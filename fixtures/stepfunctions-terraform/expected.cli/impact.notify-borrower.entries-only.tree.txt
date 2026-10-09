@@ -1,0 +1,5 @@
+-> handler                           lending/src/handlers/notify-borrower.ts:10
+  @  lending-notify-borrower         lending/infra/functions.tf:23
+  @  workflow lending-loan-approval  lending/statemachine/loan-approval.asl.json:1
+  @  workflow lending-loan-renewal   lending/statemachine/loan-renewal.asl.json:1
+Reachable from: 1 invoke (lending), 2 workflows (lending)

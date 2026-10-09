@@ -4,14 +4,17 @@ import { join } from 'node:path';
 import { Project, SyntaxKind, type SourceFile } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
+  boundDeclaration,
   declaredParameterType,
   entityNameOf,
+  originOfValue,
   packageOfPath,
   resolveTypeOrigin,
   stripWrapperSuffix,
   unwrapDelivery,
   writtenKeysOf,
 } from './origin.js';
+import { evaluateExpression } from './static-value.js';
 
 const SOURCE = `
 import { Repository } from 'some-orm';
@@ -344,5 +347,53 @@ describe('the declared type of an argument', () => {
 
   it('says nothing about a position no parameter takes', () => {
     expect(declaredAt(2, 1)).toBeUndefined();
+  });
+});
+
+describe('a value named through a namespace and through names bound to names (R168)', () => {
+  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: true } });
+  project.createSourceFile('/ops/returns.ts', 'export const processReturns = async () => {};\nexport let reassigned = processReturns;');
+  project.createSourceFile('/ops/index.ts', "export * from './returns';\nexport { processReturns as renamed } from './returns';");
+  const handlers = project.createSourceFile(
+    '/handlers.ts',
+    [
+      "import * as ops from './ops';",
+      'export const viaProperty = ops.processReturns;',
+      "export const viaBrackets = ops['renamed'];",
+      'export const viaTwoNames = viaProperty;',
+      'export const viaReassigned = ops.reassigned;',
+      'export const computed = ops[String(1)];',
+    ].join('\n'),
+  );
+  const value = (name: string) => handlers.getVariableDeclarationOrThrow(name).getInitializerOrThrow();
+  const declared = (name: string) => boundDeclaration(handlers.getVariableDeclarationOrThrow(name));
+  const target = project.getSourceFileOrThrow('/ops/returns.ts').getVariableDeclarationOrThrow('processReturns');
+
+  it('reads `ns.name` and `ns[\'name\']` through `export *` and `export { x as y } from`', () => {
+    for (const name of ['viaProperty', 'viaBrackets']) {
+      const origin = originOfValue(value(name));
+      expect(origin.kind).toBe('local');
+      expect(origin.kind === 'local' ? origin.declaration : undefined).toBe(target);
+    }
+  });
+
+  it('names nothing with a key that is not written out', () => {
+    expect(originOfValue(value('computed')).kind).toBe('unknown');
+  });
+
+  it('follows a const bound to a name to what that name declares, through several', () => {
+    expect(declared('viaProperty')).toBe(target);
+    expect(declared('viaTwoNames')).toBe(target);
+  });
+
+  it('reads a constant written in brackets the way it reads one written with a dot', () => {
+    const file = project.createSourceFile('/topics.ts', "const TOPICS = { opened: 'loans-opened' };\nexport const a = TOPICS['opened'];\nexport const b = TOPICS.opened;");
+    for (const name of ['a', 'b']) {
+      expect(evaluateExpression(file.getVariableDeclarationOrThrow(name).getInitializerOrThrow())).toEqual({ resolved: true, value: 'loans-opened' });
+    }
+  });
+
+  it('stops at a binding that is not a const, which holds whatever was assigned last', () => {
+    expect(declared('viaReassigned')).toBe(project.getSourceFileOrThrow('/ops/returns.ts').getVariableDeclarationOrThrow('reassigned'));
   });
 });

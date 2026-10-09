@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:27:35.785Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:52:08.129Z",
   "configHash": "d95e219d6b04",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 614,
+      "packages": {
+        "name": "@acme/api",
+        "runtime": [
+          "@acme/stock",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:36.856Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:58.917Z",
   "configHash": "66238374aa03",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 58,
       "types": 4,
       "unresolved": 8,
-      "durationMs": 0
+      "durationMs": 598,
+      "packages": {
+        "name": "nest-broker-markers",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

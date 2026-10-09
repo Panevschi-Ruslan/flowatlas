@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:32.105Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:51.802Z",
   "configHash": "14afc89d6d8c",
   "services": [
     {
@@ -12,7 +12,19 @@
       "edges": 8,
       "types": 5,
       "unresolved": 2,
-      "durationMs": 698
+      "durationMs": 644,
+      "packages": {
+        "name": "declared-api",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "axios",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "billing",
@@ -23,7 +35,7 @@
       "edges": 4,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 6
+      "durationMs": 3
     }
   ],
   "httpOut": {

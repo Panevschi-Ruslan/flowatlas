@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-typeorm",
-  "generatedAt": "2026-09-27T09:26:51.617Z",
+  "generatedAt": "2026-10-07T14:34:34.928Z",
   "nodes": [
     {
       "id": "db_query:nest-typeorm#src/orders/orders.service.ts:22:12",
@@ -188,7 +188,18 @@
       "label": "OrdersController.create",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.controller.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:nest-typeorm#Order"
+            }
+          ],
+          "returns": "type:nest-typeorm#Order"
+        }
+      }
     },
     {
       "id": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -196,7 +207,13 @@
       "label": "OrdersController.findAll",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-typeorm#Order[]"
+        }
+      }
     },
     {
       "id": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.recent",
@@ -204,7 +221,13 @@
       "label": "OrdersController.recent",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.remove",
@@ -212,7 +235,18 @@
       "label": "OrdersController.remove",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.controller.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-typeorm#src/orders/orders.module.ts:OrdersModule",
@@ -250,7 +284,18 @@
       "label": "OrdersService.create",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.service.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-typeorm#Order"
+            }
+          ],
+          "returns": "type:nest-typeorm#Order"
+        }
+      }
     },
     {
       "id": "nest-typeorm#src/orders/orders.service.ts:OrdersService.findAll",
@@ -258,7 +303,13 @@
       "label": "OrdersService.findAll",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.service.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-typeorm#Order[]"
+        }
+      }
     },
     {
       "id": "nest-typeorm#src/orders/orders.service.ts:OrdersService.recent",
@@ -266,7 +317,13 @@
       "label": "OrdersService.recent",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-typeorm#src/orders/orders.service.ts:OrdersService.remove",
@@ -274,7 +331,18 @@
       "label": "OrdersService.remove",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:nest-typeorm",

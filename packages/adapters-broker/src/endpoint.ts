@@ -1,9 +1,10 @@
-import { evaluateExpression, getDecorator, resolveTypeOrigin } from '@flowatlas/core';
+import { evaluateExpression, getDecorator, resolveTypeOrigin, type Unresolved } from '@flowatlas/core';
 import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { BrokerSpec, ChannelPrefix, EndpointCarrier } from './adapters/types.js';
 import { receiverMatches } from './call-site.js';
 import { trimEndpoint, type ChannelShaping } from './channel-name.js';
+import { rowAbout, type RowSite } from './row-site.js';
 
 /**
  * Which endpoint a channel name is written under.
@@ -300,8 +301,8 @@ export const unreadableEndpointRow = (
   spec: BrokerSpec,
   file: string,
   line: number,
-  symbol: string,
-): { file: string; line: number; reason: 'channel-dynamic'; hint: string; symbol: string } => ({
+  site: RowSite,
+): Unresolved & { reason: 'channel-dynamic' } => ({
   file,
   line,
   reason: 'channel-dynamic',
@@ -309,5 +310,5 @@ export const unreadableEndpointRow = (
     shaping.stated === 'class'
       ? `The ${spec.channelPrefix?.optionKey ?? 'endpoint'} this class declares cannot be read, so neither can any channel name under it. Write it as a literal or a constant.`
       : 'The address this socket was opened on cannot be read, so neither can the namespace its events belong to. Write the path beside the settings key rather than inside it.',
-  symbol: `${symbol} -> ${shaping.unreadable.slice(0, 60)}`,
+  ...rowAbout(site, shaping.unreadable),
 });

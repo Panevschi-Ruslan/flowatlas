@@ -1,0 +1,48 @@
+{
+  "services": [
+    {
+      "name": "loans",
+      "repo": "./loans",
+      "type": "express"
+    }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "library-events",
+          "channelKind": "topic",
+          "producers": [
+            {
+              "receiverType": "LibraryEventBus",
+              "method": "put",
+              "address": [
+                { "literal": "eventbridge" },
+                { "literal": "library-events" },
+                { "literal": "library.returns" },
+                { "at": [{ "kind": "constructed-argument-path", "class": "LibraryEvent", "path": ["type"] }] }
+              ],
+              "payload": [{ "kind": "constructed-argument-path", "class": "LibraryEvent", "path": ["detail"] }],
+              "kind": "event"
+            },
+            {
+              "function": "publishEvent",
+              "address": [
+                { "literal": "eventbridge" },
+                {
+                  "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "EventBusName"] }],
+                  "absent": "default"
+                },
+                { "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "Source"] }] },
+                { "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "DetailType"] }] }
+              ],
+              "payload": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "Detail"] }],
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

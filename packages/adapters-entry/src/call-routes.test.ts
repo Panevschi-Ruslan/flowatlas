@@ -498,6 +498,59 @@ describe('express routes', () => {
     expect(reasons(read)).toContain('route-handler-anonymous');
   });
 
+  // R167: a wrapper that takes a name or options first is as much a wrapper.
+  it('reads a handler a wrapper is handed after a name, inline and through a const', () => {
+    const read = express(`
+      import express from 'express';
+      import { withSpan } from './tracing.js';
+      const app = express();
+      app.get('/loans/:id', withSpan('getLoan', getLoan));
+      const listLoansTraced = withSpan('listLoans', listLoans);
+      app.get('/loans', listLoansTraced);
+      async function getLoan(req, res) { return res.send('one'); }
+      async function listLoans(req, res) { return res.send('all'); }
+    `, {
+      '/src/tracing.ts':
+        "import type { RequestHandler } from 'express';\nexport const withSpan = (name: string, fn: RequestHandler): RequestHandler => (req, res, next) => fn(req, res, next);",
+    });
+    const byId = new Map(read.entries.map((entry) => [entry.id, entry]));
+    expect(byId.get('entry:api:http:GET:/loans/:param')?.handler).toMatchObject({ functionName: 'getLoan' });
+    expect(byId.get('entry:api:http:GET:/loans')?.handler).toMatchObject({ functionName: 'listLoans' });
+    expect(read.entries.every((entry) => entry.handlerConfidence === undefined)).toBe(true);
+    expect(reasons(read)).not.toContain('route-handler-anonymous');
+  });
+
+  it('lands through a wrapper from a package that is not installed, and says the landing is a guess', () => {
+    const read = express(`
+      import express from 'express';
+      import { instrument } from '@lending/telemetry';
+      const app = express();
+      app.post('/returns', instrument(recordReturn, { segment: 'returns' }));
+      async function recordReturn(req, res) { return res.send('ok'); }
+    `);
+    const [entry] = read.entries;
+    expect(entry?.handler).toMatchObject({ functionName: 'recordReturn' });
+    expect(entry?.handlerConfidence).toBe('heuristic');
+    expect(entry?.meta?.['wrapperUnread']).toContain('@lending/telemetry, which is not installed');
+  });
+
+  it('points at nothing when a call is handed two functions', () => {
+    const read = express(`
+      import express from 'express';
+      import { firstOf } from './either.js';
+      const app = express();
+      app.get('/holds', firstOf(fromCache, fromTable));
+      async function fromCache(req, res, next) { next(); }
+      async function fromTable(req, res) { return res.send('ok'); }
+    `, {
+      '/src/either.ts':
+        "import type { RequestHandler } from 'express';\nexport const firstOf = (a: RequestHandler, b: RequestHandler): RequestHandler => (req, res, next) => a(req, res, () => b(req, res, next));",
+    });
+    const [entry] = read.entries;
+    expect(entry?.handler).toBeUndefined();
+    expect(reasons(read)).toContain('route-handler-anonymous');
+  });
+
   it('points at nothing when a wrapper is handed a list to run in turn', () => {
     const read = express(`
       import express from 'express';

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T11:19:34.780Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:29:43.900Z",
   "services": [
     {
       "name": "api",
@@ -34,7 +34,22 @@
       "label": "catalogue",
       "repo": "api",
       "file": "src/fixtures/catalogue.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pool",
+              "type": "unknown"
+            },
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController",
@@ -54,7 +69,13 @@
       "label": "OrdersController.create",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -62,7 +83,13 @@
       "label": "OrdersController.findAll",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -82,7 +109,18 @@
       "label": "OrdersService.create",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.findAll",
@@ -90,7 +128,13 @@
       "label": "OrdersService.findAll",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "db_query:api#src/fixtures/catalogue.ts:8:3",
@@ -240,6 +284,11 @@
       "to": "api#src/fixtures/catalogue.ts:catalogue",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "unknown",
+        "number"
+      ],
+      "returns": "unknown",
       "file": "src/orders/orders.service.ts",
       "line": 17
     },
@@ -299,6 +348,14 @@
       "message": "1 source file(s) under src/e2e/ were not read: a directory named `e2e` is taken to hold tests",
       "hint": "If it holds code the application runs, add \"src/e2e\" to readTestDirectories in this service's entry in flowatlas.config.json.",
       "symbol": "src/e2e",
+      "service": "api"
+    },
+    {
+      "file": "src/fixtures/catalogue.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Pool",
       "service": "api"
     },
     {

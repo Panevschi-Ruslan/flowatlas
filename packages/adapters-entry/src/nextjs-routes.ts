@@ -17,6 +17,7 @@ import {
   type ExtractContext,
   type NamedFunction,
   type Reach,
+  type RequestReading,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -31,6 +32,7 @@ import {
   type FsRouteVerb,
 } from './fs-routes.js';
 import { APP_ROUTER, PAGES_API } from './nextjs-paths.js';
+import { APP_ROUTE_REQUEST, PAGES_API_REQUEST, readingOf } from './request-readings.js';
 import {
   handlerOfFunction,
   inlineHandlerOf,
@@ -41,6 +43,12 @@ import {
 
 /** The dependency that gives the framework away. */
 const PACKAGE = 'next';
+
+/** How each kind of route module hands its handler a request (P29), by the registration it is. */
+const REQUESTS: Readonly<Record<string, RequestReading | undefined>> = {
+  'app/route': readingOf(APP_ROUTE_REQUEST),
+  'pages/api': readingOf(PAGES_API_REQUEST),
+};
 
 /** The directive that turns a module, or one function, into a boundary. */
 const USE_SERVER = 'use server';
@@ -121,6 +129,8 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
 interface HttpEntryOptions {
   method: string;
   path: string;
+  /** The path with its params named, where it names any (P34). */
+  rawPath?: string | undefined;
   /**
    * Where the way in was found, and where its verb was written.
    *
@@ -249,9 +259,14 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         file: options.at.reached.file,
         line: options.at.reached.line,
         ...(gate.length > 0 ? { wrapping: gate } : {}),
+        // A route file and a `pages/api` module hand their handler a request
+        // in two different shapes, and each is read as its own (P29).
+        ...(REQUESTS[options.via] === undefined ? {} : { request: REQUESTS[options.via] }),
         meta: {
           method: options.method,
           path: options.path,
+          // The params as the directories name them, which the key renamed (P34).
+          ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
           adapter: 'nextjs-routes',
           registration: options.via,
           // Only where there is more than one, which is where it says
@@ -294,6 +309,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         readVerbFile(ctx, sourceFile, {
           file,
           path: appAddress.path,
+          rawPath: appAddress.rawPath,
           adapter: 'nextjs-routes',
           emit: (verb) => httpEntry({ ...verb, ...appAddress, via: 'app/route' }),
         });

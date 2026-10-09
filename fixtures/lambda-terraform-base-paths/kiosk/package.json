@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-kiosk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The self-service kiosk of a lending library, calling the library's public API from Lambda functions.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

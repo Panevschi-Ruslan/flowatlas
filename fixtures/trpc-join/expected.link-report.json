@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T17:41:34.475Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:52:03.443Z",
   "configHash": "6770c6354ded",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 523,
+      "packages": {
+        "name": "trpc-join-admin",
+        "runtime": [
+          "@trpc/server",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "api",
@@ -22,8 +31,18 @@
       "nodes": 10,
       "edges": 4,
       "types": 0,
-      "unresolved": 1,
-      "durationMs": 0
+      "unresolved": 2,
+      "durationMs": 549,
+      "packages": {
+        "name": "trpc-join-api",
+        "runtime": [
+          "@trpc/react-query",
+          "@trpc/server",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -33,8 +52,17 @@
       "nodes": 11,
       "edges": 7,
       "types": 0,
-      "unresolved": 1,
-      "durationMs": 0
+      "unresolved": 4,
+      "durationMs": 520,
+      "packages": {
+        "name": "trpc-join-web",
+        "runtime": [
+          "@trpc/react-query",
+          "@trpc/tanstack-react-query",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -98,6 +126,6 @@
     "nodes": 24,
     "edges": 17,
     "types": 0,
-    "unresolved": 4
+    "unresolved": 8
   }
 }

@@ -1,0 +1,15 @@
+{
+  "name": "lending-library-circulation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loans, holds and returns for a lending library, as Lambda functions that talk over an EventBridge bus.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

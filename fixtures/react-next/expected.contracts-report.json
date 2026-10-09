@@ -1,7 +1,7 @@
 {
-  "contractsFormatVersion": 4,
-  "schemaVersion": 5,
-  "generatedAt": "2026-09-27T17:31:24.114Z",
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:28:20.336Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -26,9 +26,9 @@
       },
       "edgeKey": "ui_api_call:web#src/api/orders.ts:21:24|hits|entry:shop:http:GET:/api/orders",
       "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "shop#app/api/orders/route.ts:GET declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "reason": "no-type-on-receiver",
+      "message": "web#src/api/orders.ts:listOrders declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {
@@ -39,8 +39,8 @@
       "edgeKey": "ui_api_call:web#src/api/orders.ts:26:24|hits|entry:shop:http:PATCH:/api/orders/:param",
       "direction": "request",
       "reason": "no-type-on-receiver",
-      "message": "shop#app/api/orders/[id]/route.ts:PATCH declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "message": "shop#app/api/orders/[id]/route.ts:PATCH reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
     },
     {
       "edge": {
@@ -50,9 +50,9 @@
       },
       "edgeKey": "ui_api_call:web#src/api/orders.ts:26:24|hits|entry:shop:http:PATCH:/api/orders/:param",
       "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "shop#app/api/orders/[id]/route.ts:PATCH declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "reason": "no-type-on-receiver",
+      "message": "web#src/api/orders.ts:updateOrder declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {

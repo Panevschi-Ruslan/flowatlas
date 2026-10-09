@@ -242,6 +242,10 @@ place. Adding a sixth later is one more `link`.
 | `link-report.json` | what joined, what did not, and why |
 | `graph.db` | the same graph as SQLite, which every query reads |
 
+What it keeps between builds, each service's own graph and file hashes, is in the
+same directory under `services/`. Nothing is written into the repositories it
+reads.
+
 ---
 
 ## Commands
@@ -363,16 +367,26 @@ at a pull request.
 ### Seeing it
 
 ```sh
-flowatlas visualise                     # writes graph.html beside the graph
+flowatlas visualise                     # writes graph.html next to the configuration
 flowatlas visualise --out map.html --title "Ledger"
 ```
 
 One file with the graph inside it: no server and nothing to install. It asks
 Google Fonts for two typefaces and falls back to your own if it cannot reach
 them, so it reads offline and is not free of a third party until that is
-inlined. It opens on the reconciliation, lists every way in, follows
+inlined. It opens on a Map of the whole project - one box per service, in
+columns by what it is for, joined by what passes between them and counted, with
+families of services that open and close and a layer for the packages they are
+built from - then lists every way in, follows
 any one of them across service boundaries, and has a tab each for every crossing
-and for everything that did not join.
+and for everything that did not join. A fourth tab, Graph, draws the
+neighbourhood of any node you search for, with its details one click away, and
+walks on from there in either direction. It folds the plumbing round a route,
+groups a busy table's callers, finds a path between two nodes and what reaches
+one, marks the nodes with problems, and keeps a view as a link. Hovering a node
+shows what it takes and gives back - a method's parameters by name and type, a
+route's body, query and response - and any type opens to its fields; see
+[`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
 
 It is a report you can click, not a viewer you keep running. A page generated
 from a build can be attached to a review or kept beside a decision; a UI that
@@ -707,6 +721,26 @@ prove, and the path is given so you can run it.
   OpenAPI or AsyncAPI document, and joins and compares like any other end at
   `declared` confidence (`fixtures/multi-repo-declared`,
   `fixtures/multi-repo-asyncapi`).
+- **Serverless on AWS, wired in Terraform.** Lambda functions and the API
+  Gateway routes in front of them are read from the `.tf` files that deploy
+  them, through local modules and the public ones that ship described, with
+  each function named by what it is deployed as (`fixtures/lambda-terraform-rest`,
+  `fixtures/lambda-terraform-modules`, `fixtures/multi-repo-lambda`,
+  `fixtures/lambda-wrapped-handlers`). A Step Functions state machine is a way
+  in whose states are its steps, read from `*.asl.json` or from however the
+  Terraform writes its definition (`fixtures/stepfunctions-asl-files`,
+  `fixtures/stepfunctions-terraform`, `fixtures/multi-repo-stepfunctions`).
+  Publishing through the SDK to EventBridge, SQS and SNS meets the rule,
+  subscription or mapping the deployment declares, and a queue named by
+  `process.env` is completed from the function's environment block
+  (`fixtures/aws-sdk-publishers`, `fixtures/aws-sdk-not-installed`,
+  `fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
+  `fixtures/multi-repo-events`). Code that starts a workflow or invokes a
+  function by its deployed name is joined to it, whether it calls the SDK or a
+  helper of the project's own, read or described - one that records what to
+  start in one call and starts it by id in the next as well - so a route leads
+  into the workflow it starts (`fixtures/start-workflow-sdk`,
+  `fixtures/start-workflow-helper`, `fixtures/start-workflow-by-record`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

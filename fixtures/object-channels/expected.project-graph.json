@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T15:28:14.113Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:29:55.663Z",
   "services": [
     {
       "name": "api",
@@ -54,7 +54,18 @@
       "label": "JobBus.queue",
       "repo": "api",
       "file": "src/jobs/job-bus.service.ts",
-      "line": 48
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:api#JobItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/jobs/job-bus.service.ts:JobBus.queueAll",
@@ -62,7 +73,18 @@
       "label": "JobBus.queueAll",
       "repo": "api",
       "file": "src/jobs/job-bus.service.ts",
-      "line": 52
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "items",
+              "type": "type:api#JobItem[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/jobs/queues.ts:DigestQueue",
@@ -103,7 +125,18 @@
       "label": "QueueBase.push",
       "repo": "api",
       "file": "src/jobs/queues.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "payload",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/jobs/queues.ts:TenantQueue",
@@ -135,7 +168,18 @@
       "label": "OrdersService.confirm",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 30
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.digestFor",
@@ -143,7 +187,18 @@
       "label": "OrdersService.digestFor",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 46
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.notify",
@@ -151,7 +206,18 @@
       "label": "OrdersService.notify",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.perTenant",
@@ -159,7 +225,18 @@
       "label": "OrdersService.perTenant",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 51
+      "line": 51,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.place",
@@ -167,7 +244,18 @@
       "label": "OrdersService.place",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.reindex",
@@ -175,7 +263,13 @@
       "label": "OrdersService.reindex",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "channel:digest.send",
@@ -478,7 +572,18 @@
       "label": "JobsService.handleLegacy",
       "repo": "worker",
       "file": "src/jobs/jobs.service.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:worker#MailJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/jobs/jobs.service.ts:JobsService.handleMail",
@@ -486,7 +591,18 @@
       "label": "JobsService.handleMail",
       "repo": "worker",
       "file": "src/jobs/jobs.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:worker#MailJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
@@ -494,7 +610,18 @@
       "label": "JobsService.handleThumbnail",
       "repo": "worker",
       "file": "src/jobs/jobs.service.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:worker#ThumbnailJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     }
   ],
   "edges": [
@@ -671,6 +798,9 @@
       "to": "worker#src/jobs/jobs.service.ts:JobsService.handleLegacy",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#MailJob"
+      ],
       "returns": "void",
       "file": "src/jobs/jobs.service.ts",
       "line": 41
@@ -680,6 +810,9 @@
       "to": "worker#src/jobs/jobs.service.ts:JobsService.handleMail",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#MailJob"
+      ],
       "returns": "void",
       "file": "src/jobs/jobs.service.ts",
       "line": 31
@@ -689,6 +822,9 @@
       "to": "worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#ThumbnailJob"
+      ],
       "returns": "void",
       "file": "src/jobs/jobs.service.ts",
       "line": 26
@@ -889,8 +1025,9 @@
       "file": "src/orders/orders.service.ts",
       "line": 52,
       "reason": "channel-dynamic",
+      "message": "OrdersService.perTenant -> tenantTopic()",
       "hint": "The channel name cannot be read here. Annotate OrdersService.perTenant with the channel it uses.",
-      "symbol": "OrdersService.perTenant -> tenantTopic()",
+      "symbol": "producer:api#src/orders/orders.service.ts:52:5",
       "service": "api"
     },
     {

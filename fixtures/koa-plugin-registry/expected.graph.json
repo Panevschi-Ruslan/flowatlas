@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "koa-plugin-registry",
-  "generatedAt": "2026-09-27T12:39:40.343Z",
+  "generatedAt": "2026-10-08T07:27:08.683Z",
   "nodes": [
     {
       "id": "entry:koa-plugin-registry:http:GET:/auth/passkey",
@@ -99,7 +99,18 @@
       "label": "POST passkeys.list@13",
       "repo": "koa-plugin-registry",
       "file": "src/plugins/passkeys/server/api/passkeys.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-plugin-registry#src/plugins/passkeys/server/api/passkeys.ts:POST passkeys.update@17",
@@ -107,7 +118,18 @@
       "label": "POST passkeys.update@17",
       "repo": "koa-plugin-registry",
       "file": "src/plugins/passkeys/server/api/passkeys.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-plugin-registry#src/plugins/passkeys/server/auth/passkeys.ts:GET /passkey@6",
@@ -115,7 +137,18 @@
       "label": "GET /passkey@6",
       "repo": "koa-plugin-registry",
       "file": "src/plugins/passkeys/server/auth/passkeys.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-plugin-registry#src/plugins/webhooks/server/index.ts:POST webhooks.create@12",
@@ -123,7 +156,18 @@
       "label": "POST webhooks.create@12",
       "repo": "koa-plugin-registry",
       "file": "src/plugins/webhooks/server/index.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-plugin-registry#src/routes/documents.routes.ts:POST documents.info@6",
@@ -131,7 +175,18 @@
       "label": "POST documents.info@6",
       "repo": "koa-plugin-registry",
       "file": "src/routes/documents.routes.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:koa-plugin-registry",
@@ -161,7 +216,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/plugins/passkeys/server/auth/passkeys.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "string"
     },
     {
       "from": "entry:koa-plugin-registry:http:POST:/api/documents.info",
@@ -169,7 +228,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/routes/documents.routes.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{data:object}"
     },
     {
       "from": "entry:koa-plugin-registry:http:POST:/api/passkeys.list",
@@ -177,7 +240,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/plugins/passkeys/server/api/passkeys.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{data:undefined[]}"
     },
     {
       "from": "entry:koa-plugin-registry:http:POST:/api/passkeys.update",
@@ -185,7 +252,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/plugins/passkeys/server/api/passkeys.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{data:object}"
     },
     {
       "from": "entry:koa-plugin-registry:http:POST:/api/webhooks.create",
@@ -193,10 +264,25 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/plugins/webhooks/server/index.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{data:object}"
     }
   ],
-  "types": {},
+  "types": {
+    "type:koa#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "koa",
+      "structuralHash": "002a3105e543026c",
+      "meta": {
+        "declKind": "external",
+        "package": "koa"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/routes/api.ts",

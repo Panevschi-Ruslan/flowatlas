@@ -1,0 +1,10 @@
+@  POST /returns                                                    desk/infra/api.tf:111
+  -> recordReturn                                                   desk/src/operations/returns.ts:13
+    ~  message sqs/library-desk-returns                             desk/src/operations/returns.ts:15
+      ~  sqs/library-desk-returns                                   infra/queues.tf:17
+        ~  mapping aws_lambda_event_source_mapping.process_returns  desk/infra/queues.tf:17
+          @  library-desk-process-returns                           desk/infra/functions.tf:61
+            -> processReturns                                       desk/src/operations/returns.ts:25
+    $  RETURNS_QUEUE_URL                                            desk/src/operations/returns.ts:17
+    -> json                                                         desk/src/lib/http.ts:3
+unresolved on this path: 0

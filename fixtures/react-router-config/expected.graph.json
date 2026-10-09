@@ -1,0 +1,649 @@
+{
+  "schemaVersion": 6,
+  "repo": "react-router-config",
+  "generatedAt": "2026-10-09T07:55:35.662Z",
+  "nodes": [
+    {
+      "id": "entry:react-router-config:http:DELETE:/api/projects/:param/tasks/:param",
+      "type": "entry",
+      "label": "DELETE /api/projects/:param/tasks/:param",
+      "repo": "react-router-config",
+      "file": "app/routes/api/task.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/projects/:param/tasks/:param",
+        "rawPath": "/api/projects/:projectId/tasks/:taskId?",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:react-router-config:http:GET:/admin/projects/:param",
+      "type": "entry",
+      "label": "GET /admin/projects/:param",
+      "repo": "react-router-config",
+      "file": "app/admin/projects.$projectId.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/projects/:param",
+        "rawPath": "/admin/projects/:projectId",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:react-router-config:http:GET:/api/projects",
+      "type": "entry",
+      "label": "GET /api/projects",
+      "repo": "react-router-config",
+      "file": "app/routes/api/projects.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/projects",
+        "rawPath": "/api/projects",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:react-router-config:http:GET:/api/projects/:param/tasks/:param",
+      "type": "entry",
+      "label": "GET /api/projects/:param/tasks/:param",
+      "repo": "react-router-config",
+      "file": "app/routes/api/task.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/projects/:param/tasks/:param",
+        "rawPath": "/api/projects/:projectId/tasks/:taskId?",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:react-router-config:http:GET:/projects/:param",
+      "type": "entry",
+      "label": "GET /projects/:param",
+      "repo": "react-router-config",
+      "file": "app/routes/project.tsx",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/projects/:param",
+        "rawPath": "/projects/:projectId",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:react-router-config:http:POST:/api/projects",
+      "type": "entry",
+      "label": "POST /api/projects",
+      "repo": "react-router-config",
+      "file": "app/routes/api/projects.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/projects",
+        "rawPath": "/api/projects",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:react-router-config:http:POST:/login",
+      "type": "entry",
+      "label": "POST /login",
+      "repo": "react-router-config",
+      "file": "app/routes/login.tsx",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/login",
+        "rawPath": "/login",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:react-router-config:http:POST:/projects/:param/settings",
+      "type": "entry",
+      "label": "POST /projects/:param/settings",
+      "repo": "react-router-config",
+      "file": "app/routes/project-settings.tsx",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/projects/:param/settings",
+        "rawPath": "/projects/:projectId/settings",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "react-router-config#app/admin/projects.$projectId.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "react-router-config",
+      "file": "app/admin/projects.$projectId.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:react-router#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "type:react-router-config#Project"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/models/projects.ts:createProject",
+      "type": "function",
+      "label": "createProject",
+      "repo": "react-router-config",
+      "file": "app/models/projects.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:react-router-config#Project"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/models/projects.ts:listProjects",
+      "type": "function",
+      "label": "listProjects",
+      "repo": "react-router-config",
+      "file": "app/models/projects.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:react-router-config#Project[]"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/models/projects.ts:oneProject",
+      "type": "function",
+      "label": "oneProject",
+      "repo": "react-router-config",
+      "file": "app/models/projects.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:react-router-config#Project"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/models/projects.ts:oneTask",
+      "type": "function",
+      "label": "oneTask",
+      "repo": "react-router-config",
+      "file": "app/models/projects.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "projectId",
+              "type": "string"
+            },
+            {
+              "name": "taskId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:react-router-config#Task"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/models/projects.ts:removeTask",
+      "type": "function",
+      "label": "removeTask",
+      "repo": "react-router-config",
+      "file": "app/models/projects.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "taskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/routes/api/projects.ts:action",
+      "type": "function",
+      "label": "action",
+      "repo": "react-router-config",
+      "file": "app/routes/api/projects.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "type:react-router#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "type:react-router-config#Project"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/routes/api/projects.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "react-router-config",
+      "file": "app/routes/api/projects.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:react-router-config#Project[]"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/routes/api/task.ts:action",
+      "type": "function",
+      "label": "action",
+      "repo": "react-router-config",
+      "file": "app/routes/api/task.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request, params }",
+              "type": "type:react-router#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/routes/api/task.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "react-router-config",
+      "file": "app/routes/api/task.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:react-router#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "type:react-router-config#Task"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/routes/login.tsx:action",
+      "type": "function",
+      "label": "action",
+      "repo": "react-router-config",
+      "file": "app/routes/login.tsx",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "type:react-router#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "{user:string}"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/routes/project-settings.tsx:action",
+      "type": "function",
+      "label": "action",
+      "repo": "react-router-config",
+      "file": "app/routes/project-settings.tsx",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "type:react-router#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "{saved:string}"
+        }
+      }
+    },
+    {
+      "id": "react-router-config#app/routes/project.tsx:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "react-router-config",
+      "file": "app/routes/project.tsx",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:react-router#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "type:react-router-config#Project"
+        }
+      }
+    },
+    {
+      "id": "repo:react-router-config",
+      "type": "repo",
+      "label": "react-router-config",
+      "repo": "react-router-config",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "react-router-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:react-router-config:http:DELETE:/api/projects/:param/tasks/:param",
+      "to": "react-router-config#app/routes/api/task.ts:action",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/api/task.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true,
+        "params": "{projectId:string;taskId?:string}"
+      }
+    },
+    {
+      "from": "entry:react-router-config:http:GET:/admin/projects/:param",
+      "to": "react-router-config#app/admin/projects.$projectId.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/admin/projects.$projectId.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{projectId:string}"
+      },
+      "returns": "type:react-router-config#Project"
+    },
+    {
+      "from": "entry:react-router-config:http:GET:/api/projects",
+      "to": "react-router-config#app/routes/api/projects.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/api/projects.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "type:react-router-config#Project[]"
+    },
+    {
+      "from": "entry:react-router-config:http:GET:/api/projects/:param/tasks/:param",
+      "to": "react-router-config#app/routes/api/task.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/api/task.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{projectId:string;taskId?:string}"
+      },
+      "returns": "type:react-router-config#Task"
+    },
+    {
+      "from": "entry:react-router-config:http:GET:/projects/:param",
+      "to": "react-router-config#app/routes/project.tsx:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/project.tsx",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{projectId:string}"
+      },
+      "returns": "type:react-router-config#Project"
+    },
+    {
+      "from": "entry:react-router-config:http:POST:/api/projects",
+      "to": "react-router-config#app/routes/api/projects.ts:action",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/api/projects.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "{name:string}",
+        "claimed": [
+          "body"
+        ]
+      },
+      "returns": "type:react-router-config#Project"
+    },
+    {
+      "from": "entry:react-router-config:http:POST:/login",
+      "to": "react-router-config#app/routes/login.tsx:action",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/login.tsx",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "body": "FormData"
+      },
+      "returns": "{user:string}"
+    },
+    {
+      "from": "entry:react-router-config:http:POST:/projects/:param/settings",
+      "to": "react-router-config#app/routes/project-settings.tsx:action",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/project-settings.tsx",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "body": "FormData"
+      },
+      "returns": "{saved:string}"
+    },
+    {
+      "from": "react-router-config#app/admin/projects.$projectId.ts:loader",
+      "to": "react-router-config#app/models/projects.ts:oneProject",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/admin/projects.$projectId.ts",
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:react-router-config#Project"
+    },
+    {
+      "from": "react-router-config#app/routes/api/projects.ts:action",
+      "to": "react-router-config#app/models/projects.ts:createProject",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/api/projects.ts",
+      "line": 9,
+      "params": [
+        "string"
+      ],
+      "returns": "type:react-router-config#Project"
+    },
+    {
+      "from": "react-router-config#app/routes/api/projects.ts:loader",
+      "to": "react-router-config#app/models/projects.ts:listProjects",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/api/projects.ts",
+      "line": 5,
+      "params": [],
+      "returns": "type:react-router-config#Project[]"
+    },
+    {
+      "from": "react-router-config#app/routes/api/task.ts:action",
+      "to": "react-router-config#app/models/projects.ts:removeTask",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/api/task.ts",
+      "line": 12,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "react-router-config#app/routes/api/task.ts:loader",
+      "to": "react-router-config#app/models/projects.ts:oneTask",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/api/task.ts",
+      "line": 6,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:react-router-config#Task"
+    },
+    {
+      "from": "react-router-config#app/routes/project.tsx:loader",
+      "to": "react-router-config#app/models/projects.ts:oneProject",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/project.tsx",
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:react-router-config#Project"
+    }
+  ],
+  "types": {
+    "type:react-router#LoaderFunctionArgs": {
+      "name": "LoaderFunctionArgs",
+      "kind": "external",
+      "declaredIn": "react-router",
+      "structuralHash": "c0f22163af05fc62",
+      "meta": {
+        "declKind": "external",
+        "package": "react-router"
+      }
+    },
+    "type:react-router-config#Project": {
+      "name": "Project",
+      "kind": "object",
+      "declaredIn": "react-router-config#app/models/projects.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:react-router-config#Task": {
+      "name": "Task",
+      "kind": "object",
+      "declaredIn": "react-router-config#app/models/projects.ts",
+      "structuralHash": "18b09d07301e3307",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "app/routes.ts",
+      "line": 16,
+      "reason": "route-module-not-found",
+      "message": "The route config serves /reports from routes/reports.tsx, which is not a source file of this project, so the route's ways in were not read.",
+      "hint": "Name the module by its path relative to app/, as the file is spelled on disk, or add the file.",
+      "symbol": "routes/reports.tsx",
+      "adapter": "react-router-routes"
+    }
+  ]
+}

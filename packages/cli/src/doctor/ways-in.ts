@@ -50,3 +50,12 @@ export const waysInTotal = (byService: ReadonlyMap<string, WaysIn>): WaysIn =>
  * outnumbering it.
  */
 export const mostlyUnread = (ways: WaysIn): boolean => ways.found - ways.read > ways.read;
+
+/**
+ * What is said of a service with no way in at all (R170): that, then what its
+ * repository looks like, then what follows. One sentence for the verdict and
+ * the head of the report, which say it in the same words.
+ */
+export const noWayInSentence = ({ service, looksLike }: { service: string; looksLike: string }): string =>
+  `${service}: no way in was found — ${looksLike}. Its code was read and nothing in this graph` +
+  ' reaches it, so no flow starts there';

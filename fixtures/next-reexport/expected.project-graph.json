@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T08:36:17.272Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T07:28:12.354Z",
   "services": [
     {
       "name": "web",
@@ -147,7 +147,18 @@
       "label": "POST",
       "repo": "web",
       "file": "../../packages/handlers/src/index.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "web#../../packages/handlers/src/legacy.ts:legacyHandler",
@@ -155,7 +166,22 @@
       "label": "legacyHandler",
       "repo": "web",
       "file": "../../packages/handlers/src/legacy.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:@next-reexport/handlers#LegacyRequest"
+            },
+            {
+              "name": "response",
+              "type": "type:@next-reexport/handlers#LegacyResponse"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#../../packages/handlers/src/store.ts:recordDelivery",
@@ -163,7 +189,18 @@
       "label": "recordDelivery",
       "repo": "web",
       "file": "../../packages/handlers/src/store.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "delivery",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#lib/invoices.ts:GET",
@@ -171,7 +208,13 @@
       "label": "GET",
       "repo": "web",
       "file": "lib/invoices.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     }
   ],
   "edges": [
@@ -180,8 +223,12 @@
       "to": "web#../../packages/handlers/src/legacy.ts:legacyHandler",
       "type": "handles",
       "confidence": "static",
+      "returns": "{method:string}",
       "file": "../../packages/handlers/src/legacy.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:web:http:GET:/api/invoices",
@@ -189,7 +236,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "lib/invoices.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:web:http:POST:/api/webhook",
@@ -197,13 +247,20 @@
       "type": "handles",
       "confidence": "static",
       "file": "../../packages/handlers/src/index.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "web#../../packages/handlers/src/index.ts:POST",
       "to": "web#../../packages/handlers/src/store.ts:recordDelivery",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
       "file": "../../packages/handlers/src/index.ts",
       "line": 22
     },
@@ -232,7 +289,28 @@
       "line": 15
     }
   ],
-  "types": {},
+  "types": {
+    "type:@next-reexport/handlers#LegacyRequest": {
+      "name": "LegacyRequest",
+      "kind": "external",
+      "declaredIn": "@next-reexport/handlers",
+      "structuralHash": "ea1fe258c71a92b9",
+      "meta": {
+        "declKind": "external",
+        "package": "@next-reexport/handlers"
+      }
+    },
+    "type:@next-reexport/handlers#LegacyResponse": {
+      "name": "LegacyResponse",
+      "kind": "external",
+      "declaredIn": "@next-reexport/handlers",
+      "structuralHash": "21924fbad9b6263f",
+      "meta": {
+        "declKind": "external",
+        "package": "@next-reexport/handlers"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "../../packages/handlers/src/legacy.ts",

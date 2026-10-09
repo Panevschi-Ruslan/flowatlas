@@ -1,0 +1,18 @@
+{
+  "name": "lending-library-loans",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loans for a lending library: Lambda functions that start their workflows through a shared helper which records a run in one call and starts it in the next.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@library/jobs": "^1.1.0",
+    "@library/notify": "^1.2.0",
+    "@library/orchestration": "^3.0.0",
+    "@library/problems": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

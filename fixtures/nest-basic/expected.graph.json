@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-basic",
-  "generatedAt": "2026-09-27T09:26:34.517Z",
+  "generatedAt": "2026-10-07T14:34:03.470Z",
   "nodes": [
     {
       "id": "entry:nest-basic:http:DELETE:/api/orders/:param",
@@ -132,7 +132,18 @@
       "label": "OrdersController.create",
       "repo": "nest-basic",
       "file": "src/orders/orders.controller.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{userId:string}"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -140,7 +151,13 @@
       "label": "OrdersController.findAll",
       "repo": "nest-basic",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.findLegacy",
@@ -148,7 +165,13 @@
       "label": "OrdersController.findLegacy",
       "repo": "nest-basic",
       "file": "src/orders/orders.controller.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.findOne",
@@ -156,7 +179,18 @@
       "label": "OrdersController.findOne",
       "repo": "nest-basic",
       "file": "src/orders/orders.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.remove",
@@ -164,7 +198,18 @@
       "label": "OrdersController.remove",
       "repo": "nest-basic",
       "file": "src/orders/orders.controller.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.module.ts:OrdersModule",
@@ -203,7 +248,18 @@
       "label": "OrdersService.create",
       "repo": "nest-basic",
       "file": "src/orders/orders.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.service.ts:OrdersService.findAll",
@@ -211,7 +267,13 @@
       "label": "OrdersService.findAll",
       "repo": "nest-basic",
       "file": "src/orders/orders.service.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.service.ts:OrdersService.findOne",
@@ -219,7 +281,18 @@
       "label": "OrdersService.findOne",
       "repo": "nest-basic",
       "file": "src/orders/orders.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.service.ts:OrdersService.remove",
@@ -227,7 +300,18 @@
       "label": "OrdersService.remove",
       "repo": "nest-basic",
       "file": "src/orders/orders.service.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.service.ts:OrdersService.runHook",
@@ -235,7 +319,13 @@
       "label": "OrdersService.runHook",
       "repo": "nest-basic",
       "file": "src/orders/orders.service.ts",
-      "line": 47
+      "line": 47,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-basic#src/orders/orders.service.ts:OrdersService.validate",
@@ -243,7 +333,18 @@
       "label": "OrdersService.validate",
       "repo": "nest-basic",
       "file": "src/orders/orders.service.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-basic#src/users/users.controller.ts:UsersController",
@@ -263,7 +364,13 @@
       "label": "UsersController.findAll",
       "repo": "nest-basic",
       "file": "src/users/users.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-basic#src/users/users.module.ts:UsersModule",
@@ -303,7 +410,13 @@
       "label": "UsersService.findAll",
       "repo": "nest-basic",
       "file": "src/users/users.service.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-basic#src/users/users.service.ts:UsersService.findOne",
@@ -311,7 +424,18 @@
       "label": "UsersService.findOne",
       "repo": "nest-basic",
       "file": "src/users/users.service.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "repo:nest-basic",

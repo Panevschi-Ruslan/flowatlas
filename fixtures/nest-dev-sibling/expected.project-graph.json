@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T08:35:42.001Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:29:18.159Z",
   "services": [
     {
       "name": "api",
@@ -16,7 +16,13 @@
       "label": "apiUnderTest",
       "repo": "api",
       "file": "../../packages/e2e/src/index.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "api#../../packages/mailer/src/index.ts:sendReceipt",
@@ -24,7 +30,22 @@
       "label": "sendReceipt",
       "repo": "api",
       "file": "../../packages/mailer/src/index.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/app.module.ts:AppModule",
@@ -60,7 +81,18 @@
       "label": "OrdersController.place",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{id:string;email:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "config_key:api#E2E_API_URL",
@@ -170,6 +202,11 @@
       "to": "api#../../packages/mailer/src/index.ts:sendReceipt",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 9
     },

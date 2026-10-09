@@ -24,6 +24,8 @@ import {
   type Finding,
   type RouteIndex,
 } from './http-link.js';
+import { joinDeployments } from './deployment-link.js';
+import { completeFromEnvironment } from './environment-link.js';
 import { mergeGraphs } from './merge.js';
 import {
   isProcedureEntry,
@@ -33,6 +35,8 @@ import {
   type ProcedureIndex,
   type ProcedureOutcome,
 } from './procedure-link.js';
+import { joinChannelPatterns } from './pattern-link.js';
+import { joinReferences } from './reference-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
@@ -419,7 +423,14 @@ export const linkGraphs = (
 ): LinkResult => {
   const merged = mergeGraphs(graphs, config);
   const { nodes, edges, types } = merged;
-  const found: Unresolved[] = [];
+  // Before anything reads a route's address: a route hanging from another
+  // repository's API only has its full path once both repositories are here.
+  const found: Unresolved[] = joinDeployments(nodes, edges, merged.unresolved);
+  // An address read from the environment, completed from the values each
+  // function that runs it is deployed with; then every rule that takes its
+  // channels by a pattern, matched against every channel, those included (P23).
+  found.push(...completeFromEnvironment(nodes, edges, merged.unresolved));
+  found.push(...joinChannelPatterns(nodes, edges));
   const httpOut = emptyHttpOut();
   const ui = emptyUi();
 
@@ -603,6 +614,10 @@ export const linkGraphs = (
     const finding = uiFindingFor(outcome);
     if (finding !== undefined) record(call, finding);
   }
+
+  // Whatever names an entry by its deployed name alone, joined to the entry in
+  // whichever service declares it.
+  found.push(...joinReferences(nodes, edges));
 
   found.push(
     ...auditRoutes(nodes, edges.values(), {

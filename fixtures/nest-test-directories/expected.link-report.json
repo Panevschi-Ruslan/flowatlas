@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T11:19:34.780Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:28.973Z",
   "configHash": "d95e219d6b04",
   "services": [
     {
@@ -11,8 +11,13 @@
       "nodes": 15,
       "edges": 10,
       "types": 0,
-      "unresolved": 3,
-      "durationMs": 588
+      "unresolved": 4,
+      "durationMs": 600,
+      "packages": {
+        "name": "@fixture/nest-test-directories-api",
+        "runtime": [],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -74,6 +79,6 @@
     "nodes": 15,
     "edges": 10,
     "types": 0,
-    "unresolved": 5
+    "unresolved": 6
   }
 }

@@ -1,0 +1,6 @@
+{
+  "services": [
+    { "name": "reading-room", "repo": "./reading-room", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

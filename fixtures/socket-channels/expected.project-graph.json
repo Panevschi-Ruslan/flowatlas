@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T07:40:05.418Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T19:06:22.570Z",
   "services": [
     {
       "name": "api",
@@ -53,7 +53,18 @@
       "label": "AuditGateway.audit",
       "repo": "api",
       "file": "src/orders/audit.gateway.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "type:api#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/audit.gateway.ts:AuditGateway.record",
@@ -61,7 +72,18 @@
       "label": "AuditGateway.record",
       "repo": "api",
       "file": "src/orders/audit.gateway.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "type:api#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.gateway.ts:OrdersGateway",
@@ -81,7 +103,18 @@
       "label": "OrdersGateway.cancel",
       "repo": "api",
       "file": "src/orders/orders.gateway.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "command",
+              "type": "type:api#CancelOrder"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.gateway.ts:OrdersGateway.notifyRegion",
@@ -89,7 +122,22 @@
       "label": "OrdersGateway.notifyRegion",
       "repo": "api",
       "file": "src/orders/orders.gateway.ts",
-      "line": 65
+      "line": 65,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "region",
+              "type": "string"
+            },
+            {
+              "name": "update",
+              "type": "type:api#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.gateway.ts:OrdersGateway.publishLifecycle",
@@ -97,7 +145,22 @@
       "label": "OrdersGateway.publishLifecycle",
       "repo": "api",
       "file": "src/orders/orders.gateway.ts",
-      "line": 52
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "state",
+              "type": "type:api#OrderState"
+            },
+            {
+              "name": "update",
+              "type": "type:api#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
@@ -105,7 +168,18 @@
       "label": "OrdersGateway.summarise",
       "repo": "api",
       "file": "src/orders/orders.gateway.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#OrderSummary"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -125,7 +199,18 @@
       "label": "OrdersService.cancel",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "command",
+              "type": "type:api#CancelOrder"
+            }
+          ],
+          "returns": "type:api#OrderUpdate"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.summarise",
@@ -133,7 +218,18 @@
       "label": "OrdersService.summarise",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#OrderSummary"
+        }
+      }
     },
     {
       "id": "api#src/orders/reports.gateway.ts:ReportsGateway",
@@ -153,7 +249,18 @@
       "label": "ReportsGateway.request",
       "repo": "api",
       "file": "src/orders/reports.gateway.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "summary",
+              "type": "type:api#OrderSummary"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "channel:order:updated",
@@ -579,7 +686,18 @@
       "label": "LiveFeedService.apply",
       "repo": "web",
       "file": "src/app/live-feed.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "type:web#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/live-feed.service.ts:LiveFeedService.watch",
@@ -587,7 +705,13 @@
       "label": "LiveFeedService.watch",
       "repo": "web",
       "file": "src/app/live-feed.service.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-socket.service.ts:OrdersSocketService",
@@ -607,7 +731,18 @@
       "label": "OrdersSocketService.apply",
       "repo": "web",
       "file": "src/app/orders-socket.service.ts",
-      "line": 54
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "type:web#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.audit",
@@ -615,7 +750,22 @@
       "label": "OrdersSocketService.audit",
       "repo": "web",
       "file": "src/app/orders-socket.service.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "string"
+            },
+            {
+              "name": "update",
+              "type": "type:web#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.cancel",
@@ -623,7 +773,18 @@
       "label": "OrdersSocketService.cancel",
       "repo": "web",
       "file": "src/app/orders-socket.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "command",
+              "type": "type:web#CancelOrder"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.markOnline",
@@ -631,7 +792,13 @@
       "label": "OrdersSocketService.markOnline",
       "repo": "web",
       "file": "src/app/orders-socket.service.ts",
-      "line": 62
+      "line": 62,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary",
@@ -639,7 +806,18 @@
       "label": "OrdersSocketService.requestSummary",
       "repo": "web",
       "file": "src/app/orders-socket.service.ts",
-      "line": 45
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.show",
@@ -647,7 +825,18 @@
       "label": "OrdersSocketService.show",
       "repo": "web",
       "file": "src/app/orders-socket.service.ts",
-      "line": 58
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "summary",
+              "type": "type:web#OrderSummary"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.watch",
@@ -655,7 +844,13 @@
       "label": "OrdersSocketService.watch",
       "repo": "web",
       "file": "src/app/orders-socket.service.ts",
-      "line": 30
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent",
@@ -666,6 +861,10 @@
       "line": 6,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-orders"
       }
@@ -676,7 +875,13 @@
       "label": "OrdersComponent.cancel",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent.summarise",
@@ -684,7 +889,13 @@
       "label": "OrdersComponent.summarise",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     }
   ],
   "edges": [
@@ -797,6 +1008,9 @@
       "to": "api#src/orders/audit.gateway.ts:AuditGateway.audit",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:api#OrderUpdate"
+      ],
       "returns": "void",
       "file": "src/orders/audit.gateway.ts",
       "line": 29
@@ -806,6 +1020,9 @@
       "to": "api#src/orders/audit.gateway.ts:AuditGateway.record",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:api#OrderUpdate"
+      ],
       "returns": "void",
       "file": "src/orders/audit.gateway.ts",
       "line": 16
@@ -815,6 +1032,9 @@
       "to": "api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:api#CancelOrder"
+      ],
       "returns": "void",
       "file": "src/orders/orders.gateway.ts",
       "line": 28
@@ -824,6 +1044,9 @@
       "to": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
       "returns": "type:api#OrderSummary",
       "file": "src/orders/orders.gateway.ts",
       "line": 40
@@ -833,6 +1056,9 @@
       "to": "api#src/orders/reports.gateway.ts:ReportsGateway.request",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:api#OrderSummary"
+      ],
       "returns": "void",
       "file": "src/orders/reports.gateway.ts",
       "line": 16
@@ -986,6 +1212,10 @@
       "to": "web#src/app/live-feed.service.ts:LiveFeedService.apply",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:web#OrderUpdate"
+      ],
+      "returns": "void",
       "file": "src/app/live-feed.service.ts",
       "line": 22
     },
@@ -1018,6 +1248,10 @@
       "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.show",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:web#OrderSummary"
+      ],
+      "returns": "void",
       "file": "src/app/orders-socket.service.ts",
       "line": 46
     },
@@ -1026,6 +1260,10 @@
       "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:web#OrderUpdate"
+      ],
+      "returns": "void",
       "file": "src/app/orders-socket.service.ts",
       "line": 31
     },
@@ -1034,6 +1272,8 @@
       "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.markOnline",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "void",
       "file": "src/app/orders-socket.service.ts",
       "line": 35
     },
@@ -1050,6 +1290,10 @@
       "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.cancel",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:web#CancelOrder"
+      ],
+      "returns": "void",
       "file": "src/app/orders.component.ts",
       "line": 21
     },
@@ -1058,6 +1302,10 @@
       "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/orders.component.ts",
       "line": 25
     }
@@ -1259,8 +1507,9 @@
       "file": "src/app/orders-socket.service.ts",
       "line": 51,
       "reason": "channel-dynamic",
+      "message": "OrdersSocketService.audit -> event",
       "hint": "The event name cannot be read here, so this end of the channel cannot be joined to the service that writes the other end. Annotate OrdersSocketService.audit with the channel it uses.",
-      "symbol": "OrdersSocketService.audit -> event",
+      "symbol": "producer:web#src/app/orders-socket.service.ts:51:5",
       "service": "web"
     }
   ]

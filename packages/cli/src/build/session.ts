@@ -6,10 +6,11 @@ import {
   globalFiles,
   importsOf,
   openRepo,
+  packageFiles,
   repoFiles,
   type WarmRepo,
 } from '@flowatlas/extractor-nestjs';
-import { createRegistry, EXTRA_PASSES } from './extractor.js';
+import { createRegistry, deployedRootsOf, EXTRA_PASSES } from './extractor.js';
 import { NESTJS_EXTRACTOR, typesReadBy } from '../readers.js';
 import type { IncrementalExtractor, PartialExtract } from './incremental.js';
 
@@ -31,6 +32,7 @@ interface WarmExtractor<Ctx> extends IncrementalExtractor<Ctx> {
   open(options: OpenOptions): Ctx;
   files(ctx: Ctx): string[];
   imports(ctx: Ctx): Record<string, string[]>;
+  packages(ctx: Ctx): string[];
 }
 
 const nestjs: WarmExtractor<WarmRepo> = {
@@ -43,9 +45,11 @@ const nestjs: WarmExtractor<WarmRepo> = {
       registry: createRegistry(),
       extraPasses: EXTRA_PASSES,
       logger: silentLogger,
+      deployed: deployedRootsOf(service, repoDir, config),
     }),
   files: repoFiles,
   imports: importsOf,
+  packages: packageFiles,
   extractFull: extractRepoFull,
   extractFiles: (repo, files) => extractRepoIncremental(repo, { files }),
   dependentsOf,
@@ -56,8 +60,12 @@ const nestjs: WarmExtractor<WarmRepo> = {
 export interface ServiceSession {
   readonly name: string;
   readonly repoDir: string;
+  /** What the repository's deployment is read with, for the files that reading loads. */
+  readonly reading: Pick<OpenOptions, 'config' | 'service'>;
   files(): string[];
   imports(): Record<string, string[]>;
+  /** Declaration files out of installed packages the open program read. */
+  packages(): string[];
   globalFiles(): string[];
   dependentsOf(files: readonly string[]): string[];
   extractFull(): Promise<RepoGraph>;
@@ -70,8 +78,10 @@ const sessionOf = <Ctx>(extractor: WarmExtractor<Ctx>, options: OpenOptions): Se
   return {
     name: options.service.name,
     repoDir: options.repoDir,
+    reading: { config: options.config, service: options.service },
     files: () => extractor.files(ctx),
     imports: () => extractor.imports(ctx),
+    packages: () => extractor.packages(ctx),
     globalFiles: () => extractor.globalFiles(ctx),
     dependentsOf: (files) => extractor.dependentsOf(ctx, files),
     extractFull: () => extractor.extractFull(ctx),

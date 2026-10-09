@@ -31,8 +31,11 @@ const nearest = (db: GraphDb, text: string, types: readonly string[]): string[] 
   return [];
 };
 
-/** `event:order.created`, `cron:nightly`: a kind, then the key it is registered under. */
-const KIND_REF = /^(event|cron|rpc):(.+)$/;
+/**
+ * `event:order.created`, `cron:nightly`, `workflow:loan-approval`: a kind, then
+ * the key it is registered under.
+ */
+const KIND_REF = /^(event|cron|rpc|workflow):(.+)$/;
 
 /**
  * Entries named by their kind and key rather than by a path.

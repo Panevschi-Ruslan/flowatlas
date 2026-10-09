@@ -1,0 +1,19 @@
+{
+  "services": [
+    { "name": "loans", "repo": ".", "type": "express" }
+  ],
+  "adapters": {
+    "db": {
+      "tables": [
+        { "name": "findOne", "package": "@acme/data-kit", "table": 0, "op": "read" },
+        { "name": "insert", "package": "@acme/data-kit", "table": 0, "op": "write" },
+        { "name": "remove", "package": "@acme/data-kit", "table": 0, "op": "delete" },
+        { "factory": "createClient", "clientType": "DataClient", "package": "@acme/data-kit", "name": "insert", "table": 0, "op": "write" },
+        { "factory": "createClient", "clientType": "DataClient", "package": "@acme/data-kit", "name": "remove", "table": 0, "op": "delete" },
+        { "name": "auditLog", "table": "audit_events", "op": "write" },
+        { "factory": "openLedger", "name": "record", "table": 0, "op": "write" }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

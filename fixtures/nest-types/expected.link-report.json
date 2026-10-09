@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T06:20:30.272Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:31.327Z",
   "configHash": "7b44b59bceba",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 32,
       "types": 24,
       "unresolved": 4,
-      "durationMs": 662
+      "durationMs": 619,
+      "packages": {
+        "name": "nest-types",
+        "runtime": [
+          "@fixture/contracts",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

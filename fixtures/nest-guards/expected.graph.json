@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-guards",
-  "generatedAt": "2026-09-27T09:26:39.310Z",
+  "generatedAt": "2026-10-07T14:34:11.064Z",
   "nodes": [
     {
       "id": "entry:nest-guards:http:GET:/admin/audit",
@@ -210,7 +210,13 @@
       "label": "AdminController.audit",
       "repo": "nest-guards",
       "file": "src/admin/admin.controller.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-guards#src/admin/admin.controller.ts:AdminController.handover",
@@ -218,7 +224,13 @@
       "label": "AdminController.handover",
       "repo": "nest-guards",
       "file": "src/admin/admin.controller.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-guards#src/admin/admin.controller.ts:AdminController.stats",
@@ -226,7 +238,13 @@
       "label": "AdminController.stats",
       "repo": "nest-guards",
       "file": "src/admin/admin.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-guards#src/app.module.ts:AppModule",
@@ -306,7 +324,22 @@
       "label": "MetricsInterceptor.intercept",
       "repo": "nest-guards",
       "file": "src/interceptors/metrics.interceptor.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            },
+            {
+              "name": "next",
+              "type": "type:@nestjs/common#CallHandler<any>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-guards#src/middleware/logger.middleware.ts:LoggerMiddleware",
@@ -335,7 +368,13 @@
       "label": "OrdersController.create",
       "repo": "nest-guards",
       "file": "src/orders/orders.controller.ts",
-      "line": 39
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-guards#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -343,7 +382,13 @@
       "label": "OrdersController.findAll",
       "repo": "nest-guards",
       "file": "src/orders/orders.controller.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-guards#src/orders/orders.controller.ts:OrdersController.health",
@@ -351,7 +396,13 @@
       "label": "OrdersController.health",
       "repo": "nest-guards",
       "file": "src/orders/orders.controller.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-guards#src/orders/orders.service.ts:OrdersService",
@@ -371,7 +422,13 @@
       "label": "OrdersService.create",
       "repo": "nest-guards",
       "file": "src/orders/orders.service.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-guards#src/orders/orders.service.ts:OrdersService.findAll",
@@ -379,7 +436,13 @@
       "label": "OrdersService.findAll",
       "repo": "nest-guards",
       "file": "src/orders/orders.service.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "repo:nest-guards",

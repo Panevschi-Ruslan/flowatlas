@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-audit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The audit trail of a lending library, kept from the events other teams hand on to its bus.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

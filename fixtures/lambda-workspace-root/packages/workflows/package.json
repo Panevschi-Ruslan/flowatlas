@@ -1,0 +1,11 @@
+{
+  "name": "@library/workflows",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Starts the library's workflows: one client for every function that starts one.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@aws-sdk/client-sfn": "^3.700.0"
+  }
+}

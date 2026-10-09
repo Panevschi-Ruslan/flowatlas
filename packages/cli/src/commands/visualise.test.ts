@@ -1,6 +1,7 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { runVisualise } from './visualise.js';
 
@@ -93,9 +94,117 @@ describe('writing the graph as a page', () => {
     expect(() => dataOf(page)).not.toThrow();
   });
 
+  it('writes the graph view’s logic into the page, so it is still one file', () => {
+    expect(page).not.toContain('__GRAPH_LOGIC__');
+    expect(page).toContain('export const neighbourhood');
+    expect(page).toContain('<script type="module">');
+  });
+
+  it('writes the frame’s logic in beside it: links, touch, pictures', () => {
+    expect(page).not.toContain('__FRAME_LOGIC__');
+    expect(page).toContain('export const parseHash');
+    expect(page).toContain('export const pinch');
+  });
+
+  it('writes the map’s logic in beside them, and ships the map it draws', () => {
+    expect(page).not.toContain('__MAP_LOGIC__');
+    expect(page).toContain('export const mapLayout');
+    expect(page).toContain('export const parseMapHash');
+    const { map } = dataOf(page);
+    expect(map.boxes.length).toBeGreaterThan(0);
+    expect(Array.isArray(map.links)).toBe(true);
+  });
+
+  it('names every node by a key of its own, the same key in the next build', () => {
+    const { nodes, keys } = dataOf(page);
+    const keyAt = (i: number): string =>
+      keys.longer[String(i)] ?? keys.all.slice(i * keys.width, (i + 1) * keys.width);
+    const all = nodes.map((_: unknown, i: number) => keyAt(i));
+    expect(new Set(all).size).toBe(nodes.length);
+    for (const key of all) expect(key).toMatch(/^[a-z][a-z0-9]{5,}$/);
+
+    const again = join(scratch, 'again.html');
+    runVisualise({ config: CONFIG, out: again, print: () => {} });
+    expect(dataOf(readFileSync(again, 'utf8')).keys).toEqual(keys);
+  });
+
+  it('writes a script the browser can parse', () => {
+    const opening = '<script type="module">';
+    const start = page.indexOf(opening) + opening.length;
+    const script = join(scratch, 'page-script.mjs');
+    writeFileSync(script, page.slice(start, page.indexOf('</script>', start)));
+    expect(() => execFileSync(process.execPath, ['--check', script], { stdio: 'pipe' })).not.toThrow();
+  });
+
+  it('carries every row, and the ones that name a node point at it', () => {
+    const { rows, nodes, dicts } = dataOf(page);
+    expect(rows.length).toBe(dataOf(page).unresolved.reduce((sum: number, u: { count: number }) => sum + u.count, 0));
+    const anchored = rows.filter((row: unknown[]) => (row[0] as number) >= 0);
+    expect(anchored.length).toBeGreaterThan(0);
+    for (const row of anchored) expect(nodes[row[0]]).toBeDefined();
+    expect(dicts.reasons.length).toBeGreaterThan(0);
+  });
+
+  it('names every metadata key it ships', () => {
+    const { nodes, dicts } = dataOf(page);
+    for (const node of nodes) {
+      for (const key of Object.keys(node[6] || {})) expect(dicts.meta[key]).toBeTypeOf('string');
+    }
+  });
+
+  it('writes next to the configuration when not told where', () => {
+    const result = runVisualise({ config: CONFIG, print: () => {} });
+    try {
+      expect(result.path).toBe(join(dirname(CONFIG), 'graph.html'));
+    } finally {
+      rmSync(result.path, { force: true });
+    }
+    expect(existsSync(result.path)).toBe(false);
+  });
+
+  it('keeps a label holding a replacement pattern as written', () => {
+    // `$'` and `$&` mean something to String.replace; a project is free to
+    // name a route with either.
+    const named = join(scratch, 'dollar.html');
+    runVisualise({ config: CONFIG, out: named, title: "Cost $' and $&", print: () => {} });
+    expect(readFileSync(named, 'utf8')).toContain("<title>Cost $' and $&</title>");
+  });
+
   it('refuses when there is no graph to draw, rather than writing an empty page', () => {
     expect(() =>
       runVisualise({ db: join(scratch, 'nothing.db'), out: join(scratch, 'x.html'), print: () => {} }),
     ).toThrow(/graph\.db not found|not found/);
+  });
+});
+
+describe('editor links', () => {
+  const FIXTURE = dirname(CONFIG);
+
+  it('are off by default, so no local path is written into the page', () => {
+    expect(dataOf(page).editor).toBeUndefined();
+    expect(page).not.toContain(FIXTURE);
+  });
+
+  it('carry each service’s absolute root and the editor when asked for', () => {
+    const path = join(scratch, 'editor.html');
+    runVisualise({ config: CONFIG, out: path, editorLinks: 'vscode', print: () => {} });
+    const { editor, dicts } = dataOf(readFileSync(path, 'utf8'));
+    expect(editor.name).toBe('vscode');
+    expect(editor.roots).toEqual(dicts.repos.map((name: string) => join(FIXTURE, name)));
+  });
+
+  it('refuses an editor it does not know, and a page with nowhere to point', () => {
+    expect(() =>
+      runVisualise({ config: CONFIG, out: join(scratch, 'e.html'), editorLinks: 'emacs', print: () => {} }),
+    ).toThrow(/--editor-links takes one of vscode, cursor, idea, file/);
+    expect(() =>
+      runVisualise({ db: join(scratch, 'nothing.db'), out: join(scratch, 'e.html'), editorLinks: 'file', print: () => {} }),
+    ).toThrow(/needs the configuration/);
+  });
+});
+
+describe('what the checking tools read', () => {
+  it('names the steps of a chain, so impact in the page lengthens the way the command does', () => {
+    expect(Array.isArray(dataOf(page).steps)).toBe(true);
   });
 });

@@ -1,0 +1,38 @@
+{
+  "services": [
+    { "name": "catalogue", "repo": ".", "type": "lambda" }
+  ],
+  "adapters": {
+    "infra": {
+      "modules": [
+        {
+          "source": "git::https://git.example.com/library-platform/terraform-api-route.git",
+          "resources": {
+            "aws_api_gateway_resource.this": {
+              "rest_api_id": "var.rest_api_id",
+              "parent_id": "var.parent_resource_id",
+              "path_part": "var.path_part"
+            },
+            "aws_api_gateway_method.this": {
+              "rest_api_id": "var.rest_api_id",
+              "resource_id": "aws_api_gateway_resource.this.id",
+              "http_method": "var.http_method",
+              "authorization": "\"AWS_IAM\""
+            },
+            "aws_api_gateway_integration.this": {
+              "rest_api_id": "var.rest_api_id",
+              "resource_id": "aws_api_gateway_resource.this.id",
+              "http_method": "var.http_method",
+              "type": "\"AWS_PROXY\"",
+              "uri": "var.lambda_invoke_arn"
+            }
+          },
+          "outputs": {
+            "resource_id": "aws_api_gateway_resource.this.id"
+          }
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

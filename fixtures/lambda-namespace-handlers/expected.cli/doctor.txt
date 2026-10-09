@@ -1,0 +1,17 @@
+unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
+  ways in: 13 found, 11 with a handler that was read, 2 without
+  function-handler-unread (info): 1 row
+    A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.
+      desk/infra/functions.tf:70  library-desk-archive-loan runs handlers/consumers.archiveLoan, and src/operations/archive.ts builds that export with batchHandler({ table: 'library-desk-loan-archive', batchSize: 25 }), which names no function of this repository
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 1 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 0 now, +0)
+  no baseline at <root>/fixtures/lambda-namespace-handlers/flowatlas.baseline.json; run flowatlas doctor --accept to write one

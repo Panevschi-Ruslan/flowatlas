@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T13:55:44.806Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:28:46.460Z",
   "services": [
     {
       "name": "worker",
@@ -168,7 +168,22 @@
       "label": "EventBus.pSubscribe",
       "repo": "worker",
       "file": "src/bus/event-bus.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/bus/event-bus.service.ts:EventBus.publish",
@@ -176,7 +191,22 @@
       "label": "EventBus.publish",
       "repo": "worker",
       "file": "src/bus/event-bus.service.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections",
@@ -198,6 +228,15 @@
       "file": "src/projections/lifecycle.service.ts",
       "line": 49,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:worker#LifecycleEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Consumes",
@@ -226,7 +265,13 @@
       "label": "LifecycleProjections.onModuleInit",
       "repo": "worker",
       "file": "src/projections/lifecycle.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.subscribeTo",
@@ -234,7 +279,18 @@
       "label": "LifecycleProjections.subscribeTo",
       "repo": "worker",
       "file": "src/projections/lifecycle.service.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "state",
+              "type": "type:worker#OrderState"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     }
   ],
   "edges": [
@@ -267,6 +323,10 @@
       "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/lifecycle.service.ts",
       "line": 38
     },

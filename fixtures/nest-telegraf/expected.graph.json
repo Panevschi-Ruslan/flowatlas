@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-telegraf",
-  "generatedAt": "2026-09-27T09:26:50.931Z",
+  "generatedAt": "2026-10-07T14:34:32.678Z",
   "nodes": [
     {
       "id": "entry:nest-telegraf:bot_callback:/^order_(\\d+)$/",
@@ -438,7 +438,13 @@
       "label": "AdminGuard.canActivate",
       "repo": "nest-telegraf",
       "file": "src/admin.guard.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/app.module.ts:AppModule",
@@ -481,7 +487,13 @@
       "label": "CheckoutScene.address",
       "repo": "nest-telegraf",
       "file": "src/checkout.scene.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/checkout.scene.ts:CheckoutScene.enter",
@@ -489,7 +501,13 @@
       "label": "CheckoutScene.enter",
       "repo": "nest-telegraf",
       "file": "src/checkout.scene.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/checkout.scene.ts:CheckoutScene.leave",
@@ -497,7 +515,13 @@
       "label": "CheckoutScene.leave",
       "repo": "nest-telegraf",
       "file": "src/checkout.scene.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/direct.bot.ts:DirectBot",
@@ -517,7 +541,18 @@
       "label": "DirectBot.list",
       "repo": "nest-telegraf",
       "file": "src/direct.bot.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/direct.bot.ts:DirectBot.page",
@@ -525,7 +560,18 @@
       "label": "DirectBot.page",
       "repo": "nest-telegraf",
       "file": "src/direct.bot.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/direct.bot.ts:DirectBot.setup",
@@ -533,7 +579,13 @@
       "label": "DirectBot.setup",
       "repo": "nest-telegraf",
       "file": "src/direct.bot.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/notifications.service.ts:NotificationsService",
@@ -553,7 +605,13 @@
       "label": "NotificationsService.onEnter",
       "repo": "nest-telegraf",
       "file": "src/notifications.service.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.service.ts:OrdersService",
@@ -573,7 +631,18 @@
       "label": "OrdersService.create",
       "repo": "nest-telegraf",
       "file": "src/orders.service.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "chatId",
+              "type": "number"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate",
@@ -593,7 +662,13 @@
       "label": "OrdersUpdate.anyButton",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 69
+      "line": 69,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.anyMessage",
@@ -601,7 +676,13 @@
       "label": "OrdersUpdate.anyMessage",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 74
+      "line": 74,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.byId",
@@ -609,7 +690,13 @@
       "label": "OrdersUpdate.byId",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 52
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.checkout",
@@ -619,6 +706,10 @@
       "file": "src/orders.update.ts",
       "line": 57,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        },
         "markers": [
           {
             "name": "FlowEntry",
@@ -635,7 +726,13 @@
       "label": "OrdersUpdate.confirm",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 46
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.depots",
@@ -643,7 +740,13 @@
       "label": "OrdersUpdate.depots",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.greet",
@@ -651,7 +754,13 @@
       "label": "OrdersUpdate.greet",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.help",
@@ -659,7 +768,13 @@
       "label": "OrdersUpdate.help",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.keyboardDepots",
@@ -667,7 +782,13 @@
       "label": "OrdersUpdate.keyboardDepots",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.list",
@@ -675,7 +796,13 @@
       "label": "OrdersUpdate.list",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.projectOrderCreated",
@@ -683,7 +810,13 @@
       "label": "OrdersUpdate.projectOrderCreated",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 80
+      "line": 80,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.retry",
@@ -691,7 +824,13 @@
       "label": "OrdersUpdate.retry",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 64
+      "line": 64,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.start",
@@ -699,7 +838,13 @@
       "label": "OrdersUpdate.start",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/payments.update.ts:PaymentsUpdate",
@@ -719,7 +864,13 @@
       "label": "PaymentsUpdate.cancel",
       "repo": "nest-telegraf",
       "file": "src/payments.update.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/register.wizard.ts:RegisterWizard",
@@ -739,7 +890,13 @@
       "label": "RegisterWizard.askName",
       "repo": "nest-telegraf",
       "file": "src/register.wizard.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/register.wizard.ts:RegisterWizard.askPhone",
@@ -747,7 +904,13 @@
       "label": "RegisterWizard.askPhone",
       "repo": "nest-telegraf",
       "file": "src/register.wizard.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-telegraf#src/register.wizard.ts:RegisterWizard.done",
@@ -755,7 +918,13 @@
       "label": "RegisterWizard.done",
       "repo": "nest-telegraf",
       "file": "src/register.wizard.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "repo:nest-telegraf",

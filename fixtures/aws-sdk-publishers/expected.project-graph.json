@@ -1,0 +1,1863 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T07:26:53.271Z",
+  "services": [
+    {
+      "name": "loans",
+      "repo": "./loans",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/default/library.holds/HoldPlaced",
+      "type": "channel",
+      "label": "eventbridge/default/library.holds/HoldPlaced",
+      "repo": "loans",
+      "file": "api/holds/hold-events.ts",
+      "line": 30,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:eventbridge/library-events/library.holds/HoldCancelled",
+      "type": "channel",
+      "label": "eventbridge/library-events/library.holds/HoldCancelled",
+      "repo": "loans",
+      "file": "api/holds/hold-events.ts",
+      "line": 35,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "library-events"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:eventbridge/library-events/library.holds/HoldQueued",
+      "type": "channel",
+      "label": "eventbridge/library-events/library.holds/HoldQueued",
+      "repo": "loans",
+      "file": "api/holds/hold-events.ts",
+      "line": 30,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:eventbridge/library-events/library.loans/LoanCreated",
+      "type": "channel",
+      "label": "eventbridge/library-events/library.loans/LoanCreated",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 19,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:eventbridge/library-events/library.loans/LoanRenewed",
+      "type": "channel",
+      "label": "eventbridge/library-events/library.loans/LoanRenewed",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 37,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:eventbridge/library-events/library.returns/ItemReturned",
+      "type": "channel",
+      "label": "eventbridge/library-events/library.returns/ItemReturned",
+      "repo": "loans",
+      "file": "api/returns/returns.routes.ts",
+      "line": 10,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "library-events"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sns/borrower-notifications",
+      "type": "channel",
+      "label": "sns/borrower-notifications",
+      "repo": "loans",
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 19,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/library-reminders",
+      "type": "channel",
+      "label": "sqs/library-reminders",
+      "repo": "loans",
+      "file": "functions/send-reminder/src/handler.ts",
+      "line": 16,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/library-returns",
+      "type": "channel",
+      "label": "sqs/library-returns",
+      "repo": "loans",
+      "file": "api/returns/returns-queue.ts",
+      "line": 22,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:loans#AUDIT_BUS_NAME",
+      "type": "config_key",
+      "label": "AUDIT_BUS_NAME",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 58,
+      "meta": {
+        "key": "AUDIT_BUS_NAME",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:loans#ESCALATIONS_TOPIC_ARN",
+      "type": "config_key",
+      "label": "ESCALATIONS_TOPIC_ARN",
+      "repo": "loans",
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 27,
+      "meta": {
+        "key": "ESCALATIONS_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:loans#OVERDUE_QUEUE_URL",
+      "type": "config_key",
+      "label": "OVERDUE_QUEUE_URL",
+      "repo": "loans",
+      "file": "api/returns/returns-queue.ts",
+      "line": 41,
+      "meta": {
+        "key": "OVERDUE_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/holds",
+      "type": "entry",
+      "label": "POST /holds",
+      "repo": "loans",
+      "file": "api/holds/holds.routes.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/holds",
+        "rawPath": "/holds",
+        "adapter": "express-routes",
+        "registration": "holdsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/holds/cancellations",
+      "type": "entry",
+      "label": "POST /holds/cancellations",
+      "repo": "loans",
+      "file": "api/holds/holds.routes.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/holds/cancellations",
+        "rawPath": "/holds/cancellations",
+        "adapter": "express-routes",
+        "registration": "holdsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "loans",
+      "file": "api/loans/loans.routes.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "adapter": "express-routes",
+        "registration": "loansRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/loans/:param/renewals",
+      "type": "entry",
+      "label": "POST /loans/:param/renewals",
+      "repo": "loans",
+      "file": "api/loans/loans.routes.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans/:param/renewals",
+        "rawPath": "/loans/:loanId/renewals",
+        "adapter": "express-routes",
+        "registration": "loansRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/returns",
+      "type": "entry",
+      "label": "POST /returns",
+      "repo": "loans",
+      "file": "api/returns/returns.routes.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns",
+        "rawPath": "/returns",
+        "adapter": "express-routes",
+        "registration": "returnsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/returns/batch",
+      "type": "entry",
+      "label": "POST /returns/batch",
+      "repo": "loans",
+      "file": "api/returns/returns.routes.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns/batch",
+        "rawPath": "/returns/batch",
+        "adapter": "express-routes",
+        "registration": "returnsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/returns/overdue",
+      "type": "entry",
+      "label": "POST /returns/overdue",
+      "repo": "loans",
+      "file": "api/returns/returns.routes.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns/overdue",
+        "rawPath": "/returns/overdue",
+        "adapter": "express-routes",
+        "registration": "returnsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "loans#api/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "loans",
+      "file": "api/app.ts",
+      "line": 12,
+      "kind": "function"
+    },
+    {
+      "id": "loans#api/events/library-events.ts:LibraryEventBus",
+      "type": "provider",
+      "label": "LibraryEventBus",
+      "repo": "loans",
+      "file": "api/events/library-events.ts",
+      "line": 16,
+      "kind": "injectable"
+    },
+    {
+      "id": "loans#api/events/library-events.ts:LibraryEventBus.put",
+      "type": "method",
+      "label": "LibraryEventBus.put",
+      "repo": "loans",
+      "file": "api/events/library-events.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:loans#LibraryEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/events/publish.ts:publishEvent",
+      "type": "function",
+      "label": "publishEvent",
+      "repo": "loans",
+      "file": "api/events/publish.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "command",
+              "type": "type:@aws-sdk/client-eventbridge#PutEventsCommand"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/holds/hold-events.ts:publishHoldCancelled",
+      "type": "function",
+      "label": "publishHoldCancelled",
+      "repo": "loans",
+      "file": "api/holds/hold-events.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "hold",
+              "type": "type:loans#Hold"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/holds/hold-events.ts:publishHoldPlaced",
+      "type": "function",
+      "label": "publishHoldPlaced",
+      "repo": "loans",
+      "file": "api/holds/hold-events.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "hold",
+              "type": "type:loans#Hold"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/holds/holds.routes.ts:cancelHold",
+      "type": "function",
+      "label": "cancelHold",
+      "repo": "loans",
+      "file": "api/holds/holds.routes.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#Hold>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "loans#api/holds/holds.routes.ts:placeHold",
+      "type": "function",
+      "label": "placeHold",
+      "repo": "loans",
+      "file": "api/holds/holds.routes.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#Hold>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "loans#api/loans/loan-events.ts:auditLoan",
+      "type": "function",
+      "label": "auditLoan",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 53,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:loans#Loan"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/loans/loan-events.ts:publishLoanCreated",
+      "type": "function",
+      "label": "publishLoanCreated",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:loans#Loan"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/loans/loan-events.ts:publishLoanRenewed",
+      "type": "function",
+      "label": "publishLoanRenewed",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "renewal",
+              "type": "type:loans#Renewal"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/loans/loans.routes.ts:createLoan",
+      "type": "function",
+      "label": "createLoan",
+      "repo": "loans",
+      "file": "api/loans/loans.routes.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#Loan>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "loans#api/loans/loans.routes.ts:renewLoan",
+      "type": "function",
+      "label": "renewLoan",
+      "repo": "loans",
+      "file": "api/loans/loans.routes.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<{loanId:string},unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "loans#api/returns/returns-queue.ts:queueOverdue",
+      "type": "function",
+      "label": "queueOverdue",
+      "repo": "loans",
+      "file": "api/returns/returns-queue.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:loans#ReturnedItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/returns/returns-queue.ts:queueReturn",
+      "type": "function",
+      "label": "queueReturn",
+      "repo": "loans",
+      "file": "api/returns/returns-queue.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:loans#ReturnedItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/returns/returns-queue.ts:queueReturns",
+      "type": "function",
+      "label": "queueReturns",
+      "repo": "loans",
+      "file": "api/returns/returns-queue.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "items",
+              "type": "type:loans#ReturnedItem[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#api/returns/returns.routes.ts:returnItem",
+      "type": "function",
+      "label": "returnItem",
+      "repo": "loans",
+      "file": "api/returns/returns.routes.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#ReturnedItem>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "loans#api/returns/returns.routes.ts:returnItems",
+      "type": "function",
+      "label": "returnItems",
+      "repo": "loans",
+      "file": "api/returns/returns.routes.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#ReturnedItem[]>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "loans#api/returns/returns.routes.ts:returnOverdue",
+      "type": "function",
+      "label": "returnOverdue",
+      "repo": "loans",
+      "file": "api/returns/returns.routes.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#ReturnedItem>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "loans#functions/notify-borrower/src/handler.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "loans",
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-borrower#LoanDue"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#functions/send-reminder/src/handler.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "loans",
+      "file": "functions/send-reminder/src/handler.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reminder",
+              "type": "type:send-reminder#Reminder"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:loans#api/events/library-events.ts:18:11",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "loans",
+      "file": "api/events/library-events.ts",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "unresolved",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:loans#api/events/publish.ts:11:9",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "loans",
+      "file": "api/events/publish.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "unresolved",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:loans#api/holds/hold-events.ts:30:9",
+      "type": "producer",
+      "label": "event eventbridge/default/library.holds/HoldPlaced, eventbridge/library-events/library.holds/HoldQueued",
+      "repo": "loans",
+      "file": "api/holds/hold-events.ts",
+      "line": 30,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:loans#api/holds/hold-events.ts:35:9",
+      "type": "producer",
+      "label": "event eventbridge/library-events/library.holds/HoldCancelled",
+      "repo": "loans",
+      "file": "api/holds/hold-events.ts",
+      "line": 35,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "library-events",
+        "channelVia": "literal",
+        "method": "publishEvent"
+      }
+    },
+    {
+      "id": "producer:loans#api/loans/loan-events.ts:19:9",
+      "type": "producer",
+      "label": "event eventbridge/library-events/library.loans/LoanCreated",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:loans#api/loans/loan-events.ts:37:9",
+      "type": "producer",
+      "label": "event eventbridge/library-events/library.loans/LoanRenewed",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 37,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "putEvents"
+      }
+    },
+    {
+      "id": "producer:loans#api/loans/loan-events.ts:54:9",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "loans",
+      "file": "api/loans/loan-events.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "unresolved",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "eventbridge",
+              {
+                "environment": "AUDIT_BUS_NAME",
+                "forms": [
+                  "^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$"
+                ]
+              },
+              "library.loans",
+              "LoanAudited"
+            ],
+            "payload": "{loanId:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:loans#api/returns/returns-queue.ts:22:9",
+      "type": "producer",
+      "label": "message sqs/library-returns",
+      "repo": "loans",
+      "file": "api/returns/returns-queue.ts",
+      "line": 22,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "const",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:loans#api/returns/returns-queue.ts:30:9",
+      "type": "producer",
+      "label": "message sqs/library-returns",
+      "repo": "loans",
+      "file": "api/returns/returns-queue.ts",
+      "line": 30,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "const",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:loans#api/returns/returns-queue.ts:40:9",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "loans",
+      "file": "api/returns/returns-queue.ts",
+      "line": 40,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "unresolved",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "OVERDUE_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "type:loans#ReturnedItem"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:loans#api/returns/returns.routes.ts:10:9",
+      "type": "producer",
+      "label": "event eventbridge/library-events/library.returns/ItemReturned",
+      "repo": "loans",
+      "file": "api/returns/returns.routes.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "library-events",
+        "channelVia": "literal",
+        "method": "put"
+      }
+    },
+    {
+      "id": "producer:loans#functions/notify-borrower/src/handler.ts:19:9",
+      "type": "producer",
+      "label": "message sns/borrower-notifications",
+      "repo": "loans",
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "const",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:loans#functions/notify-borrower/src/handler.ts:27:9",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "loans",
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 27,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "unresolved",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "ESCALATIONS_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "type:notify-borrower#LoanDue"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:loans#functions/send-reminder/src/handler.ts:16:9",
+      "type": "producer",
+      "label": "message sqs/library-reminders",
+      "repo": "loans",
+      "file": "functions/send-reminder/src/handler.ts",
+      "line": 16,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "literal",
+        "method": "sendMessage"
+      }
+    },
+    {
+      "id": "repo:loans",
+      "type": "repo",
+      "label": "loans",
+      "repo": "loans",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-eventbridge": 6,
+            "express": 13,
+            "@aws-sdk/client-sqs": 3
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:loans:http:POST:/holds",
+      "to": "loans#api/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "api/app.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/holds",
+      "to": "loans#api/holds/holds.routes.ts:placeHold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "api/holds/holds.routes.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#Hold"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/holds/cancellations",
+      "to": "loans#api/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "api/app.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/holds/cancellations",
+      "to": "loans#api/holds/holds.routes.ts:cancelHold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "api/holds/holds.routes.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#Hold"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/loans",
+      "to": "loans#api/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "api/app.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/loans",
+      "to": "loans#api/loans/loans.routes.ts:createLoan",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:loans#Loan",
+      "file": "api/loans/loans.routes.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#Loan"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/loans/:param/renewals",
+      "to": "loans#api/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "api/app.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/loans/:param/renewals",
+      "to": "loans#api/loans/loans.routes.ts:renewLoan",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{loanId:string;dueOn:string;renewals:number}",
+      "file": "api/loans/loans.routes.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true,
+        "params": "{loanId:string}"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/returns",
+      "to": "loans#api/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "api/app.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/returns",
+      "to": "loans#api/returns/returns.routes.ts:returnItem",
+      "type": "handles",
+      "confidence": "static",
+      "file": "api/returns/returns.routes.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#ReturnedItem"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/returns/batch",
+      "to": "loans#api/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "api/app.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/returns/batch",
+      "to": "loans#api/returns/returns.routes.ts:returnItems",
+      "type": "handles",
+      "confidence": "static",
+      "file": "api/returns/returns.routes.ts",
+      "line": 14,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#ReturnedItem[]"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/returns/overdue",
+      "to": "loans#api/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "api/app.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/returns/overdue",
+      "to": "loans#api/returns/returns.routes.ts:returnOverdue",
+      "type": "handles",
+      "confidence": "static",
+      "file": "api/returns/returns.routes.ts",
+      "line": 19,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#ReturnedItem"
+      }
+    },
+    {
+      "from": "loans#api/events/library-events.ts:LibraryEventBus.put",
+      "to": "producer:loans#api/events/library-events.ts:18:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "api/events/library-events.ts",
+      "line": 18
+    },
+    {
+      "from": "loans#api/events/publish.ts:publishEvent",
+      "to": "producer:loans#api/events/publish.ts:11:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "api/events/publish.ts",
+      "line": 11
+    },
+    {
+      "from": "loans#api/holds/hold-events.ts:publishHoldCancelled",
+      "to": "loans#api/events/publish.ts:publishEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:@aws-sdk/client-eventbridge#PutEventsCommand"
+      ],
+      "returns": "void",
+      "file": "api/holds/hold-events.ts",
+      "line": 35
+    },
+    {
+      "from": "loans#api/holds/hold-events.ts:publishHoldCancelled",
+      "to": "producer:loans#api/holds/hold-events.ts:35:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "api/holds/hold-events.ts",
+      "line": 35
+    },
+    {
+      "from": "loans#api/holds/hold-events.ts:publishHoldPlaced",
+      "to": "producer:loans#api/holds/hold-events.ts:30:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "api/holds/hold-events.ts",
+      "line": 30
+    },
+    {
+      "from": "loans#api/holds/holds.routes.ts:cancelHold",
+      "to": "loans#api/holds/hold-events.ts:publishHoldCancelled",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#Hold"
+      ],
+      "returns": "void",
+      "file": "api/holds/holds.routes.ts",
+      "line": 12
+    },
+    {
+      "from": "loans#api/holds/holds.routes.ts:placeHold",
+      "to": "loans#api/holds/hold-events.ts:publishHoldPlaced",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#Hold"
+      ],
+      "returns": "void",
+      "file": "api/holds/holds.routes.ts",
+      "line": 7
+    },
+    {
+      "from": "loans#api/loans/loan-events.ts:auditLoan",
+      "to": "config_key:loans#AUDIT_BUS_NAME",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "api/loans/loan-events.ts",
+      "line": 58
+    },
+    {
+      "from": "loans#api/loans/loan-events.ts:auditLoan",
+      "to": "producer:loans#api/loans/loan-events.ts:54:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "api/loans/loan-events.ts",
+      "line": 54
+    },
+    {
+      "from": "loans#api/loans/loan-events.ts:publishLoanCreated",
+      "to": "producer:loans#api/loans/loan-events.ts:19:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "api/loans/loan-events.ts",
+      "line": 19
+    },
+    {
+      "from": "loans#api/loans/loan-events.ts:publishLoanRenewed",
+      "to": "producer:loans#api/loans/loan-events.ts:37:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "api/loans/loan-events.ts",
+      "line": 37
+    },
+    {
+      "from": "loans#api/loans/loans.routes.ts:createLoan",
+      "to": "loans#api/loans/loan-events.ts:auditLoan",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#Loan"
+      ],
+      "returns": "void",
+      "file": "api/loans/loans.routes.ts",
+      "line": 9
+    },
+    {
+      "from": "loans#api/loans/loans.routes.ts:createLoan",
+      "to": "loans#api/loans/loan-events.ts:publishLoanCreated",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#Loan"
+      ],
+      "returns": "void",
+      "file": "api/loans/loans.routes.ts",
+      "line": 8
+    },
+    {
+      "from": "loans#api/loans/loans.routes.ts:renewLoan",
+      "to": "loans#api/loans/loan-events.ts:publishLoanRenewed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#Renewal"
+      ],
+      "returns": "void",
+      "file": "api/loans/loans.routes.ts",
+      "line": 15
+    },
+    {
+      "from": "loans#api/returns/returns-queue.ts:queueOverdue",
+      "to": "config_key:loans#OVERDUE_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "api/returns/returns-queue.ts",
+      "line": 41
+    },
+    {
+      "from": "loans#api/returns/returns-queue.ts:queueOverdue",
+      "to": "producer:loans#api/returns/returns-queue.ts:40:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "api/returns/returns-queue.ts",
+      "line": 40
+    },
+    {
+      "from": "loans#api/returns/returns-queue.ts:queueReturn",
+      "to": "producer:loans#api/returns/returns-queue.ts:22:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "api/returns/returns-queue.ts",
+      "line": 22
+    },
+    {
+      "from": "loans#api/returns/returns-queue.ts:queueReturns",
+      "to": "producer:loans#api/returns/returns-queue.ts:30:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "api/returns/returns-queue.ts",
+      "line": 30
+    },
+    {
+      "from": "loans#api/returns/returns.routes.ts:returnItem",
+      "to": "loans#api/events/library-events.ts:LibraryEventBus.put",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#LibraryEvent"
+      ],
+      "returns": "void",
+      "file": "api/returns/returns.routes.ts",
+      "line": 10
+    },
+    {
+      "from": "loans#api/returns/returns.routes.ts:returnItem",
+      "to": "loans#api/returns/returns-queue.ts:queueReturn",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
+      "returns": "void",
+      "file": "api/returns/returns.routes.ts",
+      "line": 9
+    },
+    {
+      "from": "loans#api/returns/returns.routes.ts:returnItem",
+      "to": "producer:loans#api/returns/returns.routes.ts:10:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "api/returns/returns.routes.ts",
+      "line": 10
+    },
+    {
+      "from": "loans#api/returns/returns.routes.ts:returnItems",
+      "to": "loans#api/returns/returns-queue.ts:queueReturns",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem[]"
+      ],
+      "returns": "void",
+      "file": "api/returns/returns.routes.ts",
+      "line": 15
+    },
+    {
+      "from": "loans#api/returns/returns.routes.ts:returnOverdue",
+      "to": "loans#api/returns/returns-queue.ts:queueOverdue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
+      "returns": "void",
+      "file": "api/returns/returns.routes.ts",
+      "line": 20
+    },
+    {
+      "from": "loans#functions/notify-borrower/src/handler.ts:handler",
+      "to": "config_key:loans#ESCALATIONS_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 27
+    },
+    {
+      "from": "loans#functions/notify-borrower/src/handler.ts:handler",
+      "to": "producer:loans#functions/notify-borrower/src/handler.ts:19:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 19
+    },
+    {
+      "from": "loans#functions/notify-borrower/src/handler.ts:handler",
+      "to": "producer:loans#functions/notify-borrower/src/handler.ts:27:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 27
+    },
+    {
+      "from": "loans#functions/send-reminder/src/handler.ts:handler",
+      "to": "producer:loans#functions/send-reminder/src/handler.ts:16:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "functions/send-reminder/src/handler.ts",
+      "line": 16
+    },
+    {
+      "from": "producer:loans#api/holds/hold-events.ts:30:9",
+      "to": "channel:eventbridge/default/library.holds/HoldPlaced",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:loans#Hold"
+      ],
+      "file": "api/holds/hold-events.ts",
+      "line": 30
+    },
+    {
+      "from": "producer:loans#api/holds/hold-events.ts:30:9",
+      "to": "channel:eventbridge/library-events/library.holds/HoldQueued",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{holdId:string;position:number}"
+      ],
+      "file": "api/holds/hold-events.ts",
+      "line": 30
+    },
+    {
+      "from": "producer:loans#api/holds/hold-events.ts:35:9",
+      "to": "channel:eventbridge/library-events/library.holds/HoldCancelled",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:loans#Hold"
+      ],
+      "file": "api/holds/hold-events.ts",
+      "line": 35
+    },
+    {
+      "from": "producer:loans#api/loans/loan-events.ts:19:9",
+      "to": "channel:eventbridge/library-events/library.loans/LoanCreated",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:loans#Loan"
+      ],
+      "file": "api/loans/loan-events.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:loans#api/loans/loan-events.ts:37:9",
+      "to": "channel:eventbridge/library-events/library.loans/LoanRenewed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:loans#Renewal"
+      ],
+      "file": "api/loans/loan-events.ts",
+      "line": 37
+    },
+    {
+      "from": "producer:loans#api/returns/returns-queue.ts:22:9",
+      "to": "channel:sqs/library-returns",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
+      "file": "api/returns/returns-queue.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:loans#api/returns/returns-queue.ts:30:9",
+      "to": "channel:sqs/library-returns",
+      "type": "emits",
+      "confidence": "static",
+      "file": "api/returns/returns-queue.ts",
+      "line": 30
+    },
+    {
+      "from": "producer:loans#api/returns/returns.routes.ts:10:9",
+      "to": "channel:eventbridge/library-events/library.returns/ItemReturned",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
+      "file": "api/returns/returns.routes.ts",
+      "line": 10
+    },
+    {
+      "from": "producer:loans#functions/notify-borrower/src/handler.ts:19:9",
+      "to": "channel:sns/borrower-notifications",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{borrowerId:string;dueOn:string}"
+      ],
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:loans#functions/send-reminder/src/handler.ts:16:9",
+      "to": "channel:sqs/library-reminders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:send-reminder#Reminder"
+      ],
+      "file": "functions/send-reminder/src/handler.ts",
+      "line": 16
+    }
+  ],
+  "types": {
+    "type:@aws-sdk/client-eventbridge#PutEventsCommand": {
+      "name": "PutEventsCommand",
+      "kind": "external",
+      "declaredIn": "@aws-sdk/client-eventbridge",
+      "structuralHash": "861b0205859ca627",
+      "meta": {
+        "declKind": "external",
+        "package": "@aws-sdk/client-eventbridge"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:loans#Hold>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:loans#Loan>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:loans#ReturnedItem>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:loans#ReturnedItem[]>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<{loanId:string},unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:loans#Hold": {
+      "name": "Hold",
+      "kind": "object",
+      "declaredIn": "loans#api/holds/hold-events.ts",
+      "structuralHash": "c73ca8d8475e90d5",
+      "fields": [
+        {
+          "name": "holdId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "position",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:loans#LibraryEvent": {
+      "name": "LibraryEvent",
+      "kind": "generic",
+      "declaredIn": "loans#api/events/library-events.ts",
+      "structuralHash": "380c0747999ddb8d",
+      "fields": [],
+      "typeParams": [
+        "T"
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:loans#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "loans#api/loans/loan-events.ts",
+      "structuralHash": "bd702c4c86fc3b76",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:loans#Renewal": {
+      "name": "Renewal",
+      "kind": "object",
+      "declaredIn": "loans#api/loans/loan-events.ts",
+      "structuralHash": "49070530ce462893",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "renewals",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:loans#ReturnedItem": {
+      "name": "ReturnedItem",
+      "kind": "object",
+      "declaredIn": "loans#api/returns/returns-queue.ts",
+      "structuralHash": "1661ac8cf487c9cb",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "returnedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "condition",
+          "type": "'damaged'|'good'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:notify-borrower#LoanDue": {
+      "name": "LoanDue",
+      "kind": "external",
+      "declaredIn": "notify-borrower",
+      "structuralHash": "0e887b2ed02239c7",
+      "meta": {
+        "declKind": "external",
+        "package": "notify-borrower"
+      }
+    },
+    "type:send-reminder#Reminder": {
+      "name": "Reminder",
+      "kind": "external",
+      "declaredIn": "send-reminder",
+      "structuralHash": "92884ab73d8c38c9",
+      "meta": {
+        "declKind": "external",
+        "package": "send-reminder"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "api/events/library-events.ts",
+      "line": 17,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "loans"
+    },
+    {
+      "file": "api/events/library-events.ts",
+      "line": 18,
+      "reason": "channel-dynamic",
+      "message": "LibraryEventBus.put -> event.init.type",
+      "hint": "The channel name cannot be read here. Annotate LibraryEventBus.put with the channel it uses.",
+      "symbol": "producer:loans#api/events/library-events.ts:18:11",
+      "service": "loans"
+    },
+    {
+      "file": "api/events/publish.ts",
+      "line": 11,
+      "reason": "channel-dynamic",
+      "message": "publishEvent -> command",
+      "hint": "The channel name cannot be read here. Annotate publishEvent with the channel it uses.",
+      "symbol": "producer:loans#api/events/publish.ts:11:9",
+      "service": "loans"
+    },
+    {
+      "file": "api/loans/loan-events.ts",
+      "line": 54,
+      "reason": "channel-from-environment",
+      "message": "auditLoan -> process.env.AUDIT_BUS_NAME",
+      "hint": "The channel is the value of the environment variable AUDIT_BUS_NAME, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
+      "symbol": "producer:loans#api/loans/loan-events.ts:54:9",
+      "meta": {
+        "variable": "AUDIT_BUS_NAME"
+      },
+      "service": "loans"
+    },
+    {
+      "file": "api/returns/returns-queue.ts",
+      "line": 30,
+      "reason": "payload-type-unknown",
+      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
+      "symbol": "sqs/library-returns",
+      "service": "loans"
+    },
+    {
+      "file": "api/returns/returns-queue.ts",
+      "line": 40,
+      "reason": "channel-from-environment",
+      "message": "queueOverdue -> process.env.OVERDUE_QUEUE_URL",
+      "hint": "The channel is the value of the environment variable OVERDUE_QUEUE_URL, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
+      "symbol": "producer:loans#api/returns/returns-queue.ts:40:9",
+      "meta": {
+        "variable": "OVERDUE_QUEUE_URL"
+      },
+      "service": "loans"
+    },
+    {
+      "file": "functions/notify-borrower/src/handler.ts",
+      "line": 27,
+      "reason": "channel-from-environment",
+      "message": "handler -> process.env.ESCALATIONS_TOPIC_ARN",
+      "hint": "The channel is the value of the environment variable ESCALATIONS_TOPIC_ARN, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
+      "symbol": "producer:loans#functions/notify-borrower/src/handler.ts:27:9",
+      "meta": {
+        "variable": "ESCALATIONS_TOPIC_ARN"
+      },
+      "service": "loans"
+    }
+  ]
+}

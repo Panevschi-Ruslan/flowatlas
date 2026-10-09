@@ -1,0 +1,363 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T09:13:30.075Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:36:12|hits|entry:orders-api:http:POST:/orders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "admin",
+        "typeId": "type:admin#NewOrder",
+        "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.place",
+        "writes": [
+          "total"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#CreateOrder",
+        "symbol": "orders-api#src/orders.routes.ts:POST /@11"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+            "to": "entry:orders-api:http:POST:/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:36:12|hits|entry:orders-api:http:POST:/orders",
+          "direction": "request",
+          "sender": {
+            "service": "admin",
+            "typeId": "type:admin#NewOrder",
+            "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.place",
+            "writes": [
+              "total"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders-api",
+            "typeId": "type:orders-api#CreateOrder",
+            "symbol": "orders-api#src/orders.routes.ts:POST /@11"
+          },
+          "typeId": "type:orders-api#CreateOrder",
+          "field": "customerId",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders-api requires `customerId: string`; sender admin does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:36:12|hits|entry:orders-api:http:POST:/orders",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#Order",
+        "symbol": "orders-api#src/orders.routes.ts:POST /@11"
+      },
+      "receiver": {
+        "service": "admin",
+        "typeId": "type:admin#OrderRow",
+        "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.place"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+            "to": "entry:orders-api:http:POST:/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:36:12|hits|entry:orders-api:http:POST:/orders",
+          "direction": "response",
+          "sender": {
+            "service": "orders-api",
+            "typeId": "type:orders-api#Order",
+            "symbol": "orders-api#src/orders.routes.ts:POST /@11"
+          },
+          "receiver": {
+            "service": "admin",
+            "typeId": "type:admin#OrderRow",
+            "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.place"
+          },
+          "typeId": "type:admin#OrderRow",
+          "field": "customerId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender orders-api sends `customerId: string`; receiver admin declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:41:12",
+        "to": "entry:orders-api:http:POST:/orders/import",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:41:12|hits|entry:orders-api:http:POST:/orders/import",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "admin",
+        "typeId": "type:admin#ImportBatch",
+        "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.importBatch",
+        "writes": [
+          "source"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#ImportedOrders",
+        "symbol": "orders-api#src/orders.routes.ts:POST /import@37",
+        "claimed": true
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:admin#src/app/admin-api.service.ts:41:12",
+            "to": "entry:orders-api:http:POST:/orders/import",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:41:12|hits|entry:orders-api:http:POST:/orders/import",
+          "direction": "request",
+          "sender": {
+            "service": "admin",
+            "typeId": "type:admin#ImportBatch",
+            "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.importBatch",
+            "writes": [
+              "source"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders-api",
+            "typeId": "type:orders-api#ImportedOrders",
+            "symbol": "orders-api#src/orders.routes.ts:POST /import@37",
+            "claimed": true
+          },
+          "typeId": "type:orders-api#ImportedOrders",
+          "field": "count",
+          "expected": "number",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders-api requires `count: number`; sender admin does not send it; orders-api's type here is a cast in its code, which nothing checks",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:51:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:51:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "type:catalog-api#Item",
+        "symbol": "catalog-api#src/server.ts:GET /items/:id@24"
+      },
+      "receiver": {
+        "service": "admin",
+        "typeId": "type:admin#CatalogItem",
+        "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.item"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:36:12|hits|entry:orders-api:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "admin",
+        "typeId": "type:admin#NewOrder",
+        "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.place",
+        "writes": [
+          "total"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#CreateOrder",
+        "symbol": "orders-api#src/orders.routes.ts:POST /@11"
+      },
+      "typeId": "type:orders-api#CreateOrder",
+      "field": "customerId",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders-api requires `customerId: string`; sender admin does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:36:12|hits|entry:orders-api:http:POST:/orders",
+      "direction": "response",
+      "sender": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#Order",
+        "symbol": "orders-api#src/orders.routes.ts:POST /@11"
+      },
+      "receiver": {
+        "service": "admin",
+        "typeId": "type:admin#OrderRow",
+        "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.place"
+      },
+      "typeId": "type:admin#OrderRow",
+      "field": "customerId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender orders-api sends `customerId: string`; receiver admin declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:41:12",
+        "to": "entry:orders-api:http:POST:/orders/import",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:41:12|hits|entry:orders-api:http:POST:/orders/import",
+      "direction": "request",
+      "sender": {
+        "service": "admin",
+        "typeId": "type:admin#ImportBatch",
+        "symbol": "admin#src/app/admin-api.service.ts:AdminApiService.importBatch",
+        "writes": [
+          "source"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#ImportedOrders",
+        "symbol": "orders-api#src/orders.routes.ts:POST /import@37",
+        "claimed": true
+      },
+      "typeId": "type:orders-api#ImportedOrders",
+      "field": "count",
+      "expected": "number",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders-api requires `count: number`; sender admin does not send it; orders-api's type here is a cast in its code, which nothing checks",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:41:12",
+        "to": "entry:orders-api:http:POST:/orders/import",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:41:12|hits|entry:orders-api:http:POST:/orders/import",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "admin#src/app/admin-api.service.ts:AdminApiService.importBatch declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:46:12",
+        "to": "entry:orders-api:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:46:12|hits|entry:orders-api:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/admin-api.service.ts:AdminApiService.orders declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:46:12",
+        "to": "entry:orders-api:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:46:12|hits|entry:orders-api:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders-api#src/orders.routes.ts:GET /@44 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/admin-api.service.ts:51:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:51:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/admin-api.service.ts:AdminApiService.item declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 4,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 3,
+    "unchecked": 4,
+    "errors": 1,
+    "warnings": 1,
+    "infos": 1,
+    "ignored": 0
+  }
+}

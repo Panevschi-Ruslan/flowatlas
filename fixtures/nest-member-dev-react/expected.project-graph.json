@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T08:35:54.925Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:29:29.891Z",
   "services": [
     {
       "name": "api",
@@ -16,7 +16,22 @@
       "label": "sendReceipt",
       "repo": "api",
       "file": "../../packages/mailer/src/index.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/app.module.ts:AppModule",
@@ -52,7 +67,18 @@
       "label": "OrdersController.place",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{id:string;email:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "config_key:api#MAIL_RELAY_URL",
@@ -142,6 +168,11 @@
       "to": "api#../../packages/mailer/src/index.ts:sendReceipt",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 9
     },

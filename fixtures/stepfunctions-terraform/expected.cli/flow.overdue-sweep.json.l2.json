@@ -1,0 +1,313 @@
+{
+  "entry": "entry:lending:workflow:lending-overdue-sweep",
+  "unresolvedOnPath": 0,
+  "root": {
+    "node": {
+      "id": "entry:lending:workflow:lending-overdue-sweep",
+      "type": "entry",
+      "label": "workflow lending-overdue-sweep",
+      "loc": "infra/workflows.tf:38",
+      "service": "lending",
+      "kind": "workflow",
+      "meta": {
+        "key": "lending-overdue-sweep",
+        "name": "lending-overdue-sweep",
+        "nameFrom": "deployment",
+        "startAt": "FindOverdueLoans",
+        "states": 3,
+        "queryLanguage": "JSONPath",
+        "comment": "Finds the loans past their return date and reminds each borrower.",
+        "reads": {
+          "": "{today:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "module.overdue_sweep.aws_sfn_state_machine.this",
+        "definitionFrom": "jsonencode",
+        "declaredIn": "infra/modules/workflow/main.tf:11"
+      }
+    },
+    "children": [
+      {
+        "node": {
+          "id": "lending#infra/workflows.tf:lending-overdue-sweep/FindOverdueLoans",
+          "type": "function",
+          "label": "FindOverdueLoans [Task dynamodb:scan]",
+          "loc": "infra/workflows.tf:42",
+          "service": "lending",
+          "kind": "state",
+          "meta": {
+            "workflow": "lending-overdue-sweep",
+            "stateType": "Task",
+            "task": {
+              "kind": "table",
+              "service": "dynamodb",
+              "action": "scan",
+              "pattern": "request-response",
+              "sdk": true,
+              "op": "read",
+              "tables": [
+                "lending-loans"
+              ]
+            },
+            "parameters": {
+              "TableName": "lending-loans",
+              "FilterExpression": "dueDate < :today",
+              "ExpressionAttributeValues": {
+                ":today": {
+                  "S.$": "$.today"
+                }
+              }
+            },
+            "resultPath": "$.overdue"
+          }
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "db_query:lending#infra/workflows.tf:42:7",
+              "type": "db_query",
+              "label": "read lending-loans",
+              "loc": "infra/workflows.tf:42",
+              "service": "lending",
+              "meta": {
+                "op": "read",
+                "table": "lending-loans",
+                "tables": [
+                  "lending-loans"
+                ],
+                "service": "dynamodb",
+                "action": "scan"
+              }
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "table:lending#lending-loans",
+                  "type": "table",
+                  "label": "lending-loans",
+                  "service": "lending"
+                },
+                "edge": {
+                  "type": "queries",
+                  "confidence": "static"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "node": {
+              "id": "lending#infra/workflows.tf:lending-overdue-sweep/RemindBorrowers",
+              "type": "function",
+              "label": "RemindBorrowers [Map]",
+              "loc": "infra/workflows.tf:55",
+              "service": "lending",
+              "kind": "state",
+              "meta": {
+                "workflow": "lending-overdue-sweep",
+                "stateType": "Map",
+                "end": true
+              }
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "lending#infra/workflows.tf:lending-overdue-sweep/SendReminder",
+                  "type": "function",
+                  "label": "SendReminder [Task function]",
+                  "loc": "infra/workflows.tf:62",
+                  "service": "lending",
+                  "kind": "state",
+                  "meta": {
+                    "workflow": "lending-overdue-sweep",
+                    "stateType": "Task",
+                    "scope": [
+                      "RemindBorrowers"
+                    ],
+                    "end": true,
+                    "task": {
+                      "kind": "function",
+                      "name": "lending-send-overdue-reminder"
+                    },
+                    "reaches": [
+                      "invoke:lending-send-overdue-reminder"
+                    ]
+                  }
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "entry:lending:invoke:lending-send-overdue-reminder",
+                      "type": "entry",
+                      "label": "lending-send-overdue-reminder",
+                      "loc": "infra/functions.tf:31",
+                      "service": "lending",
+                      "kind": "invoke",
+                      "meta": {
+                        "key": "lending-send-overdue-reminder",
+                        "deployedBy": "terraform",
+                        "name": "lending-send-overdue-reminder",
+                        "runtime": "nodejs20.x",
+                        "declaredAs": "aws_lambda_function.send_overdue_reminder",
+                        "handler": "send-overdue-reminder.handler",
+                        "sourceDirectory": "src/handlers",
+                        "handlerVia": "function",
+                        "environment": {},
+                        "reads": {
+                          "": "{borrowerId:string}"
+                        },
+                        "adapter": "aws-lambda"
+                      }
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "lending#src/handlers/send-overdue-reminder.ts:handler",
+                          "type": "function",
+                          "label": "handler",
+                          "loc": "src/handlers/send-overdue-reminder.ts:3",
+                          "service": "lending",
+                          "meta": {
+                            "signature": {
+                              "params": [
+                                {
+                                  "name": "event",
+                                  "type": "{borrowerId:string}"
+                                }
+                              ],
+                              "returns": "void"
+                            }
+                          }
+                        },
+                        "edge": {
+                          "type": "handles",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "lending#src/lib/notices.ts:composeNotice",
+                              "type": "function",
+                              "label": "composeNotice",
+                              "loc": "src/lib/notices.ts:8",
+                              "service": "lending",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "borrowerId",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "name": "kind",
+                                      "type": "'approved'|'fee-due'|'overdue'|'renewed'"
+                                    }
+                                  ],
+                                  "returns": "type:lending#Notice"
+                                }
+                              }
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static",
+                              "params": [
+                                "string",
+                                "'approved'|'fee-due'|'overdue'|'renewed'"
+                              ],
+                              "returns": "type:lending#Notice"
+                            },
+                            "children": []
+                          },
+                          {
+                            "node": {
+                              "id": "lending#src/lib/notices.ts:sendNotice",
+                              "type": "function",
+                              "label": "sendNotice",
+                              "loc": "src/lib/notices.ts:19",
+                              "service": "lending",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "notice",
+                                      "type": "type:lending#Notice"
+                                    }
+                                  ],
+                                  "returns": "void"
+                                }
+                              }
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static",
+                              "params": [
+                                "type:lending#Notice"
+                              ],
+                              "returns": "void"
+                            },
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "types": {
+    "type:lending#Notice": {
+      "id": "type:lending#Notice",
+      "name": "Notice",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/notices.ts",
+      "structuralHash": "932229d30f43675f",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  }
+}

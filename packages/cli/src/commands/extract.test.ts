@@ -968,8 +968,62 @@ describe('angular-basic', () => {
   const graph = (): RepoGraph => load('angular-basic');
 
   it('reads a repository the frontend adapter recognises, without being told to', () => {
-    expect(nodesOf(graph(), 'ui_component')).toHaveLength(6);
+    // Seven components and a directive (P40).
+    expect(nodesOf(graph(), 'ui_component')).toHaveLength(8);
     expect(nodesOf(graph(), 'ui_api_call')).toHaveLength(5);
+  });
+
+  it('says what a component is handed and what it emits, both spellings of each (P35)', () => {
+    const card = nodesOf(graph(), 'ui_component').find((node) => node.label === 'OrderCardComponent');
+    expect(card?.meta?.['signature']).toEqual({
+      params: [
+        { name: 'order', type: 'type:angular-basic#OrderDto' },
+        { name: 'dense', type: 'boolean', optional: true },
+        { name: 'currency', type: 'string', optional: true },
+      ],
+      returns: '{cancelled:string;opened:type:angular-basic#OrderDto}',
+    });
+  });
+
+  it('says what a directive is bound by and what a pipe transforms (P40)', () => {
+    const directive = nodesOf(graph(), 'ui_component').find((node) => node.label === 'HighlightDirective');
+    expect(directive?.meta?.['signature']).toEqual({
+      params: [
+        { name: 'appHighlight', type: 'string', optional: true },
+        { name: 'delay', type: 'number', optional: true },
+      ],
+      returns: '{highlighted:boolean}',
+    });
+    const pipe = nodesOf(graph(), 'provider').find((node) => node.label === 'OrderTotalPipe');
+    expect(pipe?.kind).toBe('pipe');
+    expect(pipe?.meta?.['signature']).toEqual({
+      params: [
+        { name: 'order', type: 'type:angular-basic#OrderDto' },
+        { name: 'currency', type: 'string', optional: true },
+      ],
+      returns: 'string',
+    });
+  });
+
+  it('says what a directive binds on its element, what it is exported as, and whether a pipe is pure (P45)', () => {
+    const directive = nodesOf(graph(), 'ui_component').find((node) => node.label === 'HighlightDirective');
+    expect(directive?.meta?.['exportAs']).toBe('highlight');
+    expect(directive?.meta?.['hostBindings']).toEqual([
+      'role=note',
+      '[attr.aria-live]=politeness',
+      '(focus)=onFocus()',
+      '[class.is-highlighted]=active',
+      '(mouseenter)=onEnter($event)',
+    ]);
+    // The methods those listeners call are nodes, named by the directive (P50).
+    const members = directive?.meta?.['hostMembers'] as string[];
+    expect(members).toEqual([
+      'angular-basic#src/app/highlight.directive.ts:HighlightDirective.onFocus',
+      'angular-basic#src/app/highlight.directive.ts:HighlightDirective.onEnter',
+    ]);
+    expect(members.map((id) => graph().nodes.find((node) => node.id === id)?.type)).toEqual(['method', 'method']);
+    const pipe = nodesOf(graph(), 'provider').find((node) => node.label === 'OrderTotalPipe');
+    expect(pipe?.meta?.['pure']).toBe(false);
   });
 
   it('tells a standalone component from one a module declares', () => {
@@ -983,6 +1037,8 @@ describe('angular-basic', () => {
       SettingsComponent: 'standalone',
       ReportsComponent: 'standalone',
       ProfileComponent: 'standalone',
+      OrderCardComponent: 'standalone',
+      HighlightDirective: 'directive',
     });
     const declared = nodesOf(graph(), 'ui_component').find(
       (node) => node.label === 'OrdersListComponent',

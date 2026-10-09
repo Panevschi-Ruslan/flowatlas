@@ -1,3 +1,4 @@
+::warning file=flowatlas.config.json,line=4,title=gateway%3A no way in::gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there.
 ::warning file=src/invoices/invoices.consumer.ts,line=18,title=billing%3A marker-consumes-shadowed::@Consumes("order.created") on InvoicesConsumer.onOrderCreated says what the code already says. Static reading finds this subscription on its own, so the annotation adds nothing. Remove it.
 ::error file=src/invoices/invoices.service.ts,line=18,title=billing%3A marker-consumes-without-consumer::@Consumes("order.refunded") on InvoicesService.onOrderRefunded, which nothing subscribes and nothing calls. Remove the annotation, or register the method as a handler. Nothing in the repository connects it to a message.
 ::error file=src/clients/orders.client.ts,line=38,title=gateway%3A marker-callsservice-route-missing::@CallsService points at DELETE /orders/:id/void, which orders does not serve. Did you mean POST /orders? Otherwise check orders's controllers.
@@ -15,6 +16,8 @@
 ::error file=src/clients/orders.client.ts,title=gateway → orders%3A missing_required::receiver orders requires `channel: string`; sender gateway does not send it
 ::error file=src/clients/orders.client.ts,title=gateway → orders%3A type_mismatch::sender gateway sends `type:gateway#CreateOrderDto` where receiver orders expects `string`
 ::error file=src/clients/orders.client.ts,title=gateway → orders%3A missing_required::receiver orders requires `channel: string`; sender gateway does not send it
+gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there.
+
 unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync=2 · contracts: errors=4 ignored=1 · exit=0
 
 unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, folded into 5
@@ -57,16 +60,16 @@ unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, f
       gateway src/clients/orders.client.ts:49  this.http.post(this.endpoint('restock'), { sku })
   marker-route-not-found: 1 row
     Check orders's controllers, or correct the annotation.
-      gateway src/clients/orders.client.ts:40  http_out:gateway#src/clients/orders.client.ts:40:12
+      gateway src/clients/orders.client.ts:40  @CallsService points at DELETE /orders/:id/void, which orders does not serve
   marker-service-unknown: 1 row
     Add warehouse to services[] in flowatlas.config.json, or correct the annotation.
-      gateway src/clients/orders.client.ts:49  http_out:gateway#src/clients/orders.client.ts:49:12
+      gateway src/clients/orders.client.ts:49  @CallsService names warehouse, which is not a configured service
   target-route-not-found: 1 row
     Route renamed? Check orders's controllers, or annotate the call with @CallsService.
-      gateway src/clients/orders.client.ts:58  http_out:gateway#src/clients/orders.client.ts:58:12
+      gateway src/clients/orders.client.ts:58  target service orders has no route DELETE /orders/:param/void
   unknown-base-url-env: 1 row
     Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.
-      gateway src/clients/orders.client.ts:66  http_out:gateway#src/clients/orders.client.ts:66:12
+      gateway src/clients/orders.client.ts:66  no service declares LEGACY_URL
   dynamic-http-url (info): 3 rows
     The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here.
       gateway src/clients/orders.client.ts:31  this.http.post<OrderDto>(this.endpoint('orders'), body)
@@ -104,8 +107,8 @@ contracts: 4 errors, 1 excused, 4 boundary directions nothing could be compared 
   missing_required  gateway → orders  request    channel       receiver orders requires `channel: string`; sender gateway does not send it
 
 baseline: ok (26 accepted, 26 now, +0)
-  accepted against graph schema 3, and this graph is 5; the counts are still comparable, but a schema change can move them on its own
 
 verdict:
+  gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there
   7 annotations the graph contradicts
   4 contract errors nothing excused

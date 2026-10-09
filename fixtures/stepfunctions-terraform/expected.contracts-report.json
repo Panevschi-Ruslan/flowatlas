@@ -1,0 +1,33 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:28:34.882Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:lending#statemachine/loan-approval.asl.json:80:5",
+        "to": "channel:sqs/lending-librarian-approvals",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/lending-librarian-approvals|emits|producer:lending#statemachine/loan-approval.asl.json:80:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/lending-librarian-approvals is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 1,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

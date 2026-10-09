@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-prisma-wrapper",
-  "generatedAt": "2026-09-27T09:26:46.925Z",
+  "generatedAt": "2026-10-07T14:34:27.272Z",
   "nodes": [
     {
       "id": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:17:12",
@@ -201,7 +201,13 @@
       "label": "OrdersController.create",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@prisma/client#Order"
+        }
+      }
     },
     {
       "id": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -209,7 +215,13 @@
       "label": "OrdersController.findAll",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@prisma/client#Order[]"
+        }
+      }
     },
     {
       "id": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.remove",
@@ -217,7 +229,13 @@
       "label": "OrdersController.remove",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.controller.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@prisma/client#Order"
+        }
+      }
     },
     {
       "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService",
@@ -237,7 +255,18 @@
       "label": "OrdersService.create",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:@prisma/client#Order"
+        }
+      }
     },
     {
       "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.findAll",
@@ -245,7 +274,13 @@
       "label": "OrdersService.findAll",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@prisma/client#Order[]"
+        }
+      }
     },
     {
       "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.findOne",
@@ -253,7 +288,18 @@
       "label": "OrdersService.findOne",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:@prisma/client#Order"
+        }
+      }
     },
     {
       "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.remove",
@@ -261,7 +307,18 @@
       "label": "OrdersService.remove",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:@prisma/client#Order"
+        }
+      }
     },
     {
       "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.report",
@@ -269,7 +326,13 @@
       "label": "OrdersService.report",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@prisma/client#Order[]"
+        }
+      }
     },
     {
       "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.touchUser",
@@ -277,7 +340,18 @@
       "label": "OrdersService.touchUser",
       "repo": "nest-prisma-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 38
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "repo:nest-prisma-wrapper",

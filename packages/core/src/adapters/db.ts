@@ -46,8 +46,11 @@ export interface DbAdapter {
   descriptor: DbDescriptor;
 }
 
-/** Where a table name was found. */
-export type DbSource = 'type-arg' | 'receiver-prop' | 'sql-parse' | 'string-arg' | 'none';
+/**
+ * Where a table name was found. `configured`: at a call to a function the
+ * configuration names under `adapters.db.tables` (P37).
+ */
+export type DbSource = 'type-arg' | 'receiver-prop' | 'sql-parse' | 'string-arg' | 'configured' | 'none';
 
 export interface DbClassification {
   /**

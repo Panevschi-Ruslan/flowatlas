@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-reading-room",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A lending library's reading room: borrowers ask a librarian over a WebSocket API, answered by Lambda functions.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

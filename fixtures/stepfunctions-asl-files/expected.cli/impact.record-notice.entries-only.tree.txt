@@ -1,0 +1,4 @@
+-> RecordNotice [Task dynamodb:putItem]     notifications/workflows/borrower-notifications.asl.yaml:30
+  => circulation @  workflow loan-approval  circulation/statemachine/loan-approval.asl.json:1
+  @  workflow borrower-notifications        notifications/workflows/borrower-notifications.asl.yaml:1
+Reachable from: 2 workflows (circulation, notifications)

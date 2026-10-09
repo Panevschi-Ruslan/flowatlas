@@ -6,7 +6,13 @@ import {
   isFunctionHandler,
   isInlineHandler,
   makeSymbolId,
+  extendReading,
+  readRequest,
+  routeOf,
+  routeShapeEdge,
+  recordStatedSignatures,
   type EntryHandler,
+  type EntryNode,
 } from '@flowatlas/core';
 import type { CallExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -50,6 +56,22 @@ const resolveHandler = (
   }
   if (!isFunctionHandler(handler)) return undefined;
   return ctx.functions.byId(makeSymbolId(ctx.repo, handler.file, handler.functionName));
+};
+
+/**
+ * What a route's handler reads from its request and answers it with, where the
+ * adapter described where its framework puts them (P29). The same reading the
+ * server half does, so a route read by both halves carries one shape.
+ */
+const requestOf = (
+  ctx: ReactExtractContext,
+  entry: EntryNode,
+  handler: IndexedFunction,
+): ReturnType<typeof routeShapeEdge> | undefined => {
+  if (entry.request === undefined) return undefined;
+  const reading = extendReading(entry.request, ctx.config.adapters.entry.request);
+  const shape = readRequest(handler.fn.declaration, reading, (type, site) => ctx.types.collectType(type, site), routeOf(entry));
+  return shape === undefined ? undefined : routeShapeEdge(shape);
 };
 
 /** Every call to a function of this repository, found by name. */
@@ -125,6 +147,8 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
       if (entry.wrapping !== undefined) {
         addEntryWrapping(ctx.builder, ctx.repo, entry.id, entry.wrapping);
       }
+      // A way in that is not a function says what it takes where it is declared (P35).
+      if (entry.signature !== undefined) recordStatedSignatures(ctx.builder, ctx.types, [[entry.id, entry.signature]]);
 
       const handler = resolveHandler(ctx, entry.handler);
       if (handler !== undefined) {
@@ -136,6 +160,7 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
           confidence: 'static',
           file: handler.file,
           line: handler.line,
+          ...requestOf(ctx, entry, handler),
         });
       }
 

@@ -16,12 +16,14 @@ import {
   receiverIsFrom,
   replyAt,
   resolveChannelName,
+  rowAbout,
   shapeChannelNames,
   socketio,
   targetOfHandler,
   unreadableEndpointRow,
   type ChannelResolution,
   type EndpointShaping,
+  type RowSite,
 } from '@flowatlas/adapters-broker';
 import type { CallExpression, ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -83,15 +85,15 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
     resolution: ChannelResolution,
     file: string,
     line: number,
-    symbol: string,
+    site: RowSite,
   ): void => {
     if (isResolved(resolution)) return;
     ctx.report({
       file,
       line,
       reason: resolution.unresolved,
-      hint: `The event name cannot be read here, so this end of the channel cannot be joined to the service that writes the other end. Annotate ${symbol} with the channel it uses.`,
-      symbol: `${symbol} -> ${resolution.text.slice(0, 60)}`,
+      hint: `The event name cannot be read here, so this end of the channel cannot be joined to the service that writes the other end. Annotate ${site.named} with the channel it uses.`,
+      ...rowAbout(site, resolution.text),
     });
   };
 
@@ -113,10 +115,10 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
     shaping: EndpointShaping,
     file: string,
     line: number,
-    symbol: string,
+    site: RowSite,
   ): void => {
-    if (isUnreadable(shaping)) ctx.report(unreadableEndpointRow(shaping, SPEC, file, line, symbol));
-    else reportChannel(resolution, file, line, symbol);
+    if (isUnreadable(shaping)) ctx.report(unreadableEndpointRow(shaping, SPEC, file, line, site));
+    else reportChannel(resolution, file, line, site);
   };
 
   const lineColOf = (node: TsNode): { line: number; column: number } =>
@@ -193,7 +195,7 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
     });
 
     if (names.length === 0) {
-      reportUnjoined(resolution, shaping, file, line, symbol);
+      reportUnjoined(resolution, shaping, file, line, { named: symbol, node: producerId });
       return;
     }
     for (const name of names) {
@@ -272,7 +274,7 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
     });
 
     if (names.length === 0) {
-      reportUnjoined(resolution, shaping, file, line, symbol);
+      reportUnjoined(resolution, shaping, file, line, { named: symbol });
       return;
     }
     for (const name of names) {

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:27:35.785Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T14:35:11.115Z",
   "services": [
     {
       "name": "api",
@@ -25,7 +25,18 @@
       "label": "StockLevelRepository.available",
       "repo": "api",
       "file": "../packages/stock/src/repositories/stock-level.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "api#../packages/stock/src/services/stock.ts:StockService",
@@ -42,7 +53,18 @@
       "label": "StockService.available",
       "repo": "api",
       "file": "../packages/stock/src/services/stock.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "api#src/app.module.ts:AppModule",
@@ -78,7 +100,18 @@
       "label": "StockController.available",
       "repo": "api",
       "file": "src/stock/stock.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "db_query:api#../packages/stock/src/repositories/stock-level.ts:7:26",

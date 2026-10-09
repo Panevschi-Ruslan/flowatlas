@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-desk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The circulation desk of a lending library, as Lambda functions each wrapped by a tracing helper it calls by another name.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

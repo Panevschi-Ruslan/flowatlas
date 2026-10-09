@@ -83,19 +83,52 @@ as `apps/web` is, it finds nothing.
 | `--out <file>` | `./flowatlas.config.json` | where to write the configuration |
 | `-y, --yes` | off | accept every suggestion without asking. Required when the terminal is not interactive |
 | `--force` | off | overwrite an existing configuration |
+| `--list-unknown` | off | name every repository nothing reads, however many there are |
 | `--no-mcp` | off | skip registering the graph server |
+
+Each `repo` is written relative to the configuration, so the project still loads
+from another checkout — unless getting there climbs all the way to the root of
+the file system, which is what a configuration written far from its repositories
+does (`--out` in one tree, `--dir` in another). That one is written absolute,
+rather than as `../../../../../../../Users/…`. `link` writes paths the same way.
+
+**Many repositories nothing reads are counted, not listed.** Up to five are named
+as below. Past that, `init` lists the services it will read, then counts the
+rest: how many were recognised as a stack there is no reader for, by stack, and
+how many it could not type at all, with what those have in common — how many
+declare no dependency, are libraries, declare a workspace with no application in
+it, or have no `tsconfig.json`, and the dependencies they declare most. Each is
+still in the configuration, as `unknown`; `--list-unknown` names every one.
+
+```
+Wrote /work/flowatlas/flowatlas.config.json with 103 service(s):
+  api  ../api  nestjs
+  web  ../web  angular
+  and 101 that nothing here reads:
+No reader yet for 13 repositories: Vue (9), the Serverless Framework (4).
+flowatlas reads repositories of type nestjs and … and react today.
+Those repositories stay in the configuration and contribute nothing to the graph.
+Could not tell the type of 88 repositories. Of those:
+  88 have no tsconfig.json, so may hold no TypeScript at all
+  61 declare no dependency at all
+  the dependencies they declare most: lodash (22), axios (19), dayjs (12)
+Detection is only a suggestion. Set the type by hand if you know it.
+Run init again with --list-unknown to name every one; each is in the configuration with its type.
+```
 
 The type of a repository is read from its manifest: `@nestjs/core` makes it
 `nestjs`, `@medusajs/framework` or `@medusajs/medusa` makes it `medusa`, `next`
-makes it `nextjs`, `express`, `fastify` and `koa` make it each of those,
+makes it `nextjs`, `@sveltejs/kit` makes it `sveltekit`, `@remix-run/node` or
+`@remix-run/react` makes it `remix`, `@react-router/dev` makes it `react-router`,
+`express`, `fastify` and `koa` make it each of those,
 `@angular/core` makes it `angular`, `react` makes it `react`, and anything else is
-written as `unknown`. Those eight are every type there is. Hono and Telegraf have
+written as `unknown`. Those eleven are every type there is. Hono and Telegraf have
 no type of their own: they are frameworks the server reader finds inside a
 repository whichever server type it is given, so a repository whose only
 framework is Hono is
 given any of the server types — `express` will do — and its routes are read. Where
-the manifest names a framework there is no reader for — Nuxt, Remix, Vue or
-Svelte — `init` says so by name, and `build` repeats it on that repository's line:
+the manifest names a framework there is no reader for — Nuxt, Vue or Svelte
+without SvelteKit — `init` says so by name, and `build` repeats it on that repository's line:
 
 ```
 web            skipped (no-extractor: Nuxt, no reader yet)
@@ -161,6 +194,13 @@ are read too, each held by a fixture:
   (`fixtures/express-wrapped-handler`). A factory handed a function, or a wrapper
   handed a list, keeps no handler and says so, because it cannot be told from one
   more wrapper;
+- a handler handed to a wrapper after a name or options, or before options —
+  `withSpan('getLoan', getLoan)`, `traced({ name: 'createLoan' }, async (req, res)
+  => …)`, `instrument(returnLoan, { segment: 'returns' })` — inline or through a
+  `const`, which lands on the handler like any other wrapper
+  (`fixtures/express-traced-handlers`). The rule for what a wrapper is, is the
+  one the Lambda reader follows a handler by too; see
+  [Functions and routes declared in Terraform](#functions-and-routes-declared-in-terraform);
 - an application in a repository whose dependencies are not installed, where the
   framework's types resolve to nothing. The source still says what the value is —
   `import express from 'express'` and `const app = express()` — so the
@@ -178,9 +218,50 @@ repository with fewer routes.
 rather than an argument of a call, what differs between one router and another
 is the root directory, which file names declare a route, the prefix in front,
 and which segment spellings are honoured. Next.js (the app router, the pages
-router and its API routes) and Medusa are rows of that description, read by one
-walk, so the two cannot drift on what counts as a verb read or a file served at
-no address (`fixtures/react-next`, `fixtures/medusa-fs-router`). A file-system
+router and its API routes), Medusa, SvelteKit and Remix are rows of that
+description, read by one walk, so they cannot drift on what counts as a verb read
+or a file served at no address (`fixtures/react-next`, `fixtures/medusa-fs-router`).
+SvelteKit's `src/routes/**/+server.ts` exports its verbs by name; a group in
+brackets drops out, `[id]` and `[[id]]` are params (a matcher after `=` is no part
+of the name), so is a segment holding one (`foo-[id]`, keyed `/foo-:param` with
+`rawPath` `/foo-:id`, a route apart from `bar-[id]` and more specific than a bare
+`[id]`, joined only to a request segment with that text around a value:
+`/foo-42`, not `/bar`), `[x+2e]` and `[u+00e9]` are the characters they escape
+(`?`, `:` and `/` kept encoded as `%3F`, `%3A`, `%2F`; an escape past the last
+code point is literal text), and `[...rest]` is the rest of the path. A request
+that leaves an optional segment out (`/files/a.txt` for `[[lang]]/files/…`) is
+joined to the route as well. Beside a page, `+page.server.ts` answers the page's
+GET by its `load`; where a `+server.ts` beside it exports GET too, that verb keeps
+the address and the page's load is its own entry (key suffix `#page`,
+`meta.contributes: "page"`) that no request is joined to. A `+layout.server.ts`
+load runs with every page beneath it and is no address's GET: it is an entry of
+its own (key suffix `#layout:<file>`, `meta.contributes: "layout"`). Two route
+files claiming one verb and address otherwise keep the first and say the second
+in a `route-claimed-twice` row. Each member of a page's `actions` is a POST to it - the `default` one at the
+page's address, a named one at `?/name` after it (an entry keyed
+`POST:/orders/:param?/note`, its `meta.action` the name); an action written as a
+method has nothing to point at and is a `route-handler-unread` row
+(`fixtures/sveltekit-server-routes`). What a `load` or an action returns is its
+answer (the page's data, typed as written), and a layout at the root keeps
+`rawPath` `/` like every other route. Remix's flat routes are one name per route,
+its segments separated by dots - `app/routes/api.orders.$id.ts`, or a folder of
+that name holding `route.ts` - where a leading underscore is a layout that adds no
+segment (a trailing one only leaves the parent's layout, and what is left is
+read as usual: `users.$userId_.edit` is `/users/:userId/edit`), `$id` a param,
+`$` the rest of the path, `(en)` an optional literal segment and a dot in
+brackets a literal one, whole (`[sitemap.xml]`) or in part (`sitemap[.]xml`); a `loader` answers GET and an `action` POST - or, where the action compares
+`request.method` to string literals (`=== 'DELETE'`, `case 'PUT':`), the verbs it
+names - and a route module with neither is a page and says nothing
+(`fixtures/remix-flat-routes`). React Router v7 declares its routes in
+`app/routes.ts` instead: the default export's `route(path, file, children)`,
+`index(file)`, `layout(file, children)` and `...prefix(path, children)` are read
+into each module's address, its params named as configured (`rawPath`), and each
+module is read the way a Remix route module is (`fixtures/react-router-config`).
+`flatRoutes()` from `@react-router/fs-routes` - the whole export, spread into a
+list or handed to `prefix` / `layout` - reads the directory it names (`routes`
+unless `rootDirectory` says otherwise) by Remix's flat convention, under the
+address it sits at; a module the config names that is not in the project is a
+`route-module-not-found` row at the line naming it. A file-system
 router nobody has described — `@fastify/autoload`, or a convention of the
 repository's own — is not guessed at: the reader says, at `info`, that it cannot
 tell such a repository from a library that merely depends on the framework
@@ -217,10 +298,40 @@ Writes three files to the output directory, `.flowatlas` by default:
 `link-report.json` says what joined and what did not, `graph.db` is the same
 graph as SQLite and is what every query reads.
 
+Everything else it keeps is in the same directory, and nothing is written into
+the repositories it reads:
+
+```
+<output>/
+  project-graph.json   the whole graph
+  link-report.json     what joined and what did not
+  graph.db             the same graph as SQLite
+  cache.json           the file hashes the next build compares against
+  services/<name>/
+    graph.json         one service's own graph, reused when it has not changed
+    cache.json         that service's file hashes, whichever reader read it
+```
+
+`<name>` is the service's name, written so it is always one directory: lower-case
+letters, digits, `-`, `_` and an inner `.` are kept, and anything else, an
+upper-case letter included, is written as `%` and its code, so `@shop/Orders`
+is `services/%40shop%2F%4Frders/`. Two services never share a directory, even on
+a disk that ignores case. A service renamed or removed from the configuration
+has its directory removed by the next build, when nothing but the build's own
+files are in it.
+
+An earlier version wrote each service's graph and file hashes into
+`<repo>/.flowatlas/`. Where it finds those, `build` names them once, as safe to
+delete, and leaves them where they are; `--json` carries the same sentence in
+`notes`. A `.flowatlas` that is the configured output itself, which it is when
+the configuration sits at the root of the one repository it reads, is not
+named. Upgrading reads every repository once, with `cache-invalid:version`, and
+the build after that is incremental again.
+
 | Flag | Default | Does |
 |---|---|---|
 | `--config <path>` | found upward | which project to build |
-| `--out <dir>` | the configured `output` | where the three files go |
+| `--out <dir>` | the configured `output` | where everything above goes, `services/` included |
 | `--concurrency <n>` | processors minus one | how many repositories to read at once |
 | `--service <name>` | every service | read only this one and take the rest from the cache. Repeatable |
 | `--no-cache` | off | ignore the recorded file hashes and read everything again |
@@ -228,7 +339,7 @@ graph as SQLite and is what every query reads.
 | `--timing` | off | print how long each phase took, as JSON |
 | `--skip-frontend` | off | leave out the services a frontend extractor reads |
 | `--heap <megabytes>` | a share of the machine | heap limit for each repository read |
-| `--json` | off | print the report as JSON instead of a summary |
+| `--json` | off | print the report as JSON instead of a summary, with `notes` added when the summary would have said something beside it |
 
 A hash is recorded per source file, so a second build of unchanged sources reads
 nothing and still writes every output. Whether each repository's dependencies are
@@ -266,7 +377,9 @@ imports the checker could not resolve: gateway (12) — check their tsconfig pat
 - **`ways in`** counts entry points found apart from entry points whose handler
   was read, because only the second is coverage of what happens after a request
   arrives. It is the same count `doctor` refuses a service on
-  (`fixtures/next-hollow`).
+  (`fixtures/next-hollow`). A route a platform puts straight onto a queue, a
+  topic or a bus has no handler by design: its work is the message it sends,
+  and it counts as read when that message was.
 - **`contributed no node`** names a service a reader opened and put nothing into
   the graph from, with why. It looks like success otherwise.
 - **`found at arm's length`** names a framework a service has only through a
@@ -303,12 +416,22 @@ because its devDependencies are its own build and tests, and a member's in
 member's devDependencies are never installed for whoever depends on it
 (`fixtures/nest-dev-sibling`). Each package is compiled with its own `paths`, so
 an alias only that package's `tsconfig.json` defines resolves inside it
-(`fixtures/workspace-package-paths`).
+(`fixtures/workspace-package-paths`). A service that is itself the root of a
+workspace — functions in its own `src/`, the client they share in
+`packages/workflows` — takes in the members of its own workspace it declares,
+wherever they sit: a member inside the service's directory is read even though
+the service's own code is read from `src/` only, and a member it does not
+declare is not (`fixtures/lambda-workspace-root`). A workspace root that
+declares none of its members is read as it always was.
 
 ### `flowatlas extract <repo>`
 
 Reads one repository on its own, without joining. Useful for looking at what a
-single service produces, and for a build that wants to parallelise itself.
+single service produces, and for a repository's own CI that wants its graph as a
+file. `build` runs it once per service with `--out` set to that service's
+directory under the build's output, which is the only reason `build` ever
+writes a `graph.json`; run on its own, `extract` writes to `--out`, which is
+`.flowatlas` in the repository unless you say otherwise.
 
 | Flag | Default | Does |
 |---|---|---|
@@ -321,6 +444,27 @@ single service produces, and for a build that wants to parallelise itself.
 | `--types-depth <n>` | from the configuration | how deep an anonymous shape is written out |
 | `--json` | off | print the summary as JSON |
 | `-v, --verbose` | off | log each pass |
+
+**Which files are read.** A service's own code is found under its source roots,
+and `build` and `extract` ask one function for them, so the files a reading opens
+and the files the build cache stamps cannot differ. The roots are, in order:
+
+1. the directories the tsconfig's `include` and `files` name — a pattern stands
+   for the directory before its first wildcard, and a file for the directory it
+   is in, because the compiler follows imports from it. A relative `extends` is
+   followed when the tsconfig itself names neither;
+2. when it names nothing, `src` where there is one, and the whole repository
+   where there is not — the whole repository always for `react`, whose screens
+   live wherever its framework's convention puts them;
+3. beside either, for a server whose deployment is read, every directory the
+   deployment packages functions from, mapped back from compiled output by the
+   tsconfig that wrote it.
+
+A root outside the repository, under `node_modules`, `dist` or `build`, or hidden,
+is left out; a root named like a test is left out and reported as a test
+directory is. `fixtures/lambda-functions-beside-src` keeps its handlers in
+`functions/` beside `src/`, with a tsconfig that names `src` only: the deployment
+names `functions`, so both are read.
 
 ---
 
@@ -338,7 +482,7 @@ the whole graph has no walk to bound, so it is not offered `--depth`.
 |---|---|---|
 | `--detail <0-3>` | `1` | 0 identity only, 1 adds location, 2 adds metadata, 3 is answered at 2 |
 | `--format <name>` | `tree` on a terminal, `json` in a pipe | one of `tree`, `json`, `mermaid` |
-| `--depth <n>` | `8` for `flow`, `3` for `impact` | how many hops to follow |
+| `--depth <n>` | `8`, and one more per step: of the workflow `flow` starts at, of every workflow `impact` climbs through | how many hops to follow |
 | `--max-nodes <n>` | `150` | most nodes to print, after which it says how many it cut |
 | `--service <name>` | every service | narrow to one |
 | `--ascii` | off | plain prefixes instead of icons |
@@ -364,6 +508,8 @@ flowatlas flow "POST /orders/12345"
 flowatlas flow "POST /orders/:param"
 flowatlas flow "entry:orders:http:POST:/orders/:param"
 flowatlas flow "bot:order_confirm"        # a bot command or button
+flowatlas flow "invoke:library-dev-create-loan"   # a function, by its deployed name
+flowatlas flow "workflow:loan-approval"   # a state machine, by its name
 ```
 
 A name matching two services comes back as a choice rather than a guess. A name
@@ -382,6 +528,27 @@ entry:shop@examples/blog:http:GET:/api/orders
 ```
 
 `flow "GET /health"` there comes back as that choice, naming both.
+
+The last line, `unresolved on this path: N` (`unresolvedOnPath` in JSON and in
+the MCP `get_flow`), counts the nodes of the walk that something could not be
+read about: a node the graph names and does not hold, or one a `doctor` row is
+recorded against. Every node the walk reaches counts, the entry a path ends at
+included — a function deployed with a handler that could not be read is where a
+path through a queue to it stops, and its row is why — and so do nodes past the
+`maxNodes` the tree shows.
+
+A row is recorded against the node a walk passes. Rows about something a
+deployment declares name the node drawn for it: a function's `invoke` entry, a
+route's entry, the consumer a rule, mapping or subscription delivers to. A route
+integrated straight with a function whose handler is not read reaches that
+function's entry, so the walk from the route counts the same row a path through
+a queue to it does. A publish or a start whose name could not be read is still
+drawn, as a producer the body calls, and its row names that producer: a walk
+through the body counts it, and what was not read — the body, then the
+expression, `queueOverdue -> process.env.OVERDUE_QUEUE_URL` — is the row's
+`message` (`fixtures/aws-sdk-publishers`, `fixtures/start-workflow-by-record`).
+A handler whose channel could not be read is on no channel and under no entry,
+so no walk passes it, and its row names the method as it is written.
 
 ### `flowatlas impact <symbol>`
 
@@ -452,6 +619,39 @@ is information. A named rule may soften a verdict and never sharpen one.
 A boundary that could not be compared is not left out: it is listed under
 `unchecked` with the reason and the thing to do about it, so "no errors" can be
 read as "nothing broken" rather than "nothing looked at".
+
+**A message delivered by AWS is compared through the envelope it arrives in.**
+A function a queue, a topic or a bus delivers to is not handed the message: it
+is handed an event with the message inside it. A queue's message is the text at
+`Records[].body`, a topic's the text at `Records[].Sns.Message`, a bus's the
+value at `detail`; a function invoked, or a workflow started, is handed its
+input as it is. The publisher's payload (`MessageBody`, `Message`, `Detail`,
+seen through `JSON.stringify`) is compared with what the handler takes from
+that place - the type it declares there, or what it parses the text there into
+(`JSON.parse(record.body) as Loan`). A start's `input` or `Payload` is compared
+with the invoked handler's parameter, or with what the started workflow's
+first state reads of its input (`"id.$": "$.loanId"` requires `loanId`); keys a
+workflow does not read there are carried on, so they are never reported as
+extra. A rule or a subscription that hands a message on to another queue or
+topic hands on the envelope, so whatever reads that queue is compared with the
+envelope around the original message - a handler of a rule's queue that
+parses the body as the message, when the message is at `detail`, is a
+`missing_required` error. A rule that puts the events it takes on another bus
+hands on the event as it is, so a function that bus's rules deliver to is
+compared with the original message at `detail`. Each finding says where the
+message was read from.
+
+What cannot be compared this way stays `unchecked`, with one of these reasons:
+
+| Reason | Means |
+|---|---|
+| `envelope-unread` | the delivery rewrites what its target is handed (`input_transformer`, `input_path`, `input`), or is a pipe |
+| `message-unparsed` | the handler never parses the text at the message's path into a declared type |
+| `message-undeclared` | the handler, or the workflow's first state, declares nothing at the message's path |
+| `handler-unread` | the function's handler was not read as the function handed the event: built by a factory, or not found |
+| `delivered-onward` | the delivery hands the message on to another channel; it is compared where that is read |
+| `delivery-target-unread` | the delivery's target is no code this project reads, such as an e-mail address |
+| `sender-forwards` | the sending end hands on what it was given - a route sending its request to a queue, a forward with no typed publisher behind it |
 
 ### `flowatlas stats`
 
@@ -556,14 +756,278 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--out <file>` | `graph.html` beside the graph | where to write it |
+| `--config <path>` | found from the working directory | configuration to read the graph of |
+| `--db <path>` | the configured one | database to read instead |
+| `--out <file>` | `graph.html` next to the configuration | where to write it; the working directory when only `--db` is given |
 | `--title <name>` | the folder holding the configuration | what to call the project on the page |
+| `--editor-links <editor>` | off | make every `file:line` on the page a link that opens it: `vscode`, `cursor`, `idea` or `file`. **Writes each repository's absolute local path into the page**; needs the configuration |
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
-reconciliation, lists every way in, follows any one of them across service
+reconciliation and the Map, lists every way in, follows any one of them across service
 boundaries, and has a tab each for every crossing and for everything that did not
 join.
+
+The **Map** tab is the whole project at the size of its services:
+
+- **Boxes.** One per service, in a column by what it is for, left to right as a
+  request travels: front ends (screens, no routes), APIs and ways in (routes,
+  bot commands, procedures), channels, workers and workflows (reached only by
+  messages, schedules, invokes or workflows), libraries (reached by nothing but
+  the code that imports them), data (a service's tables, one box beside it), the
+  outside (APIs on other hosts), and packages. A channel is a box of its own, so
+  a channel with no consumer, or no producer, shows as a dead end.
+- **Links.** Every edge whose two ends belong to different boxes is part of the
+  link between them, merged by kind - requests, messages, workflow starts,
+  function invokes, queries, outside calls, calls - and counted. A link is as
+  thick as the edges it stands for and dashed when any of them is `heuristic`.
+  Guards, imports and settings keys are not links.
+- **Families.** Services in one column whose names share a prefix - the longest
+  one three or more of them share, written as they write it (`pay-api-*`,
+  `core.jobs.*`) - are a family; channels are a family by what carries them, and
+  packages by their scope. A family is one stacked box until it is opened; on a
+  map of more than forty boxes every family starts closed. An open family is
+  framed, its name closes it, and one of more than fourteen wraps into a block.
+  *Open all* and *Close all* do every family. Within a column, boxes are ordered
+  by where what they touch sits, a few sweeps each way, so the same graph always
+  draws the same map.
+- **Details.** A box opens its details: a service's counts, ways in by kind,
+  rows to act on, routes nothing calls, what it reaches and what reaches it,
+  its ways in (each opening in the Graph tab), its busiest classes, and what it
+  is built from. A link lists the edges it stands for, each end opening in the
+  Graph tab. *Open in Graph* centres the Graph tab on the box. Double-click, or
+  *Only this and what it touches*, draws one box and its neighbours.
+- **Packages.** A layer, off by default, from each service's `package.json`,
+  which `build` records in the link report (`services[].packages`: its name, and
+  what it needs at run time and for development). A service depending on the
+  package another service publishes is joined to that service; a package two
+  or more services use is a box, with a link from each; development
+  dependencies are drawn on request. A package nobody installed is named the
+  same as one that is.
+- **Checks.** *check* marks, per box: rows to act on, channels with one end,
+  routes nothing calls, services nothing could read, or services that reach
+  each other at run time (a cycle, its links drawn red). The chips hide a kind
+  of link.
+- **The frame.** Drag or a wheel pans, ctrl or a pinch zooms, *Fit* shows it
+  all; `F` or the button is full screen; Escape closes the details, then a
+  one-box view, then full screen. The address keeps the view by name -
+  `#map/s=<box>&l=<link>&f=<box>&t=<families toggled>&h=<kinds hidden>&m=<check>&p=1&d=1` -
+  so a link opens the same view in the next build; a box it names that is gone
+  is said. *Copy link*, and SVG and PNG export, as on the Graph tab.
+
+The **Graph** tab draws the neighbourhood of one node rather than the whole
+graph, which on a real project is ten thousand boxes and says nothing:
+
+- **Choosing a focus.** Search over every node, by label, type, kind, service or
+  file: `table orders` is the table called `orders`. Every way in on the left,
+  and every node named in the Walk, Crossings and Not joined tabs, has a *show in
+  graph* link beside it.
+- **The drawing.** The focus in the middle, what reaches it to the left and what
+  it reaches to the right, one column per hop (one, two or three; two by
+  default). Every service is a faint band across the drawing with its name in
+  the corner, the focus's service first, so an edge that leaves a band is a
+  crossing; the edge takes the colour of the service it enters. Nodes are marked
+  by type; tables, channels, outside APIs and settings are drawn round. A node
+  is written as what it is, strong, over whose it is, muted: `list` over
+  `OrdersService`, a route's address over the controller that handles it. Long
+  names are shortened in the middle, so a path keeps its verb and its last
+  segment; hovering a node gives the full name, its service and `file:line`.
+  An edge is solid when it was read from the code (`static`), dashed when it was
+  guessed (`heuristic`), and dotted when an annotation or a document said so
+  (`marker`, `declared`). An edge says its type only when hovered and around the
+  open node, so a busy drawing is lines rather than words.
+- **Plumbing is folded.** Guards, interceptors, pipes and middleware are not
+  drawn as nodes: a way in carries a chip saying what runs in front of it
+  (`2 guards · 3 interceptors · 1 pipe`). Clicking the chip, or `W` on the node,
+  draws that chain beside it and folds it back again; the *plumbing* chip above
+  the drawing draws all of it as ordinary nodes. A guard chosen as the focus
+  shows the ways in it stands in front of.
+- **Busy sides are grouped.** More than six neighbours of one type on one side
+  of a node (the queries on a table, the publishers on a channel, the callers of
+  a route) are drawn as groups: by service, then by the class that owns them,
+  each a stack with its count. A level with more than eight groups shows the
+  busiest seven and one group holding the rest. Clicking a group opens it in
+  place, into its classes and then into its nodes; *Group again* under the
+  drawing closes them all. Grouping comes before the cap, so a table with two
+  hundred queries is a handful of groups, not "348 more". What lies past a
+  closed group within the hops is counted under the drawing and drawn once the
+  group is open.
+- **Hover shows the way.** Hovering a node, or moving the keys onto it, lights
+  the way the walk took from the focus to it and dims everything else.
+- **Zoom shows what it can.** Far out, a node is its service's colour and its
+  shape; nearer, its name; close, everything. While the drawing is bigger than
+  the screen a minimap in the corner shows all of it and where the view is;
+  clicking or dragging on it moves there. It keeps to a small box in the corner
+  whatever the drawing's shape, so it never sits over a column of nodes.
+- **The cap is said, never silent.** At most 30, 60, 120 or 250 nodes are drawn
+  around a focus. The line under the drawing says how many more there are within
+  the hops, and a node with more of the flow not drawn carries `+N`; clicking
+  it, `+`, or *Expand* in the panel, draws them.
+- **Expanding keeps to the flow.** The focus looks both ways; a node to its
+  right looks only further right and a node to its left only further left, and
+  expanding a node goes on the same way: a node on the right adds what it
+  reaches (calls, queries, emits, requests, …), a node on the left what reaches
+  it, and the focus both. The panel's button says which (*Expand: what it
+  reaches*, *Expand: what reaches it*). A node reached through a group follows
+  the side it is drawn on. `+N` counts only that way, so a shared helper whose
+  only undrawn neighbours are its other callers carries no `+N`.
+- **Who else uses this.** The other way from a node - the other callers of a
+  helper on the right, the other callees of a caller on the left - is not the
+  flow, and is drawn only when asked for: by the node's *used by N others* (or
+  *uses N others*) badge, by `O`, or by *Who else uses this* (*What else it
+  uses*) in the panel, which says how many there are. They are drawn as
+  context: faded, in dashed boxes, with *also uses parseRole* (or *also used by
+  …*) where the owner would be, on faded lines, grouped by service and class as
+  a busy side is, so a helper used by ninety methods is a few groups. They do
+  not expand; *Centre here* follows one. The line under the drawing counts them
+  apart.
+- **What it takes and gives back.** *Types* above the drawing, or `T`, writes a
+  third line under every node: a method's parameters and what it returns
+  (`(dto: CreateOrder, note?: string) → Order`), a route's request parts and
+  response (`body: CreateOrder · params: { id: string } → Order`), what a call
+  sends and expects back, what a producer emits and a channel carries. Long
+  lines are shortened in the middle; the hover card gives the whole. A method or call
+  whose types were not read says *types not recorded*. The setting is kept in
+  the browser, not in the link. Every reader records them: NestJS, Express,
+  Fastify, Koa and Lambda methods and functions, Angular methods and
+  components (its inputs as what it takes, its outputs as what it gives back:
+  `(order: OrderDto, dense?: boolean) → {opened: OrderDto}`; a directive the
+  same way, a pipe as its `transform`; the details panel also lists what a
+  directive or component binds on its element - `host` entries, `@HostBinding`
+  and `@HostListener` members, as `[class.active]=isActive` and
+  `(click)=toggle($event)`, with each method a listener calls as a node it
+  links to (`hostMembers`; click one to centre on it) - the name it is
+  exported as (`exportAs`), and whether a pipe is `pure`), React components,
+  hooks and functions, tRPC procedures (the input its schema checks, and what
+  its resolver answers), routes, typed calls and payloads. A way in
+  that is not a request - a template event, a bot command, a consumer - shows
+  what it hands the function that answers it (`onSave(order: Order) → void`).
+- **The hover card.** Resting the pointer on a node, or moving the keys onto
+  one, shows a card beside it with its full name, owner, service and
+  `file:line`, what it takes and gives back (a function on one line while it
+  fits, else a parameter to a line; a route's request parts and response; what
+  a call sends and expects back; a channel's payload), and one level of each
+  type it names: up to four types of eight rows each, the rest counted. A node
+  whose types were not read says so. Resting on a type in the details panel
+  peeks at its fields the same way without opening it. The card works with
+  *Types* on or off, keeps inside the window, goes on Escape, a scroll, a pan
+  or a zoom, and never shows on a touch, where a tap opens the details.
+  The pointer can move onto the card and stay; past a height it scrolls. What
+  it counted is shown there on a click — *+12 more — show* lists every row of
+  that type, *… N more lines — show* the rest of the face, *N more types —
+  show* the types it left out — up to 200 rows a card, past which it says the
+  rest is in the details. Clicking a type's name on the card opens the details
+  with that type open; clicking the card's title, or the node while its card
+  is up (or Enter on it from the keys), opens the details with every type the
+  card showed open one level.
+- **The details panel.** Clicking a node opens its type, kind, label, service,
+  `file:line` and the metadata the graph holds for it (verb and path, table,
+  channel kind, deployed name, which reader read it and how its name was read),
+  its edges in and out grouped by type with the far node's service and the
+  edge's confidence, and its problems: the rows that name it, with their reasons
+  and hints, the rows that name no node but sit at its line, said apart, and
+  below them the rows elsewhere in its file. Above the edges, what the node takes
+  and gives back, named as the face line is: each named type is a link that
+  opens its fields underneath, an enum its values and a union its members, as
+  deep as asked, and says where it is declared; a type from a dependency says
+  so rather than opening. *expand all* on a row, or `E` on a type, opens
+  everything under it at once, and the section's *Expand all* every row of it;
+  a type already open above it is marked `↻ Name — see above` instead of
+  opening again. One opening stops at six levels or three hundred rows and says
+  how many types it left closed; asking there again opens the next stretch.
+  *Collapse all* closes them, and *Copy as TypeScript* copies the same face
+  with every type written out inline (`function create(dto: { // CreateOrder …
+  }): { // Order … };`, a route as `type Request` and `type Response`), within
+  the same bounds, a type inside itself kept as its name. From it: *Centre here*, *Expand*,
+  *Who else uses this* with its count, *Open in Walk* for a way in, *Path from here*, *Path to here* and
+  *Impact*. Clicking a node in its lists walks on to it.
+- **Problems.** A node carrying rows is badged with the count on its top edge,
+  red for rows naming it and amber for rows at its line, counted apart; a group
+  carries its members' badges summed, so a closed group still says it holds
+  problems. The same badges, drawn on every view - the neighbourhood, a path,
+  an impact - are said in words at the top of the details panel. *Problems only* cuts the drawing down to
+  the nodes with problems and the steps that join them to the focus, and says
+  how many it hid. The *Problems* button lists, in one place, the ways in with
+  rows or with no handler read, the crossings with rows at either end, and the
+  calls that joined nothing or carry rows, each with *show in graph*.
+- **A path between two nodes.** Choose the two ends with *Path from here* and
+  *Path to here* in the panel, or with *from* and *to* above the drawing and the
+  search. Every shortest path is drawn, one column per step, with how many there
+  are; past the cap one whole path is drawn first. The edges are followed the
+  way the calls run unless *either way* is pressed, within 6, 12 or 24 steps,
+  through what the filters let through (the two ends always count). With no
+  path the page says so, and what it searched: the steps, the direction, the
+  filters and how many nodes it reached.
+- **Impact.** *Impact* in the panel draws everything upstream of a node, to the
+  ways in that reach it, and lists the entry points and the screen actions among
+  them, nearest first. It is `flowatlas impact` drawn: the same edges, the same
+  eight hops lengthened by the workflow steps it climbs, no filter, and a test
+  holds the two to the same answer on the fixtures. Past the cap, every way in is
+  drawn first with one chain from it down to the node. *Back to the
+  neighbourhood* leaves a path or an impact; so does *Back*. A path and an
+  impact draw every node on them rather than grouping, and fold plumbing into
+  the same chips the neighbourhood does.
+- **Editor links.** With `--editor-links`, the `file:line` in the panel and on
+  every row opens the file in that editor: `vscode://file/<path>:<line>`,
+  `cursor://file/<path>:<line>`, `idea://open?file=<path>&line=<line>`, or
+  `file://<path>` with no line. Off by default, because it writes each
+  repository's absolute local path into the page, which is then no longer one
+  to send to somebody else.
+- **Moving around.** Drag or scroll to pan, pinch or ctrl+scroll to zoom, *Fit*
+  to see it all. Double-click centres on a node. Arrow keys move between drawn
+  nodes, a hop at a time to the side and within a column up and down; Enter
+  opens a node or a group, `+` expands it, `O` draws who else uses it, `W`
+  unfolds its plumbing. On a
+  touch screen one
+  finger pans, and two fingers pan and pinch to zoom. *Back* and *Forward* step
+  through the focuses visited.
+- **Full screen.** *Full screen*, or `F`, gives the drawing the whole window:
+  the heading, the numbers, the service rail and the ways in step aside, and the
+  details panel lays over the drawing from the right.
+- **Escape closes one thing at a time, nearest first**: the search's list of
+  nodes (or picking a path's end with it), then the details panel - the drawer
+  in full screen - then the *Problems* list, a half-chosen path, and a path or
+  impact answer, back to the neighbourhood, and last full screen.
+- **The details panel** widens or narrows by dragging its left edge, or with the
+  arrow keys once its edge has focus (`Home` and `End` for the narrowest and
+  widest), and folds to a narrow rail with the tab on its edge; the rail still
+  names the open node, and clicking it unfolds the panel. The width and the fold
+  are kept in the browser, not in the page.
+- **Links that last.** The view is in the address,
+  `graph.html#graph/<key>/<hops>/<expanded>.<expanded>/<question>/<hidden>/<also>.<also>`,
+  so it can be bookmarked or sent with the file. The last three appear only when
+  they, or one after them, say something: the question is `impact`, `path.<key>.<steps>` (with
+  `.either` when edges are walked either way) from the focus, or `only` for
+  *problems only*; what the filters hide is listed by name, `s:<service>`,
+  `e:<edge type>` and `t:<trust>`, so it reads the same in the next build. A
+  link without them leaves the filters as the person has them. `<also>` names
+  the nodes whose *who else uses this* is drawn. An expanded node is expanded
+  in the flow, so a link made when expanding drew both ways opens with the same
+  nodes expanded, keeping to the flow. A node is named by a key of six letters and digits
+  hashed from its graph id, the same in every build, so a link made today opens
+  the same node in tomorrow's page even though nodes were added and removed
+  around it. When two ids hash to the same key, which the command checks as it
+  writes the page, each takes a longer key of its own, and a link carrying the
+  short key they share - one made before the second node existed - offers both
+  rather than opening either. A link made before keys names a node by its
+  position in the page; it still opens whatever sits there, and the page says
+  so. A key the page does not
+  hold - a node removed or renamed since - is said over the drawing, not
+  guessed at. *Copy link* copies the address of what is on screen.
+- **Pictures.** *SVG* and *PNG* save the drawing as it stands - the
+  neighbourhood, the selection, the filters - at its own size rather than the
+  window's, in the theme on screen. A picture is at full detail whatever the
+  zoom, with every name, count and badge, and leaves the minimap out. The PNG is the SVG drawn onto a canvas in
+  the page, at twice its size where the browser allows, so nothing is sent
+  anywhere. Without the page's typefaces loaded, a picture falls back to the
+  system's monospace.
+- **Filters.** The service rail at the top hides a service's nodes here as it
+  does its ways in; chips hide an edge type or a confidence, so the drawing can
+  show, for instance, only what was guessed. The line under the drawing says
+  which filters are on.
+
+A link carries the page's own address, which for a file on disk is that file's
+path: it opens on the machine that has the file, at that path.
 
 ---
 
@@ -573,7 +1037,9 @@ join.
 
 What could not be read, what the annotations get wrong, what has drifted, and
 whether any of it has grown since the baseline. Five sections over one built
-graph; it reads no repository, so two runs over one graph say the same thing.
+graph; it reads no repository's source, so two runs over one graph say the same
+thing. It looks at a repository only to say whether its dependencies are
+installed, and what a service with no way in looks like.
 
 | Flag | Default | Does |
 |---|---|---|
@@ -616,6 +1082,33 @@ it would be accepting the blindness. Decided per service, so a service read end
 to end cannot carry a hollow one past the check by outnumbering it; `--service`
 narrows the question the way it narrows every other.
 
+**A server with no way in at all is said first.** A service a server reader read
+— it holds code — with no route, handler, subscriber or screen in the graph is
+one nothing reaches, so no flow starts there. That is usually a stack nothing
+reads under a type set by hand, and it is the first line of the report and the
+first sentence of the verdict, with what the repository looks like: a
+deployment written for a tool nothing reads (the Serverless Framework, AWS SAM,
+the AWS CDK), a framework nothing reads, a framework that *is* read under
+another type, or a library:
+
+```
+api: no way in was found — its functions are declared for the Serverless Framework, which nothing here reads yet. Its code was read and nothing in this graph reaches it, so no flow starts there; its dependencies are not installed either, and installing them would not give it one.
+```
+
+It comes before anything about dependencies, and such a service is not named in
+the sentence about them, because installing them would not give it a way in.
+It decides no exit code: its bodies were read, so a change inside one still adds
+a row the growth check can see, and a library typed as a server is a
+configuration somebody may mean. `doctor.json` carries the same list under
+`unresolved.withoutWaysIn`, and `--format github` makes each a `::warning` on the
+line of `flowatlas.config.json` that names the service. A service declared by a
+document is never named: none of its code was read, and a document that declares
+no way in describes a service nothing here enters.
+
+The exit code is decided by the first of these that applies: a graph that cannot
+be reported on, a baseline that cannot be read, or `--strict` with no baseline
+(2); `--strict` and a check that found something (1); otherwise 0.
+
 Every unresolved row is read at one of three levels, and only the first two say
 the graph is missing something:
 
@@ -652,6 +1145,19 @@ once. A member's own sentence sits under that member, marked `↳`. Groups are
 keyed by reason *and* level, so a group's level is every member's rather than
 its loudest member's.
 
+A row is keyed in the baseline by what it names: the node it is recorded
+against where it is about one, and the source text otherwise. It is shown in
+words a reader finds at its place: where it names a node, by its message -
+`OrdersService.tally -> this.config.get('SWEEP_CHANNEL')`, not
+`producer:orders#src/orders/orders.service.ts:71:5` - and the id is in
+`doctor.json` and in the key. A key is
+service, file, that name and the reason; it carries no line of its own, and only
+the total decides `--strict`, so a key that moves is named under `new` and
+`gone` and fails nothing. A row about a publish or a start whose name could not
+be read names the producer drawn for the call, whose id is its place in the file;
+a baseline accepted before that release lists those rows under the
+`method -> expression` they were named by, and `--accept` writes them again.
+
 Where a repository was read without its dependencies, the report opens with the
 one sentence that says so, described under [`build`](#flowatlas-build-dir),
 rather than leaving the reader to infer it from a pile of `type-unresolved` rows.
@@ -670,18 +1176,25 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
-| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
+| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key` |
-| Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `consumer-handler-unresolved`, `payload-type-unknown` |
+| Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |
+| Starting a workflow or a function by its deployed name | `start-from-environment`, `start-name-unread`, `starter-undescribed` |
 | Settings | `dynamic-config-key` |
 | Bots and handler tables | `bot-handlers-not-found`, `dynamic-bot-trigger`, `entry-registry-unconfigured`, `registry-key-dynamic`, `registry-handler-anonymous`, `orphan-scene-decorator`, `orphan-update-decorator`, `wizard-step-conflict` |
 | Annotations | `marker-route-not-found`, `marker-service-unknown`, `marker-unknown-arg`, `marker-arg-not-a-name`, `marker-names-nothing` |
 | Declared services | `document-age` |
+| Functions and routes declared in Terraform | `function-name-unread`, `function-name-disputed`, `function-repeated-unread`, `function-handler-unread`, `function-handler-not-found`, `function-handler-ambiguous`, `function-source-unread`, `function-runtime-unread` (info), `function-image-unread` (info), `route-path-unread`, `route-target-unread`, `route-base-path-unread`, `api-body-unread`, `deployment-unread` (info) |
+| Terraform files and modules | `infra-file-unparsed`, `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
+| Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
+| Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
+| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info) |
+| Values a deployment gives the code | `environment-not-set`, `environment-value-unread` |
 
 Three of these are worth knowing before they are met, because each is the
 tool declining to guess:
@@ -754,7 +1267,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
-| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `express`, `fastify` or `koa` for anything with a server in it, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
@@ -762,6 +1275,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
+| `infra.vars` | string[] | none | for a service read from Terraform: the variable files a deployment is read with, in order, relative to the service's directory (`["infra/env/dev.tfvars"]`). Without it, a name two files set differently is reported, never picked |
 | `readTestDirectories` | string[] | `[]` | directories named like tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`, `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) that hold code the application runs, relative to the service's directory: `["src/fixtures"]` |
 
 **A directory named like tests is not read, and says so.** Test code is left out
@@ -836,7 +1350,7 @@ worked example of a document that declares routes.
 | Key | Type | Default | Means |
 |---|---|---|---|
 | `sharedPackages` | string[] | `[]` | packages whose types are one declaration rather than two copies |
-| `output` | string | `.flowatlas` | where the three build outputs go |
+| `output` | string | `.flowatlas` | where everything a build writes goes, relative to this file: the three outputs, the cache and each service's own graph under `services/`. Nothing is written into the repositories |
 | `types.maxDepth` | number | `3` | how deep an anonymous shape is written out before it becomes a reference |
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |
 | `contracts.rules.disable` | string[] | `[]` | rules about the JSON wire this project's wire does not follow |
@@ -968,11 +1482,15 @@ it.
 | `auto` | boolean | `true` | detect which adapters apply from each repository's manifest |
 | `force` | object | `{}` | use these adapters regardless of what was detected |
 | `db.localBaseClasses` | (string \| object)[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares. An entry may be `{ "name": "BaseRepository", "tableProperty": "collectionName" }` to say which property each class extending it sets to its table |
+| `db.tables` | object[] | `[]` | functions your data access goes through that name their table at the call — `insert('orders', row)` from a data kit of your own, installed or not: `{ "name", "package"?, "factory"?, "clientType"?, "table": argIndex \| "name", "op"?: "read" \| "write" \| "delete" }`; with `factory`, `name` is a method of the client that factory returns, and `clientType` the type a client handed in is declared as (see [Tables named in configuration](#tables-named-in-configuration)) |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
+| `starters` | object[] | `[]` | a helper of your own that starts a workflow or invokes a function by its deployed name, described so the start is joined to what it starts (see [Code that starts a workflow or a function](#code-that-starts-a-workflow-or-a-function)) |
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
 | `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
 | `entry.procedures` | object[] | `[]` | a framework whose ways in are the keys of a tree of object literals, described so each one is read |
+| `entry.request` | object | — | your own helpers that build every answer or parse every body, read beside every framework's own places (see [An answer built by a helper](#an-answer-built-by-a-helper)) |
+| `infra.modules` | object[] | `[]` | a Terraform module whose source is not in the repository, described so the functions and routes declared through it are read |
 
 **Detection reads the workspace, not only the leaf manifest.** A service that is
 a package inside a workspace is asked what it can import, and the answer is
@@ -1090,6 +1608,75 @@ keeps working as before, and a query through it whose table is not read carries
 a row naming `tableProperty` as the key that would read it
 (`fixtures/nest-mongo-tables`).
 
+#### Tables named in configuration
+
+A data access that goes through a package of your own nobody installed - a
+shared data kit's `insert('orders', row)` - has no type to resolve and no
+library to describe it, so the Map shows no data boxes. Name its functions once
+under `adapters.db.tables` and every call to one is a `db_query` on the table
+its argument names (P37):
+
+```jsonc
+{
+  "adapters": {
+    "db": {
+      "tables": [
+        // `findOne(MEMBERS, { memberId })`: the table is argument 0
+        { "name": "findOne", "package": "@acme/data-kit", "table": 0, "op": "read" },
+        { "name": "insert", "package": "@acme/data-kit", "table": 0, "op": "write" },
+        // a helper of this repository that always writes one table
+        { "name": "auditLog", "table": "audit_events", "op": "write" }
+      ]
+    }
+  }
+}
+```
+
+A function with a `package` is matched by the import in the calling file - by
+name, under any local name, or on a namespace or default import of the package,
+a default import called itself when `name` is `"default"`, and any of these
+through a barrel of the repository's that re-exports it from the package
+- so nothing has to be installed, and a local of the same name that shadows the
+import is not it; one without is matched by a declaration of that name in the
+repository. The table is the string at argument `table`, written in place or
+through a constant, or `table` itself when it is a name. The query is recorded
+with `source: "configured"` and `declared` confidence; a table the argument
+does not name as a string keeps the query and gets a `dynamic-table-name` row
+(`fixtures/data-kit-tables`).
+
+Where the kit hands out a client and the table is an argument of its methods -
+`const db = createClient(); db.insert('orders', row)` - name the factory on the
+row and the method as `name` (P39):
+
+```jsonc
+{ "factory": "createClient", "package": "@acme/data-kit", "name": "insert", "table": 0, "op": "write" }
+```
+
+A call is matched when its receiver is what that factory's call returned: the
+call itself (`createClient().insert(…)`), awaited or not, or a variable or class
+field initialised with it, followed a few names back. The factory is matched by
+the import as above; an object of the repository's own with a method of the same
+name is not the client.
+
+A client handed in rather than made there - a function's parameter, a
+constructor's injected field, a field assigned elsewhere - is followed by its
+declared type (P44): `ReturnType<typeof createClient>` (also behind `Awaited<…>`,
+in a union with `undefined`, or through a type alias of the repository's), `typeof
+db` of a client the factory made, or the type the package names its client by,
+given as `clientType` on the row:
+
+```jsonc
+{ "factory": "createClient", "clientType": "DataClient", "package": "@acme/data-kit", "name": "insert", "table": 0, "op": "write" }
+```
+
+The `clientType` is matched written plainly or through a namespace import
+(`kit.DataClient`). Without one, a parameter typed by a named interface is the
+client when the factory resolves - installed, or the repository's own - and is
+declared to return that same type (P49): `ledger: Ledger` where
+`openLedger(): Ledger`. A type nothing resolves is no evidence either way.
+A parameter typed as anything else is not the client, whatever its methods are
+called.
+
 Two things a wrapper can hide are not configuration, and no key reaches them.
 The library has to be among the service's dependencies — directly or along the
 workspace chain above — for its adapter to be detected at all; a service that
@@ -1187,6 +1774,141 @@ readable name wins. `channel` replaces `channelArg` where both are given.
 | `{ "kind": "provider-decorator", "decorator": "InjectQueue", "index": 0 }` | argument 0 of that decorator on the constructor parameter that provided the receiver |
 | `{ "kind": "chain-call", "method": "from", "index": 0 }` | argument 0 of `from(...)` anywhere in the same chain |
 | `{ "kind": "chain-root-argument", "index": 0 }` | argument 0 of the call the chain started from |
+| `{ "kind": "argument-path", "index": 0, "path": ["Entries", "*", "DetailType"] }` | a path of properties inside argument 0; `*` is every element of an array |
+| `{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "DetailType"] }` | the same path inside what `PutEventsCommand` is constructed with, where the construction is an argument of the call — built in the call or in a `const` before it. `"index": 1` starts the path in the constructor's second argument |
+| `{ "kind": "origin-call-argument", "call": "create", "path": ["process"] }` | the path inside the argument of the earlier `create(...)` that made a value this call is handed - `run.id` after `const run = await create(...)` - on the same receiver or from the same module, in the same body, through `const` bindings only. See [a start addressed by a record](#code-that-starts-a-workflow-or-a-function) |
+
+**A path through a list is one name per element.** `["Entries", "*", "DetailType"]`
+over two entries is two channels, not one, and every part of an address that
+walks the same list is read at the same element. A path also goes through a
+record or a list kept in a `const`. Where the list is built at run time —
+`entries.map(...)` — or a spread may supply the key, the walk stops there and the
+row names that expression; a key that is simply not written is *nothing written*,
+which an address part may fill with `absent`.
+
+**`constructed-argument-path` is a condition as well as a place.** A client that
+sends commands sends every kind of them through one method, and a call handed some
+other command is not a publish whose channel could not be read: the description
+does not apply to it, and it produces nothing. A command the checker can see is an
+instance of the class but whose construction is somewhere else — a parameter — is
+of the shape, and is reported as a channel that cannot be read.
+
+### An address in parts, and a message inside the input
+
+Some transports name a message with several words that only together say where it
+goes. A producer may then take `address` instead of `channel`: a list of parts,
+joined with `/` into the channel's name. Each part is a word the description
+states, `{ "literal": "eventbridge" }`, or a place the call writes it:
+
+| Key | Says |
+|---|---|
+| `at` | locators, tried in order, as for `channel` |
+| `absent` | what the part is when the call writes nothing there, because the library fills it in. Never used for a value that is written and cannot be read |
+| `forms` | longer spellings the name may be written inside — a URL, an ARN — each a regular expression whose first group is the name |
+
+`channel` is a one-part address written short, and `channelArg` is a one-part
+address of one plain argument. A part that is written and cannot be read leaves
+the whole address unread: half an address joins nothing it should.
+
+`payload` is where the message is written, as locators, for a call whose message
+is a property of its input rather than an argument of its own; it overrides
+`payloadArg`. It is read at the same element as the address, and a message sent
+as `JSON.stringify(value)` is read as the value, because that is what the receiver
+parses back out.
+
+A project's own helper around the AWS SDK, described so that each call lands on
+the channel the SDK itself would have named:
+
+```jsonc
+{
+  "name": "library-events",
+  "channelKind": "topic",
+  "producers": [
+    {
+      "receiverType": "LibraryEventBus",
+      "method": "put",                      // libraryEvents.put(new LibraryEvent({ type, detail }))
+      "address": [
+        { "literal": "eventbridge" },
+        { "literal": "library-events" },    // the bus the helper always uses
+        { "literal": "library.returns" },   // and its source
+        { "at": [{ "kind": "constructed-argument-path", "class": "LibraryEvent", "path": ["type"] }] }
+      ],
+      "payload": [{ "kind": "constructed-argument-path", "class": "LibraryEvent", "path": ["detail"] }],
+      "kind": "event"
+    }
+  ]
+}
+```
+
+**A helper written as a function** has no receiver to name. A producer may give
+`function` — the name the function is declared with, whatever an import renames it
+to — in place of `receiverType` and `method`. A helper that sends whatever command
+it is handed, `publishEvent(new PutEventsCommand({ Entries: [...] }))`, is
+described with the same locator the SDK's own description uses:
+
+```jsonc
+{
+  "function": "publishEvent",
+  "address": [
+    { "literal": "eventbridge" },
+    { "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "EventBusName"] }], "absent": "default" },
+    { "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "Source"] }] },
+    { "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "DetailType"] }] }
+  ],
+  "payload": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "Detail"] }],
+  "kind": "event"
+}
+```
+
+The helper's own call to the SDK is still read, and has no channel: the command
+it sends was built by its caller, which is what the description is for.
+
+### The AWS SDK
+
+Publishing through EventBridge, SQS and SNS is read without configuration, from
+`@aws-sdk/client-eventbridge`, `@aws-sdk/client-sqs`, `@aws-sdk/client-sns` and
+`aws-sdk` (version 2). The package may be declared in the repository's own
+manifest or in any manifest below it, for a repository that keeps one per
+function. Three shapes of call are read for each operation: a command sent with
+`client.send(new XCommand(input))`, built in the call or in a `const`; version 3's
+aggregated client, `client.putEvents(input)`; and version 2,
+`service.putEvents(input).promise()`.
+
+| Operation | Channel | Message |
+|---|---|---|
+| EventBridge `PutEvents` | `eventbridge/<bus>/<source>/<detail type>`, one per entry; an entry with no `EventBusName` is on `default` | `Detail` |
+| SQS `SendMessage`, `SendMessageBatch` | `sqs/<queue name>`, from `QueueUrl` | `MessageBody` |
+| SNS `Publish`, `PublishBatch` | `sns/<topic name>`, from `TopicArn` | `Message` |
+
+A channel is named by the deployed name, never by the URL or ARN the code holds:
+`https://sqs.eu-west-1.amazonaws.com/111122223333/returns` is `sqs/returns`, and
+a bus's ARN is the bus's name. The service comes first because a queue and a topic
+are often given the same name and are not the same channel. A subscriber read from
+the deployment arrives at the same name, so the two meet on one node.
+
+These are descriptions in the vocabulary above: each operation is the locators and
+parts a configuration could write, plus the one thing a configuration cannot say,
+the package the client comes from (`fixtures/aws-sdk-publishers`). With nothing
+installed, a client is recognised by its construction and the import beside it,
+and every edge read that way is `heuristic` (`fixtures/aws-sdk-not-installed`).
+
+Starting a workflow and invoking a function are rows of the same table, read
+the same three ways from `@aws-sdk/client-sfn`, `@aws-sdk/client-lambda` and
+`aws-sdk` (where Step Functions is `StepFunctions`): Step Functions
+`StartExecution` and `StartSyncExecution` by `stateMachineArn`, and Lambda
+`Invoke` by `FunctionName`. They name no channel; see [Code that starts a
+workflow or a function](#code-that-starts-a-workflow-or-a-function).
+
+**A queue, topic or bus named by `process.env` is completed from the
+deployment.** The variable's name is not the resource's, and its value is set
+where the code is deployed. The extractor draws the publisher with no channel
+and a `channel-from-environment` row naming the variable, and the producer keeps
+the address it is waiting on in `meta.awaiting` — each missing part named by its
+variable, with the message it carries. Where a function whose deployment is read
+runs the call, the linker completes the address from the value that function is
+deployed with and the row goes; where nothing deployed runs it, the row stays.
+Who receives — a rule, a subscription, a mapping from a queue to a function — is
+read from the deployment too (see *Subscribers declared in Terraform* below).
 
 A bus that addresses jobs as an options object and wraps each queue in a class of
 its own is described like this — and note that the handler needs describing the
@@ -1354,6 +2076,21 @@ An HTTP framework entry:
     "verbKey": "method",
     "pathKey": "url",
     "handlerKey": "handler"
+  },
+  "request": {                               // where a handler finds the request, and how it answers
+    "parts": {
+      "body": [{ "param": 0, "at": ["payload"] }],     // a parameter and keys from it
+      "params": [{ "param": 0, "at": ["params"] }],
+      "query": [{ "param": 0, "at": ["query"] }]
+    },
+    "calls": [                               // methods that hand a part back: `await req.read()`
+      { "param": 0, "at": [], "method": "read", "part": "body", "claim": true }
+    ],
+    "answers": [                             // how a handler answers it
+      { "by": "call", "param": 1, "methods": ["reply"], "statusMethods": ["status"] }
+    ],
+    "defaults": ["HeaderMap"],               // types the framework hands over when nothing narrower was written
+    "validators": [{ "package": "my-checks", "methods": ["check"], "arg": 0 }]
   }
 }
 ```
@@ -1369,6 +2106,43 @@ Express, Fastify, Koa and Hono are rows of exactly this shape in
 and turned into a reader by the same function, so a description that reads a
 repository correctly for one of them reads it correctly for yours. A field
 nothing here uses would be a field only configuration had ever tested.
+
+**What a request carries is described the same way** (P29). `request` says
+where a handler finds the parts of a request and how it answers: each part as a
+parameter and keys from it - `"text": true` where the part is text the handler
+parses - or as a method handing it back, with `byArgument` mapping the string a
+call passes first (`valid('json')`) to the part it stands for. An answer is a
+method called on a parameter (`call`, with the methods in front of it that set
+the status), a function the framework exports (`named`, with `statusArg` or
+`statusKey` for the status beside it), an assignment to a parameter's key
+(`assign`), or what the handler returns, at a key and as text where the
+platform carries it so (`return`, with `statusAt`). What is found goes on the
+route's `handles` edge under the keys a NestJS route has always had - `body`,
+`params`, `query`, `headers`, and the answer as its `returns` - so the Graph tab,
+`flow` and `contracts` read it the same way whatever framework declared the
+route.
+
+What counts, in order: a type the handler's parameter declares at that place; a
+validator's output (`schema.parse(req.body)`, where `schema`'s `parse` is
+declared by a package `validators` names - zod, valibot, yup and superstruct are
+always listed); and a cast or an annotation (`req.body as CreateOrder`), which is
+recorded under `meta.claimed` because nothing checks it. A framework's own
+default - `any`, `unknown`, a dictionary of strings, a type `defaults` names - is
+no type, and two different claims for one part are none either. A validator
+that hands back a result rather than the value names where the value sits in it
+(`"at": ["data"]` for zod's `safeParse`, which is listed). An answer sent with a
+status of 400 or more is kept apart under `meta.failures` - a status written as
+a number, or as a constant or enum member whose value the checker knows; one
+whose status the code works out at run time could be either, and is kept under
+`meta.statusUnknown`, neither the answer nor a failure. A Koa-style status
+assigned beside the answer (`ctx.status = 404`) is read with `statusAt`. Path
+params a handler reads that nothing types are named by the path as written -
+`/orders/:id` gives `{ id: string }` - because every framework hands them over as
+text. What middleware leaves for the handler, such as Express's `res.locals`, is
+not part of what the caller sent and is not read. The shipped frameworks - Express,
+Fastify, Koa, Hono, both Next.js routers, Medusa, and a Lambda behind an API
+Gateway - are rows of this shape in
+`packages/adapters-entry/src/request-readings.ts`.
 
 **A description turns its own reader on.** Detection is offered the
 configuration as well as the manifest, so `entry-http-custom` recognises a
@@ -1406,6 +2180,54 @@ live elsewhere — and it reads exactly like a repository whose routes are decla
 in a way no reader here knows, such as a file-system router nobody has described.
 The reader cannot tell those two apart; what it can do is say which two it cannot
 tell apart, rather than counting the repository as clean.
+
+### An answer built by a helper
+
+Many codebases never call the framework's answering method in a handler: they
+return what a helper of their own builds - `return respond(201, order)` in a
+Lambda, `sendOk(res, order)` in an Express app - and parse bodies the same way.
+The framework's description finds nothing there, and every route reads as
+stating no answer. Say once, under `adapters.entry.request`, what those helpers
+are, and they are read beside every framework's own places (P30):
+
+```jsonc
+"adapters": {
+  "entry": {
+    "request": {
+      "answers": [
+        // `return respond(201, order)`: the answer is argument 1, the status argument 0
+        { "by": "helper", "name": "respond", "package": "@acme/http-kit", "statusArg": 0, "arg": 1 },
+        // `sendOk(res, order)`: a helper of this repository that always answers 200
+        { "by": "helper", "name": "sendOk", "arg": 1, "status": 200 },
+        // `return fail(400, 'bad_input', message)`: a failure built from several arguments
+        { "by": "helper", "name": "fail", "package": "@acme/http-kit", "statusArg": 0, "fields": { "code": 1, "message": 2 } }
+      ],
+      "helpers": [
+        // `readJson<CreateOrder>(event)`: hands back the body, typed by what the call asks for
+        { "name": "readJson", "package": "@acme/http-kit", "part": "body" }
+      ]
+    }
+  }
+}
+```
+
+A helper with a `package` is matched by the import in the handler's own file -
+`import { respond } from '@acme/http-kit'`, under any local name, or
+`kit.respond` on a namespace or default import of it, or a default import
+called itself when `name` is `"default"` - or through a barrel of the
+repository's that re-exports it from the package (`export { respond } from
+'@acme/http-kit'`, `export *`), so the package does not have to be installed; one without is matched by a declaration of that name in
+the repository, and a function of the same name declared anywhere else is not
+it. An answer may sit in an object handed to the helper (`"at": ["body"]`), or
+be built from several of its arguments: `"fields"` names each field of the
+answer and the argument it comes from, so `fail(400, 'bad_input', message)`
+answers `{ code: string; message: string }` under 400 - each field typed by
+what is written at the call, a literal by its kind, and an argument whose type
+says nothing left out (P33). A body helper's result is typed by a type argument written at the call, else by
+what it is declared to return, and is recorded as claimed unless `"claim":
+false` says the helper checks what it parses. `param` and `arg` say which of the
+handler's parameters is the request and which argument of the helper it must
+be handed, so a call on anything else is not read as one.
 
 ### Where a NestJS route's address comes from
 
@@ -1502,6 +2324,327 @@ key — is answered by whatever is deployed behind that key, which no source say
 so where two applications serve the address it is an
 `ambiguous-route-application` row naming both.
 
+### Functions and routes declared in Terraform
+
+A repository of Lambda handlers has no decorator, no call on an application and
+no routes directory: its handlers are plain exported functions, and the facts
+that one of them is deployed under a name and that `POST /loans` lands on it are
+written in Terraform. A service of type `lambda` is read from both. `init` and
+`link` propose it for a repository whose manifest declares `@types/aws-lambda`,
+`aws-lambda` or `@middy/core`, whose function directories each declare one, or
+which holds Terraform that declares a function or a route — including a
+repository of nothing but Terraform, which is still a service: it has routes and
+no bodies.
+
+**Every function is an `invoke` entry** under the name it is deployed with,
+`entry:<service>:invoke:<name>`, and it `handles` to the export its handler
+names: `index.createLoan` is `createLoan` exported from `index.ts` in the
+directory the function is packaged from. That directory is read from the archive
+the configuration builds (`filename = data.archive_file.x.output_path`, with its
+`source_dir` or `source_file`), and a directory of compiled output is mapped
+back to its source through the `outDir` and `rootDir` of the tsconfig that wrote
+it, so a function packaged from `dist/returns` lands on `src/returns`. Where
+nothing says what the package is built from — a zip a script makes, an object in
+a bucket — the module is searched for by name, and the edge is `heuristic`
+(`handlerFoundBy: "search"`) if exactly one source file of that name exports the
+handler, and a row otherwise. A handler wrapped in a chain —
+`middy(createLoan).use(jsonBodyParser())` — or by a wrapper lands on the function
+it wraps, with the chain and the wrappers as middleware in front of it, in the
+order they run. `flow invoke:<name>` starts from a function.
+
+**A handler re-exported lands where it is declared.** `export { processReturns }
+from './operations'` and `export * from './operations'` are followed to the
+declaration they re-export, and so is an export that is a name for something
+else: `export const processReturns = operations.processReturns` with
+`import * as operations`, the same in brackets (`operations['processReturns']`),
+or a `const` bound to another such name. The edge is `static`
+(`fixtures/lambda-namespace-handlers`). The same reading of a name serves every
+reader that follows one — a wrapper's argument, a factory, a constant — and only
+a `const` is followed, because a name assigned twice holds whatever was assigned
+last. A function whose handler could not be read is a row recorded against its
+`invoke` entry, so a `flow` that reaches it counts it.
+
+**A wrapper is a call handed exactly one function**, written in place, named, or
+a name for what another wrapper built, wherever it sits among the arguments:
+`traced('createLoan', createLoan)`, `withRetry({ attempts: 3 }, recordReturn)`
+and `instrument(placeHold, { segment: 'holds' })` all land on the function, and
+so do `middy(traced('renewLoan', renewLoan))` and `middy(createLoanLogic)` with
+`const createLoanLogic = traced('createLoan', async (event) => …)`. How far the
+landing is trusted follows what could be read of the wrapper:
+
+- a wrapper this repository declares is read, and is one when its body visibly
+  hands the function on — returns it, calls it from the function it builds with
+  everything that function was called with, returns what it returns, or hands
+  it to another wrapper and returns what that built. The edge is `static`. A
+  function of the repository that only uses what it was handed — calls it with
+  one piece of a request, or while it is being built — is a factory, not a
+  wrapper, and lands nowhere;
+- a wrapper from an installed package is read as far as its declarations go,
+  and one whose types say it hands back a function is taken at its word:
+  `static`;
+- a wrapper from a package that is not installed cannot be read at all. The
+  edge is `heuristic`, and the entry's `wrapperUnread` says which wrapper and
+  why. A wrapper of this repository that hands the function to such a package is
+  no surer than the package.
+
+A wrapper called by another name is the wrapper it names: taken off a namespace
+into a `const` (`const traced = tracing.traced`, `tracing['withRetry']`), a
+name of such a name, imported under another name (`import { traced as t }`), or
+re-exported by a barrel under one. Each is read through the same reading of a
+name as a re-exported handler, so a factory called by another name is still a
+factory and lands nowhere (`fixtures/lambda-wrapper-alias`).
+
+A call handed two or more functions — `firstOf(fromCache, fromTable)` — is not a
+wrapper of any of them, because which one runs is not in the call, and stays a
+`function-handler-unread` row naming the call (`fixtures/lambda-wrapped-handlers`).
+The Express, Fastify, Koa and Hono reader follows a route's handler by the same
+rule. The file-system routers (Next.js, Medusa) read a verb exported as a
+wrapper's value as that whole call, so where the function sits among the
+arguments never mattered to them.
+
+**Every route is an `http` entry onto the same handler.** A REST API's path is
+built from its `aws_api_gateway_resource` tree, `{loanId}` read as a parameter
+and `{proxy+}` as the rest of the path; an HTTP API's from the `route_key`. The
+integration names the function by a reference (`invoke_arn`, `arn`, the ARN
+written inside an invoke address, an alias), or by name through a `data`
+block. An authoriser in front of the route (`authorization`,
+`authorization_type`) is a guard, so `route-unguarded` sees it.
+
+**An API created from an OpenAPI document** (`body` on `aws_api_gateway_rest_api`
+or `aws_apigatewayv2_api`) is read from the document: each operation under
+`paths` - and `x-amazon-apigateway-any-method`, as `ALL` - is a route, and its
+`x-amazon-apigateway-integration` says what answers it, read exactly as an
+integration resource is: a function by its ARN or invoke ARN, or SQS, SNS or
+EventBridge integrated directly. The body may be `templatefile("openapi.yaml", {...})`,
+`file()`, `jsonencode({...})` or a heredoc, in JSON or YAML. A template
+variable that is a reference (`create_loan_arn = aws_lambda_function.create_loan.arn`)
+stays the reference, so `uri: ${create_loan_arn}` and
+`uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${create_loan_arn}/invocations`
+both name the function; a part the files do not settle - an account id - does not
+matter to which function or queue is named. An operation's `security` (or the
+document's) is a guard. Each route is placed on its line in the document. The
+walk over the operations is the one a service declared by its OpenAPI document
+is read with (`fixtures/lambda-terraform-openapi`). A body that is not read -
+a path the files do not settle, text that is not JSON or YAML, no `paths` - is
+one `api-body-unread` row.
+
+**A WebSocket API** (`protocol_type = "WEBSOCKET"`) has no paths and no verbs:
+each `aws_apigatewayv2_route` is a way in of its own, an `event` entry keyed
+`websocket/<api>/<route key>` - `$connect`, `$disconnect`, `$default`, or the
+value the route selection expression picks out of a message, `askLibrarian` -
+that runs whatever its integration invokes, or publishes onto the queue or bus
+it sends to. `meta.authorization` records an authoriser on `$connect`
+(`fixtures/lambda-terraform-websocket`).
+
+**Base paths and stages.** A custom domain's `aws_api_gateway_base_path_mapping`
+or `aws_apigatewayv2_api_mapping` puts its base path in front of every route of
+the API it maps, because that is the address a caller writes:
+`https://api.library.example/v1/items/42` calls `GET /items/{itemId}` of the API
+mapped at `v1`, and is joined to it as `GET /v1/items/:param`. An API mapped at
+two base paths has each route at both. The route records `basePath`, `domains`
+and the `stages` it is reached through; an API nothing maps records the stages
+it is deployed to (`aws_api_gateway_stage`, `aws_api_gateway_deployment`,
+`aws_apigatewayv2_stage`) and puts none of them in front, because a caller
+reaches a stage through its invoke URL, which already carries it. A point of an
+API another repository publishes carries the base path too. A mapping whose API
+or base path is not read is a `route-base-path-unread` row, and the routes of
+that API are at an address nothing joins to (`fixtures/lambda-terraform-base-paths`).
+
+**A shared API is joined across repositories.** A route that hangs from a
+point of an API another repository owns — looked up through a parameter
+(`data.aws_ssm_parameter.x.value`) or another state's output
+(`data.terraform_remote_state.x.outputs.y`) — has the part of its path this
+repository adds and the name of the point. The repository that writes that
+point (an `aws_ssm_parameter` holding a resource's id, or an output of a root
+module with a backend) publishes its path, and the linker joins the two by
+name, the way a channel is joined, so the route has its full address:
+`POST /v1/loans`. A route integrated with a function another repository deploys
+is given that function's handler, joined on the deployed name. Nothing published
+under that name, or two places for it, is a row and no join
+(`fixtures/multi-repo-lambda`).
+
+**What is evaluated, and what is not.** Variables (their defaults,
+`terraform.tfvars`, `*.auto.tfvars`), locals, `path.module`, string templates,
+references to other blocks and modules, and the functions that address things —
+`format`, `lookup`, `merge`, `join`, `replace`, `file`, `templatefile`,
+`jsonencode`, `jsondecode`, `try` and a few dozen more — are evaluated.
+Anything else is unknown, never guessed at: a function name that does not
+evaluate in full is an entry with no name (`${…}@<declaration>` in its id) and
+a row saying what to set, never a name built from the parts that did. A
+`count` or `for_each` over something the files settle is expanded; over
+something they do not, it is one instance with its key unknown, and says so.
+Nothing needs `terraform init` or state: only the checked-out files are read.
+Configuration written as JSON (`*.tf.json`) is read into the same tree as the
+native syntax, with a line on every block and argument: a string is a template
+(`"${aws_lambda_function.x.arn}"` is the reference), a variable's `default` is
+JSON as written, and `"//"` is a comment. A member is a block where the language
+makes it one - `lifecycle`, `dynamic`, a backend - and an argument everywhere
+else, which every reader accepts in place of a nested block
+(`fixtures/lambda-terraform-json`).
+
+**Environments.** Several `*.tfvars` files that give one name two values are
+two environments, and the tool does not pick one:
+
+```json
+{ "name": "loans", "repo": "./loans", "type": "lambda", "infra": { "vars": ["infra/env/dev.tfvars"] } }
+```
+
+reads the deployment `dev` describes. Without `infra.vars`, a function whose
+name depends on such a variable has no name and a `function-name-disputed` row
+names the variable and the files.
+
+**A module from elsewhere, described.** A local module (`source = "./modules/x"`)
+is read with its inputs bound. One whose source is a registry or another
+repository cannot be read, so what it declares is described, in the module's own
+language, beside the broker and HTTP descriptions:
+
+```jsonc
+{
+  "adapters": {
+    "infra": {
+      "modules": [
+        {
+          // the source as a call writes it; a pinned ?ref= is ignored, * matches anything
+          "source": "git::https://git.example.com/platform/terraform-api-route.git",
+          // defaults for inputs a call may leave out, as expressions
+          "variables": { "authorization": "\"AWS_IAM\"" },
+          // each resource it declares, by its address in the module,
+          // each argument an expression over var.<input>
+          "resources": {
+            "aws_api_gateway_resource.this": {
+              "rest_api_id": "var.rest_api_id",
+              "parent_id": "var.parent_resource_id",
+              "path_part": "var.path_part"
+            },
+            "aws_api_gateway_method.this": {
+              "rest_api_id": "var.rest_api_id",
+              "resource_id": "aws_api_gateway_resource.this.id",
+              "http_method": "var.http_method",
+              "authorization": "var.authorization"
+            },
+            "aws_api_gateway_integration.this": {
+              "rest_api_id": "var.rest_api_id",
+              "resource_id": "aws_api_gateway_resource.this.id",
+              "http_method": "var.http_method",
+              "uri": "var.lambda_invoke_arn"
+            }
+          },
+          // which output is which attribute, for a caller that hands one on
+          "outputs": { "resource_id": "aws_api_gateway_resource.this.id" }
+        }
+      ]
+    }
+  }
+}
+```
+
+A string is an expression, so a literal is written with its quotes
+(`"\"AWS_PROXY\""`); a number, `true`, `false` and `null` are themselves. A
+resource may repeat with `count` or `for_each` and use `each` like any other, and
+a description is read by exactly the code that reads a module whose source is
+present. `terraform-aws-modules/lambda/aws`,
+`terraform-aws-modules/apigateway-v2/aws` and
+`terraform-aws-modules/step-functions/aws` ship described; a description with the
+same source in the configuration is tried first. A remote module nothing
+describes is one `infra-module-undescribed` row naming the module, its source
+and the inputs it was given — at `info` unless one of those inputs looks like a
+handler, a function or a route (`fixtures/lambda-terraform-modules`).
+
+The only infrastructure reader is Terraform. SAM, the Serverless Framework, the
+CDK and CloudFormation are named when a repository is written for one
+(`deployment-unread`), and are a second implementation of the reader interface
+the adapter is written against, not a change to it.
+
+### Subscribers declared in Terraform
+
+The publishing half of an AWS channel is a call in a handler; the receiving half
+is in Terraform, and is read from there, onto the channel the publisher names in
+the grammar above. The two meet on one node, across repositories, by name.
+
+| Declared as | Read as |
+|---|---|
+| `aws_cloudwatch_event_rule` with an `event_pattern` (`jsonencode`, heredoc or a string), and each of its `aws_cloudwatch_event_target`s | a consumer of every `eventbridge/<bus>/<source>/<detail type>` the pattern selects, reaching the target |
+| a rule with a `schedule_expression`, and `aws_scheduler_schedule` | a `cron` entry on its target, the entry keyed by the rule's or the schedule's name |
+| `aws_lambda_event_source_mapping` from a queue | a consumer of `sqs/<queue>` reaching the function |
+| the same from a DynamoDB table's stream or a Kinesis stream | an `event` entry, `dynamodb/<table>` or `kinesis/<stream>`, on the function |
+| `aws_sns_topic_subscription` with protocol `lambda` or `sqs` | a consumer of `sns/<topic>` reaching the function or the queue; any other protocol is read and not followed (`info`) |
+| `redrive_policy` on `aws_sqs_queue`, and `aws_sqs_queue_redrive_policy` | a `triggers` edge from the queue to a publisher onto its dead-letter queue — not a reader, so a queue nothing reads is still one `dead` reports |
+| `aws_pipes_pipe` | a consumer of its source reaching its target; a bus target with `eventbridge_event_bus_parameters` publishes exactly that event |
+| an API Gateway integration with SQS (`arn:aws:apigateway:<region>:sqs:path/<account>/<queue>`, `sqs:action/SendMessage`), SNS (`sns:action/Publish`) or EventBridge (`events:action/PutEvents`, the HTTP API subtypes `SQS-SendMessage` and `EventBridge-PutEvents`) | the route is the way in and a publisher onto that channel: no function runs |
+
+**A target** is reached by what it is. A function this deployment creates is
+reached through its own `invoke` entry; a schedule or a stream runs it as an
+entry onto its handler, the way a route in front of it does. A function or a
+workflow deployed elsewhere is a reference by its deployed name, joined to the
+one entry in any service that answers to it (`reference-not-found` where none
+does). A queue, a topic or a bus is a publisher of its own onto that channel; a
+rule that puts the events it takes on another bus forwards each under the same
+source and detail type, where that bus's rules see them. A rule that names its
+events exactly forwards those; one that takes them by a pattern forwards
+whichever channels the pattern matches across the project, each put on the other
+bus by the linker with the match's confidence and `forwardedFrom` on the edge, and
+a rule on that bus matches them in turn (`fixtures/lambda-terraform-bus-forward`). Each is named by a reference to what the
+configuration declares or looks up, by an ARN or URL written out, or by a
+template whose name part is written out — `"arn:aws:lambda:${var.region}:${local.account}:function:library-notify"`
+names its function even though neither the region nor the account is known.
+
+**Matching an event to a rule.** A pattern is a filter, not a name. Where it
+names `source` and `detail-type` exactly, every combination is a channel, and
+the join is `static`. Anything else — `prefix`, `suffix`, `anything-but`,
+`exists`, `wildcard`, `equals-ignore-case`, or a field the pattern leaves out —
+is matched as written against every channel the project publishes, and the join
+is `heuristic`, with the reason on the edge, which `--format json` shows:
+
+```json
+"edge": {
+  "type": "consumes",
+  "confidence": "heuristic",
+  "because": ["source \"library.loans\" matches prefix \"library.\""],
+  "notMatchedOn": ["detail"]
+}
+```
+
+A filter on `detail`, on any other field, or a subscription's `filter_policy` and
+a mapping's `filter_criteria`, is recorded (`notMatchedOn`) and not matched on.
+An unnamed bus is `default` on both sides. A pattern that selects nothing any
+configured service publishes is one `subscription-matches-nothing` row at `info`:
+a rule for events from outside — another account, a partner, the platform — is a
+way in with no producer, not a fault. So is a rule that names its events exactly
+and has no publisher here: its channel is drawn with a consumer and no producer,
+and `dead --kind channels` lists it.
+
+**Values a function is deployed with.** Every variable of a function's
+`environment` block is kept on its `invoke` entry, as written, as text where the
+files settle it, and as the deployed thing it names (`aws_sqs_queue.returns.url`
+names the queue `library-returns` though its URL is not known until the queue
+exists). The linker asks, per function, which code that function's handler
+reaches, and completes every address waiting on the environment from that
+function's values: two functions that run one helper and set its queue
+differently send to two queues, each edge saying for which function. A function
+that runs the code and does not set the variable is an `environment-not-set` row
+naming both; a value two variable files set differently is an
+`environment-value-unread` row naming the files, and `services[].infra.vars`
+chooses. Every settings key a function sets says where its value comes from on
+the `reads_config` edge that reads it (`setBy`).
+
+**A default the code writes beside the variable** —
+`process.env.RETURNS_QUEUE_URL ?? '<url>'`, `|| DEFAULT_TOPIC` with a `const`,
+`const { BUS = 'library' } = process.env` — is where the code sends from a
+function deployed without the variable. The address still waits on the
+deployment, and the deployment's value wins where it is set; a function that
+does not set it sends to the default, read through the same URL and ARN forms,
+instead of being an `environment-not-set` row. The edge's `defaults` names the
+variables the code's default stood in for, beside the `variables` the
+deployment set. A value the deployment sets and the files do not settle is
+still a row: the default is not what runs there. A default that is not one
+name — an empty string, a pattern, or one behind a second variable — is not
+taken (`fixtures/sqs-environment-fallback`).
+
+`terraform-aws-modules/eventbridge/aws`, `terraform-aws-modules/sqs/aws` and
+`terraform-aws-modules/sns/aws` ship described, beside the function and route
+modules (`fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
+`fixtures/multi-repo-events`).
+
 ### Procedures
 
 A tRPC server's ways in are not routes: each procedure is a key in a tree of
@@ -1534,6 +2677,294 @@ made as a mutation to a procedure declared a query joins and says so in a
 `procedure-call-mismatch` row (`fixtures/trpc-join`). `adapters.entry.procedures`
 exposes the description the shipped reader is written as, for another framework
 of the same family.
+
+### Workflows written as state machines
+
+A state machine written in the Amazon States Language is the order a project's
+steps happen in, written down. Every repository a server reader reads is also
+searched for definitions kept as files of their own - `*.asl.json`,
+`*.asl.yaml`, `*.asl.yml`, the convention the public samples and editors use -
+and each is drawn as a way in of kind `workflow`. Nothing to configure.
+
+- **The machine** is an entry, `entry:<service>:workflow:<name>`, that `handles`
+  its `StartAt` state. `flow workflow:<name>` names it.
+- **Each state** is a `function` node of kind `state`, with the state's type in
+  `meta.stateType` and its id `<service>#<file>:<workflow>/<state>`. A state
+  nested in a `Parallel` branch or a `Map` processor is a node like any other,
+  with `meta.scope` saying where it sits. What a state is given and passes on -
+  `Parameters`/`Arguments`, `ResultSelector`, `ResultPath`, `InputPath`,
+  `OutputPath`, `Output`, `Assign` - and its `Retry` are kept on the node as
+  written, so `--detail 2` shows them. Nothing is evaluated.
+- **Every transition** is a `calls` edge from one state to the next, and
+  `meta.transitions` on it says which way it is: `next`, `choice` (with the rule
+  as written), `default`, `catch` (with the errors), `branch` (with its index)
+  or `item-processor`. Two ways between the same pair of states - a rule and the
+  default both going to one state - are one edge listing both. Every branch is
+  drawn and none is preferred.
+- **A task that starts another workflow** (`states:startExecution`, with
+  `.sync`, `.sync:2` and `.waitForTaskToken`, and the SDK's `sfn` spelling) is
+  joined to that workflow's entry by the name in its `StateMachineArn`, in
+  whichever service declares it, the way a publisher and a consumer meet on a
+  channel's name.
+- **A task that invokes a function** (`lambda:invoke` with `FunctionName` as a
+  name, a partial ARN or a full one, or the function's ARN as the `Resource`)
+  carries a reference to the function by its deployed name, `invoke:<name>`, and
+  the linker joins it to the `invoke` entry of that name in whichever service
+  deploys it (see [Functions and routes declared in
+  Terraform](#functions-and-routes-declared-in-terraform)). A name no configured
+  service deploys is a `reference-not-found` row.
+- **A task that reads or writes a table** (`dynamodb:getItem`, `putItem`,
+  `updateItem`, `deleteItem`, and through the SDK `query`, `scan` and the batch
+  and transaction calls) is a `db_query` on that table.
+- **A task that sends a message** (`sqs:sendMessage`, `sns:publish`,
+  `events:putEvents`, their batch forms, and the `aws-sdk:` spellings) is a
+  producer at the step, the way a call that sends is one in code, `static`,
+  with an `emits` edge onto each channel it names: `sqs/<queue>`,
+  `sns/<topic>`, `eventbridge/<bus>/<source>/<detail type>`, the bus an entry
+  leaves out written `default`. The message it is given is kept as written on
+  that edge, `meta.payload` (`{ "MessageBody.$": "$.notice" }`). The channel is
+  spelled the way the subscriber a deployment declares spells it (see
+  [Subscribers declared in Terraform](#subscribers-declared-in-terraform)), so a
+  mapping from the queue, a subscription to the topic or a rule on the bus, in
+  any repository, is joined to the step by name. An event whose source or
+  detail type is chosen at run time names no channel and is a row, like any
+  other name that is not written.
+- **Any other integration** - `aws-sdk:s3:putObject`, `glue:startJobRun.sync` -
+  is a step whose `meta.task` says the service, the action and how the state
+  waits for it. It joins nothing, and is still in every walk.
+
+**What is never guessed.** A name the definition does not state is a row, and no
+edge: `workflow-target-dynamic` where the state chooses it at run time (a
+`.$` path, a `States.` intrinsic, a JSONata `{% %}` expression), which is
+nothing to fix; `workflow-template-unbound` where it is a `${...}` placeholder
+that whatever deploys the definition fills in first; and
+`workflow-target-unreadable` where the field is missing or names nothing. A
+placeholder standing only for the region or the account in front of a written
+name - `arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:notify-borrower`
+- still names the function.
+
+**What a definition on its own cannot say** is the name it is deployed under. So
+a workflow read from a file is named after the file - `loan-approval.asl.json`
+is `loan-approval` - its entry says `meta.nameFrom: "file-name"`, a
+`workflow-named-by-file` row says so, and every join made to it by that name is
+`heuristic` rather than `static`. Two definitions in one service with one file
+name are a `workflow-name-duplicate` row, and only the first is drawn. A file
+that does not parse, or parses into something with no `StartAt` and `States`,
+is one `workflow-definition-unreadable` row and nothing else; a definition that
+names a state that is not there is drawn as written beside a
+`workflow-definition-invalid` row (`fixtures/stepfunctions-asl-files`).
+
+A definition file is stamped with the sources, so changing one rebuilds its
+service.
+
+#### A state machine declared in Terraform
+
+Where the repository's Terraform declares the machine -
+`aws_sfn_state_machine`, directly, through a local module, or through
+`terraform-aws-modules/step-functions/aws`, which ships described - the
+workflow is read from there, under the `name` the machine is deployed with,
+evaluated: `name = "${var.prefix}-loan-approval"` is `lending-loan-approval`,
+whatever the definition's file is called. Its entry says
+`meta.nameFrom: "deployment"`, `meta.declaredAs` and `meta.declaredIn` say
+where, and every join made to it by name is `static`. The definition is read
+however it is written, followed back through any variable or local that only
+hands it on:
+
+| Written as | Read as | Placed on the lines of |
+|---|---|---|
+| `file("${path.module}/loan-approval.asl.json")` | the file | the file |
+| `templatefile("loan-renewal.asl.json", { ... })` | the template, rendered with the variables it is handed, directives included | the template |
+| `jsonencode({ ... })` | the value | the `.tf` file, each state where its key is written |
+| a heredoc, or a quoted string | the text, rendered | the `.tf` file |
+| `jsonencode(yamldecode(file(...)))`, `jsondecode` likewise | the file, in the format the decoder names | the file |
+
+A value that is not text yet - a template variable holding
+`aws_lambda_function.x.arn`, `module.f.lambda_function_arn` or
+`aws_sfn_state_machine.y.arn`, a `Resource = aws_lambda_function.x.arn` inside
+`jsonencode`, an interpolation in a heredoc - is left in the definition as a
+placeholder, and the deployment fills it with what it addresses: the deployed
+name of the function, the workflow, the table, the queue, the topic or the bus
+it refers to, created or looked up by a `data` block. So a task names its
+function through Terraform as plainly as by a literal, and its edge is `static`
+where every name resolved. A placeholder the files do not settle - a variable
+with no default and no variable file - stays unfilled, and the step that uses
+it is one `workflow-template-unbound` row and no edge; the rest of the workflow
+is drawn.
+
+A definition that is also named `*.asl.json` is read once, by the deployment
+that loads it, and not a second time under its file's name. A machine whose
+name is not read is drawn keyed by its declaration, which nothing can join to,
+beside a `workflow-name-unread` row saying what to set; a definition that
+cannot be read at all - a path or a directive the files do not settle - is one
+`workflow-definition-not-loaded` row and nothing else. Every file `file()`,
+`templatefile()` or `fileexists()` opened while the configuration was read is
+stamped with the sources, by the path the evaluator was handed - built through a
+local or a variable as readily as written out - so changing it rebuilds the
+service (`fixtures/stepfunctions-terraform`,
+`fixtures/multi-repo-stepfunctions`).
+
+What starts a machine - a schedule, an event rule, another service's code - is
+joined to the same entry, `workflow:<deployed name>`, as those are read.
+
+#### Walking a workflow
+
+`flow workflow:<name>` takes, at each step, what the step does first - the
+function it invokes, the table it writes - and then where control goes next in
+the order it goes there: a `Parallel`'s branches, a `Map`'s processor, each
+`Choice` rule and its `Default`, `Next`, and each `Catch` last, wherever each is
+written in the file. Without `--depth`, a walk from a workflow goes one hop per
+step the workflow has, which is enough to reach its last step along the
+longest way through it, and the usual eight beyond that, into whatever the
+deepest step reaches; `--max-nodes` still bounds what is printed. `impact`
+without `--depth` is lengthened the same way, read backwards: a walk up from a
+handler climbs a workflow one step at a time from whichever step reaches it, so
+it goes the usual eight hops and one more for every step it climbs, and reaches
+whatever starts the workflow - a route in another repository, a rule, another
+workflow - without being told how far (`fixtures/multi-repo-stepfunctions`).
+The `impact` tool of the graph server does the same from its own twelve.
+
+### Code that starts a workflow or a function
+
+A handler that starts a state machine or invokes another function names it by
+the name it is deployed under, and the call is joined to the `workflow` or
+`invoke` entry of that name, in whichever service deploys it, the way a step of
+a workflow is. So `flow 'POST /loans'` goes on from the handler into the
+workflow it starts and every function that workflow invokes. The call is drawn
+as a producer labelled with what it does and the name - `start
+lending-loan-approval`, `invoke lending-hold-copies` - that carries a reference
+(`meta.reaches`) the linker joins, and never as a channel: a workflow or a
+function has exactly one receiver, which the deployment names.
+
+**Through the SDK** (see [The AWS SDK](#the-aws-sdk)):
+
+| Operation | Starts | Name from | Recorded as |
+|---|---|---|---|
+| Step Functions `StartExecution` | the workflow | `stateMachineArn`, its version or alias dropped | `start` |
+| Step Functions `StartSyncExecution` | the workflow, and waits for it | `stateMachineArn` | `start-sync` |
+| Lambda `Invoke` | the function | `FunctionName`: a name, a partial or a full ARN, a `name:alias` | `invoke`, or `invoke-async` where `InvocationType` is `Event` (`invoke-dry-run` for `DryRun`) |
+| Step Functions `SendTaskSuccess`, `SendTaskFailure` | nothing: it answers a run waiting on a `.waitForTaskToken` step | - | `task-success`, `task-failure`, a leaf on the handler that joins nothing, because a token names a run and no workflow |
+
+A name read from `process.env` is completed from the deployment exactly as a
+queue's is: the call waits on the variable (`meta.awaiting`, and a
+`start-from-environment` row), and where a function whose Terraform sets it -
+`LOAN_APPROVAL_ARN = aws_sfn_state_machine.loan_approval.arn` - runs the call,
+the name is that workflow's and the row goes (`fixtures/start-workflow-sdk`).
+
+**Through a helper whose source is read.** Where the call is inside a method or
+a function of the project's own - in a workspace package, one installed, or the
+service itself - and the name it starts is that helper's parameter, the start is
+the caller's: each call of the helper is followed out, the argument passed there
+is read as the name would have been, and the start is drawn at that call, in the
+caller. A caller that is itself handing the name on is followed further. Nothing
+is drawn inside the helper unless nothing calls it, a call may land in another
+implementation, or a caller's argument reads less than the helper's own: a
+caller is drawn on only where it says as much as the helper does, so following
+a value out is never worse than leaving it where it is written. This is the forwarding every reader shares - a shared
+HTTP client's requests get it too - and it follows a method through its
+receiver, and a function written `function start(arn)` or `const start = (arn)
+=> …` called by its name, by a name it was imported as, or through its module's
+namespace (`fixtures/start-workflow-function-helper`). A request followed out to
+a caller whose value is not read keeps the address it states: a hole that fills
+one segment stays a route parameter, and one that fills part of a segment -
+`bot${token}` - leaves the request in the helper, `static`, with the caller's
+call into it (`fixtures/nest-helper-keeps-request`).
+
+**Through a helper whose source is not here, described.** A package shared by
+a project's services is often not installed where someone first reads one: a
+private registry, a repository nobody here has cloned. `adapters.starters`
+describes its call:
+
+```jsonc
+"starters": [{
+  "module": "@library/orchestration",   // the package the helper is imported from
+  "function": "run",                    // or "receiverType" and "method"
+  "target": "workflow",                 // or "invoke"
+  "name": [{ "kind": "argument", "index": 0 }],
+  "names": { "Process.LoanApproval": "lending-loan-approval" }
+}]
+```
+
+| Key | Means |
+|---|---|
+| `module` | the package. With `function`, the call is `run(...)` imported under that name or `orchestrator.run(...)` on anything imported from the package, matched on the import, so an absent package is matched as readily as an installed one. With `receiverType` and `method`, it is the package the receiver's class comes from |
+| `function`, or `receiverType` and `method` | which call it is, as for a [`broker.custom`](#adapters) producer |
+| `target` | `workflow` or `invoke`: what the name is the deployed name of |
+| `name` | where the name is written, in any [locator](#where-the-channel-name-is-written), tried in order |
+| `names` | optional: what the code says, to the deployed name, where the two differ. A key is what the name reads as, or the expression as written where that cannot be read - an enum member of a package that is not here is `Process.LoanApproval` |
+| `kind` | optional: what the call is recorded as; `start` or `invoke` by default |
+
+**A start addressed by a record made one call earlier.** Some helpers record
+what to start in one call and start it in the next, by the record's id:
+
+```ts
+const run = await orchestrator.create({ process: Process.LoanApproval, loanId });
+await orchestrator.start({ runId: run.id });
+```
+
+The second call is the start, and its arguments do not hold the name. The
+`origin-call-argument` locator reads it from the first:
+
+```jsonc
+"starters": [{
+  "module": "@library/orchestration",
+  "function": "start",
+  "target": "workflow",
+  "name": [{ "kind": "origin-call-argument", "call": "create", "path": ["process"] }],
+  "names": { "Process.LoanApproval": "lending-loan-approval" }
+}]
+```
+
+| Key | Means |
+|---|---|
+| `call` | the call that made the record: a method on the same receiver as the start, or a function imported from the same module |
+| `path` | properties inside that call's argument, as for `argument-path`; empty is the argument itself |
+| `index` | optional: which argument of that call the path starts in, the first by default |
+
+A value the start is handed - `run.id`, `id` from `const { id } = await
+create(...)`, a `const` holding either - is followed back to the call that made
+it. Only within the body the start is written in, only through `const`
+bindings, and only to exactly one call of that name. Anything else - an id from
+the request, a `let`, a record made in another function, two records either of
+which could be the one, a path that ends at a parameter - reads as
+`start-name-unread`, and nothing is guessed (`fixtures/start-workflow-by-record`).
+
+**How far each join is trusted.** A name the code states and the deployment
+confirms is `static`, whether the SDK, a read helper or a described one states
+it. A name taken from a `names` table is `declared`: somebody wrote the mapping,
+nothing here can check it, and a stale table must not read as proof - the same
+level a service read from its OpenAPI document has. A deployed name is never
+guessed from an enum member's spelling; a convention can be written in `names`,
+and is never inferred.
+
+It is a description of its own rather than a `broker.custom` producer because
+what it describes is not a message. Described as a publish, every state machine
+would be a channel and every function a consumer of one, and `dead` and the
+reverse walk would answer about them in channel terms.
+
+**`doctor` says which helper to describe.** A call from the handler of a
+deployed function into a package whose source is not read has the shape of a
+start nobody has described when one of these holds, tried in order:
+
+| The package | The call |
+|---|---|
+| is not installed | is handed an id - `id`, `runId`, `executionArn` - read off what a call into the same package returned earlier in the same body |
+| is installed with its declared types only | is declared in types that import a client that starts something: Step Functions or Lambda, version 3 or 2 |
+
+A call handed a string or a member of an enum and nothing else is not enough:
+error builders, response mappers and code converters are handed exactly that,
+and start nothing. Each shape is one `starter-undescribed` row per package and
+function, at the first call, with the description to write in the hint and in
+`meta.description`: an `origin-call-argument` locator pointing at the call that
+made the id, where there is one, and the `target` the client's types say where
+they say one. Filling in the deployed name is left to you. A call another
+reader already drew - a request, a query - is not reported. Making the
+package's source readable here answers the row as well
+(`fixtures/start-workflow-by-record`).
+
+A described call is read, so it leaves no `call-dynamic-receiver` row: the call
+graph writes one for a receiver it cannot type, as every call into a package
+that is not here has, and takes it back once a description - a starter, or a
+broker producer - reads the call. An undescribed one keeps it.
 
 ---
 

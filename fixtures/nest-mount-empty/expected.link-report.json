@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:40:17.642Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:18.658Z",
   "configHash": "5058ec93d4d4",
   "services": [
     {
@@ -12,7 +12,15 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4109
+      "durationMs": 644,
+      "packages": {
+        "name": "nest-mount-empty-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -23,7 +31,14 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 3269
+      "durationMs": 504,
+      "packages": {
+        "name": "nest-mount-empty-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

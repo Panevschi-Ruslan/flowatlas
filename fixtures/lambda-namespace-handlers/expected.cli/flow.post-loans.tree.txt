@@ -1,0 +1,9 @@
+@  POST /loans                                                    desk/infra/api.tf:13
+  -> createLoan                                                   desk/src/operations/loans.ts:17
+    ~  message sqs/library-desk-loans-opened                      desk/src/operations/loans.ts:19
+      ~  sqs/library-desk-loans-opened                            infra/queues.tf:11
+        ~  mapping aws_lambda_event_source_mapping.archive_loans  desk/infra/queues.tf:11
+          @  library-desk-archive-loan                            desk/infra/functions.tf:70
+    $  LOANS_OPENED_QUEUE_URL                                     desk/src/operations/loans.ts:21
+    -> json                                                       desk/src/lib/http.ts:3
+unresolved on this path: 1

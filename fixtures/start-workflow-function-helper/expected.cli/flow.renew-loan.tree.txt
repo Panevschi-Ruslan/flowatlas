@@ -1,0 +1,12 @@
+@  POST /loans/:param/renewals                 lending/infra/api.tf:41
+  -> handler                                   lending/src/handlers/renew-loan.ts:5
+    -> startWorkflow                           lending/src/lib/workflows.ts:9
+    ~  start lending-loan-approval             lending/src/handlers/renew-loan.ts:9
+      @  workflow lending-loan-approval        lending/statemachine/loan-approval.asl.json:1
+        -> CheckBorrower [Task lambda:invoke]  lending/statemachine/loan-approval.asl.json:5
+          @  lending-check-borrower            lending/infra/functions.tf:37
+            -> handler                         lending/src/handlers/check-borrower.ts:3
+          -> ScoreBorrower [Task function]     lending/statemachine/loan-approval.asl.json:17
+            @  lending-score-borrower          lending/infra/functions.tf:45
+              -> handler                       lending/src/handlers/score-borrower.ts:1
+unresolved on this path: 0

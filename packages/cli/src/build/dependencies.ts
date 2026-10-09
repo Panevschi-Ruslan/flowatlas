@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { serviceSourceDirs, workspaceRootOf } from '@flowatlas/core';
-import { hashFile, type DependencyState } from './cache.js';
+import { hashFile, stampFiles, type DependencyState, type FileStamp } from './cache.js';
 
 /**
  * Whether a service's dependencies are there, as the rebuild plan means it.
@@ -132,6 +132,62 @@ export const dependencyChange = (
     if (was === undefined) return `${name} appeared`;
     if (now === undefined) return `${name} is gone`;
     return `${name} changed`;
+  }
+  return undefined;
+};
+
+/**
+ * How many declaration files out of installed packages one repository records.
+ *
+ * A lockfile already answers for an install as a whole; these are here for an
+ * edit made inside one, which is a handful of files and not a whole tree of
+ * typings. The bound keeps a repository reading thousands of them from paying
+ * a stat per file on every build, and it is a sorted prefix, so the same
+ * reading records the same files.
+ */
+export const MAX_PACKAGE_FILES = 2000;
+
+/** How many directories above the repository a recorded path climbs. */
+const climbOf = (file: string): number => /^(?:\.\.\/)*/.exec(file)?.[0].length ?? 0;
+
+/**
+ * At most {@link MAX_PACKAGE_FILES} of the files read, nearest the repository
+ * first and then by name, so what is cut is what the workspace hoisted rather
+ * than what the repository installed for itself.
+ */
+export const boundedPackageFiles = (files: readonly string[]): string[] =>
+  [...new Set(files)]
+    .sort((a, b) => climbOf(a) - climbOf(b) || (a < b ? -1 : a > b ? 1 : 0))
+    .slice(0, MAX_PACKAGE_FILES);
+
+/**
+ * The recorded package files as they are on disk now.
+ *
+ * Size and modification time stand in for a read where they agree with the
+ * record, so an unchanged install costs a stat per file; where they disagree the
+ * file is hashed, so a reinstall that rewrote identical declarations is still
+ * no change. A file that is gone hashes as empty and so reads as changed.
+ */
+export const stampPackageFiles = (
+  repoDir: string,
+  files: readonly string[],
+  previous: Record<string, FileStamp> | undefined,
+): Record<string, FileStamp> =>
+  stampFiles(repoDir, boundedPackageFiles(files), previous, { trustTimestamps: true });
+
+/**
+ * The first recorded package file whose content moved, in one phrase.
+ *
+ * Only the files the last reading recorded are compared: a package file the
+ * reading did not use cannot have changed its answer, and a new one being used
+ * comes from a change to the repository's own files, which the plan sees there.
+ */
+export const packageChange = (
+  before: Record<string, FileStamp> | undefined,
+  after: Record<string, FileStamp>,
+): string | undefined => {
+  for (const [file, stamp] of Object.entries(before ?? {}).sort(([a], [b]) => (a < b ? -1 : 1))) {
+    if (after[file]?.hash !== stamp.hash) return `installed ${file} changed`;
   }
   return undefined;
 };

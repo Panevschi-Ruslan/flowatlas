@@ -1,7 +1,7 @@
 {
-  "contractsFormatVersion": 4,
-  "schemaVersion": 5,
-  "generatedAt": "2026-09-27T17:30:49.916Z",
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:27:07.744Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -26,9 +26,9 @@
       },
       "edgeKey": "ui_api_call:web#src/app/live-events.service.ts:26:20|hits|entry:api:http:GET:/api/depots/:param/stream",
       "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "api#src/stream/sse.ts:orderStream declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/live-events.service.ts:LiveEventsService.open declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {

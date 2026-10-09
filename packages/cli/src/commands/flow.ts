@@ -18,7 +18,9 @@ export const runFlow = (ref: string, options: QueryOptions, io: QueryIo = proces
   const entry = resolveEntry(db, ref, settings.service);
 
   const flow = buildFlowTree(db, entry.id, {
-    depth: settings.depth,
+    // Without `--depth` the walk goes as far as the entry needs: a workflow is
+    // walked through every step and into what each reaches (`defaultFlowDepth`).
+    ...(options.depth === undefined ? {} : { depth: settings.depth }),
     maxNodes: settings.maxNodes,
     detail: settings.detail,
   });

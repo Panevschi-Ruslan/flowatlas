@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T17:34:49.065Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:52.018Z",
   "configHash": "b276b8650687",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 17,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 515,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "socket.io"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -21,9 +28,17 @@
       "extractor": "@flowatlas/extractor-angular",
       "nodes": 18,
       "edges": 12,
-      "types": 0,
+      "types": 2,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 495,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "@angular/core",
+          "socket.io-client"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -59,14 +74,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 4,
+    "total": 6,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
     "nodes": 36,
     "edges": 29,
-    "types": 4,
+    "types": 6,
     "unresolved": 0
   }
 }

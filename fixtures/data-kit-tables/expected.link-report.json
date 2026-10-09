@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-09T08:01:47.194Z",
+  "configHash": "99ae4690aaf0",
+  "services": [
+    {
+      "name": "loans",
+      "repo": ".",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 53,
+      "edges": 56,
+      "types": 2,
+      "unresolved": 4,
+      "durationMs": 503,
+      "packages": {
+        "name": "library-loans",
+        "runtime": [
+          "@acme/data-kit",
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 9,
+    "called": 0,
+    "uncalled": [
+      "entry:loans:http:DELETE:/loans/:param",
+      "entry:loans:http:DELETE:/members/:param",
+      "entry:loans:http:DELETE:/reservations/:param",
+      "entry:loans:http:POST:/fines/:param",
+      "entry:loans:http:POST:/loans",
+      "entry:loans:http:POST:/loans/archive/:param",
+      "entry:loans:http:POST:/members",
+      "entry:loans:http:POST:/reservations/:param",
+      "entry:loans:http:PUT:/reservations/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 53,
+    "edges": 56,
+    "types": 2,
+    "unresolved": 4
+  }
+}

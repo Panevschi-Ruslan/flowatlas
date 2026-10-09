@@ -1,0 +1,70 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:28:31.749Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:lending#src/handlers/create-loan.ts:12:9",
+        "to": "entry:lending:workflow:lending-loan-approval",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/create-loan.ts:12:9|calls|entry:lending:workflow:lending-loan-approval",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "lending",
+        "typeId": "type:lending#Loan",
+        "symbol": "lending#src/handlers/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "lending",
+        "typeId": "{borrowerId:unknown}",
+        "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:borrowerId"
+      ]
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:lending#src/handlers/create-loan.ts:16:9",
+        "to": "entry:lending:workflow:lending-reserve-copies",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/create-loan.ts:16:9|calls|entry:lending:workflow:lending-reserve-copies",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "lending#src/handlers/create-loan.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:lending#src/handlers/renew-loan.ts:10:9",
+        "to": "entry:lending:workflow:lending-loan-approval",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/renew-loan.ts:10:9|calls|entry:lending:workflow:lending-loan-approval",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "lending#src/handlers/renew-loan.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 1,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

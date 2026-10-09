@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-hold-shelf",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Holds on a lending library's titles, as Lambda handlers kept in functions/ beside the shared code in src/.",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

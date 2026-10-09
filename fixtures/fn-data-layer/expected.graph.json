@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "fn-data-layer",
-  "generatedAt": "2026-09-27T14:20:49.869Z",
+  "generatedAt": "2026-10-07T18:28:44.456Z",
   "nodes": [
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
@@ -195,7 +195,18 @@
       "label": "OrdersService.archiveOrder",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.class.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "fn-data-layer#src/orders/orders.class.ts:OrdersService.listOrders",
@@ -203,7 +214,13 @@
       "label": "OrdersService.listOrders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.class.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:fn-data-layer#Order[]"
+        }
+      }
     },
     {
       "id": "fn-data-layer#src/orders/orders.class.ts:OrdersService.saveInvoice",
@@ -211,7 +228,18 @@
       "label": "OrdersService.saveInvoice",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.class.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "invoice",
+              "type": "type:fn-data-layer#InvoiceEntity"
+            }
+          ],
+          "returns": "type:fn-data-layer#InvoiceEntity"
+        }
+      }
     },
     {
       "id": "fn-data-layer#src/orders/orders.class.ts:OrdersService.saveOrder",
@@ -219,7 +247,18 @@
       "label": "OrdersService.saveOrder",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.class.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:fn-data-layer#Order"
+            }
+          ],
+          "returns": "type:fn-data-layer#Order"
+        }
+      }
     },
     {
       "id": "fn-data-layer#src/orders/orders.object.ts:orderQueries.list",
@@ -227,7 +266,13 @@
       "label": "orderQueries.list",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.object.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:fn-data-layer#Order[]"
+        }
+      }
     },
     {
       "id": "fn-data-layer#src/orders/orders.repository.ts:archiveOrder",
@@ -235,7 +280,18 @@
       "label": "archiveOrder",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.repository.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "fn-data-layer#src/orders/orders.repository.ts:listOrders",
@@ -243,7 +299,13 @@
       "label": "listOrders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.repository.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:fn-data-layer#Order[]"
+        }
+      }
     },
     {
       "id": "fn-data-layer#src/orders/orders.repository.ts:saveInvoice",
@@ -251,7 +313,18 @@
       "label": "saveInvoice",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.repository.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "invoice",
+              "type": "type:fn-data-layer#InvoiceEntity"
+            }
+          ],
+          "returns": "type:fn-data-layer#InvoiceEntity"
+        }
+      }
     },
     {
       "id": "fn-data-layer#src/orders/orders.repository.ts:saveOrder",
@@ -259,7 +332,18 @@
       "label": "saveOrder",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.repository.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:fn-data-layer#Order"
+            }
+          ],
+          "returns": "type:fn-data-layer#Order"
+        }
+      }
     },
     {
       "id": "repo:fn-data-layer",

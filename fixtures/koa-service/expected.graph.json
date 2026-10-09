@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "koa-service",
-  "generatedAt": "2026-09-27T17:37:38.257Z",
+  "generatedAt": "2026-10-08T09:12:40.126Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -156,7 +156,18 @@
       "label": "listOrders",
       "repo": "koa-service",
       "file": "src/orders/orders.controller.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository",
@@ -173,7 +184,18 @@
       "label": "OrdersRepository.byId",
       "repo": "koa-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository.insert",
@@ -181,7 +203,18 @@
       "label": "OrdersRepository.insert",
       "repo": "koa-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository.list",
@@ -189,7 +222,13 @@
       "label": "OrdersRepository.list",
       "repo": "koa-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.routes.ts:GET /:orderId@27",
@@ -197,7 +236,18 @@
       "label": "GET /:orderId@27",
       "repo": "koa-service",
       "file": "src/orders/orders.routes.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.routes.ts:POST /@32",
@@ -205,7 +255,18 @@
       "label": "POST /@32",
       "repo": "koa-service",
       "file": "src/orders/orders.routes.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.routes.ts:requireAdmin",
@@ -231,7 +292,18 @@
       "label": "GET /health@12",
       "repo": "koa-service",
       "file": "src/public/public.routes.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-service#src/public/public.routes.ts:GET /summary@16",
@@ -239,7 +311,18 @@
       "label": "GET /summary@16",
       "repo": "koa-service",
       "file": "src/public/public.routes.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-service#src/server.ts:authenticate",
@@ -310,7 +393,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:koa-service:http:GET:/orders",
@@ -346,7 +432,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
     },
     {
       "from": "entry:koa-service:http:GET:/orders/:param",
@@ -382,7 +472,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/public/public.routes.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{status:string}"
     },
     {
       "from": "entry:koa-service:http:GET:/public/summary",
@@ -390,7 +484,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/public/public.routes.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{orders:unknown}"
     },
     {
       "from": "entry:koa-service:http:POST:/orders",
@@ -398,7 +496,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "requestRead": true,
+        "body": "type:koa-service#CreateOrder",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:koa-service:http:POST:/orders",
@@ -511,7 +616,35 @@
       "returns": "unknown"
     }
   ],
-  "types": {},
+  "types": {
+    "type:koa#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "koa",
+      "structuralHash": "002a3105e543026c",
+      "meta": {
+        "declKind": "external",
+        "package": "koa"
+      }
+    },
+    "type:koa-service#CreateOrder": {
+      "name": "CreateOrder",
+      "kind": "object",
+      "declaredIn": "koa-service#src/orders/orders.routes.ts",
+      "structuralHash": "f571afd1325e8f1e",
+      "fields": [
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/orders/orders.routes.ts",

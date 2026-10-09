@@ -1,0 +1,22 @@
+{
+  "Comment": "Sends a borrower a notice, and tries once more an hour later if the mail service refuses it.",
+  "StartAt": "SendNotice",
+  "States": {
+    "SendNotice": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "members-send-notice",
+        "Payload.$": "$"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["MailServiceUnavailable"],
+          "IntervalSeconds": 3600,
+          "MaxAttempts": 1
+        }
+      ],
+      "End": true
+    }
+  }
+}

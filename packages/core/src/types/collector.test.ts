@@ -26,6 +26,8 @@ export class Api {
   nothing(): Promise<void> { return null as never }
   literalReturn(): { a: string; b?: number } { return null as never }
   takes(a: string, b: Money, c?: number): void {}
+  spread(first: string, ...rest: number[]): void {}
+  destructured({ amount, currency }: Money): void {}
   unioned(): Cart | null { return null as never }
   enumed(): Status { return Status.New }
   kinded(): Kind { return 'retail' }
@@ -98,6 +100,27 @@ describe('TypeCollector', () => {
       'string',
       'type:orders#Money',
       'number|undefined',
+    ]);
+  });
+
+  it('names each parameter, and says which are optional or a rest', () => {
+    expect(collector.collectSignature(method('takes')).signature).toEqual({
+      params: [
+        { name: 'a', type: 'string' },
+        { name: 'b', type: 'type:orders#Money' },
+        { name: 'c', type: 'number|undefined', optional: true },
+      ],
+      returns: 'void',
+    });
+    expect(collector.collectSignature(method('spread')).signature.params).toEqual([
+      { name: 'first', type: 'string' },
+      { name: 'rest', type: 'number[]', rest: true },
+    ]);
+  });
+
+  it('calls a destructured parameter by its pattern', () => {
+    expect(collector.collectSignature(method('destructured')).signature.params).toEqual([
+      { name: '{ amount, currency }', type: 'type:orders#Money' },
     ]);
   });
 

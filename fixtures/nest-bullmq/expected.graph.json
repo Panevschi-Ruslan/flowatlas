@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-09-27T15:27:50.649Z",
+  "generatedAt": "2026-10-07T18:29:15.510Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -226,7 +226,18 @@
       "label": "AnonymousProcessor.process",
       "repo": "nest-bullmq",
       "file": "src/mail/anonymous.processor.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:bullmq#Job<unknown,unknown,string>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/legacy-mail.processor.ts:LegacyMailProcessor",
@@ -246,7 +257,18 @@
       "label": "LegacyMailProcessor.handleAny",
       "repo": "nest-bullmq",
       "file": "src/mail/legacy-mail.processor.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:bull#Job<type:nest-bullmq#SendEmailJob>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/legacy-mail.processor.ts:LegacyMailProcessor.handleSendEmail",
@@ -254,7 +276,18 @@
       "label": "LegacyMailProcessor.handleSendEmail",
       "repo": "nest-bullmq",
       "file": "src/mail/legacy-mail.processor.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:bull#Job<type:nest-bullmq#SendEmailJob>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/mail.controller.ts:MailController",
@@ -274,7 +307,18 @@
       "label": "MailController.welcome",
       "repo": "nest-bullmq",
       "file": "src/mail/mail.controller.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:nest-bullmq#SendEmailJob"
+            }
+          ],
+          "returns": "{queued:true}"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/mail.processor.ts:MailProcessor",
@@ -294,7 +338,18 @@
       "label": "MailProcessor.digest",
       "repo": "nest-bullmq",
       "file": "src/mail/mail.processor.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "type:nest-bullmq#SendDigestJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/mail.processor.ts:MailProcessor.process",
@@ -302,7 +357,18 @@
       "label": "MailProcessor.process",
       "repo": "nest-bullmq",
       "file": "src/mail/mail.processor.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:bullmq#Job<type:nest-bullmq#SendDigestJob|type:nest-bullmq#SendEmailJob,unknown,string>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/mail.processor.ts:MailProcessor.send",
@@ -310,7 +376,18 @@
       "label": "MailProcessor.send",
       "repo": "nest-bullmq",
       "file": "src/mail/mail.processor.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "type:nest-bullmq#SendEmailJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/mail.service.ts:MailService",
@@ -330,7 +407,22 @@
       "label": "MailService.enqueue",
       "repo": "nest-bullmq",
       "file": "src/mail/mail.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobName",
+              "type": "string"
+            },
+            {
+              "name": "job",
+              "type": "type:nest-bullmq#SendEmailJob"
+            }
+          ],
+          "returns": "type:bullmq#Job<type:nest-bullmq#SendEmailJob,unknown,string>"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/mail.service.ts:MailService.enqueueReport",
@@ -338,7 +430,22 @@
       "label": "MailService.enqueueReport",
       "repo": "nest-bullmq",
       "file": "src/mail/mail.service.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "queueName",
+              "type": "string"
+            },
+            {
+              "name": "job",
+              "type": "type:nest-bullmq#ReportJob"
+            }
+          ],
+          "returns": "type:bullmq#Job<type:nest-bullmq#ReportJob,unknown,string>"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/mail.service.ts:MailService.sendDigest",
@@ -346,7 +453,18 @@
       "label": "MailService.sendDigest",
       "repo": "nest-bullmq",
       "file": "src/mail/mail.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:nest-bullmq#SendDigestJob"
+            }
+          ],
+          "returns": "type:bullmq#Job<type:nest-bullmq#SendDigestJob,unknown,string>"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/mail.service.ts:MailService.sendWelcome",
@@ -354,7 +472,18 @@
       "label": "MailService.sendWelcome",
       "repo": "nest-bullmq",
       "file": "src/mail/mail.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:nest-bullmq#SendEmailJob"
+            }
+          ],
+          "returns": "type:bullmq#Job<type:nest-bullmq#SendEmailJob,unknown,string>"
+        }
+      }
     },
     {
       "id": "nest-bullmq#src/mail/reports.processor.ts:ReportsProcessor",
@@ -371,7 +500,18 @@
       "label": "ReportsProcessor.process",
       "repo": "nest-bullmq",
       "file": "src/mail/reports.processor.ts",
-      "line": 30
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:bullmq#Job<type:nest-bullmq#ReportJob,unknown,string>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "producer:nest-bullmq#src/mail/mail.service.ts:26:12",
@@ -501,7 +641,10 @@
       "confidence": "static",
       "file": "src/mail/anonymous.processor.ts",
       "line": 11,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "type:bullmq#Job<unknown,unknown,string>"
+      ]
     },
     {
       "from": "consumer:nest-bullmq#src/mail/legacy-mail.processor.ts:LegacyMailProcessor.handleAny",
@@ -510,7 +653,10 @@
       "confidence": "static",
       "file": "src/mail/legacy-mail.processor.ts",
       "line": 22,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "type:bull#Job<type:nest-bullmq#SendEmailJob>"
+      ]
     },
     {
       "from": "consumer:nest-bullmq#src/mail/legacy-mail.processor.ts:LegacyMailProcessor.handleSendEmail",
@@ -519,7 +665,10 @@
       "confidence": "static",
       "file": "src/mail/legacy-mail.processor.ts",
       "line": 15,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "type:bull#Job<type:nest-bullmq#SendEmailJob>"
+      ]
     },
     {
       "from": "consumer:nest-bullmq#src/mail/mail.processor.ts:MailProcessor.process",
@@ -528,7 +677,10 @@
       "confidence": "static",
       "file": "src/mail/mail.processor.ts",
       "line": 16,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "type:bullmq#Job<type:nest-bullmq#SendDigestJob|type:nest-bullmq#SendEmailJob,unknown,string>"
+      ]
     },
     {
       "from": "consumer:nest-bullmq#src/mail/reports.processor.ts:ReportsProcessor.process",
@@ -537,7 +689,10 @@
       "confidence": "static",
       "file": "src/mail/reports.processor.ts",
       "line": 30,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "type:bullmq#Job<type:nest-bullmq#ReportJob,unknown,string>"
+      ]
     },
     {
       "from": "entry:nest-bullmq:event:mail",
@@ -550,6 +705,15 @@
         "type:bull#Job<type:nest-bullmq#SendEmailJob>"
       ],
       "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "type:bull#Job<type:nest-bullmq#SendEmailJob>"
+          }
+        ],
+        "returns": "void"
+      },
       "meta": {
         "body": "type:nest-bullmq#SendEmailJob"
       }
@@ -565,6 +729,15 @@
         "type:bull#Job<type:nest-bullmq#SendEmailJob>"
       ],
       "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "type:bull#Job<type:nest-bullmq#SendEmailJob>"
+          }
+        ],
+        "returns": "void"
+      },
       "meta": {
         "body": "type:nest-bullmq#SendEmailJob"
       }
@@ -580,6 +753,15 @@
         "type:bullmq#Job<type:nest-bullmq#SendDigestJob|type:nest-bullmq#SendEmailJob,unknown,string>"
       ],
       "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "type:bullmq#Job<type:nest-bullmq#SendDigestJob|type:nest-bullmq#SendEmailJob,unknown,string>"
+          }
+        ],
+        "returns": "void"
+      },
       "meta": {
         "body": "type:nest-bullmq#SendDigestJob|type:nest-bullmq#SendEmailJob"
       }
@@ -595,6 +777,15 @@
         "type:bullmq#Job<type:nest-bullmq#ReportJob,unknown,string>"
       ],
       "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "type:bullmq#Job<type:nest-bullmq#ReportJob,unknown,string>"
+          }
+        ],
+        "returns": "void"
+      },
       "meta": {
         "body": "type:nest-bullmq#ReportJob"
       }
@@ -896,7 +1087,8 @@
       "line": 46,
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate MailService.enqueueReport with the channel it uses.",
-      "symbol": "MailService.enqueueReport -> queue"
+      "symbol": "producer:nest-bullmq#src/mail/mail.service.ts:46:12",
+      "message": "MailService.enqueueReport -> queue"
     }
   ]
 }

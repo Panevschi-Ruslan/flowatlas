@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:16.183Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:28:32.710Z",
   "services": [
     {
       "name": "api",
@@ -50,7 +50,18 @@
       "label": "ItemsController.findOne",
       "repo": "api",
       "file": "src/items/items.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/items/items.controller.ts:ItemsController.list",
@@ -58,7 +69,13 @@
       "label": "ItemsController.list",
       "repo": "api",
       "file": "src/items/items.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "api#src/items/items.controller.ts:ItemsController.pay",
@@ -66,7 +83,13 @@
       "label": "ItemsController.pay",
       "repo": "api",
       "file": "src/items/items.controller.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "entry:api:http:GET:/items",
@@ -272,6 +295,15 @@
       "file": "src/app/items.service.ts",
       "line": 51,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -283,6 +315,10 @@
       "file": "src/app/items.service.ts",
       "line": 74,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        },
         "unreferenced": true
       }
     },
@@ -294,6 +330,10 @@
       "file": "src/app/items.service.ts",
       "line": 63,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -305,6 +345,15 @@
       "file": "src/app/items.service.ts",
       "line": 84,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "term",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        },
         "unreferenced": true
       }
     }

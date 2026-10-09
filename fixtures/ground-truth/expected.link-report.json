@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:28.119Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:29.027Z",
   "configHash": "a47ef5cd45c0",
   "services": [
     {
@@ -12,7 +12,15 @@
       "edges": 10,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 674,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "client",
@@ -23,7 +31,19 @@
       "edges": 8,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 740,
+      "packages": {
+        "name": "client",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "axios",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

@@ -32,7 +32,8 @@ const FIXTURE = join(
 );
 
 const readGraph = (): RepoGraph => {
-  const path = join(FIXTURE, 'orders', '.flowatlas', 'graph.json');
+  // Under the build's output, where a build keeps each service's graph (R166).
+  const path = join(FIXTURE, '.flowatlas', 'services', 'orders', 'graph.json');
   // Named rather than skipped. A test that quietly does nothing when its input
   // is missing is a test that passes on the day it matters; `pnpm check` runs the
   // fixtures before the tests, so this only fires for somebody running one

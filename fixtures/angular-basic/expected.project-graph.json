@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:18.770Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-09T08:17:43.660Z",
   "services": [
     {
       "name": "angular-basic",
@@ -40,7 +40,13 @@
       "label": "AuthService.token",
       "repo": "angular-basic",
       "file": "src/app/auth.service.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
@@ -51,6 +57,10 @@
       "line": 15,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-checkout"
       }
@@ -61,7 +71,13 @@
       "label": "CheckoutComponent.ngOnInit",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.onChange",
@@ -69,7 +85,18 @@
       "label": "CheckoutComponent.onChange",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 54
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.onInput",
@@ -77,7 +104,18 @@
       "label": "CheckoutComponent.onInput",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 58
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.save",
@@ -85,7 +123,18 @@
       "label": "CheckoutComponent.save",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:angular-basic#CreateOrderDto"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.submit",
@@ -93,7 +142,13 @@
       "label": "CheckoutComponent.submit",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 46
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.token",
@@ -101,7 +156,85 @@
       "label": "CheckoutComponent.token",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 62
+      "line": 62,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "angular-basic#src/app/highlight.directive.ts:HighlightDirective",
+      "type": "ui_component",
+      "label": "HighlightDirective",
+      "repo": "angular-basic",
+      "file": "src/app/highlight.directive.ts",
+      "line": 10,
+      "kind": "directive",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "appHighlight",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "delay",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "{highlighted:boolean}"
+        },
+        "selector": "[appHighlight]",
+        "exportAs": "highlight",
+        "hostBindings": [
+          "role=note",
+          "[attr.aria-live]=politeness",
+          "(focus)=onFocus()",
+          "[class.is-highlighted]=active",
+          "(mouseenter)=onEnter($event)"
+        ],
+        "hostMembers": [
+          "angular-basic#src/app/highlight.directive.ts:HighlightDirective.onFocus",
+          "angular-basic#src/app/highlight.directive.ts:HighlightDirective.onEnter"
+        ]
+      }
+    },
+    {
+      "id": "angular-basic#src/app/highlight.directive.ts:HighlightDirective.onEnter",
+      "type": "method",
+      "label": "HighlightDirective.onEnter",
+      "repo": "angular-basic",
+      "file": "src/app/highlight.directive.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "MouseEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "angular-basic#src/app/highlight.directive.ts:HighlightDirective.onFocus",
+      "type": "method",
+      "label": "HighlightDirective.onFocus",
+      "repo": "angular-basic",
+      "file": "src/app/highlight.directive.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/legacy-panel.component.ts:LegacyPanelComponent",
@@ -112,10 +245,73 @@
       "line": 10,
       "kind": "declared",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": false,
         "module": "OrdersModule",
         "selector": "app-legacy-panel",
         "templateUrl": "./legacy-panel.component.html"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/order-card.component.ts:OrderCardComponent",
+      "type": "ui_component",
+      "label": "OrderCardComponent",
+      "repo": "angular-basic",
+      "file": "src/app/order-card.component.ts",
+      "line": 13,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:angular-basic#OrderDto"
+            },
+            {
+              "name": "dense",
+              "type": "boolean",
+              "optional": true
+            },
+            {
+              "name": "currency",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "{cancelled:string;opened:type:angular-basic#OrderDto}"
+        },
+        "standalone": true,
+        "selector": "app-order-card"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/order-total.pipe.ts:OrderTotalPipe",
+      "type": "provider",
+      "label": "OrderTotalPipe",
+      "repo": "angular-basic",
+      "file": "src/app/order-total.pipe.ts",
+      "line": 10,
+      "kind": "pipe",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:angular-basic#OrderDto"
+            },
+            {
+              "name": "currency",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "string"
+        },
+        "name": "orderTotal",
+        "pure": false
       }
     },
     {
@@ -136,7 +332,18 @@
       "label": "OrdersApiService.create",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:angular-basic#CreateOrderDto"
+            }
+          ],
+          "returns": "type:angular-basic#OrderDto"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
@@ -144,7 +351,13 @@
       "label": "OrdersApiService.list",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:angular-basic#OrderDto[]"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
@@ -152,7 +365,18 @@
       "label": "OrdersApiService.onOrderUpdated",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 60
+      "line": 60,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:angular-basic#OrderDto"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.refresh",
@@ -160,7 +384,13 @@
       "label": "OrdersApiService.refresh",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:angular-basic#OrderDto[]"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.remove",
@@ -170,6 +400,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 36,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -179,7 +418,18 @@
       "label": "OrdersApiService.send",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.updateStatus",
@@ -187,7 +437,22 @@
       "label": "OrdersApiService.updateStatus",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 55
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent",
@@ -198,6 +463,10 @@
       "line": 6,
       "kind": "declared",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": false,
         "module": "OrdersModule",
         "selector": "app-orders-list",
@@ -210,7 +479,13 @@
       "label": "OrdersListComponent.reload",
       "repo": "angular-basic",
       "file": "src/app/orders-list.component.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders.module.ts:OrdersModule",
@@ -235,6 +510,10 @@
       "line": 4,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-profile"
       }
@@ -248,6 +527,10 @@
       "line": 4,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-reports"
       }
@@ -261,6 +544,10 @@
       "line": 4,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-settings"
       }
@@ -312,12 +599,13 @@
       "repo": "angular-basic",
       "meta": {
         "stats": {
-          "files": 15,
-          "filesRead": 15,
+          "files": 18,
+          "filesRead": 18,
           "filesUnreadable": 0,
-          "classes": 10,
-          "templates": 5,
+          "classes": 13,
+          "templates": 6,
           "skippedExternalCalls": {
+            "@angular/core": 1,
             "@angular/common": 4
           }
         },
@@ -697,6 +985,8 @@
       "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:angular-basic#OrderDto[]",
       "file": "src/app/checkout.component.ts",
       "line": 43
     },
@@ -705,6 +995,10 @@
       "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.create",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:angular-basic#CreateOrderDto"
+      ],
+      "returns": "type:angular-basic#OrderDto",
       "file": "src/app/checkout.component.ts",
       "line": 51
     },
@@ -713,6 +1007,10 @@
       "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.create",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:angular-basic#CreateOrderDto"
+      ],
+      "returns": "type:angular-basic#OrderDto",
       "file": "src/app/checkout.component.ts",
       "line": 47
     },
@@ -721,8 +1019,26 @@
       "to": "angular-basic#src/app/auth.service.ts:AuthService.token",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "string",
       "file": "src/app/checkout.component.ts",
       "line": 63
+    },
+    {
+      "from": "angular-basic#src/app/order-card.component.ts:OrderCardComponent",
+      "to": "angular-basic#src/app/highlight.directive.ts:HighlightDirective",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app/order-card.component.ts",
+      "line": 16
+    },
+    {
+      "from": "angular-basic#src/app/order-card.component.ts:OrderCardComponent",
+      "to": "angular-basic#src/app/order-total.pipe.ts:OrderTotalPipe",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app/order-card.component.ts",
+      "line": 16
     },
     {
       "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService",
@@ -753,6 +1069,8 @@
       "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:angular-basic#OrderDto[]",
       "file": "src/app/orders-api.service.ts",
       "line": 42
     },
@@ -777,6 +1095,10 @@
       "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.send",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/orders-api.service.ts",
       "line": 56
     },
@@ -801,6 +1123,8 @@
       "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:angular-basic#OrderDto[]",
       "file": "src/app/orders-list.component.ts",
       "line": 14
     },

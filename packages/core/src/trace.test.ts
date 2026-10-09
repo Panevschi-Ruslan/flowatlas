@@ -5,6 +5,7 @@ import { resolveStaticString, settingKeyIn } from './static-string.js';
 import {
   constantMethodResult,
   constantPropertyValue,
+  forwardNoWorse,
   literalChoices,
   returnedExpression,
   rootSettingAddress,
@@ -339,5 +340,41 @@ describe('a segment whose type is a handful of strings', () => {
     expect(
       choicesIn("function f() { const a: 'one' | 'two' = 'one'; http.get(`/x/${a}`); }"),
     ).toEqual([]);
+  });
+});
+
+/**
+ * Where a value forwarded out of a helper is drawn: at each caller that reads
+ * it at least as surely as the helper does, and in the helper as well whenever
+ * one falls short or cannot be named.
+ */
+describe('forwarding no worse than the helper', () => {
+  const hop = (text: string) => {
+    const file = new Project({ useInMemoryFileSystem: true }).createSourceFile('a.ts', `go(${text});`);
+    const site = file.getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression);
+    return { site, argument: site.getArguments()[0]! };
+  };
+  const sureness = (reading: string) => ({ unread: 0, partial: 1, read: 2 })[reading] ?? 0;
+  const decide = (here: string, readings: string[], undecided = false) => {
+    const calls = readings.map(hop);
+    const forwarding = forwardNoWorse(
+      { calls, undecided },
+      { here, at: (call) => (call.argument.getText() === 'nobody' ? undefined : call.argument.getText()), sureness },
+    );
+    return { callers: forwarding.callers.map((caller) => caller.reading), here: forwarding.here };
+  };
+
+  it('draws on every caller at least as sure, and leaves the helper', () => {
+    expect(decide('partial', ['read', 'partial'])).toEqual({ callers: ['read', 'partial'], here: false });
+  });
+
+  it('keeps the helper for a caller that reads less, and still draws on the others', () => {
+    expect(decide('partial', ['read', 'unread'])).toEqual({ callers: ['read'], here: true });
+  });
+
+  it('keeps the helper when nobody can be drawn on, or a call may run another implementation', () => {
+    expect(decide('unread', ['nobody'])).toEqual({ callers: [], here: true });
+    expect(decide('unread', [])).toEqual({ callers: [], here: true });
+    expect(decide('unread', ['read'], true)).toEqual({ callers: ['read'], here: true });
   });
 });

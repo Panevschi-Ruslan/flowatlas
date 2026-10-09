@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:47:30.932Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:01.320Z",
   "configHash": "5058ec93d4d4",
   "services": [
     {
@@ -12,7 +12,15 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1269
+      "durationMs": 611,
+      "packages": {
+        "name": "nest-context-path-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -23,7 +31,14 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1013
+      "durationMs": 477,
+      "packages": {
+        "name": "nest-context-path-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

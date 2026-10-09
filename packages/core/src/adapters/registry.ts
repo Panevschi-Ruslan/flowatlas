@@ -34,13 +34,14 @@ type SlotMaps = { [S in AdapterSlot]: Map<string, SlotAdapters[S]> };
  * every slot having to name it. Written as a function taking the adapter rather
  * than read off it, so the adapter is still the receiver of its own method.
  */
-type Detects = (pkg: PackageJson, config?: FlowatlasConfig) => boolean;
+type Detects = (pkg: PackageJson, config?: FlowatlasConfig, repoDir?: string) => boolean;
 
 const applies = (
   adapter: { detect: Detects },
   pkg: PackageJson,
   config: FlowatlasConfig | undefined,
-): boolean => adapter.detect(pkg, config);
+  repoDir: string | undefined,
+): boolean => adapter.detect(pkg, config, repoDir);
 
 /**
  * Lookup table of the adapters this build knows about.
@@ -103,13 +104,21 @@ export class AdapterRegistry {
    * this repository. A caller with no configuration to hand omits it and every
    * such adapter answers no, which is what it answered before there was
    * anything to consult.
+   *
+   * `repoDir` is passed on in the same way and for the same kind of adapter:
+   * one whose evidence is a file in the repository other than the manifest.
    */
-  detect(pkg: PackageJson, force: AdapterForce = {}, config?: FlowatlasConfig): DetectedAdapters {
+  detect(
+    pkg: PackageJson,
+    force: AdapterForce = {},
+    config?: FlowatlasConfig,
+    repoDir?: string,
+  ): DetectedAdapters {
     return {
-      entry: this.#resolve('entry', pkg, force.entry, config),
-      db: this.#resolve('db', pkg, force.db, config),
-      broker: this.#resolve('broker', pkg, force.broker, config),
-      frontend: this.#resolve('frontend', pkg, force.frontend, config),
+      entry: this.#resolve('entry', pkg, force.entry, config, repoDir),
+      db: this.#resolve('db', pkg, force.db, config, repoDir),
+      broker: this.#resolve('broker', pkg, force.broker, config, repoDir),
+      frontend: this.#resolve('frontend', pkg, force.frontend, config, repoDir),
     };
   }
 
@@ -118,10 +127,11 @@ export class AdapterRegistry {
     pkg: PackageJson,
     forced: readonly string[] | undefined,
     config: FlowatlasConfig | undefined,
+    repoDir: string | undefined,
   ): readonly SlotAdapters[S][] {
     const registered = this.#slots[slot];
     if (forced === undefined) {
-      return [...registered.values()].filter((adapter) => applies(adapter, pkg, config));
+      return [...registered.values()].filter((adapter) => applies(adapter, pkg, config, repoDir));
     }
     return forced.map((name) => {
       const adapter = registered.get(name);

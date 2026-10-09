@@ -1,5 +1,6 @@
 import type {
   CallExpression,
+  FunctionDeclaration,
   Identifier,
   ObjectLiteralExpression,
   ParameterDeclaration,
@@ -7,6 +8,7 @@ import type {
   Symbol as TsSymbol,
   TemplateExpression,
   Node as TsNode,
+  VariableDeclaration,
 } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import {
@@ -1144,11 +1146,11 @@ export const writtenBodyOutward = (argument: TsNode | undefined, depth = 4): TsN
       value = declaration.getInitializer();
       continue;
     }
-    const method = enclosingMethod(node);
-    if (method === undefined) return [];
-    const index = parametersOf(method).findIndex((parameter) => parameter === declaration);
-    if (index < 0) return [];
-    const sites = callSitesOf(method);
+    if (!Node.isParameterDeclaration(declaration)) return [];
+    const holder = forwarderOf(declaration);
+    const index = positionOf(declaration);
+    if (holder === undefined || index < 0) return [];
+    const sites = callSitesOf(holder);
     if (sites.length === 0) return [];
     // A crowd of callers is not a set of writers, so nothing is read across
     // them and the body is left to its declared type.
@@ -1174,21 +1176,48 @@ export const writtenBodyOutward = (argument: TsNode | undefined, depth = 4): TsN
 };
 
 /**
- * The method a parameter belongs to, however that method was written.
+ * What callers name to hand a function its parameters: a method of a class, or
+ * a function with a name of its own.
+ *
+ * `export const start = (arn) => …` called as `start(arn)` hands its caller's
+ * value on as surely as a method does, and is how a helper is written wherever
+ * there is no class to put it on (R175).
+ */
+export type Forwarder = ClassMethod | FunctionDeclaration | VariableDeclaration;
+
+const isClassMethod = (holder: Forwarder): holder is ClassMethod =>
+  Node.isMethodDeclaration(holder) || Node.isPropertyDeclaration(holder);
+
+/**
+ * What a parameter's callers name, however the function it belongs to was written.
  *
  * `handle(url: string) {}` keeps its parameters on itself; `handle = (url) =>
  * {}` keeps them on the arrow, and the thing callers name is the property the
  * arrow was assigned to. Asking only for a `MethodDeclaration` answers nothing
  * for the second, so a request forwarded through a wrapper written that way
- * stopped at the wrapper (R29).
+ * stopped at the wrapper (R29). A function is the same two spellings,
+ * `function start(arn) {}` and `const start = (arn) => {}`; only a `const`,
+ * because a name assigned twice is called with whichever function it holds.
  */
-const methodHolding = (parameter: ParameterDeclaration): ClassMethod | undefined => {
+const forwarderOf = (parameter: ParameterDeclaration): Forwarder | undefined => {
   const owner = parameter.getParent();
   if (owner === undefined) return undefined;
   if (Node.isMethodDeclaration(owner)) return owner;
+  if (Node.isFunctionDeclaration(owner)) return owner.getName() === undefined ? undefined : owner;
   if (!Node.isArrowFunction(owner) && !Node.isFunctionExpression(owner)) return undefined;
-  const property = owner.getParent();
-  return property !== undefined && Node.isPropertyDeclaration(property) ? property : undefined;
+  const holder = owner.getParent();
+  if (holder === undefined) return undefined;
+  if (Node.isPropertyDeclaration(holder)) return holder;
+  return Node.isVariableDeclaration(holder) &&
+    holder.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const
+    ? holder
+    : undefined;
+};
+
+/** Where a parameter stands in its function's list, which is where a caller's argument for it is. */
+const positionOf = (parameter: ParameterDeclaration): number => {
+  const owner = parameter.getParent();
+  return Node.isParametered(owner) ? owner.getParameters().indexOf(parameter) : -1;
 };
 
 /**
@@ -1275,26 +1304,40 @@ export const dispatchOf = (call: CallExpression, method: ClassMethod): Dispatch 
 };
 
 /**
- * Everywhere a method may be called, as a call expression.
- *
- * A reference that is not the callee — the method passed as a value, or named
- * in a type — is not a call and is left out. Neither is a call that dispatches
- * to another method altogether (R158); a call that may land here and may land
- * in a sibling stays, and `dispatchOf` tells the two apart for a caller that
- * needs to.
+ * How a call reaches what it names: a function named is the function it names,
+ * and a method is asked `dispatchOf`.
  */
-export const callSitesOf = (method: ClassMethod): CallExpression[] => {
+const dispatchAt = (call: CallExpression, holder: Forwarder): Dispatch =>
+  isClassMethod(holder) ? dispatchOf(call, holder) : 'runs';
+
+/** The call a reference is the callee of: `start(…)`, `this.start(…)` or `workflows.start(…)`. */
+const callOf = (reference: TsNode): CallExpression | undefined => {
+  const parent = reference.getParent();
+  const callee =
+    parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === reference
+      ? parent
+      : reference;
+  const call = callee.getParent();
+  return call !== undefined && Node.isCallExpression(call) && call.getExpression() === callee ? call : undefined;
+};
+
+/**
+ * Everywhere a method or a named function may be called, as a call expression.
+ *
+ * A reference that is not the callee — the function passed as a value, or named
+ * in a type or an import — is not a call and is left out. A function is called
+ * by its name, by a name it was imported as, or through the namespace of its
+ * module; a method through a receiver. Neither is a call that dispatches to
+ * another method altogether (R158); a call that may land here and may land in
+ * a sibling stays, and `dispatchOf` tells the two apart for a caller that needs
+ * to.
+ */
+export const callSitesOf = (holder: Forwarder): CallExpression[] => {
   const sites: CallExpression[] = [];
   const seen = new Set<string>();
-  for (const reference of method.findReferencesAsNodes()) {
-    const access = reference.getParent();
-    if (access === undefined || !Node.isPropertyAccessExpression(access)) continue;
-    if (access.getNameNode() !== reference) continue;
-    const call = access.getParent();
-    if (call === undefined || !Node.isCallExpression(call) || call.getExpression() !== access) {
-      continue;
-    }
-    if (dispatchOf(call, method) === 'elsewhere') continue;
+  for (const reference of holder.findReferencesAsNodes()) {
+    const call = callOf(reference);
+    if (call === undefined || dispatchAt(call, holder) === 'elsewhere') continue;
     const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -1645,15 +1688,15 @@ export interface Forwarded {
 export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forwarded => {
   const out: Forwarded = { calls: [], undecided: false };
   if (budget <= 0) return out;
-  const method = methodHolding(parameter);
-  if (method === undefined) return out;
-  const index = parametersOf(method).findIndex((item) => item === parameter);
+  const holder = forwarderOf(parameter);
+  if (holder === undefined) return out;
+  const index = positionOf(parameter);
   if (index < 0) return out;
 
-  for (const call of callSitesOf(method)) {
+  for (const call of callSitesOf(holder)) {
     const argument = call.getArguments()[index];
     if (argument === undefined) continue;
-    if (dispatchOf(call, method) === 'undecided') {
+    if (dispatchAt(call, holder) === 'undecided') {
       out.undecided = true;
       continue;
     }
@@ -1671,6 +1714,52 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
     out.calls.push({ site: call, argument });
   }
   return out;
+};
+
+/**
+ * How one reader reads what a helper forwards: where it is written, at a
+ * caller, and how sure each reading is. Higher is surer; only the order counts.
+ */
+export interface ForwardReader<R> {
+  /** What the helper itself states, read where the value is used. */
+  here: R;
+  /** What one caller's argument reads as, or nothing when that caller cannot be drawn on. */
+  at: (hop: ForwardedCall) => R | undefined;
+  sureness: (reading: R) => number;
+}
+
+/** Where a forwarded value is drawn, decided by `forwardNoWorse`. */
+export interface Forwarding<R> {
+  /** The callers it is drawn at, each with what it reads as there. */
+  callers: Array<ForwardedCall & { reading: R }>;
+  /** Whether the helper draws it too, where it is written. */
+  here: boolean;
+}
+
+/**
+ * Where a value forwarded out of a helper - a request's address, the name of
+ * what a call starts - is drawn.
+ *
+ * Following a value out to a caller says who decided it, and must never cost
+ * what the helper states: `sendViaTelegram(token, job)` with a token nobody can
+ * read made a static request in the helper a heuristic one at the caller, and
+ * took the helper's node and the caller's call into it with it. So a caller is
+ * drawn on only where its reading is at least as sure as the helper's own; the
+ * helper keeps its own drawing whenever any caller falls short, as it does for
+ * a caller it cannot name (R158) and for no caller at all. A method and a
+ * function are one rule, decided here.
+ */
+export const forwardNoWorse = <R>(forwarded: Forwarded, reader: ForwardReader<R>): Forwarding<R> => {
+  const floor = reader.sureness(reader.here);
+  const callers: Forwarding<R>['callers'] = [];
+  let short = forwarded.undecided;
+  for (const hop of forwarded.calls) {
+    const reading = reader.at(hop);
+    if (reading === undefined) continue;
+    if (reader.sureness(reading) < floor) short = true;
+    else callers.push({ ...hop, reading });
+  }
+  return { callers, here: short || callers.length === 0 };
 };
 
 /** True when a value can be read where it stands, with no caller needed. */

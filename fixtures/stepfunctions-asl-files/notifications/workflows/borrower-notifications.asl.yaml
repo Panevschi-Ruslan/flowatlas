@@ -1,0 +1,40 @@
+Comment: Tells a borrower something, by the channel they prefer, and records that it was sent.
+StartAt: ChooseChannel
+States:
+  ChooseChannel:
+    Type: Choice
+    Choices:
+      - Variable: $.borrower.prefers
+        StringEquals: email
+        Next: SendEmail
+      - Variable: $.borrower.prefers
+        StringEquals: text
+        Next: SendText
+    Default: SendEmail
+  SendEmail:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    Parameters:
+      FunctionName: arn:aws:lambda:eu-west-1:123456789012:function:send-borrower-email
+      Payload.$: $
+    ResultPath: $.sent
+    Next: RecordNotice
+  SendText:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    Parameters:
+      FunctionName: 123456789012:function:send-borrower-text
+      Payload.$: $
+    ResultPath: $.sent
+    Next: RecordNotice
+  RecordNotice:
+    Type: Task
+    Resource: arn:aws:states:::aws-sdk:dynamodb:putItem
+    Parameters:
+      TableName: library-notices
+      Item:
+        borrowerId:
+          S.$: $.borrowerId
+        notice:
+          S.$: $.notice
+    End: true

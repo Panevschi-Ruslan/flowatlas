@@ -1,0 +1,8 @@
+{
+  "services": [
+    { "name": "platform", "repo": "./platform", "type": "lambda" },
+    { "name": "loans", "repo": "./loans", "type": "lambda", "infra": { "vars": ["infra/env/dev.tfvars"] } },
+    { "name": "holds", "repo": "./holds", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

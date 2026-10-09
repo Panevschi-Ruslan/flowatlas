@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-kysely",
-  "generatedAt": "2026-09-27T09:26:42.731Z",
+  "generatedAt": "2026-10-07T14:34:16.892Z",
   "nodes": [
     {
       "id": "db_query:nest-kysely#src/assets/assets.service.ts:16:12",
@@ -306,7 +306,13 @@
       "label": "AssetsController.create",
       "repo": "nest-kysely",
       "file": "src/assets/assets.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.controller.ts:AssetsController.findAll",
@@ -314,7 +320,13 @@
       "label": "AssetsController.findAll",
       "repo": "nest-kysely",
       "file": "src/assets/assets.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.controller.ts:AssetsController.remove",
@@ -322,7 +334,13 @@
       "label": "AssetsController.remove",
       "repo": "nest-kysely",
       "file": "src/assets/assets.controller.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService",
@@ -342,7 +360,18 @@
       "label": "AssetsService.byOwner",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ownerId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.close",
@@ -350,7 +379,13 @@
       "label": "AssetsService.close",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 81
+      "line": 81,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.create",
@@ -358,7 +393,18 @@
       "label": "AssetsService.create",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.findAll",
@@ -366,7 +412,13 @@
       "label": "AssetsService.findAll",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.fromSubquery",
@@ -374,7 +426,13 @@
       "label": "AssetsService.fromSubquery",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 72
+      "line": 72,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.joined",
@@ -382,7 +440,13 @@
       "label": "AssetsService.joined",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.move",
@@ -390,7 +454,18 @@
       "label": "AssetsService.move",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 59
+      "line": 59,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.remove",
@@ -398,7 +473,18 @@
       "label": "AssetsService.remove",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 53
+      "line": 53,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.rename",
@@ -406,7 +492,22 @@
       "label": "AssetsService.rename",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 49
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "type",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.upsertExif",
@@ -414,7 +515,22 @@
       "label": "AssetsService.upsertExif",
       "repo": "nest-kysely",
       "file": "src/assets/assets.service.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "assetId",
+              "type": "string"
+            },
+            {
+              "name": "make",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "repo:nest-kysely",

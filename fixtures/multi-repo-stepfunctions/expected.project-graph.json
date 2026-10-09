@@ -1,0 +1,1899 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:36:47.850Z",
+  "services": [
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "members",
+      "repo": "./members",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalogue",
+      "repo": "./catalogue",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalogue#src/handlers/pull-copy.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/handlers/pull-copy.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:catalogue#PullRequests"
+            }
+          ],
+          "returns": "{shelves:string[]}"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/pull-copy.ts:shelfOf",
+      "type": "function",
+      "label": "shelfOf",
+      "repo": "catalogue",
+      "file": "src/handlers/pull-copy.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "copyId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/reserve-copy.ts:firstFreeCopy",
+      "type": "function",
+      "label": "firstFreeCopy",
+      "repo": "catalogue",
+      "file": "src/handlers/reserve-copy.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "titleId",
+              "type": "string"
+            }
+          ],
+          "returns": "string|undefined"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/reserve-copy.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/handlers/reserve-copy.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:catalogue#ReserveRequest"
+            }
+          ],
+          "returns": "{copyId:string}"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/reshelve.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/handlers/reshelve.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{copyId:string}"
+            }
+          ],
+          "returns": "{shelf:string}"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/reshelve.ts:shelfOf",
+      "type": "function",
+      "label": "shelfOf",
+      "repo": "catalogue",
+      "file": "src/handlers/reshelve.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "copyId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/update-availability.ts:copiesLeft",
+      "type": "function",
+      "label": "copiesLeft",
+      "repo": "catalogue",
+      "file": "src/handlers/update-availability.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "titleId",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/update-availability.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/handlers/update-availability.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:catalogue#LoanCheckedOut"
+            }
+          ],
+          "returns": "{available:boolean}"
+        }
+      }
+    },
+    {
+      "id": "catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/Reshelve",
+      "type": "function",
+      "label": "Reshelve [Task lambda:invoke]",
+      "repo": "catalogue",
+      "file": "workflows/reshelve-returns.asl.json",
+      "line": 14,
+      "kind": "state",
+      "meta": {
+        "workflow": "reshelve-returns",
+        "stateType": "Task",
+        "scope": [
+          "ReshelveEach"
+        ],
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "catalogue-reshelve"
+        },
+        "reaches": [
+          "invoke:catalogue-reshelve"
+        ],
+        "parameters": {
+          "FunctionName": "catalogue-reshelve",
+          "Payload": {
+            "copyId.$": "$"
+          }
+        }
+      }
+    },
+    {
+      "id": "catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/ReshelveEach",
+      "type": "function",
+      "label": "ReshelveEach [Map]",
+      "repo": "catalogue",
+      "file": "workflows/reshelve-returns.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "reshelve-returns",
+        "stateType": "Map",
+        "end": true
+      }
+    },
+    {
+      "id": "channel:eventbridge/library/library.circulation/LoanCheckedOut",
+      "type": "channel",
+      "label": "eventbridge/library/library.circulation/LoanCheckedOut",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 86,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/library/library.members/CheckoutRequested",
+      "type": "channel",
+      "label": "eventbridge/library/library.members/CheckoutRequested",
+      "repo": "circulation",
+      "file": "infra/main.tf",
+      "line": 74,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/circulation-checkouts",
+      "type": "channel",
+      "label": "sns/circulation-checkouts",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 76,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/catalogue-copy-pulls",
+      "type": "channel",
+      "label": "sqs/catalogue-copy-pulls",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 63,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/AnnounceCheckout",
+      "type": "function",
+      "label": "AnnounceCheckout [Task events:putEvents]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 86,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Task",
+        "task": {
+          "kind": "channel",
+          "service": "events",
+          "action": "putEvents",
+          "pattern": "request-response",
+          "transport": "bus",
+          "targets": [
+            "library"
+          ],
+          "channels": [
+            "eventbridge/library/library.circulation/LoanCheckedOut"
+          ]
+        },
+        "parameters": {
+          "Entries": [
+            {
+              "EventBusName": "library",
+              "Source": "library.circulation",
+              "DetailType": "LoanCheckedOut",
+              "Detail": {
+                "titleId.$": "$.titleId",
+                "copyId.$": "$.copy.copyId"
+              }
+            }
+          ]
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/CheckStanding",
+      "type": "function",
+      "label": "CheckStanding [Task lambda:invoke]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "members-check-standing"
+        },
+        "reaches": [
+          "invoke:members-check-standing"
+        ],
+        "parameters": {
+          "FunctionName": "${check_standing_arn}",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId"
+          }
+        },
+        "resultSelector": {
+          "standing.$": "$.Payload.standing"
+        },
+        "resultPath": "$.borrower"
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/CheckoutRefused",
+      "type": "function",
+      "label": "CheckoutRefused [Fail]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 117,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Fail",
+        "end": true
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/IsInGoodStanding",
+      "type": "function",
+      "label": "IsInGoodStanding [Choice]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 20,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Choice"
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/PublishCheckout",
+      "type": "function",
+      "label": "PublishCheckout [Task sns:publish]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 76,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Task",
+        "task": {
+          "kind": "channel",
+          "service": "sns",
+          "action": "publish",
+          "pattern": "request-response",
+          "transport": "topic",
+          "targets": [
+            "circulation-checkouts"
+          ],
+          "channels": [
+            "sns/circulation-checkouts"
+          ]
+        },
+        "parameters": {
+          "TopicArn": "${checkouts_topic_arn}",
+          "Message.$": "States.JsonToString($)"
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/RequestCopyPull",
+      "type": "function",
+      "label": "RequestCopyPull [Task sqs:sendMessage]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 63,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Task",
+        "task": {
+          "kind": "channel",
+          "service": "sqs",
+          "action": "sendMessage",
+          "pattern": "request-response",
+          "transport": "queue",
+          "targets": [
+            "catalogue-copy-pulls"
+          ],
+          "channels": [
+            "sqs/catalogue-copy-pulls"
+          ]
+        },
+        "parameters": {
+          "QueueUrl": "${copy_pulls_url}",
+          "MessageBody": {
+            "copyId.$": "$.copy.copyId",
+            "borrowerId.$": "$.borrowerId"
+          }
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy",
+      "type": "function",
+      "label": "ReserveCopy [Task function]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 31,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "name": "catalogue-reserve-copy"
+        },
+        "reaches": [
+          "invoke:catalogue-reserve-copy"
+        ],
+        "resultPath": "$.copy"
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/SendCheckoutNotice",
+      "type": "function",
+      "label": "SendCheckoutNotice [Task states:startExecution]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 105,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "workflow",
+          "service": "states",
+          "action": "startExecution",
+          "pattern": "request-response",
+          "name": "members-borrower-notices"
+        },
+        "reaches": [
+          "workflow:members-borrower-notices"
+        ],
+        "parameters": {
+          "StateMachineArn": "${borrower_notices_arn}",
+          "Input": {
+            "borrowerId.$": "$.borrowerId",
+            "notice": "checked-out"
+          }
+        }
+      }
+    },
+    {
+      "id": "circulation#statemachine/checkout.asl.json:circulation-checkout/WriteLoan",
+      "type": "function",
+      "label": "WriteLoan [Task dynamodb:putItem]",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 43,
+      "kind": "state",
+      "meta": {
+        "workflow": "circulation-checkout",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "putItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": [
+            "circulation-loans"
+          ]
+        },
+        "parameters": {
+          "TableName": "circulation-loans",
+          "Item": {
+            "loanId": {
+              "S.$": "$$.Execution.Name"
+            },
+            "borrowerId": {
+              "S.$": "$.borrowerId"
+            },
+            "copyId": {
+              "S.$": "$.copy.copyId"
+            }
+          }
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "consumer:catalogue#infra/main.tf:aws_cloudwatch_event_target.update_availability",
+      "type": "consumer",
+      "label": "rule catalogue-loan-checked-out",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 79,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.update_availability",
+        "deployedBy": "terraform",
+        "name": "catalogue-loan-checked-out",
+        "rule": "aws_cloudwatch_event_rule.loan_checked_out",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:catalogue#infra/main.tf:aws_lambda_event_source_mapping.copy_pulls",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.copy_pulls",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 49,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.copy_pulls",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:circulation#infra/main.tf:aws_cloudwatch_event_target.checkout",
+      "type": "consumer",
+      "label": "rule circulation-checkout-requested",
+      "repo": "circulation",
+      "file": "infra/main.tf",
+      "line": 74,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.checkout",
+        "deployedBy": "terraform",
+        "name": "circulation-checkout-requested",
+        "rule": "aws_cloudwatch_event_rule.checkout_requested",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
+        "reaches": [
+          "workflow:circulation-checkout"
+        ]
+      }
+    },
+    {
+      "id": "consumer:members#infra/main.tf:aws_sns_topic_subscription.record_checkout",
+      "type": "consumer",
+      "label": "subscription aws_sns_topic_subscription.record_checkout",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 60,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.record_checkout",
+        "deployedBy": "terraform",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "db_query:circulation#statemachine/checkout.asl.json:43:5",
+      "type": "db_query",
+      "label": "write circulation-loans",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 43,
+      "meta": {
+        "op": "write",
+        "table": "circulation-loans",
+        "tables": [
+          "circulation-loans"
+        ],
+        "service": "dynamodb",
+        "action": "putItem"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:catalogue-pull-copy",
+      "type": "entry",
+      "label": "catalogue-pull-copy",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 41,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalogue-pull-copy",
+        "deployedBy": "terraform",
+        "name": "catalogue-pull-copy",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.pull_copy",
+        "handler": "pull-copy.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:catalogue#PullRequests",
+          "Records[].body": "{copyId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:catalogue-reserve-copy",
+      "type": "entry",
+      "label": "catalogue-reserve-copy",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 16,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalogue-reserve-copy",
+        "deployedBy": "terraform",
+        "name": "catalogue-reserve-copy",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.reserve_copy",
+        "handler": "reserve-copy.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:catalogue#ReserveRequest"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:catalogue-reshelve",
+      "type": "entry",
+      "label": "catalogue-reshelve",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalogue-reshelve",
+        "deployedBy": "terraform",
+        "name": "catalogue-reshelve",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.reshelve",
+        "handler": "reshelve.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{copyId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:catalogue-update-availability",
+      "type": "entry",
+      "label": "catalogue-update-availability",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 61,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalogue-update-availability",
+        "deployedBy": "terraform",
+        "name": "catalogue-update-availability",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.update_availability",
+        "handler": "update-availability.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:catalogue#LoanCheckedOut",
+          "detail": "{titleId:string;copyId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:workflow:reshelve-returns",
+      "type": "entry",
+      "label": "workflow reshelve-returns",
+      "repo": "catalogue",
+      "file": "workflows/reshelve-returns.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "reshelve-returns",
+        "name": "reshelve-returns",
+        "nameFrom": "file-name",
+        "nameConfidence": "heuristic",
+        "startAt": "ReshelveEach",
+        "states": 2,
+        "queryLanguage": "JSONPath",
+        "comment": "Puts every returned copy back on its shelf.",
+        "reads": {
+          "": "{copyIds:unknown}"
+        },
+        "carriesOn": true
+      }
+    },
+    {
+      "id": "entry:circulation:workflow:circulation-checkout",
+      "type": "entry",
+      "label": "workflow circulation-checkout",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "circulation-checkout",
+        "name": "circulation-checkout",
+        "nameFrom": "deployment",
+        "startAt": "CheckStanding",
+        "states": 9,
+        "queryLanguage": "JSONPath",
+        "comment": "Checks a title out to a borrower: asks the members service about the borrower, the catalogue for a copy, writes the loan, tells the catalogue and the members service about it, and starts the members service's notices.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.checkout",
+        "definitionFrom": "templatefile",
+        "declaredIn": "infra/main.tf:48"
+      }
+    },
+    {
+      "id": "entry:members:http:POST:/checkouts",
+      "type": "entry",
+      "label": "POST /checkouts",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 92,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/checkouts",
+        "rawPath": "/checkouts",
+        "deployedBy": "terraform",
+        "api": "members",
+        "declaredAs": "aws_apigatewayv2_route.request_checkout",
+        "integration": "bus",
+        "sends": "eventbridge/library/library.members/CheckoutRequested",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:members-check-standing",
+      "type": "entry",
+      "label": "members-check-standing",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 22,
+      "kind": "invoke",
+      "meta": {
+        "key": "members-check-standing",
+        "deployedBy": "terraform",
+        "name": "members-check-standing",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.check_standing",
+        "handler": "check-standing.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:members#StandingRequest"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:members-record-checkout",
+      "type": "entry",
+      "label": "members-record-checkout",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 52,
+      "kind": "invoke",
+      "meta": {
+        "key": "members-record-checkout",
+        "deployedBy": "terraform",
+        "name": "members-record-checkout",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.record_checkout",
+        "handler": "record-checkout.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:members#CheckoutNotifications",
+          "Records[].Sns.Message": "{borrowerId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:members-send-notice",
+      "type": "entry",
+      "label": "members-send-notice",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 30,
+      "kind": "invoke",
+      "meta": {
+        "key": "members-send-notice",
+        "deployedBy": "terraform",
+        "name": "members-send-notice",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.send_notice",
+        "handler": "send-notice.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:members#NoticeRequest"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:workflow:members-borrower-notices",
+      "type": "entry",
+      "label": "workflow members-borrower-notices",
+      "repo": "members",
+      "file": "statemachine/borrower-notices.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "members-borrower-notices",
+        "name": "members-borrower-notices",
+        "nameFrom": "deployment",
+        "startAt": "SendNotice",
+        "states": 1,
+        "queryLanguage": "JSONPath",
+        "comment": "Sends a borrower a notice, and tries once more an hour later if the mail service refuses it.",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.borrower_notices",
+        "definitionFrom": "file",
+        "type": "EXPRESS",
+        "declaredIn": "infra/main.tf:39"
+      }
+    },
+    {
+      "id": "members#src/handlers/check-standing.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/handlers/check-standing.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:members#StandingRequest"
+            }
+          ],
+          "returns": "{standing:'good'|'suspended'}"
+        }
+      }
+    },
+    {
+      "id": "members#src/handlers/check-standing.ts:lookUpStanding",
+      "type": "function",
+      "label": "lookUpStanding",
+      "repo": "members",
+      "file": "src/handlers/check-standing.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "'good'|'suspended'"
+        }
+      }
+    },
+    {
+      "id": "members#src/handlers/record-checkout.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/handlers/record-checkout.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:members#CheckoutNotifications"
+            }
+          ],
+          "returns": "{recorded:number}"
+        }
+      }
+    },
+    {
+      "id": "members#src/handlers/send-notice.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/handlers/send-notice.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:members#NoticeRequest"
+            }
+          ],
+          "returns": "{subject:string}"
+        }
+      }
+    },
+    {
+      "id": "members#src/handlers/send-notice.ts:subjectOf",
+      "type": "function",
+      "label": "subjectOf",
+      "repo": "members",
+      "file": "src/handlers/send-notice.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "notice",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "members#statemachine/borrower-notices.json:members-borrower-notices/SendNotice",
+      "type": "function",
+      "label": "SendNotice [Task lambda:invoke]",
+      "repo": "members",
+      "file": "statemachine/borrower-notices.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "members-borrower-notices",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "members-send-notice"
+        },
+        "reaches": [
+          "invoke:members-send-notice"
+        ],
+        "parameters": {
+          "FunctionName": "members-send-notice",
+          "Payload.$": "$"
+        },
+        "retry": [
+          {
+            "ErrorEquals": [
+              "MailServiceUnavailable"
+            ],
+            "IntervalSeconds": 3600,
+            "MaxAttempts": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "producer:circulation#statemachine/checkout.asl.json:63:5",
+      "type": "producer",
+      "label": "message sqs/catalogue-copy-pulls",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 63,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "definition",
+        "service": "sqs",
+        "action": "sendMessage"
+      }
+    },
+    {
+      "id": "producer:circulation#statemachine/checkout.asl.json:76:5",
+      "type": "producer",
+      "label": "message sns/circulation-checkouts",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 76,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "definition",
+        "service": "sns",
+        "action": "publish"
+      }
+    },
+    {
+      "id": "producer:circulation#statemachine/checkout.asl.json:86:5",
+      "type": "producer",
+      "label": "event eventbridge/library/library.circulation/LoanCheckedOut",
+      "repo": "circulation",
+      "file": "statemachine/checkout.asl.json",
+      "line": 86,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "definition",
+        "service": "events",
+        "action": "putEvents"
+      }
+    },
+    {
+      "id": "producer:members#infra/main.tf:aws_apigatewayv2_route.request_checkout",
+      "type": "producer",
+      "label": "event eventbridge/library/library.members/CheckoutRequested",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 92,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "deployment",
+        "by": "route",
+        "declaredAs": "aws_apigatewayv2_route.request_checkout",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "repo:catalogue",
+      "type": "repo",
+      "label": "catalogue",
+      "repo": "catalogue",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:circulation",
+      "type": "repo",
+      "label": "circulation",
+      "repo": "circulation",
+      "meta": {
+        "stats": {
+          "files": 0,
+          "filesRead": 0,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:members",
+      "type": "repo",
+      "label": "members",
+      "repo": "members",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:circulation#circulation-loans",
+      "type": "table",
+      "label": "circulation-loans",
+      "repo": "circulation"
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalogue#src/handlers/pull-copy.ts:handler",
+      "to": "catalogue#src/handlers/pull-copy.ts:shelfOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/handlers/pull-copy.ts",
+      "line": 9
+    },
+    {
+      "from": "catalogue#src/handlers/reserve-copy.ts:handler",
+      "to": "catalogue#src/handlers/reserve-copy.ts:firstFreeCopy",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string|undefined",
+      "file": "src/handlers/reserve-copy.ts",
+      "line": 8
+    },
+    {
+      "from": "catalogue#src/handlers/reshelve.ts:handler",
+      "to": "catalogue#src/handlers/reshelve.ts:shelfOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/handlers/reshelve.ts",
+      "line": 4
+    },
+    {
+      "from": "catalogue#src/handlers/update-availability.ts:handler",
+      "to": "catalogue#src/handlers/update-availability.ts:copiesLeft",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/handlers/update-availability.ts",
+      "line": 11
+    },
+    {
+      "from": "catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/Reshelve",
+      "to": "entry:catalogue:invoke:catalogue-reshelve",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/reshelve-returns.asl.json",
+      "line": 14,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:catalogue-reshelve"
+      }
+    },
+    {
+      "from": "catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/ReshelveEach",
+      "to": "catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/Reshelve",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/reshelve-returns.asl.json",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "item-processor",
+            "field": "ItemProcessor"
+          }
+        ]
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.circulation/LoanCheckedOut",
+      "to": "consumer:catalogue#infra/main.tf:aws_cloudwatch_event_target.update_availability",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 79,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.members/CheckoutRequested",
+      "to": "consumer:circulation#infra/main.tf:aws_cloudwatch_event_target.checkout",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 74,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:sns/circulation-checkouts",
+      "to": "consumer:members#infra/main.tf:aws_sns_topic_subscription.record_checkout",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 60,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/catalogue-copy-pulls",
+      "to": "consumer:catalogue#infra/main.tf:aws_lambda_event_source_mapping.copy_pulls",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 49,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/AnnounceCheckout",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/SendCheckoutNotice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 103,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/AnnounceCheckout",
+      "to": "producer:circulation#statemachine/checkout.asl.json:86:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 86
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/CheckStanding",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/IsInGoodStanding",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/CheckStanding",
+      "to": "entry:members:invoke:members-check-standing",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:members-check-standing"
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/IsInGoodStanding",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/CheckoutRefused",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 29,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "default"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/IsInGoodStanding",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 26,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.borrower.standing",
+              "StringEquals": "good"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/PublishCheckout",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/AnnounceCheckout",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 84,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/PublishCheckout",
+      "to": "producer:circulation#statemachine/checkout.asl.json:76:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 76
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/RequestCopyPull",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/PublishCheckout",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 74,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/RequestCopyPull",
+      "to": "producer:circulation#statemachine/checkout.asl.json:63:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 63
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/CheckoutRefused",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 38,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "catch",
+            "errors": [
+              "NoCopyAvailable"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/WriteLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 41,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy",
+      "to": "entry:catalogue:invoke:catalogue-reserve-copy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 31,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:catalogue-reserve-copy"
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/SendCheckoutNotice",
+      "to": "entry:members:workflow:members-borrower-notices",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 105,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:members-borrower-notices"
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/WriteLoan",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/RequestCopyPull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 61,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/checkout.asl.json:circulation-checkout/WriteLoan",
+      "to": "db_query:circulation#statemachine/checkout.asl.json:43:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 43
+    },
+    {
+      "from": "consumer:catalogue#infra/main.tf:aws_cloudwatch_event_target.update_availability",
+      "to": "entry:catalogue:invoke:catalogue-update-availability",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 79,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:catalogue#infra/main.tf:aws_lambda_event_source_mapping.copy_pulls",
+      "to": "entry:catalogue:invoke:catalogue-pull-copy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 49,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:circulation#infra/main.tf:aws_cloudwatch_event_target.checkout",
+      "to": "entry:circulation:workflow:circulation-checkout",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 74,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:circulation-checkout"
+      }
+    },
+    {
+      "from": "consumer:members#infra/main.tf:aws_sns_topic_subscription.record_checkout",
+      "to": "entry:members:invoke:members-record-checkout",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 60,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "db_query:circulation#statemachine/checkout.asl.json:43:5",
+      "to": "table:circulation#circulation-loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 43
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-pull-copy",
+      "to": "catalogue#src/handlers/pull-copy.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/pull-copy.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-reserve-copy",
+      "to": "catalogue#src/handlers/reserve-copy.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/reserve-copy.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-reshelve",
+      "to": "catalogue#src/handlers/reshelve.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/reshelve.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-update-availability",
+      "to": "catalogue#src/handlers/update-availability.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/update-availability.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:catalogue:workflow:reshelve-returns",
+      "to": "catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/ReshelveEach",
+      "type": "handles",
+      "confidence": "static",
+      "file": "workflows/reshelve-returns.asl.json",
+      "line": 3
+    },
+    {
+      "from": "entry:circulation:workflow:circulation-checkout",
+      "to": "circulation#statemachine/checkout.asl.json:circulation-checkout/CheckStanding",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 3
+    },
+    {
+      "from": "entry:members:http:POST:/checkouts",
+      "to": "producer:members#infra/main.tf:aws_apigatewayv2_route.request_checkout",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 92,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:members:invoke:members-check-standing",
+      "to": "members#src/handlers/check-standing.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/check-standing.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:members:invoke:members-record-checkout",
+      "to": "members#src/handlers/record-checkout.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/record-checkout.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:members:invoke:members-send-notice",
+      "to": "members#src/handlers/send-notice.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/send-notice.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:members:workflow:members-borrower-notices",
+      "to": "members#statemachine/borrower-notices.json:members-borrower-notices/SendNotice",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/borrower-notices.json",
+      "line": 3
+    },
+    {
+      "from": "members#src/handlers/check-standing.ts:handler",
+      "to": "members#src/handlers/check-standing.ts:lookUpStanding",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "'good'|'suspended'",
+      "file": "src/handlers/check-standing.ts",
+      "line": 9
+    },
+    {
+      "from": "members#src/handlers/send-notice.ts:handler",
+      "to": "members#src/handlers/send-notice.ts:subjectOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/handlers/send-notice.ts",
+      "line": 9
+    },
+    {
+      "from": "members#statemachine/borrower-notices.json:members-borrower-notices/SendNotice",
+      "to": "entry:members:invoke:members-send-notice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/borrower-notices.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:members-send-notice"
+      }
+    },
+    {
+      "from": "producer:circulation#statemachine/checkout.asl.json:63:5",
+      "to": "channel:sqs/catalogue-copy-pulls",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 63,
+      "meta": {
+        "payload": {
+          "MessageBody": {
+            "copyId.$": "$.copy.copyId",
+            "borrowerId.$": "$.borrowerId"
+          }
+        }
+      }
+    },
+    {
+      "from": "producer:circulation#statemachine/checkout.asl.json:76:5",
+      "to": "channel:sns/circulation-checkouts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 76,
+      "meta": {
+        "payload": {
+          "Message.$": "States.JsonToString($)"
+        }
+      }
+    },
+    {
+      "from": "producer:circulation#statemachine/checkout.asl.json:86:5",
+      "to": "channel:eventbridge/library/library.circulation/LoanCheckedOut",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/checkout.asl.json",
+      "line": 86,
+      "meta": {
+        "payload": {
+          "Detail": {
+            "titleId.$": "$.titleId",
+            "copyId.$": "$.copy.copyId"
+          }
+        }
+      }
+    },
+    {
+      "from": "producer:members#infra/main.tf:aws_apigatewayv2_route.request_checkout",
+      "to": "channel:eventbridge/library/library.members/CheckoutRequested",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 92,
+      "meta": {
+        "via": "deployment"
+      }
+    }
+  ],
+  "types": {
+    "type:catalogue#LoanCheckedOut": {
+      "name": "LoanCheckedOut",
+      "kind": "object",
+      "declaredIn": "catalogue#src/handlers/update-availability.ts",
+      "structuralHash": "459d4afa4c3a76d2",
+      "fields": [
+        {
+          "name": "source",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "detail-type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "detail",
+          "type": "{titleId:string;copyId:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:catalogue#PullRequests": {
+      "name": "PullRequests",
+      "kind": "object",
+      "declaredIn": "catalogue#src/handlers/pull-copy.ts",
+      "structuralHash": "37be2caf4d190dc9",
+      "fields": [
+        {
+          "name": "Records",
+          "type": "{body:string}[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:catalogue#ReserveRequest": {
+      "name": "ReserveRequest",
+      "kind": "object",
+      "declaredIn": "catalogue#src/handlers/reserve-copy.ts",
+      "structuralHash": "70b76d9194d90f8c",
+      "fields": [
+        {
+          "name": "titleId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:members#CheckoutNotifications": {
+      "name": "CheckoutNotifications",
+      "kind": "object",
+      "declaredIn": "members#src/handlers/record-checkout.ts",
+      "structuralHash": "3a006433824985ea",
+      "fields": [
+        {
+          "name": "Records",
+          "type": "{Sns:{Message:string}}[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:members#NoticeRequest": {
+      "name": "NoticeRequest",
+      "kind": "object",
+      "declaredIn": "members#src/handlers/send-notice.ts",
+      "structuralHash": "88620a0052a61c24",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "notice",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:members#StandingRequest": {
+      "name": "StandingRequest",
+      "kind": "object",
+      "declaredIn": "members#src/handlers/check-standing.ts",
+      "structuralHash": "55fd635b04be42b6",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "workflows/reshelve-returns.asl.json",
+      "line": 1,
+      "reason": "workflow-named-by-file",
+      "level": "info",
+      "message": "the workflow in workflows/reshelve-returns.asl.json is named reshelve-returns after its file; nothing here says the name it is deployed under",
+      "hint": "A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.",
+      "symbol": "entry:catalogue:workflow:reshelve-returns",
+      "service": "catalogue"
+    }
+  ]
+}

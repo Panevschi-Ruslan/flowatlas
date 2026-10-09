@@ -19,6 +19,7 @@ import {
   makeHttpEntryKey,
   makeSymbolId,
   normalizePath,
+  operationsOf,
   type GraphEdge,
   type GraphNode,
   type RepoGraph,
@@ -38,7 +39,7 @@ import {
   sealHashes,
   type ShapeContext,
 } from '../document/shapes.js';
-import { OPERATION_VERBS, openapiDocumentSchema, operationSchema, type Operation } from './document.js';
+import { openapiDocumentSchema, operationSchema, type Operation } from './document.js';
 
 /**
  * A name for the operation, which is what a reader will see as the far end.
@@ -129,67 +130,63 @@ export const readOpenapiDocument = (
   const edges: GraphEdge[] = [];
   const declared = { [DECLARED_BY]: documentPath };
 
-  for (const [rawPath, item] of Object.entries(document.paths).sort(([a], [b]) => (a < b ? -1 : 1))) {
-    for (const [key, verb] of Object.entries(OPERATION_VERBS)) {
-      const found = (item as Record<string, unknown>)[key];
-      if (found === null || typeof found !== 'object') continue;
-      const operation = operationSchema.parse(found);
-      const path = normalizePath(rawPath);
-      const name = operationName(operation, verb, path);
-      const entryId = makeEntryId(service, 'http', makeHttpEntryKey(verb, path));
-      const handlerId = makeSymbolId(service, documentPath, name);
-      const shape = shapeName(name);
+  for (const { rawPath, verb, operation: found } of operationsOf(document.paths)) {
+    const operation = operationSchema.parse(found);
+    const path = normalizePath(rawPath);
+    const name = operationName(operation, verb, path);
+    const entryId = makeEntryId(service, 'http', makeHttpEntryKey(verb, path));
+    const handlerId = makeSymbolId(service, documentPath, name);
+    const shape = shapeName(name);
 
-      nodes.push({
-        id: entryId,
-        type: 'entry',
-        label: `${verb} ${path}`,
-        repo: service,
-        file: documentPath,
-        kind: 'http',
-        meta: {
-          method: verb,
-          path,
-          rawPath,
-          adapter: 'openapi',
-          ...declared,
-          ...(pathParameters(operation).length === 0
-            ? {}
-            : { pathParams: pathParameters(operation) }),
-          ...(operation.summary === undefined ? {} : { summary: operation.summary }),
-        },
-      });
-      nodes.push({
-        id: handlerId,
-        type: 'method',
-        label: name,
-        repo: service,
-        file: documentPath,
-        meta: { ...declared },
-      });
+    nodes.push({
+      id: entryId,
+      type: 'entry',
+      label: `${verb} ${path}`,
+      repo: service,
+      file: documentPath,
+      kind: 'http',
+      meta: {
+        method: verb,
+        path,
+        rawPath,
+        adapter: 'openapi',
+        ...declared,
+        ...(pathParameters(operation).length === 0
+          ? {}
+          : { pathParams: pathParameters(operation) }),
+        ...(operation.summary === undefined ? {} : { summary: operation.summary }),
+      },
+    });
+    nodes.push({
+      id: handlerId,
+      type: 'method',
+      label: name,
+      repo: service,
+      file: documentPath,
+      meta: { ...declared },
+    });
 
-      const body = jsonSchemaOf(
-        operation.requestBody?.content as Record<string, { schema?: unknown }> | undefined,
-      );
-      const bodyRef =
-        body === undefined ? undefined : refOf(body as never, context, inlineName(shape, 'Body'));
-      const answer = successResponse(operation);
-      const returns =
-        answer === undefined
-          ? undefined
-          : refOf(answer as never, context, inlineName(shape, 'Response'));
+    const body = jsonSchemaOf(
+      operation.requestBody?.content as Record<string, { schema?: unknown }> | undefined,
+    );
+    const bodyRef =
+      body === undefined ? undefined : refOf(body as never, context, inlineName(shape, 'Body'));
+    const answer = successResponse(operation);
+    const returns =
+      answer === undefined
+        ? undefined
+        : refOf(answer as never, context, inlineName(shape, 'Response'));
 
-      edges.push({
-        from: entryId,
-        to: handlerId,
-        type: 'handles',
-        confidence: DECLARED_CONFIDENCE,
-        file: documentPath,
-        ...(bodyRef === undefined ? {} : { params: [bodyRef] }),
-        ...(returns === undefined ? {} : { returns }),
-        meta: { ...declared, ...(bodyRef === undefined ? {} : { body: bodyRef }) },
-      });
-    }
+    edges.push({
+      from: entryId,
+      to: handlerId,
+      type: 'handles',
+      confidence: DECLARED_CONFIDENCE,
+      file: documentPath,
+      ...(bodyRef === undefined ? {} : { params: [bodyRef] }),
+      ...(returns === undefined ? {} : { returns }),
+      meta: { ...declared, ...(bodyRef === undefined ? {} : { body: bodyRef }) },
+    });
   }
 
   sealHashes(registry, declaredIn);

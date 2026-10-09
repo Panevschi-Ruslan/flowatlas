@@ -8,7 +8,8 @@ import { openGraphDb } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
 import { resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
 import { CACHE_VERSION, loadBuildCache } from '../build/cache.js';
-import { buildProject, inPools, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
+import { serviceOutputDir } from '@flowatlas/core';
+import { buildProject, inPools, serviceGraphPath, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -38,6 +39,19 @@ const copyOfMultiRepo = (): string => {
 };
 
 const FIXTURE = copyOfMultiRepo();
+
+/** A copy of one single-repository fixture, beside the fixtures for its stubs. */
+const copyOfFixture = (name: string): string => {
+  const dir = join(mkdtempSync(join(FIXTURES, '.scratch-build-')), name);
+  cpSync(join(FIXTURES, name), dir, {
+    recursive: true,
+    filter: (from) => !from.endsWith('/.flowatlas'),
+  });
+  return dir;
+};
+
+const ANGULAR = copyOfFixture('angular-basic');
+const REACT = copyOfFixture('react-router-config');
 
 /**
  * A second copy, for the tests whose build is meant to fail.
@@ -79,7 +93,7 @@ const DOOMED_FIXTURE = copyOfMultiRepo();
  */
 afterAll(() => {
   rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
-  for (const tree of [FIXTURE, DOOMED_FIXTURE]) {
+  for (const tree of [FIXTURE, DOOMED_FIXTURE, ANGULAR, REACT]) {
     rmSync(resolve(tree, '..'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 });
@@ -492,6 +506,76 @@ describe('building a project a second time', () => {
       .toBeLessThanOrEqual(result.timing.total);
   }, 240_000);
 
+  it('reads a repository again when a type stub it was read against is edited', async () => {
+    const config = configFor('stubbed', services);
+    await buildProject({ config, builtAt: FIXED });
+    const stub = join(FIXTURE, 'orders', 'node_modules', 'typeorm', 'index.d.ts');
+    const original = readFileSync(stub, 'utf8');
+
+    // Rewritten with the same content, the way a reinstall does: no change.
+    writeFileSync(stub, original);
+    const reinstalled = await buildProject({ config, builtAt: FIXED });
+    expect(reinstalled.plan['orders']).toEqual({ mode: 'skip', reason: '0 files changed' });
+
+    try {
+      writeFileSync(stub, `${original}\n// edited\n`);
+      const edited = await buildProject({ config, builtAt: FIXED });
+      expect(edited.plan['orders']).toEqual({
+        mode: 'full',
+        reason: 'installed node_modules/typeorm/index.d.ts changed',
+      });
+      expect(edited.plan['billing']).toEqual({ mode: 'skip', reason: '0 files changed' });
+    } finally {
+      writeFileSync(stub, original);
+    }
+  }, 240_000);
+
+  it('reads a browser repository again when a type stub it was read against is edited', async () => {
+    const config = configFor('stubbed-browser', [web({ apiTarget: {} })]);
+    await buildProject({ config, builtAt: FIXED });
+    const stub = join(FIXTURE, 'web', 'node_modules', '@angular', 'common', 'http', 'index.d.ts');
+    const original = readFileSync(stub, 'utf8');
+    const settled = await buildProject({ config, builtAt: FIXED });
+    expect(settled.plan['web']).toEqual({ mode: 'skip', reason: '0 files changed' });
+    try {
+      writeFileSync(stub, `${original}\n// edited\n`);
+      const edited = await buildProject({ config, builtAt: FIXED });
+      expect(edited.plan['web']).toEqual({
+        mode: 'full',
+        reason: 'installed node_modules/@angular/common/http/index.d.ts changed',
+      });
+    } finally {
+      writeFileSync(stub, original);
+    }
+  }, 240_000);
+
+  it('settles a browser repository, and reads it again when a template it reads is edited', async () => {
+    const config = configFor('angular-template', [
+      { name: 'shop', repo: ANGULAR, type: 'angular', apiBaseEnv: ['apiUrl'] },
+    ]);
+    await buildProject({ config, builtAt: FIXED });
+    // What the reading recorded and what the survey lists are one list, so a
+    // build with nothing moved reads nothing.
+    const settled = await buildProject({ config, builtAt: FIXED });
+    expect(settled.plan['shop']).toEqual({ mode: 'skip', reason: '0 files changed' });
+
+    const template = join(ANGULAR, 'src', 'app', 'orders-list.component.html');
+    writeFileSync(template, `${readFileSync(template, 'utf8')}\n<button (click)="load()">again</button>\n`);
+    const edited = await buildProject({ config, builtAt: FIXED });
+    expect(edited.plan['shop']?.mode).toBe('full');
+  }, 240_000);
+
+  it('settles a React repository, and reads it again when a script file beside its sources moves', async () => {
+    const config = configFor('react-script', [{ name: 'app', repo: REACT, type: 'react' }]);
+    await buildProject({ config, builtAt: FIXED });
+    const settled = await buildProject({ config, builtAt: FIXED });
+    expect(settled.plan['app']).toEqual({ mode: 'skip', reason: '0 files changed' });
+
+    writeFileSync(join(REACT, 'app', 'legacy.jsx'), 'export const Legacy = () => null;\n');
+    const edited = await buildProject({ config, builtAt: FIXED });
+    expect(edited.plan['app']?.mode).toBe('full');
+  }, 240_000);
+
   it('reads everything again when told to ignore the cache, and rewrites it', async () => {
     const config = configFor('ignored', services);
     await buildProject({ config, builtAt: FIXED });
@@ -567,22 +651,23 @@ describe('building only some of the repositories', () => {
     // A graph to reuse has to exist before one can be taken away; on a tree
     // nothing has been built in, every skipped repository is missing one and
     // the message could name any of them.
-    await buildProject({ config: configFor('no-graph-first', doomed), builtAt: FIXED });
-
-    const config = configFor('no-graph', doomed);
-    rmSync(join(DOOMED_FIXTURE, 'gateway', '.flowatlas'), {
+    const config = configFor('no-graph-first', doomed);
+    const first = await buildProject({ config, builtAt: FIXED });
+    rmSync(serviceOutputDir(first.outputDir, 'gateway'), {
       recursive: true,
       force: true,
       maxRetries: 10,
       retryDelay: 100,
     });
 
-    const graphPath = join(DOOMED_FIXTURE, 'orders', '.flowatlas', 'graph.json');
+    const graphPath = serviceGraphPath(first.outputDir, 'orders');
     const before = readFileSync(graphPath, 'utf8');
 
-    await expect(
-      buildProject({ config, builtAt: FIXED, service: ['orders'] }),
-    ).rejects.toThrow(/missing graph for gateway/);
+    // The message names where the graph was looked for, which is under the
+    // build's output and not in the repository.
+    const refused = buildProject({ config, builtAt: FIXED, service: ['orders'] });
+    await expect(refused).rejects.toThrow(/missing graph for gateway/);
+    await expect(refused).rejects.toThrow(serviceGraphPath(first.outputDir, 'gateway'));
 
     // The refusal costs two milliseconds and the extraction of `orders` it had
     // already started costs most of a second, so a build that returned without

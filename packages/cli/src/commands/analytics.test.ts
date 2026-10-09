@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, type Dirent } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -235,14 +235,14 @@ describe('what every one of them promises', () => {
   it('writes nothing: the graph and its journal come out byte for byte the same', async () => {
     // `graph.db-shm` is left out on purpose. It is SQLite's shared-memory
     // index, and opening a WAL database read-only still stamps it; nothing in
-    // it is part of the graph.
+    // it is part of the graph. Every file under the output, the services' own
+    // graphs under `services/` included.
     const carried = (): Array<[string, string]> =>
-      readdirSync(scratch)
-        .filter((name) => !name.endsWith('-shm'))
-        .map((name) => [
-          name,
-          createHash('sha256').update(readFileSync(join(scratch, name))).digest('hex'),
-        ]);
+      (readdirSync(scratch, { recursive: true, withFileTypes: true }) as Dirent[])
+        .filter((entry) => entry.isFile() && !entry.name.endsWith('-shm'))
+        .map((entry) => join(entry.parentPath, entry.name))
+        .sort()
+        .map((path) => [path, createHash('sha256').update(readFileSync(path)).digest('hex')]);
 
     const before = carried();
 

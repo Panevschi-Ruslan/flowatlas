@@ -1,0 +1,16 @@
+@  POST /loans/:param/renewals                              circulation/infra/api.tf:26
+  -> handler                                                circulation/src/loans/renew-loan.ts:13
+    -> findLoan                                             circulation/src/lib/loans-table.ts:15
+    -> saveLoan                                             circulation/src/lib/loans-table.ts:11
+    ~  event eventbridge/library/library.loans/LoanRenewed  circulation/src/loans/renew-loan.ts:29
+      ~  eventbridge/library/library.loans/LoanRenewed      src/loans/renew-loan.ts:29
+        ~  rule library-renewal-review ~heuristic           circulation/infra/rules.tf:67
+          @  workflow loan-review                           circulation/statemachines/loan-review.asl.json:1
+            -> ReviewLoan [Task lambda:invoke]              circulation/statemachines/loan-review.asl.json:5
+              @  library-review-loan                        circulation/infra/functions.tf:37
+                -> handler                                  circulation/src/reviews/review-loan.ts:9
+                  -> findLoan                               circulation/src/lib/loans-table.ts:15
+              -> Approved? [Choice]                         circulation/statemachines/loan-review.asl.json:19
+                -> Renewed [Succeed]                        circulation/statemachines/loan-review.asl.json:30
+                -> Refused [Fail]                           circulation/statemachines/loan-review.asl.json:33
+unresolved on this path: 0

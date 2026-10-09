@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:36.856Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:29:14.667Z",
   "services": [
     {
       "name": "nest-broker-markers",
@@ -286,7 +286,22 @@
       "label": "EventBusService.on",
       "repo": "nest-broker-markers",
       "file": "src/bus/event-bus.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "listener",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.publish",
@@ -294,7 +309,22 @@
       "label": "EventBusService.publish",
       "repo": "nest-broker-markers",
       "file": "src/bus/event-bus.service.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-broker-markers#src/orders/orders.controller.ts:OrdersController",
@@ -314,7 +344,18 @@
       "label": "OrdersController.create",
       "repo": "nest-broker-markers",
       "file": "src/orders/orders.controller.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:nest-broker-markers#OrderCreatedEvent"
+            }
+          ],
+          "returns": "{accepted:true}"
+        }
+      }
     },
     {
       "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService",
@@ -336,6 +377,15 @@
       "file": "src/orders/orders.service.ts",
       "line": 82,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderArchivedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -357,6 +407,15 @@
       "file": "src/orders/orders.service.ts",
       "line": 77,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderArchivedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -378,6 +437,15 @@
       "file": "src/orders/orders.service.ts",
       "line": 55,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderArchivedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -394,7 +462,18 @@
       "label": "OrdersService.cancel",
       "repo": "nest-broker-markers",
       "file": "src/orders/orders.service.ts",
-      "line": 62
+      "line": 62,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderCancelledEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.channelFor",
@@ -402,7 +481,18 @@
       "label": "OrdersService.channelFor",
       "repo": "nest-broker-markers",
       "file": "src/orders/orders.service.ts",
-      "line": 110
+      "line": 110,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "suffix",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.create",
@@ -410,7 +500,18 @@
       "label": "OrdersService.create",
       "repo": "nest-broker-markers",
       "file": "src/orders/orders.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.createAndNotify",
@@ -420,6 +521,15 @@
       "file": "src/orders/orders.service.ts",
       "line": 36,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -438,6 +548,10 @@
       "file": "src/orders/orders.service.ts",
       "line": 45,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-broker-markers#OrderExport"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -456,6 +570,15 @@
       "file": "src/orders/orders.service.ts",
       "line": 98,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderArchivedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -474,6 +597,15 @@
       "file": "src/orders/orders.service.ts",
       "line": 104,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderArchivedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -492,6 +624,15 @@
       "file": "src/orders/orders.service.ts",
       "line": 72,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderArchivedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -511,6 +652,15 @@
       "file": "src/orders/orders.service.ts",
       "line": 89,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderArchivedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -545,7 +695,13 @@
       "label": "ProjectionsService.onModuleInit",
       "repo": "nest-broker-markers",
       "file": "src/orders/projections.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
@@ -555,6 +711,15 @@
       "file": "src/orders/projections.service.ts",
       "line": 32,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderCancelledEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Consumes",
@@ -573,6 +738,15 @@
       "file": "src/orders/projections.service.ts",
       "line": 25,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-broker-markers#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Consumes",
@@ -867,6 +1041,10 @@
       "to": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
       "type": "handles",
       "confidence": "marker",
+      "params": [
+        "type:nest-broker-markers#OrderCancelledEvent"
+      ],
+      "returns": "void",
       "file": "src/orders/projections.service.ts",
       "line": 32
     },
@@ -875,6 +1053,10 @@
       "to": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
       "type": "handles",
       "confidence": "marker",
+      "params": [
+        "type:nest-broker-markers#OrderCreatedEvent"
+      ],
+      "returns": "void",
       "file": "src/orders/projections.service.ts",
       "line": 25
     },
@@ -1521,56 +1703,63 @@
       "file": "src/orders/orders.service.ts",
       "line": 57,
       "reason": "channel-dynamic",
+      "message": "OrdersService.archive -> this.channelFor('archived')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.archive with the channel it uses.",
-      "symbol": "OrdersService.archive -> this.channelFor('archived')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:57:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 74,
       "reason": "channel-dynamic",
+      "message": "OrdersService.severalArguments -> this.channelFor('held-or-released')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.severalArguments with the channel it uses.",
-      "symbol": "OrdersService.severalArguments -> this.channelFor('held-or-released')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:74:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 79,
       "reason": "channel-dynamic",
+      "message": "OrdersService.aListInPlace -> this.channelFor('split-or-merged')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.aListInPlace with the channel it uses.",
-      "symbol": "OrdersService.aListInPlace -> this.channelFor('split-or-merged')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:79:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 84,
       "reason": "channel-dynamic",
+      "message": "OrdersService.aCatalogue -> this.channelFor('shipping')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.aCatalogue with the channel it uses.",
-      "symbol": "OrdersService.aCatalogue -> this.channelFor('shipping')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:84:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 92,
       "reason": "channel-dynamic",
+      "message": "OrdersService.stacked -> this.channelFor('refunded-or-reopened')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.stacked with the channel it uses.",
-      "symbol": "OrdersService.stacked -> this.channelFor('refunded-or-reopened')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:92:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 100,
       "reason": "channel-dynamic",
+      "message": "OrdersService.namesNothing -> this.channelFor('nothing')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.namesNothing with the channel it uses.",
-      "symbol": "OrdersService.namesNothing -> this.channelFor('nothing')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:100:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 106,
       "reason": "channel-dynamic",
+      "message": "OrdersService.notAName -> this.channelFor('number')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.notAName with the channel it uses.",
-      "symbol": "OrdersService.notAName -> this.channelFor('number')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:106:5",
       "service": "nest-broker-markers"
     }
   ]

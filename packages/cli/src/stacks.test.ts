@@ -1,4 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { EXTRACTORS, isFrontend } from './build/extractor.js';
 import { isIncremental } from './build/session.js';
@@ -8,6 +10,7 @@ import {
   guessType,
   guessUnread,
   guessWorkspaceType,
+  looksLike,
   looksLikeApplication,
   noReaderNote,
   UNKNOWN_TYPE,
@@ -57,9 +60,17 @@ describe('the stack a repository is built on', () => {
     expect(guessUnread(pkg)).toBeUndefined();
   });
 
+  it('reads the two file-system routers described as rows (P38)', () => {
+    expect(guessType({ dependencies: { '@remix-run/react': '2.0.0', react: '18.3.1' } })).toBe('remix');
+    expect(guessType({ devDependencies: { '@sveltejs/kit': '2.8.0', svelte: '5.0.0' } })).toBe('sveltekit');
+    expect(
+      guessType({ dependencies: { 'react-router': '7.1.0', react: '19.0.0' }, devDependencies: { '@react-router/dev': '7.1.0' } }),
+    ).toBe('react-router');
+  });
+
   it('names the framework when there is no reader for it', () => {
     expect(guessUnread({ dependencies: { nuxt: '3.14.0' } })).toBe('Nuxt');
-    expect(guessUnread({ dependencies: { '@remix-run/react': '2.0.0' } })).toBe('Remix');
+    expect(guessUnread({ dependencies: { vue: '3.5.0' } })).toBe('Vue');
     expect(guessUnread({ devDependencies: { svelte: '5.0.0' } })).toBe('Svelte');
   });
 
@@ -255,5 +266,51 @@ describe('the readers this tool ships', () => {
       (type) => halfOf(type) === 'browser',
     );
     expect(browsers.sort()).toEqual([...BROWSER_READERS.keys()].sort());
+  });
+});
+
+/**
+ * What a repository with no way in looks like (R170): the first description that
+ * applies, most telling first, and always something.
+ */
+describe('what a repository looks like', () => {
+  const repository = (files: Record<string, string | object>): string => {
+    const dir = mkdtempSync(join(tmpdir(), 'flowatlas-looks-'));
+    for (const [path, content] of Object.entries(files)) {
+      writeFileSync(join(dir, path), typeof content === 'string' ? content : JSON.stringify(content));
+    }
+    return dir;
+  };
+
+  it('names a deployment tool nothing reads before anything in the manifest', () => {
+    const dir = repository({ 'serverless.yml': 'service: holds\n', 'package.json': { dependencies: { vue: '3.4.0' } } });
+    expect(looksLike(dir, 'nestjs')).toBe('its functions are declared for the Serverless Framework, which nothing here reads yet');
+  });
+
+  it('names a framework nothing reads', () => {
+    expect(looksLike(repository({ 'package.json': { dependencies: { svelte: '5.0.0' } } }), 'express')).toBe(
+      'it is built on Svelte, which nothing here reads yet',
+    );
+  });
+
+  it('names the type to set when the manifest declares one that is read', () => {
+    expect(looksLike(repository({ 'package.json': { dependencies: { koa: '2.15.0' } } }), 'express')).toBe(
+      'it looks like koa rather than express; set its type to "koa"',
+    );
+  });
+
+  it('names a library', () => {
+    expect(looksLike(repository({ 'package.json': { name: '@acme/stock', main: 'dist/index.js' } }), 'nestjs')).toMatch(
+      /^it looks like a library/,
+    );
+  });
+
+  it('says what was looked for when nothing else applies', () => {
+    expect(looksLike(repository({ 'package.json': { dependencies: { express: '4.19.0' } } }), 'express')).toBe(
+      'it is configured as express, and none of its code declares a route, a handler or a consumer that reader recognises',
+    );
+    expect(looksLike(repository({}), 'lambda')).toBe(
+      'it has no package.json, and none of its files declares a way in that the lambda reader recognises',
+    );
   });
 });

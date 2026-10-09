@@ -9,6 +9,7 @@ export const PACKAGE_NAME = '@flowatlas/adapters-broker';
 
 export { brokerSpecsFor, brokersPass, extractBrokers } from './brokers-pass.js';
 export { brokerAdapters, createCustomBrokerAdapter, socketio } from './adapters/index.js';
+export { nameWithin } from './address.js';
 export type {
   BrokerSpec,
   ChannelPrefix,
@@ -28,6 +29,8 @@ export type {
 export { endpointShapingAt, isUnreadable, unreadableEndpointRow } from './endpoint.js';
 export type { Endpoint, EndpointShaping } from './endpoint.js';
 export { pairKey, readBrokerMarkers } from './markers.js';
+export { rowAbout } from './row-site.js';
+export type { RowSite } from './row-site.js';
 
 import type { AdapterRegistry } from '@flowatlas/core';
 import { brokerAdapters } from './adapters/index.js';

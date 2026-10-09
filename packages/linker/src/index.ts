@@ -40,7 +40,7 @@ export type { ChannelSurvey, RouteSurvey } from './survey.js';
 export { matchesRoutePattern } from './route-audit.js';
 export { isMatch, matchRoute, pathAnswers } from './route-match.js';
 export type { RouteMatch, RouteMiss, RouteResult } from './route-match.js';
-export type { LinkReport, ServiceReport } from './report.js';
+export type { LinkReport, ServicePackages, ServiceReport } from './report.js';
 export { replaceService, writeGraphDb } from './db/writer.js';
 export type { WriteOptions } from './db/writer.js';
 export { blastRadius, BLAST_EDGES, PROVIDER_EDGES } from './diff/blast-radius.js';
@@ -81,6 +81,7 @@ export type {
 } from './diff/types.js';
 export { GraphDb, GraphStore, openGraphDb } from './db/reader.js';
 export type {
+  AnchoredUnresolvedRow,
   SearchOptions,
   TraverseOptions,
   TraverseResult,

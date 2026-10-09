@@ -64,7 +64,7 @@ const entry = (over: Partial<RepoCache> = {}): RepoCache => ({
   dependencies: installed(),
   globalFiles: ['src/main.ts', 'src/orders/orders.module.ts'],
   files: files(),
-  graphPath: '../orders/.flowatlas/graph.json',
+  graphPath: '.flowatlas/services/orders/graph.json',
   graphHash: 'sha1:graph',
   counts: { nodes: 0, edges: 0, types: 0, unresolved: 0 },
   ...over,
@@ -79,9 +79,10 @@ const survey = (over: Partial<RepoSurvey> = {}): RepoSurvey => ({
   tsconfigHash: 'sha1:ts',
   packageJsonHash: 'sha1:pkg',
   dependencies: installed(),
+  packages: {},
   globalFiles: ['src/main.ts', 'src/orders/orders.module.ts'],
   files: files(),
-  graphPath: '../orders/.flowatlas/graph.json',
+  graphPath: '.flowatlas/services/orders/graph.json',
   graphHash: 'sha1:graph',
   ...over,
 });
@@ -193,6 +194,24 @@ describe('planning what to re-read', () => {
     ).toBe('pnpm-lock.yaml changed');
   });
 
+  it('re-reads a repository whose installed declarations were edited, and only then', () => {
+    const typings = { 'node_modules/typeorm/index.d.ts': stamp('sha1:stub') };
+    const cache = cacheOf(['orders', entry({ packages: typings })]);
+    expect(planRebuild([survey({ packages: typings })], { cache }).orders).toEqual({
+      mode: 'skip',
+      reason: '0 files changed',
+    });
+    expect(
+      planRebuild(
+        [survey({ packages: { 'node_modules/typeorm/index.d.ts': stamp('sha1:stub-edited') } })],
+        { cache },
+      ).orders,
+    ).toEqual({ mode: 'full', reason: 'installed node_modules/typeorm/index.d.ts changed' });
+    expect(planRebuild([survey()], { cache }).orders?.reason).toBe(
+      'installed node_modules/typeorm/index.d.ts changed',
+    );
+  });
+
   it('re-reads a repository the last build recorded nothing about the dependencies of', () => {
     const { dependencies: _dependencies, ...older } = entry();
     expect(planRebuild([survey()], { cache: cacheOf(['orders', older]) }).orders?.reason).toBe(
@@ -223,7 +242,7 @@ describe('planning what to re-read', () => {
     expect(
       planRebuild([survey({ graphHash: null })], { cache: cacheOf(['orders', entry()]) }).orders
         ?.reason,
-    ).toBe('no graph at ../orders/.flowatlas/graph.json');
+    ).toBe('no graph at .flowatlas/services/orders/graph.json');
     expect(
       planRebuild([survey({ graphHash: 'sha1:by-hand' })], { cache: cacheOf(['orders', entry()]) })
         .orders?.reason,

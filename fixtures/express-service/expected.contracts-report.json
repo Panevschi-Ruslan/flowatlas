@@ -1,0 +1,84 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:27:00.039Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:16:12",
+        "to": "entry:api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:16:12|hits|entry:api:http:POST:/orders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{total:number}",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+        "writes": [
+          "total"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#CreateOrder",
+        "symbol": "api#src/orders/orders.routes.ts:POST /@36"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+        "to": "entry:api:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:12:12|hits|entry:api:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+        "to": "entry:api:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:12:12|hits|entry:api:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/orders/orders.controller.ts:listOrders answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:16:12",
+        "to": "entry:api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:16:12|hits|entry:api:http:POST:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/orders/orders.routes.ts:POST /@36 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 1,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:27:11.144Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:desk#src/operations/returns.ts:15:9",
+        "to": "consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.process_returns",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk#src/operations/returns.ts:15:9|emits|consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.process_returns",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "desk",
+        "typeId": "type:desk#ReturnedItem",
+        "symbol": "desk#src/operations/returns.ts:recordReturn"
+      },
+      "receiver": {
+        "service": "desk",
+        "typeId": "type:desk#ReturnedItem",
+        "symbol": "desk#src/operations/returns.ts:processReturns"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:desk#src/operations/loans.ts:19:9",
+        "to": "consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.archive_loans",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk#src/operations/loans.ts:19:9|emits|consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.archive_loans",
+      "direction": "payload",
+      "reason": "handler-unread",
+      "message": "the code entry:desk:invoke:library-desk-archive-loan runs was not read for what it takes from what it is handed",
+      "hint": "Its handler is built by a call whose result is not a function this tool reads, or was not found; see the rows about it in flowatlas doctor. Export the function the platform calls, so there is a parameter to compare."
+    }
+  ],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 0,
+    "unchecked": 1,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

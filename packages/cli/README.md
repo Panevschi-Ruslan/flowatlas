@@ -2,9 +2,12 @@
 
 **A command-line tool that reads several TypeScript repositories without running
 them, joins them into one graph, and answers questions about it.** It knows
-NestJS and Angular, Telegraf and Hono, TypeORM, Prisma, Mongo, Redis, Kafka,
-RabbitMQ and BullMQ. It also serves the graph to a coding agent over the Model
-Context Protocol.
+NestJS and Angular, React and Next.js, Express, Fastify, Koa and Hono, Medusa,
+tRPC and Telegraf; AWS Lambda, API Gateway, Step Functions, EventBridge, SQS
+and SNS as Terraform deploys them; TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
+MongoDB and node-postgres; Redis, Kafka, RabbitMQ, BullMQ and socket.io; and
+OpenAPI and AsyncAPI documents for the services whose source you do not have. It
+also serves the graph to a coding agent over the Model Context Protocol.
 
 A compiler reads one repository. This reads five and matches a request made in
 one service to the route that answers it in another, a message published in one
@@ -35,6 +38,66 @@ steps with a recording of each.
 
 ---
 
+## What it reads
+
+**Ways in**
+
+- NestJS controllers, message handlers and schedules, with their guards and pipes
+- Express, Fastify, Koa and Hono, where a route is registered by a call
+- Next.js and Medusa, where a route is the path of a file
+- tRPC procedures, and Telegraf bot commands, callbacks and events
+- what a request carries and what it answers, in every one of them: a
+  validator, a typed request or reply, or a helper of your own that builds the
+  answer
+
+**Serverless on AWS**
+
+- Lambda functions and API Gateway routes, read from the Terraform that deploys
+  them, modules and variable files included
+- Step Functions state machines as ways in whose states are steps
+- EventBridge, SQS and SNS from the SDK call to the rule or mapping it meets
+- code that starts a workflow or invokes a function by its deployed name
+
+**Browsers**
+
+- Angular templates, services and router, lazy routes included
+- React components and hooks
+- `fetch`, `axios`, a wrapper or a client class of your own, each joined to the
+  route that answers it
+
+**Data**
+
+- TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex, MongoDB and
+  node-postgres
+- read with nothing installed, even a Prisma client that was never generated
+- a repository base of your own, with the table each class states
+- Redis and cache-manager, and every settings key a request depends on
+
+**Messages**
+
+- Kafka, RabbitMQ, BullMQ, Redis pub/sub and socket.io, from both ends
+- an in-house bus, described in the configuration
+- the payload and the reply of a request, compared across the boundary
+
+**Across repositories**
+
+- a monorepo's services with the workspace packages they use, on a fresh clone
+- a service you have no source for, from its OpenAPI or AsyncAPI document
+- every contract compared where one repository meets another
+
+**What it cannot read**
+
+- a row saying why, and the one change that would read it
+- an address or a table decided at run time is reported, never guessed
+- test code left out, and every test directory named so you can see it
+
+Every shape above is held by a fixture: a small repository written to prove it,
+compared on every push. There are 136 of them, and
+[the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
+lists them all, generated from their READMEs.
+
+---
+
 ## What it answers
 
 | Command | Answers |
@@ -45,28 +108,33 @@ steps with a recording of each.
 | `flowatlas contracts` | what each service sends against what the other declares |
 | `flowatlas doctor` | what could not be read, and what has drifted |
 | `flowatlas diff <base>` | what a branch changes and who would notice |
-| `flowatlas visualise` | the whole graph as one page you can open |
+| `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a graph to walk, every type on hover |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
-`flowatlas --help` lists all twenty-one.
+`flowatlas --help` lists all twenty.
 
 ---
 
 ## What to expect on a first build
 
-Not everything joins, and the tool says so rather than guessing. A first build of
-a five-repository project, with no configuration beyond what `init` writes:
+Not everything joins, and the tool says so rather than guessing. Five
+repositories that ship as one product, three NestJS services and two Angular
+frontends with a shared package of types between them, measured with 0.5.0:
 
-| | first build | after two settings |
+| | first build | configured |
 |---|---|---|
 | HTTP routes found | 564 | 564 |
-| Browser requests matched to a route | 489 of 495 | 489 of 495 |
-| Calls between services matched | 1 of 61 | 41 of 61 |
-| Routes something reaches | 477 | 502 |
+| Browser requests matched to a route | 494 of 503 | 494 of 503 |
+| Calls between services matched | 1 of 43 | 41 of 43 |
+| Routes something reaches | 483 | 508 |
 
-The two settings are `baseUrlEnv`, which tells the tool which settings key
-addresses a service, and `apiTarget`, which says where a frontend's key points.
-`flowatlas doctor` names both, with the file and the line that needs them.
+The first column is what `init` writes and nothing more. The second adds the
+settings `init` cannot know: `baseUrlEnv`, the settings key that addresses a
+service; `apiBaseEnv` and `apiTarget`, the key a frontend's requests are rooted
+at and where it points; and `sharedPackages`, the shared package of types. A
+string in one repository and a route in another are joined by a fact only the
+person who deployed them knows. `flowatlas doctor` names what is missing, with
+the file and the line that wants it.
 
 Precision over recall throughout: an edge marked `static` is one the code says is
 there, an edge it inferred is marked `heuristic`, and anything it could not read

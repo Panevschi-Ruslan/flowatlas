@@ -17,9 +17,10 @@ Type-checked, never executed:
 ./node_modules/.bin/tsc -p fixtures/hono-worker/web/tsconfig.json --noEmit
 ```
 
-`api/node_modules` holds a hand-written stub for `hono`; `web/node_modules`
-holds ones for `@angular/core`, `@angular/common/http` and `rxjs`. `api` reaches
-the real `@nestjs/common` types through the shared fixture manifest.
+`api/node_modules` holds hand-written stubs for `hono`, `@hono/zod-validator`
+and `zod`; `web/node_modules` holds ones for `@angular/core`,
+`@angular/common/http` and `rxjs`. `api` reaches the real `@nestjs/common` types
+through the shared fixture manifest.
 
 ## The chain, end to end
 
@@ -39,7 +40,7 @@ own routes carry.
 
 ## The worker — `api/src/worker.ts`
 
-Seven of the repository's nine routes, the two refusals, and the calls on the
+Seven of the repository's eleven routes, the two refusals, and the calls on the
 application that declare no route at all.
 
 | Site | Line | Entry | `handlerVia` |
@@ -51,7 +52,7 @@ application that declare no route at all.
 | `app.post('/api/messenger/webhook', withNest, …)` | 34 | `POST /api/messenger/webhook` | `inline`, `guarded_by` → `requestLogger` (order 0), `withNest` (order 1) |
 | `app.on('DELETE', '…/cache', …)` | 42 | `DELETE /api/depots/:param/cache` | `inline` |
 | `app.get(pathFor('stats'), …)` | 45 | none | `route-path-dynamic` |
-| `app.route('/api/admin', adminRoutes)` | 48 | two, declared in another file | — |
+| `app.route('/api/admin', adminRoutes)` | 48 | four, declared in another file | — |
 | `app.basePath('/internal')`, then `.post('/reload', …)` | 51‑52 | `POST /internal/reload` | `call` |
 | `registerReports(app)` | 56 | none | `route-path-dynamic` |
 | `app.all('/api/*', …)` | 65 | `ALL /api/*` | `call` |
@@ -86,6 +87,13 @@ and says nothing about where it hangs. `worker.ts:48` mounts it at `/api/admin`,
 so both are recorded a level down: `GET /api/admin/events` and
 `GET /api/admin/orders/:param`. Reading the declaration on its own would have put
 them at an address nothing serves.
+
+The two note routes are there for what a route reads (P29). `POST
+/api/admin/notes` has `zValidator('json', NoteSchema)` in front of its handler,
+so `c.req.valid('json')` is the schema's type and that is the body, recorded as
+`{ text: string; pinned: boolean }`. `PUT /api/admin/notes/:param` reads
+`c.req.json<NoteChange>()`: a type argument nothing checks, so its body is
+`NoteChange` and claimed. Both answer with what they hand `c.json`.
 
 `reports.routes.ts` is the refusal. Its routes are declared on an application
 that arrives as an argument, and this repository does move applications about —

@@ -1,0 +1,30 @@
+{
+  "Comment": "Puts every returned copy back on its shelf.",
+  "StartAt": "ReshelveEach",
+  "States": {
+    "ReshelveEach": {
+      "Type": "Map",
+      "ItemsPath": "$.copyIds",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Reshelve",
+        "States": {
+          "Reshelve": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "catalogue-reshelve",
+              "Payload": {
+                "copyId.$": "$"
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

@@ -1,13 +1,13 @@
 {
   "name": "@flowatlas/cli",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "One map of a project that lives in several repositories: read them, join them, ask questions.",
   "license": "MIT",
   "author": {
     "name": "Ruslan Panevschi",
     "url": "https://github.com/Panevschi-Ruslan"
   },
-  "homepage": "https://github.com/Panevschi-Ruslan/flowatlas#readme",
+  "homepage": "https://panevschi-ruslan.github.io/flowatlas/",
   "bugs": {
     "url": "https://github.com/Panevschi-Ruslan/flowatlas/issues"
   },
@@ -17,14 +17,30 @@
     "directory": "packages/cli"
   },
   "keywords": [
-    "monorepo",
-    "polyrepo",
-    "static-analysis",
-    "dependency-graph",
     "typescript",
+    "react",
+    "nextjs",
+    "express",
     "nestjs",
     "angular",
+    "prisma",
+    "mongodb",
+    "fastify",
+    "typeorm",
+    "kafka",
+    "trpc",
+    "drizzle",
+    "koa",
+    "hono",
+    "aws-lambda",
+    "terraform",
+    "step-functions",
+    "serverless",
     "mcp",
+    "static-analysis",
+    "dependency-graph",
+    "monorepo",
+    "polyrepo",
     "architecture"
   ],
   "type": "module",
@@ -51,9 +67,9 @@
     "access": "public"
   },
   "scripts": {
-    "build": "node ../../scripts/bundle.mjs && mkdir -p dist/visualise && cp src/visualise/page.html dist/visualise/page.html",
+    "build": "node ../../scripts/bundle.mjs && mkdir -p dist/visualise && cp src/visualise/page.html src/visualise/graph.js src/visualise/frame.js src/visualise/map.js dist/visualise/",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests --testTimeout=60000"
   },
   "dependencies": {
     "@angular/compiler": "^19.2.0",
@@ -63,6 +79,7 @@
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
     "ts-morph": "^28.0.0",
+    "yaml": "^2.9.1",
     "zod": "^4.5.4"
   },
   "devDependencies": {
@@ -76,6 +93,8 @@
     "@flowatlas/extractor-react": "workspace:*",
     "@flowatlas/extractor-nestjs": "workspace:*",
     "@flowatlas/linker": "workspace:*",
-    "@flowatlas/mcp": "workspace:*"
+    "@flowatlas/mcp": "workspace:*",
+    "@flowatlas/terraform": "workspace:*",
+    "@flowatlas/stepfunctions": "workspace:*"
   }
 }

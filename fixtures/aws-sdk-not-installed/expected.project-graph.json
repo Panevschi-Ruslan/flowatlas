@@ -1,0 +1,563 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T09:12:27.872Z",
+  "services": [
+    {
+      "name": "catalogue",
+      "repo": "./catalogue",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalogue#src/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "catalogue",
+      "file": "src/app.ts",
+      "line": 7,
+      "kind": "function"
+    },
+    {
+      "id": "catalogue#src/catalogue-events.ts:CatalogueEvents",
+      "type": "provider",
+      "label": "CatalogueEvents",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 16,
+      "kind": "injectable"
+    },
+    {
+      "id": "catalogue#src/catalogue-events.ts:CatalogueEvents.catalogued",
+      "type": "method",
+      "label": "CatalogueEvents.catalogued",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:catalogue#CatalogueItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/catalogue-events.ts:announceWithdrawal",
+      "type": "function",
+      "label": "announceWithdrawal",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 47,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/catalogue-events.ts:queueForShelving",
+      "type": "function",
+      "label": "queueForShelving",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sqs",
+              "type": "unknown"
+            },
+            {
+              "name": "item",
+              "type": "type:catalogue#CatalogueItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/catalogue.handlers.ts:Mailer",
+      "type": "provider",
+      "label": "Mailer",
+      "repo": "catalogue",
+      "file": "src/catalogue.handlers.ts",
+      "line": 13,
+      "kind": "injectable"
+    },
+    {
+      "id": "catalogue#src/catalogue.handlers.ts:Mailer.send",
+      "type": "method",
+      "label": "Mailer.send",
+      "repo": "catalogue",
+      "file": "src/catalogue.handlers.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "{to:string;body:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/catalogue.handlers.ts:catalogueItem",
+      "type": "function",
+      "label": "catalogueItem",
+      "repo": "catalogue",
+      "file": "src/catalogue.handlers.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/catalogue.handlers.ts:withdrawItem",
+      "type": "function",
+      "label": "withdrawItem",
+      "repo": "catalogue",
+      "file": "src/catalogue.handlers.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "channel:eventbridge/library-events/library.catalogue/ItemCatalogued",
+      "type": "channel",
+      "label": "eventbridge/library-events/library.catalogue/ItemCatalogued",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 21,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sns/catalogue-withdrawals",
+      "type": "channel",
+      "label": "sns/catalogue-withdrawals",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 48,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/library-shelving",
+      "type": "channel",
+      "label": "sqs/library-shelving",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 38,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "entry:catalogue:http:DELETE:/items/:param",
+      "type": "entry",
+      "label": "DELETE /items/:param",
+      "repo": "catalogue",
+      "file": "src/app.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/items/:param",
+        "rawPath": "/items/:itemId",
+        "adapter": "express-routes",
+        "registration": "app.delete",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:catalogue:http:POST:/items",
+      "type": "entry",
+      "label": "POST /items",
+      "repo": "catalogue",
+      "file": "src/app.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:catalogue#src/catalogue-events.ts:21:11",
+      "type": "producer",
+      "label": "event eventbridge/library-events/library.catalogue/ItemCatalogued",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:catalogue#src/catalogue-events.ts:38:9",
+      "type": "producer",
+      "label": "message sqs/library-shelving",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 38,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:catalogue#src/catalogue-events.ts:48:9",
+      "type": "producer",
+      "label": "message sns/catalogue-withdrawals",
+      "repo": "catalogue",
+      "file": "src/catalogue-events.ts",
+      "line": 48,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "repo:catalogue",
+      "type": "repo",
+      "label": "catalogue",
+      "repo": "catalogue",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalogue#src/catalogue-events.ts:CatalogueEvents.catalogued",
+      "to": "producer:catalogue#src/catalogue-events.ts:21:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/catalogue-events.ts",
+      "line": 21
+    },
+    {
+      "from": "catalogue#src/catalogue-events.ts:announceWithdrawal",
+      "to": "producer:catalogue#src/catalogue-events.ts:48:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/catalogue-events.ts",
+      "line": 48
+    },
+    {
+      "from": "catalogue#src/catalogue-events.ts:queueForShelving",
+      "to": "producer:catalogue#src/catalogue-events.ts:38:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/catalogue-events.ts",
+      "line": 38
+    },
+    {
+      "from": "catalogue#src/catalogue.handlers.ts:catalogueItem",
+      "to": "catalogue#src/catalogue-events.ts:CatalogueEvents.catalogued",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:catalogue#CatalogueItem"
+      ],
+      "returns": "void",
+      "file": "src/catalogue.handlers.ts",
+      "line": 23
+    },
+    {
+      "from": "catalogue#src/catalogue.handlers.ts:catalogueItem",
+      "to": "catalogue#src/catalogue-events.ts:queueForShelving",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown",
+        "type:catalogue#CatalogueItem"
+      ],
+      "returns": "void",
+      "file": "src/catalogue.handlers.ts",
+      "line": 24
+    },
+    {
+      "from": "catalogue#src/catalogue.handlers.ts:catalogueItem",
+      "to": "catalogue#src/catalogue.handlers.ts:Mailer.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{to:string;body:string}"
+      ],
+      "returns": "void",
+      "file": "src/catalogue.handlers.ts",
+      "line": 25
+    },
+    {
+      "from": "catalogue#src/catalogue.handlers.ts:withdrawItem",
+      "to": "catalogue#src/catalogue-events.ts:announceWithdrawal",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/catalogue.handlers.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:catalogue:http:DELETE:/items/:param",
+      "to": "catalogue#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:DELETE:/items/:param",
+      "to": "catalogue#src/catalogue.handlers.ts:withdrawItem",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalogue.handlers.ts",
+      "line": 29,
+      "meta": {
+        "requestRead": true,
+        "params": "{itemId:string}"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:POST:/items",
+      "to": "catalogue#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:POST:/items",
+      "to": "catalogue#src/catalogue.handlers.ts:catalogueItem",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:catalogue#CatalogueItem",
+      "file": "src/catalogue.handlers.ts",
+      "line": 21,
+      "meta": {
+        "requestRead": true,
+        "body": "type:catalogue#CatalogueItem",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "producer:catalogue#src/catalogue-events.ts:21:11",
+      "to": "channel:eventbridge/library-events/library.catalogue/ItemCatalogued",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "type:catalogue#CatalogueItem"
+      ],
+      "file": "src/catalogue-events.ts",
+      "line": 21
+    },
+    {
+      "from": "producer:catalogue#src/catalogue-events.ts:38:9",
+      "to": "channel:sqs/library-shelving",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "type:catalogue#CatalogueItem"
+      ],
+      "file": "src/catalogue-events.ts",
+      "line": 38
+    },
+    {
+      "from": "producer:catalogue#src/catalogue-events.ts:48:9",
+      "to": "channel:sns/catalogue-withdrawals",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{itemId:string}"
+      ],
+      "file": "src/catalogue-events.ts",
+      "line": 48
+    }
+  ],
+  "types": {
+    "type:catalogue#CatalogueItem": {
+      "name": "CatalogueItem",
+      "kind": "object",
+      "declaredIn": "catalogue#src/catalogue-events.ts",
+      "structuralHash": "ff14acbf3e84543b",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "shelfMark",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/catalogue-events.ts",
+      "line": 37,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "SQSClient",
+      "service": "catalogue"
+    },
+    {
+      "file": "src/catalogue-events.ts",
+      "line": 48,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 5,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "announceWithdrawal -> sns\n    .publish({\n      TopicArn: 'arn:aws:sns:eu-west-1:111122223333:catalogue-withdrawals',\n      Message: JSON.stringify({ itemId }),\n    }).promise",
+      "service": "catalogue"
+    },
+    {
+      "file": "src/catalogue.handlers.ts",
+      "line": 21,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Request",
+      "service": "catalogue"
+    },
+    {
+      "file": "src/catalogue.handlers.ts",
+      "line": 21,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Response",
+      "service": "catalogue"
+    },
+    {
+      "file": "src/catalogue.handlers.ts",
+      "line": 29,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Request",
+      "service": "catalogue"
+    },
+    {
+      "file": "src/catalogue.handlers.ts",
+      "line": 29,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Response",
+      "service": "catalogue"
+    }
+  ]
+}

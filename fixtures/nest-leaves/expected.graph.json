@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-leaves",
-  "generatedAt": "2026-09-27T14:21:12.968Z",
+  "generatedAt": "2026-10-07T14:34:17.537Z",
   "nodes": [
     {
       "id": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",
@@ -319,7 +319,18 @@
       "label": "OrdersController.findOne",
       "repo": "nest-leaves",
       "file": "src/orders/orders.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:nest-leaves#OrderDto>"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.controller.ts:OrdersController.settings",
@@ -327,7 +338,13 @@
       "label": "OrdersController.settings",
       "repo": "nest-leaves",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService",
@@ -347,7 +364,18 @@
       "label": "OrdersService.byId",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.callAnything",
@@ -355,7 +383,18 @@
       "label": "OrdersService.callAnything",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 59
+      "line": 59,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "url",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.charge",
@@ -363,7 +402,13 @@
       "label": "OrdersService.charge",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 53
+      "line": 53,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.create",
@@ -371,7 +416,18 @@
       "label": "OrdersService.create",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 48
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:nest-leaves#OrderDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:nest-leaves#OrderDto>"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.drop",
@@ -379,7 +435,18 @@
       "label": "OrdersService.drop",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.dropComputed",
@@ -387,7 +454,18 @@
       "label": "OrdersService.dropComputed",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.dynamicSetting",
@@ -395,7 +473,18 @@
       "label": "OrdersService.dynamicSetting",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 78
+      "line": 78,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.fetchOne",
@@ -403,7 +492,18 @@
       "label": "OrdersService.fetchOne",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 43
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:nest-leaves#OrderDto>"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.ping",
@@ -411,7 +511,13 @@
       "label": "OrdersService.ping",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 64
+      "line": 64,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.put",
@@ -419,7 +525,22 @@
       "label": "OrdersService.put",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "returns": "'OK'"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.settings",
@@ -427,7 +548,13 @@
       "label": "OrdersService.settings",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 69
+      "line": 69,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.warm",
@@ -435,7 +562,13 @@
       "label": "OrdersService.warm",
       "repo": "nest-leaves",
       "file": "src/orders/orders.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "repo:nest-leaves",

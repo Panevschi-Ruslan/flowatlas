@@ -1,0 +1,9 @@
+{
+  "name": "lending-library-holds",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Holds placed on titles that are out on loan.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

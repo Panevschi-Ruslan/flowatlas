@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "pg-query-verb",
-  "generatedAt": "2026-09-27T17:48:09.593Z",
+  "generatedAt": "2026-10-07T14:34:46.673Z",
   "nodes": [
     {
       "id": "db_query:pg-query-verb#src/orders/orders.service.ts:10:12",
@@ -144,7 +144,13 @@
       "label": "OrdersController.findAll",
       "repo": "pg-query-verb",
       "file": "src/orders/orders.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.plan",
@@ -152,7 +158,13 @@
       "label": "OrdersController.plan",
       "repo": "pg-query-verb",
       "file": "src/orders/orders.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.report",
@@ -160,7 +172,13 @@
       "label": "OrdersController.report",
       "repo": "pg-query-verb",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-query-verb#src/orders/orders.service.ts:OrdersService",
@@ -180,7 +198,13 @@
       "label": "OrdersService.findAll",
       "repo": "pg-query-verb",
       "file": "src/orders/orders.service.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-query-verb#src/orders/orders.service.ts:OrdersService.plan",
@@ -188,7 +212,13 @@
       "label": "OrdersService.plan",
       "repo": "pg-query-verb",
       "file": "src/orders/orders.service.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-query-verb#src/orders/orders.service.ts:OrdersService.report",
@@ -196,7 +226,13 @@
       "label": "OrdersService.report",
       "repo": "pg-query-verb",
       "file": "src/orders/orders.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "repo:pg-query-verb",

@@ -17,9 +17,10 @@
  * manifest, or a configuration - and never by the name of a directory inside it,
  * which is the framework's business and not this repository's.
  */
-import { readdirSync, statSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { serviceOutputDir } from '@flowatlas/core';
 
 export const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -107,6 +108,34 @@ export const layoutOf = (dir) => KINDS.find(({ marker }) => isFile(join(dir, mar
 
 /** Where a run over this fixture writes its graphs and its report. */
 export const outputDir = (dir) => join(dir, OUTPUT);
+
+/**
+ * Where a run over this fixture leaves the graph of the repository at its root.
+ *
+ * `extract` writes it at the top of the output. `build` keeps each service's
+ * graph under `services/` in its output (R166), so for a project the graph of
+ * the repository at the fixture's root is the one belonging to the service
+ * whose `repo` is that root. Before R166 a build wrote it into the repository's
+ * own `.flowatlas`, which for a configuration kept at the root was the output
+ * directory, and the two answers happened to be one path.
+ */
+export const repoGraphPath = (dir) => {
+  if (layoutOf(dir).kind !== 'project') return join(outputDir(dir), 'graph.json');
+  let config;
+  try {
+    config = JSON.parse(readFileSync(join(dir, 'flowatlas.config.json'), 'utf8'));
+  } catch {
+    return join(outputDir(dir), 'graph.json');
+  }
+  const own = (config.services ?? []).find(
+    (service) =>
+      typeof service.repo === 'string' &&
+      (isAbsolute(service.repo) ? service.repo : resolve(dir, service.repo)) === resolve(dir),
+  );
+  return own === undefined
+    ? join(outputDir(dir), 'graph.json')
+    : join(serviceOutputDir(outputDir(dir), own.name), 'graph.json');
+};
 
 /** Every fixture directory, or the ones named on the command line. */
 export const fixtureDirs = (selected = []) => {

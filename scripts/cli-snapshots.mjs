@@ -163,6 +163,235 @@ const SOCKET_CASES = [
   ['expected.channel.updated.tree.txt', (io) => runChannel('orders/order:updated', { config: socketConfig, color: false, ascii: true, format: 'tree' }, io)],
 ];
 
+const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
+const lambdaConfig = join(lambdaFixture, 'flowatlas.config.json');
+
+/**
+ * A route declared in Terraform, walked from the request to the table (P21).
+ *
+ * The route hangs from an API another repository owns, so its address is the
+ * one the linker joined; the walk shows the authoriser and the middleware chain
+ * in front of the handler, and the handler's body after it. The health check
+ * holds the two rows a disputed variable leaves, which say what to set.
+ */
+const LAMBDA_CASES = [
+  ['expected.flow.post-loans.tree.txt', (io) => runFlow('POST /v1/loans', { config: lambdaConfig, color: false, ascii: true, format: 'tree' }, io)],
+  ['expected.doctor.txt', (io) => runDoctorCommand({ config: lambdaConfig }, io)],
+];
+
+/**
+ * A workflow read from state machine definitions, walked and reached into.
+ *
+ * The graph beneath it is gated by the fixture's own snapshot; these hold what a
+ * person reads. A workflow is a chain of steps longer than the default depth a
+ * walk stops at, so each asks for the whole of it.
+ */
+const workflowsFixture = join(root, 'fixtures', 'stepfunctions-asl-files');
+const workflowsConfig = join(workflowsFixture, 'flowatlas.config.json');
+const workflowsPlain = { config: workflowsConfig, color: false, ascii: true };
+const RECORD_NOTICE = 'notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/RecordNotice';
+
+const WORKFLOW_CASES = [
+  ['flow.loan-approval.tree.txt', (io) => runFlow('workflow:loan-approval', { ...workflowsPlain, format: 'tree', depth: '24' }, io)],
+  ['flow.loan-approval.json.l2.json', (io) => runFlow('workflow:loan-approval', { ...workflowsPlain, format: 'json', detail: '2', depth: '24' }, io)],
+  ['impact.record-notice.tree.txt', (io) => runImpact(RECORD_NOTICE, { ...workflowsPlain, format: 'tree', depth: '24' }, io)],
+  ['impact.record-notice.entries-only.tree.txt', (io) => runImpact(RECORD_NOTICE, { ...workflowsPlain, format: 'tree', depth: '24', entriesOnly: true }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: workflowsConfig }, io)],
+];
+
+/**
+ * Workflows read from the Terraform that deploys them (P22, part B).
+ *
+ * No case passes `--depth`: the default walks every step of a workflow and on
+ * into each handler, and back up from a handler through every step it climbs,
+ * and these are what show that it does.
+ */
+const deployedWorkflowsFixture = join(root, 'fixtures', 'stepfunctions-terraform');
+const deployedWorkflowsPlain = { config: join(deployedWorkflowsFixture, 'flowatlas.config.json'), color: false, ascii: true };
+
+const DEPLOYED_WORKFLOW_CASES = [
+  ['flow.loan-approval.tree.txt', (io) => runFlow('workflow:lending-loan-approval', { ...deployedWorkflowsPlain, format: 'tree' }, io)],
+  ['flow.loan-renewal.tree.txt', (io) => runFlow('workflow:lending-loan-renewal', { ...deployedWorkflowsPlain, format: 'tree' }, io)],
+  ['flow.overdue-sweep.json.l2.json', (io) => runFlow('workflow:lending-overdue-sweep', { ...deployedWorkflowsPlain, format: 'json', detail: '2' }, io)],
+  [
+    'impact.notify-borrower.entries-only.tree.txt',
+    (io) => runImpact('lending#src/handlers/notify-borrower.ts:handler', { ...deployedWorkflowsPlain, format: 'tree', entriesOnly: true }, io),
+  ],
+  ['doctor.txt', (io) => runDoctorCommand({ config: deployedWorkflowsPlain.config }, io)],
+];
+
+const multiRepoWorkflowsFixture = join(root, 'fixtures', 'multi-repo-stepfunctions');
+const multiRepoWorkflowsPlain = { config: join(multiRepoWorkflowsFixture, 'flowatlas.config.json'), color: false, ascii: true };
+
+const MULTI_REPO_WORKFLOW_CASES = [
+  ['flow.checkout.tree.txt', (io) => runFlow('workflow:circulation-checkout', { ...multiRepoWorkflowsPlain, format: 'tree' }, io)],
+  [
+    'impact.check-standing.tree.txt',
+    (io) => runImpact('members#src/handlers/check-standing.ts:handler', { ...multiRepoWorkflowsPlain, format: 'tree' }, io),
+  ],
+  [
+    'impact.send-notice.entries-only.tree.txt',
+    (io) => runImpact('members#src/handlers/send-notice.ts:handler', { ...multiRepoWorkflowsPlain, format: 'tree', entriesOnly: true }, io),
+  ],
+  [
+    'channel.loan-checked-out.json',
+    (io) => runChannel('eventbridge/library/library.circulation/LoanCheckedOut', { ...multiRepoWorkflowsPlain, format: 'json' }, io),
+  ],
+  ['doctor.txt', (io) => runDoctorCommand({ config: multiRepoWorkflowsPlain.config }, io)],
+];
+
+/**
+ * Channels whose subscriber is declared in Terraform (P23), walked from the
+ * route a person calls into whatever the subscriber runs.
+ *
+ * One fixture each for a bus, for queues and a topic, and for both halves in
+ * different repositories. The channel is recorded as JSON because that is where
+ * a join that is less than proven says why.
+ */
+const plainFor = (name) => ({ config: join(root, 'fixtures', name, 'flowatlas.config.json'), color: false, ascii: true });
+const eventsPlain = plainFor('eventbridge-terraform');
+const queuesPlain = plainFor('sqs-sns-terraform');
+const multiEventsPlain = plainFor('multi-repo-events');
+
+const EVENT_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...eventsPlain, format: 'tree' }, io)],
+  ['flow.renew-loan.tree.txt', (io) => runFlow('POST /loans/:param/renewals', { ...eventsPlain, format: 'tree', depth: '24' }, io)],
+  ['flow.post-holds.tree.txt', (io) => runFlow('POST /holds', { ...eventsPlain, format: 'tree' }, io)],
+  ['channel.loan-renewed.json', (io) => runChannel('eventbridge/library/library.loans/LoanRenewed', { ...eventsPlain, format: 'json' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: eventsPlain.config }, io)],
+];
+
+const QUEUE_CASES = [
+  ['flow.post-returns.tree.txt', (io) => runFlow('POST /returns', { ...queuesPlain, format: 'tree', depth: '24' }, io)],
+  ['flow.post-holds.tree.txt', (io) => runFlow('POST /holds', { ...queuesPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: queuesPlain.config }, io)],
+];
+
+const MULTI_EVENT_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...multiEventsPlain, format: 'tree' }, io)],
+  ['channel.loan-returned.json', (io) => runChannel('eventbridge/library/library.loans/LoanReturned', { ...multiEventsPlain, format: 'json' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: multiEventsPlain.config }, io)],
+];
+
+/**
+ * Handlers re-exported through a namespace and through `export … from` (R168):
+ * a route through a queue to a consumer that lands, and one through a queue to a
+ * consumer whose handler cannot be read, which the path counts; and a route
+ * straight onto that function, which passes its entry and counts the same row
+ * (R173).
+ */
+const namespacePlain = plainFor('lambda-namespace-handlers');
+
+const NAMESPACE_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...namespacePlain, format: 'tree' }, io)],
+  ['flow.archive-loan.tree.txt', (io) => runFlow('POST /loans/:param/archive', { ...namespacePlain, format: 'tree' }, io)],
+  ['flow.post-returns.tree.txt', (io) => runFlow('POST /returns', { ...namespacePlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: namespacePlain.config }, io)],
+];
+
+/**
+ * Code that starts a workflow or invokes a function by its deployed name (P24),
+ * walked from the route a person calls into the workflow it starts and the
+ * functions that workflow invokes: the SDK called directly, then a helper whose
+ * source is read and one whose package is absent and described.
+ */
+const sdkStartsPlain = plainFor('start-workflow-sdk');
+const helperStartsPlain = plainFor('start-workflow-helper');
+
+const SDK_START_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...sdkStartsPlain, format: 'tree' }, io)],
+  ['flow.post-reviews.tree.txt', (io) => runFlow('POST /reviews', { ...sdkStartsPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: sdkStartsPlain.config }, io)],
+];
+
+const HELPER_START_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...helperStartsPlain, format: 'tree' }, io)],
+  ['flow.post-loans.json.l2.json', (io) => runFlow('POST /loans', { ...helperStartsPlain, format: 'json', detail: '2' }, io)],
+  ['flow.renew-loan.tree.txt', (io) => runFlow('POST /loans/:param/renewals', { ...helperStartsPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: helperStartsPlain.config }, io)],
+];
+
+/**
+ * A start addressed by a record made one call earlier (R171): the described
+ * pair joined at `declared`, a start whose record was made elsewhere, and the
+ * hint offered to the calls shaped like a start and to nothing else.
+ */
+const recordStartsPlain = plainFor('start-workflow-by-record');
+
+const RECORD_START_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...recordStartsPlain, format: 'tree' }, io)],
+  ['flow.post-loans.json.l2.json', (io) => runFlow('POST /loans', { ...recordStartsPlain, format: 'json', detail: '2' }, io)],
+  ['flow.resume-run.tree.txt', (io) => runFlow('POST /runs/:param/resume', { ...recordStartsPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: recordStartsPlain.config }, io)],
+];
+
+/**
+ * A publish whose name is the value of an environment variable nothing deployed
+ * here sets (R177): its row names the producer, which the walk from the route
+ * passes, so the path counts it.
+ */
+const sdkPublishersPlain = plainFor('aws-sdk-publishers');
+
+const SDK_PUBLISHER_CASES = [
+  ['flow.post-returns-overdue.tree.txt', (io) => runFlow('POST /returns/overdue', { ...sdkPublishersPlain, format: 'tree' }, io)],
+];
+
+/**
+ * Names followed through (R175): a start handed in through a module function, a
+ * client in a workspace package beside the functions' own `src/`, and an
+ * address the deployment sets with a default for when it does not.
+ */
+const functionStartsPlain = plainFor('start-workflow-function-helper');
+const workspaceRootPlain = plainFor('lambda-workspace-root');
+const fallbackPlain = plainFor('sqs-environment-fallback');
+
+const FUNCTION_START_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...functionStartsPlain, format: 'tree' }, io)],
+  ['flow.renew-loan.tree.txt', (io) => runFlow('POST /loans/:param/renewals', { ...functionStartsPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: functionStartsPlain.config }, io)],
+];
+
+const WORKSPACE_ROOT_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...workspaceRootPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: workspaceRootPlain.config }, io)],
+];
+
+const FALLBACK_CASES = [
+  ['flow.post-returns.tree.txt', (io) => runFlow('POST /returns', { ...fallbackPlain, format: 'tree', depth: '24' }, io)],
+  ['flow.post-returns-bulk.tree.txt', (io) => runFlow('POST /returns/bulk', { ...fallbackPlain, format: 'tree', depth: '24' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: fallbackPlain.config }, io)],
+];
+
+/**
+ * Terraform shapes read since R174: configuration written as JSON, an API
+ * created from its OpenAPI document, a WebSocket API, base paths a domain puts
+ * in front of an API, and a rule that forwards to another bus by a pattern.
+ * Each fixture's health check is the proof it is read without a row; the walk
+ * is what each shape adds.
+ */
+const terraformShape = (name, cases) => {
+  const plain = plainFor(name);
+  return {
+    dir: join(root, 'fixtures', name, 'expected.cli'),
+    owned: true,
+    cases: [
+      ...cases.map(([file, route]) => [file, (io) => runFlow(route, { ...plain, format: 'tree' }, io)]),
+      ['doctor.txt', (io) => runDoctorCommand({ config: plain.config }, io)],
+    ],
+  };
+};
+
+const TERRAFORM_SHAPE_SUITES = [
+  terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
+  terraformShape('lambda-terraform-openapi', [
+    ['flow.post-returns.tree.txt', 'POST /returns'],
+    ['flow.get-loan.tree.txt', 'GET /loans/:param'],
+  ]),
+  terraformShape('lambda-terraform-websocket', [['flow.ask-librarian.tree.txt', 'event:websocket/library-reading-room/askLibrarian']]),
+  terraformShape('lambda-terraform-base-paths', [['flow.check-item.tree.txt', 'invoke:library-kiosk-check-item']]),
+  terraformShape('lambda-terraform-bus-forward', [['flow.renew-loan.tree.txt', 'POST /loans/:param/renewals']]),
+];
+
 /**
  * Sets of recordings, in several places.
  *
@@ -177,6 +406,22 @@ const SUITES = [
   { dir: foldedFixture, owned: false, cases: FOLDED_CASES },
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
+  { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
+  { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
+  { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
+  { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },
+  { dir: join(root, 'fixtures', 'eventbridge-terraform', 'expected.cli'), owned: true, cases: EVENT_CASES },
+  { dir: join(root, 'fixtures', 'sqs-sns-terraform', 'expected.cli'), owned: true, cases: QUEUE_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-events', 'expected.cli'), owned: true, cases: MULTI_EVENT_CASES },
+  { dir: join(root, 'fixtures', 'lambda-namespace-handlers', 'expected.cli'), owned: true, cases: NAMESPACE_CASES },
+  { dir: join(root, 'fixtures', 'start-workflow-sdk', 'expected.cli'), owned: true, cases: SDK_START_CASES },
+  { dir: join(root, 'fixtures', 'start-workflow-helper', 'expected.cli'), owned: true, cases: HELPER_START_CASES },
+  { dir: join(root, 'fixtures', 'start-workflow-by-record', 'expected.cli'), owned: true, cases: RECORD_START_CASES },
+  { dir: join(root, 'fixtures', 'aws-sdk-publishers', 'expected.cli'), owned: true, cases: SDK_PUBLISHER_CASES },
+  { dir: join(root, 'fixtures', 'start-workflow-function-helper', 'expected.cli'), owned: true, cases: FUNCTION_START_CASES },
+  { dir: join(root, 'fixtures', 'lambda-workspace-root', 'expected.cli'), owned: true, cases: WORKSPACE_ROOT_CASES },
+  { dir: join(root, 'fixtures', 'sqs-environment-fallback', 'expected.cli'), owned: true, cases: FALLBACK_CASES },
+  ...TERRAFORM_SHAPE_SUITES,
 ];
 
 /**

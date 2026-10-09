@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:56.734Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T07:28:10.886Z",
   "services": [
     {
       "name": "web",
@@ -124,7 +124,13 @@
       "label": "listOrders",
       "repo": "web",
       "file": "../../packages/orders-lib/src/index.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "web#../../packages/orders-lib/src/index.ts:saveOrder",
@@ -132,7 +138,18 @@
       "label": "saveOrder",
       "repo": "web",
       "file": "../../packages/orders-lib/src/index.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#../../packages/orders-lib/src/store.ts:readOrders",
@@ -140,7 +157,13 @@
       "label": "readOrders",
       "repo": "web",
       "file": "../../packages/orders-lib/src/store.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "web#../../packages/orders-lib/src/store.ts:writeOrder",
@@ -148,7 +171,18 @@
       "label": "writeOrder",
       "repo": "web",
       "file": "../../packages/orders-lib/src/store.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#app/api/orders/route.ts:GET",
@@ -156,7 +190,13 @@
       "label": "GET",
       "repo": "web",
       "file": "app/api/orders/route.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "web#app/api/orders/route.ts:POST",
@@ -164,7 +204,18 @@
       "label": "POST",
       "repo": "web",
       "file": "app/api/orders/route.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     }
   ],
   "edges": [
@@ -174,7 +225,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:web:http:POST:/api/orders",
@@ -182,13 +236,18 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "web#../../packages/orders-lib/src/index.ts:listOrders",
       "to": "web#../../packages/orders-lib/src/store.ts:readOrders",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
       "file": "../../packages/orders-lib/src/index.ts",
       "line": 11
     },
@@ -197,6 +256,10 @@
       "to": "web#../../packages/orders-lib/src/store.ts:writeOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
       "file": "../../packages/orders-lib/src/index.ts",
       "line": 13
     },
@@ -229,6 +292,8 @@
       "to": "web#../../packages/orders-lib/src/index.ts:listOrders",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
       "file": "app/api/orders/route.ts",
       "line": 8
     },
@@ -237,6 +302,10 @@
       "to": "web#../../packages/orders-lib/src/index.ts:saveOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
       "file": "app/api/orders/route.ts",
       "line": 14
     }

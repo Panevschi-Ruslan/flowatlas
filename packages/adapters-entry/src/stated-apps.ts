@@ -1,8 +1,7 @@
-import { originOfValue } from '@flowatlas/core';
+import { originOfValue, packageOfSpecifier } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { AppType, RouteDialect } from './route-dialects.js';
-import { packageOfSpecifier } from './shared.js';
 
 /**
  * What the source says an application is, when the checker will not say.

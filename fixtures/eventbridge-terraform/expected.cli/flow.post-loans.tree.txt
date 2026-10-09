@@ -1,0 +1,10 @@
+@  POST /loans                                              circulation/infra/api.tf:13
+  -> handler                                                circulation/src/loans/create-loan.ts:7
+    -> saveLoan                                             circulation/src/lib/loans-table.ts:11
+    ~  event eventbridge/library/library.loans/LoanCreated  circulation/src/loans/create-loan.ts:11
+      ~  eventbridge/library/library.loans/LoanCreated      infra/rules.tf:12
+        ~  rule library-loan-created                        circulation/infra/rules.tf:12
+          @  library-notify-borrower                        circulation/infra/functions.tf:28
+            -> handler                                      circulation/src/notices/notify-borrower.ts:8
+              -> sendNotice                                 circulation/src/lib/notices.ts:8
+unresolved on this path: 0

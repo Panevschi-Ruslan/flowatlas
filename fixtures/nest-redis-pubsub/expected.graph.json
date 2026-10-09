@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-redis-pubsub",
-  "generatedAt": "2026-09-27T19:38:19.328Z",
+  "generatedAt": "2026-10-07T18:29:38.754Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
@@ -280,7 +280,18 @@
       "label": "CachePublisherService.forward",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-publisher.service.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "raw",
+              "type": "any"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidate",
@@ -288,7 +299,18 @@
       "label": "CachePublisherService.invalidate",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-publisher.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-redis-pubsub#CacheInvalidated"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidateAll",
@@ -296,7 +318,18 @@
       "label": "CachePublisherService.invalidateAll",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-publisher.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "events",
+              "type": "type:nest-redis-pubsub#CacheInvalidated[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.publishTo",
@@ -304,7 +337,22 @@
       "label": "CachePublisherService.publishTo",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-publisher.service.ts",
-      "line": 49
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "event",
+              "type": "type:nest-redis-pubsub#CacheInvalidated"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.warm",
@@ -312,7 +360,18 @@
       "label": "CachePublisherService.warm",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-publisher.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-redis-pubsub#CacheWarmed"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService",
@@ -332,7 +391,22 @@
       "label": "CacheSubscriberService.audit",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-subscriber.service.ts",
-      "line": 43
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleInvalidation",
@@ -340,7 +414,18 @@
       "label": "CacheSubscriberService.handleInvalidation",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-subscriber.service.ts",
-      "line": 38
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleRaw",
@@ -348,7 +433,18 @@
       "label": "CacheSubscriberService.handleRaw",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-subscriber.service.ts",
-      "line": 48
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
@@ -356,7 +452,13 @@
       "label": "CacheSubscriberService.onModuleInit",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache-subscriber.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-pubsub#src/cache/cache.controller.ts:CacheController",
@@ -376,7 +478,18 @@
       "label": "CacheController.invalidate",
       "repo": "nest-redis-pubsub",
       "file": "src/cache/cache.controller.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:nest-redis-pubsub#CacheInvalidated"
+            }
+          ],
+          "returns": "{published:number}"
+        }
+      }
     },
     {
       "id": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
@@ -500,7 +613,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/cache/cache-subscriber.service.ts",
-      "line": 23
+      "line": 23,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
     },
     {
       "from": "consumer:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
@@ -508,7 +625,9 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/cache/cache-subscriber.service.ts",
-      "line": 30
+      "line": 30,
+      "params": [],
+      "returns": "void"
     },
     {
       "from": "entry:nest-redis-pubsub:event:cache.invalidate",
@@ -520,7 +639,16 @@
       "params": [
         "string"
       ],
-      "returns": "void"
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
+        "returns": "void"
+      }
     },
     {
       "from": "entry:nest-redis-pubsub:event:cache.raw",
@@ -530,7 +658,11 @@
       "file": "src/cache/cache-subscriber.service.ts",
       "line": 30,
       "params": [],
-      "returns": "void"
+      "returns": "void",
+      "signature": {
+        "params": [],
+        "returns": "void"
+      }
     },
     {
       "from": "entry:nest-redis-pubsub:http:POST:/cache/invalidate",
@@ -818,7 +950,8 @@
       "line": 50,
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate CachePublisherService.publishTo with the channel it uses.",
-      "symbol": "CachePublisherService.publishTo -> channel"
+      "symbol": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:50:12",
+      "message": "CachePublisherService.publishTo -> channel"
     },
     {
       "file": "src/cache/cache-publisher.service.ts",

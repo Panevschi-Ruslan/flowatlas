@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:48.629Z",
+  "configHash": "a81751a6539d",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 20,
+      "edges": 14,
+      "types": 4,
+      "unresolved": 0,
+      "durationMs": 688,
+      "packages": {
+        "name": "admin",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "cart-api",
+      "repo": "./cart-api",
+      "type": "koa",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 4,
+      "unresolved": 0,
+      "durationMs": 646,
+      "packages": {
+        "name": "cart-api",
+        "runtime": [
+          "@koa/router",
+          "koa"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 8,
+      "unresolved": 0,
+      "durationMs": 663,
+      "packages": {
+        "name": "catalog-api",
+        "runtime": [
+          "fastify"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders-api",
+      "repo": "./orders-api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 22,
+      "edges": 22,
+      "types": 11,
+      "unresolved": 0,
+      "durationMs": 715,
+      "packages": {
+        "name": "orders-api",
+        "runtime": [
+          "express",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 7,
+      "unresolved": 0,
+      "durationMs": 674,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 4,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 16,
+    "called": 4,
+    "uncalled": [
+      "entry:cart-api:http:DELETE:/carts/:param/lines/:param",
+      "entry:cart-api:http:GET:/carts/:param",
+      "entry:cart-api:http:POST:/carts/:param/lines",
+      "entry:catalog-api:http:DELETE:/items/:param",
+      "entry:catalog-api:http:POST:/items",
+      "entry:orders-api:http:GET:/orders/:param",
+      "entry:orders-api:http:GET:/orders/:param/status",
+      "entry:orders-api:http:GET:/orders/:param/summary",
+      "entry:orders-api:http:PATCH:/orders/:param",
+      "entry:orders-api:http:POST:/orders/:param/refunds",
+      "entry:shop:http:ALL:/api/health",
+      "entry:shop:http:POST:/api/carts"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 34,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 61,
+    "edges": 48,
+    "types": 34,
+    "unresolved": 0
+  }
+}

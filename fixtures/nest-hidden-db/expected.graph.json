@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-hidden-db",
-  "generatedAt": "2026-09-27T09:26:39.917Z",
+  "generatedAt": "2026-10-07T14:34:12.871Z",
   "nodes": [
     {
       "id": "config_key:nest-hidden-db#MONGO_URL",
@@ -81,7 +81,18 @@
       "label": "MongoStore.one",
       "repo": "nest-hidden-db",
       "file": "src/data/mongo-store.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "nest-hidden-db#src/data/mongo-store.ts:MongoStore.put",
@@ -89,7 +100,22 @@
       "label": "MongoStore.put",
       "repo": "nest-hidden-db",
       "file": "src/data/mongo-store.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "row",
+              "type": "T"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "nest-hidden-db#src/orders/order.store.ts:OrderStore",
@@ -109,7 +135,18 @@
       "label": "OrderStore.findById",
       "repo": "nest-hidden-db",
       "file": "src/orders/order.store.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-hidden-db#Order"
+        }
+      }
     },
     {
       "id": "nest-hidden-db#src/orders/order.store.ts:OrderStore.save",
@@ -117,7 +154,18 @@
       "label": "OrderStore.save",
       "repo": "nest-hidden-db",
       "file": "src/orders/order.store.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-hidden-db#Order"
+            }
+          ],
+          "returns": "type:nest-hidden-db#Order"
+        }
+      }
     },
     {
       "id": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController",
@@ -137,7 +185,18 @@
       "label": "OrdersController.create",
       "repo": "nest-hidden-db",
       "file": "src/orders/orders.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-hidden-db#Order"
+            }
+          ],
+          "returns": "type:nest-hidden-db#Order"
+        }
+      }
     },
     {
       "id": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController.get",
@@ -145,7 +204,18 @@
       "label": "OrdersController.get",
       "repo": "nest-hidden-db",
       "file": "src/orders/orders.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-hidden-db#Order"
+        }
+      }
     },
     {
       "id": "nest-hidden-db#src/orders/orders.service.ts:OrdersService",
@@ -165,7 +235,13 @@
       "label": "OrdersService.connection",
       "repo": "nest-hidden-db",
       "file": "src/orders/orders.service.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.create",
@@ -173,7 +249,18 @@
       "label": "OrdersService.create",
       "repo": "nest-hidden-db",
       "file": "src/orders/orders.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-hidden-db#Order"
+            }
+          ],
+          "returns": "type:nest-hidden-db#Order"
+        }
+      }
     },
     {
       "id": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.get",
@@ -181,7 +268,18 @@
       "label": "OrdersService.get",
       "repo": "nest-hidden-db",
       "file": "src/orders/orders.service.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-hidden-db#Order"
+        }
+      }
     },
     {
       "id": "repo:nest-hidden-db",

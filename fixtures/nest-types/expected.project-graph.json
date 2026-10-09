@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T06:20:30.272Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T14:34:35.839Z",
   "services": [
     {
       "name": "nest-types",
@@ -218,7 +218,13 @@
       "label": "CatalogController.categories",
       "repo": "nest-types",
       "file": "src/catalog/catalog.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#Category[]"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.classify",
@@ -226,7 +232,18 @@
       "label": "CatalogController.classify",
       "repo": "nest-types",
       "file": "src/catalog/catalog.controller.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "type:nest-types#Kind"
+            }
+          ],
+          "returns": "type:nest-types#Status"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.cycle",
@@ -234,7 +251,13 @@
       "label": "CatalogController.cycle",
       "repo": "nest-types",
       "file": "src/catalog/catalog.controller.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#A"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.deep",
@@ -242,7 +265,13 @@
       "label": "CatalogController.deep",
       "repo": "nest-types",
       "file": "src/catalog/catalog.controller.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#L0"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.shapes",
@@ -250,7 +279,13 @@
       "label": "CatalogController.shapes",
       "repo": "nest-types",
       "file": "src/catalog/catalog.controller.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#Shape2"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.module.ts:CatalogModule",
@@ -288,7 +323,13 @@
       "label": "CatalogService.categories",
       "repo": "nest-types",
       "file": "src/catalog/catalog.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#Category[]"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.classify",
@@ -296,7 +337,18 @@
       "label": "CatalogService.classify",
       "repo": "nest-types",
       "file": "src/catalog/catalog.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "type:nest-types#Kind"
+            }
+          ],
+          "returns": "type:nest-types#Status"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.cycle",
@@ -304,7 +356,13 @@
       "label": "CatalogService.cycle",
       "repo": "nest-types",
       "file": "src/catalog/catalog.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#A"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.deep",
@@ -312,7 +370,13 @@
       "label": "CatalogService.deep",
       "repo": "nest-types",
       "file": "src/catalog/catalog.service.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#L0"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.shapes",
@@ -320,7 +384,18 @@
       "label": "CatalogService.shapes",
       "repo": "nest-types",
       "file": "src/catalog/catalog.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "first",
+              "type": "type:nest-types#Shape1"
+            }
+          ],
+          "returns": "type:nest-types#Shape2"
+        }
+      }
     },
     {
       "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.wrap",
@@ -328,7 +403,18 @@
       "label": "CatalogService.wrap",
       "repo": "nest-types",
       "file": "src/catalog/catalog.service.ts",
-      "line": 45
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "items",
+              "type": "T[]"
+            }
+          ],
+          "returns": "type:nest-types#Paginated"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.controller.ts:OrdersController",
@@ -348,7 +434,22 @@
       "label": "OrdersController.cancel",
       "repo": "nest-types",
       "file": "src/orders/orders.controller.ts",
-      "line": 45
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.controller.ts:OrdersController.create",
@@ -356,7 +457,18 @@
       "label": "OrdersController.create",
       "repo": "nest-types",
       "file": "src/orders/orders.controller.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-types#CreateOrderDto"
+            }
+          ],
+          "returns": "type:nest-types#Order"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.controller.ts:OrdersController.findOne",
@@ -364,7 +476,18 @@
       "label": "OrdersController.findOne",
       "repo": "nest-types",
       "file": "src/orders/orders.controller.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-types#Order"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.controller.ts:OrdersController.list",
@@ -372,7 +495,18 @@
       "label": "OrdersController.list",
       "repo": "nest-types",
       "file": "src/orders/orders.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "q",
+              "type": "type:nest-types#ListQuery"
+            }
+          ],
+          "returns": "type:nest-types#Paginated<type:nest-types#Order>"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.controller.ts:OrdersController.stream",
@@ -380,7 +514,13 @@
       "label": "OrdersController.stream",
       "repo": "nest-types",
       "file": "src/orders/orders.controller.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#Order[]"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.controller.ts:OrdersController.update",
@@ -388,7 +528,22 @@
       "label": "OrdersController.update",
       "repo": "nest-types",
       "file": "src/orders/orders.controller.ts",
-      "line": 39
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "patch",
+              "type": "{customerId?:string;status?:type:nest-types#Status;kind?:type:nest-types#Kind;lines?:type:nest-types#OrderLine[];note?:string;id?:string;createdAt?:Date}"
+            }
+          ],
+          "returns": "type:nest-types#Order"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.module.ts:OrdersModule",
@@ -426,7 +581,22 @@
       "label": "OrdersService.cancel",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.create",
@@ -434,7 +604,18 @@
       "label": "OrdersService.create",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-types#CreateOrderDto"
+            }
+          ],
+          "returns": "type:nest-types#Order"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.findOne",
@@ -442,7 +623,18 @@
       "label": "OrdersService.findOne",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-types#Order"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.fromLegacy",
@@ -450,7 +642,18 @@
       "label": "OrdersService.fromLegacy",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 58
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "legacy",
+              "type": "unknown"
+            }
+          ],
+          "returns": "type:nest-types#Order"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.list",
@@ -458,7 +661,18 @@
       "label": "OrdersService.list",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "type:nest-types#ListQuery"
+            }
+          ],
+          "returns": "type:nest-types#Paginated<type:nest-types#Order>"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.logTo",
@@ -466,7 +680,22 @@
       "label": "OrdersService.logTo",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 63
+      "line": 63,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "logger",
+              "type": "type:@nestjs/common#Logger"
+            },
+            {
+              "name": "order",
+              "type": "type:nest-types#Order"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.stream",
@@ -474,7 +703,13 @@
       "label": "OrdersService.stream",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-types#Order[]"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
@@ -482,7 +717,18 @@
       "label": "OrdersService.stub",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 67
+      "line": 67,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-types#Order"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.toEvent",
@@ -490,7 +736,18 @@
       "label": "OrdersService.toEvent",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 47
+      "line": 47,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-types#Order"
+            }
+          ],
+          "returns": "type:@fixture/contracts#SharedOrderEvent"
+        }
+      }
     },
     {
       "id": "nest-types#src/orders/orders.service.ts:OrdersService.update",
@@ -498,7 +755,22 @@
       "label": "OrdersService.update",
       "repo": "nest-types",
       "file": "src/orders/orders.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "patch",
+              "type": "{customerId?:string;status?:type:nest-types#Status;kind?:type:nest-types#Kind;lines?:type:nest-types#OrderLine[];note?:string;id?:string;createdAt?:Date}"
+            }
+          ],
+          "returns": "type:nest-types#Order"
+        }
+      }
     },
     {
       "id": "repo:nest-types",

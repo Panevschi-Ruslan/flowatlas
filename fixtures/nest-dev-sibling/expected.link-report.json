@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T07:58:47.865Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:02.473Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -12,7 +12,18 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 672
+      "durationMs": 598,
+      "packages": {
+        "name": "@dev-sibling/api",
+        "runtime": [
+          "@dev-sibling/mailer",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": [
+          "@dev-sibling/e2e"
+        ]
+      }
     }
   ],
   "httpOut": {

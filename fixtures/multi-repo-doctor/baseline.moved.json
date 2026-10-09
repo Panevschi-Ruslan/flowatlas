@@ -1,6 +1,6 @@
 {
   "baselineFormatVersion": 1,
-  "schemaVersion": 3,
+  "schemaVersion": 6,
   "flowatlasVersion": "0.0.0",
   "acceptedAt": "2026-09-09T20:14:00.000Z",
   "acceptedBy": "fixture",
@@ -94,15 +94,15 @@
         "count": 1
       },
       {
-        "key": "orders|src/orders/orders.service.ts|OrdersService.drain -> this.config.get('DRAIN_CHANNEL')|channel-from-config",
+        "key": "orders|src/orders/orders.service.ts|producer:orders#src/orders/orders.service.ts:126:5|channel-from-config",
         "count": 1
       },
       {
-        "key": "orders|src/orders/orders.service.ts|OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')|channel-from-config",
+        "key": "orders|src/orders/orders.service.ts|producer:orders#src/orders/orders.service.ts:71:5|channel-from-config",
         "count": 1
       },
       {
-        "key": "orders|src/orders/orders.service.ts|OrdersService.tally -> this.config.get('SWEEP_CHANNEL')|channel-from-config",
+        "key": "orders|src/orders/orders.service.ts|producer:orders#src/orders/orders.service.ts:81:5|channel-from-config",
         "count": 1
       },
       {

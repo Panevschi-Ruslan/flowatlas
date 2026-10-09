@@ -1,0 +1,8 @@
+{
+  "name": "remix-flat-routes",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@remix-run/node": "^2.15.0"
+  }
+}

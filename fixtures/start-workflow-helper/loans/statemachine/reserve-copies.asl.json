@@ -1,0 +1,32 @@
+{
+  "Comment": "Reserves every copy a loan asks for.",
+  "StartAt": "ReserveEachCopy",
+  "States": {
+    "ReserveEachCopy": {
+      "Type": "Map",
+      "ItemsPath": "$.itemIds",
+      "ItemSelector": {
+        "loanId.$": "$.loanId",
+        "itemId.$": "$$.Map.Item.Value"
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "ReserveCopy",
+        "States": {
+          "ReserveCopy": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "lending-reserve-copy",
+              "Payload.$": "$"
+            },
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

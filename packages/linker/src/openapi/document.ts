@@ -51,21 +51,8 @@ export const openapiDocumentSchema = z.looseObject({
 export type OpenapiDocument = z.infer<typeof openapiDocumentSchema>;
 export type Operation = z.infer<typeof operationSchema>;
 
-/**
- * The verbs an operation may be spelled under, and what each one is called here.
- *
- * A lookup rather than a run of tests, and the source of truth for which keys
- * of a path item are operations at all: a path item also carries `parameters`,
- * `summary` and `$ref`, and treating one of those as a verb would invent a
- * route nobody declared.
- */
-export const OPERATION_VERBS: Record<string, string> = {
-  get: 'GET',
-  put: 'PUT',
-  post: 'POST',
-  delete: 'DELETE',
-  options: 'OPTIONS',
-  head: 'HEAD',
-  patch: 'PATCH',
-  trace: 'ALL',
-};
+// Which keys of a path item are verbs, and the walk over them, are shared with
+// the deployment reader that reads an API created from a document (R174), so
+// they live where both can reach them. Re-exported because they were part of
+// this reader's surface first.
+export { OPERATION_VERBS } from '@flowatlas/core';

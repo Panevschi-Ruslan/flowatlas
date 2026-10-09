@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:38:03.009Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T18:56:29.628Z",
   "services": [
     {
       "name": "shop",
@@ -22,7 +22,13 @@
       "label": "listOrders",
       "repo": "admin",
       "file": "src/api/orders.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "config_key:shop#SHOP_URL",
@@ -83,6 +89,7 @@
       "meta": {
         "method": "GET",
         "path": "/api/*",
+        "rawPath": "/api/:slug",
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "application": "examples/blog",
@@ -119,6 +126,7 @@
       "meta": {
         "method": "GET",
         "path": "/api/*",
+        "rawPath": "/api/:slug",
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "application": "examples/template",
@@ -285,7 +293,13 @@
       "label": "GET",
       "repo": "shop",
       "file": "app/api/orders/route.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#app/api/posts/route.ts:GET",
@@ -293,7 +307,13 @@
       "label": "GET",
       "repo": "shop",
       "file": "app/api/posts/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#app/orders-client.ts:listOrders",
@@ -301,7 +321,13 @@
       "label": "listOrders",
       "repo": "shop",
       "file": "app/orders-client.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "shop#app/orders-upstream.ts:upstreamOrders",
@@ -309,7 +335,13 @@
       "label": "upstreamOrders",
       "repo": "shop",
       "file": "app/orders-upstream.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "shop#examples/blog/src/api-client.ts:listOrders",
@@ -317,7 +349,13 @@
       "label": "listOrders",
       "repo": "shop",
       "file": "examples/blog/src/api-client.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "shop#examples/blog/src/api-client.ts:listPosts",
@@ -325,7 +363,13 @@
       "label": "listPosts",
       "repo": "shop",
       "file": "examples/blog/src/api-client.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "shop#examples/blog/src/app/api/[...slug]/route.ts:GET",
@@ -333,7 +377,13 @@
       "label": "GET",
       "repo": "shop",
       "file": "examples/blog/src/app/api/[...slug]/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#examples/blog/src/app/api/orders/route.ts:GET",
@@ -341,7 +391,13 @@
       "label": "GET",
       "repo": "shop",
       "file": "examples/blog/src/app/api/orders/route.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#examples/blog/src/orders-upstream.ts:upstreamOrders",
@@ -349,7 +405,13 @@
       "label": "upstreamOrders",
       "repo": "shop",
       "file": "examples/blog/src/orders-upstream.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "shop#examples/template/src/app/api/[...slug]/route.ts:GET",
@@ -357,7 +419,13 @@
       "label": "GET",
       "repo": "shop",
       "file": "examples/template/src/app/api/[...slug]/route.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#examples/template/src/orders-client.ts:listOrders",
@@ -365,7 +433,13 @@
       "label": "listOrders",
       "repo": "shop",
       "file": "examples/template/src/orders-client.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "ui_api_call:admin#src/api/orders.ts:13:24",
@@ -535,7 +609,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop@.:http:GET:/api/posts",
@@ -543,7 +620,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/posts/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop@examples/blog:http:GET:/api/*",
@@ -551,7 +631,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "examples/blog/src/app/api/[...slug]/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop@examples/blog:http:GET:/api/orders",
@@ -559,7 +642,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "examples/blog/src/app/api/orders/route.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop@examples/template:http:GET:/api/*",
@@ -567,7 +653,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "examples/template/src/app/api/[...slug]/route.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "http_out:shop#app/orders-upstream.ts:10:24",

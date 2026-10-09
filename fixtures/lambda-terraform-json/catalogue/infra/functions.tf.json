@@ -1,0 +1,31 @@
+{
+  "resource": {
+    "aws_lambda_function": {
+      "get_item": {
+        "function_name": "${local.prefix}-get-item",
+        "role": "${aws_iam_role.lambda.arn}",
+        "runtime": "nodejs20.x",
+        "handler": "items/get-item.handler",
+        "filename": "${data.archive_file.catalogue.output_path}",
+        "source_code_hash": "${data.archive_file.catalogue.output_base64sha256}",
+        "environment": {
+          "variables": {
+            "ITEMS_TABLE": "${aws_dynamodb_table.items.name}"
+          }
+        },
+        "lifecycle": {
+          "ignore_changes": ["source_code_hash"]
+        }
+      }
+    }
+  },
+  "module": {
+    "add_item": {
+      "source": "./modules/function",
+      "name": "${local.prefix}-add-item",
+      "handler": "items/add-item.handler",
+      "role_arn": "${aws_iam_role.lambda.arn}",
+      "package": "${data.archive_file.catalogue.output_path}"
+    }
+  }
+}

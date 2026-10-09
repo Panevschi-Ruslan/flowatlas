@@ -1,0 +1,45 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:27:18.861Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:lending#src/handlers/create-loan.ts:10:9",
+        "to": "entry:lending:workflow:lending-loan-approval",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/create-loan.ts:10:9|calls|entry:lending:workflow:lending-loan-approval",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "lending",
+        "typeId": "type:lending#Loan",
+        "symbol": "lending#src/handlers/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "lending",
+        "typeId": "{borrowerId:unknown}",
+        "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:borrowerId"
+      ]
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 1,
+    "unchecked": 0,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

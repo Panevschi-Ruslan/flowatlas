@@ -1,0 +1,24 @@
+@  POST /returns/bulk                                                     returns/infra/main.tf:75
+  -> handler                                                              returns/src/returns/bulk-return.ts:5
+    -> queueReturn                                                        returns/src/lib/returns-queue.ts:17
+      ~  message sqs/library-priority-returns, sqs/library-returns        returns/src/lib/returns-queue.ts:18
+        ~  sqs/library-priority-returns                                   infra/functions.tf:70
+          ~  mapping aws_lambda_event_source_mapping.process_priority_returns  returns/infra/functions.tf:70
+            @  library-process-return                                     returns/infra/functions.tf:34
+              -> handler                                                  returns/src/returns/process-return.ts:19
+                ~  message sns/library-item-returned                      returns/src/returns/process-return.ts:22
+                  ~  sns/library-item-returned                            src/returns/process-return.ts:22
+                $  ITEM_RETURNED_TOPIC_ARN                                returns/src/returns/process-return.ts:24
+                ~  event eventbridge/library-circulation/library.returns/ItemReturned  returns/src/returns/process-return.ts:28
+                  ~  eventbridge/library-circulation/library.returns/ItemReturned  src/returns/process-return.ts:28
+        ~  sqs/library-returns                                            infra/functions.tf:65
+          ~  mapping aws_lambda_event_source_mapping.process_returns      returns/infra/functions.tf:65
+            @  library-process-return                                     returns/infra/functions.tf:34
+              -> handler                                                  returns/src/returns/process-return.ts:19
+                ~  message sns/library-item-returned                      returns/src/returns/process-return.ts:22
+                  ~  sns/library-item-returned                            src/returns/process-return.ts:22
+                $  ITEM_RETURNED_TOPIC_ARN                                returns/src/returns/process-return.ts:24
+                ~  event eventbridge/library-circulation/library.returns/ItemReturned  returns/src/returns/process-return.ts:28
+                  ~  eventbridge/library-circulation/library.returns/ItemReturned  src/returns/process-return.ts:28
+      $  RETURNS_QUEUE_URL                                                returns/src/lib/returns-queue.ts:20
+unresolved on this path: 0

@@ -1,4 +1,7 @@
-import { allDependencies, type PackageJson } from '@flowatlas/core';
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { allDependencies, readPackageJson, type PackageJson } from '@flowatlas/core';
+import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { halfOf, rowsInHalf, type ReaderRow } from './readers.js';
 
 /**
@@ -37,14 +40,13 @@ export const UNKNOWN_TYPE = 'unknown';
  * strength of a second dependency it happens to declare.
  */
 export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, dependency: string]> = [
-  // The file-system routers that are left. What they have in common with the two
+  // The file-system routers that are left. What they have in common with the four
   // that are now read is that the path a route is served at is the path of the
   // file declaring it — a different fact from a call with a path in it — and by
   // now that part is a row of data rather than a reader (`fs-routes.ts`). What
   // they do not have in common with them is the language the rest is written in,
   // which is what would have to be read next.
   ['Nuxt', 'nuxt'],
-  ['Remix', '@remix-run/react'],
   ['Vue', 'vue'],
   ['Svelte', 'svelte'],
 ];
@@ -99,7 +101,7 @@ const ENTRY_POINT_KEYS = ['main', 'module', 'browser', 'bin'] as const;
  * server that is compiled in place but never imported as a whole is spelled —
  * does not, because there is no whole to import.
  */
-const importableByName = (pkg: PackageJson): boolean => {
+export const importableByName = (pkg: PackageJson): boolean => {
   if (ENTRY_POINT_KEYS.some((key) => pkg[key] !== undefined)) return true;
   const exported = pkg['exports'];
   if (typeof exported === 'string') return true;
@@ -200,4 +202,128 @@ export const noReaderNote = (pkg: PackageJson | undefined): string | undefined =
   }
   const framework = guessUnread(pkg);
   return framework === undefined ? undefined : `${framework}, no reader yet`;
+};
+
+/** Directories never searched for a manifest of their own. */
+const NOT_NESTED = new Set(['node_modules', 'dist', 'build', 'coverage', 'cdk.out', '.terraform']);
+
+/**
+ * Manifests below a directory that no workspace declares, nearest first.
+ *
+ * A repository of Lambda handlers often keeps one `package.json` per function,
+ * each with its own dependencies and no workspace tying them together, and its
+ * root - if it has a manifest at all - names none of them. Those manifests are
+ * the only place such a repository says what it is built on (P21). Bounded in
+ * depth, and asked only when the directory's own manifest gave nothing away.
+ */
+export const nestedManifests = (dir: string, depth = 4): PackageJson[] => {
+  const out: PackageJson[] = [];
+  const walk = (at: string, level: number): void => {
+    if (level > depth) return;
+    let entries;
+    try {
+      entries = readdirSync(at, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name.startsWith('.') || NOT_NESTED.has(entry.name)) continue;
+      const child = join(at, entry.name);
+      if (existsSync(join(child, 'package.json'))) {
+        const pkg = readPackageJson(child);
+        if (pkg !== undefined) out.push(pkg);
+      }
+      walk(child, level + 1);
+    }
+  };
+  walk(dir, 1);
+  return out;
+};
+
+/** The type a deployment description gives a repository away as, when one does. */
+const DEPLOYED_TYPE = 'lambda';
+
+/** Whether a directory holds infrastructure that declares a function or a route. */
+export const declaresDeployment = (dir: string): boolean => terraformReader.declares(dir);
+
+/**
+ * The type to suggest for a directory, asking more than its manifest.
+ *
+ * The manifest first, as everywhere, then the manifests of the packages below it
+ * that no workspace declares, then the files that describe how it is deployed.
+ * The last two are what a repository of functions has instead of a framework:
+ * a manifest per function, or none at all beside its Terraform.
+ */
+export const guessDirectoryType = (
+  dir: string,
+  pkg: PackageJson | undefined,
+  root: PackageJson | undefined,
+): string => {
+  const own = guessWorkspaceType(pkg ?? {}, root);
+  if (own !== UNKNOWN_TYPE) return own;
+  for (const nested of nestedManifests(dir)) {
+    const found = guessType(nested);
+    if (found !== UNKNOWN_TYPE) return found;
+  }
+  return declaresDeployment(dir) ? DEPLOYED_TYPE : UNKNOWN_TYPE;
+};
+
+/** The stack a directory is built on when nothing here reads it, from its manifest or its files. */
+export const guessUnreadIn = (dir: string, pkg: PackageJson | undefined): string | undefined =>
+  (pkg === undefined ? undefined : guessUnread(pkg)) ?? unreadDeploymentOf(dir);
+
+/** What one description of a repository is asked: its directory, manifest and configured type. */
+interface Seen {
+  readonly dir: string;
+  readonly pkg: PackageJson | undefined;
+  readonly type: string;
+}
+
+/**
+ * Descriptions of a repository, most telling first; the first that applies is
+ * the one given (R170).
+ *
+ * Asked about a service that was read and has no way in, where the useful
+ * sentence is what the repository is rather than what is missing from it: a
+ * deployment written for a tool nothing reads, a framework nothing reads, a
+ * framework that *is* read under another type, or a library. Each row is one
+ * claim the repository's own files make, and a new one is a row here.
+ */
+const DESCRIPTIONS: ReadonlyArray<(seen: Seen) => string | undefined> = Object.freeze([
+  ({ dir }) => {
+    const tool = unreadDeploymentOf(dir);
+    return tool === undefined ? undefined : `its functions are declared for ${tool}, which nothing here reads yet`;
+  },
+  ({ pkg }) => {
+    const framework = pkg === undefined ? undefined : guessUnread(pkg);
+    return framework === undefined ? undefined : `it is built on ${framework}, which nothing here reads yet`;
+  },
+  ({ dir, pkg, type }) => {
+    const guessed = guessDirectoryType(dir, pkg, undefined);
+    return guessed === UNKNOWN_TYPE || guessed === type
+      ? undefined
+      : `it looks like ${guessed} rather than ${type}; set its type to "${guessed}"`;
+  },
+  ({ pkg }) =>
+    pkg !== undefined && importableByName(pkg)
+      ? 'it looks like a library: its package.json says how to import it, and a library has no way in of its own'
+      : undefined,
+  ({ pkg, type }) =>
+    pkg === undefined
+      ? `it has no package.json, and none of its files declares a way in that the ${type} reader recognises`
+      : undefined,
+]);
+
+/**
+ * What a repository looks like, in one clause, for a reader told it has no way
+ * in. Always says something: where none of the descriptions applies, it says
+ * what was looked for and under which type.
+ */
+export const looksLike = (dir: string, type: string): string => {
+  const seen: Seen = { dir, pkg: readPackageJson(dir), type };
+  for (const describe of DESCRIPTIONS) {
+    const said = describe(seen);
+    if (said !== undefined) return said;
+  }
+  return `it is configured as ${type}, and none of its code declares a route, a handler or a consumer that reader recognises`;
 };

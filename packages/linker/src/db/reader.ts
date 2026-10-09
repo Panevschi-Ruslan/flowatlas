@@ -53,6 +53,17 @@ export interface UnresolvedRow {
   hint: string | null;
 }
 
+/**
+ * A row with the node it is about, when it is about one.
+ *
+ * The symbol a finding names is stored as `node_id`; most rows name source text
+ * rather than a node, so the field is often a string that is no node's id, and
+ * a reader checks it against the nodes rather than trusting it.
+ */
+export interface AnchoredUnresolvedRow extends UnresolvedRow {
+  node: string | null;
+}
+
 export interface SearchOptions {
   types?: readonly string[];
   limit?: number;
@@ -274,13 +285,14 @@ export class GraphDb {
     ).map(toEdge);
   }
 
-  /** Every finding, in the order a reader would walk them. */
-  allUnresolved(): UnresolvedRow[] {
+  /** Every finding, in the order a reader would walk them, with the symbol it names. */
+  allUnresolved(): AnchoredUnresolvedRow[] {
     return this.#db
       .prepare(
-        'SELECT service, file, line, reason, level, sites, message, hint FROM unresolved ORDER BY service, file, line',
+        `SELECT service, file, line, reason, level, sites, message, hint, node_id AS node
+           FROM unresolved ORDER BY service, file, line`,
       )
-      .all() as UnresolvedRow[];
+      .all() as AnchoredUnresolvedRow[];
   }
 
   search(text: string, options: SearchOptions = {}): GraphNode[] {
@@ -302,6 +314,10 @@ export class GraphDb {
    *
    * The path each row was reached by is carried along, which is what stops a
    * cycle without a visited set and lets a caller rebuild the shape of the walk.
+   * A node is on the path when it is one of the path's `>`-separated ids, not
+   * when its id is part of one: `Auth.refresh` is not on a path through
+   * `Auth.refreshToken`, and was once left out of every walk that came
+   * through it.
    */
   traverse(options: TraverseOptions): TraverseResult {
     const roots = typeof options.from === 'string' ? [options.from] : [...options.from];
@@ -321,7 +337,7 @@ export class GraphDb {
         SELECT e.${far}, w.depth + 1, w.path || '>' || e.${far}, e.id
           FROM walk w JOIN edges e ON e.${near} = w.node_id
          WHERE w.depth < ?
-           AND instr(w.path, e.${far}) = 0
+           AND instr('>' || w.path || '>', '>' || e.${far} || '>') = 0
            AND (? IS NULL OR e.type IN (SELECT value FROM json_each(?)))
       )
       SELECT w.node_id AS id, w.depth, w.path,

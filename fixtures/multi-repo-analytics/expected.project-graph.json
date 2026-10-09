@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:37:52.094Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:29:04.058Z",
   "services": [
     {
       "name": "gateway",
@@ -93,7 +93,18 @@
       "label": "OrdersClient.create",
       "repo": "admin",
       "file": "src/clients/orders.client.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "admin#src/sync/sync.job.ts:SyncJob",
@@ -113,7 +124,13 @@
       "label": "SyncJob.hourly",
       "repo": "admin",
       "file": "src/sync/sync.job.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "billing#node_modules/@nestjs/axios:HttpService",
@@ -202,7 +219,18 @@
       "label": "OrdersClient.create",
       "repo": "billing",
       "file": "src/clients/orders.client.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "billing#src/invoices/invoices.controller.ts:InvoicesController",
@@ -222,7 +250,18 @@
       "label": "InvoicesController.create",
       "repo": "billing",
       "file": "src/invoices/invoices.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "billing#src/invoices/invoices.service.ts:InvoicesService",
@@ -242,7 +281,18 @@
       "label": "InvoicesService.create",
       "repo": "billing",
       "file": "src/invoices/invoices.service.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
@@ -250,7 +300,18 @@
       "label": "InvoicesService.sync",
       "repo": "billing",
       "file": "src/invoices/invoices.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "billing#src/invoices/orders.consumer.ts:OrdersConsumer",
@@ -270,7 +331,18 @@
       "label": "OrdersConsumer.onOrderChanged",
       "repo": "billing",
       "file": "src/invoices/orders.consumer.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer",
@@ -290,7 +362,18 @@
       "label": "OrphanConsumer.onOrphan",
       "repo": "billing",
       "file": "src/invoices/orphan.consumer.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "channel:audit.log",
@@ -676,7 +759,18 @@
       "label": "AccountsController.findOne",
       "repo": "gateway",
       "file": "src/accounts/accounts.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "gateway#src/accounts/accounts.service.ts:AccountsService",
@@ -696,7 +790,18 @@
       "label": "AccountsService.find",
       "repo": "gateway",
       "file": "src/accounts/accounts.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "gateway#src/app.module.ts:AppModule",
@@ -737,7 +842,18 @@
       "label": "AuthGuard.canActivate",
       "repo": "gateway",
       "file": "src/auth/auth.guard.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient",
@@ -757,7 +873,18 @@
       "label": "OrdersClient.create",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.createDraft",
@@ -765,7 +892,18 @@
       "label": "OrdersClient.createDraft",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.recent",
@@ -773,7 +911,18 @@
       "label": "OrdersClient.recent",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "gateway#src/orders/legacy.controller.ts:LegacyController",
@@ -793,7 +942,13 @@
       "label": "LegacyController.legacy",
       "repo": "gateway",
       "file": "src/orders/legacy.controller.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:boolean}"
+        }
+      }
     },
     {
       "id": "gateway#src/orders/orders.controller.ts:OrdersController",
@@ -813,7 +968,18 @@
       "label": "OrdersController.create",
       "repo": "gateway",
       "file": "src/orders/orders.controller.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{customerId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "http_out:admin#src/clients/orders.client.ts:14:12",
@@ -1047,7 +1213,22 @@
       "label": "AuditService.record",
       "repo": "orders",
       "file": "src/audit/audit.service.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "action",
+              "type": "string"
+            },
+            {
+              "name": "subject",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/clients/accounts.client.ts:AccountsClient",
@@ -1067,7 +1248,22 @@
       "label": "AccountsClient.enrich",
       "repo": "orders",
       "file": "src/clients/accounts.client.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            },
+            {
+              "name": "rows",
+              "type": "unknown"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "orders#src/clients/billing.client.ts:BillingClient",
@@ -1087,7 +1283,18 @@
       "label": "BillingClient.requestInvoice",
       "repo": "orders",
       "file": "src/clients/billing.client.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer",
@@ -1107,7 +1314,18 @@
       "label": "InvoicesConsumer.onInvoiceChanged",
       "repo": "orders",
       "file": "src/invoices/invoices.consumer.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController",
@@ -1127,7 +1345,18 @@
       "label": "OrdersController.create",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{customerId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.recent",
@@ -1135,7 +1364,13 @@
       "label": "OrdersController.recent",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.repository.ts:OrdersRepository",
@@ -1155,7 +1390,18 @@
       "label": "OrdersRepository.recent",
       "repo": "orders",
       "file": "src/orders/orders.repository.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.repository.ts:OrdersRepository.save",
@@ -1163,7 +1409,18 @@
       "label": "OrdersRepository.save",
       "repo": "orders",
       "file": "src/orders/orders.repository.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService",
@@ -1183,7 +1440,18 @@
       "label": "OrdersService.create",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.expand",
@@ -1191,7 +1459,18 @@
       "label": "OrdersService.expand",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.normalise",
@@ -1199,7 +1478,18 @@
       "label": "OrdersService.normalise",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.recent",
@@ -1207,7 +1497,18 @@
       "label": "OrdersService.recent",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.sync",
@@ -1215,7 +1516,18 @@
       "label": "OrdersService.sync",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 54
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/orders/unused.service.ts:UnusedService",
@@ -1235,7 +1547,13 @@
       "label": "UnusedService.describe",
       "repo": "orders",
       "file": "src/orders/unused.service.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "orders#src/pricing/discount.service.ts:DiscountService",
@@ -1255,7 +1573,13 @@
       "label": "DiscountService.rate",
       "repo": "orders",
       "file": "src/pricing/discount.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "orders#src/pricing/pricing.service.ts:PricingService",
@@ -1275,7 +1599,18 @@
       "label": "PricingService.price",
       "repo": "orders",
       "file": "src/pricing/pricing.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "producer:billing#src/invoices/invoices.service.ts:20:5",
@@ -1487,6 +1822,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 10,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     }
@@ -1692,6 +2036,9 @@
       "to": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
       "returns": "void",
       "file": "src/invoices/orders.consumer.ts",
       "line": 10
@@ -1701,6 +2048,9 @@
       "to": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "{id:string}"
+      ],
       "returns": "void",
       "file": "src/invoices/orphan.consumer.ts",
       "line": 21
@@ -1710,6 +2060,9 @@
       "to": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
       "returns": "void",
       "file": "src/invoices/invoices.consumer.ts",
       "line": 11

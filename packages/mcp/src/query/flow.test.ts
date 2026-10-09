@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { buildTestDb, edge, entry, node, testDbDirectory, type TestGraph } from '../test-graph.js';
 import { projectDetail, truncate } from './detail.js';
 import { isResolved, resolveEntryRef } from './entry-ref.js';
-import { buildFlowTree, flatten } from './flow.js';
+import { buildFlowTree, defaultFlowDepth, flatten, walkBack } from './flow.js';
 import type { FlowNode } from './types.js';
 
 afterAll(() => rmSync(testDbDirectory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
@@ -165,6 +165,124 @@ describe('walking outward from an entry', () => {
     });
     expect(buildFlowTree(db, 'entry:orders:http:GET /a', {}).unresolvedOnPath).toBe(1);
     db.close();
+  });
+
+  /** A route that sends to a queue whose consumer is a function with no body to read (R168). */
+  const toUnreadConsumer: TestGraph = {
+    nodes: [
+      entry('entry:desk:http:POST:/loans'),
+      node('desk#loans.ts:createLoan'),
+      node('channel:sqs/loans-opened', { type: 'channel' }),
+      node('consumer:desk#queues.tf:archive', { type: 'consumer' }),
+      entry('entry:desk:invoke:archive-loan', { kind: 'invoke' }),
+    ],
+    edges: [
+      edge('entry:desk:http:POST:/loans', 'desk#loans.ts:createLoan', { type: 'handles' }),
+      edge('desk#loans.ts:createLoan', 'channel:sqs/loans-opened', { type: 'emits' }),
+      edge('channel:sqs/loans-opened', 'consumer:desk#queues.tf:archive', { type: 'consumes' }),
+      edge('consumer:desk#queues.tf:archive', 'entry:desk:invoke:archive-loan'),
+    ],
+    unresolved: [
+      {
+        service: 'desk',
+        file: 'functions.tf',
+        line: 70,
+        reason: 'function-handler-unread',
+        level: 'info',
+        message: 'archive-loan runs consumers.archiveLoan, which names no function of this repository',
+        symbol: 'entry:desk:invoke:archive-loan',
+      },
+    ],
+  };
+
+  it('counts the entry a path ends at, whose handler could not be read', () => {
+    const db = buildTestDb(toUnreadConsumer);
+    expect(buildFlowTree(db, 'entry:desk:http:POST:/loans', {}).unresolvedOnPath).toBe(1);
+    db.close();
+  });
+
+  it('counts a node the walk reaches past the budget it shows', () => {
+    const db = buildTestDb(toUnreadConsumer);
+    const flow = buildFlowTree(db, 'entry:desk:http:POST:/loans', { maxNodes: 2 });
+    expect(flatten(flow.root).map((item) => item.node.id)).not.toContain('entry:desk:invoke:archive-loan');
+    expect(flow.unresolvedOnPath).toBe(1);
+    db.close();
+  });
+});
+
+describe('walking a workflow', () => {
+  const STEPS = 12;
+  const step = (index: number): string => `loans#flow.asl.json:approval/Step${index}`;
+
+  /**
+   * A chain of steps longer than the usual depth, the first of which invokes a
+   * function and catches into the last; the catch is written above the next
+   * step, on an earlier line.
+   */
+  const workflow = (): TestGraph => ({
+    nodes: [
+      entry('entry:loans:workflow:approval', { kind: 'workflow', label: 'approval', meta: { states: STEPS } }),
+      ...Array.from({ length: STEPS }, (_, index) => node(step(index), { kind: 'state', label: `Step${index}`, line: 10 * (index + 1) })),
+      entry('entry:loans:invoke:check', { kind: 'invoke', label: 'check' }),
+      node('loans#check.ts:handler', { label: 'handler' }),
+    ],
+    edges: [
+      edge('entry:loans:workflow:approval', step(0), { type: 'handles' }),
+      edge(step(0), 'entry:loans:invoke:check', { line: 10, meta: { via: 'deployed-name' } }),
+      edge(step(0), step(STEPS - 1), { line: 12, meta: { order: 1, transitions: [{ kind: 'catch' }] } }),
+      edge(step(0), step(1), { line: 15, meta: { order: 0, transitions: [{ kind: 'next' }] } }),
+      ...Array.from({ length: STEPS - 2 }, (_, index) =>
+        edge(step(index + 1), step(index + 2), { line: 10 * (index + 2), meta: { order: 0 } }),
+      ),
+      edge('entry:loans:invoke:check', 'loans#check.ts:handler', { type: 'handles' }),
+    ],
+  });
+
+  it('takes what a step does first, then where control goes, in the order it goes there', () => {
+    const db = buildTestDb(workflow());
+    const { root } = buildFlowTree(db, 'entry:loans:workflow:approval', {});
+    const first = root.children[0] as FlowNode;
+    expect(first.children.map((child) => child.node.id)).toEqual([
+      'entry:loans:invoke:check',
+      step(1),
+      step(STEPS - 1),
+    ]);
+    db.close();
+  });
+
+  it('goes, without being told how far, through every step and on into what the last one reaches', () => {
+    const db = buildTestDb(workflow());
+    const ids = flatten(buildFlowTree(db, 'entry:loans:workflow:approval', {}).root).map((item) => item.node.id);
+    // The step before the last is reached only along the chain, eleven hops in.
+    expect(ids).toContain(step(STEPS - 2));
+    expect(ids).toContain('loans#check.ts:handler');
+    // Told, it stops where it was told.
+    const short = flatten(buildFlowTree(db, 'entry:loans:workflow:approval', { depth: 8 }).root).map((item) => item.node.id);
+    expect(short).not.toContain(step(9));
+    db.close();
+  });
+
+  it('goes the usual eight hops from an entry that is not a chain of steps', () => {
+    expect(defaultFlowDepth(undefined)).toBe(8);
+    expect(defaultFlowDepth({ id: 'entry:a:http:GET /', type: 'entry', label: 'GET /', repo: 'a' })).toBe(8);
+    expect(defaultFlowDepth({ id: 'entry:a:workflow:w', type: 'entry', kind: 'workflow', label: 'w', repo: 'a', meta: { states: 12 } })).toBe(20);
+  });
+
+  it('walks back further by every step it climbs, until it climbs no new one', () => {
+    // A chain of twelve steps above a handler, the step that reaches the handler
+    // last, and a route above the chain: twelve hops of climbing and four more.
+    const steps = Array.from({ length: 12 }, (_, index) => ({ id: `step${index}`, meta: { workflow: 'approval' } }));
+    const path = [{ id: 'handler' }, { id: 'invoke' }, ...[...steps].reverse(), { id: 'workflow', meta: { states: 12 } }, { id: 'route' }];
+    const asked: number[] = [];
+    const walk = (depth: number) => {
+      asked.push(depth);
+      // A second path to one step reaches it again, and it is still one step.
+      return { rows: [...path.slice(0, depth + 1), ...(depth >= 3 ? path.slice(2, 3) : [])] };
+    };
+    expect(walkBack(8, walk).rows.map((row) => row.id)).toContain('route');
+    expect(asked).toEqual([8, 15, 20]);
+    // A walk that climbs nothing goes the usual distance once.
+    expect(walkBack(8, () => ({ rows: [{ id: 'handler' }] })).rows).toHaveLength(1);
   });
 });
 

@@ -1,6 +1,7 @@
 import type { AdapterRegistry, EntryAdapter } from '@flowatlas/core';
 import { configuredProceduresAdapter } from './configured-procedures.js';
 import { configuredRoutesAdapter } from './configured-routes.js';
+import { deployedFunctionsAdapter } from './deployed-functions.js';
 import { entryRegistriesAdapter } from './entry-registries.js';
 import {
   expressRoutesAdapter,
@@ -10,6 +11,8 @@ import {
 } from './call-routes.js';
 import { nestjsHttpAdapter } from './nestjs-http.js';
 import { medusaRoutesAdapter } from './medusa-routes.js';
+import { remixRoutesAdapter, sveltekitRoutesAdapter } from './described-fs-routes.js';
+import { reactRouterRoutesAdapter } from './route-config.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
 import { trpcProceduresAdapter } from './procedure-routers.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
@@ -29,6 +32,9 @@ export const entryAdapters: readonly EntryAdapter[] = [
   nestjsHttpAdapter,
   nextjsRoutesAdapter,
   medusaRoutesAdapter,
+  sveltekitRoutesAdapter,
+  remixRoutesAdapter,
+  reactRouterRoutesAdapter,
   honoRoutesAdapter,
   expressRoutesAdapter,
   fastifyRoutesAdapter,
@@ -41,12 +47,21 @@ export const entryAdapters: readonly EntryAdapter[] = [
   entryRegistriesAdapter,
   configuredRoutesAdapter,
   configuredProceduresAdapter,
+  deployedFunctionsAdapter,
 ];
 
 export const registerEntryAdapters = (registry: AdapterRegistry): AdapterRegistry =>
   registry.registerAll('entry', entryAdapters);
 
 export { CONFIGURED_ROUTES, configuredRoutesAdapter } from './configured-routes.js';
+export {
+  DEPLOYED_FUNCTIONS,
+  DEPLOYMENT_READERS,
+  LAMBDA_PACKAGES,
+  deployedFunctionsAdapter,
+  deploymentReadersFor,
+} from './deployed-functions.js';
+export { deployedSourceDirectories } from './deployed-sources.js';
 export {
   CONFIGURED_PROCEDURES,
   configuredProceduresAdapter,
@@ -90,6 +105,16 @@ export type {
   VerbReading,
 } from './fs-routes.js';
 export { MEDUSA_API } from './medusa-routes.js';
+export {
+  fsRoutesAdapter,
+  REMIX_ROUTES,
+  remixRoutesAdapter,
+  SVELTEKIT_ROUTES,
+  sveltekitRoutesAdapter,
+} from './described-fs-routes.js';
+export type { FsEntries, FsRouteExports, FsRoutesDescription } from './described-fs-routes.js';
+export { configuredRoutes, reactRouterRoutesAdapter } from './route-config.js';
+export type { ConfiguredRoute } from './route-config.js';
 export {
   entryRegistriesAdapter,
   honoRoutesAdapter,

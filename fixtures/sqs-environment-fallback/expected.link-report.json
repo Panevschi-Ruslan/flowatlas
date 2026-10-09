@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:53.089Z",
+  "configHash": "462b9b0bf7ba",
+  "services": [
+    {
+      "name": "returns",
+      "repo": "./returns",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 19,
+      "edges": 16,
+      "types": 4,
+      "unresolved": 3,
+      "durationMs": 491,
+      "packages": {
+        "name": "lending-library-returns",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 2,
+    "noConsumers": [
+      "channel:eventbridge/library-circulation/library.returns/ItemReturned",
+      "channel:sns/library-item-returned"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:returns:http:POST:/returns",
+      "entry:returns:http:POST:/returns/bulk"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 21,
+    "edges": 20,
+    "types": 4,
+    "unresolved": 0
+  }
+}

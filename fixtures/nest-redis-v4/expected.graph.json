@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-redis-v4",
-  "generatedAt": "2026-09-27T15:18:49.818Z",
+  "generatedAt": "2026-10-07T18:29:39.579Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-v4#src/feed/feed.service.ts:24:11",
@@ -219,7 +219,13 @@
       "label": "FeedService.listen",
       "repo": "nest-redis-v4",
       "file": "src/feed/feed.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onItem",
@@ -227,7 +233,18 @@
       "label": "FeedService.onItem",
       "repo": "nest-redis-v4",
       "file": "src/feed/feed.service.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onModeration",
@@ -235,7 +252,18 @@
       "label": "FeedService.onModeration",
       "repo": "nest-redis-v4",
       "file": "src/feed/feed.service.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onShard",
@@ -243,7 +271,18 @@
       "label": "FeedService.onShard",
       "repo": "nest-redis-v4",
       "file": "src/feed/feed.service.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-redis-v4#src/feed/feed.service.ts:FeedService.publish",
@@ -251,7 +290,18 @@
       "label": "FeedService.publish",
       "repo": "nest-redis-v4",
       "file": "src/feed/feed.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-redis-v4#FeedItemAdded"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "producer:nest-redis-v4#src/feed/feed.service.ts:24:11",
@@ -323,30 +373,6 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/feed/feed.service.ts",
-      "line": 29
-    },
-    {
-      "from": "consumer:nest-redis-v4#src/feed/feed.service.ts:FeedService.onModeration",
-      "to": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onModeration",
-      "type": "handles",
-      "confidence": "static",
-      "file": "src/feed/feed.service.ts",
-      "line": 31
-    },
-    {
-      "from": "consumer:nest-redis-v4#src/feed/feed.service.ts:FeedService.onShard",
-      "to": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onShard",
-      "type": "handles",
-      "confidence": "static",
-      "file": "src/feed/feed.service.ts",
-      "line": 33
-    },
-    {
-      "from": "entry:nest-redis-v4:event:feed.item.added",
-      "to": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onItem",
-      "type": "handles",
-      "confidence": "static",
-      "file": "src/feed/feed.service.ts",
       "line": 29,
       "params": [
         "string"
@@ -354,7 +380,7 @@
       "returns": "void"
     },
     {
-      "from": "entry:nest-redis-v4:event:feed.moderation.*",
+      "from": "consumer:nest-redis-v4#src/feed/feed.service.ts:FeedService.onModeration",
       "to": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onModeration",
       "type": "handles",
       "confidence": "static",
@@ -366,7 +392,7 @@
       "returns": "void"
     },
     {
-      "from": "entry:nest-redis-v4:event:feed.shard.updated",
+      "from": "consumer:nest-redis-v4#src/feed/feed.service.ts:FeedService.onShard",
       "to": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onShard",
       "type": "handles",
       "confidence": "static",
@@ -376,6 +402,69 @@
         "string"
       ],
       "returns": "void"
+    },
+    {
+      "from": "entry:nest-redis-v4:event:feed.item.added",
+      "to": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onItem",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/feed/feed.service.ts",
+      "line": 29,
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:nest-redis-v4:event:feed.moderation.*",
+      "to": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onModeration",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/feed/feed.service.ts",
+      "line": 31,
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:nest-redis-v4:event:feed.shard.updated",
+      "to": "nest-redis-v4#src/feed/feed.service.ts:FeedService.onShard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/feed/feed.service.ts",
+      "line": 33,
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
+        "returns": "void"
+      }
     },
     {
       "from": "nest-redis-v4#src/feed/feed.service.ts:FeedService.listen",

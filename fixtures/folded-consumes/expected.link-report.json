@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T13:55:44.806Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:27.703Z",
   "configHash": "c6950e2d9de7",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 11,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 626
+      "durationMs": 622,
+      "packages": {
+        "name": "folded-consumes-worker",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

@@ -38,8 +38,10 @@ const NOT_FIXTURES = new Set(['node_modules', 'shared']);
  * the other brokers and data layers rather than under the framework.
  */
 const AREAS = [
-  ['Channels and messages', /^(nest-(kafka|rabbitmq|bullmq|redis|broker)|socket-|folded-|object-channels|fn-broker|sse-)/],
+  ['Channels and messages', /^(nest-(kafka|rabbitmq|bullmq|redis|broker)|socket-|folded-|object-channels|fn-broker|sse-|aws-sdk-)/],
   ['Data layers', /^(nest-(typeorm|prisma|drizzle|mongoose|sequelize|kysely|knex|pg|mikro|leaves|unknown-orm|workspace-wrapper)|prisma-|pg-|db-|fn-data)/],
+  ['Serverless, wired in Terraform', /^(lambda-|multi-repo-lambda|eventbridge-terraform|sqs-sns-terraform|multi-repo-events)/],
+  ['State machines', /^(stepfunctions-|multi-repo-stepfunctions|start-workflow-)/],
   ['Several repositories', /^(multi-repo|same-service|ground-truth)/],
   ['Workspaces and monorepos', /^workspace-/],
   ['NestJS', /^nest-/],

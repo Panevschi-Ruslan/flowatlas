@@ -349,6 +349,7 @@ export const MARKER_ANSWERS: Readonly<Record<string, AnswerTest>> = Object.freez
   'api-method-dynamic': annotatedBeside,
   // @Emits / @Consumes
   'channel-from-config': publishesOrConsumes,
+  'channel-from-environment': publishesOrConsumes,
   'channel-dynamic': publishesOrConsumes,
   'channel-const-unresolved': publishesOrConsumes,
   // @FlowEntry
@@ -460,6 +461,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Name the table under adapters.entry.registries in flowatlas.config.json so each registration becomes an entry point.',
   'server-action-unread': () =>
     'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
+  'route-module-not-found': () =>
+    'A route config names a module that is not a source file of this project, so the address it declares has nothing behind it here. Name the module by its path relative to the app directory as it is spelled on disk, or add the file.',
+  'route-claimed-twice': () =>
+    'Two route files resolve to one verb and address, so only the first is drawn. The framework refuses that or serves one of them; remove one, or move it to the address it was meant for.',
   'route-file-not-served': () =>
     'A file exporting a route verb sits under a directory the framework does not serve, so it answers at no address. Informational: it is the framework behaving as documented, and the row exists so that a file with a verb in it and no route to show for it is never silence.',
   'route-verb-unread': () =>
@@ -512,6 +517,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Channels (adapters-broker)
   'channel-from-config': (row) =>
     `The channel name is read from settings, so it cannot be followed. Annotate ${named(row)} with @Emits('<channel>') or @Consumes('<channel>').`,
+  'channel-from-environment': (row) =>
+    `The channel is the value of ${typeof row.meta?.['variable'] === 'string' ? `the environment variable ${row.meta['variable']}` : 'an environment variable'}, set where the code is deployed and not in it. Where a function whose deployment is read runs this code, the channel is completed from the value it is deployed with and this row goes; it is left where nothing deployed is known to run it.`,
   'channel-dynamic': (row) =>
     `The channel name is built at run time. Annotate ${named(row)} with @Emits('<channel>') or @Consumes('<channel>').`,
   'channel-const-unresolved': (row) =>
@@ -520,6 +527,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The call carries no payload argument, so nothing describes what travels on this channel. Pass a typed value.',
   'consumer-handler-unresolved': () =>
     'The listener does more than delegate, so the chain stops at the method that registered it. Delegate to a named method.',
+
+  // Starting a workflow or a function by its deployed name (adapters-broker, P24)
+  'start-from-environment': () =>
+    'What this call starts is the value of an environment variable, set where the code is deployed and not in it. It is completed from the value each function that runs the code is deployed with; this row is left where nothing deployed is known to run it.',
+  'start-name-unread': () =>
+    'The name of the workflow or function this call starts is not written where it can be read. Write the deployed name or its ARN, or a value of the environment the deployment sets; where the code names it some other way, say how in the `names` table of a starter description (adapters.starters), and where it is written in an earlier call of the same body that recorded what to start, point at that call with an `origin-call-argument` locator.',
+  'starter-undescribed': () =>
+    'A deployed function calls into a package whose source is not read, in the shape of a helper that starts a workflow or invokes a function by its deployed name: it is handed an id the same package made earlier in the body, or the package is installed with types that reach a client that starts things. If it is one, describe it under adapters.starters, as the row says; or make the package\'s source readable here.',
 
   // Data layer (core/adapters/db, adapters-db)
   'unknown-db-package': () =>
@@ -579,7 +594,61 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'route-config-unread': () =>
     'A piece of the route configuration was not read, so nothing behind it answers a link. Write the spread, the children or the loadChildren as a name that leads to an array or an object in this repository.',
 
+  // Ways in declared where a service is deployed (adapters-entry/deployed-functions.ts, terraform)
+  'infra-file-unparsed': () =>
+    'This configuration file does not parse, so nothing in it is read. If the file is valid, this is a defect in the reader: report it with the line.',
+  'infra-module-missing': () =>
+    'A module call names a local directory that holds no configuration. Check the path; a local source is relative to the directory of the file that calls it.',
+  'infra-module-undescribed': () =>
+    'A module whose source is not in the repository was called, and nothing describes what it declares, so its functions and routes are not read. Describe it under adapters.infra.modules.',
+  'infra-module-description-invalid': () =>
+    'A value in a module description is not an expression in the module language. Write a string literal with its quotes, as "\"AWS_PROXY\"".',
+  'function-name-unread': () =>
+    'The name a function is deployed under depends on something the files do not settle, so nothing can join to it. Give the variable a default or a variable file, or write the name out.',
+  'function-name-disputed': () =>
+    'The variable files of this repository give a function two different names, one per environment. Choose the environment to read under services[].infra.vars.',
+  'function-repeated-unread': () =>
+    'A function is declared once per element of a collection the files do not settle, so neither how many there are nor their names are known. Give the collection a value the files settle.',
+  'function-handler-unread': () =>
+    'The handler of a function is not read, so the function has no code to point at. Write the handler as "<module>.<export>" and export a function, or a function wrapped by calls that take it as their first argument.',
+  'function-handler-not-found': () =>
+    'The handler a function names is not where the deployment packages it from. Check the handler string, the directory, and the tsconfig that compiles it.',
+  'function-handler-ambiguous': () =>
+    'Nothing says what a function is packaged from, and more than one source file could be its handler. Build the package from an archive of a source directory so the handler is read from where it is.',
+  'function-source-unread': () =>
+    'Nothing says what a function is packaged from, and no source file of the right name exports its handler. Build the package from an archive of a source directory the configuration names.',
+  'function-runtime-unread': () =>
+    'The function runs on a runtime whose code is not read. It is still in the graph under its name. Nothing to do here.',
+  'function-image-unread': () =>
+    'The function is a container image, whose handler is set inside the image. It is in the graph under its name. Nothing to do here.',
+  'route-path-unread': () =>
+    'The path or verb of an API route depends on something the files do not settle, so the route cannot be joined to anything that calls it.',
+  'route-target-unread': () =>
+    'What answers a route is not read. Point the integration at a function, a queue, a topic or a bus the files declare, or at one by a name they settle.',
+  'route-base-path-unread': () =>
+    'A custom domain maps an API at a base path, and the API it maps or the base path is not read, so the routes of that API are at an address not known in full and nothing calling them joins. Write the base path and the API so the files settle them.',
+  'subscription-source-unread': () =>
+    'What a rule, a subscription, a mapping or a pipe takes its messages from is not read, so it is drawn on no channel. Write the queue, topic, bus or stream so the files settle it: a reference to what the configuration declares, or its ARN. A source of a kind nothing here reads is said once, at info.',
+  'subscription-target-unread': () =>
+    'What a rule, a subscription, a mapping or a pipe hands its messages to is not read. A target of a kind nothing here follows - a container task, an e-mail address, an API destination - is said once at info and needs nothing; a function, workflow, queue, topic or bus whose name the files do not settle needs one.',
+  'subscription-forward-unread': () =>
+    'Something that is not a rule on a bus - a schedule, a queue, a pipe - puts what it takes on a bus, and which events those are is not named, so no channel on that bus is drawn. A rule that takes its events by name or by a pattern carries them on. Nothing to fix unless that bus has subscribers you expect to see.',
+  'event-pattern-unread': () =>
+    'A rule\'s event pattern is not read, so the rule is on no channel. Write it as JSON, a heredoc or jsonencode of what the files settle.',
+  'api-body-unread': () =>
+    'An API is created from an OpenAPI body that is not read, so none of its routes are drawn. Write the body as templatefile(), file(), jsonencode() or a heredoc, with a path the files settle and text that is JSON or YAML with paths.',
+  'deployment-unread': () =>
+    'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform; the handlers are still read as code, and nothing reaches them.',
+
   // Joining the repositories (linker)
+  'route-root-not-found': () =>
+    'A route hangs from a point of an API that no configured service publishes, so its full path is not known. Add the repository that declares that API to the configuration.',
+  'route-root-ambiguous': () =>
+    'A route hangs from a point of an API that two declarations place differently. One of them is stale.',
+  'invoke-target-not-found': () =>
+    'A route names its function by the name it is deployed under, and no configured service deploys a function of that name. Add the repository that deploys it to the configuration.',
+  'invoke-target-ambiguous': () =>
+    'Two services deploy a function under one name, so which one answers is not known. One of the two declarations is stale, or two environments need telling apart with services[].infra.vars.',
   'unknown-base-url-env': () =>
     'Add the settings key to services[].baseUrlEnv of exactly one service, so the address names a service.',
   'target-route-not-found': () =>
@@ -620,6 +689,40 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'document-age': () =>
     'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
 
+  // Workflows written down as state machine definitions (stepfunctions)
+  'workflow-definition-unreadable': () =>
+    'The definition could not be read as a state machine, so no step of it is in the graph. Fix the syntax, or give the file another name if it is not a definition.',
+  'workflow-definition-invalid': () =>
+    'The definition names a state that is not there, or names one twice, and the service would refuse it. What is drawn is what the file says, which is not what runs. Correct the definition.',
+  'workflow-named-by-file': () =>
+    'A definition read on its own does not say what it is deployed as, so it is named after its file and anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.',
+  'workflow-name-duplicate': () =>
+    'Two definitions in one service would be one workflow, so only the first is drawn. Rename one of the files.',
+  'workflow-target-dynamic': () =>
+    'The step chooses what it calls when it runs, from its input, so no edge is drawn for it. Nothing to fix here.',
+  'workflow-template-unbound': () =>
+    'The step names what it calls through a placeholder that whatever deploys the definition fills in. Read the definition from the file that deploys it, or write the name in place.',
+  'workflow-target-unreadable': () =>
+    'The step says it calls something and does not say what, or says it in a form that names nothing. Write the name or the ARN the service expects.',
+  'workflow-name-unread': () =>
+    'The name a workflow is deployed under depends on something the files do not settle, so nothing can start it by name. Its steps are still drawn. Give the variable a default or a variable file, or write the name out.',
+  'workflow-definition-not-loaded': () =>
+    'The deployment declares a workflow whose definition is not read, so none of its steps is drawn. Write the definition with file(), templatefile(), jsonencode() or a heredoc, with a path the files settle.',
+
+  // A name joined across services (linker/reference-link.ts)
+  'reference-not-found': () =>
+    'Something here names what it reaches by the name it is deployed under, and no configured service declares that name. Add the repository that deploys it to the configuration.',
+  'reference-ambiguous': () =>
+    'More than one configured service declares the same deployed name, so nothing was joined. One of the declarations is stale, or two environments are configured as one project.',
+
+  // Values a deployment gives the code it runs, and filters on channels (linker)
+  'environment-not-set': () =>
+    'Code sends to the value of an environment variable, and a function that runs it is not deployed with that variable, so where it sends from that function is not known. Set the variable in the function\'s environment, or correct the name the code reads.',
+  'environment-value-unread': () =>
+    'Code sends to the value of an environment variable, and the value a function is deployed with is not read. Where the variable files disagree, choose the environment under services[].infra.vars; otherwise give the value something the files settle.',
+  'subscription-matches-nothing': () =>
+    'A rule takes events by a pattern that nothing the configured services publish matches. A rule for events from outside - another account, a partner, the platform itself - is a way in, not a fault. Nothing to fix if that is what it is.',
+
   // Boundaries nothing could be compared on (contracts)
   ...Object.fromEntries(
     Object.entries(UNCHECKED_HINTS).map(([reason, hint]) => [reason, () => hint]),
@@ -644,6 +747,8 @@ export const KIND_HINTS: Readonly<Record<string, string>> = Object.freeze({
     'The wrapper is not registered with a class from this repository, so what it wraps cannot be read.',
   'channel-from-config':
     "The channel name is read from settings, so it cannot be followed. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
+  'channel-from-environment':
+    'The channel is the value of an environment variable, set where the code is deployed and not in it. It is completed from the value each function that runs the code is deployed with; this row is left where nothing deployed is known to run it.',
   'channel-dynamic':
     "The channel name is built at run time. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
   'channel-const-unresolved':

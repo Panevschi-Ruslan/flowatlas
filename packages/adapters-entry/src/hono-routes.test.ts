@@ -357,6 +357,27 @@ describe('an application that is not served where it is declared', () => {
     expect(read.unresolved.map((row) => row.reason)).toContain('route-mount-unread');
   });
 
+  // R167: the same rule as every other reader that follows a handler through a
+  // wrapper, so a Hono handler wrapped name-first lands like an Express one.
+  it('lands on a handler wrapped with the function second', () => {
+    const read = extract(
+      `
+      import { Hono } from 'hono';
+      import { withSpan } from './tracing.js';
+      const app = new Hono();
+      app.get('/loans/:id', withSpan('getLoan', getLoan));
+      function getLoan(c) { return c.json({ id: c.req.param('id') }); }
+    `,
+      {
+        '/src/tracing.ts':
+          "import type { Context, Handler } from 'hono';\nexport const withSpan = (name: string, handler: Handler): Handler => async (c: Context) => {\n  const result = await handler(c);\n  console.log(name);\n  return result;\n};",
+      },
+    );
+    const handler = read.entries[0]?.handler;
+    expect(handler !== undefined && isFunctionHandler(handler) && handler.functionName).toBe('getLoan');
+    expect(read.entries[0]?.handlerConfidence).toBeUndefined();
+  });
+
   it('takes such a route as declared where nothing in the repository shifts a base', () => {
     const read = extract(
       `

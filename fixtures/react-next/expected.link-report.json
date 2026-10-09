@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T09:19:35.952Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:46.884Z",
   "configHash": "fe6ade849f35",
   "services": [
     {
@@ -10,9 +10,18 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 41,
       "edges": 50,
-      "types": 0,
-      "unresolved": 1,
-      "durationMs": 532
+      "types": 2,
+      "unresolved": 2,
+      "durationMs": 550,
+      "packages": {
+        "name": "react-next-shop",
+        "runtime": [
+          "@prisma/client",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -21,9 +30,16 @@
       "extractor": "@flowatlas/extractor-react",
       "nodes": 17,
       "edges": 14,
-      "types": 1,
-      "unresolved": 0,
-      "durationMs": 505
+      "types": 2,
+      "unresolved": 2,
+      "durationMs": 523,
+      "packages": {
+        "name": "react-next-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -66,14 +82,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 1,
+    "total": 4,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
     "nodes": 58,
     "edges": 67,
-    "types": 1,
-    "unresolved": 1
+    "types": 4,
+    "unresolved": 4
   }
 }

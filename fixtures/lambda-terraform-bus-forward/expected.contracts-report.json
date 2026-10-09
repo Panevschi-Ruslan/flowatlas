@@ -1,0 +1,601 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:27:13.239Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/flag-renewal.ts:handler"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "audit",
+            "typeId": "{loanId:string}",
+            "symbol": "audit#src/audit/flag-renewal.ts:handler"
+          },
+          "typeId": "{loanId:string}",
+          "field": "borrowerId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `borrowerId: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "audit",
+            "typeId": "{loanId:string}",
+            "symbol": "audit#src/audit/flag-renewal.ts:handler"
+          },
+          "typeId": "{loanId:string}",
+          "field": "dueOn",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `dueOn: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "audit",
+            "typeId": "{loanId:string}",
+            "symbol": "audit#src/audit/flag-renewal.ts:handler"
+          },
+          "typeId": "{loanId:string}",
+          "field": "itemId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `itemId: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "audit",
+            "typeId": "{loanId:string}",
+            "symbol": "audit#src/audit/flag-renewal.ts:handler"
+          },
+          "typeId": "{loanId:string}",
+          "field": "renewals",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender circulation sends `renewals: number`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/record-entry.ts:handler"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "audit",
+            "typeId": "{loanId:string}",
+            "symbol": "audit#src/audit/record-entry.ts:handler"
+          },
+          "typeId": "{loanId:string}",
+          "field": "borrowerId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `borrowerId: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "audit",
+            "typeId": "{loanId:string}",
+            "symbol": "audit#src/audit/record-entry.ts:handler"
+          },
+          "typeId": "{loanId:string}",
+          "field": "dueOn",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `dueOn: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "audit",
+            "typeId": "{loanId:string}",
+            "symbol": "audit#src/audit/record-entry.ts:handler"
+          },
+          "typeId": "{loanId:string}",
+          "field": "itemId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `itemId: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "audit",
+            "typeId": "{loanId:string}",
+            "symbol": "audit#src/audit/record-entry.ts:handler"
+          },
+          "typeId": "{loanId:string}",
+          "field": "renewals",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender circulation sends `renewals: number`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/renew-loan.ts:8:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/renew-loan.ts:8:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "circulation",
+        "typeId": "{loanId:string}",
+        "symbol": "circulation#src/loans/renew-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/flag-renewal.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/renew-loan.ts:8:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/renew-loan.ts:8:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "circulation",
+        "typeId": "{loanId:string}",
+        "symbol": "circulation#src/loans/renew-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/record-entry.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/flag-renewal.ts:handler"
+      },
+      "typeId": "{loanId:string}",
+      "field": "borrowerId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `borrowerId: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/flag-renewal.ts:handler"
+      },
+      "typeId": "{loanId:string}",
+      "field": "dueOn",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `dueOn: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/flag-renewal.ts:handler"
+      },
+      "typeId": "{loanId:string}",
+      "field": "itemId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `itemId: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/flag-renewal.ts:handler"
+      },
+      "typeId": "{loanId:string}",
+      "field": "renewals",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender circulation sends `renewals: number`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/record-entry.ts:handler"
+      },
+      "typeId": "{loanId:string}",
+      "field": "borrowerId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `borrowerId: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/record-entry.ts:handler"
+      },
+      "typeId": "{loanId:string}",
+      "field": "dueOn",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `dueOn: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/record-entry.ts:handler"
+      },
+      "typeId": "{loanId:string}",
+      "field": "itemId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `itemId: string`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:audit#infra/main.tf:aws_cloudwatch_event_target.record_entry",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "audit",
+        "typeId": "{loanId:string}",
+        "symbol": "audit#src/audit/record-entry.ts:handler"
+      },
+      "typeId": "{loanId:string}",
+      "field": "renewals",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender circulation sends `renewals: number`; receiver audit declares no such field; circulation hands it on as it was sent; audit reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:circulation#infra/forward.tf:aws_cloudwatch_event_target.to_audit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/forward.tf:aws_cloudwatch_event_target.to_audit",
+      "direction": "payload",
+      "reason": "delivered-onward",
+      "message": "consumer:circulation#infra/forward.tf:aws_cloudwatch_event_target.to_audit hands the message on to channel:eventbridge/library-audit/library.loans/LoanCreated, channel:eventbridge/library-audit/library.loans/LoanRenewed rather than to code",
+      "hint": "Nothing to change: the message is compared with what reads it where it is handed on to."
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/renew-loan.ts:8:9",
+        "to": "consumer:circulation#infra/forward.tf:aws_cloudwatch_event_target.to_audit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/renew-loan.ts:8:9|emits|consumer:circulation#infra/forward.tf:aws_cloudwatch_event_target.to_audit",
+      "direction": "payload",
+      "reason": "delivered-onward",
+      "message": "consumer:circulation#infra/forward.tf:aws_cloudwatch_event_target.to_audit hands the message on to channel:eventbridge/library-audit/library.loans/LoanCreated, channel:eventbridge/library-audit/library.loans/LoanRenewed rather than to code",
+      "hint": "Nothing to change: the message is compared with what reads it where it is handed on to."
+    }
+  ],
+  "summary": {
+    "edges": 4,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 2,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 8,
+    "ignored": 0
+  }
+}

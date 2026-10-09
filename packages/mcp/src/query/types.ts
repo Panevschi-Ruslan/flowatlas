@@ -27,6 +27,14 @@ export interface FlowEdge {
   /** Type ids the call carries, from L1. */
   params?: string[];
   returns?: string;
+  /**
+   * Why an edge less than proven was drawn at all, from L1: a channel matched
+   * by a prefix, a part not filtered (P23). An edge that is weak and says
+   * nothing about it leaves a reader to guess which part to doubt.
+   */
+  because?: string[];
+  /** Filters the join recorded and did not match on, from L1. */
+  notMatchedOn?: string[];
 }
 
 /** Something that runs before an entry, in the order it runs. */

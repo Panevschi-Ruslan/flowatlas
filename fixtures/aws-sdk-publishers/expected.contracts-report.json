@@ -1,0 +1,129 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:26:53.541Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:loans#api/holds/hold-events.ts:30:9",
+        "to": "channel:eventbridge/default/library.holds/HoldPlaced",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/default/library.holds/HoldPlaced|emits|producer:loans#api/holds/hold-events.ts:30:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/default/library.holds/HoldPlaced is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#api/holds/hold-events.ts:35:9",
+        "to": "channel:eventbridge/library-events/library.holds/HoldCancelled",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/library-events/library.holds/HoldCancelled|emits|producer:loans#api/holds/hold-events.ts:35:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/library-events/library.holds/HoldCancelled is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#api/holds/hold-events.ts:30:9",
+        "to": "channel:eventbridge/library-events/library.holds/HoldQueued",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/library-events/library.holds/HoldQueued|emits|producer:loans#api/holds/hold-events.ts:30:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/library-events/library.holds/HoldQueued is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#api/loans/loan-events.ts:19:9",
+        "to": "channel:eventbridge/library-events/library.loans/LoanCreated",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/library-events/library.loans/LoanCreated|emits|producer:loans#api/loans/loan-events.ts:19:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/library-events/library.loans/LoanCreated is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#api/loans/loan-events.ts:37:9",
+        "to": "channel:eventbridge/library-events/library.loans/LoanRenewed",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/library-events/library.loans/LoanRenewed|emits|producer:loans#api/loans/loan-events.ts:37:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/library-events/library.loans/LoanRenewed is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#api/returns/returns.routes.ts:10:9",
+        "to": "channel:eventbridge/library-events/library.returns/ItemReturned",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/library-events/library.returns/ItemReturned|emits|producer:loans#api/returns/returns.routes.ts:10:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/library-events/library.returns/ItemReturned is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#functions/notify-borrower/src/handler.ts:19:9",
+        "to": "channel:sns/borrower-notifications",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sns/borrower-notifications|emits|producer:loans#functions/notify-borrower/src/handler.ts:19:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sns/borrower-notifications is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#functions/send-reminder/src/handler.ts:16:9",
+        "to": "channel:sqs/library-reminders",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-reminders|emits|producer:loans#functions/send-reminder/src/handler.ts:16:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-reminders is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#api/returns/returns-queue.ts:22:9",
+        "to": "channel:sqs/library-returns",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-returns|emits|producer:loans#api/returns/returns-queue.ts:22:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-returns is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 9,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

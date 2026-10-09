@@ -1,0 +1,613 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T07:27:18.590Z",
+  "services": [
+    {
+      "name": "lending",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "config_key:lending#LOAN_APPROVAL_ARN",
+      "type": "config_key",
+      "label": "LOAN_APPROVAL_ARN",
+      "repo": "lending",
+      "file": "src/handlers/create-loan.ts",
+      "line": 10,
+      "meta": {
+        "key": "LOAN_APPROVAL_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:lending:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 51,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "api": "lending-loans",
+        "function": "lending-create-loan",
+        "declaredAs": "aws_api_gateway_method.create_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-check-borrower",
+      "type": "entry",
+      "label": "lending-check-borrower",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 15,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-check-borrower",
+        "deployedBy": "terraform",
+        "name": "lending-check-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.check_borrower",
+        "handler": "handlers/check-borrower.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-create-loan",
+      "type": "entry",
+      "label": "lending-create-loan",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 1,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-create-loan",
+        "deployedBy": "terraform",
+        "name": "lending-create-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.create_loan",
+        "handler": "handlers/create-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "LOAN_APPROVAL_ARN": {
+            "written": "aws_sfn_state_machine.loan_approval.arn",
+            "value": "lending-loan-approval",
+            "kind": "workflow"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-score-borrower",
+      "type": "entry",
+      "label": "lending-score-borrower",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 23,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-score-borrower",
+        "deployedBy": "terraform",
+        "name": "lending-score-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.score_borrower",
+        "handler": "handlers/score-borrower.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:workflow:lending-loan-approval",
+      "type": "entry",
+      "label": "workflow lending-loan-approval",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "lending-loan-approval",
+        "name": "lending-loan-approval",
+        "nameFrom": "deployment",
+        "startAt": "CheckBorrower",
+        "states": 2,
+        "queryLanguage": "JSONPath",
+        "comment": "Approves a loan: checks the borrower, then scores them.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.loan_approval",
+        "definitionFrom": "file",
+        "declaredIn": "infra/main.tf:35"
+      }
+    },
+    {
+      "id": "lending#packages/workflows/src/index.ts:WorkflowClient",
+      "type": "provider",
+      "label": "WorkflowClient",
+      "repo": "lending",
+      "file": "packages/workflows/src/index.ts",
+      "line": 8,
+      "kind": "injectable"
+    },
+    {
+      "id": "lending#packages/workflows/src/index.ts:WorkflowClient.start",
+      "type": "method",
+      "label": "WorkflowClient.start",
+      "repo": "lending",
+      "file": "packages/workflows/src/index.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "stateMachineArn",
+              "type": "string|undefined"
+            },
+            {
+              "name": "input",
+              "type": "unknown"
+            }
+          ],
+          "returns": "string|undefined"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/check-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/check-borrower.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{borrowerId:string}"
+            }
+          ],
+          "returns": "{standing:type:lending#Standing}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/create-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/create-loan.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/score-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/score-borrower.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{borrowerId:string}"
+            }
+          ],
+          "returns": "{score:number}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/lib/loans.ts:newLoan",
+      "type": "function",
+      "label": "newLoan",
+      "repo": "lending",
+      "file": "src/lib/loans.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:lending#LoanRequest"
+            }
+          ],
+          "returns": "type:lending#Loan"
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "type": "function",
+      "label": "CheckBorrower [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "lending-check-borrower"
+        },
+        "reaches": [
+          "invoke:lending-check-borrower"
+        ],
+        "parameters": {
+          "FunctionName": "lending-check-borrower",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId"
+          }
+        },
+        "resultPath": "$.borrower"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "type": "function",
+      "label": "ScoreBorrower [Task function]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 17,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "function",
+          "name": "lending-score-borrower"
+        },
+        "reaches": [
+          "invoke:lending-score-borrower"
+        ]
+      }
+    },
+    {
+      "id": "producer:lending#src/handlers/create-loan.ts:10:9",
+      "type": "producer",
+      "label": "start lending-loan-approval",
+      "repo": "lending",
+      "file": "src/handlers/create-loan.ts",
+      "line": 10,
+      "kind": "start",
+      "meta": {
+        "kind": "start",
+        "adapter": "aws-stepfunctions",
+        "method": "send",
+        "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "type:lending#Loan",
+        "confidence": "static",
+        "awaiting": [
+          {
+            "parts": [
+              {
+                "environment": "LOAN_APPROVAL_ARN",
+                "forms": [
+                  "^arn:[^:]+:states:[^:]*:[^:]*:stateMachine:([^:]+)(?::[^:]+)?$"
+                ]
+              }
+            ]
+          }
+        ],
+        "channelVia": "environment",
+        "reaches": [
+          "workflow:lending-loan-approval"
+        ]
+      }
+    },
+    {
+      "id": "repo:lending",
+      "type": "repo",
+      "label": "lending",
+      "repo": "lending",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sfn": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:lending:http:POST:/loans",
+      "to": "lending#src/handlers/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:lending#Loan",
+      "file": "src/handlers/create-loan.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "type:lending#LoanRequest",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:lending:invoke:lending-check-borrower",
+      "to": "lending#src/handlers/check-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/check-borrower.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:lending:invoke:lending-create-loan",
+      "to": "lending#src/handlers/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:lending:invoke:lending-score-borrower",
+      "to": "lending#src/handlers/score-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/score-borrower.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:lending:workflow:lending-loan-approval",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 3
+    },
+    {
+      "from": "lending#src/handlers/create-loan.ts:handler",
+      "to": "config_key:lending#LOAN_APPROVAL_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "lending-create-loan",
+            "written": "aws_sfn_state_machine.loan_approval.arn",
+            "value": "lending-loan-approval"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#src/handlers/create-loan.ts:handler",
+      "to": "lending#packages/workflows/src/index.ts:WorkflowClient.start",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string|undefined",
+        "unknown"
+      ],
+      "returns": "string|undefined",
+      "file": "src/handlers/create-loan.ts",
+      "line": 10
+    },
+    {
+      "from": "lending#src/handlers/create-loan.ts:handler",
+      "to": "lending#src/lib/loans.ts:newLoan",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:lending#LoanRequest"
+      ],
+      "returns": "type:lending#Loan",
+      "file": "src/handlers/create-loan.ts",
+      "line": 7
+    },
+    {
+      "from": "lending#src/handlers/create-loan.ts:handler",
+      "to": "producer:lending#src/handlers/create-loan.ts:10:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 10
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "to": "entry:lending:invoke:lending-check-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-check-borrower"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "to": "entry:lending:invoke:lending-score-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 17,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-score-borrower"
+      }
+    },
+    {
+      "from": "producer:lending#src/handlers/create-loan.ts:10:9",
+      "to": "entry:lending:workflow:lending-loan-approval",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 10,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:lending-loan-approval"
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "642e5e2619bf9e1c",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "requestedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "extends": [
+          "type:lending#LoanRequest"
+        ]
+      }
+    },
+    "type:lending#LoanRequest": {
+      "name": "LoanRequest",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "07210ddb6676fb42",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending#Standing": {
+      "name": "Standing",
+      "kind": "union",
+      "declaredIn": "lending#src/handlers/check-borrower.ts",
+      "structuralHash": "8af2dd81749c2e41",
+      "members": [
+        "'good'",
+        "'suspended'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

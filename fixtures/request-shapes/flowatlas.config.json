@@ -1,0 +1,23 @@
+{
+  "services": [
+    { "name": "orders-api", "repo": "./orders-api", "type": "express" },
+    { "name": "catalog-api", "repo": "./catalog-api", "type": "fastify" },
+    { "name": "cart-api", "repo": "./cart-api", "type": "koa" },
+    { "name": "shop", "repo": "./shop", "type": "nextjs" },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "apiBaseEnv": ["ordersUrl", "catalogUrl"],
+      "apiTarget": { "ordersUrl": "orders-api", "catalogUrl": "catalog-api" }
+    }
+  ],
+  "adapters": {
+    "entry": {
+      "request": {
+        "answers": [{ "by": "helper", "name": "sendOk", "arg": 1, "status": 200 }]
+      }
+    }
+  },
+  "output": ".flowatlas"
+}
