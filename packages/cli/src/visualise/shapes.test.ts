@@ -639,6 +639,15 @@ describe('what a route answers besides its own response (P32)', () => {
     expect(faceLine(only({ requestRead: true, failures: { '404': ORDER } }), 0)).toBe('+1 failure');
     expect(faceLine(only({ requestRead: true, failures: { '404': ORDER } }, ORDER), 0)).toBe('→ Order · +1 failure');
     expect(faceLine(only({ requestRead: true }, ORDER), 0)).toBe('→ Order');
+    // The hover card says so too: its answer rows, without a line saying nothing was read (P50).
+    expect(cardOf(only({ requestRead: true, statusUnknown: '{open:boolean}' }), 0)?.lines).toEqual([
+      'status ? → { open: boolean }',
+    ]);
+    expect(cardOf(only({ requestRead: true, failures: { '404': ORDER } }, ORDER), 0)?.lines).toEqual([
+      '→ responds Order',
+      '404 → Order',
+    ]);
+    expect(cardOf(only({ requestRead: true }), 0)?.lines).toEqual(['no request parts read']);
   });
 
   it('counts the routes giving each on their service in the map', () => {

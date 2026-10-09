@@ -29,6 +29,8 @@ export interface PackedGraph {
     enumerated: string[];
     /** Strings an enumerated metadata field takes, shared by every such field. */
     values: string[];
+    /** The short keys whose value is a list of nodes, by position, the panel jumps to (P50). */
+    nodeRefs?: string[];
     reasons: string[];
     levels: string[];
     hints: string[];
@@ -127,6 +129,8 @@ const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerate
   ['selector', 'sl', false],
   ['exportAs', 'ea', false],
   ['hostBindings', 'hb', false],
+  // The methods those bindings call, shipped as the nodes' positions (P50).
+  ['hostMembers', 'hm', false],
   // A pipe is pure unless it says otherwise, so both answers are worth a line (P45).
   ['pure', 'pu', false, true],
   ['route', 'rt', false],
@@ -155,7 +159,10 @@ const shippable = (value: unknown, either = false): boolean =>
       ? true
       : Array.isArray(value) && value.length > 0 && value.every((item) => typeof item === 'string');
 
-const metaPacker = (nodes: readonly GraphNode[]) => {
+/** Fields whose value is a list of node ids: shipped as positions, so the panel can jump to them. */
+const NODE_REFS: ReadonlySet<string> = new Set(['hostMembers']);
+
+const metaPacker = (nodes: readonly GraphNode[], position: ReadonlyMap<string, number>) => {
   const enumerated = META_FIELDS.filter(([, , isEnum]) => isEnum);
   const [values, valueIx] = dictionary(
     nodes.flatMap((node) =>
@@ -168,6 +175,12 @@ const metaPacker = (nodes: readonly GraphNode[]) => {
     const meta = node.meta ?? {};
     const out: Record<string, unknown> = {};
     META_FIELDS.forEach(([field, key, isEnum, either], index) => {
+      if (NODE_REFS.has(field)) {
+        const ids = Array.isArray(meta[field]) ? (meta[field] as unknown[]) : [];
+        const at = ids.flatMap((id) => (typeof id === 'string' && position.has(id) ? [position.get(id) as number] : []));
+        if (at.length > 0) out[key] = at;
+        return;
+      }
       const value = meta[field];
       if (!shippable(value, either)) return;
       // Past the fields the lists read, a word the label already says is not
@@ -180,7 +193,8 @@ const metaPacker = (nodes: readonly GraphNode[]) => {
     return Object.keys(out).length === 0 ? 0 : out;
   };
   const keys = Object.fromEntries(META_FIELDS.map(([field, key]) => [key, field]));
-  return { values, pack, keys, enumerated: enumerated.map(([, key]) => key) };
+  const nodeRefs = META_FIELDS.filter(([field]) => NODE_REFS.has(field)).map(([, key]) => key);
+  return { values, pack, keys, enumerated: enumerated.map(([, key]) => key), nodeRefs };
 };
 
 /** One row per reason, since that is the shape the page shows them in. */
@@ -226,9 +240,9 @@ export const packGraph = (input: PackInput): PackedGraph => {
   const [reasons, reasonIx] = dictionary(rowsIn.map((row) => row.reason));
   const [levels, levelIx] = dictionary(rowsIn.map((row) => row.level));
   const [hints, hintIx] = dictionary(rowsIn.flatMap((row) => (row.hint ? [row.hint] : [])));
-  const meta = metaPacker(input.nodes);
-
   const position = new Map(input.nodes.map((node, index) => [node.id, index]));
+  const meta = metaPacker(input.nodes, position);
+
   const entryIds: Record<string, number> = {};
   const steps: number[] = [];
   input.nodes.forEach((node, index) => {
@@ -289,6 +303,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
       confidences,
       meta: meta.keys,
       enumerated: meta.enumerated,
+      nodeRefs: meta.nodeRefs,
       values: meta.values,
       reasons,
       levels,

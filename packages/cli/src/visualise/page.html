@@ -1002,6 +1002,10 @@
 
   .g-meta dt { color: var(--faint); font-family: var(--f-mono); }
   .g-meta dd { margin: 0; font-family: var(--f-mono); word-break: break-word; }
+  .g-meta-go {
+    font: inherit; color: var(--accent, inherit); background: none; border: 0; padding: 0;
+    text-decoration: underline; cursor: pointer;
+  }
 
   .g-group + .g-group { margin-top: 8px; }
 
@@ -2206,12 +2210,21 @@ __MAP_LOGIC__
       : '';
     const plural = (n, one, many) => n.toLocaleString() + ' ' + (n === 1 ? one : many);
     const enumerated = new Set(data.dicts.enumerated || []);
+    /* A field naming other nodes (a directive's host members, P50) is a list of
+       positions: each said by its label and jumped to from the panel. */
+    const nodeRefs = new Set(data.dicts.nodeRefs || []);
     const metaOf = (i) => Object.entries(nodes[i][MT] || {}).map(([key, value]) => [
       data.dicts.meta[key] || key,
       enumerated.has(key) ? data.dicts.values[value]
+        : nodeRefs.has(key) ? value.map((v) => nodes[v][LB]).join(', ')
         : Array.isArray(value) ? value.join(', ')
         : value === true ? 'yes' : value === false ? 'no' : String(value),
+      nodeRefs.has(key) ? value : null,
     ]);
+    const metaValueHtml = (value, refs) => refs === null
+      ? esc(value)
+      : refs.map((v) => `<button class="g-meta-go" data-go="${v}" title="Centre on ${esc(nodes[v][LB])}">` +
+          `${esc(nodes[v][LB])}</button>`).join(' ');
 
     const graphView = document.getElementById('graph-view');
     const wrap = document.getElementById('g-canvas');
@@ -3352,7 +3365,7 @@ __MAP_LOGIC__
           : '') +
         checkActionsHtml(v) +
         (meta.length > 0
-          ? '<dl class="g-meta">' + meta.map(([key, value]) => `<dt>${esc(key)}</dt><dd>${esc(value)}</dd>`).join('') + '</dl>'
+          ? '<dl class="g-meta">' + meta.map(([key, value, refs]) => `<dt>${esc(key)}</dt><dd>${metaValueHtml(value, refs)}</dd>`).join('') + '</dl>'
           : '') +
         shapeHtml(v) +
         `<section><h4>In &middot; ${total(d.into)}</h4>` +

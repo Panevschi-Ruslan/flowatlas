@@ -1011,9 +1011,17 @@ describe('angular-basic', () => {
     expect(directive?.meta?.['hostBindings']).toEqual([
       'role=note',
       '[attr.aria-live]=politeness',
+      '(focus)=onFocus()',
       '[class.is-highlighted]=active',
       '(mouseenter)=onEnter($event)',
     ]);
+    // The methods those listeners call are nodes, named by the directive (P50).
+    const members = directive?.meta?.['hostMembers'] as string[];
+    expect(members).toEqual([
+      'angular-basic#src/app/highlight.directive.ts:HighlightDirective.onFocus',
+      'angular-basic#src/app/highlight.directive.ts:HighlightDirective.onEnter',
+    ]);
+    expect(members.map((id) => graph().nodes.find((node) => node.id === id)?.type)).toEqual(['method', 'method']);
     const pipe = nodesOf(graph(), 'provider').find((node) => node.label === 'OrderTotalPipe');
     expect(pipe?.meta?.['pure']).toBe(false);
   });

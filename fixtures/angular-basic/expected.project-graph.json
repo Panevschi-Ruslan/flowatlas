@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T21:18:38.114Z",
+  "builtAt": "2026-10-09T08:17:43.660Z",
   "services": [
     {
       "name": "angular-basic",
@@ -170,7 +170,7 @@
       "label": "HighlightDirective",
       "repo": "angular-basic",
       "file": "src/app/highlight.directive.ts",
-      "line": 9,
+      "line": 10,
       "kind": "directive",
       "meta": {
         "signature": {
@@ -193,9 +193,47 @@
         "hostBindings": [
           "role=note",
           "[attr.aria-live]=politeness",
+          "(focus)=onFocus()",
           "[class.is-highlighted]=active",
           "(mouseenter)=onEnter($event)"
+        ],
+        "hostMembers": [
+          "angular-basic#src/app/highlight.directive.ts:HighlightDirective.onFocus",
+          "angular-basic#src/app/highlight.directive.ts:HighlightDirective.onEnter"
         ]
+      }
+    },
+    {
+      "id": "angular-basic#src/app/highlight.directive.ts:HighlightDirective.onEnter",
+      "type": "method",
+      "label": "HighlightDirective.onEnter",
+      "repo": "angular-basic",
+      "file": "src/app/highlight.directive.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "MouseEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "angular-basic#src/app/highlight.directive.ts:HighlightDirective.onFocus",
+      "type": "method",
+      "label": "HighlightDirective.onFocus",
+      "repo": "angular-basic",
+      "file": "src/app/highlight.directive.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
       }
     },
     {

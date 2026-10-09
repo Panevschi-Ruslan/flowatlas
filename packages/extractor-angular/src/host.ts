@@ -1,5 +1,5 @@
 import { evaluateExpression, getDecorator } from '@flowatlas/core';
-import type { ClassDeclaration, Decorator, ObjectLiteralExpression } from 'ts-morph';
+import type { ClassDeclaration, Decorator, MethodDeclaration, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { ANGULAR_CORE } from './index-classes.js';
 import { propertyOf } from './util/metadata.js';
@@ -12,7 +12,27 @@ import { propertyOf } from './util/metadata.js';
  * Read from both places Angular takes them: the decorator's `host` object, and
  * members decorated `@HostBinding` or `@HostListener`. One list, because to a
  * person reading the element they are one thing.
+ *
+ * A binding that calls a method of the class names it, so the method can be
+ * pointed at (P50): `(mouseenter)=onEnter($event)` is `onEnter`.
  */
+
+/** One binding as written, and the method of the class it calls, when it calls one. */
+export interface HostBinding {
+  readonly written: string;
+  readonly method?: MethodDeclaration;
+}
+
+/** The method a listener's statement calls: `toggle($event)` is `toggle`. */
+const CALLED = /^\s*(?:this\.)?([A-Za-z_$][\w$]*)\s*\(/;
+
+const calledMethod = (declaration: ClassDeclaration, statement: string): MethodDeclaration | undefined => {
+  const name = CALLED.exec(statement)?.[1];
+  return name === undefined ? undefined : declaration.getMethod(name);
+};
+
+const bound = (written: string, method: MethodDeclaration | undefined): HostBinding =>
+  method === undefined ? { written } : { written, method };
 
 /** A string a decorator was handed, when it is one. */
 const literalArgument = (decorator: Decorator, index: number): string | undefined => {
@@ -44,8 +64,8 @@ const MEMBER_BINDINGS: ReadonlyArray<readonly [decorator: string, read: (decorat
   ['HostListener', (decorator, member) => `(${literalArgument(decorator, 0) ?? '?'})=${member}(${listenerArguments(decorator)})`],
 ];
 
-/** The `host` object's entries, each `key=value` as written. */
-const hostObject = (metadata: ObjectLiteralExpression | undefined): string[] => {
+/** The `host` object's entries, each `key=value` as written; an `(event)` key's value may call a method. */
+const hostObject = (declaration: ClassDeclaration, metadata: ObjectLiteralExpression | undefined): HostBinding[] => {
   const host = propertyOf(metadata, 'host');
   if (host === undefined || !Node.isObjectLiteralExpression(host)) return [];
   return host.getProperties().flatMap((property) => {
@@ -54,20 +74,23 @@ const hostObject = (metadata: ObjectLiteralExpression | undefined): string[] => 
     const key = Node.isStringLiteral(nameNode) ? nameNode.getLiteralText() : nameNode.getText();
     const written = property.getInitializer();
     const value = written === undefined ? undefined : evaluateExpression(written);
-    return value?.resolved === true && typeof value.value === 'string' ? [`${key}=${value.value}`] : [];
+    if (value?.resolved !== true || typeof value.value !== 'string') return [];
+    const method = key.startsWith('(') ? calledMethod(declaration, value.value) : undefined;
+    return [bound(`${key}=${value.value}`, method)];
   });
 };
 
 /** Every host binding a class declares, in the order written: the object, then its members. */
-export const hostBindingsOf = (declaration: ClassDeclaration, metadata: ObjectLiteralExpression | undefined): string[] => {
+export const hostBindingsOf = (declaration: ClassDeclaration, metadata: ObjectLiteralExpression | undefined): HostBinding[] => {
   const members = [...declaration.getProperties(), ...declaration.getGetAccessors(), ...declaration.getMethods()].sort(
     (a, b) => a.getStart() - b.getStart(),
   );
   const fromMembers = members.flatMap((member) =>
     MEMBER_BINDINGS.flatMap(([name, read]) => {
       const decorator = getDecorator(member, name, ANGULAR_CORE);
-      return decorator === undefined ? [] : [read(decorator, member.getName())];
+      if (decorator === undefined) return [];
+      return [bound(read(decorator, member.getName()), Node.isMethodDeclaration(member) ? member : undefined)];
     }),
   );
-  return [...hostObject(metadata), ...fromMembers];
+  return [...hostObject(declaration, metadata), ...fromMembers];
 };

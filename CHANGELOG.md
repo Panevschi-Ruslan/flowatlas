@@ -6,6 +6,12 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+A host listener's method - `@HostListener` on a method, or a `host` entry like
+`'(focus)': 'onFocus()'` - is a method node the directive names in
+`meta.hostMembers`; the `visualise` details panel lists them as links that
+centre on the method. The hover card of a route that reads no request parts no
+longer says so when it responds or answers otherwise.
+
 A data kit's client handed in typed by a named interface is followed with no
 `clientType` on the row when the factory resolves and is declared to return that
 type; a `clientType` is matched through a namespace import too (`kit.DataClient`,

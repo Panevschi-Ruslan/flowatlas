@@ -1305,8 +1305,10 @@ const CARD_FACES = {
   method: asCardFunction,
   bare: asCardFunction,
   handler: asCardFunction,
-  route: (name, params, back) => [
-    ...(params.length > 0 ? params.map((p) => p.text) : ['no request parts read']),
+  // Says no request parts were read only when nothing else follows it (P50):
+  // a route that responds or answers otherwise lists that instead.
+  route: (name, params, back, chars, answered) => [
+    ...(params.length > 0 ? params.map((p) => p.text) : back === '' && !answered ? ['no request parts read'] : []),
     ...(back === '' ? [] : ['→ responds ' + back]),
   ],
   call: (name, params, back) => [
@@ -1336,9 +1338,10 @@ export const cardOf = (model, i, bounds = CARD_BOUNDS, wide = GLANCE) => {
     text: middle(paramText(model, param), bounds.chars),
   }));
   const back = face.returns < 0 ? '' : middle(refText(model, face.returns), bounds.chars);
+  const answers = answersOf(model, i);
   const all = [
-    ...CARD_FACES[face.face](faceName(model, i, face), params, back, bounds.chars),
-    ...answersOf(model, i).map((answer) => answerLine(model, answer, bounds.chars)),
+    ...CARD_FACES[face.face](faceName(model, i, face), params, back, bounds.chars, answers.length > 0),
+    ...answers.map((answer) => answerLine(model, answer, bounds.chars)),
   ];
   let room = bounds.most;
   const lines = all.slice(0, Math.min(wide.lines ? all.length : bounds.lines, room));

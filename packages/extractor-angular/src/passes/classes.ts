@@ -4,7 +4,7 @@ import {
   resolveConstructorInjection,
   resolveFieldInjection,
 } from '@flowatlas/core';
-import type { ClassDeclaration } from 'ts-morph';
+import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
 import { angularDiOptions } from '../di.js';
 import {
   componentDecorator,
@@ -31,16 +31,27 @@ const IMPORTABLE: ReadonlySet<AngularRole> = new Set(['component', 'directive', 
  * a row saying why it could not be followed. Nothing is dropped in between,
  * because a missing edge here is what makes a chain from a button end early.
  */
+/** The node a method is drawn as, made when asked for. */
+type MethodNode = (method: MethodDeclaration) => string | undefined;
+
 /**
  * What a component or directive is exported to a template as, and what it binds
- * on its host element (P45). Nothing at all when it says neither.
+ * on its host element (P45), with the methods those bindings call as nodes
+ * (`hostMembers`, P50). Nothing at all when it says neither.
  */
-const boundBy = (declaration: ClassDeclaration, metadata: ReturnType<typeof metadataOf>): Record<string, unknown> => {
+const boundBy = (
+  declaration: ClassDeclaration,
+  metadata: ReturnType<typeof metadataOf>,
+  methodNode: MethodNode,
+): Record<string, unknown> => {
   const exportAs = stringProperty(metadata, 'exportAs');
-  const hostBindings = hostBindingsOf(declaration, metadata);
+  const bindings = hostBindingsOf(declaration, metadata);
+  const methods = bindings.flatMap((binding) => (binding.method === undefined ? [] : [binding.method]));
+  const hostMembers = [...new Set(methods.flatMap((method) => methodNode(method) ?? []))];
   return {
     ...(exportAs === undefined ? {} : { exportAs }),
-    ...(hostBindings.length === 0 ? {} : { hostBindings }),
+    ...(bindings.length === 0 ? {} : { hostBindings: bindings.map((binding) => binding.written) }),
+    ...(hostMembers.length === 0 ? {} : { hostMembers }),
   };
 };
 
@@ -50,11 +61,14 @@ const boundBy = (declaration: ClassDeclaration, metadata: ReturnType<typeof meta
  * it as and whether it is pure, which it is unless it says otherwise.
  */
 const DECLARABLE_META: Readonly<
-  Record<'directive' | 'pipe', (declaration: ClassDeclaration, metadata: ReturnType<typeof metadataOf>) => Record<string, unknown>>
+  Record<
+    'directive' | 'pipe',
+    (declaration: ClassDeclaration, metadata: ReturnType<typeof metadataOf>, methodNode: MethodNode) => Record<string, unknown>
+  >
 > = {
-  directive: (declaration, metadata) => {
+  directive: (declaration, metadata, methodNode) => {
     const selector = stringProperty(metadata, 'selector');
-    return { ...(selector === undefined ? {} : { selector }), ...boundBy(declaration, metadata) };
+    return { ...(selector === undefined ? {} : { selector }), ...boundBy(declaration, metadata, methodNode) };
   },
   pipe: (_declaration, metadata) => {
     const name = stringProperty(metadata, 'name');
@@ -65,6 +79,7 @@ const DECLARABLE_META: Readonly<
 
 export const classesPass = definePass('classes', (ctx) => {
   const options = angularDiOptions(ctx);
+  const methodNode: MethodNode = (method) => ctx.ensureMethodNode(method)?.id;
 
   const component = (indexed: IndexedClass): void => {
     const metadata = metadataOf(componentDecorator(indexed.declaration));
@@ -73,7 +88,7 @@ export const classesPass = definePass('classes', (ctx) => {
     ctx.ensureClassNode(indexed.declaration, {
       ...(selector === undefined ? {} : { selector }),
       ...(templateUrl === undefined ? {} : { templateUrl }),
-      ...boundBy(indexed.declaration, metadata),
+      ...boundBy(indexed.declaration, metadata, methodNode),
     });
 
     for (const element of arrayProperty(metadata, 'imports')) {
@@ -101,7 +116,7 @@ export const classesPass = definePass('classes', (ctx) => {
 
   const declarable = (indexed: IndexedClass, role: 'directive' | 'pipe'): void => {
     const metadata = metadataOf(declarableDecorator(indexed.declaration, role));
-    const meta = DECLARABLE_META[role](indexed.declaration, metadata);
+    const meta = DECLARABLE_META[role](indexed.declaration, metadata, methodNode);
     ctx.ensureClassNode(indexed.declaration, Object.keys(meta).length === 0 ? undefined : meta);
   };
 

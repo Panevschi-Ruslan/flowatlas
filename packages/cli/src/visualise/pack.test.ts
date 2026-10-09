@@ -53,6 +53,27 @@ const nodes: GraphNode[] = [
     line: 4,
     meta: { name: 'total', pure: false, hostBindings: [], exportAs: 'total' },
   },
+  {
+    id: 'shop#src/app/glow.directive.ts:GlowDirective',
+    type: 'ui_component',
+    kind: 'directive',
+    label: 'GlowDirective',
+    repo: 'shop',
+    file: 'src/app/glow.directive.ts',
+    line: 5,
+    meta: {
+      hostBindings: ['(focus)=onFocus()'],
+      hostMembers: ['shop#src/app/glow.directive.ts:GlowDirective.onFocus', 'shop#src/app/gone.ts:Gone.away'],
+    },
+  },
+  {
+    id: 'shop#src/app/glow.directive.ts:GlowDirective.onFocus',
+    type: 'method',
+    label: 'GlowDirective.onFocus',
+    repo: 'shop',
+    file: 'src/app/glow.directive.ts',
+    line: 9,
+  },
 ];
 
 const row = (over: Partial<AnchoredUnresolvedRow>): AnchoredUnresolvedRow => ({
@@ -105,6 +126,11 @@ describe('packing what the details panel shows', () => {
 
   it('ships a pipe that says it is impure, and leaves an empty list out (P45)', () => {
     expect(metaOf(3)).toEqual({ name: 'total', pure: false, exportAs: 'total' });
+  });
+
+  it('ships the methods a host binding calls as node positions the panel jumps to, dropping ids with no node (P50)', () => {
+    expect(metaOf(4)).toEqual({ hostBindings: ['(focus)=onFocus()'], hostMembers: [5] });
+    expect(packed.dicts.nodeRefs).toEqual(['hm']);
   });
 
   it('ships a word that takes few values once, as an index into one list', () => {
