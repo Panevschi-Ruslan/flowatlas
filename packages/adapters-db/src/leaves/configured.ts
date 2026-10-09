@@ -9,24 +9,42 @@ export interface ConfiguredAccess {
   op: DbOp | null;
 }
 
-/**
- * The table a call touches, when the call is to a function the project named
- * under `adapters.db.tables` (P37).
- *
- * A data access behind a package of the project's own that nobody installed
- * has no type to resolve and no descriptor to describe it, but the call site
- * says everything: which function it is, by the import in the calling file,
- * and which table, by the string written at the argument the configuration
- * names. The first description that matches wins.
- */
 /** How far a client is followed back to the call that made it. */
 const MOST_HOPS = 4;
 
-/** The factory a row names, and the type its package names the client by. */
+/**
+ * Where the repository exports a name, found once per name for one read.
+ *
+ * Held by the read and not by the project: a project held open between
+ * rebuilds re-parses a saved file, and a declaration found in it before is a
+ * node that is gone.
+ */
+export type RepositoryExports = (project: Project, name: string) => Node[];
+
+/**
+ * A factory of the repository's own wherever the repository exports it: the
+ * interface it returns may sit in a file of its own (P49).
+ */
+export const repositoryExports = (): RepositoryExports => {
+  const known = new Map<string, Node[]>();
+  return (project, name) => {
+    const found =
+      known.get(name) ??
+      project
+        .getSourceFiles()
+        .filter((file) => !file.getFilePath().includes('/node_modules/'))
+        .flatMap((file) => file.getExportedDeclarations().get(name) ?? []);
+    known.set(name, found);
+    return found;
+  };
+};
+
+/** The factory a row names, the type its package names the client by, and where a repository exports its own. */
 interface Factory {
   readonly name: string;
   readonly package?: string | undefined;
   readonly clientType?: string | undefined;
+  readonly exports: RepositoryExports;
 }
 
 /** Type wrappers that stand for the type inside them: `Awaited<…>`, `Readonly<…>`. */
@@ -42,28 +60,9 @@ const fromPackage = (specifier: string, pkg: string): boolean => specifier === p
  * imported from, when the row names the package, or anywhere the repository
  * exports it, for a factory of the repository's own.
  */
-/**
- * A repository factory wherever the repository exports it, found once per name:
- * the interface it returns may sit in a file of its own (P49).
- */
-const REPOSITORY_FACTORIES = new WeakMap<Project, Map<string, Node[]>>();
-
-const repositoryFactory = (project: Project, name: string): Node[] => {
-  const known = REPOSITORY_FACTORIES.get(project) ?? new Map<string, Node[]>();
-  REPOSITORY_FACTORIES.set(project, known);
-  const found =
-    known.get(name) ??
-    project
-      .getSourceFiles()
-      .filter((file) => !file.getFilePath().includes('/node_modules/'))
-      .flatMap((file) => file.getExportedDeclarations().get(name) ?? []);
-  known.set(name, found);
-  return found;
-};
-
 const factoryBeside = (name: EntityName, factory: Factory): Node[] =>
   (rootOf(name).getSymbol()?.getDeclarations() ?? []).flatMap((declaration) => {
-    if (factory.package === undefined) return repositoryFactory(declaration.getProject(), factory.name);
+    if (factory.package === undefined) return factory.exports(declaration.getProject(), factory.name);
     const imported = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
     if (imported !== undefined && factory.package !== undefined && !fromPackage(imported.getModuleSpecifierValue(), factory.package)) {
       return [];
@@ -172,20 +171,36 @@ const madeBy = (value: Node, factory: Factory, hops: number): boolean => {
  * Whether a call is the one a row describes: the function itself, or a method
  * of a client its factory made.
  */
-const MATCHES: Readonly<Record<'function' | 'client', (call: CallExpression, access: DbTableAccess) => boolean>> = {
+const MATCHES: Readonly<
+  Record<'function' | 'client', (call: CallExpression, access: DbTableAccess, exports: RepositoryExports) => boolean>
+> = {
   function: (call, access) => callsHelper(call, access),
-  client: (call, access) => {
+  client: (call, access, exports) => {
     const callee = call.getExpression();
     if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== access.name) return false;
-    return madeBy(callee.getExpression(), { name: access.factory ?? '', package: access.package, clientType: access.clientType }, 0);
+    const factory = { name: access.factory ?? '', package: access.package, clientType: access.clientType, exports };
+    return madeBy(callee.getExpression(), factory, 0);
   },
 };
 
+/**
+ * The table a call touches, when the call is to a function the project named
+ * under `adapters.db.tables` (P37).
+ *
+ * A data access behind a package of the project's own that nobody installed
+ * has no type to resolve and no descriptor to describe it, but the call site
+ * says everything: which function it is, by the import in the calling file,
+ * and which table, by the string written at the argument the configuration
+ * names. The first description that matches wins.
+ */
 export const configuredAccessOf = (
   call: CallExpression,
   described: readonly DbTableAccess[],
+  exports: RepositoryExports = repositoryExports(),
 ): ConfiguredAccess | undefined => {
-  const access = described.find((candidate) => MATCHES[candidate.factory === undefined ? 'function' : 'client'](call, candidate));
+  const access = described.find((candidate) =>
+    MATCHES[candidate.factory === undefined ? 'function' : 'client'](call, candidate, exports),
+  );
   if (access === undefined) return undefined;
   const op = access.op ?? null;
   if (typeof access.table === 'string') return { access, table: access.table, op };

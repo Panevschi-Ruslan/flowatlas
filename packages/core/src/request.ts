@@ -1,4 +1,4 @@
-import { Node, SyntaxKind, type Node as TsNode, type ParameterDeclaration, type Type } from 'ts-morph';
+import { Node, SyntaxKind, type Node as TsNode, type ParameterDeclaration, type SourceFile, type Type } from 'ts-morph';
 import { z } from 'zod';
 import { pathFrom, sameKeys } from './envelope.js';
 import type { GraphEdge } from './model/edges.js';
@@ -401,13 +401,13 @@ const saidOf = (value: TsNode, validators: readonly RequestValidator[]): Candida
   return undefined;
 };
 
-/** Every expression in a function that reads a path of keys off one of its parameters. */
 /** Whether a name is the key of an access, `x.name`, rather than a value of its own. */
 const isAccessedName = (node: TsNode): boolean => {
   const parent = node.getParent();
   return parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === node;
 };
 
+/** Every expression in a function that reads a path of keys off one of its parameters. */
 const readsOf = (fn: FunctionLike, parameter: ParameterDeclaration, at: readonly string[]): TsNode[] => {
   const out: TsNode[] = [];
   const body = fn.getBody();
@@ -539,7 +539,6 @@ const byCalls = (
   return out;
 };
 
-/** The name a call is made by, and the name its callee is reached from: `respond` and `respond`, or `respond` and `http`. */
 /**
  * The name and the thing it is a member of, for a name written as a value
  * (`kit.createClient`) or as a type (`kit.DataClient`, P49) alike.
@@ -550,6 +549,7 @@ const memberOf = (callee: TsNode): { name: string; object: TsNode } | undefined 
   return undefined;
 };
 
+/** The name a call is made by, and the name its callee is reached from: `respond` and `respond`, or `respond` and `http`. */
 const calledBy = (callee: TsNode): { name: string; root: string } | undefined => {
   if (Node.isIdentifier(callee)) return { name: callee.getText(), root: callee.getText() };
   const member = memberOf(callee);
@@ -562,16 +562,6 @@ const calledBy = (callee: TsNode): { name: string; root: string } | undefined =>
 const fromPackage = (specifier: string, pkg: string): boolean => specifier === pkg || specifier.startsWith(`${pkg}/`);
 
 /**
- * Whether a call is one to a helper (P30), or to any function a configuration
- * names the same way - a data kit's `insert('orders', row)` (P37).
- *
- * A helper of a package is matched by the import in the calling file, which is
- * there whether or not the package is installed: a name imported from it under
- * whatever local name, or a property of a namespace or default import of it.
- * A helper of the project's is matched by name and by being declared outside
- * any installed package.
- */
-/**
  * Whether a name at a call is the one an import binds, and not a local of the
  * same name declared nearer: `const findOne = …` inside a function shadows the
  * kit's `findOne` (P37).
@@ -581,6 +571,16 @@ const boundByImport = (name: TsNode): boolean =>
     (declaration) => Node.isImportSpecifier(declaration) || Node.isNamespaceImport(declaration) || Node.isImportClause(declaration),
   );
 
+/**
+ * Whether a call is one to a helper (P30), or to any function a configuration
+ * names the same way - a data kit's `insert('orders', row)` (P37).
+ *
+ * A helper of a package is matched by the import in the calling file, which is
+ * there whether or not the package is installed: a name imported from it under
+ * whatever local name, or a property of a namespace or default import of it.
+ * A helper of the project's is matched by name and by being declared outside
+ * any installed package.
+ */
 export const callsHelper = (site: TsNode, helper: { name: string; package?: string | undefined }): boolean =>
   Node.isCallExpression(site) && namesHelper(site.getExpression(), helper);
 
@@ -597,23 +597,100 @@ export const namesHelper = (callee: TsNode, helper: { name: string; package?: st
     const declarations = calleeDeclarations(callee);
     return declarations.length > 0 && declarations.every((declaration) => !declaration.getSourceFile().getFilePath().includes('/node_modules/'));
   }
+  const pkg = helper.package;
+  const isHelper = (declared: Declared | undefined): boolean =>
+    declared !== undefined && declared.name === helper.name && fromPackage(declared.module, pkg);
   for (const declaration of callee.getSourceFile().getImportDeclarations()) {
-    if (!fromPackage(declaration.getModuleSpecifierValue(), helper.package)) continue;
+    const module = declaration.getModuleSpecifierValue();
+    const barrel = isRelative(module) ? declaration.getModuleSpecifierSourceFile() : undefined;
+    if (!fromPackage(module, pkg) && barrel === undefined) continue;
+    // What a name imported from here is, by the package that declares it: the
+    // package itself, or the one a barrel of the repository's re-exports it from.
+    const declaredAs = (name: string): Declared | undefined =>
+      barrel === undefined ? { module, name } : reexported(barrel, name, 0);
     if (called.root === called.name && Node.isIdentifier(callee)) {
+      if (!boundByImport(callee)) continue;
       const named = declaration
         .getNamedImports()
-        .some((specifier) => specifier.getName() === helper.name && (specifier.getAliasNode()?.getText() ?? specifier.getName()) === called.name);
-      if (named && boundByImport(callee)) return true;
+        .some((specifier) => (specifier.getAliasNode()?.getText() ?? specifier.getName()) === called.name && isHelper(declaredAs(specifier.getName())));
+      // A default import called itself: the row names it `default`.
+      const byDefault = declaration.getDefaultImport()?.getText() === called.name && isHelper(declaredAs('default'));
+      if (named || byDefault) return true;
       continue;
     }
     const member = memberOf(callee);
-    if (called.name !== helper.name || member === undefined) continue;
-    const root = member.object;
-    if (declaration.getNamespaceImport()?.getText() === called.root && boundByImport(root)) return true;
-    if (declaration.getDefaultImport()?.getText() === called.root && boundByImport(root)) return true;
+    if (member === undefined || !boundByImport(member.object)) continue;
+    if (declaration.getNamespaceImport()?.getText() === called.root && isHelper(declaredAs(called.name))) return true;
+    if (barrel === undefined && declaration.getDefaultImport()?.getText() === called.root && called.name === helper.name) return true;
   }
   return false;
 };
+
+/** A name as the module that declares it spells it. */
+interface Declared {
+  readonly module: string;
+  readonly name: string;
+}
+
+const isRelative = (specifier: string): boolean => specifier.startsWith('.');
+
+/** How many barrels a re-export is followed through. */
+const MOST_BARRELS = 4;
+
+/**
+ * Where a barrel of the repository's gets a name it exports, when that is a
+ * package: `export { respond } from '@acme/http-kit'`, `export * from …`, or an
+ * import of the package exported again. A name the barrel declares itself is
+ * its own and not the package's, whatever it is called.
+ */
+const reexported = (barrel: SourceFile, name: string, hops: number): Declared | undefined => {
+  if (hops > MOST_BARRELS) return undefined;
+  const onward = (module: string, from: SourceFile | undefined, as: string): Declared | undefined => {
+    if (!isRelative(module)) return { module, name: as };
+    return from === undefined ? undefined : reexported(from, as, hops + 1);
+  };
+  for (const declaration of barrel.getExportDeclarations()) {
+    const module = declaration.getModuleSpecifierValue();
+    const named = declaration
+      .getNamedExports()
+      .find((specifier) => (specifier.getAliasNode()?.getText() ?? specifier.getName()) === name);
+    if (named !== undefined) {
+      const original = named.getName();
+      if (module !== undefined) return onward(module, declaration.getModuleSpecifierSourceFile(), original);
+      // `import respond from '@acme/http-kit'; export { respond }`: the package's default.
+      const byDefault = barrel.getImportDeclarations().find((candidate) => candidate.getDefaultImport()?.getText() === original);
+      if (byDefault !== undefined) {
+        return onward(byDefault.getModuleSpecifierValue(), byDefault.getModuleSpecifierSourceFile(), 'default');
+      }
+      const imported = barrel.getImportDeclarations().find((candidate) =>
+        candidate.getNamedImports().some((specifier) => (specifier.getAliasNode()?.getText() ?? specifier.getName()) === original),
+      );
+      const specifier = imported?.getNamedImports().find((candidate) => (candidate.getAliasNode()?.getText() ?? candidate.getName()) === original);
+      return imported === undefined || specifier === undefined
+        ? undefined
+        : onward(imported.getModuleSpecifierValue(), imported.getModuleSpecifierSourceFile(), specifier.getName());
+    }
+  }
+  // `export *` passes on every name but the default, and none the barrel declares.
+  if (name === 'default' || declaresItself(barrel, name)) return undefined;
+  // Two of them passing on one name, from two places, pass on neither: the
+  // compiler calls the name ambiguous and exports it from nowhere. A module of
+  // the repository's that has the name but not from a package is a place too.
+  const places = barrel.getExportDeclarations().flatMap((declaration): Array<Declared | null> => {
+    const module = declaration.getModuleSpecifierValue();
+    if (module === undefined || declaration.hasNamedExports() || declaration.getNamespaceExport() !== undefined) return [];
+    const from = declaration.getModuleSpecifierSourceFile();
+    const found = onward(module, from, name);
+    if (found !== undefined) return [found];
+    return from?.getExportedDeclarations().has(name) === true ? [null] : [];
+  });
+  const distinct = new Set(places.map((place) => (place === null ? null : `${place.module}\0${place.name}`)));
+  return distinct.size === 1 ? (places[0] ?? undefined) : undefined;
+};
+
+/** Whether a module declares a name of its own rather than passing one on. */
+const declaresItself = (file: SourceFile, name: string): boolean =>
+  (file.getExportedDeclarations().get(name) ?? []).some((declaration) => declaration.getSourceFile() === file);
 
 /** Every call in a function's body, the body itself first when it is one. */
 const callsIn = (fn: FunctionLike): TsNode[] => {
@@ -1047,12 +1124,19 @@ export const readRequest = (
  */
 const PATH_PARAM = /^(?::([A-Za-z_$][\w$]*)(\?)?|\{([A-Za-z_$][\w$]*)\+?\}|\[(?:\.\.\.)?([A-Za-z_$][\w$]*)\])$/;
 
+/** A `:name` inside a segment with literal text around it. */
+const EMBEDDED_PARAM = /:([A-Za-z_$][\w$]*)/g;
+
 /** The params a path names, as an object of strings, or nothing when it names none. */
 export const pathParamsOf = (path: string): TypeRef | undefined => {
   const fields = new Map<string, boolean>();
   for (const segment of path.split('/')) {
     const match = PATH_PARAM.exec(segment);
-    if (match === null) continue;
+    if (match === null) {
+      // A name among literal text, as a segment like SvelteKit's `foo-[id]` is written (`foo-:id`).
+      for (const embedded of segment.matchAll(EMBEDDED_PARAM)) fields.set(embedded[1] as string, false);
+      continue;
+    }
     const name = match[1] ?? match[3] ?? match[4];
     if (name !== undefined) fields.set(name, match[2] === '?');
   }

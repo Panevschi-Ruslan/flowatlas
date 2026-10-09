@@ -1,7 +1,8 @@
-import { Project, type SourceFile } from 'ts-morph';
+import { Project, SyntaxKind, type SourceFile } from 'ts-morph';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { GraphBuilder } from './builder.js';
 import {
+  callsHelper,
   CLAIMED_META,
   extendReading,
   FAILURES_META,
@@ -471,11 +472,99 @@ describe('the params a path names', () => {
   it('reads every spelling a framework writes a param in', () => {
     expect(pathParamsOf('/orders/:id/lines/:line?')).toBe('{id:string;line?:string}');
     expect(pathParamsOf('/files/{proxy+}')).toBe('{proxy:string}');
+    expect(pathParamsOf('/foo-:id/:a-:b')).toBe('{a:string;b:string;id:string}');
     expect(pathParamsOf('/blog/[...slug]')).toBe('{slug:string}');
     expect(pathParamsOf('/orders/{orderId}')).toBe('{orderId:string}');
   });
 
   it('names nothing for a path without params', () => {
     expect(pathParamsOf('/orders')).toBeUndefined();
+  });
+});
+
+describe('a package helper reached through a default import or a barrel of the repository', () => {
+  const callsIn = (files: Record<string, string>, helper: { name: string; package: string }): string[] => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
+    return project
+      .getSourceFileOrThrow('/src/use.ts')
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .filter((call) => callsHelper(call, helper))
+      .map((call) => call.getText());
+  };
+
+  it("matches a default import called itself when the row names it 'default', and nothing else", () => {
+    expect(
+      callsIn(
+        {
+          '/src/use.ts': [
+            "import respond from '@acme/http-kit';",
+            "import other from '@acme/other-kit';",
+            'respond(200, {});',
+            'other(200, {});',
+            'const shadow = () => { const respond = (a: number) => a; return respond(1); };',
+          ].join('\n'),
+        },
+        { name: 'default', package: '@acme/http-kit' },
+      ),
+    ).toEqual(['respond(200, {})']);
+  });
+
+  it('matches a helper re-exported through a local barrel, named, renamed, starred or imported and exported again', () => {
+    const files = {
+      '/src/http/index.ts': [
+        "export { respond } from '@acme/http-kit';",
+        "export { fail as refuse } from '@acme/http-kit';",
+        "export { default as send } from '@acme/http-kit';",
+        "export * from './more';",
+        "export const lookalike = (status: number) => status;",
+      ].join('\n'),
+      '/src/http/more.ts': [
+        "import { respond as again } from '@acme/http-kit';",
+        'export { again };',
+        "export * from '@acme/other-kit';",
+      ].join('\n'),
+      '/src/use.ts': [
+        "import { respond, refuse, send, again, lookalike, otherRespond } from './http';",
+        "import * as http from './http';",
+        'respond(200, {});',
+        'refuse(400);',
+        'send(200);',
+        'again(201, {});',
+        'http.respond(202, {});',
+        'lookalike(500);',
+        'otherRespond(500);',
+      ].join('\n'),
+    };
+    expect(callsIn(files, { name: 'respond', package: '@acme/http-kit' })).toEqual([
+      'respond(200, {})',
+      'again(201, {})',
+      'http.respond(202, {})',
+    ]);
+    expect(callsIn(files, { name: 'fail', package: '@acme/http-kit' })).toEqual(['refuse(400)']);
+    expect(callsIn(files, { name: 'default', package: '@acme/http-kit' })).toEqual(['send(200)']);
+    expect(callsIn(files, { name: 'lookalike', package: '@acme/http-kit' })).toEqual([]);
+  });
+
+  it("follows a default import a barrel exports again by name, as the package's 'default'", () => {
+    const files = {
+      '/src/http/index.ts': ["import respond from '@acme/http-kit';", 'export { respond };'].join('\n'),
+      '/src/use.ts': ["import { respond } from './http';", 'respond(200, {});'].join('\n'),
+    };
+    expect(callsIn(files, { name: 'default', package: '@acme/http-kit' })).toEqual(['respond(200, {})']);
+    expect(callsIn(files, { name: 'respond', package: '@acme/http-kit' })).toEqual([]);
+  });
+
+  it('matches neither of two star exports that pass on one name from two places', () => {
+    const files = {
+      '/src/http/index.ts': ["export * from './a';", "export * from './b';", "export * from './c';"].join('\n'),
+      '/src/http/a.ts': "export { respond, fail } from '@acme/http-kit';",
+      '/src/http/b.ts': "export { respond } from '@acme/other-kit';",
+      '/src/http/c.ts': 'export const fail = (status: number) => status;',
+      '/src/use.ts': ["import { respond, fail } from './http';", 'respond(200, {});', 'fail(500);'].join('\n'),
+    };
+    expect(callsIn(files, { name: 'respond', package: '@acme/http-kit' })).toEqual([]);
+    expect(callsIn(files, { name: 'respond', package: '@acme/other-kit' })).toEqual([]);
+    expect(callsIn(files, { name: 'fail', package: '@acme/http-kit' })).toEqual([]);
   });
 });

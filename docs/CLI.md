@@ -223,9 +223,21 @@ description, read by one walk, so they cannot drift on what counts as a verb rea
 or a file served at no address (`fixtures/react-next`, `fixtures/medusa-fs-router`).
 SvelteKit's `src/routes/**/+server.ts` exports its verbs by name; a group in
 brackets drops out, `[id]` and `[[id]]` are params (a matcher after `=` is no part
-of the name) and `[...rest]` is the rest of the path. Beside a page,
-`+page.server.ts` and `+layout.server.ts` answer the page's GET by their `load`,
-and each member of a page's `actions` is a POST to it - the `default` one at the
+of the name), so is a segment holding one (`foo-[id]`, keyed `/foo-:param` with
+`rawPath` `/foo-:id`, a route apart from `bar-[id]` and more specific than a bare
+`[id]`, joined only to a request segment with that text around a value:
+`/foo-42`, not `/bar`), `[x+2e]` and `[u+00e9]` are the characters they escape
+(`?`, `:` and `/` kept encoded as `%3F`, `%3A`, `%2F`; an escape past the last
+code point is literal text), and `[...rest]` is the rest of the path. A request
+that leaves an optional segment out (`/files/a.txt` for `[[lang]]/files/…`) is
+joined to the route as well. Beside a page, `+page.server.ts` answers the page's
+GET by its `load`; where a `+server.ts` beside it exports GET too, that verb keeps
+the address and the page's load is its own entry (key suffix `#page`,
+`meta.contributes: "page"`) that no request is joined to. A `+layout.server.ts`
+load runs with every page beneath it and is no address's GET: it is an entry of
+its own (key suffix `#layout:<file>`, `meta.contributes: "layout"`). Two route
+files claiming one verb and address otherwise keep the first and say the second
+in a `route-claimed-twice` row. Each member of a page's `actions` is a POST to it - the `default` one at the
 page's address, a named one at `?/name` after it (an entry keyed
 `POST:/orders/:param?/note`, its `meta.action` the name); an action written as a
 method has nothing to point at and is a `route-handler-unread` row
@@ -234,8 +246,10 @@ answer (the page's data, typed as written), and a layout at the root keeps
 `rawPath` `/` like every other route. Remix's flat routes are one name per route,
 its segments separated by dots - `app/routes/api.orders.$id.ts`, or a folder of
 that name holding `route.ts` - where a leading underscore is a layout that adds no
-segment, `$id` a param, `$` the rest of the path and a dot in brackets a literal
-one; a `loader` answers GET and an `action` POST - or, where the action compares
+segment (a trailing one only leaves the parent's layout, and what is left is
+read as usual: `users.$userId_.edit` is `/users/:userId/edit`), `$id` a param,
+`$` the rest of the path, `(en)` an optional literal segment and a dot in
+brackets a literal one, whole (`[sitemap.xml]`) or in part (`sitemap[.]xml`); a `loader` answers GET and an `action` POST - or, where the action compares
 `request.method` to string literals (`=== 'DELETE'`, `case 'PUT':`), the verbs it
 names - and a route module with neither is a page and says nothing
 (`fixtures/remix-flat-routes`). React Router v7 declares its routes in
@@ -295,7 +309,7 @@ the repositories it reads:
   cache.json           the file hashes the next build compares against
   services/<name>/
     graph.json         one service's own graph, reused when it has not changed
-    cache.json         that service's file hashes, for a server reader
+    cache.json         that service's file hashes, whichever reader read it
 ```
 
 `<name>` is the service's name, written so it is always one directory: lower-case
@@ -1162,7 +1176,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
-| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
+| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
@@ -1619,7 +1633,9 @@ its argument names (P37):
 ```
 
 A function with a `package` is matched by the import in the calling file - by
-name, under any local name, or on a namespace or default import of the package
+name, under any local name, or on a namespace or default import of the package,
+a default import called itself when `name` is `"default"`, and any of these
+through a barrel of the repository's that re-exports it from the package
 - so nothing has to be installed, and a local of the same name that shadows the
 import is not it; one without is matched by a declaration of that name in the
 repository. The table is the string at argument `table`, written in place or
@@ -2197,8 +2213,10 @@ are, and they are read beside every framework's own places (P30):
 
 A helper with a `package` is matched by the import in the handler's own file -
 `import { respond } from '@acme/http-kit'`, under any local name, or
-`kit.respond` on a namespace or default import of it - so the package does not
-have to be installed; one without is matched by a declaration of that name in
+`kit.respond` on a namespace or default import of it, or a default import
+called itself when `name` is `"default"` - or through a barrel of the
+repository's that re-exports it from the package (`export { respond } from
+'@acme/http-kit'`, `export *`), so the package does not have to be installed; one without is matched by a declaration of that name in
 the repository, and a function of the same name declared anywhere else is not
 it. An answer may sit in an object handed to the helper (`"at": ["body"]`), or
 be built from several of its arguments: `"fields"` names each field of the

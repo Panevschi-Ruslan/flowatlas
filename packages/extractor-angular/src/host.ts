@@ -1,5 +1,5 @@
-import { evaluateExpression, getDecorator } from '@flowatlas/core';
-import type { ClassDeclaration, Decorator, MethodDeclaration, ObjectLiteralExpression } from 'ts-morph';
+import { evaluateExpression, getDecorator, type ClassMethod } from '@flowatlas/core';
+import type { ClassDeclaration, Decorator, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { ANGULAR_CORE } from './index-classes.js';
 import { propertyOf } from './util/metadata.js';
@@ -20,18 +20,38 @@ import { propertyOf } from './util/metadata.js';
 /** One binding as written, and the method of the class it calls, when it calls one. */
 export interface HostBinding {
   readonly written: string;
-  readonly method?: MethodDeclaration;
+  readonly method?: ClassMethod;
 }
 
 /** The method a listener's statement calls: `toggle($event)` is `toggle`. */
 const CALLED = /^\s*(?:this\.)?([A-Za-z_$][\w$]*)\s*\(/;
 
-const calledMethod = (declaration: ClassDeclaration, statement: string): MethodDeclaration | undefined => {
-  const name = CALLED.exec(statement)?.[1];
-  return name === undefined ? undefined : declaration.getMethod(name);
+/** How many base classes a called name is looked for through. */
+const MOST_BASES = 8;
+
+/** A member that can be called: a method, or a property holding a function (`onClick = () => …`). */
+const callable = (member: TsNode | undefined): ClassMethod | undefined => {
+  if (member === undefined) return undefined;
+  if (Node.isMethodDeclaration(member)) return member;
+  if (!Node.isPropertyDeclaration(member)) return undefined;
+  const value = member.getInitializer();
+  return value !== undefined && (Node.isArrowFunction(value) || Node.isFunctionExpression(value)) ? member : undefined;
 };
 
-const bound = (written: string, method: MethodDeclaration | undefined): HostBinding =>
+/** The member a name calls on this class, or on the nearest base class declaring it. */
+const memberCalled = (declaration: ClassDeclaration, name: string, depth = 0): ClassMethod | undefined => {
+  const own = declaration.getMethod(name) ?? declaration.getProperty(name);
+  if (own !== undefined) return callable(own);
+  const base = depth < MOST_BASES ? declaration.getBaseClass() : undefined;
+  return base === undefined ? undefined : memberCalled(base, name, depth + 1);
+};
+
+const calledMethod = (declaration: ClassDeclaration, statement: string): ClassMethod | undefined => {
+  const name = CALLED.exec(statement)?.[1];
+  return name === undefined ? undefined : memberCalled(declaration, name);
+};
+
+const bound = (written: string, method: ClassMethod | undefined): HostBinding =>
   method === undefined ? { written } : { written, method };
 
 /** A string a decorator was handed, when it is one. */
@@ -82,14 +102,18 @@ const hostObject = (declaration: ClassDeclaration, metadata: ObjectLiteralExpres
 
 /** Every host binding a class declares, in the order written: the object, then its members. */
 export const hostBindingsOf = (declaration: ClassDeclaration, metadata: ObjectLiteralExpression | undefined): HostBinding[] => {
-  const members = [...declaration.getProperties(), ...declaration.getGetAccessors(), ...declaration.getMethods()].sort(
-    (a, b) => a.getStart() - b.getStart(),
-  );
+  // A set-only accessor may carry the binding as well as a getter (P45).
+  const members = [
+    ...declaration.getProperties(),
+    ...declaration.getGetAccessors(),
+    ...declaration.getSetAccessors(),
+    ...declaration.getMethods(),
+  ].sort((a, b) => a.getStart() - b.getStart());
   const fromMembers = members.flatMap((member) =>
     MEMBER_BINDINGS.flatMap(([name, read]) => {
       const decorator = getDecorator(member, name, ANGULAR_CORE);
       if (decorator === undefined) return [];
-      return [bound(read(decorator, member.getName()), Node.isMethodDeclaration(member) ? member : undefined)];
+      return [bound(read(decorator, member.getName()), callable(member))];
     }),
   );
   return [...hostObject(declaration, metadata), ...fromMembers];

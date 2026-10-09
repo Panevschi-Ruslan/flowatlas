@@ -40,6 +40,19 @@ const copyOfMultiRepo = (): string => {
 
 const FIXTURE = copyOfMultiRepo();
 
+/** A copy of one single-repository fixture, beside the fixtures for its stubs. */
+const copyOfFixture = (name: string): string => {
+  const dir = join(mkdtempSync(join(FIXTURES, '.scratch-build-')), name);
+  cpSync(join(FIXTURES, name), dir, {
+    recursive: true,
+    filter: (from) => !from.endsWith('/.flowatlas'),
+  });
+  return dir;
+};
+
+const ANGULAR = copyOfFixture('angular-basic');
+const REACT = copyOfFixture('react-router-config');
+
 /**
  * A second copy, for the tests whose build is meant to fail.
  *
@@ -80,7 +93,7 @@ const DOOMED_FIXTURE = copyOfMultiRepo();
  */
 afterAll(() => {
   rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
-  for (const tree of [FIXTURE, DOOMED_FIXTURE]) {
+  for (const tree of [FIXTURE, DOOMED_FIXTURE, ANGULAR, REACT]) {
     rmSync(resolve(tree, '..'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 });
@@ -515,6 +528,52 @@ describe('building a project a second time', () => {
     } finally {
       writeFileSync(stub, original);
     }
+  }, 240_000);
+
+  it('reads a browser repository again when a type stub it was read against is edited', async () => {
+    const config = configFor('stubbed-browser', [web({ apiTarget: {} })]);
+    await buildProject({ config, builtAt: FIXED });
+    const stub = join(FIXTURE, 'web', 'node_modules', '@angular', 'common', 'http', 'index.d.ts');
+    const original = readFileSync(stub, 'utf8');
+    const settled = await buildProject({ config, builtAt: FIXED });
+    expect(settled.plan['web']).toEqual({ mode: 'skip', reason: '0 files changed' });
+    try {
+      writeFileSync(stub, `${original}\n// edited\n`);
+      const edited = await buildProject({ config, builtAt: FIXED });
+      expect(edited.plan['web']).toEqual({
+        mode: 'full',
+        reason: 'installed node_modules/@angular/common/http/index.d.ts changed',
+      });
+    } finally {
+      writeFileSync(stub, original);
+    }
+  }, 240_000);
+
+  it('settles a browser repository, and reads it again when a template it reads is edited', async () => {
+    const config = configFor('angular-template', [
+      { name: 'shop', repo: ANGULAR, type: 'angular', apiBaseEnv: ['apiUrl'] },
+    ]);
+    await buildProject({ config, builtAt: FIXED });
+    // What the reading recorded and what the survey lists are one list, so a
+    // build with nothing moved reads nothing.
+    const settled = await buildProject({ config, builtAt: FIXED });
+    expect(settled.plan['shop']).toEqual({ mode: 'skip', reason: '0 files changed' });
+
+    const template = join(ANGULAR, 'src', 'app', 'orders-list.component.html');
+    writeFileSync(template, `${readFileSync(template, 'utf8')}\n<button (click)="load()">again</button>\n`);
+    const edited = await buildProject({ config, builtAt: FIXED });
+    expect(edited.plan['shop']?.mode).toBe('full');
+  }, 240_000);
+
+  it('settles a React repository, and reads it again when a script file beside its sources moves', async () => {
+    const config = configFor('react-script', [{ name: 'app', repo: REACT, type: 'react' }]);
+    await buildProject({ config, builtAt: FIXED });
+    const settled = await buildProject({ config, builtAt: FIXED });
+    expect(settled.plan['app']).toEqual({ mode: 'skip', reason: '0 files changed' });
+
+    writeFileSync(join(REACT, 'app', 'legacy.jsx'), 'export const Legacy = () => null;\n');
+    const edited = await buildProject({ config, builtAt: FIXED });
+    expect(edited.plan['app']?.mode).toBe('full');
   }, 240_000);
 
   it('reads everything again when told to ignore the cache, and rewrites it', async () => {

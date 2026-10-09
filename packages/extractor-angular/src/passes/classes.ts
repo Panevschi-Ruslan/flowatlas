@@ -3,8 +3,9 @@ import {
   resolveClassOfExpression,
   resolveConstructorInjection,
   resolveFieldInjection,
+  type ClassMethod,
 } from '@flowatlas/core';
-import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
+import type { ClassDeclaration } from 'ts-morph';
 import { angularDiOptions } from '../di.js';
 import {
   componentDecorator,
@@ -32,7 +33,7 @@ const IMPORTABLE: ReadonlySet<AngularRole> = new Set(['component', 'directive', 
  * because a missing edge here is what makes a chain from a button end early.
  */
 /** The node a method is drawn as, made when asked for. */
-type MethodNode = (method: MethodDeclaration) => string | undefined;
+type MethodNode = (method: ClassMethod) => string | undefined;
 
 /**
  * What a component or directive is exported to a template as, and what it binds

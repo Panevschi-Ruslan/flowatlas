@@ -89,7 +89,8 @@ export type SegmentConvention =
   | 'param'
   | 'catch-all'
   | 'pathless'
-  | 'dollar';
+  | 'dollar'
+  | 'mixed';
 
 /** A directory that groups files without appearing in the address. */
 const GROUP = /^\(.*\)$/;
@@ -117,6 +118,36 @@ const OPTIONAL = /^\[\[.+\]\]$/;
 
 /** `$id` is a param, `$` alone the rest of the path, `($lang)` an optional one (Remix). */
 const DOLLAR = /^(\()?\$([\w-]*)\)?$/;
+
+/** `(en)` is a literal segment that may be absent (Remix). */
+const OPTIONAL_LITERAL = /^\(([^$()][^()]*)\)$/;
+
+/** A segment that is one bracketed name and nothing else, which `param` and `catch-all` read. */
+const WHOLE_DYNAMIC = /^\[{1,2}(?:\.\.\.)?[^[\]]+\]{1,2}$/;
+
+/**
+ * The brackets inside a SvelteKit segment: `[x+2e]` and `[u+00e9]` are escaped
+ * characters, anything else a param (`foo-[id]`).
+ */
+const BRACKETED = /\[(?:([xu])\+([0-9a-fA-F]+)|([^\]]+))\]/g;
+
+/** The most hex digits an escape spells, and the last code point there is. */
+const ESCAPE_DIGITS = 6;
+const LAST_CODE_POINT = 0x10ffff;
+
+/** Characters an address reads as syntax: kept encoded, so `?` is not read as optional, `:` as a param or `/` as a segment. */
+const SYNTAX_CHARACTER = /^[?:/%#]$/;
+
+/**
+ * The character an escape stands for, or the escape as written when it stands
+ * for none (`[x+110000]`), which a router serves as literal text.
+ */
+const escapedCharacter = (code: string, written: string): string => {
+  const point = Number.parseInt(code, 16);
+  if (code.length > ESCAPE_DIGITS || point > LAST_CODE_POINT) return written;
+  const character = String.fromCodePoint(point);
+  return SYNTAX_CHARACTER.test(character) ? encodeURIComponent(character) : character;
+};
 
 /**
  * One segment as a router reads it: what it contributes to the address (the
@@ -150,9 +181,12 @@ const named = (read: string, name: string | undefined, optional: boolean): Segme
  * group as a path serves `app/api/(admin)/users/route.ts` at `/api/users`, and
  * getting that wrong moves every route under it.
  */
-const SEGMENT_RULES: Readonly<
-  Record<SegmentConvention, (segment: string) => SegmentReading | null | undefined>
-> = Object.freeze({
+type SegmentRule = (
+  segment: string,
+  rest: (segment: string) => SegmentReading | null,
+) => SegmentReading | null | undefined;
+
+const SEGMENT_RULES: Readonly<Record<SegmentConvention, SegmentRule>> = Object.freeze({
   group: (segment) => (GROUP.test(segment) ? null : undefined),
   slot: (segment) => (SLOT.test(segment) ? null : undefined),
   // Not a segment that drops out but a segment that cancels the route; the walk
@@ -170,38 +204,60 @@ const SEGMENT_RULES: Readonly<
     return named(PARAM_PLACEHOLDER, dynamicName(segment), OPTIONAL.test(segment));
   },
   // Remix: a leading underscore is a layout that adds no segment (`_index`
-  // among them), and a trailing one only opts out of a parent's layout.
-  pathless: (segment) => {
+  // among them), and a trailing one only opts out of a parent's layout - what is
+  // left is read by the conventions after this one, so `$userId_` is a param.
+  pathless: (segment, rest) => {
     if (PRIVATE.test(segment)) return null;
     if (!segment.endsWith('_')) return undefined;
-    const literal = segment.slice(0, -1);
-    return { read: literal, raw: literal };
+    return rest(segment.slice(0, -1));
   },
   dollar: (segment) => {
+    const literal = OPTIONAL_LITERAL.exec(segment)?.[1];
+    if (literal !== undefined) return { read: literal, raw: `${literal}?` };
     const dollar = DOLLAR.exec(segment);
     if (dollar === null) return undefined;
     const name = dollar[2] ?? '';
     return name === '' ? { read: '*', raw: '*' } : named(PARAM_PLACEHOLDER, name, dollar[1] !== undefined);
   },
+  // SvelteKit: brackets inside a segment. Each param among them is a hole in
+  // the key and the literal around it stays (`foo-[id]` is `/foo-:param`), so
+  // `foo-[id]` and `bar-[id]` beside each other are two addresses and either
+  // spells out more than a bare `[id]` beside them, which is how SvelteKit
+  // ranks them. The path as written names each param (`/foo-:id`). Escapes are
+  // the characters they stand for, save those an address reads as syntax.
+  mixed: (segment) => {
+    const parts = [...segment.matchAll(BRACKETED)];
+    if (parts.length === 0) return undefined;
+    const escaped = parts.some((part) => part[2] !== undefined);
+    if (!escaped && WHOLE_DYNAMIC.test(segment)) return undefined;
+    const spell = (name: (param: string) => string): string =>
+      segment.replace(BRACKETED, (whole, _kind: string, code: string | undefined, param: string | undefined) =>
+        param === undefined ? escapedCharacter(code as string, whole) : name(param),
+      );
+    return { read: spell(() => PARAM_PLACEHOLDER), raw: spell((param) => `:${param.replace(/=.*$/, '')}`) };
+  },
 });
 
 /** The conventions, in the order a segment is offered to them. */
+// `mixed` stays before `catch-all` and `param`, which would read `foo-[id]` as one whole param.
 const CONVENTION_ORDER: readonly SegmentConvention[] = [
   'group',
   'slot',
   'private',
   'pathless',
+  'mixed',
   'catch-all',
   'param',
   'dollar',
 ];
 
 /** One segment of a directory path, as this router reads it. */
-const segmentOf = (segment: string, router: FsRouter): SegmentReading | null => {
+const segmentOf = (segment: string, router: FsRouter, from = 0): SegmentReading | null => {
   if (segment === '') return null;
-  for (const convention of CONVENTION_ORDER) {
+  for (let index = from; index < CONVENTION_ORDER.length; index += 1) {
+    const convention = CONVENTION_ORDER[index] as SegmentConvention;
     if (!router.segments.includes(convention)) continue;
-    const read = SEGMENT_RULES[convention](segment);
+    const read = SEGMENT_RULES[convention](segment, (rest) => segmentOf(rest, router, index + 1));
     if (read !== undefined) return read;
   }
   return { read: segment, raw: segment };
@@ -209,12 +265,11 @@ const segmentOf = (segment: string, router: FsRouter): SegmentReading | null => 
 
 /**
  * The segments of one flat name: split at each dot outside brackets, and the
- * brackets of an escaped part dropped (`[sitemap.xml]` is one literal segment).
+ * brackets of every escaped run dropped (`[sitemap.xml]` and `sitemap[.]xml`
+ * are one literal segment each).
  */
 const dottedSegments = (name: string): string[] =>
-  (name.match(/(?:\[[^\]]*\]|[^.])+/g) ?? []).map((part) =>
-    /^\[[^\]]*\]$/.test(part) ? part.slice(1, -1) : part,
-  );
+  (name.match(/(?:\[[^\]]*\]|[^.])+/g) ?? []).map((part) => part.replace(/\[([^\]]*)\]/g, '$1'));
 
 /**
  * The segments of a route laid out flat, or nothing when the file is not one:

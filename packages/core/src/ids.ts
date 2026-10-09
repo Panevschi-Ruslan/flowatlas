@@ -47,6 +47,15 @@ export const isHttpMethod = (value: string): value is HttpMethod =>
 const PARAM_SEGMENT = /^(?::[^/]+|\{[^/]*\}|<[^/]*>)$/;
 
 /**
+ * A segment already read into holes among literal text (SvelteKit's `[a]-[b]`
+ * is `:param-:param`), which is its own address and not one hole: collapsing it
+ * would make it claim the bare `[id]` beside it.
+ */
+const HOLES_AMONG_TEXT = /^(?!:param$).*:param(?![\w$])/;
+
+const isParamSegment = (segment: string): boolean => PARAM_SEGMENT.test(segment) && !HOLES_AMONG_TEXT.test(segment);
+
+/**
  * How far from a route its data access is looked for.
  *
  * One number, because two checks say "this route reaches stored data" and they
@@ -126,7 +135,7 @@ export const normalizePath = (path: string): string => {
   const segments = raw
     .split('/')
     .filter((segment) => segment.length > 0)
-    .map((segment) => (PARAM_SEGMENT.test(segment) ? PARAM_PLACEHOLDER : segment));
+    .map((segment) => (isParamSegment(segment) ? PARAM_PLACEHOLDER : segment));
   return segments.length === 0 ? '/' : `/${segments.join('/')}`;
 };
 

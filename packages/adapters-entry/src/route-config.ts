@@ -221,18 +221,19 @@ export const reactRouterRoutesAdapter: EntryAdapter = {
           continue;
         }
         const path = normalizePath(route.rawPath);
+        const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
         readVerbFile(ctx, sourceFile, {
-          file: normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir),
+          file,
           path,
           rawPath: route.rawPath,
           adapter: 'react-router-routes',
-          emit: (verb) => collected.add(verb, undefined, REGISTRATION),
+          emit: (verb) => collected.add(verb, undefined, REGISTRATION, undefined, { file }),
           verbs: REMIX_VERBS,
           narrowed: REMIX_NARROWED,
           pagesServed: true,
         });
       }
     }
-    return collected.entries;
+    return collected.entries();
   },
 };

@@ -581,7 +581,6 @@ const extractApart = async (
   return readGraph(join(out, 'graph.json'));
 };
 
-/** The single entry a lone `flowatlas extract` leaves behind for the build. */
 /** What an entry knows about a repository's files, carried to the next cache. */
 const factsOf = (entry: RepoCache): FileFacts => ({
   files: entry.files,
@@ -589,6 +588,7 @@ const factsOf = (entry: RepoCache): FileFacts => ({
   ...(entry.packages === undefined ? {} : { packages: entry.packages }),
 });
 
+/** The single entry a lone `flowatlas extract` leaves behind for the build. */
 const readRepoFacts = (path: string, name: string): FileFacts | undefined => {
   const loaded = loadBuildCache(path);
   if (loaded === null || 'problem' in loaded) return undefined;

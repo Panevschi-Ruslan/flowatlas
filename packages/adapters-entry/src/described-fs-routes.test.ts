@@ -17,7 +17,7 @@ import {
   SVELTEKIT_ROUTES,
   sveltekitRoutesAdapter,
 } from './described-fs-routes.js';
-import { methodsCompared, routePathOfFile } from './fs-routes.js';
+import { methodsCompared, routeAddressOfFile, routePathOfFile } from './fs-routes.js';
 import { configuredRoutes, reactRouterRoutesAdapter } from './route-config.js';
 
 interface Read {
@@ -88,7 +88,7 @@ describe('SvelteKit pages', () => {
       '/src/routes/about/+page.server.ts': 'export const prerender = true;',
     });
     expect(rawPaths(read)).toEqual({
-      'GET /': '/',
+      'GET / (layout)': '/',
       'GET /orders/:param': '/orders/:id',
       'POST /orders/:param': '/orders/:id',
       'POST /orders/:param?/archive': '/orders/:id',
@@ -102,7 +102,7 @@ describe('SvelteKit pages', () => {
     expect(byLabel.get('POST /orders/:param?/subscribe')?.handler).toMatchObject({ functionName: 'subscribe' });
     expect(byLabel.get('POST /orders/:param')?.handler).toMatchObject({ inline: true });
     expect(byLabel.get('POST /orders/:param')?.meta?.['registration']).toBe('routes/+page.server');
-    expect(byLabel.get('GET /')?.meta?.['registration']).toBe('routes/+layout.server');
+    expect(byLabel.get('GET / (layout)')?.meta?.['registration']).toBe('routes/+layout.server');
     // A method has no node to point at, and says so; a page with neither export says nothing.
     expect(read.unresolved.map((row) => [row.reason, row.symbol])).toEqual([
       ['route-handler-unread', 'POST /orders/:param?/archive'],
@@ -117,10 +117,78 @@ describe('SvelteKit pages', () => {
     });
     const answersOf = (label: string) =>
       read.entries.find((entry) => entry.label === label)?.request?.answers.map((answer) => answer.by);
-    expect(answersOf('GET /')).toEqual(['named', 'return']);
+    expect(answersOf('GET / (layout)')).toEqual(['named', 'return']);
     expect(answersOf('GET /orders')).toEqual(['named', 'return']);
     expect(answersOf('GET /api/orders')).toEqual(['named']);
-    expect(rawPaths(read)['GET /']).toBe('/');
+    expect(rawPaths(read)['GET / (layout)']).toBe('/');
+  });
+
+  it('keeps a layout, a page and a verb at one address apart, and says a second claim', () => {
+    const read = extract(sveltekitRoutesAdapter, {
+      '/src/routes/+layout.server.ts': "export const load = () => ({ section: 'root' });",
+      '/src/routes/(shop)/+layout.server.ts': "export const load = () => ({ section: 'shop' });",
+      '/src/routes/(shop)/+page.server.ts': 'export const load = () => ({ page: 1 });',
+      '/src/routes/about/+page.server.ts': 'export const load = () => ({ about: true });',
+      '/src/routes/about/+server.ts': 'export function GET() { return new Response(); }',
+      '/src/routes/(a)/cart/+server.ts': 'export function POST() { return new Response(); }',
+      '/src/routes/(b)/cart/+server.ts': 'export function POST() { return new Response(); }',
+    });
+    const byKey = Object.fromEntries(
+      read.entries.map((entry) => [entry.key, [entry.meta?.['registration'], entry.meta?.['contributes']]]),
+    );
+    expect(byKey).toEqual({
+      'GET:/': ['routes/+page.server', undefined],
+      'GET:/#layout:src/routes/+layout.server.ts': ['routes/+layout.server', 'layout'],
+      'GET:/#layout:src/routes/(shop)/+layout.server.ts': ['routes/+layout.server', 'layout'],
+      'GET:/about': ['routes/+server', undefined],
+      'GET:/about#page': ['routes/+page.server', 'page'],
+      'POST:/cart': ['routes/+server', undefined],
+    });
+    expect(read.unresolved.map((row) => [row.reason, row.file])).toEqual([
+      ['route-claimed-twice', 'src/routes/(b)/cart/+server.ts'],
+    ]);
+  });
+
+  it('reads a segment holding a param as one, and escaped characters as themselves', () => {
+    expect(routeAddressOfFile('src/routes/foo-[id]/+server.ts', SVELTEKIT_ROUTES)).toEqual({
+      path: '/foo-:param',
+      rawPath: '/foo-:id',
+    });
+    expect(routeAddressOfFile('src/routes/[a]-[b=integer]/+server.ts', SVELTEKIT_ROUTES)).toEqual({
+      path: '/:param-:param',
+      rawPath: '/:a-:b',
+    });
+    expect(routePathOfFile('src/routes/[x+2e]well-known/+server.ts', SVELTEKIT_ROUTES)).toBe('/.well-known');
+    expect(routePathOfFile('src/routes/caf[u+00e9]/+server.ts', SVELTEKIT_ROUTES)).toBe('/café');
+    expect(routePathOfFile('src/routes/[a]-[b=integer]/+server.ts', SVELTEKIT_ROUTES)).toBe('/:param-:param');
+    expect(routePathOfFile('src/routes/[[lang]]/+server.ts', SVELTEKIT_ROUTES)).toBe('/:param');
+  });
+
+  it('reads an escape that stands for no character as the text it is, and never throws', () => {
+    expect(routePathOfFile('src/routes/[x+110000]/+server.ts', SVELTEKIT_ROUTES)).toBe('/[x+110000]');
+    expect(routePathOfFile('src/routes/a[u+1234567]/+server.ts', SVELTEKIT_ROUTES)).toBe('/a[u+1234567]');
+    expect(routePathOfFile('src/routes/a[x+ffffffffffff]b/+server.ts', SVELTEKIT_ROUTES)).toBe('/a[x+ffffffffffff]b');
+    expect(routePathOfFile('src/routes/[u+10ffff]/+server.ts', SVELTEKIT_ROUTES)).toBe(`/${String.fromCodePoint(0x10ffff)}`);
+  });
+
+  it('keeps an escape for a character an address reads as syntax encoded', () => {
+    expect(routeAddressOfFile('src/routes/what[x+3f]/+server.ts', SVELTEKIT_ROUTES)).toEqual({ path: '/what%3F', rawPath: '/what%3F' });
+    expect(routeAddressOfFile('src/routes/a[x+3a]b/+server.ts', SVELTEKIT_ROUTES)).toEqual({ path: '/a%3Ab', rawPath: '/a%3Ab' });
+    expect(routeAddressOfFile('src/routes/a[x+2f]b/+server.ts', SVELTEKIT_ROUTES)).toEqual({ path: '/a%2Fb', rawPath: '/a%2Fb' });
+    expect(routeAddressOfFile('src/routes/[id][x+3a]x/+server.ts', SVELTEKIT_ROUTES)).toEqual({
+      path: '/:param%3Ax',
+      rawPath: '/:id%3Ax',
+    });
+  });
+
+  it('keeps siblings with literal text around a param apart, and apart from a bare param', () => {
+    const read = extract(sveltekitRoutesAdapter, {
+      '/src/routes/foo-[id]/+server.ts': 'export function GET() { return new Response(); }',
+      '/src/routes/bar-[id]/+server.ts': 'export function GET() { return new Response(); }',
+      '/src/routes/[id]/+server.ts': 'export function GET() { return new Response(); }',
+    });
+    expect(read.entries.map((entry) => entry.key).sort()).toEqual(['GET:/:param', 'GET:/bar-:param', 'GET:/foo-:param']);
+    expect(read.unresolved).toEqual([]);
   });
 });
 
@@ -133,6 +201,22 @@ describe('Remix routes', () => {
     expect(routePathOfFile('app/routes/[sitemap.xml].ts', REMIX_ROUTES)).toBe('/sitemap.xml');
     expect(routePathOfFile('app/routes/files.$.ts', REMIX_ROUTES)).toBe('/files/*');
     expect(routePathOfFile('app/routes/orders_.$id.edit.tsx', REMIX_ROUTES)).toBe('/orders/:param/edit');
+  });
+
+  it('reads what is left of a segment opting out of its layout, partial escapes and optional literals', () => {
+    expect(routeAddressOfFile('app/routes/users.$userId_.edit.tsx', REMIX_ROUTES)).toEqual({
+      path: '/users/:param/edit',
+      rawPath: '/users/:userId/edit',
+    });
+    expect(routePathOfFile('app/routes/sitemap[.]xml.tsx', REMIX_ROUTES)).toBe('/sitemap.xml');
+    expect(routeAddressOfFile('app/routes/(en).about.tsx', REMIX_ROUTES)).toEqual({
+      path: '/en/about',
+      rawPath: '/en?/about',
+    });
+    expect(routeAddressOfFile('app/routes/($lang).about.tsx', REMIX_ROUTES)).toEqual({
+      path: '/:param/about',
+      rawPath: '/:lang?/about',
+    });
   });
 
   it('turns a loader into a GET and an action into a POST, and a page into nothing', () => {

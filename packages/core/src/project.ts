@@ -49,6 +49,13 @@ export interface SourceRootOptions {
    * its screens wherever its framework's convention puts them.
    */
   fallback?: 'src' | 'repository';
+  /**
+   * Extensions of files a reader reads beside its sources without parsing them
+   * as code: a template in a file of its own, a script the tsconfig may let the checker
+   * resolve. {@link listRepoSources} lists them, so editing one is a change the
+   * build sees; {@link createProject} never opens them.
+   */
+  companions?: readonly string[];
 }
 
 export interface CreateProjectOptions extends SourceRootOptions {
@@ -169,13 +176,14 @@ const sourceFilesUnder = (
   dir: string,
   tests: TestDirectories = NO_TEST_DIRECTORIES,
   roots: readonly string[] = sourceRootsOf(dir),
+  extensions: readonly string[] = SOURCE_EXTENSIONS,
 ): string[] => {
   const files = roots.flatMap((root) => {
     const at = root === WHOLE ? '' : root;
     // A root is a directory like any other: one a tsconfig names that is named
     // like a test is left out and recorded, as it would be met on a walk.
     const testDir = skippingTestDirectory(dir, join(dir, at, '_'), tests);
-    if (testDir === undefined) return walkSources(dir, at, tests);
+    if (testDir === undefined) return walkSources(dir, at, tests, extensions);
     tests.skipped(testDir, walkSources(dir, at, undefined).map((file) => join(dir, file)));
     return [];
   });
@@ -295,7 +303,12 @@ export const sourceRootsOf = (rootDir: string, options: SourceRootOptions = {}):
  * With `tests` undefined every directory is entered: that is how a skipped test
  * directory's own files are counted for the row that reports it.
  */
-const walkSources = (dir: string, at: string, tests: TestDirectories | undefined): string[] => {
+const walkSources = (
+  dir: string,
+  at: string,
+  tests: TestDirectories | undefined,
+  extensions: readonly string[] = SOURCE_EXTENSIONS,
+): string[] => {
   const out: string[] = [];
   const walk = (under: string): void => {
     let entries;
@@ -318,7 +331,7 @@ const walkSources = (dir: string, at: string, tests: TestDirectories | undefined
         walk(path);
         continue;
       }
-      if (!SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) continue;
+      if (!extensions.some((ext) => entry.name.endsWith(ext))) continue;
       if (entry.name.endsWith(DECLARATION_SUFFIX) || isTestName(entry.name)) continue;
       out.push(path);
     }
@@ -1029,7 +1042,9 @@ export const reportSkippedTestDirectories = (
  * What a build needs to answer "did anything change here" before deciding to
  * read a repository at all. The two agree by construction: both walk the roots
  * {@link sourceRootsOf} names, given the same `roots`, and the same directories
- * of the workspace. `sources.test.ts` still checks it against fixtures.
+ * of the workspace. `sources.test.ts` still checks it against fixtures. Beside
+ * them it lists the reader's {@link SourceRootOptions.companions}, which the
+ * reading reads from disk and the build must see change.
  */
 export const listRepoSources = (
   rootDir: string,
@@ -1042,11 +1057,12 @@ export const listRepoSources = (
   // that, editing a handler body in a sibling package would leave the graph of
   // the service that calls it on disk unchanged and out of date.
   const own = sourceRootsOf(rootDir, roots);
+  const extensions = [...SOURCE_EXTENSIONS, ...(roots.companions ?? [])];
   const out = [
-    ...sourceFilesUnder(rootDir, tests, own),
+    ...sourceFilesUnder(rootDir, tests, own, extensions),
     ...membersBeyond(rootDir, own).flatMap((dir) => {
       const prefix = relative(rootDir, dir).split(sep).join('/');
-      return sourceFilesUnder(dir, tests).map((file) => `${prefix}/${file}`);
+      return sourceFilesUnder(dir, tests, sourceRootsOf(dir), extensions).map((file) => `${prefix}/${file}`);
     }),
   ];
   return out.sort();
@@ -1075,3 +1091,33 @@ const membersBeyond = (rootDir: string, roots: readonly string[]): string[] =>
     if (rel === '..' || rel.startsWith('../') || isAbsolute(rel)) return true;
     return !roots.some((root) => root === WHOLE || rel === root || rel.startsWith(`${root}/`));
   });
+
+/**
+ * A file out of an installed package whose text the reading depends on: a
+ * declaration of any module kind (`.d.ts`, `.d.mts`, `.d.cts`), or the source
+ * of a workspace package linked in rather than built, which the program reads
+ * as TypeScript.
+ */
+const INSTALLED_SOURCE = /\.[cm]?tsx?$/;
+
+/**
+ * Files out of installed packages that the program actually read,
+ * repo-relative and sorted.
+ *
+ * What a type resolves to is decided as much by these as by the repository's
+ * own files, so the build cache records them, whichever reader opened the
+ * project: a package's declarations edited in place - a stub beside a fixture,
+ * a patched install - would otherwise leave the cache answering with the graph
+ * read against the old ones. Only files that are on disk: the checker's own
+ * library files are held in memory and change only with the tool, which the
+ * cache already keys on. Unbounded here; the build records a bounded, sorted
+ * prefix of it (`stampPackageFiles` in the command line), whichever writes.
+ */
+export const installedFiles = (project: Project, rootDir: string): string[] =>
+  project
+    .getProgram()
+    .compilerObject.getSourceFiles()
+    .map((sourceFile) => sourceFile.fileName)
+    .filter((path) => path.includes('/node_modules/') && INSTALLED_SOURCE.test(path) && existsSync(path))
+    .map((path) => normalizeFilePath(path, rootDir))
+    .sort();

@@ -375,20 +375,26 @@ export const mapCycles = (view) => {
  * no consumer, routes nothing calls, the services nothing could read, or
  * 1 for a unit in a cycle.
  */
+/**
+ * How each check marks one unit: a count summed over the boxes it holds, or,
+ * for cycles, whether the unit is in one at all.
+ */
+const sumOf = (count) => (map, unit) =>
+  unit.members.reduce((n, i) => n + count(map.boxes[i]), 0);
+const MARKS = {
+  problems: sumOf((box) => box.s.problems || 0),
+  uncalled: sumOf((box) => box.s.uncalled || 0),
+  unread: sumOf((box) => box.s.unread || 0),
+  dead: sumOf((box) => (MAP_BOX_KINDS[box.k] === 'channel' && (box.s.producers === 0 || box.s.consumers === 0) ? 1 : 0)),
+  cycles: (map, unit, cycles) => (cycles && cycles.units.has(unit.id) ? 1 : 0),
+};
+
 export const mapMarks = (map, view, mark, cycles = null) => {
   const out = new Map();
+  if (!Object.hasOwn(MARKS, mark)) return out;
+  const markOf = MARKS[mark];
   for (const unit of view.units.values()) {
-    let n = 0;
-    for (const i of unit.members) {
-      const s = map.boxes[i].s;
-      if (mark === 'problems') n += s.problems || 0;
-      else if (mark === 'uncalled') n += s.uncalled || 0;
-      else if (mark === 'unread') n += s.unread || 0;
-      else if (mark === 'dead' && MAP_BOX_KINDS[map.boxes[i].k] === 'channel') {
-        n += s.producers === 0 || s.consumers === 0 ? 1 : 0;
-      }
-    }
-    if (mark === 'cycles') n = cycles && cycles.units.has(unit.id) ? 1 : 0;
+    const n = markOf(map, unit, cycles);
     if (n > 0) out.set(unit.id, n);
   }
   return out;

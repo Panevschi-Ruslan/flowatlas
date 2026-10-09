@@ -110,6 +110,52 @@ data boxes. Matched by the import in the calling file, like an answer helper;
 a local that shadows the imported name is no longer taken for the helper, for
 answer and request helpers too.
 
+### Fixed
+
+- **SvelteKit route files at one address are no longer dropped in silence.** A
+  `+layout.server.ts` load was the address's GET and hid the `load` of the page
+  at the same address; it is now an entry of its own (`meta.contributes:
+  "layout"`, key suffix `#layout:<file>`) that no request is joined to. A
+  `+server.ts` GET beside a `+page.server.ts` load keeps the address, and the
+  page's load is kept too (`meta.contributes: "page"`, key suffix `#page`). Two
+  files claiming one verb and address otherwise keep the first and say the
+  second in a new `route-claimed-twice` row.
+- **File-system route segments.** Remix's `users.$userId_.edit` is
+  `/users/:userId/edit` (what is left of a segment after its trailing
+  underscore is read as usual, not as a literal), `sitemap[.]xml` is
+  `/sitemap.xml`, and `(en)` is an optional literal segment. SvelteKit's
+  `foo-[id]` is keyed `/foo-:param` with the param named in its path as written
+  (`rawPath: "/foo-:id"`), so `foo-[id]` and `bar-[id]` beside each other are two
+  routes, either wins over a bare `[id]`, and it is joined to `/foo-42` and not
+  to `/bar`; `[x+2e]` / `[u+00e9]` are the characters they escape, an escape for
+  `?`, `:` or `/` stays encoded (`%3F`, `%3A`, `%2F`), and one past the last
+  code point is read as the text it is. A request that leaves an optional segment out (`[[lang]]`,
+  `($lang)`, `(en)`) is joined to the route.
+- **A build re-reads a browser repository whose installed declarations were
+  edited.** The Angular and React readers recorded no installed files, so an
+  edited stub left their graphs cached; every reader now records them, and
+  `.d.mts` / `.d.cts` declarations and the TypeScript of a linked workspace
+  package under `node_modules` are recorded too.
+- **A build re-reads a browser repository whose template or script was edited.**
+  The cache an Angular or React read writes listed only its `.ts` and `.tsx`
+  files, so an edited `templateUrl` file, or a `.js` / `.jsx` file a React
+  tsconfig lets the checker resolve, answered "0 files changed" and kept a stale
+  graph. Both readers now list those files beside their sources, and the cache
+  and the build's survey list a browser repository's files the same way.
+- **A repository factory is found again in a repository held open across
+  rebuilds.** The declarations found for `adapters.db.tables` rows were kept for
+  the life of the parsed project, so a warm rebuild after the factory's file was
+  saved failed on a node that was gone; they are now found once per read.
+- **Answer and request helpers** of a package are matched through a default
+  import called itself when the row names `"default"`, and through a barrel of
+  the repository's that re-exports them from the package, including a default
+  import exported again by name (`import respond from 'pkg'; export { respond }`
+  is the package's `default`). A name two `export *` pass on from two places is
+  ambiguous to the compiler and matches neither.
+- **Angular host listeners** link to a function-valued property
+  (`onClick = () => …`) and to a method a base class declares, and a
+  `@HostBinding` on a set-only accessor is read.
+
 ## [0.5.1][] - 2026-10-08
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things

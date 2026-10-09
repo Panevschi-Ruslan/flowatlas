@@ -207,4 +207,26 @@ describe('a client handed in, by the type its factory resolves to return or a qu
       ),
     ).toEqual(['write orders', 'write members']);
   });
+
+  it('finds a repository factory again in a project held open across reads, after its file changes', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    project.createSourceFile('/src/types.ts', 'export interface Store { put(table: string, row: object): void; }');
+    const store = project.createSourceFile(
+      '/src/store.ts',
+      "import type { Store } from './types';\nexport const openStore = (): Store => ({ put: () => undefined });",
+    );
+    const use = project.createSourceFile(
+      '/src/use.ts',
+      "import type { Store } from './types';\nexport const save = (store: Store) => store.put('orders', {});",
+    );
+    const described = [{ factory: 'openStore', name: 'put', table: 0, op: 'write' }].map((row) => dbTableAccessSchema.parse(row));
+    const tables = () =>
+      use
+        .getDescendantsOfKind(SyntaxKind.CallExpression)
+        .flatMap((call) => configuredAccessOf(call, described)?.table ?? []);
+    expect(tables()).toEqual(['orders']);
+    // What a warm rebuild does to a file saved since the last read.
+    store.replaceWithText("import type { Store } from './types';\nexport const openStore = (): Store => ({ put: () => {} });");
+    expect(tables()).toEqual(['orders']);
+  });
 });

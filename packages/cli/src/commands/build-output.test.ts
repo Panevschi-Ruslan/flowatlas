@@ -123,9 +123,9 @@ describe('a build reads the repositories and writes only to its output', () => {
     expect(readdirSync(services).sort()).toEqual([...MULTI_REPO_SERVICES].sort());
     for (const name of MULTI_REPO_SERVICES) {
       const files = readdirSync(serviceOutputDir(result.outputDir, name)).sort();
-      // The server reader records file hashes beside its graph; the browser
-      // reader records none, as before.
-      expect(files, name).toEqual(name === 'web' ? ['graph.json'] : ['cache.json', 'graph.json']);
+      // Every reader records file hashes beside its graph, and the installed
+      // files its reading used, the browser reader too.
+      expect(files, name).toEqual(['cache.json', 'graph.json']);
       const graph = JSON.parse(readFileSync(serviceGraphPath(result.outputDir, name), 'utf8')) as {
         repo: string;
       };

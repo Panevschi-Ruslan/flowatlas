@@ -1,3 +1,4 @@
+import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
   AdapterRegistry,
@@ -17,6 +18,7 @@ import {
   type Logger,
   type PackageJson,
   type RepoGraph,
+  type SourceRootOptions,
   type ServiceConfig,
 } from '@flowatlas/core';
 import { createAngularContext } from './context.js';
@@ -50,7 +52,34 @@ export interface ExtractRepoOptions {
   noTypes?: boolean;
   /** How deep anonymous shapes are written out, overriding the configuration. */
   typesDepth?: number;
+  /**
+   * The repository already parsed by {@link openProject}, when the caller opened
+   * it to ask what the reading used as well as what it read.
+   */
+  project?: Project;
 }
+
+/**
+ * What this reader reads beside its sources: a template in a file of its own,
+ * read from disk by the templates pass. Exported so the build's file listing
+ * stamps it, and an edited template is a change (R166).
+ */
+export const ANGULAR_SOURCE_ROOTS: Readonly<Pick<SourceRootOptions, 'companions'>> = Object.freeze({
+  companions: ['.html'],
+});
+
+/** Parses a repository the way this reader needs it. */
+export const openProject = (options: ExtractRepoOptions): Project => {
+  const service = options.service ?? defaultService(options.repo, options.rootDir);
+  const tsconfig = options.tsconfig ?? service.tsconfig;
+  return createProject({
+    rootDir: options.rootDir,
+    ...(tsconfig === undefined ? {} : { tsconfig }),
+    ...(service.readTestDirectories === undefined
+      ? {}
+      : { readTestDirectories: service.readTestDirectories }),
+  });
+};
 
 /**
  * The built-in steps, in the order they run.
@@ -163,14 +192,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const config = options.config ?? parseConfig({});
   const service = options.service ?? defaultService(repo, rootDir);
 
-  const tsconfig = options.tsconfig ?? service.tsconfig;
-  const project = createProject({
-    rootDir,
-    ...(tsconfig === undefined ? {} : { tsconfig }),
-    ...(service.readTestDirectories === undefined
-      ? {}
-      : { readTestDirectories: service.readTestDirectories }),
-  });
+  const project = options.project ?? openProject(options);
   // The manifest that answers what this repository can import, which on a
   // package inside a workspace is not the leaf manifest alone. Everything below
   // gates on it, so widening it here is what lets an adapter stay a statement

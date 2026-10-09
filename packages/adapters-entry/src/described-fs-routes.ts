@@ -56,7 +56,18 @@ export interface FsRouteExports {
    * answers with the data it returns (P47).
    */
   readonly request?: RequestReadingDescription;
+  /**
+   * What these ways in contribute to rather than answer by themselves. A
+   * layout's `load` runs for every page beneath it and is no address's GET; a
+   * page's `load` answers a browser's navigation, and gives way to a `+server`
+   * GET at the same address, which is what a request from code reaches.
+   */
+  readonly contributes?: FsContribution;
 }
+
+/** What a way in contributes to, where it answers no request of its own. */
+export type FsContribution = 'page' | 'layout';
+
 
 const FILE_NAME = /^(?:.*\/)?([^/]+?)\.[cm]?[jt]sx?$/;
 
@@ -70,14 +81,88 @@ const exportsOf = (file: string, description: FsRoutesDescription): FsRouteExpor
 
 /** The ways in one reading collects, each once, and how one is added. */
 export interface FsEntries {
-  readonly entries: EntryNode[];
+  /** Every way in, each claim settled: read once every file has been added. */
+  readonly entries: () => EntryNode[];
   readonly add: (
     verb: FsRouteVerb,
     application: string | undefined,
     registration: string,
     own?: EntryNode['request'],
+    claim?: FsClaim,
   ) => void;
 }
+
+/** Which route file a way in was declared by, and what it contributes to. */
+export interface FsClaim {
+  readonly file: string;
+  readonly contributes?: FsContribution;
+}
+
+/** A way in read, before what else claims its address is known. */
+interface Candidate {
+  readonly entry: EntryNode;
+  readonly claim: FsClaim | undefined;
+}
+
+/** The entry a contribution is, beside the way in that answers its address. */
+const contributing = (entry: EntryNode, contributes: FsContribution, suffix: string): EntryNode => ({
+  ...entry,
+  id: `${entry.id}#${suffix}`,
+  key: `${entry.key}#${suffix}`,
+  label: `${entry.label} (${contributes})`,
+  meta: { ...entry.meta, contributes },
+});
+
+/**
+ * How the ways in claiming one address are settled, by what they contribute:
+ * a layout never answers it and is its own entry, a page gives way to a verb
+ * beside it, and two that answer it alike are a duplicate claim, the first kept
+ * and the rest said. Nothing is dropped in silence.
+ */
+const settle = (
+  ctx: ExtractContext,
+  adapter: string,
+  claims: readonly Candidate[],
+): EntryNode[] => {
+  const byRole = (contributes: FsContribution | undefined) =>
+    claims.filter((candidate) => candidate.claim?.contributes === contributes);
+  const verbs = byRole(undefined);
+  const pages = byRole('page');
+  // The first of each kind answers; the rest of that kind claim it again.
+  const firstOf = (kind: readonly Candidate[]): Candidate | undefined => {
+    const [first, ...rest] = kind;
+    for (const duplicate of rest) reportDuplicateClaim(ctx, adapter, duplicate, first as Candidate);
+    return first;
+  };
+  const verb = firstOf(verbs);
+  const page = firstOf(pages);
+  const settled: EntryNode[] = [];
+  if (verb !== undefined) settled.push(verb.entry);
+  if (page !== undefined) settled.push(verb === undefined ? page.entry : contributing(page.entry, 'page', 'page'));
+  // A layout is named by its file: two groups may each lay out the same address.
+  for (const layout of byRole('layout')) {
+    settled.push(contributing(layout.entry, 'layout', `layout:${layout.claim?.file ?? ''}`));
+  }
+  return settled;
+};
+
+const reportDuplicateClaim = (
+  ctx: ExtractContext,
+  adapter: string,
+  duplicate: Candidate,
+  kept: Candidate,
+): void => {
+  const file = duplicate.claim?.file ?? duplicate.entry.file ?? '';
+  ctx.builder.addUnresolved({
+    file,
+    line: duplicate.entry.line ?? 1,
+    reason: 'route-claimed-twice',
+    message: `${file} answers ${duplicate.entry.label}, which ${kept.claim?.file ?? kept.entry.file ?? 'another file'} already answers, so only the first is drawn.`,
+    hint: 'Two route files resolve to one address; the framework refuses that or serves one of them. Remove one, or move it to the address it was meant for.',
+    symbol: duplicate.entry.label,
+    adapter,
+  });
+};
 
 /**
  * The entries of a router whose ways in are route modules, built one way for
@@ -88,25 +173,26 @@ export const fsEntries = (
   adapter: string,
   request: EntryNode['request'],
 ): FsEntries => {
-  const entries: EntryNode[] = [];
-  const seen = new Set<string>();
+  const claims = new Map<string, Candidate[]>();
   const add = (
     verb: FsRouteVerb,
     application: string | undefined,
     registration: string,
     own: EntryNode['request'] = request,
+    claim?: FsClaim,
   ): void => {
     // A named action is posted to the page's address with `?/name` after
     // it; the query is kept out of the path, so params are named as before.
     const query = verb.action === undefined ? '' : `?/${verb.action}`;
     const key = `${makeHttpEntryKey(verb.method, verb.path)}${query}`;
     const id = makeEntryId(ctx.repo, 'http', key, application);
-    if (seen.has(id)) return;
-    seen.add(id);
+    // One file read twice (a route config naming a module twice) is one claim.
+    const same = claims.get(id) ?? [];
+    if (same.some((candidate) => candidate.claim?.file === claim?.file)) return;
     const label = `${verb.method} ${verb.path}${query}`;
     const handler =
       verb.handler !== undefined ? handlerOfFunction(verb.handler, ctx) : inlineHandlerOf(verb.inline, label, ctx);
-    entries.push({
+    const entry: EntryNode = {
       id,
       kind: 'http',
       label: application === undefined ? label : `${label} (${application})`,
@@ -127,8 +213,10 @@ export const fsEntries = (
         ...(verb.bodyRead ? {} : { handlerBodyRead: false }),
         ...reachMeta(verb.at),
       },
-    });
+    };
+    claims.set(id, [...same, { entry, claim }]);
   };
+  const entries = (): EntryNode[] => [...claims.values()].flatMap((claimed) => settle(ctx, adapter, claimed));
   return { entries, add };
 };
 
@@ -175,6 +263,7 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
               address.application,
               own?.registration ?? description.registration,
               requestOf(file) ?? request,
+              { file, ...(own?.contributes === undefined ? {} : { contributes: own.contributes }) },
             ),
           ...(verbs === undefined ? {} : { verbs }),
           ...(pagesServed === true ? { pagesServed: true } : {}),
@@ -182,7 +271,7 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
           ...(description.narrowed === undefined ? {} : { narrowed: description.narrowed }),
         });
       }
-      return collected.entries;
+      return collected.entries();
     },
   };
 };
@@ -207,12 +296,13 @@ const EVENT_REQUEST = {
  * `+page.server.ts` / `+layout.server.ts` beside a page, whose `load` answers
  * the page's GET and whose `actions` its form POSTs (P42). A group in brackets
  * drops out, `[id]` and `[[id]]` are params (a matcher after `=` is no part of
- * the name) and `[...rest]` is the rest of the path.
+ * the name), so is a segment holding one (`foo-[id]`), `[x+2e]` is an escaped
+ * character and `[...rest]` is the rest of the path.
  */
 export const SVELTEKIT_ROUTES: FsRouter = {
   root: 'src/routes',
   routeFiles: ['+server', '+page.server', '+layout.server'],
-  segments: ['group', 'param', 'catch-all'],
+  segments: ['group', 'mixed', 'param', 'catch-all'],
 };
 
 /**
@@ -259,6 +349,7 @@ const SVELTEKIT_PAGE: FsRouteExports = {
   actions: new Map([['actions', 'POST']]),
   pagesServed: true,
   registration: 'routes/+page.server',
+  contributes: 'page',
 };
 
 /** The export whose verbs are the ones it branches on. */
@@ -291,6 +382,7 @@ export const sveltekitRoutesAdapter = fsRoutesAdapter({
         pagesServed: true,
         registration: 'routes/+layout.server',
         request: SVELTEKIT_PAGE_REQUEST,
+        contributes: 'layout',
       },
     ],
   ]),

@@ -10,14 +10,17 @@ import {
 import { brokersPass, registerBrokerAdapters } from '@flowatlas/adapters-broker';
 import { leavesPass, registerDbAdapters } from '@flowatlas/adapters-db';
 import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
-import { registerFrontendAdapters as registerAngularFrontend } from '@flowatlas/extractor-angular';
+import {
+  ANGULAR_SOURCE_ROOTS,
+  registerFrontendAdapters as registerAngularFrontend,
+} from '@flowatlas/extractor-angular';
 import {
   REACT_SOURCE_ROOTS,
   registerFrontendAdapters as registerReactFrontend,
 } from '@flowatlas/extractor-react';
 import type { NestExtractorPass } from '@flowatlas/extractor-nestjs';
 import { workflowsPass } from '@flowatlas/stepfunctions';
-import { halfOf, READERS, REACT_EXTRACTOR } from '../readers.js';
+import { ANGULAR_EXTRACTOR, halfOf, READERS, REACT_EXTRACTOR } from '../readers.js';
 
 /**
  * Package that reads each kind of repository.
@@ -163,14 +166,19 @@ export const declinedNote = (
 
 /**
  * Where each reader looks when a repository's tsconfig names no source root, for
- * the readers that do not look in `src` (R170).
+ * the readers that do not look in `src` (R170), and what each reads beside its
+ * sources (R166).
  *
  * Taken from the reader's own package rather than restated here, so the build's
  * file listing and the reading have one statement of it between them.
  */
-const ROOTS_OF_READER: ReadonlyMap<string, SourceRootOptions> = new Map([
+const ROOTS_OF_READER: ReadonlyMap<string, SourceRootOptions> = new Map<string, SourceRootOptions>([
+  [ANGULAR_EXTRACTOR, ANGULAR_SOURCE_ROOTS],
   [REACT_EXTRACTOR, REACT_SOURCE_ROOTS],
 ]);
+
+/** {@link ROOTS_OF_READER} for one reader, for a repository read with no service. */
+export const readerRootsOf = (extractor: string): SourceRootOptions => ROOTS_OF_READER.get(extractor) ?? {};
 
 /**
  * The directories a server's deployment packages its functions from, which are

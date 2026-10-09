@@ -367,3 +367,90 @@ describe('a route whose address opens with a mount read from settings', () => {
     expect(verbsAnswering('/v1/orders', [mounted('/${…}v1/orders')])).toEqual(['GET']);
   });
 });
+
+describe('a route with an optional segment', () => {
+  const at = (path: string, rawPath: string, meta: Record<string, unknown> = {}): GraphNode => ({
+    ...route('GET', path),
+    id: `entry:web:http:GET:${path}${String(meta['contributes'] ?? '')}`,
+    meta: { method: 'GET', path, rawPath, ...meta },
+  });
+
+  it('answers a request that leaves the optional segment out, and one that fills it', () => {
+    const files = at('/:param/files/*', '/:lang?/files/:path');
+    for (const asked of ['/files/a.txt', '/en/files/a.txt']) {
+      const result = matchRoute('GET', asked, [files]);
+      expect(isMatch(result) ? result.entry.id : result).toBe(files.id);
+    }
+    const about = at('/en/about', '/en?/about');
+    expect(isMatch(matchRoute('GET', '/about', [about]))).toBe(true);
+    expect(isMatch(matchRoute('GET', '/de/about', [about]))).toBe(false);
+  });
+
+  it('is not answered by what only contributes to a page', () => {
+    const layout = at('/', '/', { contributes: 'layout' });
+    const page = at('/', '/', { contributes: 'page' });
+    expect(matchRoute('GET', '/', [layout, page])).toEqual({ reason: 'not-found', candidates: [] });
+  });
+});
+
+describe('a route whose segment holds a param among literal text', () => {
+  const at = (path: string, rawPath: string): GraphNode => ({
+    ...route('GET', path),
+    meta: { method: 'GET', path, rawPath },
+  });
+
+  it('answers only a segment with the same text around a value', () => {
+    const foo = at('/:param', '/foo-:id');
+    expect(isMatch(matchRoute('GET', '/foo-42', [foo]))).toBe(true);
+    expect(isMatch(matchRoute('GET', '/FOO-x', [foo]))).toBe(true);
+    expect(isMatch(matchRoute('GET', '/bar', [foo]))).toBe(false);
+    expect(isMatch(matchRoute('GET', '/foo-', [foo]))).toBe(false);
+    const pair = at('/v/:param', '/v/:a-:b.json');
+    expect(isMatch(matchRoute('GET', '/v/1-2.json', [pair]))).toBe(true);
+    expect(isMatch(matchRoute('GET', '/v/12.json', [pair]))).toBe(false);
+  });
+
+  it('keeps a hole open where the path as written is a name alone or a spelling it does not know', () => {
+    expect(isMatch(matchRoute('GET', '/anything', [at('/:param', '/:id')]))).toBe(true);
+    expect(isMatch(matchRoute('GET', '/anything', [at('/:param', '/:id(\\d+)')]))).toBe(true);
+  });
+
+  it('keeps the shape where an optional segment is left out', () => {
+    const shaped = at('/:param/:param', '/:lang?/foo-:id');
+    expect(isMatch(matchRoute('GET', '/foo-1', [shaped]))).toBe(true);
+    expect(isMatch(matchRoute('GET', '/en/foo-1', [shaped]))).toBe(true);
+    expect(isMatch(matchRoute('GET', '/en/bar', [shaped]))).toBe(false);
+  });
+});
+
+describe('sibling routes with literal text around a param', () => {
+  const at = (path: string, rawPath?: string): GraphNode => ({
+    ...route('GET', path),
+    meta: { method: 'GET', path, ...(rawPath === undefined ? {} : { rawPath }) },
+  });
+  const foo = at('/foo-:param', '/foo-:id');
+  const bar = at('/bar-:param', '/bar-:id');
+  const bare = at('/:param', '/:id');
+  const picked = (path: string): string | undefined => {
+    const result = matchRoute('GET', path, [foo, bar, bare]);
+    return isMatch(result) ? String(result.entry.meta?.['path']) : undefined;
+  };
+
+  it('picks the route whose text the segment spells, before a bare param', () => {
+    expect(picked('/foo-1')).toBe('/foo-:param');
+    expect(picked('/bar-1')).toBe('/bar-:param');
+    expect(picked('/baz')).toBe('/:param');
+  });
+
+  it('reads the shape off the key where no path as written was kept', () => {
+    expect(pathAnswers('/foo-:param', '/foo-7')).toBe(true);
+    expect(pathAnswers('/foo-:param', '/bar-7')).toBe(false);
+  });
+
+  it('compares an encoded character as the text it is', () => {
+    expect(pathAnswers('/what%3F', '/what%3f')).toBe(true);
+    expect(pathAnswers('/a%2Fb', '/a/b')).toBe(false);
+    expect(isMatch(matchRoute('GET', '/x%3Ay', [at('/:param%3Ay', '/:id%3Ay')]))).toBe(true);
+    expect(isMatch(matchRoute('GET', '/x', [at('/what%3F', '/what%3F')]))).toBe(false);
+  });
+});

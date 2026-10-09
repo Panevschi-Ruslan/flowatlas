@@ -13,7 +13,7 @@
 
 export { reactFrontendAdapter, registerFrontendAdapters } from './adapter.js';
 
-export { BUILT_IN_PASSES, defaultOutputPath, extractReact, extractRepo } from './extract-repo.js';
+export { BUILT_IN_PASSES, defaultOutputPath, extractReact, extractRepo, openProject } from './extract-repo.js';
 export type { ExtractRepoOptions } from './extract-repo.js';
 
 export { createReactProject, REACT_SOURCE_ROOTS } from './project.js';

@@ -56,7 +56,7 @@ import {
 } from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
-import { configuredAccessOf } from './leaves/configured.js';
+import { configuredAccessOf, repositoryExports } from './leaves/configured.js';
 import { hostCallOf } from './leaves/fragment.js';
 import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
 import { handedBackBy } from './leaves/handed-back.js';
@@ -239,6 +239,7 @@ const siteOf = (ctx: NestExtractContext, node: TsNode, file: string): Site => {
  * `orderCache` whose type comes from a database package proves everything.
  */
 export const extractLeaves = (ctx: NestExtractContext): void => {
+  const exported = repositoryExports();
   const configuredBases = ctx.config.adapters.db.localBaseClasses;
   const localBaseClasses = localBaseClassNames(configuredBases);
   const byPackage = new Map<string, DbDescriptor>();
@@ -1028,7 +1029,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    * as a string keeps the query and gets the ordinary row.
    */
   const emitConfigured = (call: CallExpression, scope: Scope): boolean => {
-    const found = configuredAccessOf(call, ctx.config.adapters.db.tables);
+    const found = configuredAccessOf(call, ctx.config.adapters.db.tables, exported);
     if (found === undefined) return false;
     const { id: holderId, file } = scope;
     const site = siteOf(ctx, call, file);

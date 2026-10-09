@@ -127,6 +127,7 @@ const GATED = {
       'route-registry-unread',
       'route-file-not-served',
       'route-module-not-found',
+      'route-claimed-twice',
       'route-unguarded',
       'route-guard-skipped',
       'route-shadowed',

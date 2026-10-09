@@ -13,7 +13,7 @@ src/routes/api/orders/[id=integer]/+server.ts     GET, DELETE /api/orders/:id
 src/routes/(shop)/api/cart/+server.ts             POST /api/cart (a group drops out)
 src/routes/[[lang]]/files/[...path]/+server.ts    GET /:lang?/files/:path
 src/routes/about/+page.server.ts                  GET /about (its load)
-src/routes/(shop)/+layout.server.ts               GET / (a layout's load)
+src/routes/(shop)/+layout.server.ts               GET / (layout): runs with every page beneath it
 src/routes/orders/[id]/+page.server.ts            GET /orders/:id (load),
                                                   POST /orders/:id (default action),
                                                   POST /orders/:id?/note (named action)

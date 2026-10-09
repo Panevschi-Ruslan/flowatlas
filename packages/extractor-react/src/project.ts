@@ -13,9 +13,14 @@ import type { Project } from 'ts-morph';
  * Exported so the build's file listing asks the same question the reading does:
  * a fallback this package kept to itself would be files the reader opens and the
  * build never stamps.
+ *
+ * Its companions are scripts: a tsconfig with `allowJs` lets the checker
+ * resolve an import into one, and what the reading then sees of it changes when
+ * the file does.
  */
-export const REACT_SOURCE_ROOTS: Readonly<Pick<SourceRootOptions, 'fallback'>> = Object.freeze({
+export const REACT_SOURCE_ROOTS: Readonly<Pick<SourceRootOptions, 'fallback' | 'companions'>> = Object.freeze({
   fallback: 'repository',
+  companions: ['.js', '.jsx', '.mjs', '.cjs'],
 });
 
 /**

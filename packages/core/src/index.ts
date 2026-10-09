@@ -343,6 +343,7 @@ export {
   countSources,
   createProject,
   findTsconfig,
+  installedFiles,
   listRepoSources,
   reportSkippedTestDirectories,
   reportUnreadableSources,

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "sveltekit-server-routes",
-  "generatedAt": "2026-10-09T07:47:18.739Z",
+  "generatedAt": "2026-10-09T10:21:02.110Z",
   "nodes": [
     {
       "id": "entry:sveltekit-server-routes:http:DELETE:/api/orders/:param",
@@ -21,9 +21,9 @@
       }
     },
     {
-      "id": "entry:sveltekit-server-routes:http:GET:/",
+      "id": "entry:sveltekit-server-routes:http:GET:/#layout:src/routes/(shop)/+layout.server.ts",
       "type": "entry",
-      "label": "GET /",
+      "label": "GET / (layout)",
       "repo": "sveltekit-server-routes",
       "file": "src/routes/(shop)/+layout.server.ts",
       "line": 2,
@@ -34,7 +34,8 @@
         "rawPath": "/",
         "adapter": "sveltekit-routes",
         "registration": "routes/+layout.server",
-        "handlerVia": "function"
+        "handlerVia": "function",
+        "contributes": "layout"
       }
     },
     {
@@ -433,7 +434,7 @@
       }
     },
     {
-      "from": "entry:sveltekit-server-routes:http:GET:/",
+      "from": "entry:sveltekit-server-routes:http:GET:/#layout:src/routes/(shop)/+layout.server.ts",
       "to": "sveltekit-server-routes#src/routes/(shop)/+layout.server.ts:load",
       "type": "handles",
       "confidence": "static",

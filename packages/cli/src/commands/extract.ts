@@ -7,6 +7,7 @@ import {
   createLogger,
   DEFAULT_OUTPUT,
   findConfig,
+  listRepoSources,
   loadConfig,
   parseConfig,
   readPackageJson,
@@ -19,8 +20,8 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import { deployedSourceDirectories } from '@flowatlas/adapters-entry';
-import { extractRepo as extractAngularRepo } from '@flowatlas/extractor-angular';
-import { extractRepo as extractReactRepo } from '@flowatlas/extractor-react';
+import { extractRepo as extractAngularRepo, openProject as openAngularProject } from '@flowatlas/extractor-angular';
+import { extractRepo as extractReactRepo, openProject as openReactProject } from '@flowatlas/extractor-react';
 import {
   extractRepo,
   findTsconfig,
@@ -32,6 +33,7 @@ import {
   type ExtractRepoOptions,
 } from '@flowatlas/extractor-nestjs';
 import type { Command } from 'commander';
+import type { Project } from 'ts-morph';
 import { partialReadNotice } from '../partial-read.js';
 import {
   emptyCache,
@@ -44,10 +46,10 @@ import {
   type BuildCache,
 } from '../build/cache.js';
 import { hashGraphFile } from '../build/incremental.js';
-import { adapterNames, createRegistry, EXTRA_PASSES } from '../build/extractor.js';
+import { adapterNames, createRegistry, EXTRA_PASSES, readerRootsOf, sourceRootOptionsOf } from '../build/extractor.js';
 import { deploymentFiles } from '../build/deployment-files.js';
 import { stampPackageFiles } from '../build/dependencies.js';
-import { NESTJS_EXTRACTOR } from '../readers.js';
+import { ANGULAR_EXTRACTOR, NESTJS_EXTRACTOR, REACT_EXTRACTOR } from '../readers.js';
 
 /**
  * The browser readers, by the name of the half each one reads.
@@ -68,12 +70,17 @@ import { NESTJS_EXTRACTOR } from '../readers.js';
  * likelier to be a service, and the server reader is also the one that reads a
  * repository which is both halves.
  */
-export const BROWSER_READERS: ReadonlyMap<
-  string,
-  (options: ExtractRepoOptions) => Promise<RepoGraph>
-> = new Map([
-  ['angular', extractAngularRepo],
-  ['react', extractReactRepo],
+export interface BrowserReader {
+  /** The extractor the build cache records the reading under. */
+  readonly extractor: string;
+  /** Parses the repository, so the cache can ask what the reading used. */
+  readonly open: (options: ExtractRepoOptions) => Project;
+  readonly read: (options: ExtractRepoOptions) => Promise<RepoGraph>;
+}
+
+export const BROWSER_READERS: ReadonlyMap<string, BrowserReader> = new Map([
+  ['angular', { extractor: ANGULAR_EXTRACTOR, open: openAngularProject, read: extractAngularRepo }],
+  ['react', { extractor: REACT_EXTRACTOR, open: openReactProject, read: extractReactRepo }],
 ]);
 
 /**
@@ -101,7 +108,7 @@ const detectBrowserReader = (
   registry: AdapterRegistry,
   pkg: PackageJson,
   rootDir: string,
-): ((options: ExtractRepoOptions) => Promise<RepoGraph>) | undefined => {
+): BrowserReader | undefined => {
   // The directory as well as the manifest, because a way in declared in the
   // files that describe a deployment is evidence of a server that no manifest
   // carries - and a repository of nothing but those files has no manifest.
@@ -260,23 +267,22 @@ export const runExtract = async (
       ? detectBrowserReader(registry, readResolvedPackageJson(rootDir) ?? {}, rootDir)
       : BROWSER_READERS.get(service.type);
 
-  // A server repository is opened here rather than inside the extractor, so the
+  // The repository is opened here rather than inside the extractor, so the
   // parsed project can also answer what the build cache needs to know: which
-  // files there are, what each imports, and which of them are global. The
-  // browser readers have no such session yet, so they cache nothing. The
-  // directories its deployment packages functions from are roots of its code as
-  // much as `src` is, and the build's listing is told the same (R170).
-  const warm =
+  // files there are, what each imports, which of them are global, and which
+  // installed files the reading used. A browser reader parses it its own way and
+  // is handed what it parsed. The directories a server's deployment packages
+  // functions from are roots of its code as much as `src` is, and the build's
+  // listing is told the same (R170).
+  const warm = openRepo(
     readBrowser === undefined
-      ? openRepo({
-          ...extractOptions,
-          deployed: deployedSourceDirectories(rootDir, config ?? parseConfig({}), service),
-        })
-      : undefined;
+      ? { ...extractOptions, deployed: deployedSourceDirectories(rootDir, config ?? parseConfig({}), service) }
+      : { ...extractOptions, project: readBrowser.open(extractOptions) },
+  );
   const graph =
-    warm === undefined
-      ? await (readBrowser as (options: ExtractRepoOptions) => Promise<RepoGraph>)(extractOptions)
-      : await extractRepo({ ...extractOptions, project: warm.project });
+    readBrowser === undefined
+      ? await extractRepo({ ...extractOptions, project: warm.project })
+      : await readBrowser.read({ ...extractOptions, project: warm.project });
 
   const outDir = options.out ?? config?.output ?? DEFAULT_OUTPUT;
   const outPath = isAbsolute(outDir)
@@ -290,10 +296,10 @@ export const runExtract = async (
   await writeFile(temporary, `${JSON.stringify(graph, null, 2)}\n`, 'utf8');
   await rename(temporary, outPath);
 
-  if (options.cache !== false && warm !== undefined) {
+  if (options.cache !== false) {
     saveBuildCache(
       join(dirname(outPath), 'cache.json'),
-      repoCacheOf({ warm, graph, outPath, repo, rootDir, registry, ...(service === undefined ? {} : { service }), ...(config === undefined ? {} : { config }), ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }) }),
+      repoCacheOf({ warm, graph, outPath, repo, rootDir, registry, extractor: readBrowser?.extractor ?? NESTJS_EXTRACTOR, ...(service === undefined ? {} : { service }), ...(config === undefined ? {} : { config }), ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }) }),
     );
   }
 
@@ -307,6 +313,7 @@ interface RepoCacheOptions {
   repo: string;
   rootDir: string;
   registry: ReturnType<typeof createRegistry>;
+  extractor: string;
   service?: ServiceConfig;
   config?: FlowatlasConfig;
   tsconfig?: string;
@@ -320,13 +327,13 @@ interface RepoCacheOptions {
  * the build with the same thing to compare against.
  */
 const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
-  const { warm, graph, outPath, repo, rootDir, registry } = options;
+  const { warm, graph, outPath, repo, rootDir, registry, extractor } = options;
   const config = options.config ?? parseConfig({});
   const cache = emptyCache(
     {
       schemaVersion: SCHEMA_VERSION,
       flowatlasVersion: BUILD_STAMP,
-      extractors: { [NESTJS_EXTRACTOR]: BUILD_STAMP },
+      extractors: { [extractor]: BUILD_STAMP },
       configHash: hashConfig(config),
     },
     graph.generatedAt,
@@ -334,13 +341,13 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
 
   const imports = importsOf(warm);
   const deployed = deploymentFiles(rootDir, { config, ...(options.service === undefined ? {} : { service: options.service }) });
-  const files = stampFiles(rootDir, [...repoFiles(warm), ...deployed], undefined, {});
+  const files = stampFiles(rootDir, [...filesOfReading(options, config), ...deployed], undefined, {});
   for (const [file, stamp] of Object.entries(files)) stamp.deps = imports[file] ?? [];
 
   const tsconfig = findTsconfig(rootDir, options.tsconfig ?? options.service?.tsconfig);
   cache.repos[repo] = {
     repo: options.service?.repo ?? rootDir,
-    extractor: NESTJS_EXTRACTOR,
+    extractor,
     adapters: adapterNames(registry, readResolvedPackageJson(rootDir) ?? {}, config, rootDir),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(rootDir, 'package.json')),
@@ -357,6 +364,25 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
     },
   };
   return cache;
+};
+
+/**
+ * The files of the repository the cache records, as the build's survey lists them.
+ *
+ * A browser reader's are the survey's own listing, asked with the same roots, so
+ * the two are one list and the files a reader reads beside its sources — an
+ * Angular template — are stamped as well: the parsed project never holds those,
+ * and a cache built from it answered "0 files changed" to an edited template
+ * (R166). A server's are the parsed project's, as the warm build records them.
+ */
+const filesOfReading = (options: RepoCacheOptions, config: FlowatlasConfig): string[] => {
+  const { warm, rootDir, extractor, service } = options;
+  if (extractor === NESTJS_EXTRACTOR) return repoFiles(warm);
+  const roots = {
+    ...(service === undefined ? readerRootsOf(extractor) : sourceRootOptionsOf(service, rootDir, config)),
+    ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }),
+  };
+  return listRepoSources(rootDir, service?.readTestDirectories, roots);
 };
 
 export const registerExtract = (program: Command): void => {

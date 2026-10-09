@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileOf, hasDecorator, normalizeFilePath, type RepoGraph } from '@flowatlas/core';
+import { fileOf, hasDecorator, installedFiles, normalizeFilePath, type RepoGraph } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 import { findBootstrapFile } from './bootstrap.js';
 import { createRepoProject, extractRepo, type ExtractRepoOptions } from './extract-repo.js';
@@ -53,25 +53,8 @@ const sourceFilesOf = (repo: WarmRepo): SourceFile[] =>
     .getSourceFiles()
     .filter((sourceFile) => !sourceFile.getFilePath().includes('/node_modules/'));
 
-/**
- * Declaration files out of installed packages that the program actually read,
- * repo-relative and sorted.
- *
- * What a type resolves to is decided as much by these as by the repository's
- * own files, so the build cache records them: a package's declarations edited
- * in place — a stub beside a fixture, a patched install — would otherwise leave
- * the cache answering with the graph read against the old ones. Only files that
- * are on disk: the checker's own library files are held in memory and change
- * only with the tool, which the cache already keys on.
- */
-export const packageFiles = (repo: WarmRepo): string[] =>
-  repo.project
-    .getProgram()
-    .compilerObject.getSourceFiles()
-    .map((sourceFile) => sourceFile.fileName)
-    .filter((path) => path.includes('/node_modules/') && path.endsWith('.d.ts') && existsSync(path))
-    .map((path) => normalizeFilePath(path, repo.options.rootDir))
-    .sort();
+/** Files out of installed packages the open program read; see {@link installedFiles}. */
+export const packageFiles = (repo: WarmRepo): string[] => installedFiles(repo.project, repo.options.rootDir);
 
 /**
  * What each file of the repository imports, one level, repo-relative.
