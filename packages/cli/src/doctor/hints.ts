@@ -461,6 +461,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Name the table under adapters.entry.registries in flowatlas.config.json so each registration becomes an entry point.',
   'server-action-unread': () =>
     'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
+  'route-module-not-found': () =>
+    'A route config names a module that is not a source file of this project, so the address it declares has nothing behind it here. Name the module by its path relative to the app directory as it is spelled on disk, or add the file.',
   'route-file-not-served': () =>
     'A file exporting a route verb sits under a directory the framework does not serve, so it answers at no address. Informational: it is the framework behaving as documented, and the row exists so that a file with a verb in it and no route to show for it is never silence.',
   'route-verb-unread': () =>

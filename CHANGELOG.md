@@ -6,6 +6,11 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+React Router's `app/routes.ts` follows `flatRoutes()` - as the whole config,
+spread into it, or under `prefix` / `layout` - reading the directory it names by
+Remix's flat convention; a module the config names that is not in the project is
+a `route-module-not-found` row instead of being skipped in silence.
+
 A SvelteKit page's `load` (and a layout's) and each of its form actions answer
 with what they return, so the page's GET is typed by its data; a layout at `/`
 keeps `rawPath` `/` like every other route.

@@ -242,7 +242,12 @@ names - and a route module with neither is a page and says nothing
 `app/routes.ts` instead: the default export's `route(path, file, children)`,
 `index(file)`, `layout(file, children)` and `...prefix(path, children)` are read
 into each module's address, its params named as configured (`rawPath`), and each
-module is read the way a Remix route module is (`fixtures/react-router-config`). A file-system
+module is read the way a Remix route module is (`fixtures/react-router-config`).
+`flatRoutes()` from `@react-router/fs-routes` - the whole export, spread into a
+list or handed to `prefix` / `layout` - reads the directory it names (`routes`
+unless `rootDirectory` says otherwise) by Remix's flat convention, under the
+address it sits at; a module the config names that is not in the project is a
+`route-module-not-found` row at the line naming it. A file-system
 router nobody has described — `@fastify/autoload`, or a convention of the
 repository's own — is not guessed at: the reader says, at `info`, that it cannot
 tell such a repository from a library that merely depends on the framework
@@ -1156,7 +1161,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
-| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
+| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |

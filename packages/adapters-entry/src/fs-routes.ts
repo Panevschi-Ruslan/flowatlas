@@ -382,6 +382,19 @@ export const routePathOfFile = (file: string, router: FsRouter): string | null =
   return reading.kind === 'route' ? reading.path : null;
 };
 
+/**
+ * The address one file is served at by a router, its params named as written,
+ * or nothing: a route config's `flatRoutes()` hands its directory to the flat
+ * convention and places what it finds itself (P48).
+ */
+export const routeAddressOfFile = (
+  file: string,
+  router: FsRouter,
+): { readonly path: string; readonly rawPath: string } | null => {
+  const reading = readFsFile(file, router);
+  return reading.kind === 'route' ? { path: reading.path, rawPath: reading.rawPath } : null;
+};
+
 /** One address a file-system router serves, and which application serves it. */
 export interface FsAddress {
   /** What the framework answers on, with nothing in front of it. */

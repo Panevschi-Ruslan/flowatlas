@@ -197,7 +197,8 @@ describe('React Router route config', () => {
 
   it('reads each helper into a module and an address', () => {
     const project = new Project({ useInMemoryFileSystem: true });
-    expect(configuredRoutes(project.createSourceFile('/app/routes.ts', CONFIG))).toEqual([
+    const routes = configuredRoutes(project.createSourceFile('/app/routes.ts', CONFIG));
+    expect(routes.map(({ module, rawPath }) => ({ module, rawPath }))).toEqual([
       { module: 'routes/home.tsx', rawPath: '/' },
       { module: 'routes/order.tsx', rawPath: '/orders/:orderId' },
       { module: 'routes/order-edit.tsx', rawPath: '/orders/:orderId/edit' },
@@ -225,6 +226,40 @@ describe('React Router route config', () => {
       'GET /api/files/*': '/api/files/*',
     });
     expect(read.entries[0]?.meta?.['registration']).toBe('routes.ts/route-config');
+    // A module the config names and the project does not have is a row, at the line naming it.
+    expect(read.unresolved.map((row) => [row.reason, row.symbol, row.line])).toEqual([
+      ['route-module-not-found', 'routes/home.tsx', 3],
+      ['route-module-not-found', 'routes/order-edit.tsx', 4],
+      ['route-module-not-found', 'routes/auth.tsx', 5],
+      ['route-module-not-found', 'routes/api/root.ts', 6],
+    ]);
+  });
+
+  it('reads flatRoutes() by the flat convention, at the root, spread and under a prefix', () => {
+    const read = extract(reactRouterRoutesAdapter, {
+      '/app/routes.ts': [
+        "import { prefix, route, type RouteConfig } from '@react-router/dev/routes';",
+        "import { flatRoutes } from '@react-router/fs-routes';",
+        'export default [',
+        '  ...(await flatRoutes()),',
+        "  ...prefix('admin', await flatRoutes({ rootDirectory: 'admin' })),",
+        '] satisfies RouteConfig;',
+      ].join('\n'),
+      '/app/routes/api.orders.$orderId.ts': 'export const loader = ({ params }) => params.orderId;',
+      '/app/routes/_index.tsx': 'export default function Home() { return null; }',
+      '/app/admin/users.$id/route.ts': 'export const action = () => null;',
+      '/app/models/orders.ts': 'export const loader = () => null;',
+    });
+    expect(rawPaths(read)).toEqual({
+      'GET /api/orders/:param': '/api/orders/:orderId',
+      'POST /admin/users/:param': '/admin/users/:id',
+    });
     expect(read.unresolved).toEqual([]);
+
+    const project = new Project({ useInMemoryFileSystem: true });
+    const whole = project.createSourceFile('/app/routes.ts', "export default flatRoutes() satisfies RouteConfig;");
+    expect(configuredRoutes(whole, (root) => [{ module: `${root}/_index.tsx`, rawPath: '/' }])).toEqual([
+      { module: 'routes/_index.tsx', rawPath: '/', line: 1 },
+    ]);
   });
 });

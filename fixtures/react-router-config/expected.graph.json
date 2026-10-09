@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "react-router-config",
-  "generatedAt": "2026-10-08T21:01:56.679Z",
+  "generatedAt": "2026-10-09T07:55:35.662Z",
   "nodes": [
     {
       "id": "entry:react-router-config:http:DELETE:/api/projects/:param/tasks/:param",
@@ -15,6 +15,23 @@
         "method": "DELETE",
         "path": "/api/projects/:param/tasks/:param",
         "rawPath": "/api/projects/:projectId/tasks/:taskId?",
+        "adapter": "react-router-routes",
+        "registration": "routes.ts/route-config",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:react-router-config:http:GET:/admin/projects/:param",
+      "type": "entry",
+      "label": "GET /admin/projects/:param",
+      "repo": "react-router-config",
+      "file": "app/admin/projects.$projectId.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/projects/:param",
+        "rawPath": "/admin/projects/:projectId",
         "adapter": "react-router-routes",
         "registration": "routes.ts/route-config",
         "handlerVia": "function"
@@ -120,6 +137,25 @@
         "adapter": "react-router-routes",
         "registration": "routes.ts/route-config",
         "handlerVia": "function"
+      }
+    },
+    {
+      "id": "react-router-config#app/admin/projects.$projectId.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "react-router-config",
+      "file": "app/admin/projects.$projectId.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:react-router#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "type:react-router-config#Project"
+        }
       }
     },
     {
@@ -351,8 +387,8 @@
       "repo": "react-router-config",
       "meta": {
         "stats": {
-          "files": 9,
-          "filesRead": 9,
+          "files": 11,
+          "filesRead": 11,
           "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {}
@@ -377,6 +413,19 @@
         "requestRead": true,
         "params": "{projectId:string;taskId?:string}"
       }
+    },
+    {
+      "from": "entry:react-router-config:http:GET:/admin/projects/:param",
+      "to": "react-router-config#app/admin/projects.$projectId.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/admin/projects.$projectId.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{projectId:string}"
+      },
+      "returns": "type:react-router-config#Project"
     },
     {
       "from": "entry:react-router-config:http:GET:/api/projects",
@@ -457,6 +506,18 @@
         "body": "FormData"
       },
       "returns": "{saved:string}"
+    },
+    {
+      "from": "react-router-config#app/admin/projects.$projectId.ts:loader",
+      "to": "react-router-config#app/models/projects.ts:oneProject",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/admin/projects.$projectId.ts",
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:react-router-config#Project"
     },
     {
       "from": "react-router-config#app/routes/api/projects.ts:action",
@@ -574,5 +635,15 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "app/routes.ts",
+      "line": 16,
+      "reason": "route-module-not-found",
+      "message": "The route config serves /reports from routes/reports.tsx, which is not a source file of this project, so the route's ways in were not read.",
+      "hint": "Name the module by its path relative to app/, as the file is spelled on disk, or add the file.",
+      "symbol": "routes/reports.tsx",
+      "adapter": "react-router-routes"
+    }
+  ]
 }
