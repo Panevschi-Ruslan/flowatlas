@@ -136,3 +136,75 @@ export const lookalikes = (a: OtherClient, b: { insert(t: string, r: object): vo
     ]);
   });
 });
+
+describe('a client handed in, by the type its factory resolves to return or a qualified name (P49)', () => {
+  const read = (files: Record<string, string>, rows: Array<Record<string, unknown>>) => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
+    const described = rows.map((row) => dbTableAccessSchema.parse(row));
+    return project
+      .getSourceFileOrThrow('/src/use.ts')
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .map((call) => configuredAccessOf(call, described))
+      .flatMap((found) => (found === undefined ? [] : [`${found.op ?? '?'} ${found.table ?? '?'}`]));
+  };
+
+  it('matches a named interface against what an installed factory returns, with no clientType', () => {
+    expect(
+      read(
+        {
+          '/node_modules/@acme/data-kit/package.json': '{ "name": "@acme/data-kit", "types": "index.d.ts" }',
+          '/node_modules/@acme/data-kit/index.d.ts': [
+            'export interface Store { put(table: string, row: object): Promise<void>; }',
+            'export interface Other { put(table: string, row: object): Promise<void>; }',
+            'export declare function openStore(): Promise<Store>;',
+          ].join('\n'),
+          '/src/use.ts': [
+            "import type { Store, Other } from '@acme/data-kit';",
+            "export const save = (store: Store) => store.put('orders', {});",
+            "export const not = (other: Other) => other.put('nope', {});",
+          ].join('\n'),
+        },
+        [{ factory: 'openStore', name: 'put', package: '@acme/data-kit', table: 0, op: 'write' }],
+      ),
+    ).toEqual(['write orders']);
+  });
+
+  it("matches a repository factory's own interface from a file of its own, and nothing when the type does not resolve", () => {
+    expect(
+      read(
+        {
+          '/src/types.ts': 'export interface Store { put(table: string, row: object): void; }',
+          '/src/store.ts': [
+            "import type { Store } from './types';",
+            'export const openStore = (): Store => ({ put: () => undefined });',
+          ].join('\n'),
+          '/src/use.ts': [
+            "import type { Store } from './types';",
+            "import type { Missing } from './missing';",
+            "export const save = (store: Store) => store.put('orders', {});",
+            "export const lost = (store: Missing) => store.put('nope', {});",
+          ].join('\n'),
+        },
+        [{ factory: 'openStore', name: 'put', table: 0, op: 'write' }],
+      ),
+    ).toEqual(['write orders']);
+  });
+
+  it('matches a qualified kit.DataClient against clientType through a namespace import', () => {
+    expect(
+      read(
+        {
+          '/src/use.ts': [
+            "import * as kit from '@acme/data-kit';",
+            "import * as other from '@acme/other-kit';",
+            "export const save = (db: kit.DataClient) => db.insert('orders', {});",
+            "export const made = (db: ReturnType<typeof kit.createClient>) => db.insert('members', {});",
+            "export const not = (db: other.DataClient) => db.insert('nope', {});",
+          ].join('\n'),
+        },
+        [{ factory: 'createClient', clientType: 'DataClient', name: 'insert', package: '@acme/data-kit', table: 0, op: 'write' }],
+      ),
+    ).toEqual(['write orders', 'write members']);
+  });
+});

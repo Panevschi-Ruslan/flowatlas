@@ -30,6 +30,8 @@ else of note: that is the state being read.
 | `leaveLibrary` | `db.remove('members', …)` | delete `members` | the same client |
 | `Reservations.hold` | `this.db.insert('reservations', …)` | write `reservations` | `db` is injected through the constructor, typed `DataClient` - the `clientType` named on the row (P44) |
 | `releaseHold` | `db.remove('reservations', …)` | delete `reservations` | a parameter typed `ReturnType<typeof createClient>` (P44) |
+| `extendHold` | `db.insert('hold_extensions', …)` | write `hold_extensions` | a parameter typed `kit.DataClient`, the `clientType` through a namespace import (P49) |
+| `recordFine` | `ledger.record('fines', …)` | write `fines` | a parameter typed `Ledger`, the interface the repository's `openLedger()` is declared to return; the row names no `clientType` (P49) |
 | `notifyHold` | `mailer.insert('hold-notices', …)` | - | a parameter typed as something else |
 | `queueWelcome` | `outbox.insert('welcome', …)` | - | an object of the repository's own, not a client the factory made |
 | `lookalike` | `findOne('members')` | - | a local of the same name shadows the import, so it is not the kit's |

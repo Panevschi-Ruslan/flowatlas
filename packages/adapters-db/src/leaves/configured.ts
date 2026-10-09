@@ -1,5 +1,5 @@
 import { callsHelper, evaluateExpression, namesHelper, type DbOp, type DbTableAccess } from '@flowatlas/core';
-import { Node, SyntaxKind, type CallExpression, type TypeNode } from 'ts-morph';
+import { Node, SyntaxKind, type CallExpression, type EntityName, type Project, type Type, type TypeNode } from 'ts-morph';
 
 /** A call to a function the configuration names, and the table it touches. */
 export interface ConfiguredAccess {
@@ -32,9 +32,72 @@ interface Factory {
 /** Type wrappers that stand for the type inside them: `Awaited<…>`, `Readonly<…>`. */
 const WRAPPERS: ReadonlySet<string> = new Set(['Awaited', 'Readonly', 'NonNullable']);
 
+/** The name a qualified type starts from: `kit` of `kit.DataClient`. */
+const rootOf = (name: EntityName): Node => (Node.isQualifiedName(name) ? rootOf(name.getLeft()) : name);
+
+const fromPackage = (specifier: string, pkg: string): boolean => specifier === pkg || specifier.startsWith(`${pkg}/`);
+
+/**
+ * The factory as declared for a type name: exported by the module the name was
+ * imported from, when the row names the package, or anywhere the repository
+ * exports it, for a factory of the repository's own.
+ */
+/**
+ * A repository factory wherever the repository exports it, found once per name:
+ * the interface it returns may sit in a file of its own (P49).
+ */
+const REPOSITORY_FACTORIES = new WeakMap<Project, Map<string, Node[]>>();
+
+const repositoryFactory = (project: Project, name: string): Node[] => {
+  const known = REPOSITORY_FACTORIES.get(project) ?? new Map<string, Node[]>();
+  REPOSITORY_FACTORIES.set(project, known);
+  const found =
+    known.get(name) ??
+    project
+      .getSourceFiles()
+      .filter((file) => !file.getFilePath().includes('/node_modules/'))
+      .flatMap((file) => file.getExportedDeclarations().get(name) ?? []);
+  known.set(name, found);
+  return found;
+};
+
+const factoryBeside = (name: EntityName, factory: Factory): Node[] =>
+  (rootOf(name).getSymbol()?.getDeclarations() ?? []).flatMap((declaration) => {
+    if (factory.package === undefined) return repositoryFactory(declaration.getProject(), factory.name);
+    const imported = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
+    if (imported !== undefined && factory.package !== undefined && !fromPackage(imported.getModuleSpecifierValue(), factory.package)) {
+      return [];
+    }
+    return imported?.getModuleSpecifierSourceFile()?.getExportedDeclarations().get(factory.name) ?? [];
+  });
+
+/** What a call hands back, past the promise an async factory wraps it in. */
+const settled = (type: Type): Type => (type.getSymbol()?.getName() === 'Promise' ? (type.getTypeArguments()[0] ?? type) : type);
+
+/**
+ * Whether a named type is the one the factory is declared to return (P49):
+ * `db: DataClient` where `createClient(): DataClient`, with no `clientType` on
+ * the row. Only when both resolve: a type nothing resolves is no evidence.
+ */
+const returnedByFactory = (name: EntityName, type: TypeNode, factory: Factory): boolean => {
+  const declared = type.getType();
+  if (declared.isAny() || declared.isUnknown()) return false;
+  return factoryBeside(name, factory).some((made) =>
+    made
+      .getType()
+      .getCallSignatures()
+      .some((signature) => {
+        const returned = settled(signature.getReturnType());
+        return !returned.isAny() && returned.compilerType === declared.compilerType;
+      }),
+  );
+};
+
 /**
  * Whether a declared type is the factory's client, by how the type is written
- * (P44): `ReturnType<typeof createClient>`, the type the package names it by,
+ * (P44): `ReturnType<typeof createClient>`, the type the package names it by
+ * (qualified through a namespace import too), the type the factory resolves to
+ * return (P49),
  * `typeof db` of a client the factory made, a type alias of any of them, or
  * any of them in a union or behind `Awaited<…>`.
  */
@@ -55,6 +118,7 @@ const CLIENT_TYPES: ReadonlyMap<SyntaxKind, (type: TypeNode, factory: Factory, h
       }
       if (named !== undefined && WRAPPERS.has(named)) return argument !== undefined && isClientType(argument, factory, hops + 1);
       if (factory.clientType !== undefined && namesHelper(name, { name: factory.clientType, package: factory.package })) return true;
+      if (returnedByFactory(name, type, factory)) return true;
       // A name the repository gave one of these: `type Client = ReturnType<…>`.
       return (name.getSymbol()?.getDeclarations() ?? []).some((declaration) => {
         const aliased = Node.isTypeAliasDeclaration(declaration) ? declaration.getTypeNode() : undefined;

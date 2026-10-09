@@ -6,6 +6,11 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+A data kit's client handed in typed by a named interface is followed with no
+`clientType` on the row when the factory resolves and is declared to return that
+type; a `clientType` is matched through a namespace import too (`kit.DataClient`,
+and `ReturnType<typeof kit.createClient>`).
+
 React Router's `app/routes.ts` follows `flatRoutes()` - as the whole config,
 spread into it, or under `prefix` / `layout` - reading the directory it names by
 Remix's flat convention; a module the config names that is not in the project is

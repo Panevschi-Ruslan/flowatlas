@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T21:10:37.863Z",
+  "builtAt": "2026-10-09T08:01:47.194Z",
   "services": [
     {
       "name": "loans",
@@ -10,6 +10,25 @@
     }
   ],
   "nodes": [
+    {
+      "id": "db_query:loans#src/ledger.ts:13:9",
+      "type": "db_query",
+      "label": "write fines",
+      "repo": "loans",
+      "file": "src/ledger.ts",
+      "line": 13,
+      "meta": {
+        "op": "write",
+        "table": "fines",
+        "tables": [
+          "fines"
+        ],
+        "package": "local",
+        "method": "record",
+        "receiver": "ledger.record",
+        "source": "configured"
+      }
+    },
     {
       "id": "db_query:loans#src/loans.ts:14:24",
       "type": "db_query",
@@ -161,12 +180,12 @@
       }
     },
     {
-      "id": "db_query:loans#src/reservations.ts:10:11",
+      "id": "db_query:loans#src/reservations.ts:11:11",
       "type": "db_query",
       "label": "write reservations",
       "repo": "loans",
       "file": "src/reservations.ts",
-      "line": 10,
+      "line": 11,
       "meta": {
         "op": "write",
         "table": "reservations",
@@ -180,12 +199,12 @@
       }
     },
     {
-      "id": "db_query:loans#src/reservations.ts:15:9",
+      "id": "db_query:loans#src/reservations.ts:16:9",
       "type": "db_query",
       "label": "delete reservations",
       "repo": "loans",
       "file": "src/reservations.ts",
-      "line": 15,
+      "line": 16,
       "meta": {
         "op": "delete",
         "table": "reservations",
@@ -199,12 +218,31 @@
       }
     },
     {
+      "id": "db_query:loans#src/reservations.ts:21:9",
+      "type": "db_query",
+      "label": "write hold_extensions",
+      "repo": "loans",
+      "file": "src/reservations.ts",
+      "line": 21,
+      "meta": {
+        "op": "write",
+        "table": "hold_extensions",
+        "tables": [
+          "hold_extensions"
+        ],
+        "package": "@acme/data-kit",
+        "method": "insert",
+        "receiver": "db.insert",
+        "source": "configured"
+      }
+    },
+    {
       "id": "entry:loans:http:DELETE:/loans/:param",
       "type": "entry",
       "label": "DELETE /loans/:param",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 14,
+      "line": 15,
       "kind": "http",
       "meta": {
         "method": "DELETE",
@@ -223,7 +261,7 @@
       "label": "DELETE /members/:param",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 30,
+      "line": 31,
       "kind": "http",
       "meta": {
         "method": "DELETE",
@@ -242,7 +280,7 @@
       "label": "DELETE /reservations/:param",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 41,
+      "line": 42,
       "kind": "http",
       "meta": {
         "method": "DELETE",
@@ -256,12 +294,31 @@
       }
     },
     {
+      "id": "entry:loans:http:POST:/fines/:param",
+      "type": "entry",
+      "label": "POST /fines/:param",
+      "repo": "loans",
+      "file": "src/server.ts",
+      "line": 52,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/fines/:param",
+        "rawPath": "/fines/:memberId",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
       "id": "entry:loans:http:POST:/loans",
       "type": "entry",
       "label": "POST /loans",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 10,
+      "line": 11,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -280,7 +337,7 @@
       "label": "POST /loans/archive/:param",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 19,
+      "line": 20,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -299,7 +356,7 @@
       "label": "POST /members",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 24,
+      "line": 25,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -318,7 +375,7 @@
       "label": "POST /reservations/:param",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 35,
+      "line": 36,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -326,6 +383,25 @@
         "rawPath": "/reservations/:isbn",
         "adapter": "express-routes",
         "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:loans:http:PUT:/reservations/:param",
+      "type": "entry",
+      "label": "PUT /reservations/:param",
+      "repo": "loans",
+      "file": "src/server.ts",
+      "line": 47,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/reservations/:param",
+        "rawPath": "/reservations/:isbn",
+        "adapter": "express-routes",
+        "registration": "app.put",
         "middlewareRead": true,
         "handlerVia": "inline",
         "confidence": "heuristic"
@@ -348,6 +424,47 @@
             {
               "name": "subject",
               "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#src/ledger.ts:openLedger",
+      "type": "function",
+      "label": "openLedger",
+      "repo": "loans",
+      "file": "src/ledger.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:loans#Ledger"
+        }
+      }
+    },
+    {
+      "id": "loans#src/ledger.ts:recordFine",
+      "type": "function",
+      "label": "recordFine",
+      "repo": "loans",
+      "file": "src/ledger.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ledger",
+              "type": "type:loans#Ledger"
+            },
+            {
+              "name": "memberId",
+              "type": "string"
+            },
+            {
+              "name": "amount",
+              "type": "number"
             }
           ],
           "returns": "void"
@@ -509,7 +626,7 @@
       "label": "Reservations",
       "repo": "loans",
       "file": "src/reservations.ts",
-      "line": 6,
+      "line": 7,
       "kind": "injectable"
     },
     {
@@ -518,7 +635,7 @@
       "label": "Reservations.hold",
       "repo": "loans",
       "file": "src/reservations.ts",
-      "line": 9,
+      "line": 10,
       "meta": {
         "signature": {
           "params": [
@@ -536,12 +653,35 @@
       }
     },
     {
+      "id": "loans#src/reservations.ts:extendHold",
+      "type": "function",
+      "label": "extendHold",
+      "repo": "loans",
+      "file": "src/reservations.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "db",
+              "type": "unknown"
+            },
+            {
+              "name": "isbn",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "loans#src/reservations.ts:notifyHold",
       "type": "function",
       "label": "notifyHold",
       "repo": "loans",
       "file": "src/reservations.ts",
-      "line": 19,
+      "line": 25,
       "meta": {
         "signature": {
           "params": [
@@ -564,7 +704,7 @@
       "label": "releaseHold",
       "repo": "loans",
       "file": "src/reservations.ts",
-      "line": 14,
+      "line": 15,
       "meta": {
         "signature": {
           "params": [
@@ -582,12 +722,12 @@
       }
     },
     {
-      "id": "loans#src/server.ts:DELETE /loans/:loanId@14",
+      "id": "loans#src/server.ts:DELETE /loans/:loanId@15",
       "type": "function",
-      "label": "DELETE /loans/:loanId@14",
+      "label": "DELETE /loans/:loanId@15",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 14,
+      "line": 15,
       "meta": {
         "signature": {
           "params": [
@@ -605,12 +745,12 @@
       }
     },
     {
-      "id": "loans#src/server.ts:DELETE /members/:memberId@30",
+      "id": "loans#src/server.ts:DELETE /members/:memberId@31",
       "type": "function",
-      "label": "DELETE /members/:memberId@30",
+      "label": "DELETE /members/:memberId@31",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 30,
+      "line": 31,
       "meta": {
         "signature": {
           "params": [
@@ -628,12 +768,12 @@
       }
     },
     {
-      "id": "loans#src/server.ts:DELETE /reservations/:isbn@41",
+      "id": "loans#src/server.ts:DELETE /reservations/:isbn@42",
       "type": "function",
-      "label": "DELETE /reservations/:isbn@41",
+      "label": "DELETE /reservations/:isbn@42",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 41,
+      "line": 42,
       "meta": {
         "signature": {
           "params": [
@@ -651,12 +791,12 @@
       }
     },
     {
-      "id": "loans#src/server.ts:POST /loans/archive/:year@19",
+      "id": "loans#src/server.ts:POST /fines/:memberId@52",
       "type": "function",
-      "label": "POST /loans/archive/:year@19",
+      "label": "POST /fines/:memberId@52",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 19,
+      "line": 52,
       "meta": {
         "signature": {
           "params": [
@@ -674,12 +814,12 @@
       }
     },
     {
-      "id": "loans#src/server.ts:POST /loans@10",
+      "id": "loans#src/server.ts:POST /loans/archive/:year@20",
       "type": "function",
-      "label": "POST /loans@10",
+      "label": "POST /loans/archive/:year@20",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 10,
+      "line": 20,
       "meta": {
         "signature": {
           "params": [
@@ -697,12 +837,12 @@
       }
     },
     {
-      "id": "loans#src/server.ts:POST /members@24",
+      "id": "loans#src/server.ts:POST /loans@11",
       "type": "function",
-      "label": "POST /members@24",
+      "label": "POST /loans@11",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 24,
+      "line": 11,
       "meta": {
         "signature": {
           "params": [
@@ -720,12 +860,58 @@
       }
     },
     {
-      "id": "loans#src/server.ts:POST /reservations/:isbn@35",
+      "id": "loans#src/server.ts:POST /members@25",
       "type": "function",
-      "label": "POST /reservations/:isbn@35",
+      "label": "POST /members@25",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 35,
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#src/server.ts:POST /reservations/:isbn@36",
+      "type": "function",
+      "label": "POST /reservations/:isbn@36",
+      "repo": "loans",
+      "file": "src/server.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "loans#src/server.ts:PUT /reservations/:isbn@47",
+      "type": "function",
+      "label": "PUT /reservations/:isbn@47",
+      "repo": "loans",
+      "file": "src/server.ts",
+      "line": 47,
       "meta": {
         "signature": {
           "params": [
@@ -748,7 +934,7 @@
       "label": "express.json()",
       "repo": "loans",
       "file": "src/server.ts",
-      "line": 8,
+      "line": 9,
       "kind": "function"
     },
     {
@@ -758,8 +944,8 @@
       "repo": "loans",
       "meta": {
         "stats": {
-          "files": 6,
-          "filesRead": 6,
+          "files": 7,
+          "filesRead": 7,
           "filesUnreadable": 0,
           "classes": 1,
           "skippedExternalCalls": {}
@@ -775,6 +961,18 @@
       "id": "table:loans#audit_events",
       "type": "table",
       "label": "audit_events",
+      "repo": "loans"
+    },
+    {
+      "id": "table:loans#fines",
+      "type": "table",
+      "label": "fines",
+      "repo": "loans"
+    },
+    {
+      "id": "table:loans#hold_extensions",
+      "type": "table",
+      "label": "hold_extensions",
       "repo": "loans"
     },
     {
@@ -797,6 +995,14 @@
     }
   ],
   "edges": [
+    {
+      "from": "db_query:loans#src/ledger.ts:13:9",
+      "to": "table:loans#fines",
+      "type": "queries",
+      "confidence": "declared",
+      "file": "src/ledger.ts",
+      "line": 13
+    },
     {
       "from": "db_query:loans#src/loans.ts:14:24",
       "to": "table:loans#members",
@@ -854,28 +1060,36 @@
       "line": 9
     },
     {
-      "from": "db_query:loans#src/reservations.ts:10:11",
+      "from": "db_query:loans#src/reservations.ts:11:11",
       "to": "table:loans#reservations",
       "type": "queries",
       "confidence": "declared",
       "file": "src/reservations.ts",
-      "line": 10
+      "line": 11
     },
     {
-      "from": "db_query:loans#src/reservations.ts:15:9",
+      "from": "db_query:loans#src/reservations.ts:16:9",
       "to": "table:loans#reservations",
       "type": "queries",
       "confidence": "declared",
       "file": "src/reservations.ts",
-      "line": 15
+      "line": 16
+    },
+    {
+      "from": "db_query:loans#src/reservations.ts:21:9",
+      "to": "table:loans#hold_extensions",
+      "type": "queries",
+      "confidence": "declared",
+      "file": "src/reservations.ts",
+      "line": 21
     },
     {
       "from": "entry:loans:http:DELETE:/loans/:param",
-      "to": "loans#src/server.ts:DELETE /loans/:loanId@14",
+      "to": "loans#src/server.ts:DELETE /loans/:loanId@15",
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 14,
+      "line": 15,
       "meta": {
         "requestRead": true,
         "params": "{loanId:string}"
@@ -887,7 +1101,7 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 8,
+      "line": 9,
       "meta": {
         "order": 0,
         "scope": "global",
@@ -897,11 +1111,11 @@
     },
     {
       "from": "entry:loans:http:DELETE:/members/:param",
-      "to": "loans#src/server.ts:DELETE /members/:memberId@30",
+      "to": "loans#src/server.ts:DELETE /members/:memberId@31",
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 30,
+      "line": 31,
       "meta": {
         "requestRead": true,
         "params": "{memberId:string}"
@@ -913,7 +1127,7 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 8,
+      "line": 9,
       "meta": {
         "order": 0,
         "scope": "global",
@@ -923,11 +1137,11 @@
     },
     {
       "from": "entry:loans:http:DELETE:/reservations/:param",
-      "to": "loans#src/server.ts:DELETE /reservations/:isbn@41",
+      "to": "loans#src/server.ts:DELETE /reservations/:isbn@42",
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 41,
+      "line": 42,
       "meta": {
         "requestRead": true,
         "params": "{isbn:string}"
@@ -939,7 +1153,33 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 8,
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/fines/:param",
+      "to": "loans#src/server.ts:POST /fines/:memberId@52",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 52,
+      "meta": {
+        "requestRead": true,
+        "params": "{memberId:string}"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/fines/:param",
+      "to": "loans#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9,
       "meta": {
         "order": 0,
         "scope": "global",
@@ -949,12 +1189,12 @@
     },
     {
       "from": "entry:loans:http:POST:/loans",
-      "to": "loans#src/server.ts:POST /loans@10",
+      "to": "loans#src/server.ts:POST /loans@11",
       "type": "handles",
       "confidence": "static",
       "returns": "type:loans#Loan",
       "file": "src/server.ts",
-      "line": 10,
+      "line": 11,
       "meta": {
         "requestRead": true
       }
@@ -965,7 +1205,7 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 8,
+      "line": 9,
       "meta": {
         "order": 0,
         "scope": "global",
@@ -975,11 +1215,11 @@
     },
     {
       "from": "entry:loans:http:POST:/loans/archive/:param",
-      "to": "loans#src/server.ts:POST /loans/archive/:year@19",
+      "to": "loans#src/server.ts:POST /loans/archive/:year@20",
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 19,
+      "line": 20,
       "meta": {
         "requestRead": true,
         "params": "{year:string}"
@@ -991,7 +1231,7 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 8,
+      "line": 9,
       "meta": {
         "order": 0,
         "scope": "global",
@@ -1001,11 +1241,11 @@
     },
     {
       "from": "entry:loans:http:POST:/members",
-      "to": "loans#src/server.ts:POST /members@24",
+      "to": "loans#src/server.ts:POST /members@25",
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 24,
+      "line": 25,
       "meta": {
         "requestRead": true
       }
@@ -1016,7 +1256,7 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 8,
+      "line": 9,
       "meta": {
         "order": 0,
         "scope": "global",
@@ -1026,11 +1266,11 @@
     },
     {
       "from": "entry:loans:http:POST:/reservations/:param",
-      "to": "loans#src/server.ts:POST /reservations/:isbn@35",
+      "to": "loans#src/server.ts:POST /reservations/:isbn@36",
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 35,
+      "line": 36,
       "meta": {
         "requestRead": true,
         "params": "{isbn:string}"
@@ -1042,13 +1282,47 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 8,
+      "line": 9,
       "meta": {
         "order": 0,
         "scope": "global",
         "layer": "middleware",
         "source": "app.use"
       }
+    },
+    {
+      "from": "entry:loans:http:PUT:/reservations/:param",
+      "to": "loans#src/server.ts:PUT /reservations/:isbn@47",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 47,
+      "meta": {
+        "requestRead": true,
+        "params": "{isbn:string}"
+      }
+    },
+    {
+      "from": "entry:loans:http:PUT:/reservations/:param",
+      "to": "loans#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "loans#src/ledger.ts:recordFine",
+      "to": "db_query:loans#src/ledger.ts:13:9",
+      "type": "calls",
+      "confidence": "declared",
+      "file": "src/ledger.ts",
+      "line": 13
     },
     {
       "from": "loans#src/loans.ts:archive",
@@ -1155,22 +1429,30 @@
     },
     {
       "from": "loans#src/reservations.ts:Reservations.hold",
-      "to": "db_query:loans#src/reservations.ts:10:11",
+      "to": "db_query:loans#src/reservations.ts:11:11",
       "type": "calls",
       "confidence": "declared",
       "file": "src/reservations.ts",
-      "line": 10
+      "line": 11
+    },
+    {
+      "from": "loans#src/reservations.ts:extendHold",
+      "to": "db_query:loans#src/reservations.ts:21:9",
+      "type": "calls",
+      "confidence": "declared",
+      "file": "src/reservations.ts",
+      "line": 21
     },
     {
       "from": "loans#src/reservations.ts:releaseHold",
-      "to": "db_query:loans#src/reservations.ts:15:9",
+      "to": "db_query:loans#src/reservations.ts:16:9",
       "type": "calls",
       "confidence": "declared",
       "file": "src/reservations.ts",
-      "line": 15
+      "line": 16
     },
     {
-      "from": "loans#src/server.ts:DELETE /loans/:loanId@14",
+      "from": "loans#src/server.ts:DELETE /loans/:loanId@15",
       "to": "loans#src/loans.ts:returnBook",
       "type": "calls",
       "confidence": "static",
@@ -1179,10 +1461,10 @@
       ],
       "returns": "void",
       "file": "src/server.ts",
-      "line": 15
+      "line": 16
     },
     {
-      "from": "loans#src/server.ts:DELETE /members/:memberId@30",
+      "from": "loans#src/server.ts:DELETE /members/:memberId@31",
       "to": "loans#src/members.ts:leaveLibrary",
       "type": "calls",
       "confidence": "static",
@@ -1191,10 +1473,10 @@
       ],
       "returns": "void",
       "file": "src/server.ts",
-      "line": 31
+      "line": 32
     },
     {
-      "from": "loans#src/server.ts:DELETE /reservations/:isbn@41",
+      "from": "loans#src/server.ts:DELETE /reservations/:isbn@42",
       "to": "loans#src/reservations.ts:releaseHold",
       "type": "calls",
       "confidence": "static",
@@ -1204,10 +1486,34 @@
       ],
       "returns": "void",
       "file": "src/server.ts",
-      "line": 42
+      "line": 43
     },
     {
-      "from": "loans#src/server.ts:POST /loans/archive/:year@19",
+      "from": "loans#src/server.ts:POST /fines/:memberId@52",
+      "to": "loans#src/ledger.ts:openLedger",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:loans#Ledger",
+      "file": "src/server.ts",
+      "line": 53
+    },
+    {
+      "from": "loans#src/server.ts:POST /fines/:memberId@52",
+      "to": "loans#src/ledger.ts:recordFine",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:loans#Ledger",
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/server.ts",
+      "line": 53
+    },
+    {
+      "from": "loans#src/server.ts:POST /loans/archive/:year@20",
       "to": "loans#src/loans.ts:archive",
       "type": "calls",
       "confidence": "static",
@@ -1217,10 +1523,10 @@
       ],
       "returns": "void",
       "file": "src/server.ts",
-      "line": 20
+      "line": 21
     },
     {
-      "from": "loans#src/server.ts:POST /loans@10",
+      "from": "loans#src/server.ts:POST /loans@11",
       "to": "loans#src/loans.ts:lendBook",
       "type": "calls",
       "confidence": "static",
@@ -1230,10 +1536,10 @@
       ],
       "returns": "type:loans#Loan",
       "file": "src/server.ts",
-      "line": 11
+      "line": 12
     },
     {
-      "from": "loans#src/server.ts:POST /members@24",
+      "from": "loans#src/server.ts:POST /members@25",
       "to": "loans#src/members.ts:joinLibrary",
       "type": "calls",
       "confidence": "static",
@@ -1243,10 +1549,10 @@
       ],
       "returns": "void",
       "file": "src/server.ts",
-      "line": 25
+      "line": 26
     },
     {
-      "from": "loans#src/server.ts:POST /members@24",
+      "from": "loans#src/server.ts:POST /members@25",
       "to": "loans#src/members.ts:queueWelcome",
       "type": "calls",
       "confidence": "static",
@@ -1255,10 +1561,10 @@
       ],
       "returns": "unknown[]",
       "file": "src/server.ts",
-      "line": 26
+      "line": 27
     },
     {
-      "from": "loans#src/server.ts:POST /reservations/:isbn@35",
+      "from": "loans#src/server.ts:POST /reservations/:isbn@36",
       "to": "loans#src/reservations.ts:Reservations.hold",
       "type": "calls",
       "confidence": "static",
@@ -1268,10 +1574,10 @@
       ],
       "returns": "void",
       "file": "src/server.ts",
-      "line": 36
+      "line": 37
     },
     {
-      "from": "loans#src/server.ts:POST /reservations/:isbn@35",
+      "from": "loans#src/server.ts:POST /reservations/:isbn@36",
       "to": "loans#src/reservations.ts:notifyHold",
       "type": "calls",
       "confidence": "static",
@@ -1281,10 +1587,34 @@
       ],
       "returns": "void",
       "file": "src/server.ts",
-      "line": 37
+      "line": 38
+    },
+    {
+      "from": "loans#src/server.ts:PUT /reservations/:isbn@47",
+      "to": "loans#src/reservations.ts:extendHold",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/server.ts",
+      "line": 48
     }
   ],
   "types": {
+    "type:loans#Ledger": {
+      "name": "Ledger",
+      "kind": "object",
+      "declaredIn": "loans#src/ledger.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
     "type:loans#Loan": {
       "name": "Loan",
       "kind": "object",
@@ -1315,13 +1645,13 @@
   },
   "unresolved": [
     {
-      "file": "src/loans.ts",
-      "line": 24,
+      "file": "src/ledger.ts",
+      "line": 13,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 20,
+      "sites": 26,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
-      "symbol": "returnBook -> kit.remove",
+      "symbol": "recordFine -> ledger.record",
       "service": "loans"
     },
     {
@@ -1334,10 +1664,18 @@
     },
     {
       "file": "src/reservations.ts",
-      "line": 14,
+      "line": 15,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
+      "service": "loans"
+    },
+    {
+      "file": "src/reservations.ts",
+      "line": 20,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "kit.DataClient",
       "service": "loans"
     }
   ]

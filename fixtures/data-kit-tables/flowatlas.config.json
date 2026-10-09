@@ -10,7 +10,8 @@
         { "name": "remove", "package": "@acme/data-kit", "table": 0, "op": "delete" },
         { "factory": "createClient", "clientType": "DataClient", "package": "@acme/data-kit", "name": "insert", "table": 0, "op": "write" },
         { "factory": "createClient", "clientType": "DataClient", "package": "@acme/data-kit", "name": "remove", "table": 0, "op": "delete" },
-        { "name": "auditLog", "table": "audit_events", "op": "write" }
+        { "name": "auditLog", "table": "audit_events", "op": "write" },
+        { "factory": "openLedger", "name": "record", "table": 0, "op": "write" }
       ]
     }
   },

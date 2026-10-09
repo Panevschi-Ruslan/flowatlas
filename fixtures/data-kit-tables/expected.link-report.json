@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T21:10:37.863Z",
+  "builtAt": "2026-10-09T08:01:47.194Z",
   "configHash": "99ae4690aaf0",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": ".",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 42,
-      "edges": 45,
-      "types": 1,
-      "unresolved": 3,
-      "durationMs": 496,
+      "nodes": 53,
+      "edges": 56,
+      "types": 2,
+      "unresolved": 4,
+      "durationMs": 503,
       "packages": {
         "name": "library-loans",
         "runtime": [
@@ -46,28 +46,30 @@
     "noProducers": []
   },
   "routes": {
-    "total": 7,
+    "total": 9,
     "called": 0,
     "uncalled": [
       "entry:loans:http:DELETE:/loans/:param",
       "entry:loans:http:DELETE:/members/:param",
       "entry:loans:http:DELETE:/reservations/:param",
+      "entry:loans:http:POST:/fines/:param",
       "entry:loans:http:POST:/loans",
       "entry:loans:http:POST:/loans/archive/:param",
       "entry:loans:http:POST:/members",
-      "entry:loans:http:POST:/reservations/:param"
+      "entry:loans:http:POST:/reservations/:param",
+      "entry:loans:http:PUT:/reservations/:param"
     ],
     "duplicated": []
   },
   "types": {
-    "total": 1,
+    "total": 2,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
-    "nodes": 42,
-    "edges": 45,
-    "types": 1,
-    "unresolved": 3
+    "nodes": 53,
+    "edges": 56,
+    "types": 2,
+    "unresolved": 4
   }
 }

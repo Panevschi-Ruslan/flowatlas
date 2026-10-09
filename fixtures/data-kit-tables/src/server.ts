@@ -2,7 +2,8 @@ import express from 'express';
 import { archive, lendBook, returnBook } from './loans';
 import { joinLibrary, leaveLibrary, queueWelcome } from './members';
 import { createClient } from '@acme/data-kit';
-import { notifyHold, releaseHold, reservations } from './reservations';
+import { extendHold, notifyHold, releaseHold, reservations } from './reservations';
+import { openLedger, recordFine } from './ledger';
 
 const app = express();
 app.use(express.json());
@@ -41,6 +42,16 @@ app.post('/reservations/:isbn', async (req, res) => {
 app.delete('/reservations/:isbn', async (req, res) => {
   await releaseHold(createClient({ pool: 1 }), req.params.isbn);
   res.status(204).end();
+});
+
+app.put('/reservations/:isbn', async (req, res) => {
+  await extendHold(createClient({ pool: 1 }), req.params.isbn);
+  res.status(204).end();
+});
+
+app.post('/fines/:memberId', async (req, res) => {
+  await recordFine(openLedger(), req.params.memberId, Number(req.body.amount));
+  res.status(201).end();
 });
 
 app.listen(3000);

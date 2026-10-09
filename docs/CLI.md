@@ -1652,6 +1652,11 @@ given as `clientType` on the row:
 { "factory": "createClient", "clientType": "DataClient", "package": "@acme/data-kit", "name": "insert", "table": 0, "op": "write" }
 ```
 
+The `clientType` is matched written plainly or through a namespace import
+(`kit.DataClient`). Without one, a parameter typed by a named interface is the
+client when the factory resolves - installed, or the repository's own - and is
+declared to return that same type (P49): `ledger: Ledger` where
+`openLedger(): Ledger`. A type nothing resolves is no evidence either way.
 A parameter typed as anything else is not the client, whatever its methods are
 called.
 

@@ -326,7 +326,7 @@ const innermost = (node: TsNode): TsNode => {
 
 /** The declaration a called name resolves to, through an import. */
 const calleeDeclarations = (callee: TsNode): TsNode[] => {
-  const name = Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : callee;
+  const name = Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : Node.isQualifiedName(callee) ? callee.getRight() : callee;
   const symbol = name.getSymbol();
   const target = symbol?.isAlias() === true ? symbol.getAliasedSymbol() : symbol;
   return target?.getDeclarations() ?? [];
@@ -540,11 +540,22 @@ const byCalls = (
 };
 
 /** The name a call is made by, and the name its callee is reached from: `respond` and `respond`, or `respond` and `http`. */
+/**
+ * The name and the thing it is a member of, for a name written as a value
+ * (`kit.createClient`) or as a type (`kit.DataClient`, P49) alike.
+ */
+const memberOf = (callee: TsNode): { name: string; object: TsNode } | undefined => {
+  if (Node.isPropertyAccessExpression(callee)) return { name: callee.getName(), object: callee.getExpression() };
+  if (Node.isQualifiedName(callee)) return { name: callee.getRight().getText(), object: callee.getLeft() };
+  return undefined;
+};
+
 const calledBy = (callee: TsNode): { name: string; root: string } | undefined => {
   if (Node.isIdentifier(callee)) return { name: callee.getText(), root: callee.getText() };
-  if (!Node.isPropertyAccessExpression(callee)) return undefined;
-  const object = callee.getExpression();
-  return Node.isIdentifier(object) ? { name: callee.getName(), root: object.getText() } : undefined;
+  const member = memberOf(callee);
+  return member !== undefined && Node.isIdentifier(member.object)
+    ? { name: member.name, root: member.object.getText() }
+    : undefined;
 };
 
 /** Whether a module specifier is a package or a path inside it. */
@@ -595,8 +606,9 @@ export const namesHelper = (callee: TsNode, helper: { name: string; package?: st
       if (named && boundByImport(callee)) return true;
       continue;
     }
-    if (called.name !== helper.name || !Node.isPropertyAccessExpression(callee)) continue;
-    const root = callee.getExpression();
+    const member = memberOf(callee);
+    if (called.name !== helper.name || member === undefined) continue;
+    const root = member.object;
     if (declaration.getNamespaceImport()?.getText() === called.root && boundByImport(root)) return true;
     if (declaration.getDefaultImport()?.getText() === called.root && boundByImport(root)) return true;
   }
