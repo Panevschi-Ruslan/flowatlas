@@ -88,7 +88,7 @@ describe('SvelteKit pages', () => {
       '/src/routes/about/+page.server.ts': 'export const prerender = true;',
     });
     expect(rawPaths(read)).toEqual({
-      'GET /': undefined,
+      'GET /': '/',
       'GET /orders/:param': '/orders/:id',
       'POST /orders/:param': '/orders/:id',
       'POST /orders/:param?/archive': '/orders/:id',
@@ -107,6 +107,20 @@ describe('SvelteKit pages', () => {
     expect(read.unresolved.map((row) => [row.reason, row.symbol])).toEqual([
       ['route-handler-unread', 'POST /orders/:param?/archive'],
     ]);
+  });
+
+  it('answers a load and an action with what they return, and a +server verb only through json', () => {
+    const read = extract(sveltekitRoutesAdapter, {
+      '/src/routes/+layout.server.ts': "export const load = () => ({ section: 'shop' });",
+      '/src/routes/orders/+page.server.ts': 'export const load = () => ({ orders: [] });',
+      '/src/routes/api/orders/+server.ts': 'export function GET() { return new Response(); }',
+    });
+    const answersOf = (label: string) =>
+      read.entries.find((entry) => entry.label === label)?.request?.answers.map((answer) => answer.by);
+    expect(answersOf('GET /')).toEqual(['named', 'return']);
+    expect(answersOf('GET /orders')).toEqual(['named', 'return']);
+    expect(answersOf('GET /api/orders')).toEqual(['named']);
+    expect(rawPaths(read)['GET /']).toBe('/');
   });
 });
 

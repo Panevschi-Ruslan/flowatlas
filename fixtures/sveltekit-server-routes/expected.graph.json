@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "sveltekit-server-routes",
-  "generatedAt": "2026-10-08T20:53:13.436Z",
+  "generatedAt": "2026-10-09T07:47:18.739Z",
   "nodes": [
     {
       "id": "entry:sveltekit-server-routes:http:DELETE:/api/orders/:param",
@@ -31,6 +31,7 @@
       "meta": {
         "method": "GET",
         "path": "/",
+        "rawPath": "/",
         "adapter": "sveltekit-routes",
         "registration": "routes/+layout.server",
         "handlerVia": "function"
@@ -440,7 +441,8 @@
       "line": 2,
       "meta": {
         "requestRead": true
-      }
+      },
+      "returns": "{section:'shop'}"
     },
     {
       "from": "entry:sveltekit-server-routes:http:GET:/:param/files/*",
@@ -463,7 +465,8 @@
       "line": 2,
       "meta": {
         "requestRead": true
-      }
+      },
+      "returns": "{title:'About'}"
     },
     {
       "from": "entry:sveltekit-server-routes:http:GET:/api/orders",
@@ -500,7 +503,8 @@
       "meta": {
         "requestRead": true,
         "params": "{id:string}"
-      }
+      },
+      "returns": "{order:type:sveltekit-server-routes#Order}"
     },
     {
       "from": "entry:sveltekit-server-routes:http:POST:/api/cart",
@@ -528,7 +532,8 @@
       "meta": {
         "requestRead": true,
         "params": "{id:string}"
-      }
+      },
+      "returns": "{cancelled:true}"
     },
     {
       "from": "entry:sveltekit-server-routes:http:POST:/orders/:param?/note",
@@ -540,7 +545,8 @@
       "meta": {
         "requestRead": true,
         "body": "FormData"
-      }
+      },
+      "returns": "{note:string}"
     },
     {
       "from": "sveltekit-server-routes#src/routes/api/orders/+server.ts:GET",

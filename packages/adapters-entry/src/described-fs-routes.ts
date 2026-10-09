@@ -51,20 +51,32 @@ export interface FsRouteExports {
   readonly pagesServed?: boolean;
   /** What the entry's `registration` says, where it is not the router's. */
   readonly registration?: string;
+  /**
+   * How these files answer, where it is not the router's: a SvelteKit `load`
+   * answers with the data it returns (P47).
+   */
+  readonly request?: RequestReadingDescription;
 }
 
 const FILE_NAME = /^(?:.*\/)?([^/]+?)\.[cm]?[jt]sx?$/;
 
 /** The exports one route file is read by: its own row, or the router's. */
+const fileNameOf = (file: string): string | undefined => FILE_NAME.exec(file)?.[1];
+
 const exportsOf = (file: string, description: FsRoutesDescription): FsRouteExports | undefined => {
-  const name = FILE_NAME.exec(file)?.[1];
+  const name = fileNameOf(file);
   return name === undefined ? undefined : description.files?.get(name);
 };
 
 /** The ways in one reading collects, each once, and how one is added. */
 export interface FsEntries {
   readonly entries: EntryNode[];
-  readonly add: (verb: FsRouteVerb, application: string | undefined, registration: string) => void;
+  readonly add: (
+    verb: FsRouteVerb,
+    application: string | undefined,
+    registration: string,
+    own?: EntryNode['request'],
+  ) => void;
 }
 
 /**
@@ -78,7 +90,12 @@ export const fsEntries = (
 ): FsEntries => {
   const entries: EntryNode[] = [];
   const seen = new Set<string>();
-  const add = (verb: FsRouteVerb, application: string | undefined, registration: string): void => {
+  const add = (
+    verb: FsRouteVerb,
+    application: string | undefined,
+    registration: string,
+    own: EntryNode['request'] = request,
+  ): void => {
     // A named action is posted to the page's address with `?/name` after
     // it; the query is kept out of the path, so params are named as before.
     const query = verb.action === undefined ? '' : `?/${verb.action}`;
@@ -95,7 +112,7 @@ export const fsEntries = (
       label: application === undefined ? label : `${label} (${application})`,
       key,
       ...(handler === undefined ? {} : { handler }),
-      ...(request === undefined ? {} : { request }),
+      ...(own === undefined ? {} : { request: own }),
       file: verb.at.reached.file,
       line: verb.at.reached.line,
       meta: {
@@ -121,6 +138,11 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
   const files = (ctx: ExtractContext): string[] =>
     [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir));
   const applicationsOf = (ctx: ExtractContext) => fsApplicationMap(files(ctx), [description.router]);
+  const fileRequests = new Map(
+    [...(description.files ?? new Map<string, FsRouteExports>())].flatMap(([name, own]) =>
+      own.request === undefined ? [] : [[name, readingOf(own.request)] as const],
+    ),
+  );
 
   return {
     name: description.name,
@@ -128,6 +150,10 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
     applications: (ctx) => applicationsOf(ctx),
 
     extractEntries(ctx: ExtractContext): EntryNode[] {
+      const requestOf = (file: string) => {
+        const name = fileNameOf(file);
+        return name === undefined ? undefined : fileRequests.get(name);
+      };
       const collected = fsEntries(ctx, description.name, request);
 
       const space = fsAddressSpace(applicationsOf(ctx));
@@ -143,7 +169,13 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
           path: address.path,
           rawPath: address.rawPath,
           adapter: description.name,
-          emit: (verb) => collected.add(verb, address.application, own?.registration ?? description.registration),
+          emit: (verb) =>
+            collected.add(
+              verb,
+              address.application,
+              own?.registration ?? description.registration,
+              requestOf(file) ?? request,
+            ),
           ...(verbs === undefined ? {} : { verbs }),
           ...(pagesServed === true ? { pagesServed: true } : {}),
           ...(own?.actions === undefined ? {} : { actions: own.actions }),
@@ -210,8 +242,20 @@ export const REMIX_VERBS: ReadonlyMap<string, string> = new Map([
  * - the default at the page's address, a named one at `?/name`. A page module
  * exporting neither only renders, as a layout's usually does.
  */
+const SVELTEKIT_ANSWERS = [{ by: 'named' as const, callee: 'json', statusKey: 'status' }];
+
+/**
+ * A page's `load` and its actions answer with what they return: the page's
+ * data, or what the form is handed back (P47).
+ */
+const SVELTEKIT_PAGE_REQUEST: RequestReadingDescription = {
+  ...EVENT_REQUEST,
+  answers: [...SVELTEKIT_ANSWERS, { by: 'return' }],
+};
+
 const SVELTEKIT_PAGE: FsRouteExports = {
   verbs: new Map([['load', 'GET']]),
+  request: SVELTEKIT_PAGE_REQUEST,
   actions: new Map([['actions', 'POST']]),
   pagesServed: true,
   registration: 'routes/+page.server',
@@ -240,12 +284,20 @@ export const sveltekitRoutesAdapter = fsRoutesAdapter({
   router: SVELTEKIT_ROUTES,
   files: new Map([
     ['+page.server', SVELTEKIT_PAGE],
-    ['+layout.server', { verbs: SVELTEKIT_PAGE.verbs, pagesServed: true, registration: 'routes/+layout.server' }],
+    [
+      '+layout.server',
+      {
+        verbs: SVELTEKIT_PAGE.verbs,
+        pagesServed: true,
+        registration: 'routes/+layout.server',
+        request: SVELTEKIT_PAGE_REQUEST,
+      },
+    ],
   ]),
   registration: 'routes/+server',
   request: {
     ...EVENT_REQUEST,
-    answers: [{ by: 'named', callee: 'json', statusKey: 'status' }],
+    answers: SVELTEKIT_ANSWERS,
   },
 });
 

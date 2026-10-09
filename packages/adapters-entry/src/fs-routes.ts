@@ -456,7 +456,9 @@ export const fsAddressSpace = (map: ApplicationMap): FsAddressSpace => {
       const [application] = applicationsServing(map, reading.application);
       return {
         path: reading.path,
-        ...(reading.rawPath === reading.path ? {} : { rawPath: reading.rawPath }),
+        // The root is said as written too, so a layout or index at `/` names
+        // its address the way every other route does (P47).
+        ...(reading.rawPath === reading.path && reading.path !== '/' ? {} : { rawPath: reading.rawPath }),
         ...(application === undefined ? {} : { application }),
       };
     },

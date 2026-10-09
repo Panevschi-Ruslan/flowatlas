@@ -20,7 +20,8 @@ src/routes/orders/[id]/+page.server.ts            GET /orders/:id (load),
 ```
 
 A page's `load` answers its GET and each of its `actions` a POST (P42): the
-default at the page's address, a named one at `?/name` after it.
+default at the page's address, a named one at `?/name` after it. What each
+returns is its answer (P47): `{ order: Order }` for the order page's GET.
 
 Each entry keeps `rawPath` beside its key, so a handler's params are named by
 the directories the route sits in.

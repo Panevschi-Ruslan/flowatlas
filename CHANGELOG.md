@@ -6,6 +6,10 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+A SvelteKit page's `load` (and a layout's) and each of its form actions answer
+with what they return, so the page's GET is typed by its data; a layout at `/`
+keeps `rawPath` `/` like every other route.
+
 In `visualise`, a route's one line marks its other answers - `+2 failures`,
 `status ?` - and a route that answers only under a worked-out status shows that
 answer (`status ? → Station[]`) instead of saying no request parts were read.

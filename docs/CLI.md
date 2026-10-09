@@ -229,7 +229,9 @@ and each member of a page's `actions` is a POST to it - the `default` one at the
 page's address, a named one at `?/name` after it (an entry keyed
 `POST:/orders/:param?/note`, its `meta.action` the name); an action written as a
 method has nothing to point at and is a `route-handler-unread` row
-(`fixtures/sveltekit-server-routes`). Remix's flat routes are one name per route,
+(`fixtures/sveltekit-server-routes`). What a `load` or an action returns is its
+answer (the page's data, typed as written), and a layout at the root keeps
+`rawPath` `/` like every other route. Remix's flat routes are one name per route,
 its segments separated by dots - `app/routes/api.orders.$id.ts`, or a folder of
 that name holding `route.ts` - where a leading underscore is a layout that adds no
 segment, `$id` a param, `$` the rest of the path and a dot in brackets a literal
