@@ -208,6 +208,22 @@ describe('a client handed in, by the type its factory resolves to return or a qu
     ).toEqual(['write orders', 'write members']);
   });
 
+  it('matches a qualified kit.DataClient through a default import, and not a lookalike from another package', () => {
+    expect(
+      read(
+        {
+          '/src/use.ts': [
+            "import kit from '@acme/data-kit';",
+            "import other from '@acme/other-kit';",
+            "export const save = (db: kit.DataClient) => db.insert('orders', {});",
+            "export const not = (db: other.DataClient) => db.insert('nope', {});",
+          ].join('\n'),
+        },
+        [{ factory: 'createClient', clientType: 'DataClient', name: 'insert', package: '@acme/data-kit', table: 0, op: 'write' }],
+      ),
+    ).toEqual(['write orders']);
+  });
+
   it('finds a repository factory again in a project held open across reads, after its file changes', () => {
     const project = new Project({ useInMemoryFileSystem: true });
     project.createSourceFile('/src/types.ts', 'export interface Store { put(table: string, row: object): void; }');

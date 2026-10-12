@@ -1670,7 +1670,7 @@ given as `clientType` on the row:
 ```
 
 The `clientType` is matched written plainly or through a namespace import
-(`kit.DataClient`). Without one, a parameter typed by a named interface is the
+(`kit.DataClient`) or a default import. Without one, a parameter typed by a named interface is the
 client when the factory resolves - installed, or the repository's own - and is
 declared to return that same type (P49): `ledger: Ledger` where
 `openLedger(): Ledger`. A type nothing resolves is no evidence either way.
