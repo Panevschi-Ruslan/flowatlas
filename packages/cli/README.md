@@ -2,8 +2,8 @@
 
 **A command-line tool that reads several TypeScript repositories without running
 them, joins them into one graph, and answers questions about it.** It knows
-NestJS and Angular, React and Next.js, Express, Fastify, Koa and Hono, Medusa,
-tRPC and Telegraf; AWS Lambda, API Gateway, Step Functions, EventBridge, SQS
+NestJS and Angular, React and Next.js, SvelteKit and Remix, Express, Fastify,
+Koa and Hono, Medusa, tRPC and Telegraf; AWS Lambda, API Gateway, Step Functions, EventBridge, SQS
 and SNS as Terraform deploys them; TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
 MongoDB and node-postgres; Redis, Kafka, RabbitMQ, BullMQ and socket.io; and
 OpenAPI and AsyncAPI documents for the services whose source you do not have. It
@@ -29,6 +29,8 @@ flowatlas doctor         # what it could not read, and the one thing to change
 
 ![one click in a browser, followed into a third repository](https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/docs/media/04-flow.gif)
 
+![the Map of five repositories, then one route's types field by field in the Graph](https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/docs/media/14-map-tour.gif)
+
 That is one `(click)` in an Angular template, followed through a gateway, into
 an orders service, down to the row it reads. Three repositories, and
 `unresolved on this path: 0` says nothing along the way was guessed.
@@ -44,11 +46,14 @@ steps with a recording of each.
 
 - NestJS controllers, message handlers and schedules, with their guards and pipes
 - Express, Fastify, Koa and Hono, where a route is registered by a call
-- Next.js and Medusa, where a route is the path of a file
+- Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path
+  of a file - a SvelteKit page's `load` and form actions included
 - tRPC procedures, and Telegraf bot commands, callbacks and events
 - what a request carries and what it answers, in every one of them: a
   validator, a typed request or reply, or a helper of your own that builds the
-  answer
+  answer - with each route's failures (`400 → Problem`) beside its success
+- what every function, method, component, directive, pipe and tRPC procedure
+  takes and gives back, field by field
 
 **Serverless on AWS**
 
@@ -92,7 +97,7 @@ steps with a recording of each.
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 136 of them, and
+compared on every push. There are 140 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 

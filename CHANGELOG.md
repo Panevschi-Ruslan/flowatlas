@@ -6,157 +6,7 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
-A host listener's method - `@HostListener` on a method, or a `host` entry like
-`'(focus)': 'onFocus()'` - is a method node the directive names in
-`meta.hostMembers`; the `visualise` details panel lists them as links that
-centre on the method. The hover card of a route that reads no request parts no
-longer says so when it responds or answers otherwise.
-
-A data kit's client handed in typed by a named interface is followed with no
-`clientType` on the row when the factory resolves and is declared to return that
-type; a `clientType` is matched through a namespace import too (`kit.DataClient`,
-and `ReturnType<typeof kit.createClient>`).
-
-React Router's `app/routes.ts` follows `flatRoutes()` - as the whole config,
-spread into it, or under `prefix` / `layout` - reading the directory it names by
-Remix's flat convention; a module the config names that is not in the project is
-a `route-module-not-found` row instead of being skipped in silence.
-
-A SvelteKit page's `load` (and a layout's) and each of its form actions answer
-with what they return, so the page's GET is typed by its data; a layout at `/`
-keeps `rawPath` `/` like every other route.
-
-In `visualise`, a route's one line marks its other answers - `+2 failures`,
-`status ?` - and a route that answers only under a worked-out status shows that
-answer (`status ? → Station[]`) instead of saying no request parts were read.
-
-An Angular directive's (or component's) host bindings - its `host` object and
-its `@HostBinding` / `@HostListener` members - are recorded as
-`meta.hostBindings` (`[class.active]=isActive`, `(click)=toggle($event)`), with
-its `exportAs`; a pipe's node says whether it is `pure`. The `visualise` details
-panel shows all three, a pipe that is not pure as `pure no`.
-
-A data kit's client handed in rather than made in place is followed too: a
-parameter or an injected field declared `ReturnType<typeof createClient>`,
-`typeof db`, or the type named by a row's new `clientType` under
-`adapters.db.tables` is the factory's client, so `this.db.insert('orders', row)`
-is a query of `orders`.
-
-A Remix `action` that compares `request.method` to string literals answers the
-verbs it names rather than a POST. React Router v7's `app/routes.ts` is read:
-`route()`, `index()`, `layout()` and `prefix()` give each named module its
-address, params named as configured, and its `loader` and `action` are ways in as
-a Remix route module's are; a repository with `@react-router/dev` is typed
-`react-router`. `data(x, { status })` is read as an answer beside `json`.
-
-A SvelteKit page's server module is read as ways in: the `load` of a
-`+page.server.ts` or `+layout.server.ts` answers the page's GET, and each of a
-page's `actions` a POST - the default at the page's address, a named one at
-`?/name` (keyed `POST:/orders/:param?/note`, with `meta.action`). A form action's
-`request.formData()` is read as its body.
-
-Angular directives and pipes have nodes and signatures: a directive (a
-`ui_component` of kind `directive`, with its selector) takes its inputs and gives
-back its outputs, read the way a component's are; a pipe (a `provider` of kind
-`pipe`, with its name) says what its `transform(value, ...args)` takes and gives
-back. Both are injected into and imported by standalone components like any
-other declarable.
-
-A row under `adapters.db.tables` may name a `factory`: `name` is then a method
-of the client that factory returns, so `const db = createClient();
-db.insert('orders', row)` from a data kit nobody installed is a query of
-`orders`. The receiver is followed back to the factory's call through a
-variable, a class field, an `await` or a chain.
-
-SvelteKit and Remix routes are read as ways in. A SvelteKit `+server.ts` under
-`src/routes` answers at its directories' address (groups drop out, `[id]`,
-`[[id]]` and `[id=matcher]` are params, `[...rest]` the rest), and a Remix flat
-route - `app/routes/api.orders.$id.ts`, or that folder's `route.ts` - answers a
-GET by its `loader` and a POST by its `action`. Both keep the path with its params
-named as `rawPath`, and the repository types `sveltekit` and `remix` are guessed
-from `@sveltejs/kit` and `@remix-run/*`. A handler's params bound in its parameter
-list - `({ params }) => params.id` - now count as read, so they are named by the
-route too.
-
-`visualise` shows what a route answers besides its own response: the hover
-card and the details panel list its failures by status (`404 → Problem`) and
-mark an answer sent under a status its code works out (`status ? → ...`), and
-a service's details on the Map count the routes with failures and with an
-unknown status.
-
-A helper that builds its answer from several arguments - `fail(400,
-'bad_input', message)` - is described with `fields` on its `answers` row under
-`adapters.entry.request`: each field of the answer names the argument it comes
-from, and the route records `{ code: string; message: string }` as its failure
-under the status, with nothing of the helper's package installed.
-
-A route a file-system router serves (Next.js `app/` and `pages/api/`, Medusa
-`src/api/`) keeps the path with its params named by its directories -
-`[id]` is `:id`, `[...slug]` is `:slug`, `[[...slug]]` is `:slug?` - as
-`rawPath`, so a handler that reads params nothing types gets them named by the
-route, as a registered route's already were.
-
-An Angular component says what it takes and gives back in the Types view: its
-inputs (`@Input()`, `input()`, `input.required()`, under the name a template
-binds) as its parameters, and its outputs (`@Output()` emitters, `output()`)
-as an object it gives back. A tRPC procedure says the input its schema checks
-(a zod-style schema's output, a parser's result, or the object itself) and what
-its resolver answers.
-
-`adapters.db.tables` names the functions a data access goes through when they
-name their table at the call - `insert('orders', row)` from a data kit nobody
-installed - so each call becomes a query of that table and the Map shows its
-data boxes. Matched by the import in the calling file, like an answer helper;
-a local that shadows the imported name is no longer taken for the helper, for
-answer and request helpers too.
-
-### Fixed
-
-- **SvelteKit route files at one address are no longer dropped in silence.** A
-  `+layout.server.ts` load was the address's GET and hid the `load` of the page
-  at the same address; it is now an entry of its own (`meta.contributes:
-  "layout"`, key suffix `#layout:<file>`) that no request is joined to. A
-  `+server.ts` GET beside a `+page.server.ts` load keeps the address, and the
-  page's load is kept too (`meta.contributes: "page"`, key suffix `#page`). Two
-  files claiming one verb and address otherwise keep the first and say the
-  second in a new `route-claimed-twice` row.
-- **File-system route segments.** Remix's `users.$userId_.edit` is
-  `/users/:userId/edit` (what is left of a segment after its trailing
-  underscore is read as usual, not as a literal), `sitemap[.]xml` is
-  `/sitemap.xml`, and `(en)` is an optional literal segment. SvelteKit's
-  `foo-[id]` is keyed `/foo-:param` with the param named in its path as written
-  (`rawPath: "/foo-:id"`), so `foo-[id]` and `bar-[id]` beside each other are two
-  routes, either wins over a bare `[id]`, and it is joined to `/foo-42` and not
-  to `/bar`; `[x+2e]` / `[u+00e9]` are the characters they escape, an escape for
-  `?`, `:` or `/` stays encoded (`%3F`, `%3A`, `%2F`), and one past the last
-  code point is read as the text it is. A request that leaves an optional segment out (`[[lang]]`,
-  `($lang)`, `(en)`) is joined to the route.
-- **A build re-reads a browser repository whose installed declarations were
-  edited.** The Angular and React readers recorded no installed files, so an
-  edited stub left their graphs cached; every reader now records them, and
-  `.d.mts` / `.d.cts` declarations and the TypeScript of a linked workspace
-  package under `node_modules` are recorded too.
-- **A build re-reads a browser repository whose template or script was edited.**
-  The cache an Angular or React read writes listed only its `.ts` and `.tsx`
-  files, so an edited `templateUrl` file, or a `.js` / `.jsx` file a React
-  tsconfig lets the checker resolve, answered "0 files changed" and kept a stale
-  graph. Both readers now list those files beside their sources, and the cache
-  and the build's survey list a browser repository's files the same way.
-- **A repository factory is found again in a repository held open across
-  rebuilds.** The declarations found for `adapters.db.tables` rows were kept for
-  the life of the parsed project, so a warm rebuild after the factory's file was
-  saved failed on a node that was gone; they are now found once per read.
-- **Answer and request helpers** of a package are matched through a default
-  import called itself when the row names `"default"`, and through a barrel of
-  the repository's that re-exports them from the package, including a default
-  import exported again by name (`import respond from 'pkg'; export { respond }`
-  is the package's `default`). A name two `export *` pass on from two places is
-  ambiguous to the compiler and matches neither.
-- **Angular host listeners** link to a function-valued property
-  (`onClick = () => …`) and to a method a base class declares, and a
-  `@HostBinding` on a set-only accessor is read.
-
-## [0.5.1][] - 2026-10-08
+## [0.5.1][] - 2026-10-12
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things
 to do after upgrading:
@@ -171,7 +21,9 @@ to do after upgrading:
 Serverless on AWS is read from Terraform and Step Functions definitions; the
 `visualise` page opens on a Map of the whole project and gains a Graph tab you
 can walk, check with and read types in; and what a request carries is read in
-every framework, not only NestJS. The npm page (README and keywords) is brought
+every framework, not only NestJS - SvelteKit, Remix and React Router file
+routes included - with each route's failures and the signatures of Angular
+components, directives, pipes and tRPC procedures. The npm page (README and keywords) is brought
 up to date as well.
 
 ### Added
@@ -570,6 +422,94 @@ up to date as well.
   `file:line` on the page open in that editor. Off by default: it writes each
   repository's absolute local path into the page.
 
+- A host listener's method - `@HostListener` on a method, or a `host` entry like
+  `'(focus)': 'onFocus()'` - is a method node the directive names in
+  `meta.hostMembers`; the `visualise` details panel lists them as links that
+  centre on the method. The hover card of a route that reads no request parts no
+  longer says so when it responds or answers otherwise.
+- A data kit's client handed in typed by a named interface is followed with no
+  `clientType` on the row when the factory resolves and is declared to return that
+  type; a `clientType` is matched through a namespace import too (`kit.DataClient`,
+  and `ReturnType<typeof kit.createClient>`).
+- React Router's `app/routes.ts` follows `flatRoutes()` - as the whole config,
+  spread into it, or under `prefix` / `layout` - reading the directory it names by
+  Remix's flat convention; a module the config names that is not in the project is
+  a `route-module-not-found` row instead of being skipped in silence.
+- A SvelteKit page's `load` (and a layout's) and each of its form actions answer
+  with what they return, so the page's GET is typed by its data; a layout at `/`
+  keeps `rawPath` `/` like every other route.
+- In `visualise`, a route's one line marks its other answers - `+2 failures`,
+  `status ?` - and a route that answers only under a worked-out status shows that
+  answer (`status ? → Station[]`) instead of saying no request parts were read.
+- An Angular directive's (or component's) host bindings - its `host` object and
+  its `@HostBinding` / `@HostListener` members - are recorded as
+  `meta.hostBindings` (`[class.active]=isActive`, `(click)=toggle($event)`), with
+  its `exportAs`; a pipe's node says whether it is `pure`. The `visualise` details
+  panel shows all three, a pipe that is not pure as `pure no`.
+- A data kit's client handed in rather than made in place is followed too: a
+  parameter or an injected field declared `ReturnType<typeof createClient>`,
+  `typeof db`, or the type named by a row's new `clientType` under
+  `adapters.db.tables` is the factory's client, so `this.db.insert('orders', row)`
+  is a query of `orders`.
+- A Remix `action` that compares `request.method` to string literals answers the
+  verbs it names rather than a POST. React Router v7's `app/routes.ts` is read:
+  `route()`, `index()`, `layout()` and `prefix()` give each named module its
+  address, params named as configured, and its `loader` and `action` are ways in as
+  a Remix route module's are; a repository with `@react-router/dev` is typed
+  `react-router`. `data(x, { status })` is read as an answer beside `json`.
+- A SvelteKit page's server module is read as ways in: the `load` of a
+  `+page.server.ts` or `+layout.server.ts` answers the page's GET, and each of a
+  page's `actions` a POST - the default at the page's address, a named one at
+  `?/name` (keyed `POST:/orders/:param?/note`, with `meta.action`). A form action's
+  `request.formData()` is read as its body.
+- Angular directives and pipes have nodes and signatures: a directive (a
+  `ui_component` of kind `directive`, with its selector) takes its inputs and gives
+  back its outputs, read the way a component's are; a pipe (a `provider` of kind
+  `pipe`, with its name) says what its `transform(value, ...args)` takes and gives
+  back. Both are injected into and imported by standalone components like any
+  other declarable.
+- A row under `adapters.db.tables` may name a `factory`: `name` is then a method
+  of the client that factory returns, so `const db = createClient();
+  db.insert('orders', row)` from a data kit nobody installed is a query of
+  `orders`. The receiver is followed back to the factory's call through a
+  variable, a class field, an `await` or a chain.
+- SvelteKit and Remix routes are read as ways in. A SvelteKit `+server.ts` under
+  `src/routes` answers at its directories' address (groups drop out, `[id]`,
+  `[[id]]` and `[id=matcher]` are params, `[...rest]` the rest), and a Remix flat
+  route - `app/routes/api.orders.$id.ts`, or that folder's `route.ts` - answers a
+  GET by its `loader` and a POST by its `action`. Both keep the path with its params
+  named as `rawPath`, and the repository types `sveltekit` and `remix` are guessed
+  from `@sveltejs/kit` and `@remix-run/*`. A handler's params bound in its parameter
+  list - `({ params }) => params.id` - now count as read, so they are named by the
+  route too.
+- `visualise` shows what a route answers besides its own response: the hover
+  card and the details panel list its failures by status (`404 → Problem`) and
+  mark an answer sent under a status its code works out (`status ? → ...`), and
+  a service's details on the Map count the routes with failures and with an
+  unknown status.
+- A helper that builds its answer from several arguments - `fail(400,
+  'bad_input', message)` - is described with `fields` on its `answers` row under
+  `adapters.entry.request`: each field of the answer names the argument it comes
+  from, and the route records `{ code: string; message: string }` as its failure
+  under the status, with nothing of the helper's package installed.
+- A route a file-system router serves (Next.js `app/` and `pages/api/`, Medusa
+  `src/api/`) keeps the path with its params named by its directories -
+  `[id]` is `:id`, `[...slug]` is `:slug`, `[[...slug]]` is `:slug?` - as
+  `rawPath`, so a handler that reads params nothing types gets them named by the
+  route, as a registered route's already were.
+- An Angular component says what it takes and gives back in the Types view: its
+  inputs (`@Input()`, `input()`, `input.required()`, under the name a template
+  binds) as its parameters, and its outputs (`@Output()` emitters, `output()`)
+  as an object it gives back. A tRPC procedure says the input its schema checks
+  (a zod-style schema's output, a parser's result, or the object itself) and what
+  its resolver answers.
+- `adapters.db.tables` names the functions a data access goes through when they
+  name their table at the call - `insert('orders', row)` from a data kit nobody
+  installed - so each call becomes a query of that table and the Map shows its
+  data boxes. Matched by the import in the calling file, like an answer helper;
+  a local that shadows the imported name is no longer taken for the helper, for
+  answer and request helpers too.
+
 ### Changed
 
 - **`flow` takes a workflow's steps in the order control moves**, not the
@@ -813,6 +753,49 @@ up to date as well.
   The rows a function's handler leaves are now recorded against its entry, and
   `doctor` names the entry; the count also takes in the nodes a walk reaches past
   the `maxNodes` it shows. The CLI and the MCP `get_flow` give the same number.
+- **SvelteKit route files at one address are no longer dropped in silence.** A
+  `+layout.server.ts` load was the address's GET and hid the `load` of the page
+  at the same address; it is now an entry of its own (`meta.contributes:
+  "layout"`, key suffix `#layout:<file>`) that no request is joined to. A
+  `+server.ts` GET beside a `+page.server.ts` load keeps the address, and the
+  page's load is kept too (`meta.contributes: "page"`, key suffix `#page`). Two
+  files claiming one verb and address otherwise keep the first and say the
+  second in a new `route-claimed-twice` row.
+- **File-system route segments.** Remix's `users.$userId_.edit` is
+  `/users/:userId/edit` (what is left of a segment after its trailing
+  underscore is read as usual, not as a literal), `sitemap[.]xml` is
+  `/sitemap.xml`, and `(en)` is an optional literal segment. SvelteKit's
+  `foo-[id]` is keyed `/foo-:param` with the param named in its path as written
+  (`rawPath: "/foo-:id"`), so `foo-[id]` and `bar-[id]` beside each other are two
+  routes, either wins over a bare `[id]`, and it is joined to `/foo-42` and not
+  to `/bar`; `[x+2e]` / `[u+00e9]` are the characters they escape, an escape for
+  `?`, `:` or `/` stays encoded (`%3F`, `%3A`, `%2F`), and one past the last
+  code point is read as the text it is. A request that leaves an optional segment out (`[[lang]]`,
+  `($lang)`, `(en)`) is joined to the route.
+- **A build re-reads a browser repository whose installed declarations were
+  edited.** The Angular and React readers recorded no installed files, so an
+  edited stub left their graphs cached; every reader now records them, and
+  `.d.mts` / `.d.cts` declarations and the TypeScript of a linked workspace
+  package under `node_modules` are recorded too.
+- **A build re-reads a browser repository whose template or script was edited.**
+  The cache an Angular or React read writes listed only its `.ts` and `.tsx`
+  files, so an edited `templateUrl` file, or a `.js` / `.jsx` file a React
+  tsconfig lets the checker resolve, answered "0 files changed" and kept a stale
+  graph. Both readers now list those files beside their sources, and the cache
+  and the build's survey list a browser repository's files the same way.
+- **A repository factory is found again in a repository held open across
+  rebuilds.** The declarations found for `adapters.db.tables` rows were kept for
+  the life of the parsed project, so a warm rebuild after the factory's file was
+  saved failed on a node that was gone; they are now found once per read.
+- **Answer and request helpers** of a package are matched through a default
+  import called itself when the row names `"default"`, and through a barrel of
+  the repository's that re-exports them from the package, including a default
+  import exported again by name (`import respond from 'pkg'; export { respond }`
+  is the package's `default`). A name two `export *` pass on from two places is
+  ambiguous to the compiler and matches neither.
+- **Angular host listeners** link to a function-valued property
+  (`onClick = () => …`) and to a method a base class declares, and a
+  `@HostBinding` on a set-only accessor is read.
 
 ## [0.5.0][] - 2026-09-28
 

@@ -29,6 +29,7 @@ const GENERIC_BUILTINS = new Set(['Map', 'Set', 'ReadonlyMap', 'ReadonlySet', 'R
 
 /** The `import("…").` the checker writes in front of a name it cannot reach from the site. */
 const IMPORT_QUALIFIER = /import\("[^"]*"\)\./g;
+const SYMBOL_KEYED = '__@';
 
 /**
  * A type written as it reads at the site: in its terms, and with no
@@ -606,6 +607,9 @@ export class TypeCollector {
       // brought in and dropped every property written beside it, so
       // `{ ...stats, rate }` read as `stats` alone.
       if (declaration === undefined) continue;
+      // A symbol-keyed property (`[Symbol.metadata]`) is no data field, and its
+      // name carries the compiler's own numbering, which differs run to run.
+      if (property.getName().startsWith(SYMBOL_KEYED)) continue;
       const declared = isDataProperty(declaration) ? declaration : undefined;
       if (declared === undefined && !isLiteralProperty(declaration)) continue;
       const propertyType = answeredLiteral(declaration) ?? property.getTypeAtLocation(declaration);

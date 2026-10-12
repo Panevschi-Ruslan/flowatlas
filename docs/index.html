@@ -262,8 +262,10 @@ footer {
   <p class="lede">A command-line tool that reads several TypeScript
     repositories with the compiler's own checker, <em>without running them</em>,
     and joins them into one graph you can query — from a terminal or from a
-    coding agent. It knows NestJS and Angular, React and Next.js, Express,
-    Fastify, Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle,
+    coding agent. It knows NestJS and Angular, React and Next.js, SvelteKit and
+    Remix, Express, Fastify, Koa and Hono, Medusa, tRPC and Telegraf; AWS Lambda,
+    API Gateway, Step Functions, EventBridge, SQS and SNS as Terraform deploys
+    them; TypeORM, Prisma, Drizzle,
     Mongoose, Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka,
     RabbitMQ, BullMQ and socket.io &mdash; and it can join to a service it
     cannot read at all, from its OpenAPI or AsyncAPI document.</p>
@@ -293,8 +295,10 @@ flowatlas build          <span class="c"># read them all and join them</span></c
       <ul>
         <li>NestJS controllers, message handlers and schedules, with their guards and pipes</li>
         <li>Express, Fastify, Koa and Hono, where a route is registered by a call</li>
-        <li>Next.js and Medusa, where a route is the path of a file</li>
+        <li>Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path of a file</li>
+        <li>Lambda functions, API Gateway routes and Step Functions, read from the Terraform that deploys them</li>
         <li>tRPC procedures, and Telegraf bot commands, callbacks and events</li>
+        <li>what each one takes and answers, failures included, field by field</li>
       </ul>
     </div>
     <div>
@@ -613,6 +617,23 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
   <div class="col">
     <p>It is a report you can click, not a viewer you keep running. Attach it to
       a review, or keep it beside a decision.</p>
+    <p>It opens on a <strong>Map</strong>: one box per service, laid out from the
+      browser to the data, joined by what passes between them and counted. A
+      check marks what to look at &mdash; routes nothing calls, channels with one
+      end, services that reach each other. Click a link for the calls behind it,
+      a service for its ways in, and any one of them opens in the
+      <strong>Graph</strong> tab, where every node carries what it takes and
+      gives back: the body a route reads, what it answers, what it answers when
+      it fails, each type opened field by field.</p>
+  </div>
+  <figure class="rec">
+    <div class="rec-bar"><span>Map</span><span>a link</span><span>a service</span><span>Graph &middot; Types &middot; Expand all</span><span>hover</span><span>Back</span></div>
+    <img src="media/14-map-tour.gif" loading="lazy"
+         alt="the Map of five services, a link and a service opened, then one route followed in the Graph tab down to its handler with every type opened">
+  </figure>
+  <div class="col">
+    <p>The page above is <code>fixtures/request-shapes</code>: an Angular admin and
+      four APIs in Koa, Fastify, Express and Next.js.</p>
   </div>
 </section>
 

@@ -25,6 +25,7 @@ export class Api {
   both(): Promise<Observable<Cart[]>> { return null as never }
   nothing(): Promise<void> { return null as never }
   literalReturn(): { a: string; b?: number } { return null as never }
+  symbolKeyed(): { a: string; readonly [Symbol.toStringTag]: string } { return null as never }
   takes(a: string, b: Money, c?: number): void {}
   spread(first: string, ...rest: number[]): void {}
   destructured({ amount, currency }: Money): void {}
@@ -93,6 +94,10 @@ describe('TypeCollector', () => {
 
   it('writes an anonymous shape out in place', () => {
     expect(returnRef('literalReturn')).toBe('{a:string;b?:number}');
+  });
+
+  it('leaves a symbol-keyed property out of a shape, so no compiler numbering is written', () => {
+    expect(returnRef('symbolKeyed')).toBe('{a:string}');
   });
 
   it('collects the parameters of a signature in order', () => {

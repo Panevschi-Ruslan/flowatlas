@@ -16,7 +16,7 @@ Two packages, and only two.
 They are versioned separately, because they change for different reasons: the
 command moves with nearly every release, and the markers move only when an
 annotation changes what it takes. At the time of writing `@flowatlas/cli` is at
-0.5.0 and `@flowatlas/markers` at 0.2.0. `CHANGELOG.md` names the package when
+0.5.1 and `@flowatlas/markers` at 0.2.0. `CHANGELOG.md` names the package when
 only one of them moved.
 
 The other `@flowatlas/*` packages are how the source is organised, not
