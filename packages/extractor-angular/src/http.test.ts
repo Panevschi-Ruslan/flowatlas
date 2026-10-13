@@ -691,7 +691,9 @@ export class DealsClient {
       responseType: 'type:web#OrderDto',
       through: 'ApiClient.post',
     });
-    expect(reasons(graph)).toEqual([]);
+    // The wrapper's own signature names its `T`, which is a note and not a
+    // request left unread (R148).
+    expect(graph.unresolved.filter((row) => row.level !== 'info').map((row) => row.reason)).toEqual([]);
   });
 
   it('answers an abstract resource with the subclass that calls the base helper', () => {

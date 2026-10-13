@@ -1,6 +1,15 @@
 import type { GraphNode } from './nodes.js';
 
 /**
+ * The key of an entry's `meta` that names the channel the entry hands what it
+ * receives to itself, when that is the whole of what it does: a route a
+ * platform puts straight onto a queue or a bus, with no code behind it by
+ * design. Its work is the message it sends, drawn as a publisher the entry
+ * calls (R173).
+ */
+export const SENDS_META = 'sends';
+
+/**
  * Whether the code behind one way in was read.
  *
  * One definition for every reader of a graph that asks it, because three do and
@@ -17,6 +26,11 @@ import type { GraphNode } from './nodes.js';
  * so on the node - `handlerBodyRead: false` - and the edge onto that handler is
  * real, pointing at the call the framework enters, so the edge alone would count
  * a way in nobody read as read.
+ *
+ * A way in that has no code behind it by design is read when the message it
+ * sends is (`SENDS_META`): that message is everything that happens after the
+ * request arrives, and counting it as a way in without a handler would size a
+ * gap that is not there (R173).
  */
 export const wayInBodyRead = (entry: GraphNode, handled: (id: string) => boolean): boolean =>
-  handled(entry.id) && entry.meta?.['handlerBodyRead'] !== false;
+  typeof entry.meta?.[SENDS_META] === 'string' || (handled(entry.id) && entry.meta?.['handlerBodyRead'] !== false);

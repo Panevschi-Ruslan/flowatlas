@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T13:56:26.574Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:55.384Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 21,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 679
+      "durationMs": 630,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -21,9 +30,18 @@
       "extractor": "@flowatlas/extractor-angular",
       "nodes": 31,
       "edges": 20,
-      "types": 0,
+      "types": 1,
       "unresolved": 1,
-      "durationMs": 582
+      "durationMs": 549,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -57,14 +75,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 1,
+    "total": 2,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
     "nodes": 56,
     "edges": 46,
-    "types": 1,
+    "types": 2,
     "unresolved": 2
   }
 }

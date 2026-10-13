@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import type { RepoGraph } from '@flowatlas/core';
 import type { BuildCache, DependencyState, FileStamp } from './cache.js';
 import { diffRepoFiles, hashText } from './cache.js';
-import { dependencyChange } from './dependencies.js';
+import { dependencyChange, packageChange } from './dependencies.js';
 
 /**
  * The hash of a graph file as the rebuild plan means it: its body, not its bytes.
@@ -109,6 +109,8 @@ export interface RepoSurvey {
    * simply absent from the graph.
    */
   dependencies: DependencyState;
+  /** The package files the last reading recorded, as they are now. */
+  packages: Record<string, FileStamp>;
   /** Files whose change affects the whole repository, from the extractor. */
   globalFiles: string[];
   files: Record<string, FileStamp>;
@@ -197,6 +199,10 @@ const planOne = (
   // re-read at all.
   const dependencies = dependencyChange(entry.dependencies, survey.dependencies);
   if (dependencies !== undefined) return full(dependencies);
+  // Not a file of the repository, so never a partial read: what a declaration
+  // says reaches every file that uses the type.
+  const installed = packageChange(entry.packages, survey.packages);
+  if (installed !== undefined) return full(installed);
   if (survey.graphHash === null) return full(`no graph at ${survey.graphPath}`);
   if (survey.graphHash !== entry.graphHash) return full('graph changed outside the build');
 

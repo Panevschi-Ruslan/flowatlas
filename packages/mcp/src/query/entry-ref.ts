@@ -61,6 +61,15 @@ export const resolveEntryRef = (db: GraphDb, ref: string): EntryRef => {
     if (matches.length > 1) return { candidates: byId(matches) };
   }
 
+  // `invoke:library-dev-create-loan`: a function, by the name it is deployed
+  // under, which is the key of its id.
+  const invoked = /^invoke:(.+)$/.exec(trimmed)?.[1]?.trim();
+  if (invoked !== undefined) {
+    const matches = entries.filter((entry) => entry.kind === 'invoke' && String(entry.meta?.['key'] ?? '') === invoked);
+    if (matches.length === 1) return { id: matches[0]!.id, node: matches[0]! };
+    if (matches.length > 1) return { candidates: byId(matches) };
+  }
+
   // Last resort: an entry whose label is exactly what was asked for.
   const named = entries.filter((entry) => entry.label === trimmed);
   if (named.length === 1) return { id: named[0]!.id, node: named[0]! };

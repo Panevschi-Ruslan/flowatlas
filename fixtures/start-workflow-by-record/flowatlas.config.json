@@ -1,0 +1,17 @@
+{
+  "services": [
+    { "name": "lending", "repo": ".", "type": "lambda" }
+  ],
+  "adapters": {
+    "starters": [
+      {
+        "module": "@library/orchestration",
+        "function": "start",
+        "target": "workflow",
+        "name": [{ "kind": "origin-call-argument", "call": "create", "path": ["process"] }],
+        "names": { "Process.LoanApproval": "lending-loan-approval" }
+      }
+    ]
+  },
+  "output": ".flowatlas"
+}

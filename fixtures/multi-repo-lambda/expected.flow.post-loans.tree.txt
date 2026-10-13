@@ -1,0 +1,6 @@
+@  POST /v1/loans  loans/infra/api.tf:14
+  !  AWS_IAM
+  !  logged()
+  -> createLoan    loans/functions/create-loan/index.ts:11
+    -> saveLoan    loans/shared/loans-table.ts:10
+unresolved on this path: 0

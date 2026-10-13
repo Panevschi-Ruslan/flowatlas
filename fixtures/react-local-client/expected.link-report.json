@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:58.220Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:45.753Z",
   "configHash": "586a6f4aa63f",
   "services": [
     {
@@ -11,8 +11,15 @@
       "nodes": 11,
       "edges": 8,
       "types": 1,
-      "unresolved": 2,
-      "durationMs": 564
+      "unresolved": 3,
+      "durationMs": 479,
+      "packages": {
+        "name": "react-local-client-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -83,6 +90,6 @@
     "nodes": 11,
     "edges": 8,
     "types": 1,
-    "unresolved": 5
+    "unresolved": 6
   }
 }

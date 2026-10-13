@@ -1,8 +1,8 @@
 import { execFile } from 'node:child_process';
-import { existsSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { cpus } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import {
@@ -13,6 +13,9 @@ import {
   parseRepoGraph,
   readPackageJson,
   readResolvedPackageJson,
+  SERVICES_DIRECTORY,
+  serviceDirectoryName,
+  serviceOutputDir,
   serviceSourceDirs,
   sitesIn,
   wasMissed,
@@ -24,10 +27,17 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { findTsconfig, listRepoSources } from '@flowatlas/extractor-nestjs';
-import { linkGraphs, writeGraphDb, type LinkResult, type ServiceReport } from '@flowatlas/linker';
+import {
+  linkGraphs,
+  writeGraphDb,
+  type LinkResult,
+  type ServicePackages,
+  type ServiceReport,
+} from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { partialReadNotice } from '../partial-read.js';
 import {
+  CACHE_FILENAME,
   cachePathFor,
   emptyCache,
   hashConfig,
@@ -44,7 +54,7 @@ import {
   type RepoCache,
 } from '../build/cache.js';
 import { isDeclared, readDeclaredService } from '../build/declared.js';
-import { surveyDependencies } from '../build/dependencies.js';
+import { stampPackageFiles, surveyDependencies } from '../build/dependencies.js';
 import { readFailure } from '../build/failure.js';
 import { heapArgs, heapForReaders } from '../build/heap.js';
 import {
@@ -53,8 +63,10 @@ import {
   declinedNote,
   EXTRACTORS,
   isFrontend,
+  sourceRootOptionsOf,
 } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
+import { deploymentFiles } from '../build/deployment-files.js';
 import {
   hashGraphFile,
   planRebuild,
@@ -94,9 +106,17 @@ const declaredExtractor = (kind: string): string => `${kind}${DECLARED_SUFFIX}`;
 const wasDeclared = (extractor: string | null): boolean =>
   extractor !== null && extractor.endsWith(DECLARED_SUFFIX);
 
-/** Where a repository's own graph lives, whoever wrote it. */
-export const serviceGraphPath = (repoDir: string): string =>
-  join(repoDir, DEFAULT_OUTPUT, 'graph.json');
+/**
+ * Where one service's own graph lives: under the build's output, never in the
+ * service's repository.
+ *
+ * Its file hashes are beside it, as `cache.json`, written by the same process.
+ * Both used to be written to `<repo>/.flowatlas/`, which is a write into a
+ * repository the build was only asked to read, and a file two projects naming
+ * the same repository would share (R166).
+ */
+export const serviceGraphPath = (outputDir: string, service: string): string =>
+  join(serviceOutputDir(outputDir, service), 'graph.json');
 
 export interface BuildOptions {
   config?: string;
@@ -157,6 +177,11 @@ export interface BuildResult extends LinkResult {
   readNothing: readonly ReadNothing[];
   /** Adapters each service has only through a workspace member it reaches. */
   armsLength: readonly ArmsLength[];
+  /**
+   * `.flowatlas` directories an earlier version of this command left inside the
+   * repositories it read, absolute. Named, never removed (R166).
+   */
+  leftovers: readonly string[];
   plan: RebuildPlan;
   /**
    * Where each service's repository is, absolute.
@@ -225,7 +250,7 @@ export const inPools = async <T, R>(
 };
 
 /** What only the extraction knows about a repository's files. */
-type FileFacts = Pick<RepoCache, 'files' | 'globalFiles'>;
+type FileFacts = Pick<RepoCache, 'files' | 'globalFiles' | 'packages'>;
 
 interface Extracted {
   service: ServiceConfig;
@@ -276,6 +301,8 @@ const cacheExpectations = (config: FlowatlasConfig): CacheExpectations => {
 interface SurveyOptions {
   service: ServiceConfig;
   repoDir: string;
+  /** Where this service's graph is kept, under the build's output. */
+  graphPath: string;
   config: FlowatlasConfig;
   previous?: RepoCache;
   session?: ServiceSession;
@@ -284,13 +311,18 @@ interface SurveyOptions {
 
 /** Everything planning needs to know about one repository, read from disk. */
 const surveyService = (options: SurveyOptions): RepoSurvey => {
-  const { service, repoDir, config, previous, session } = options;
+  const { service, repoDir, config, previous, session, graphPath } = options;
   const extractor = EXTRACTORS.get(service.type) ?? null;
   const tsconfig = findTsconfig(repoDir, service.tsconfig);
-  const graphPath = serviceGraphPath(repoDir);
   // Listed from disk even when the repository is already open: a file created
   // since it was opened is exactly the change the survey must not miss.
-  const files = listRepoSources(repoDir, service.readTestDirectories);
+  const deployed = extractor === null ? [] : deploymentFiles(repoDir, { config, service });
+  const sources = listRepoSources(
+    repoDir,
+    service.readTestDirectories,
+    sourceRootOptionsOf(service, repoDir, config),
+  );
+  const files = [...sources, ...deployed];
 
   return {
     service: service.name,
@@ -300,11 +332,12 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     adapters:
       extractor === null
         ? []
-        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config),
+        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config, repoDir),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
     dependencies: surveyDependencies(repoDir),
-    globalFiles: session?.globalFiles() ?? [],
+    packages: stampPackageFiles(repoDir, Object.keys(previous?.packages ?? {}), previous?.packages),
+    globalFiles: [...(session?.globalFiles() ?? []), ...deployed],
     files: stampFiles(repoDir, files, previous?.files, {
       ...(options.trustTimestamps === undefined ? {} : { trustTimestamps: options.trustTimestamps }),
     }),
@@ -351,6 +384,25 @@ const reportOf = (
   durationMs,
 });
 
+/**
+ * What a service's manifest says it is built from, for the map's packages
+ * layer: read from the manifest alone, so a package nobody installed is named
+ * the same as one that is. A service with no manifest has nothing to say.
+ */
+export const packagesOf = (manifest: PackageJson | undefined): ServicePackages | undefined => {
+  if (manifest === undefined) return undefined;
+  const names = (...lists: Array<Record<string, string> | undefined>): string[] =>
+    [...new Set(lists.flatMap((list) => (list === undefined ? [] : Object.keys(list))))].sort();
+  const runtime = names(manifest.dependencies, manifest.peerDependencies, manifest.optionalDependencies);
+  const needed = new Set(runtime);
+  const dev = names(manifest.devDependencies).filter((name) => !needed.has(name));
+  return {
+    ...(typeof manifest.name === 'string' && manifest.name !== '' ? { name: manifest.name } : {}),
+    runtime,
+    dev,
+  };
+};
+
 /** A service that was read and whose repository is not in the graph. */
 export interface ReadNothing {
   service: string;
@@ -383,7 +435,7 @@ const readNothing = (
     const declared = isDeclared(item.service);
     const note = declared
       ? undefined
-      : declinedNote(item.service.type, readPackageJson(repoDirOf(item.service)) ?? {}, config);
+      : declinedNote(item.service.type, readPackageJson(repoDirOf(item.service)) ?? {}, config, repoDirOf(item.service));
     return [
       {
         service: item.service.name,
@@ -455,8 +507,8 @@ const armsLengthOf = (
     const repoDir = repoDirOf(item.service);
     const narrow = readResolvedPackageJson(repoDir, { sideways: false });
     if (narrow === undefined) return [];
-    const along = new Set(adapterNames(registry, narrow, config));
-    const found = adapterNames(registry, readResolvedPackageJson(repoDir) ?? {}, config).filter(
+    const along = new Set(adapterNames(registry, narrow, config, repoDir));
+    const found = adapterNames(registry, readResolvedPackageJson(repoDir) ?? {}, config, repoDir).filter(
       (adapter) => !along.has(adapter),
     );
     if (found.length === 0) return [];
@@ -505,11 +557,14 @@ const normalise = (graph: RepoGraph): RepoGraph =>
  */
 const extractApart = async (
   repoDir: string,
+  out: string,
   configPath: string,
   heapMb: number | undefined,
   signal?: AbortSignal,
 ): Promise<RepoGraph> => {
-  const out = join(repoDir, DEFAULT_OUTPUT);
+  // `out` is this service's own directory under the build's output, so the
+  // process writes nothing into the repository it reads, and processes reading
+  // different services at once never write into the same directory.
   // A separate process is also a process that can be stopped. When the build
   // around it has already failed, the child is killed rather than left to write
   // a graph for an answer nobody will receive. It writes by renaming a
@@ -523,20 +578,29 @@ const extractApart = async (
     maxBuffer: 64 * 1024 * 1024,
     ...(signal === undefined ? {} : { signal }),
   });
-  return readGraph(serviceGraphPath(repoDir));
+  return readGraph(join(out, 'graph.json'));
 };
+
+/** What an entry knows about a repository's files, carried to the next cache. */
+const factsOf = (entry: RepoCache): FileFacts => ({
+  files: entry.files,
+  globalFiles: entry.globalFiles,
+  ...(entry.packages === undefined ? {} : { packages: entry.packages }),
+});
 
 /** The single entry a lone `flowatlas extract` leaves behind for the build. */
 const readRepoFacts = (path: string, name: string): FileFacts | undefined => {
   const loaded = loadBuildCache(path);
   if (loaded === null || 'problem' in loaded) return undefined;
   const entry = loaded.cache.repos[name] ?? Object.values(loaded.cache.repos)[0];
-  return entry === undefined ? undefined : { files: entry.files, globalFiles: entry.globalFiles };
+  return entry === undefined ? undefined : factsOf(entry);
 };
 
 interface ExtractOneOptions {
   service: ServiceConfig;
   repoDir: string;
+  /** This service's directory under the build's output: its graph and its file hashes. */
+  serviceDir: string;
   configPath: string;
   plan: ServicePlan;
   session?: ServiceSession;
@@ -605,7 +669,8 @@ const extractDeclared = async (options: ExtractOneOptions): Promise<Extracted> =
 
 /** Reads one repository, or reuses what the last build left of it. */
 const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
-  const { service, repoDir, plan, session, previous } = options;
+  const { service, repoDir, serviceDir, plan, session, previous } = options;
+  const graphPath = join(serviceDir, 'graph.json');
 
   // A service the configuration described rather than pointed at. There is no
   // repository to survey, nothing to cache against and no extractor to choose:
@@ -643,9 +708,9 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   }
 
   if (plan.mode === 'skip') {
-    const graph = await readGraph(serviceGraphPath(repoDir)).catch(() => {
+    const graph = await readGraph(graphPath).catch(() => {
       throw new BuildInputError(
-        `missing graph for ${service.name} (${serviceGraphPath(repoDir)})`,
+        `missing graph for ${service.name} (${graphPath})`,
         'Run flowatlas build without --service first.',
       );
     });
@@ -655,7 +720,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
       report: { ...base, ...countsOf(graph) },
       ...(previous === undefined
         ? {}
-        : { facts: { files: previous.files, globalFiles: previous.globalFiles } }),
+        : { facts: factsOf(previous) }),
     };
   }
 
@@ -663,18 +728,18 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   try {
     const graph =
       session === undefined
-        ? await extractApart(repoDir, options.configPath, options.heapMb, options.signal)
-        : normalise(await extractWarm(session, plan, repoDir));
+        ? await extractApart(repoDir, serviceDir, options.configPath, options.heapMb, options.signal)
+        : normalise(await extractWarm(session, plan, graphPath));
     // An open repository is read in this process and cannot be interrupted
     // part-way, so a warm read finishes even when the build around it has
     // already failed. What it must not do then is write: a graph left behind by
     // a build that never returned is exactly what the next build trips over.
     if (session !== undefined && options.signal?.aborted !== true) {
-      await writeJson(serviceGraphPath(repoDir), graph);
+      await writeJson(graphPath, graph);
     }
     const facts =
       session === undefined
-        ? readRepoFacts(join(repoDir, DEFAULT_OUTPUT, 'cache.json'), service.name)
+        ? readRepoFacts(join(serviceDir, CACHE_FILENAME), service.name)
         : factsFromSession(session, options.stamps ?? {}, previous);
     return {
       service,
@@ -715,13 +780,13 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
 const extractWarm = async (
   session: ServiceSession,
   plan: ServicePlan,
-  repoDir: string,
+  graphPath: string,
 ): Promise<RepoGraph> => {
   if (plan.mode === 'full') return session.extractFull();
   try {
     const { graph, covers } = await session.extractFiles(plan.files ?? []);
     if (covers === 'repository') return graph;
-    const previous = await readGraph(serviceGraphPath(repoDir));
+    const previous = await readGraph(graphPath);
     return spliceRepoGraph(previous, [...covers], graph);
   } catch {
     // Reading part of a repository is an optimisation, so a part that will not
@@ -751,7 +816,8 @@ const factsFromSession = (
   previous?: RepoCache,
 ): FileFacts => {
   const imports = session.imports();
-  const held = [...session.files()].sort();
+  const deployed = deploymentFiles(session.repoDir, session.reading);
+  const held = [...new Set([...session.files(), ...deployed])].sort();
   const unseen = held.filter((file) => stamps[file] === undefined);
   const late = unseen.length === 0 ? {} : stampFiles(session.repoDir, unseen, previous?.files, {});
   const files: Record<string, FileStamp> = {};
@@ -759,7 +825,11 @@ const factsFromSession = (
     const stamp = stamps[file] ?? late[file];
     if (stamp !== undefined) files[file] = { ...stamp, deps: imports[file] ?? [] };
   }
-  return { files, globalFiles: session.globalFiles() };
+  return {
+    files,
+    globalFiles: [...session.globalFiles(), ...deployed],
+    packages: stampPackageFiles(session.repoDir, session.packages(), previous?.packages),
+  };
 };
 
 const writeJson = async (path: string, value: unknown): Promise<void> => {
@@ -799,6 +869,106 @@ const clearTemporaries = (outputDir: string): void => {
   }
 };
 
+/** Every service directory under an output directory, configured or not. */
+const serviceDirsIn = (outputDir: string): string[] => {
+  const root = join(outputDir, SERVICES_DIRECTORY);
+  try {
+    return readdirSync(root, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => join(root, entry.name));
+  } catch {
+    return [];
+  }
+};
+
+/** What a build writes into a service's directory, and nothing else. */
+const isServiceFile = (name: string): boolean =>
+  name === 'graph.json' || name === CACHE_FILENAME || name.endsWith('.tmp');
+
+/**
+ * Removes the directory of a service the configuration no longer names.
+ *
+ * Renaming a service, or taking one out, would otherwise leave its graph under
+ * `services/` for good, where nothing reads it. Only a directory holding nothing
+ * but what a build writes there is removed: anything else in it was put there by
+ * somebody, and is theirs.
+ */
+const pruneServiceDirs = (outputDir: string, services: readonly ServiceConfig[]): void => {
+  const named = new Set(services.map((service) => serviceDirectoryName(service.name)));
+  for (const dir of serviceDirsIn(outputDir)) {
+    const name = dir.slice(dir.lastIndexOf(sep) + 1);
+    if (named.has(name)) continue;
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    if (!entries.every(isServiceFile)) continue;
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+/** A path as the file system knows it, so a symlink in one spelling is not missed. */
+const realPath = (path: string): string => {
+  try {
+    return realpathSync(path);
+  } catch {
+    return resolve(path);
+  }
+};
+
+const isFile = (path: string): boolean => {
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
+};
+
+/** True when `inner` is `outer` or anywhere beneath it. */
+const within = (outer: string, inner: string): boolean => {
+  const rest = relative(outer, inner);
+  return rest === '' || (rest !== '..' && !rest.startsWith(`..${sep}`) && !isAbsolute(rest));
+};
+
+/**
+ * `.flowatlas` directories an earlier version of `build` left in the repositories.
+ *
+ * Up to R166 a build wrote each service's graph, and for most services its file
+ * hashes, into `<repo>/.flowatlas/`. Nothing reads them any more, and the build
+ * says so once rather than deleting them: they are inside somebody's repository,
+ * which is the place this change stopped writing to, and removing things there
+ * is a bigger step than writing them was.
+ *
+ * Three cases are not named. A directory that is this build's own output, or
+ * holds it, because deleting it would delete the build — a configuration kept at
+ * the root of the one repository it reads is the common one. And a directory
+ * holding a `project-graph.json`, which is some project's output rather than one
+ * service's leftovers: another configuration may build from that repository.
+ */
+export const leftoverRepoOutputs = (repoDirs: readonly string[], outputDir: string): string[] => {
+  const output = realPath(outputDir);
+  const found = new Set<string>();
+  for (const repoDir of repoDirs) {
+    const dir = join(repoDir, DEFAULT_OUTPUT);
+    if (!existsSync(dir)) continue;
+    const real = realPath(dir);
+    if (within(real, output)) continue;
+    if (!isFile(join(dir, 'graph.json')) && !isFile(join(dir, CACHE_FILENAME))) continue;
+    if (isFile(join(dir, 'project-graph.json'))) continue;
+    found.add(dir);
+  }
+  return [...found].sort();
+};
+
+/** The one line that names what an earlier version left behind, when it left anything. */
+export const leftoversLine = (leftovers: readonly string[]): string | undefined =>
+  leftovers.length === 0
+    ? undefined
+    : `left in the repositories by an earlier version of build, which wrote each service's graph there;` +
+      ` nothing reads ${leftovers.length === 1 ? 'it' : 'them'} now and ${leftovers.length === 1 ? 'it is' : 'they are'} safe to delete: ${leftovers.join(', ')}`;
+
 /**
  * Reads every repository and joins them.
  *
@@ -825,6 +995,8 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const outputDir = options.out === undefined ? loaded.outputDir : resolve(options.out);
   await mkdir(outputDir, { recursive: true });
   clearTemporaries(outputDir);
+  for (const dir of serviceDirsIn(outputDir)) clearTemporaries(dir);
+  const serviceDirOf = (service: ServiceConfig): string => serviceOutputDir(outputDir, service.name);
 
   const expected = cacheExpectations(loaded.config);
   const cachePath = cachePathFor(outputDir);
@@ -843,6 +1015,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     return surveyService({
       service,
       repoDir: loaded.repoDir(service),
+      graphPath: serviceGraphPath(outputDir, service.name),
       config: loaded.config,
       ...(previous === undefined ? {} : { previous }),
       ...(session === undefined ? {} : { session }),
@@ -883,6 +1056,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     return extractOne({
       service,
       repoDir: loaded.repoDir(service),
+      serviceDir: serviceDirOf(service),
       configPath: loaded.configPath,
       rootDir: loaded.rootDir,
       ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
@@ -904,7 +1078,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     if (item.graph === undefined) return [];
     const row = rowFor.get(item.service.name);
     // A copy rather than the graph itself, because the same object is what the
-    // cache counts and what was already written to the repository's own
+    // cache counts and what was already written to the service's own
     // graph.json, and neither of those should gain a row that this build
     // derived from the project rather than read from the repository.
     if (row === undefined) return [item.graph];
@@ -912,7 +1086,10 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   });
   const result = linkGraphs(graphs, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
-    services: extracted.map((item) => item.report),
+    services: extracted.map((item) => {
+      const packages = packagesOf(readPackageJson(loaded.repoDir(item.service)));
+      return packages === undefined ? item.report : { ...item.report, packages };
+    }),
   });
   const linkedAt = Date.now();
 
@@ -948,6 +1125,11 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   // Written even when it was ignored: `--no-cache` means read everything now,
   // not stay slow next time.
   saveBuildCache(cachePath, nextCache(expected, result.project.builtAt, surveys, extracted));
+  pruneServiceDirs(outputDir, loaded.config.services);
+  const leftovers = leftoverRepoOutputs(
+    readable.map((service) => loaded.repoDir(service)),
+    outputDir,
+  );
   const done = Date.now();
 
   return {
@@ -961,6 +1143,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     wrote: !keeping,
     readNothing: silent,
     armsLength,
+    leftovers,
     plan,
     repoDirs: Object.fromEntries(
       loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]),
@@ -1007,6 +1190,7 @@ const nextCache = (
       dependencies: survey.dependencies,
       globalFiles: carried?.globalFiles ?? survey.globalFiles,
       files: carried?.files ?? survey.files,
+      packages: carried?.packages ?? survey.packages,
       graphPath: survey.graphPath,
       graphHash: hashGraphFile(survey.graphPath),
       counts: countsOf(item.graph),
@@ -1198,6 +1382,11 @@ export const summariseBuild = (result: BuildResult): string[] => {
         ' — nothing here checked any of it against the service it describes',
     );
   }
+  // Before the count, which stays the line the eye lands on: this is about the
+  // disk rather than the graph, and it is said on every build until somebody
+  // deletes what it names.
+  const leftovers = leftoversLine(result.leftovers);
+  if (leftovers !== undefined) lines.push(leftovers);
   // Rows and places differ wherever a reason was folded, and both are worth
   // saying: one is how long the list is, the other is what it covers.
   lines.push(unresolvedLine(result.project.unresolved, report.totals.unresolved));
@@ -1270,7 +1459,7 @@ export const registerBuild = (program: Command): void => {
         return;
       }
       if (options.json === true) {
-        process.stdout.write(`${JSON.stringify(result.report, null, 2)}\n`);
+        process.stdout.write(`${JSON.stringify(buildJson(result), null, 2)}\n`);
       } else {
         process.stderr.write(`${summariseBuild(result).join('\n')}\n`);
         process.stdout.write(`${result.graphPath}\n`);
@@ -1285,3 +1474,18 @@ export const registerBuild = (program: Command): void => {
 };
 
 const collect = (value: string, previous: string[]): string[] => [...previous, value];
+
+/**
+ * What `--json` prints: the link report, and the notes the summary would have
+ * said beside it.
+ *
+ * `notes` is the shape a query's answer already gives what it says beside the
+ * rows, and it is left out when there is nothing to say, so the output of a
+ * build with nothing to note is the report and only the report — what this
+ * printed before there were notes. The report written to `link-report.json` is
+ * untouched: a note is about this run and this disk, not about the graph.
+ */
+export const buildJson = (result: BuildResult): LinkResult['report'] & { notes?: string[] } => {
+  const notes = [leftoversLine(result.leftovers)].filter((note): note is string => note !== undefined);
+  return notes.length === 0 ? result.report : { ...result.report, notes };
+};

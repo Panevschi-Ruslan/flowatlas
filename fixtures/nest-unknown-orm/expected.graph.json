@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-unknown-orm",
-  "generatedAt": "2026-09-27T09:26:53.970Z",
+  "generatedAt": "2026-10-07T14:34:36.664Z",
   "nodes": [
     {
       "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:30:12",
@@ -108,7 +108,18 @@
       "label": "JobBus.enqueue",
       "repo": "nest-unknown-orm",
       "file": "src/orders/jobs.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.repository.ts:OrdersRepository",
@@ -128,7 +139,13 @@
       "label": "OrdersRepository.find",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.repository.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-unknown-orm#Order[]"
+        }
+      }
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService",
@@ -148,7 +165,13 @@
       "label": "OrdersService.listFromLibrary",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-unknown-orm#Order[]"
+        }
+      }
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listLocally",
@@ -156,7 +179,13 @@
       "label": "OrdersService.listLocally",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-unknown-orm#Order[]"
+        }
+      }
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listVideos",
@@ -164,7 +193,13 @@
       "label": "OrdersService.listVideos",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listWidgets",
@@ -172,7 +207,13 @@
       "label": "OrdersService.listWidgets",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.schedule",
@@ -180,7 +221,13 @@
       "label": "OrdersService.schedule",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 57
+      "line": 57,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.store",
@@ -188,7 +235,18 @@
       "label": "OrdersService.store",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-unknown-orm#Order"
+            }
+          ],
+          "returns": "type:nest-unknown-orm#Order"
+        }
+      }
     },
     {
       "id": "nest-unknown-orm#src/orders/video.model.ts:VideoModel",

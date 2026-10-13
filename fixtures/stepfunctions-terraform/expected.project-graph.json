@@ -1,0 +1,2458 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:37:49.951Z",
+  "services": [
+    {
+      "name": "lending",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/lending-librarian-approvals",
+      "type": "channel",
+      "label": "sqs/lending-librarian-approvals",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "db_query:lending#infra/workflows.tf:42:7",
+      "type": "db_query",
+      "label": "read lending-loans",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 42,
+      "meta": {
+        "op": "read",
+        "table": "lending-loans",
+        "tables": [
+          "lending-loans"
+        ],
+        "service": "dynamodb",
+        "action": "scan"
+      }
+    },
+    {
+      "id": "db_query:lending#infra/workflows.tf:96:5",
+      "type": "db_query",
+      "label": "delete lending-holds",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 96,
+      "meta": {
+        "op": "delete",
+        "table": "lending-holds",
+        "tables": [
+          "lending-holds"
+        ],
+        "service": "dynamodb",
+        "action": "deleteItem"
+      }
+    },
+    {
+      "id": "db_query:lending#statemachine/loan-approval.asl.json:108:13",
+      "type": "db_query",
+      "label": "write lending-loans",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 108,
+      "meta": {
+        "op": "write",
+        "table": "lending-loans",
+        "tables": [
+          "lending-loans"
+        ],
+        "service": "dynamodb",
+        "action": "putItem"
+      }
+    },
+    {
+      "id": "db_query:lending#statemachine/loan-approval.asl.json:56:11",
+      "type": "db_query",
+      "label": "write lending-copies",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 56,
+      "meta": {
+        "op": "write",
+        "table": "lending-copies",
+        "tables": [
+          "lending-copies"
+        ],
+        "service": "dynamodb",
+        "action": "updateItem"
+      }
+    },
+    {
+      "id": "db_query:lending#statemachine/loan-renewal.asl.json:85:11",
+      "type": "db_query",
+      "label": "write lending-loans",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 85,
+      "meta": {
+        "op": "write",
+        "table": "lending-loans",
+        "tables": [
+          "lending-loans"
+        ],
+        "service": "dynamodb",
+        "action": "updateItem"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-assess-late-fee",
+      "type": "entry",
+      "label": "lending-assess-late-fee",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-assess-late-fee",
+        "deployedBy": "terraform",
+        "name": "lending-assess-late-fee",
+        "runtime": "nodejs20.x",
+        "declaredAs": "module.assess_late_fee.aws_lambda_function.this[0]",
+        "handler": "assess-late-fee.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:lending#Overdue"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-check-borrower",
+      "type": "entry",
+      "label": "lending-check-borrower",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 7,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-check-borrower",
+        "deployedBy": "terraform",
+        "name": "lending-check-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.check_borrower",
+        "handler": "check-borrower.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:lending#Borrower"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-notify-borrower",
+      "type": "entry",
+      "label": "lending-notify-borrower",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 23,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-notify-borrower",
+        "deployedBy": "terraform",
+        "name": "lending-notify-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.notify_borrower",
+        "handler": "notify-borrower.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:lending#NotifyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-release-hold",
+      "type": "entry",
+      "label": "lending-release-hold",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 39,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-release-hold",
+        "deployedBy": "terraform",
+        "name": "lending-release-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.release_hold",
+        "handler": "release-hold.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:lending#ExpiredHold"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-score-borrower",
+      "type": "entry",
+      "label": "lending-score-borrower",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 15,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-score-borrower",
+        "deployedBy": "terraform",
+        "name": "lending-score-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.score_borrower",
+        "handler": "score-borrower.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:lending#Borrower"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-send-overdue-reminder",
+      "type": "entry",
+      "label": "lending-send-overdue-reminder",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-send-overdue-reminder",
+        "deployedBy": "terraform",
+        "name": "lending-send-overdue-reminder",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.send_overdue_reminder",
+        "handler": "send-overdue-reminder.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:workflow:lending-hold-expiry",
+      "type": "entry",
+      "label": "workflow lending-hold-expiry",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 82,
+      "kind": "workflow",
+      "meta": {
+        "key": "lending-hold-expiry",
+        "name": "lending-hold-expiry",
+        "nameFrom": "deployment",
+        "startAt": "WaitForCollectionWindow",
+        "states": 3,
+        "queryLanguage": "JSONPath",
+        "comment": "Releases a hold nobody collected and offers the item to the next borrower.",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.hold_expiry",
+        "definitionFrom": "heredoc",
+        "type": "EXPRESS",
+        "declaredIn": "infra/workflows.tf:76"
+      }
+    },
+    {
+      "id": "entry:lending:workflow:lending-loan-approval",
+      "type": "entry",
+      "label": "workflow lending-loan-approval",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "lending-loan-approval",
+        "name": "lending-loan-approval",
+        "nameFrom": "deployment",
+        "startAt": "CheckBorrowerStanding",
+        "states": 12,
+        "queryLanguage": "JSONPath",
+        "comment": "Approves a loan: checks the borrower, reserves the copies, waits for a librarian, records the loan and tells the borrower.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.loan_approval",
+        "definitionFrom": "file",
+        "declaredIn": "infra/workflows.tf:6"
+      }
+    },
+    {
+      "id": "entry:lending:workflow:lending-loan-renewal",
+      "type": "entry",
+      "label": "workflow lending-loan-renewal",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "lending-loan-renewal",
+        "name": "lending-loan-renewal",
+        "nameFrom": "deployment",
+        "startAt": "CheckBorrowerStanding",
+        "states": 12,
+        "queryLanguage": "JSONPath",
+        "comment": "Renews a borrower's loans: settles any late fee first, then extends every loan and asks for approval again where a loan was flagged.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "module.loan_renewal.aws_sfn_state_machine.this[0]",
+        "definitionFrom": "templatefile",
+        "type": "STANDARD",
+        "declaredIn": "infra/workflows.tf:15"
+      }
+    },
+    {
+      "id": "entry:lending:workflow:lending-overdue-sweep",
+      "type": "entry",
+      "label": "workflow lending-overdue-sweep",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 38,
+      "kind": "workflow",
+      "meta": {
+        "key": "lending-overdue-sweep",
+        "name": "lending-overdue-sweep",
+        "nameFrom": "deployment",
+        "startAt": "FindOverdueLoans",
+        "states": 3,
+        "queryLanguage": "JSONPath",
+        "comment": "Finds the loans past their return date and reminds each borrower.",
+        "reads": {
+          "": "{today:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "module.overdue_sweep.aws_sfn_state_machine.this",
+        "definitionFrom": "jsonencode",
+        "declaredIn": "infra/modules/workflow/main.tf:11"
+      }
+    },
+    {
+      "id": "lending#infra/workflows.tf:lending-hold-expiry/ClearHold",
+      "type": "function",
+      "label": "ClearHold [Task dynamodb:deleteItem]",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 96,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-hold-expiry",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "deleteItem",
+          "pattern": "request-response",
+          "op": "delete",
+          "tables": [
+            "lending-holds"
+          ]
+        },
+        "parameters": {
+          "TableName": "lending-holds",
+          "Key": {
+            "holdId": {
+              "S.$": "$.holdId"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "lending#infra/workflows.tf:lending-hold-expiry/ReleaseHold",
+      "type": "function",
+      "label": "ReleaseHold [Task function]",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 91,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-hold-expiry",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "name": "lending-release-hold"
+        },
+        "reaches": [
+          "invoke:lending-release-hold"
+        ]
+      }
+    },
+    {
+      "id": "lending#infra/workflows.tf:lending-hold-expiry/WaitForCollectionWindow",
+      "type": "function",
+      "label": "WaitForCollectionWindow [Wait]",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 86,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-hold-expiry",
+        "stateType": "Wait"
+      }
+    },
+    {
+      "id": "lending#infra/workflows.tf:lending-overdue-sweep/FindOverdueLoans",
+      "type": "function",
+      "label": "FindOverdueLoans [Task dynamodb:scan]",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 42,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-overdue-sweep",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "scan",
+          "pattern": "request-response",
+          "sdk": true,
+          "op": "read",
+          "tables": [
+            "lending-loans"
+          ]
+        },
+        "parameters": {
+          "TableName": "lending-loans",
+          "FilterExpression": "dueDate < :today",
+          "ExpressionAttributeValues": {
+            ":today": {
+              "S.$": "$.today"
+            }
+          }
+        },
+        "resultPath": "$.overdue"
+      }
+    },
+    {
+      "id": "lending#infra/workflows.tf:lending-overdue-sweep/RemindBorrowers",
+      "type": "function",
+      "label": "RemindBorrowers [Map]",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 55,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-overdue-sweep",
+        "stateType": "Map",
+        "end": true
+      }
+    },
+    {
+      "id": "lending#infra/workflows.tf:lending-overdue-sweep/SendReminder",
+      "type": "function",
+      "label": "SendReminder [Task function]",
+      "repo": "lending",
+      "file": "infra/workflows.tf",
+      "line": 62,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-overdue-sweep",
+        "stateType": "Task",
+        "scope": [
+          "RemindBorrowers"
+        ],
+        "end": true,
+        "task": {
+          "kind": "function",
+          "name": "lending-send-overdue-reminder"
+        },
+        "reaches": [
+          "invoke:lending-send-overdue-reminder"
+        ]
+      }
+    },
+    {
+      "id": "lending#src/handlers/assess-late-fee.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/assess-late-fee.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#Overdue"
+            }
+          ],
+          "returns": "{fee:number}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/check-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/check-borrower.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#Borrower"
+            }
+          ],
+          "returns": "{standing:type:lending#Standing}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/notify-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/notify-borrower.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#NotifyEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/release-hold.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/release-hold.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#ExpiredHold"
+            }
+          ],
+          "returns": "{offeredTo:string}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/release-hold.ts:nextInQueue",
+      "type": "function",
+      "label": "nextInQueue",
+      "repo": "lending",
+      "file": "src/handlers/release-hold.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "hold",
+              "type": "type:lending#ExpiredHold"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/score-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/score-borrower.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#Borrower"
+            }
+          ],
+          "returns": "{score:number}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/send-overdue-reminder.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/send-overdue-reminder.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{borrowerId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending#src/lib/fees.ts:lateFee",
+      "type": "function",
+      "label": "lateFee",
+      "repo": "lending",
+      "file": "src/lib/fees.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "daysOverdue",
+              "type": "number"
+            },
+            {
+              "name": "replacementCost",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "lending#src/lib/notices.ts:composeNotice",
+      "type": "function",
+      "label": "composeNotice",
+      "repo": "lending",
+      "file": "src/lib/notices.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            },
+            {
+              "name": "kind",
+              "type": "'approved'|'fee-due'|'overdue'|'renewed'"
+            }
+          ],
+          "returns": "type:lending#Notice"
+        }
+      }
+    },
+    {
+      "id": "lending#src/lib/notices.ts:sendNotice",
+      "type": "function",
+      "label": "sendNotice",
+      "repo": "lending",
+      "file": "src/lib/notices.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "notice",
+              "type": "type:lending#Notice"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending#src/lib/standing.ts:scoreOf",
+      "type": "function",
+      "label": "scoreOf",
+      "repo": "lending",
+      "file": "src/lib/standing.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrower",
+              "type": "type:lending#Borrower"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "lending#src/lib/standing.ts:standingOf",
+      "type": "function",
+      "label": "standingOf",
+      "repo": "lending",
+      "file": "src/lib/standing.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrower",
+              "type": "type:lending#Borrower"
+            }
+          ],
+          "returns": "type:lending#Standing"
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
+      "type": "function",
+      "label": "AwaitLibrarianApproval [Task sqs:sendMessage]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "channel",
+          "service": "sqs",
+          "action": "sendMessage",
+          "pattern": "wait-for-task-token",
+          "transport": "queue",
+          "targets": [
+            "lending-librarian-approvals"
+          ],
+          "channels": [
+            "sqs/lending-librarian-approvals"
+          ]
+        },
+        "parameters": {
+          "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/000000000000/lending-librarian-approvals",
+          "MessageBody": {
+            "borrowerId.$": "$.borrowerId",
+            "itemIds.$": "$.itemIds",
+            "taskToken.$": "$$.Task.Token"
+          }
+        },
+        "resultPath": "$.approval"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrowerStanding",
+      "type": "function",
+      "label": "CheckBorrowerStanding [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "lending-check-borrower"
+        },
+        "reaches": [
+          "invoke:lending-check-borrower"
+        ],
+        "parameters": {
+          "FunctionName": "lending-check-borrower",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId"
+          }
+        },
+        "resultSelector": {
+          "standing.$": "$.Payload.standing"
+        },
+        "resultPath": "$.borrower",
+        "retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/IsBorrowerInGoodStanding",
+      "type": "function",
+      "label": "IsBorrowerInGoodStanding [Choice]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 35,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Choice"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/LoanApproved",
+      "type": "function",
+      "label": "LoanApproved [Succeed]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 149,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Succeed",
+        "end": true
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/LoanRejected",
+      "type": "function",
+      "label": "LoanRejected [Fail]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 159,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Fail",
+        "end": true
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/NotifyBorrower",
+      "type": "function",
+      "label": "NotifyBorrower [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 137,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "lending-notify-borrower"
+        },
+        "reaches": [
+          "invoke:lending-notify-borrower"
+        ],
+        "parameters": {
+          "FunctionName": "lending-notify-borrower",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId",
+            "kind": "approved"
+          }
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RecordLoan",
+      "type": "function",
+      "label": "RecordLoan [Parallel]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 102,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Parallel",
+        "resultPath": "$.recorded"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RejectLoan",
+      "type": "function",
+      "label": "RejectLoan [Pass]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 152,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Pass"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ReserveCopies",
+      "type": "function",
+      "label": "ReserveCopies [Map]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 46,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Map",
+        "resultPath": null
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ReserveCopy",
+      "type": "function",
+      "label": "ReserveCopy [Task dynamodb:updateItem]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 56,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "scope": [
+          "ReserveCopies"
+        ],
+        "end": true,
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "updateItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": [
+            "lending-copies"
+          ]
+        },
+        "parameters": {
+          "TableName": "lending-copies",
+          "Key": {
+            "itemId": {
+              "S.$": "$"
+            }
+          },
+          "UpdateExpression": "SET reserved = :yes",
+          "ExpressionAttributeValues": {
+            ":yes": {
+              "BOOL": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "type": "function",
+      "label": "ScoreBorrower [Task function]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 126,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "scope": [
+          "RecordLoan[1]"
+        ],
+        "end": true,
+        "task": {
+          "kind": "function",
+          "name": "lending-score-borrower"
+        },
+        "reaches": [
+          "invoke:lending-score-borrower"
+        ]
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/WriteLoan",
+      "type": "function",
+      "label": "WriteLoan [Task dynamodb:putItem]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 108,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "scope": [
+          "RecordLoan[0]"
+        ],
+        "end": true,
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "putItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": [
+            "lending-loans"
+          ]
+        },
+        "parameters": {
+          "TableName": "lending-loans",
+          "Item": {
+            "borrowerId": {
+              "S.$": "$.borrowerId"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy",
+      "type": "function",
+      "label": "ApplyBranchPolicy [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 66,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response"
+        },
+        "parameters": {
+          "FunctionName": "${branch_policy_arn}",
+          "Payload.$": "$"
+        },
+        "resultPath": "$.policy"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AssessLateFee",
+      "type": "function",
+      "label": "AssessLateFee [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 36,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "lending-assess-late-fee"
+        },
+        "reaches": [
+          "invoke:lending-assess-late-fee"
+        ],
+        "parameters": {
+          "FunctionName": "${assess_late_fee_arn}",
+          "Payload.$": "$"
+        },
+        "resultPath": "$.fee"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment",
+      "type": "function",
+      "label": "AwaitFeePayment [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 46,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "wait-for-task-token",
+          "name": "lending-notify-borrower"
+        },
+        "reaches": [
+          "invoke:lending-notify-borrower"
+        ],
+        "parameters": {
+          "FunctionName": "${notify_borrower_arn}",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId",
+            "kind": "fee-due",
+            "taskToken.$": "$$.Task.Token"
+          }
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/CheckBorrowerStanding",
+      "type": "function",
+      "label": "CheckBorrowerStanding [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "lending-check-borrower"
+        },
+        "reaches": [
+          "invoke:lending-check-borrower"
+        ],
+        "parameters": {
+          "FunctionName": "${check_borrower_arn}",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId"
+          }
+        },
+        "resultSelector": {
+          "standing.$": "$.Payload.standing"
+        },
+        "resultPath": "$.borrower"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ExtendLoan",
+      "type": "function",
+      "label": "ExtendLoan [Task dynamodb:updateItem]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 85,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Task",
+        "scope": [
+          "ExtendLoans"
+        ],
+        "end": true,
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "updateItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": [
+            "lending-loans"
+          ]
+        },
+        "parameters": {
+          "TableName": "lending-loans",
+          "Key": {
+            "loanId": {
+              "S.$": "$"
+            }
+          },
+          "UpdateExpression": "SET dueDate = :next",
+          "ExpressionAttributeValues": {
+            ":next": {
+              "S.$": "$$.Execution.Input.nextDueDate"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ExtendLoans",
+      "type": "function",
+      "label": "ExtendLoans [Map]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 76,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Map",
+        "resultPath": null
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/HasOverdueItems",
+      "type": "function",
+      "label": "HasOverdueItems [Choice]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 20,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Choice"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/NotifyRenewal",
+      "type": "function",
+      "label": "NotifyRenewal [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 115,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Task",
+        "scope": [
+          "RecordRenewal[0]"
+        ],
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "lending-notify-borrower"
+        },
+        "reaches": [
+          "invoke:lending-notify-borrower"
+        ],
+        "parameters": {
+          "FunctionName": "${notify_borrower_arn}",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId",
+            "kind": "renewed"
+          }
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ReapproveFlaggedLoans",
+      "type": "function",
+      "label": "ReapproveFlaggedLoans [Task states:startExecution]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 132,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Task",
+        "scope": [
+          "RecordRenewal[1]"
+        ],
+        "end": true,
+        "task": {
+          "kind": "workflow",
+          "service": "states",
+          "action": "startExecution",
+          "pattern": "sync:2",
+          "name": "lending-loan-approval"
+        },
+        "reaches": [
+          "workflow:lending-loan-approval"
+        ],
+        "parameters": {
+          "StateMachineArn": "${loan_approval_arn}",
+          "Input": {
+            "borrowerId.$": "$.borrowerId",
+            "itemIds.$": "$.flaggedItemIds"
+          }
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RecordRenewal",
+      "type": "function",
+      "label": "RecordRenewal [Parallel]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 109,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Parallel"
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RenewalComplete",
+      "type": "function",
+      "label": "RenewalComplete [Succeed]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 149,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Succeed",
+        "end": true
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RenewalRefused",
+      "type": "function",
+      "label": "RenewalRefused [Fail]",
+      "repo": "lending",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 152,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-renewal",
+        "stateType": "Fail",
+        "end": true
+      }
+    },
+    {
+      "id": "producer:lending#statemachine/loan-approval.asl.json:80:5",
+      "type": "producer",
+      "label": "message sqs/lending-librarian-approvals",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "definition",
+        "service": "sqs",
+        "action": "sendMessage"
+      }
+    },
+    {
+      "id": "repo:lending",
+      "type": "repo",
+      "label": "lending",
+      "repo": "lending",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:lending#lending-copies",
+      "type": "table",
+      "label": "lending-copies",
+      "repo": "lending"
+    },
+    {
+      "id": "table:lending#lending-holds",
+      "type": "table",
+      "label": "lending-holds",
+      "repo": "lending"
+    },
+    {
+      "id": "table:lending#lending-loans",
+      "type": "table",
+      "label": "lending-loans",
+      "repo": "lending"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:lending#infra/workflows.tf:42:7",
+      "to": "table:lending#lending-loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 42
+    },
+    {
+      "from": "db_query:lending#infra/workflows.tf:96:5",
+      "to": "table:lending#lending-holds",
+      "type": "queries",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 96
+    },
+    {
+      "from": "db_query:lending#statemachine/loan-approval.asl.json:108:13",
+      "to": "table:lending#lending-loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 108
+    },
+    {
+      "from": "db_query:lending#statemachine/loan-approval.asl.json:56:11",
+      "to": "table:lending#lending-copies",
+      "type": "queries",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 56
+    },
+    {
+      "from": "db_query:lending#statemachine/loan-renewal.asl.json:85:11",
+      "to": "table:lending#lending-loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 85
+    },
+    {
+      "from": "entry:lending:invoke:lending-assess-late-fee",
+      "to": "lending#src/handlers/assess-late-fee.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/assess-late-fee.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:lending:invoke:lending-check-borrower",
+      "to": "lending#src/handlers/check-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/check-borrower.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:lending:invoke:lending-notify-borrower",
+      "to": "lending#src/handlers/notify-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/notify-borrower.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:lending:invoke:lending-release-hold",
+      "to": "lending#src/handlers/release-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/release-hold.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:lending:invoke:lending-score-borrower",
+      "to": "lending#src/handlers/score-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/score-borrower.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:lending:invoke:lending-send-overdue-reminder",
+      "to": "lending#src/handlers/send-overdue-reminder.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/send-overdue-reminder.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:lending:workflow:lending-hold-expiry",
+      "to": "lending#infra/workflows.tf:lending-hold-expiry/WaitForCollectionWindow",
+      "type": "handles",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 84
+    },
+    {
+      "from": "entry:lending:workflow:lending-loan-approval",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrowerStanding",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 3
+    },
+    {
+      "from": "entry:lending:workflow:lending-loan-renewal",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/CheckBorrowerStanding",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 3
+    },
+    {
+      "from": "entry:lending:workflow:lending-overdue-sweep",
+      "to": "lending#infra/workflows.tf:lending-overdue-sweep/FindOverdueLoans",
+      "type": "handles",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 40
+    },
+    {
+      "from": "lending#infra/workflows.tf:lending-hold-expiry/ClearHold",
+      "to": "db_query:lending#infra/workflows.tf:96:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 96
+    },
+    {
+      "from": "lending#infra/workflows.tf:lending-hold-expiry/ReleaseHold",
+      "to": "entry:lending:invoke:lending-release-hold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 91,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-release-hold"
+      }
+    },
+    {
+      "from": "lending#infra/workflows.tf:lending-hold-expiry/ReleaseHold",
+      "to": "lending#infra/workflows.tf:lending-hold-expiry/ClearHold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 94,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#infra/workflows.tf:lending-hold-expiry/WaitForCollectionWindow",
+      "to": "lending#infra/workflows.tf:lending-hold-expiry/ReleaseHold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 89,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#infra/workflows.tf:lending-overdue-sweep/FindOverdueLoans",
+      "to": "db_query:lending#infra/workflows.tf:42:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 42
+    },
+    {
+      "from": "lending#infra/workflows.tf:lending-overdue-sweep/FindOverdueLoans",
+      "to": "lending#infra/workflows.tf:lending-overdue-sweep/RemindBorrowers",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 53,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#infra/workflows.tf:lending-overdue-sweep/RemindBorrowers",
+      "to": "lending#infra/workflows.tf:lending-overdue-sweep/SendReminder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 60,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "item-processor",
+            "field": "ItemProcessor"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#infra/workflows.tf:lending-overdue-sweep/SendReminder",
+      "to": "entry:lending:invoke:lending-send-overdue-reminder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/workflows.tf",
+      "line": 62,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-send-overdue-reminder"
+      }
+    },
+    {
+      "from": "lending#src/handlers/assess-late-fee.ts:handler",
+      "to": "lending#src/lib/fees.ts:lateFee",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number",
+        "number"
+      ],
+      "returns": "number",
+      "file": "src/handlers/assess-late-fee.ts",
+      "line": 10
+    },
+    {
+      "from": "lending#src/handlers/check-borrower.ts:handler",
+      "to": "lending#src/lib/standing.ts:standingOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:lending#Borrower"
+      ],
+      "returns": "type:lending#Standing",
+      "file": "src/handlers/check-borrower.ts",
+      "line": 4
+    },
+    {
+      "from": "lending#src/handlers/notify-borrower.ts:handler",
+      "to": "lending#src/lib/notices.ts:composeNotice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "'approved'|'fee-due'|'overdue'|'renewed'"
+      ],
+      "returns": "type:lending#Notice",
+      "file": "src/handlers/notify-borrower.ts",
+      "line": 11
+    },
+    {
+      "from": "lending#src/handlers/notify-borrower.ts:handler",
+      "to": "lending#src/lib/notices.ts:sendNotice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:lending#Notice"
+      ],
+      "returns": "void",
+      "file": "src/handlers/notify-borrower.ts",
+      "line": 11
+    },
+    {
+      "from": "lending#src/handlers/release-hold.ts:handler",
+      "to": "lending#src/handlers/release-hold.ts:nextInQueue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:lending#ExpiredHold"
+      ],
+      "returns": "string",
+      "file": "src/handlers/release-hold.ts",
+      "line": 9
+    },
+    {
+      "from": "lending#src/handlers/score-borrower.ts:handler",
+      "to": "lending#src/lib/standing.ts:scoreOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:lending#Borrower"
+      ],
+      "returns": "number",
+      "file": "src/handlers/score-borrower.ts",
+      "line": 4
+    },
+    {
+      "from": "lending#src/handlers/send-overdue-reminder.ts:handler",
+      "to": "lending#src/lib/notices.ts:composeNotice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "'approved'|'fee-due'|'overdue'|'renewed'"
+      ],
+      "returns": "type:lending#Notice",
+      "file": "src/handlers/send-overdue-reminder.ts",
+      "line": 4
+    },
+    {
+      "from": "lending#src/handlers/send-overdue-reminder.ts:handler",
+      "to": "lending#src/lib/notices.ts:sendNotice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:lending#Notice"
+      ],
+      "returns": "void",
+      "file": "src/handlers/send-overdue-reminder.ts",
+      "line": 4
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RecordLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 100,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RejectLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 97,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "catch",
+            "errors": [
+              "States.Timeout",
+              "LoanDeclined"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
+      "to": "producer:lending#statemachine/loan-approval.asl.json:80:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrowerStanding",
+      "to": "entry:lending:invoke:lending-check-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-check-borrower"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrowerStanding",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/IsBorrowerInGoodStanding",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 33,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrowerStanding",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RejectLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 30,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "catch",
+            "errors": [
+              "States.ALL"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/IsBorrowerInGoodStanding",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RejectLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 44,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "default"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/IsBorrowerInGoodStanding",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ReserveCopies",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 41,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.borrower.standing",
+              "StringEquals": "good"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/NotifyBorrower",
+      "to": "entry:lending:invoke:lending-notify-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 137,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-notify-borrower"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/NotifyBorrower",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/LoanApproved",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 147,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RecordLoan",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/NotifyBorrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 135,
+      "meta": {
+        "order": 2,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RecordLoan",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 124,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "branch",
+            "branch": 1
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RecordLoan",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/WriteLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 106,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "branch",
+            "branch": 0
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/RejectLoan",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/LoanRejected",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 157,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ReserveCopies",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 78,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ReserveCopies",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ReserveCopy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 54,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "item-processor",
+            "field": "ItemProcessor"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ReserveCopy",
+      "to": "db_query:lending#statemachine/loan-approval.asl.json:56:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 56
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "to": "entry:lending:invoke:lending-score-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 126,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-score-borrower"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/WriteLoan",
+      "to": "db_query:lending#statemachine/loan-approval.asl.json:108:13",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 108
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ExtendLoans",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 74,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AssessLateFee",
+      "to": "entry:lending:invoke:lending-assess-late-fee",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 36,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-assess-late-fee"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AssessLateFee",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 44,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment",
+      "to": "entry:lending:invoke:lending-notify-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 46,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-notify-borrower"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 64,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RenewalRefused",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 61,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "catch",
+            "errors": [
+              "States.Timeout"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/CheckBorrowerStanding",
+      "to": "entry:lending:invoke:lending-check-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-check-borrower"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/CheckBorrowerStanding",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/HasOverdueItems",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ExtendLoan",
+      "to": "db_query:lending#statemachine/loan-renewal.asl.json:85:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 85
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ExtendLoans",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ExtendLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 83,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "item-processor",
+            "field": "ItemProcessor"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ExtendLoans",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RecordRenewal",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 107,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/HasOverdueItems",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 34,
+      "meta": {
+        "order": 2,
+        "transitions": [
+          {
+            "kind": "default"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/HasOverdueItems",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AssessLateFee",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 31,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.borrower.standing",
+              "StringEquals": "overdue"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/HasOverdueItems",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RenewalRefused",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 26,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.borrower.standing",
+              "StringEquals": "suspended"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/NotifyRenewal",
+      "to": "entry:lending:invoke:lending-notify-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 115,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-notify-borrower"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ReapproveFlaggedLoans",
+      "to": "entry:lending:workflow:lending-loan-approval",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 132,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:lending-loan-approval"
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RecordRenewal",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/NotifyRenewal",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 113,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "branch",
+            "branch": 0
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RecordRenewal",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ReapproveFlaggedLoans",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 130,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "branch",
+            "branch": 1
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RecordRenewal",
+      "to": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/RenewalComplete",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 147,
+      "meta": {
+        "order": 2,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "producer:lending#statemachine/loan-approval.asl.json:80:5",
+      "to": "channel:sqs/lending-librarian-approvals",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80,
+      "meta": {
+        "payload": {
+          "MessageBody": {
+            "borrowerId.$": "$.borrowerId",
+            "itemIds.$": "$.itemIds",
+            "taskToken.$": "$$.Task.Token"
+          }
+        }
+      }
+    }
+  ],
+  "types": {
+    "type:lending#Borrower": {
+      "name": "Borrower",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/standing.ts",
+      "structuralHash": "0ac248e42a828374",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "overdueItems",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "unpaidFees",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending#ExpiredHold": {
+      "name": "ExpiredHold",
+      "kind": "object",
+      "declaredIn": "lending#src/handlers/release-hold.ts",
+      "structuralHash": "8366d9a63c51d6c1",
+      "fields": [
+        {
+          "name": "holdId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending#Notice": {
+      "name": "Notice",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/notices.ts",
+      "structuralHash": "932229d30f43675f",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending#NotifyEvent": {
+      "name": "NotifyEvent",
+      "kind": "object",
+      "declaredIn": "lending#src/handlers/notify-borrower.ts",
+      "structuralHash": "12cc2c890aaa860c",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": "'approved'|'fee-due'|'renewed'",
+          "optional": false
+        },
+        {
+          "name": "taskToken",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending#Overdue": {
+      "name": "Overdue",
+      "kind": "object",
+      "declaredIn": "lending#src/handlers/assess-late-fee.ts",
+      "structuralHash": "70d090f597dba38d",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "daysOverdue",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "replacementCost",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending#Standing": {
+      "name": "Standing",
+      "kind": "union",
+      "declaredIn": "lending#src/lib/standing.ts",
+      "structuralHash": "3900485074324ef3",
+      "members": [
+        "'good'",
+        "'suspended'",
+        "'overdue'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 66,
+      "reason": "workflow-template-unbound",
+      "message": "ApplyBranchPolicy invokes a function named by ${branch_policy_arn}, and nothing here says what ${branch_policy_arn} stands for",
+      "hint": "Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.",
+      "symbol": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy",
+      "adapter": "aws-lambda",
+      "meta": {
+        "field": "FunctionName",
+        "written": "${branch_policy_arn}",
+        "variables": [
+          "branch_policy_arn"
+        ]
+      },
+      "service": "lending"
+    }
+  ]
+}

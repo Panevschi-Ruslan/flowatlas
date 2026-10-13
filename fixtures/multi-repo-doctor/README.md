@@ -46,6 +46,12 @@ built at run time, a channel read from settings, a token no module provides,
 and the three `orders` routes that reach stored data with no guard in front of
 them (`route-unguarded`).
 
+**No way in — `gateway`.** It holds a client and no controller, so nothing
+enters it, and the report opens by saying so (R170). With
+`--format github` that is a `::warning` on the line of `flowatlas.config.json`
+that names the service, since there is no line of its code to put it on
+(R173).
+
 **`baseline` — three files, three answers.** See `make-baselines.mjs`:
 
 | File | Against this graph |

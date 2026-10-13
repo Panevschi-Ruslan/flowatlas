@@ -163,6 +163,15 @@ describe('GraphBuilder', () => {
     expect(b.build().unresolved).toHaveLength(2);
   });
 
+  it('keeps two rows about one node at one site apart by what each says was not read (R177)', () => {
+    const b = builder();
+    const at = { file: 'src/a.ts', line: 3, reason: 'channel-from-environment', symbol: 'producer:orders#src/a.ts:3:5' };
+    b.addUnresolved({ ...at, message: 'publish -> process.env.BUS' });
+    b.addUnresolved({ ...at, message: 'publish -> process.env.TOPIC' });
+    b.addUnresolved({ ...at, message: 'publish -> process.env.BUS' });
+    expect(b.unresolved.map((row) => row.message)).toEqual(['publish -> process.env.BUS', 'publish -> process.env.TOPIC']);
+  });
+
   it('folds rows below action by reason and by level, never across the two', () => {
     // One reason raising both levels is not a case any pass makes today, and a
     // fold keyed on the reason alone would answer it by inventing a number:
@@ -194,6 +203,17 @@ describe('GraphBuilder', () => {
       ['src/c.ts', 2],
       ['src/e2e/a.ts', 3],
       ['src/test/b.ts', 5],
+    ]);
+  });
+
+  it('takes back the rows a later reader answered, before the rest are folded', () => {
+    const b = builder();
+    b.addUnresolved({ file: 'src/a.ts', line: 1, reason: 'call-dynamic-receiver', level: 'info', symbol: 'run -> orchestrator.run' });
+    b.addUnresolved({ file: 'src/a.ts', line: 2, reason: 'call-dynamic-receiver', level: 'info', symbol: 'run -> scheduler.schedule' });
+    b.addUnresolved({ file: 'src/b.ts', line: 3, reason: 'call-dynamic-receiver', level: 'info', symbol: 'go -> orchestrator.run' });
+    b.withdrawUnresolved((row) => row.symbol?.endsWith('orchestrator.run') === true);
+    expect(b.build().unresolved).toEqual([
+      { file: 'src/a.ts', line: 2, reason: 'call-dynamic-receiver', level: 'info', symbol: 'run -> scheduler.schedule' },
     ]);
   });
 

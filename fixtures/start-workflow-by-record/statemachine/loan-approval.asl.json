@@ -1,0 +1,17 @@
+{
+  "Comment": "Approves a loan: checks the borrower.",
+  "StartAt": "CheckBorrower",
+  "States": {
+    "CheckBorrower": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "lending-check-borrower",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId"
+        }
+      },
+      "End": true
+    }
+  }
+}

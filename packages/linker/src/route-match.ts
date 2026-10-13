@@ -1,4 +1,4 @@
-import { normalizePath, UNREAD_SPAN, wasRead, type GraphNode } from '@flowatlas/core';
+import { normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN, wasRead, type GraphNode } from '@flowatlas/core';
 import { cmp } from './order.js';
 
 export interface RouteMatch {
@@ -33,11 +33,50 @@ export const isMatch = (result: RouteResult): result is RouteMatch => 'entry' in
 const segmentsOf = (path: string): string[] =>
   normalizePath(path).split('/').filter((segment) => segment.length > 0);
 
+/** A name in a segment as written: `:id` in `foo-:id`. */
+const NAMED_PARAM = /:[A-Za-z_$][\w$]*/g;
+
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * How one hole of a route's key reads the segment asked for, by what its path
+ * as written spells there. A hole the path writes as one name and nothing else
+ * takes any segment; one written with literal text around its names (SvelteKit's
+ * `foo-[id]`, written `foo-:id`) takes only a segment with that text around a
+ * value, so `/foo-42` reaches it and `/bar` does not.
+ */
+type SegmentShape = 'open' | 'literal';
+
+/**
+ * Literal only where the text around the names is plain URL text: a spelling
+ * this does not know (`{id}`, an Express pattern `:id(\\d+)`) stays open, as
+ * the key says it is.
+ */
+const LITERAL_TEXT = /^[\w.~@!$&'+,;=%-]+$/;
+
+const shapeOf = (written: string | undefined): SegmentShape => {
+  if (written === undefined || !written.includes(':')) return 'open';
+  const text = written.replace(NAMED_PARAM, '');
+  return text !== '' && LITERAL_TEXT.test(text) ? 'literal' : 'open';
+};
+
+const SHAPE_MATCHERS: Readonly<Record<SegmentShape, (written: string, asked: string) => boolean>> = Object.freeze({
+  open: () => true,
+  // Case aside, as a literal segment is compared below.
+  literal: (written, asked) =>
+    new RegExp(`^${written.split(NAMED_PARAM).map(escapeRegExp).join('[^/]+?')}$`, 'i').test(asked),
+});
+
+/** Whether a hole written this way takes the segment asked for. */
+const shapeAnswers = (written: string | undefined, asked: string): boolean =>
+  SHAPE_MATCHERS[shapeOf(written)](written ?? '', asked);
+
 /**
  * Whether a route answers a request for this path.
  *
- * A hole on the route side accepts any single segment of the request; a literal
- * accepts only itself. A trailing wildcard accepts everything below it. Nothing
+ * A hole on the route side accepts any single segment of the request, unless
+ * the path as written (`shapes`, a segment each) spells literal text around it;
+ * a literal accepts only itself. A trailing wildcard accepts everything below it. Nothing
  * is fuzzy: a near miss is a miss, because an edge drawn here claims one service
  * really does reach the other.
  *
@@ -47,7 +86,7 @@ const segmentsOf = (path: string): string[] =>
  * into a call reported as dynamic; the check is repeated here so that a caller
  * that forgets cannot invent an edge.
  */
-const pathAnswers = (routePath: string, requestPath: string): boolean => {
+const pathAnswers = (routePath: string, requestPath: string, shapes: readonly (string | undefined)[] = []): boolean => {
   if (!wasRead(routePath) || !wasRead(requestPath)) return false;
   // Neither side is a path. Two empty strings compared segment by segment agree
   // about nothing and used to answer yes, so an entry whose path could not be
@@ -70,7 +109,13 @@ const pathAnswers = (routePath: string, requestPath: string): boolean => {
     }
     const asked = request[index];
     if (asked === undefined) return false;
-    if (segment === ':param') continue;
+    // A hole, or holes with literal text around them (`foo-:param`, SvelteKit's
+    // `foo-[id]`), which reads the segment by its path as written where there
+    // is one and by its own spelling where not.
+    if (segment.includes(PARAM_PLACEHOLDER)) {
+      if (shapeAnswers(shapes[index] ?? segment, asked)) continue;
+      return false;
+    }
     // Express and Nest both match a path without regard to case unless they are
     // told otherwise, so `/Orders/42` really does reach `/orders/:id`. Comparing
     // exactly reported that as a route the target does not serve: a finding
@@ -126,16 +171,60 @@ export const assumedMountOf = (entry: GraphNode): { path: string; settings: stri
 };
 
 /**
- * Whether an entry answers a request for this path, and on what footing.
+ * How an entry answers a request.
  *
  * `read` is an address read in full; `mount` is one that answers only once its
  * leading part is taken as empty, carrying the settings that part is read from.
  */
 export type Answer = { footing: 'read'; path: string } | { footing: 'mount'; path: string; settings: string[] };
 
+/**
+ * The addresses a route answers on: its own, and each spelling of it without
+ * the segments its path as written marks optional (`/:lang?/files` answers
+ * `/files` too). Read only where the two spellings agree on how many segments
+ * there are, since that is what says which segment is which.
+ */
+export const optionalVariantsOf = (routePath: string, rawPath: unknown): string[] =>
+  spellingsOf(routePath, rawPath).map((spelling) => spelling.path);
+
+/** One address a route answers on, with its path as written segment by segment where that lines up. */
+interface Spelling {
+  readonly path: string;
+  readonly shapes: readonly (string | undefined)[];
+}
+
+const spellingsOf = (routePath: string, rawPath: unknown): Spelling[] => {
+  const segments = segmentsOf(routePath);
+  const raw = typeof rawPath === 'string' ? rawPath.split('/').filter((segment) => segment.length > 0) : [];
+  if (raw.length !== segments.length) return [{ path: routePath, shapes: [] }];
+  if (!raw.some((segment) => segment.endsWith('?'))) return [{ path: routePath, shapes: raw }];
+  const kept = raw.reduce<number[][]>(
+    (variants, segment, index) =>
+      segment.endsWith('?')
+        ? variants.flatMap((variant) => [[...variant, index], variant])
+        : variants.map((variant) => [...variant, index]),
+    [[]],
+  );
+  return kept.map((indices) => ({
+    path: `/${indices.map((index) => segments[index]).join('/')}`,
+    shapes: indices.map((index) => raw[index]),
+  }));
+};
+
+/**
+ * Whether an entry answers a request for this path, and on what footing.
+ *
+ * An entry that contributes to a page rather than answering by itself - a
+ * layout's `load`, a page's `load` beside a verb at its address - answers no
+ * request: it is reached through the page, not called.
+ */
 export const answeringAt = (entry: GraphNode, requestPath: string): Answer | undefined => {
+  if (entry.meta?.['contributes'] !== undefined) return undefined;
   const routePath = String(entry.meta?.['path'] ?? '');
-  if (pathAnswers(routePath, requestPath)) return { footing: 'read', path: routePath };
+  const read = spellingsOf(routePath, entry.meta?.['rawPath']).find((spelling) =>
+    pathAnswers(spelling.path, requestPath, spelling.shapes),
+  );
+  if (read !== undefined) return { footing: 'read', path: read.path };
   const assumed = assumedMountOf(entry);
   return assumed !== undefined && pathAnswers(assumed.path, requestPath)
     ? { footing: 'mount', path: assumed.path, settings: assumed.settings }

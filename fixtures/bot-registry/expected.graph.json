@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "bot-registry",
-  "generatedAt": "2026-09-28T07:58:13.054Z",
+  "generatedAt": "2026-10-07T18:36:10.894Z",
   "nodes": [
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",
@@ -9,7 +9,22 @@
       "label": "callbacks:keep_order@19",
       "repo": "bot-registry",
       "file": "src/actions/cancel-order.action.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "{ orders }",
+              "type": "type:bot-registry#BotDeps"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:confirmCancelHandler",
@@ -17,7 +32,22 @@
       "label": "confirmCancelHandler",
       "repo": "bot-registry",
       "file": "src/actions/cancel-order.action.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "{ orders }",
+              "type": "type:bot-registry#BotDeps"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:viewOrderHandler",
@@ -25,7 +55,22 @@
       "label": "viewOrderHandler",
       "repo": "bot-registry",
       "file": "src/actions/cancel-order.action.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "deps",
+              "type": "type:bot-registry#BotDeps"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "bot-registry#src/actions/summary.ts:summarise",
@@ -33,7 +78,22 @@
       "label": "summarise",
       "repo": "bot-registry",
       "file": "src/actions/summary.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "{ orders }",
+              "type": "type:bot-registry#BotDeps"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "bot-registry#src/app.module.ts:AppModule",
@@ -70,7 +130,18 @@
       "label": "Bot.announce",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "bot-registry#src/bot.ts:Bot.greet",
@@ -78,7 +149,13 @@
       "label": "Bot.greet",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "bot-registry#src/bot.ts:Bot.ready",
@@ -86,7 +163,13 @@
       "label": "Bot.ready",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 49
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "bot-registry#src/bot.ts:Bot.setup",
@@ -94,7 +177,13 @@
       "label": "Bot.setup",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "bot-registry#src/bot.ts:on callback_query@26",
@@ -102,7 +191,18 @@
       "label": "on callback_query@26",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "bot-registry#src/commands/menu.command.ts:action back_to_main@14",
@@ -110,7 +210,13 @@
       "label": "action back_to_main@14",
       "repo": "bot-registry",
       "file": "src/commands/menu.command.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
@@ -118,7 +224,22 @@
       "label": "registerMenuHandlers",
       "repo": "bot-registry",
       "file": "src/commands/menu.command.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bot",
+              "type": "type:telegraf#Telegraf"
+            },
+            {
+              "name": "orders",
+              "type": "type:bot-registry#OrdersService"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "bot-registry#src/commands/menu.command.ts:showMenu",
@@ -126,7 +247,18 @@
       "label": "showMenu",
       "repo": "bot-registry",
       "file": "src/commands/menu.command.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orders",
+              "type": "type:bot-registry#OrdersService"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "bot-registry#src/commands/order-commands.ts:orderCommands.myOrders",
@@ -134,7 +266,18 @@
       "label": "orderCommands.myOrders",
       "repo": "bot-registry",
       "file": "src/commands/order-commands.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orders",
+              "type": "type:bot-registry#OrdersService"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "bot-registry#src/orders.service.ts:OrdersService",
@@ -154,7 +297,18 @@
       "label": "OrdersService.cancel",
       "repo": "bot-registry",
       "file": "src/orders.service.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "bot-registry#src/orders.service.ts:OrdersService.find",
@@ -162,7 +316,18 @@
       "label": "OrdersService.find",
       "repo": "bot-registry",
       "file": "src/orders.service.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "entry:bot-registry:bot_callback:back_to_main",
@@ -335,7 +500,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/actions/cancel-order.action.ts",
-      "line": 12
+      "line": 12,
+      "params": [
+        "string",
+        "type:bot-registry#BotDeps"
+      ],
+      "returns": "string"
     },
     {
       "from": "bot-registry#src/actions/summary.ts:summarise",
@@ -387,7 +557,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 50
+      "line": 50,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
     },
     {
       "from": "bot-registry#src/bot.ts:Bot.setup",
@@ -405,7 +579,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 24
+      "line": 24,
+      "params": [
+        "type:telegraf#Telegraf",
+        "type:bot-registry#OrdersService"
+      ],
+      "returns": "void"
     },
     {
       "from": "bot-registry#src/bot.ts:Bot.setup",
@@ -413,7 +592,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 32
+      "line": 32,
+      "params": [
+        "type:bot-registry#OrdersService"
+      ],
+      "returns": "string"
     },
     {
       "from": "bot-registry#src/commands/menu.command.ts:action back_to_main@14",
@@ -433,7 +616,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/commands/menu.command.ts",
-      "line": 12
+      "line": 12,
+      "params": [
+        "type:bot-registry#OrdersService"
+      ],
+      "returns": "string"
     },
     {
       "from": "bot-registry#src/commands/menu.command.ts:showMenu",
@@ -518,7 +705,46 @@
       "line": 26
     }
   ],
-  "types": {},
+  "types": {
+    "type:bot-registry#BotDeps": {
+      "name": "BotDeps",
+      "kind": "object",
+      "declaredIn": "bot-registry#src/handlers/callback-registry.ts",
+      "structuralHash": "3ae57fd092056287",
+      "fields": [
+        {
+          "name": "orders",
+          "type": "type:bot-registry#OrdersService",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:bot-registry#OrdersService": {
+      "name": "OrdersService",
+      "kind": "object",
+      "declaredIn": "bot-registry#src/orders.service.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:telegraf#Telegraf": {
+      "name": "Telegraf",
+      "kind": "external",
+      "declaredIn": "telegraf",
+      "structuralHash": "fd2724d3f06867eb",
+      "meta": {
+        "declKind": "external",
+        "package": "telegraf"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/actions/cancel-order.action.ts",

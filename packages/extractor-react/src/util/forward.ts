@@ -1,4 +1,4 @@
-import { wasRead, type NamedFunction } from '@flowatlas/core';
+import { callSitesOf as callSitesOfFunction, wasRead, type NamedFunction } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -76,47 +76,16 @@ const readsParameter = (value: TsNode, fn: NamedFunction): boolean => {
 };
 
 /**
- * Every call to a function of this repository, found by name.
- *
- * The core has this for a class method, where the call is always a property
- * access on something. A module function is called bare — `getOrder(id)` — or
- * through the namespace of the module it was imported from — `api.getOrder(id)`
- * — and both have to be recognised, because an API module imported wholesale is
- * how half of these repositories are written.
+ * Every call to a function of this repository: bare, by a name it was imported
+ * as, or through the namespace of its module - `api.getOrder(id)` - because an
+ * API module imported wholesale is how half of these repositories are written.
+ * The core's answer, the one every reader that follows a parameter outward asks.
  */
 const callSitesOf = (fn: NamedFunction): CallExpression[] => {
   const declaration = fn.declaration;
-  const nameNode = Node.isFunctionDeclaration(declaration)
-    ? declaration.getNameNode()
-    : Node.isVariableDeclaration(declaration)
-      ? declaration.getNameNode()
-      : undefined;
-  if (nameNode === undefined || !Node.isIdentifier(nameNode)) return [];
-
-  const sites: CallExpression[] = [];
-  const seen = new Set<string>();
-  for (const reference of nameNode.findReferencesAsNodes()) {
-    const parent = reference.getParent();
-    if (parent === undefined) continue;
-    const call = Node.isPropertyAccessExpression(parent)
-      ? parent.getNameNode() === reference
-        ? parent.getParent()
-        : undefined
-      : parent;
-    if (call === undefined || !Node.isCallExpression(call)) continue;
-    // A reference that is the callee, not one that is an argument: passing a
-    // function to something else is not calling it here.
-    const callee = call.getExpression();
-    if (callee !== reference && callee.getParent() !== call) continue;
-    if (callee !== reference && !(Node.isPropertyAccessExpression(callee) && callee.getNameNode() === reference)) {
-      continue;
-    }
-    const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    sites.push(call);
-  }
-  return sites;
+  return Node.isFunctionDeclaration(declaration) || Node.isVariableDeclaration(declaration)
+    ? callSitesOfFunction(declaration)
+    : [];
 };
 
 /** What a call passed for each of the called function's parameters. */

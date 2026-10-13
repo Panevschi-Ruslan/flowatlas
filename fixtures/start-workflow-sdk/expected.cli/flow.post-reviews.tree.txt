@@ -1,0 +1,5 @@
+@  POST /reviews     lending/infra/api.tf:64
+  -> handler         lending/src/handlers/record-review.ts:15
+    ~  task-success  lending/src/handlers/record-review.ts:18
+    ~  task-failure  lending/src/handlers/record-review.ts:20
+unresolved on this path: 0

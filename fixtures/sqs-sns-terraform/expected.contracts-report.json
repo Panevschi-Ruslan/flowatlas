@@ -1,0 +1,170 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:28:27.379Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:returns#src/lib/returns-queue.ts:17:9",
+        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/lib/returns-queue.ts:17:9|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/lib/returns-queue.ts:queueReturn"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/returns/process-return.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/notices/notify-borrower.ts:20:11",
+        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/notices/notify-borrower.ts:20:11|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#Reminder",
+        "symbol": "returns#src/notices/notify-borrower.ts:handler"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#Reminder",
+        "symbol": "returns#src/notices/send-reminder.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/returns/process-return.ts:21:11",
+        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/returns/process-return.ts:handler"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/stock/restock.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/returns/process-return.ts:21:11",
+        "to": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/returns/process-return.ts:handler"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/notices/notify-borrower.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:returns#infra/queues.tf:module.restock_queue.aws_sqs_queue_redrive_policy.this[0]",
+        "to": "channel:sqs/library-restock-dlq",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-restock-dlq|emits|producer:returns#infra/queues.tf:module.restock_queue.aws_sqs_queue_redrive_policy.this[0]",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-restock-dlq is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:returns#infra/queues.tf:aws_sqs_queue.returns",
+        "to": "channel:sqs/library-returns-dlq",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-returns-dlq|emits|producer:returns#infra/queues.tf:aws_sqs_queue.returns",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-returns-dlq is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:returns#infra/api.tf:aws_api_gateway_method.request_hold",
+        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.place_holds",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#infra/api.tf:aws_api_gateway_method.request_hold|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.place_holds",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:returns#infra/api.tf:aws_api_gateway_method.request_hold hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/returns/process-return.ts:21:11",
+        "to": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox",
+      "direction": "payload",
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/returns/process-return.ts:21:11",
+        "to": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
+      "direction": "payload",
+      "reason": "delivered-onward",
+      "message": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock hands the message on to channel:sqs/library-restock rather than to code",
+      "hint": "Nothing to change: the message is compared with what reads it where it is handed on to."
+    }
+  ],
+  "summary": {
+    "edges": 4,
+    "shared": 0,
+    "identical": 4,
+    "hash_differs": 0,
+    "unchecked": 5,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

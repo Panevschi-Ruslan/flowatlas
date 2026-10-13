@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-mikro-orm-knex-not-installed",
-  "generatedAt": "2026-09-28T10:17:29.773Z",
+  "generatedAt": "2026-10-07T18:29:31.290Z",
   "nodes": [
     {
       "id": "db_query:nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:24:12",
@@ -132,7 +132,22 @@
       "label": "InventoryLevelRepository.adjust",
       "repo": "nest-mikro-orm-knex-not-installed",
       "file": "src/inventory/inventory-level.repository.ts",
-      "line": 52
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.reservation",
@@ -140,7 +155,18 @@
       "label": "InventoryLevelRepository.reservation",
       "repo": "nest-mikro-orm-knex-not-installed",
       "file": "src/inventory/inventory-level.repository.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.reserved",
@@ -148,7 +174,18 @@
       "label": "InventoryLevelRepository.reserved",
       "repo": "nest-mikro-orm-knex-not-installed",
       "file": "src/inventory/inventory-level.repository.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.stocked",
@@ -156,7 +193,18 @@
       "label": "InventoryLevelRepository.stocked",
       "repo": "nest-mikro-orm-knex-not-installed",
       "file": "src/inventory/inventory-level.repository.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:reservedLocations",
@@ -164,7 +212,18 @@
       "label": "reservedLocations",
       "repo": "nest-mikro-orm-knex-not-installed",
       "file": "src/inventory/inventory-level.repository.ts",
-      "line": 62
+      "line": 62,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "{manager?:unknown}"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-mikro-orm-knex-not-installed#src/inventory/manager-base.ts:ManagerBase",
@@ -181,7 +240,13 @@
       "label": "ManagerBase.getActiveManager",
       "repo": "nest-mikro-orm-knex-not-installed",
       "file": "src/inventory/manager-base.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "TManager"
+        }
+      }
     },
     {
       "id": "repo:nest-mikro-orm-knex-not-installed",

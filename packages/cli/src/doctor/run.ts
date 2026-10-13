@@ -11,6 +11,7 @@ import { tally, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/co
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
 import type { GraphDb, ServiceReport } from '@flowatlas/linker';
+import { halfOf } from '../readers.js';
 import {
   compareBaseline,
   isProblem,
@@ -28,8 +29,8 @@ import {
   kindHint,
   type HintContext,
 } from './hints.js';
-import { validateMarkers, type MarkerIssue } from './markers.js';
-import { mostlyUnread, waysInByService, waysInTotal, type WaysIn } from './ways-in.js';
+import { callerOfProducer, validateMarkers, type MarkerIssue } from './markers.js';
+import { mostlyUnread, noWayInSentence, waysInByService, waysInTotal, type WaysIn } from './ways-in.js';
 import {
   DOCTOR_FORMAT_VERSION,
   SECTIONS,
@@ -80,6 +81,18 @@ export interface DoctorSettings {
   /** Fixed timestamp, for reproducible output. */
   generatedAt?: string;
   flowatlasVersion?: string;
+  /**
+   * What a service's repository looks like, for one that has no way in (R170).
+   * Handed in because this module reads no repository; without it, the
+   * service's configured type is all that is said.
+   */
+  looksLike?: (service: { name: string; type: string }) => string | undefined;
+  /**
+   * The services the configuration declares by a document rather than points
+   * at a repository of, by name: nothing of theirs was read, so whether they
+   * have a way in is not a question about them (R173).
+   */
+  declared?: readonly string[];
 }
 
 /** The reasons that mean a call does not land where it was aimed. */
@@ -196,6 +209,138 @@ const graphFaults = (
   };
   return GRAPH_FAULTS.flatMap((check) => check(facts));
 };
+
+/**
+ * The kinds of node a flow can start at: a way in on the server, a subscriber,
+ * and the screens and taps of a browser half the server reader read alongside.
+ */
+const WAY_IN_TYPES = ['entry', 'consumer', 'ui_component', 'ui_action'] as const;
+
+/**
+ * Services a server reader read into the graph that have no way in at all (R170).
+ *
+ * The code was read — the service holds nodes — and nothing in this graph
+ * reaches it, so no flow starts there and every question that begins at a way
+ * in passes it by. On the first contact with a stack nothing reads, this was
+ * described as a partial read with its dependencies missing, and installing them
+ * changes nothing; what the repository looks like is the finding, so each is
+ * described by `looksLike`, which reads the repository and is handed in because
+ * this module reads none.
+ *
+ * Not a fault, and it decides no exit code. The bodies were read, so a change
+ * inside one still adds a row for the growth check to see — the gate is not
+ * blind, as it is for a service whose ways in are mostly unread — and a library
+ * typed as a server is a configuration somebody may mean.
+ *
+ * It says nothing about a service declared by a document, by rule rather than
+ * because a declared service happens to have no server type: no code of it was
+ * read, and a document that declares no way in describes a service nothing here
+ * enters, not a stack nothing reads (R173).
+ */
+const withoutWaysInOf = (
+  db: GraphDb,
+  settings: DoctorSettings,
+): Pick<DoctorReport['unresolved'], 'withoutWaysIn'> => {
+  const entered = new Set(WAY_IN_TYPES.flatMap((type) => db.nodesByType(type)).map((node) => node.repo));
+  const declared = new Set(settings.declared ?? []);
+  const found = (db.report()?.services ?? [])
+    .filter((service) => settings.service === undefined || service.name === settings.service)
+    .filter((service) => !declared.has(service.name))
+    .filter(
+      (service) =>
+        service.skipped === undefined &&
+        service.extractor !== null &&
+        service.nodes > 0 &&
+        halfOf(service.type) === 'server' &&
+        !entered.has(service.name),
+    )
+    .map((service) => ({
+      service: service.name,
+      looksLike: settings.looksLike?.(service) ?? `it is configured as ${service.type}`,
+    }));
+  return found.length === 0 ? {} : { withoutWaysIn: found };
+};
+
+/** What the verdict is decided from, read once from the sections above. */
+interface VerdictFacts {
+  strict: boolean;
+  markerErrors: number;
+  contractErrors: number;
+  baseline: DoctorReport['baseline'];
+  withoutWaysIn: NonNullable<DoctorReport['unresolved']['withoutWaysIn']>;
+  /** The sentences that say this graph is not one to report on. */
+  faults: readonly string[];
+}
+
+const plural = (count: number, one: string, many = `${one}s`): string =>
+  `${count} ${count === 1 ? one : many}`;
+
+/**
+ * What the verdict says, in the order it says it: one rule per kind of
+ * sentence, each saying nothing when it does not apply.
+ *
+ * A service with no way in is said first (R170), because a reader of that
+ * service has to hear it before anything else in the report makes sense, and
+ * before anything about dependencies: installing them would not give it one.
+ */
+const VERDICT_REASONS: ReadonlyArray<{ says(facts: VerdictFacts): string[] }> = Object.freeze([
+  { says: (facts) => facts.withoutWaysIn.map(noWayInSentence) },
+  {
+    says: (facts) =>
+      facts.markerErrors > 0 ? [`${plural(facts.markerErrors, 'annotation')} the graph contradicts`] : [],
+  },
+  {
+    says: (facts) =>
+      facts.contractErrors > 0 ? [`${plural(facts.contractErrors, 'contract error')} nothing excused`] : [],
+  },
+  {
+    says: ({ baseline }) =>
+      baseline.status === 'grew'
+        ? [`unresolved grew by ${baseline.total.delta} (${baseline.total.baseline} accepted, ${baseline.total.current} now)`]
+        : [],
+  },
+  {
+    says: ({ baseline }) =>
+      baseline.status === 'invalid' ? [baseline.note ?? 'the baseline could not be read'] : [],
+  },
+  { says: (facts) => [...facts.faults] },
+  {
+    says: ({ strict, baseline }) =>
+      strict && baseline.status === 'missing'
+        ? [`${baseline.note ?? 'there is no baseline'} — or pass --no-baseline to check annotations and contracts only`]
+        : [],
+  },
+]);
+
+/** Whether a strict run found something: a check ran and its answer was no. */
+const foundSomething = (facts: VerdictFacts): boolean =>
+  facts.markerErrors > 0 || facts.contractErrors > 0 || facts.baseline.status === 'grew';
+
+/**
+ * The exit code, as an ordered list of rules: the first that applies decides it.
+ *
+ * 2 means a check could not be run, and comes first, because a finding from a
+ * check that could not be run is not one. A graph nobody could report on is the
+ * first of those, and it does not wait for `--strict`: a run without the flag
+ * still answers a question, and "nothing wrong" is not an answer anybody asked
+ * of an unread graph — so the one gate a team can disable by dropping a flag is
+ * not the only thing standing between it and a clean bill of health, and
+ * `--accept` refuses it for the same reason. Calling it 1 would say the project
+ * is broken when the reading is; calling it 0 is what every one of these bugs
+ * did (R85, R94, R106). A baseline that cannot be read is the second, and a
+ * strict run with no baseline the third: a gate with nothing to compare against
+ * is not a gate. Only then does 1 mean what it says — a strict run whose checks
+ * ran and found something.
+ */
+const EXIT_RULES: ReadonlyArray<{ applies(facts: VerdictFacts): boolean; exitCode: 0 | 1 | 2 }> =
+  Object.freeze([
+    { applies: (facts) => facts.faults.length > 0, exitCode: 2 },
+    { applies: (facts) => facts.baseline.status === 'invalid', exitCode: 2 },
+    { applies: (facts) => facts.strict && facts.baseline.status === 'missing', exitCode: 2 },
+    { applies: (facts) => facts.strict && foundSomething(facts), exitCode: 1 },
+  ]);
+
+const NOTHING_FAILS = { exitCode: 0 } as const;
 
 /** Ways in per service, narrowed as the run is. */
 const waysOf = (db: GraphDb, service?: string): Map<string, WaysIn> => {
@@ -364,11 +509,12 @@ export const withAnsweredDemoted = (
   /**
    * Methods by the name a row calls them, within the file they are declared in.
    *
-   * A row names its symbol as it is written rather than by id, and for a
-   * channel that is `OrdersService.publish -> channel`: the method, then what
-   * about it could not be read. The line is the line of the *call*, not of the
-   * method, so the join is the name and the file — the same join `doctor`
-   * already makes to put a marker issue on a row.
+   * A row read off one repository names its symbol as it is written rather
+   * than by id: the method, then what about it could not be read. The line is
+   * the line of the *call*, not of the method, so the join is the name and the
+   * file — the same join `doctor` already makes to put a marker issue on a row.
+   * A row about a publish names the producer instead, and its method is the one
+   * that calls it (R177).
    */
   const methodsAt = new Map<string, GraphNode>();
   for (const node of db.allNodes()) {
@@ -376,7 +522,7 @@ export const withAnsweredDemoted = (
     methodsAt.set(`${node.repo}|${node.file ?? ''}|${node.label}`, node);
   }
   const idFor = (row: Unresolved): string | undefined => {
-    if (row.symbol !== undefined && db.node(row.symbol) !== undefined) return row.symbol;
+    if (row.symbol !== undefined && db.node(row.symbol) !== undefined) return callerOfProducer(db, row.symbol) ?? row.symbol;
     const here = callsAt.get(`${row.service ?? ''}|${row.file}|${row.line}`);
     if (here !== undefined) return here.id;
     if (row.symbol === undefined) return undefined;
@@ -483,6 +629,7 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     byReason: grouped.groups,
     unknownReasons: grouped.unknown,
     waysIn: waysInTotal(ways),
+    ...withoutWaysInOf(db, settings),
   };
 
   // ---- contracts --------------------------------------------------------
@@ -573,53 +720,16 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     : compareBaseline(snapshot, undefined);
 
   // ---- verdict ----------------------------------------------------------
-  const reasons: string[] = [];
-  const markerErrors =
-    markers.errors + (settings.warnAsError === true ? markers.warnings : 0);
-  if (markerErrors > 0) {
-    reasons.push(
-      `${markerErrors} annotation${markerErrors === 1 ? '' : 's'} the graph contradicts`,
-    );
-  }
-  if (contracts.errorCount > 0) {
-    reasons.push(
-      `${contracts.errorCount} contract error${contracts.errorCount === 1 ? '' : 's'} nothing excused`,
-    );
-  }
-  if (baseline.status === 'grew') {
-    reasons.push(
-      `unresolved grew by ${baseline.total.delta} (${baseline.total.baseline} accepted, ${baseline.total.current} now)`,
-    );
-  }
-  const failing = strict && reasons.length > 0;
-  if (baseline.status === 'invalid') {
-    reasons.push(baseline.note ?? 'the baseline could not be read');
-  }
-
-  /**
-   * A graph nobody could report on, and why exit 2 rather than 1.
-   *
-   * This is a change to what `doctor` fails on, so it is written down. 1 means a
-   * check found something: a route was renamed, an annotation is wrong, the list
-   * of unresolved places grew. 2 means the check could not be run — which is
-   * exactly the case here, because a graph that is empty, that lost a service, or
-   * that came from a failed build is not a project this looked at and said
-   * nothing was wrong. Calling it 1 would say the project is broken when the
-   * reading is; calling it 0 is what every one of these bugs did.
-   *
-   * Two consequences are deliberate. It does not wait for `--strict`: a run
-   * without the flag answers a question, and "nothing wrong" is not an answer
-   * anybody asked of an unread graph, so the one gate that a team can disable by
-   * dropping a flag is the one gate that must not be the only thing standing
-   * between this and a clean bill of health. And `--accept` already refuses to
-   * write a baseline over exit 2, which is the right refusal for the same reason:
-   * numbers from a graph nobody read are not numbers to accept.
-   */
-  const faults = graphFaults(db, ways, settings.service);
-  reasons.push(...faults);
-
-  const exitCode: 0 | 1 | 2 =
-    faults.length > 0 || baseline.status === 'invalid' ? 2 : failing ? 1 : 0;
+  const facts: VerdictFacts = {
+    strict,
+    markerErrors: markers.errors + (settings.warnAsError === true ? markers.warnings : 0),
+    contractErrors: contracts.errorCount,
+    baseline,
+    withoutWaysIn: unresolved.withoutWaysIn ?? [],
+    faults: graphFaults(db, ways, settings.service),
+  };
+  const reasons = VERDICT_REASONS.flatMap((rule) => rule.says(facts));
+  const exitCode = (EXIT_RULES.find((rule) => rule.applies(facts)) ?? NOTHING_FAILS).exitCode;
 
   return {
     doctorFormatVersion: DOCTOR_FORMAT_VERSION,

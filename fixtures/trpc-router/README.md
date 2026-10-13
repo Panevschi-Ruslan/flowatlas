@@ -31,6 +31,10 @@ writes. A scheduling app has one such member and nine ways in hang under it. Its
 guards, `isSignedIn` and `isAdmin`, are inherited through two procedure
 definitions built on each other, which is the other half of the same walk.
 
+Each also carries `meta.signature` (P35): the input its `.input(...)` checks -
+`{customerId:string}` for `orders.list` - and what its resolver answers,
+`{day:string;total:number}[]` for `reportsRouter.daily`, which takes none.
+
 All three carry `served`, naming the mount file that answers them. That is the
 fact the ticket was about: twenty-nine three-line files and nothing tying them to
 the 171 ways in underneath.

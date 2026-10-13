@@ -3,7 +3,7 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, projectEdge, truncate } from '../query/detail.js';
-import { REVERSE_EDGES } from '../query/flow.js';
+import { REVERSE_EDGES, walkBack } from '../query/flow.js';
 import { truncationMessage, type FlowNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
 import { bound, commonInput, withDb, type ToolContext } from './common.js';
@@ -129,7 +129,8 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
             : { candidates: found.map((node) => projectDetail(node, detail)) };
         }
 
-        const reach = db.reverseReach(found.id, { edgeTypes: REVERSE_EDGES, maxDepth: 12, maxNodes: 4000 });
+        // Twelve hops back, and one more per step of every workflow the walk climbs through.
+        const reach = walkBack(12, (maxDepth) => db.reverseReach(found.id, { edgeTypes: REVERSE_EDGES, maxDepth, maxNodes: 4000 }));
         const entries: GraphNode[] = [];
         const channels = new Set<string>();
         const entriesByService: Record<string, number> = {};

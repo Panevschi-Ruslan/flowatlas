@@ -1,0 +1,8 @@
+{
+  "name": "@library/catalogue-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A member of the workspace the functions do not declare, and so not a part of them.",
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

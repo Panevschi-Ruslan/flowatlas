@@ -1,0 +1,5 @@
+@  POST /items   catalogue/infra/api.tf.json:29
+  !  AWS_IAM
+  -> handler     catalogue/src/items/add-item.ts:5
+    -> saveItem  catalogue/src/items/items-table.ts:10
+unresolved on this path: 0

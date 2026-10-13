@@ -1,0 +1,17 @@
+{
+  "name": "lending-library-loans",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loans for a lending library: Lambda functions that start their workflows through the project's own helpers rather than the AWS SDK.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@library/orchestration": "^2.3.0",
+    "@library/scheduling": "^1.4.0",
+    "@library/workflows": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

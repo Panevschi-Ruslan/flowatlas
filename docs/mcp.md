@@ -81,8 +81,10 @@ were cut, rather than filling a context window.
 | `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix` |
 | `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service` |
 
-`kind` is one of `http`, `rpc`, `event`, `cron`, `bot_command`, `bot_callback`,
-`bot_event` and `scene_step`. `rpc` is a procedure — a tRPC one, say — whose
+`kind` is one of `http`, `rpc`, `event`, `cron`, `workflow`, `bot_command`,
+`bot_callback`, `bot_event` and `scene_step`. A `workflow` is a state machine,
+reached by the name it is deployed under; its steps are `function` nodes of
+kind `state`. `rpc` is a procedure — a tRPC one, say — whose
 address is the dotted path its callers write, `orders.list`, rather than a verb
 and a path. It has no path for `pathPrefix` to match, so a prefix leaves
 procedures out; narrow them with `service` and `kind` instead.

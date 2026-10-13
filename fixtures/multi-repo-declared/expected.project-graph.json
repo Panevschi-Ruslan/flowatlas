@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:32.105Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T14:33:57.523Z",
   "services": [
     {
       "name": "api",
@@ -74,7 +74,18 @@
       "label": "BillingClient.create",
       "repo": "api",
       "file": "src/billing/billing.client.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:api#CreateInvoiceDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:api#InvoiceDto>"
+        }
+      }
     },
     {
       "id": "api#src/billing/billing.client.ts:BillingClient.customer",
@@ -82,7 +93,18 @@
       "label": "BillingClient.customer",
       "repo": "api",
       "file": "src/billing/billing.client.ts",
-      "line": 45
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:api#CustomerRefDto>"
+        }
+      }
     },
     {
       "id": "api#src/billing/billing.client.ts:BillingClient.fetchOne",
@@ -90,7 +112,18 @@
       "label": "BillingClient.fetchOne",
       "repo": "api",
       "file": "src/billing/billing.client.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:api#InvoiceDto>"
+        }
+      }
     },
     {
       "id": "billing#contracts/billing.json:createInvoice",

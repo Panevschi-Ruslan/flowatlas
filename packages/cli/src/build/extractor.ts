@@ -4,14 +4,23 @@ import {
   type AdapterSlot,
   type FlowatlasConfig,
   type PackageJson,
+  type ServiceConfig,
+  type SourceRootOptions,
 } from '@flowatlas/core';
 import { brokersPass, registerBrokerAdapters } from '@flowatlas/adapters-broker';
 import { leavesPass, registerDbAdapters } from '@flowatlas/adapters-db';
-import { registerEntryAdapters } from '@flowatlas/adapters-entry';
-import { registerFrontendAdapters as registerAngularFrontend } from '@flowatlas/extractor-angular';
-import { registerFrontendAdapters as registerReactFrontend } from '@flowatlas/extractor-react';
+import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
+import {
+  ANGULAR_SOURCE_ROOTS,
+  registerFrontendAdapters as registerAngularFrontend,
+} from '@flowatlas/extractor-angular';
+import {
+  REACT_SOURCE_ROOTS,
+  registerFrontendAdapters as registerReactFrontend,
+} from '@flowatlas/extractor-react';
 import type { NestExtractorPass } from '@flowatlas/extractor-nestjs';
-import { halfOf, READERS } from '../readers.js';
+import { workflowsPass } from '@flowatlas/stepfunctions';
+import { ANGULAR_EXTRACTOR, halfOf, READERS, REACT_EXTRACTOR } from '../readers.js';
 
 /**
  * Package that reads each kind of repository.
@@ -43,8 +52,13 @@ export const EXTRACTORS: ReadonlyMap<string, string> = new Map(
  */
 export const isFrontend = (type: string): boolean => halfOf(type) === 'browser';
 
-/** Steps the adapter packages contribute, run after the built-in ones. */
-export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, brokersPass];
+/**
+ * Steps the adapter packages contribute, run after the built-in ones.
+ *
+ * `workflowsPass` reads the state machine definitions a repository keeps beside
+ * its code, so any service a server reader reads has its workflows drawn too.
+ */
+export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, brokersPass, workflowsPass];
 
 /** Every adapter the command line knows how to offer an extractor. */
 export const createRegistry = (): AdapterRegistry => {
@@ -76,11 +90,13 @@ export const adaptersBySlot = (
   registry: AdapterRegistry,
   pkg: PackageJson,
   config: FlowatlasConfig,
+  repoDir?: string,
 ): Record<AdapterSlot, string[]> => {
   const detected = registry.detect(
     pkg,
     config.adapters.auto ? config.adapters.force : {},
     config,
+    repoDir,
   );
   return Object.fromEntries(
     ADAPTER_SLOTS.map((slot) => [slot, detected[slot].map((adapter) => adapter.name)]),
@@ -91,8 +107,9 @@ export const adapterNames = (
   registry: AdapterRegistry,
   pkg: PackageJson,
   config: FlowatlasConfig,
+  repoDir?: string,
 ): string[] => {
-  const bySlot = adaptersBySlot(registry, pkg, config);
+  const bySlot = adaptersBySlot(registry, pkg, config, repoDir);
   const names = ADAPTER_SLOTS.flatMap((slot) => bySlot[slot]);
   return [...names, ...config.adapters.broker.custom.map((broker) => broker.name)].sort();
 };
@@ -135,13 +152,60 @@ export const declinedNote = (
   type: string,
   pkg: PackageJson,
   config: FlowatlasConfig,
+  repoDir?: string,
 ): string | undefined => {
   const slot = decidingSlot(type);
   if (slot === undefined) return undefined;
-  const claimed = adaptersBySlot(createRegistry(), pkg, config)[slot];
+  const claimed = adaptersBySlot(createRegistry(), pkg, config, repoDir)[slot];
   if (claimed.length > 0) return undefined;
   return (
     `no ${slot} adapter recognises it, so its reader walked the repository and had nowhere to put anything;` +
     ` the configuration says "${type}" and its package.json declares no framework this reads`
   );
 };
+
+/**
+ * Where each reader looks when a repository's tsconfig names no source root, for
+ * the readers that do not look in `src` (R170), and what each reads beside its
+ * sources (R166).
+ *
+ * Taken from the reader's own package rather than restated here, so the build's
+ * file listing and the reading have one statement of it between them.
+ */
+const ROOTS_OF_READER: ReadonlyMap<string, SourceRootOptions> = new Map<string, SourceRootOptions>([
+  [ANGULAR_EXTRACTOR, ANGULAR_SOURCE_ROOTS],
+  [REACT_EXTRACTOR, REACT_SOURCE_ROOTS],
+]);
+
+/** {@link ROOTS_OF_READER} for one reader, for a repository read with no service. */
+export const readerRootsOf = (extractor: string): SourceRootOptions => ROOTS_OF_READER.get(extractor) ?? {};
+
+/**
+ * The directories a server's deployment packages its functions from, which are
+ * roots of its code whatever its tsconfig says. A browser is never deployed as
+ * a function, and its reader is told of none.
+ */
+export const deployedRootsOf = (
+  service: ServiceConfig,
+  repoDir: string,
+  config: FlowatlasConfig,
+): readonly string[] =>
+  halfOf(service.type) === 'server' ? deployedSourceDirectories(repoDir, config, service) : [];
+
+/**
+ * Where a service's own code is, as the build's file listing is told it.
+ *
+ * The reading is told the same three things — the service's tsconfig, its
+ * reader's fallback and its deployment's directories — and both hand them to
+ * the core's `sourceRootsOf`, so a file one of them opens is a file the other
+ * stamps (R170).
+ */
+export const sourceRootOptionsOf = (
+  service: ServiceConfig,
+  repoDir: string,
+  config: FlowatlasConfig,
+): SourceRootOptions => ({
+  ...(service.tsconfig === undefined ? {} : { tsconfig: service.tsconfig }),
+  ...ROOTS_OF_READER.get(EXTRACTORS.get(service.type) ?? ''),
+  deployed: deployedRootsOf(service, repoDir, config),
+});

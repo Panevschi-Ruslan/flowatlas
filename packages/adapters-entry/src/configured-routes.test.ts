@@ -231,3 +231,40 @@ describe('the shipped frameworks are written in that same description', () => {
     expect(dialect.mount).toEqual({ method: 'attach', appAt: 1, pathAt: 0 });
   });
 });
+
+describe('what a request carries, in the same description (P29)', () => {
+  it('ships where every framework that registers by a call puts the request and the answer', () => {
+    for (const dialect of [EXPRESS, HONO, KOA]) {
+      expect(dialect.request).toBeDefined();
+      // The validators are no framework's, and every description is handed them.
+      expect(dialect.request?.validators.map((validator) => validator.package)).toContain('zod');
+    }
+    expect(EXPRESS.request?.parts.body).toEqual([{ param: 0, at: ['body'], text: false }]);
+    expect(KOA.request?.answers).toEqual([{ by: 'assign', param: 0, at: ['body'], statusAt: ['status'] }]);
+  });
+
+  it('hands a route the reading its description gives, and none where it gives none', () => {
+    const request = {
+      parts: { body: [{ param: 0, at: ['payload'] }] },
+      answers: [{ by: 'call', param: 1, methods: ['reply'] }],
+    };
+    const handler = `
+      import { createServer } from 'minihttp';
+      const app = createServer();
+      app.post('/orders', (req, res) => res);
+    `;
+    const [withReading] = read([{ ...DESCRIPTION, request }], { '/src/app.ts': handler }).entries;
+    expect(withReading?.request?.parts.body).toEqual([{ param: 0, at: ['payload'], text: false }]);
+    expect(withReading?.request?.validators.length).toBeGreaterThan(0);
+    const [without] = read([DESCRIPTION], { '/src/app.ts': handler }).entries;
+    expect(without?.request).toBeUndefined();
+  });
+
+  it('refuses a description of the request that says how rather than where', () => {
+    expect(() =>
+      parseConfig({
+        adapters: { entry: { http: [{ ...DESCRIPTION, request: { answers: [{ by: 'compute', code: 'x' }] } }] } },
+      }),
+    ).toThrow();
+  });
+});

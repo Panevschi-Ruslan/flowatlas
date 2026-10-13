@@ -1,26 +1,41 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { basename, dirname, resolve } from 'node:path';
+import { loadConfig } from '@flowatlas/core';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
-import { openDbFromOptions, type DbOptions } from '../db.js';
-import { packGraph } from '../visualise/pack.js';
+import { openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
+import { EDITOR_NAMES } from '../visualise/graph.js';
+import { packGraph, type PackInput } from '../visualise/pack.js';
 import { shipped } from '../own-path.js';
 
-/** The template ships beside the code, whether that is source or build output. */
-const template = (): string => {
+/** A file the page is made of, beside the code whether that is source or build output. */
+const part = (name: string): string => {
   const path = shipped(
     import.meta.url,
-    'visualise/page.html',
-    '../visualise/page.html',
-    '../../src/visualise/page.html',
+    `visualise/${name}`,
+    `../visualise/${name}`,
+    `../../src/visualise/${name}`,
   );
   try {
     return readFileSync(path, 'utf8');
   } catch {
-    throw cannotRun('the page template is missing; rebuild the command');
+    throw cannotRun(`the page's ${name} is missing; rebuild the command`);
   }
 };
+
+/**
+ * The page, with the graph view's logic written into it.
+ *
+ * The logic is three modules of its own - what to draw, the frame around it,
+ * and the map of the whole project - so that a test can import exactly the
+ * text the browser runs; the page holds all three inline, in one module
+ * script, so the result is still one file with nothing to fetch.
+ */
+const template = (): string =>
+  part('page.html')
+    .replace('__GRAPH_LOGIC__', () => part('graph.js'))
+    .replace('__FRAME_LOGIC__', () => part('frame.js'))
+    .replace('__MAP_LOGIC__', () => part('map.js'));
 
 /**
  * A name for the project, since the configuration does not carry one.
@@ -46,11 +61,49 @@ const nameFrom = (where: string): string => {
  */
 const embeddable = (data: unknown): string => JSON.stringify(data).replace(/</g, '\\u003c');
 
+/**
+ * Where the page goes when nobody says: next to the configuration it was built
+ * from, which is the project's own folder, found the same way the database was.
+ * Given only a database there is no configuration to stand beside, so the
+ * working directory.
+ */
+const defaultFolder = (options: DbOptions): string => {
+  if (options.config === undefined && options.db !== undefined) return process.cwd();
+  try {
+    return dirname(loadConfig(options.config ?? process.cwd()).configPath);
+  } catch {
+    return process.cwd();
+  }
+};
+
 export interface VisualiseOptions extends DbOptions {
   out?: string;
   title?: string;
+  /** `vscode`, `cursor`, `idea` or `file`: make every `file:line` a link that opens it. */
+  editorLinks?: string;
   print?: (message: string) => void;
 }
+
+/**
+ * The editor links asked for, with where each service's sources are, or none.
+ *
+ * Off unless asked: a link to a file is the file's absolute path on this
+ * machine, written into a page that is made to be sent to other people. Asked
+ * for without a configuration there is no telling where a repository is, and a
+ * page of links that open nothing is refused rather than written.
+ */
+const editorFor = (options: VisualiseOptions): PackInput['editor'] => {
+  const name = options.editorLinks;
+  if (name === undefined) return undefined;
+  if (!EDITOR_NAMES.includes(name)) {
+    throw cannotRun(`--editor-links takes one of ${EDITOR_NAMES.join(', ')}; got ${JSON.stringify(name)}`);
+  }
+  if (options.config === undefined && options.db !== undefined) {
+    throw cannotRun('--editor-links needs the configuration, to know where each repository is; pass --config');
+  }
+  const roots = sourceRootsFor(options);
+  return { name, rootOf: (service) => roots.repoDir(service) };
+};
 
 export interface VisualiseResult {
   path: string;
@@ -69,6 +122,7 @@ export interface VisualiseResult {
  */
 export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult => {
   const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
+  const editor = editorFor(options);
   const db = openDbFromOptions(options);
   let packed;
   let counts;
@@ -84,17 +138,21 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       edges,
       unresolved: db.allUnresolved(),
       report,
+      typeOf: (id) => db.type(id),
+      ...(editor === undefined ? {} : { editor }),
     });
   } finally {
     db.close();
   }
 
   const title = options.title ?? nameFrom(options.config ?? options.db ?? process.cwd());
+  // Replaced through a function: a replacement string reads `$&` and `$'` as
+  // patterns, and a label is free to contain either.
   const page = template()
-    .replace(/__TITLE__/g, title)
-    .replace('__DATA__', embeddable(packed));
+    .replace(/__TITLE__/g, () => title)
+    .replace('__DATA__', () => embeddable(packed));
 
-  const path = resolve(options.out ?? 'graph.html');
+  const path = resolve(options.out ?? resolve(defaultFolder(options), 'graph.html'));
   writeFileSync(path, page, 'utf8');
 
   const result = { path, bytes: Buffer.byteLength(page), ...counts };
@@ -113,8 +171,12 @@ export const registerVisualise = (program: Command): void => {
     .description('write the graph as one page you can open in a browser')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
-    .option('--out <file>', 'where to write it (default: beside the graph, as graph.html)')
+    .option('--out <file>', 'where to write it (default: graph.html next to the configuration)')
     .option('--title <name>', 'what to call the project on the page')
+    .option(
+      '--editor-links <editor>',
+      `make each file:line a link that opens it: ${EDITOR_NAMES.join(', ')}. Writes absolute local paths into the page`,
+    )
     .action((options: VisualiseOptions) => {
       runVisualise(options);
     });

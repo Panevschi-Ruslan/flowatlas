@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-catalogue",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A lending library's catalogue and holds APIs, published on the library's own domain under base paths.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

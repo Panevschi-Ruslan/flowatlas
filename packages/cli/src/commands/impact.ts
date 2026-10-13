@@ -26,7 +26,9 @@ export const runImpact = (
   const target = resolveSymbol(db, symbol, settings.service);
 
   const callers = callersOf(db, target, {
-    depth: settings.depth,
+    // Without `--depth` the walk goes as far back as the workflows it climbs
+    // through need, the way `flow` goes as far down (`walkBack`).
+    ...(options.depth === undefined ? {} : { depth: settings.depth }),
     maxNodes: settings.maxNodes,
     detail: settings.detail,
     ...(options.entriesOnly === true ? { entriesOnly: true } : {}),

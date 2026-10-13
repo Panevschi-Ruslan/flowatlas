@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T09:18:37.831Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T19:05:01.333Z",
   "services": [
     {
       "name": "api",
@@ -17,12 +17,70 @@
   ],
   "nodes": [
     {
-      "id": "api#src/admin/admin.routes.ts:GET /orders/:orderId@15",
+      "id": "api#src/admin/admin.routes.ts:GET /orders/:orderId@22",
       "type": "function",
-      "label": "GET /orders/:orderId@15",
+      "label": "GET /orders/:orderId@22",
       "repo": "api",
       "file": "src/admin/admin.routes.ts",
-      "line": 15
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "api#src/admin/admin.routes.ts:POST /notes@28",
+      "type": "function",
+      "label": "POST /notes@28",
+      "repo": "api",
+      "file": "src/admin/admin.routes.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{out:object}>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "api#src/admin/admin.routes.ts:PUT /notes/:noteId@34",
+      "type": "function",
+      "label": "PUT /notes/:noteId@34",
+      "repo": "api",
+      "file": "src/admin/admin.routes.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "api#src/admin/admin.routes.ts:zValidator('json', NoteSchema)",
+      "type": "middleware",
+      "label": "zValidator('json', NoteSchema)",
+      "repo": "api",
+      "file": "src/admin/admin.routes.ts",
+      "line": 28,
+      "kind": "function"
     },
     {
       "id": "api#src/app.module.ts:AppModule",
@@ -68,7 +126,22 @@
       "label": "OrdersController.cancel",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController.list",
@@ -76,7 +149,18 @@
       "label": "OrdersController.list",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Order[]"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -96,7 +180,22 @@
       "label": "OrdersService.cancel",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.changesFor",
@@ -104,7 +203,18 @@
       "label": "OrdersService.changesFor",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.list",
@@ -112,7 +222,18 @@
       "label": "OrdersService.list",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Order[]"
+        }
+      }
     },
     {
       "id": "api#src/stream/sse.ts:adminEvents",
@@ -120,7 +241,18 @@
       "label": "adminEvents",
       "repo": "api",
       "file": "src/stream/sse.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/stream/sse.ts:orderStream",
@@ -128,7 +260,18 @@
       "label": "orderStream",
       "repo": "api",
       "file": "src/stream/sse.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/stream/sse.ts:stockStream",
@@ -136,7 +279,18 @@
       "label": "stockStream",
       "repo": "api",
       "file": "src/stream/sse.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:DELETE /api/depots/:depotId/cache@42",
@@ -144,7 +298,18 @@
       "label": "DELETE /api/depots/:depotId/cache@42",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:GET /health@23",
@@ -152,7 +317,18 @@
       "label": "GET /health@23",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:POST /api/messenger/webhook@34",
@@ -160,7 +336,18 @@
       "label": "POST /api/messenger/webhook@34",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:acceptUpdate",
@@ -168,7 +355,18 @@
       "label": "acceptUpdate",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 67
+      "line": 67,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:all@65",
@@ -176,7 +374,18 @@
       "label": "all@65",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 65
+      "line": 65,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:boot",
@@ -184,7 +393,13 @@
       "label": "boot",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 78
+      "line": 78,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "object"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:forwardToNest",
@@ -192,7 +407,18 @@
       "label": "forwardToNest",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 73
+      "line": 73,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:post@52",
@@ -200,7 +426,18 @@
       "label": "post@52",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 52
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:requestLogger",
@@ -262,7 +499,7 @@
       "label": "GET /api/admin/events",
       "repo": "api",
       "file": "src/admin/admin.routes.ts",
-      "line": 13,
+      "line": 20,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -280,7 +517,7 @@
       "label": "GET /api/admin/orders/:param",
       "repo": "api",
       "file": "src/admin/admin.routes.ts",
-      "line": 15,
+      "line": 22,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -364,6 +601,24 @@
       }
     },
     {
+      "id": "entry:api:http:POST:/api/admin/notes",
+      "type": "entry",
+      "label": "POST /api/admin/notes",
+      "repo": "api",
+      "file": "src/admin/admin.routes.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/admin/notes",
+        "rawPath": "/api/admin/notes",
+        "adapter": "hono-routes",
+        "registration": "adminRoutes.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
       "id": "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
       "type": "entry",
       "label": "POST /api/depots/:param/orders/:param/cancel",
@@ -417,6 +672,24 @@
       }
     },
     {
+      "id": "entry:api:http:PUT:/api/admin/notes/:param",
+      "type": "entry",
+      "label": "PUT /api/admin/notes/:param",
+      "repo": "api",
+      "file": "src/admin/admin.routes.ts",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/api/admin/notes/:param",
+        "rawPath": "/api/admin/notes/:noteId",
+        "adapter": "hono-routes",
+        "registration": "adminRoutes.put",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
       "id": "repo:api",
       "type": "repo",
       "label": "api",
@@ -429,7 +702,7 @@
           "classes": 4,
           "skippedExternalCalls": {
             "@nestjs/common": 1,
-            "hono": 18
+            "hono": 23
           }
         },
         "bootstrap": "src/main.ts",
@@ -567,7 +840,18 @@
       "label": "LiveEventsService.open",
       "repo": "web",
       "file": "src/app/live-events.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService",
@@ -587,7 +871,18 @@
       "label": "OrdersApiService.list",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent",
@@ -598,6 +893,10 @@
       "line": 6,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-orders"
       }
@@ -608,7 +907,13 @@
       "label": "OrdersComponent.load",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent.watch",
@@ -616,7 +921,13 @@
       "label": "OrdersComponent.watch",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     }
   ],
   "edges": [
@@ -707,6 +1018,8 @@
       "to": "api#src/worker.ts:boot",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "object",
       "file": "src/worker.ts",
       "line": 35
     },
@@ -728,6 +1041,10 @@
       "to": "api#src/worker.ts:forwardToNest",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:hono#Context<object>"
+      ],
+      "returns": "unknown",
       "file": "src/worker.ts",
       "line": 65
     },
@@ -736,6 +1053,10 @@
       "to": "api#src/worker.ts:acceptUpdate",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:hono#Context<object>"
+      ],
+      "returns": "unknown",
       "file": "src/worker.ts",
       "line": 52
     },
@@ -744,8 +1065,12 @@
       "to": "api#src/worker.ts:forwardToNest",
       "type": "handles",
       "confidence": "static",
+      "returns": "string",
       "file": "src/worker.ts",
-      "line": 73
+      "line": 73,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:ALL:/api/*",
@@ -766,8 +1091,12 @@
       "to": "api#src/worker.ts:DELETE /api/depots/:depotId/cache@42",
       "type": "handles",
       "confidence": "static",
+      "returns": "string",
       "file": "src/worker.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:DELETE:/api/depots/:param/cache",
@@ -788,8 +1117,12 @@
       "to": "api#src/stream/sse.ts:adminEvents",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:api#Order[]",
       "file": "src/stream/sse.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:GET:/api/admin/events",
@@ -807,11 +1140,16 @@
     },
     {
       "from": "entry:api:http:GET:/api/admin/orders/:param",
-      "to": "api#src/admin/admin.routes.ts:GET /orders/:orderId@15",
+      "to": "api#src/admin/admin.routes.ts:GET /orders/:orderId@22",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:string}",
       "file": "src/admin/admin.routes.ts",
-      "line": 15
+      "line": 22,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
     },
     {
       "from": "entry:api:http:GET:/api/admin/orders/:param",
@@ -861,8 +1199,13 @@
       "to": "api#src/stream/sse.ts:stockStream",
       "type": "handles",
       "confidence": "static",
+      "returns": "string",
       "file": "src/stream/sse.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "requestRead": true,
+        "params": "{depotId:string}"
+      }
     },
     {
       "from": "entry:api:http:GET:/api/depots/:param/stock-stream",
@@ -883,8 +1226,13 @@
       "to": "api#src/stream/sse.ts:orderStream",
       "type": "handles",
       "confidence": "static",
+      "returns": "string",
       "file": "src/stream/sse.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "params": "{depotId:string}"
+      }
     },
     {
       "from": "entry:api:http:GET:/api/depots/:param/stream",
@@ -905,11 +1253,56 @@
       "to": "api#src/worker.ts:GET /health@23",
       "type": "handles",
       "confidence": "static",
+      "returns": "{status:string}",
       "file": "src/worker.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:GET:/health",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/admin/notes",
+      "to": "api#src/admin/admin.routes.ts:POST /notes@28",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;text:string}",
+      "file": "src/admin/admin.routes.ts",
+      "line": 28,
+      "meta": {
+        "requestRead": true,
+        "body": "{text:string;pinned:boolean}"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/admin/notes",
+      "to": "api#src/admin/admin.routes.ts:zValidator('json', NoteSchema)",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/admin/admin.routes.ts",
+      "line": 28,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "adminRoutes.post"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/admin/notes",
       "to": "api#src/worker.ts:requestLogger",
       "type": "guarded_by",
       "confidence": "static",
@@ -957,8 +1350,12 @@
       "to": "api#src/worker.ts:POST /api/messenger/webhook@34",
       "type": "handles",
       "confidence": "static",
+      "returns": "{ok:boolean}",
       "file": "src/worker.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:POST:/api/messenger/webhook",
@@ -993,11 +1390,46 @@
       "to": "api#src/worker.ts:acceptUpdate",
       "type": "handles",
       "confidence": "static",
+      "returns": "{ok:boolean}",
       "file": "src/worker.ts",
-      "line": 67
+      "line": 67,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:POST:/internal/reload",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:PUT:/api/admin/notes/:param",
+      "to": "api#src/admin/admin.routes.ts:PUT /notes/:noteId@34",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;text:string}",
+      "file": "src/admin/admin.routes.ts",
+      "line": 34,
+      "meta": {
+        "requestRead": true,
+        "body": "type:api#NoteChange",
+        "params": "{noteId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:api:http:PUT:/api/admin/notes/:param",
       "to": "api#src/worker.ts:requestLogger",
       "type": "guarded_by",
       "confidence": "static",
@@ -1095,6 +1527,10 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.list",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/orders.component.ts",
       "line": 25
     },
@@ -1103,11 +1539,32 @@
       "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/orders.component.ts",
       "line": 21
     }
   ],
   "types": {
+    "type:api#NoteChange": {
+      "name": "NoteChange",
+      "kind": "object",
+      "declaredIn": "api#src/admin/admin.routes.ts",
+      "structuralHash": "21e50344ae0e9dc3",
+      "fields": [
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
     "type:api#Order": {
       "name": "Order",
       "kind": "object",
@@ -1134,6 +1591,26 @@
         "declKind": "interface",
         "exported": true
       }
+    },
+    "type:hono#Context<object>": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "hono",
+      "structuralHash": "9245dcdd5ac0d844",
+      "meta": {
+        "declKind": "external",
+        "package": "hono"
+      }
+    },
+    "type:hono#Context<{out:object}>": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "hono",
+      "structuralHash": "9245dcdd5ac0d844",
+      "meta": {
+        "declKind": "external",
+        "package": "hono"
+      }
     }
   },
   "unresolved": [
@@ -1142,7 +1619,7 @@
       "line": 1,
       "reason": "entry-http-routes-unplaced",
       "level": "info",
-      "message": "9 of 10 routes the hono-routes reader read could be placed at an address; the other 1 could not, so the ways in recorded here are a part of what this service serves rather than the whole of it.",
+      "message": "11 of 12 routes the hono-routes reader read could be placed at an address; the other 1 could not, so the ways in recorded here are a part of what this service serves rather than the whole of it.",
       "hint": "Each of the 1 has a row of its own above, naming the application whose base could not be read. Until those are answered, a question this graph answers about which ways in exist is answered short.",
       "symbol": "hono-routes",
       "adapter": "hono-routes",

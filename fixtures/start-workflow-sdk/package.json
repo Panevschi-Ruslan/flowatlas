@@ -1,0 +1,17 @@
+{
+  "name": "lending-library-loans",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loans for a lending library: Lambda functions behind a REST API that start the approval workflow and invoke each other through the AWS SDK.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.700.0",
+    "@aws-sdk/client-sfn": "^3.700.0",
+    "aws-sdk": "^2.1691.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

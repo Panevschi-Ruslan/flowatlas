@@ -1,0 +1,5 @@
+@  GET /loans/:param  circulation/infra/openapi.yaml:16
+  !  librarians
+  -> handler          circulation/src/loans/get-loan.ts:5
+    -> findLoan       circulation/src/loans/loans-table.ts:14
+unresolved on this path: 0

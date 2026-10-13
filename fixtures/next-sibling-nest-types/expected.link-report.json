@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:28:55.436Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:40.009Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 600
+      "durationMs": 574,
+      "packages": {
+        "name": "@sibling-types/web",
+        "runtime": [
+          "@sibling-types/platform-types",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

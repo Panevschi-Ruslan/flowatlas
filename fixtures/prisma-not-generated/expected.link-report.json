@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T10:11:28.384Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:43.614Z",
   "configHash": "d95e219d6b04",
   "services": [
     {
@@ -10,9 +10,19 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 29,
       "edges": 22,
-      "types": 0,
-      "unresolved": 2,
-      "durationMs": 653
+      "types": 1,
+      "unresolved": 4,
+      "durationMs": 633,
+      "packages": {
+        "name": "@acme/api",
+        "runtime": [
+          "@acme/db",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@prisma/client"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -44,14 +54,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 0,
+    "total": 1,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
     "nodes": 29,
     "edges": 22,
-    "types": 0,
-    "unresolved": 2
+    "types": 1,
+    "unresolved": 4
   }
 }

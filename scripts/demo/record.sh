@@ -24,6 +24,7 @@ state_of() {
     08-* | 91-*) echo renamed ;;
     11-*) echo streams ;;
     12-*) echo folded ;;
+    13-*) echo reactnext ;;
     *) echo tuned ;;
   esac
 }
@@ -42,6 +43,7 @@ fixture_of() {
   case $1 in
     streams) echo sse-stream ;;
     folded) echo folded-channels ;;
+    reactnext) echo react-next ;;
     *) echo '' ;;
   esac
 }

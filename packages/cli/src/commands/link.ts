@@ -12,8 +12,8 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
-import { guessType, UNKNOWN_TYPE } from '../stacks.js';
-import { suggestName, toPosixRelative } from './init.js';
+import { declaresDeployment, guessDirectoryType, guessType, UNKNOWN_TYPE } from '../stacks.js';
+import { repoPathFor, suggestName } from './init.js';
 import { installMcp, MCP_FILE, SERVER_KEY } from './mcp.js';
 
 export interface LinkOptions {
@@ -62,17 +62,17 @@ const openProject = (configPath: string): { config: FlowatlasConfig; existed: bo
  * nothing at all and the workspace is the only thing left to ask.
  */
 const describe = (dir: string): { name: string; type: string } => {
-  const pkg = readPackageJson(dir);
+  const pkg = readPackageJson(dir) ?? (declaresDeployment(dir) ? {} : undefined);
   if (pkg === undefined) {
     throw new FlowatlasError(
       'not-a-repository',
-      `${dir} has no package.json`,
-      'Point at the root of a repository, the directory holding its package.json.',
+      `${dir} has no package.json and no Terraform that declares a function or a route`,
+      'Point at the root of a repository: the directory holding its package.json, or its Terraform.',
     );
   }
   const declared = guessType(pkg);
-  const type =
-    declared === UNKNOWN_TYPE ? guessType(readResolvedPackageJson(dir) ?? pkg) : declared;
+  const widened = declared === UNKNOWN_TYPE ? guessType(readResolvedPackageJson(dir) ?? pkg) : declared;
+  const type = widened === UNKNOWN_TYPE ? guessDirectoryType(dir, pkg, undefined) : widened;
   return { name: suggestName(pkg, dir), type };
 };
 
@@ -116,7 +116,7 @@ export const linkRepos = (paths: readonly string[], options: LinkOptions = {}): 
     const { name: suggested, type } = describe(dir);
     // Two repositories can share a package name; the directory settles it.
     const name = byName.has(suggested) ? `${suggested}-${basename(dir)}` : suggested;
-    const service: ServiceConfig = { name, repo: toPosixRelative(configDir, dir), type };
+    const service: ServiceConfig = { name, repo: repoPathFor(configDir, dir), type };
     byName.set(name, service);
     byPath.set(dir, service);
     added.push(service);

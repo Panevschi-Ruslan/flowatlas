@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "express-not-installed",
-  "generatedAt": "2026-09-27T19:29:04.832Z",
+  "generatedAt": "2026-10-08T09:12:32.355Z",
   "nodes": [
     {
       "id": "entry:express-not-installed:http:GET:/admin",
@@ -104,7 +104,22 @@
       "label": "sendHtml",
       "repo": "express-not-installed",
       "file": "src/admin.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "express-not-installed#src/server.ts:GET /health@23",
@@ -112,7 +127,22 @@
       "label": "GET /health@23",
       "repo": "express-not-installed",
       "file": "src/server.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "express-not-installed#src/server.ts:express.json()",
@@ -129,7 +159,22 @@
       "label": "getVideo",
       "repo": "express-not-installed",
       "file": "src/videos.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "express-not-installed#src/videos.controller.ts:listVideos",
@@ -137,7 +182,22 @@
       "label": "listVideos",
       "repo": "express-not-installed",
       "file": "src/videos.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:express-not-installed",
@@ -167,7 +227,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/admin.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "string"
     },
     {
       "from": "entry:express-not-installed:http:GET:/admin",
@@ -189,7 +253,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/admin.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "string"
     },
     {
       "from": "entry:express-not-installed:http:GET:/admin/*",
@@ -225,7 +293,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/videos.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}[]"
     },
     {
       "from": "entry:express-not-installed:http:GET:/api/v1/videos/:param",
@@ -247,7 +319,12 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/videos.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      },
+      "returns": "{id:unknown}"
     },
     {
       "from": "entry:express-not-installed:http:GET:/health",
@@ -255,7 +332,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{ok:boolean}"
     },
     {
       "from": "entry:express-not-installed:http:GET:/health",
@@ -276,12 +357,61 @@
   "unresolved": [
     {
       "file": "src/admin.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Request"
+    },
+    {
+      "file": "src/admin.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Response"
+    },
+    {
+      "file": "src/admin.ts",
       "line": 10,
       "reason": "call-dynamic-receiver",
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "sendHtml -> res.send",
       "sites": 4
+    },
+    {
+      "file": "src/videos.controller.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Request"
+    },
+    {
+      "file": "src/videos.controller.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Response"
+    },
+    {
+      "file": "src/videos.controller.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Request"
+    },
+    {
+      "file": "src/videos.controller.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Response"
+    },
+    {
+      "file": "src/videos.controller.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
     }
   ]
 }

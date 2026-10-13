@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T11:36:13.900Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:38.860Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -10,9 +10,18 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 11,
       "edges": 7,
-      "types": 0,
+      "types": 2,
       "unresolved": 1,
-      "durationMs": 0
+      "durationMs": 482,
+      "packages": {
+        "name": "@next-reexport/web",
+        "runtime": [
+          "@next-reexport/handlers",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -50,7 +59,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 0,
+    "total": 2,
     "sharedPackage": 0
   },
   "unresolved": [
@@ -76,7 +85,7 @@
   "totals": {
     "nodes": 11,
     "edges": 7,
-    "types": 0,
+    "types": 2,
     "unresolved": 3
   }
 }

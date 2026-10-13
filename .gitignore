@@ -9,6 +9,9 @@ node_modules/
 # A fixture holding two revisions of a project is one level deeper again.
 !fixtures/*/*/*/node_modules/
 !fixtures/*/*/*/node_modules/**
+# A repository of functions that keeps a manifest, and its stubs, per function.
+!fixtures/*/*/*/*/node_modules/
+!fixtures/*/*/*/*/node_modules/**
 dist/
 *.tsbuildinfo
 .flowatlas/

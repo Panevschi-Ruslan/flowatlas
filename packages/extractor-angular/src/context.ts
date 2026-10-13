@@ -32,6 +32,8 @@ export interface AngularStats extends RepoStats {
 /** Node type and `kind` implied by a class's role. */
 const NODE_SHAPE: Record<AngularRole, { type: NodeType; kind?: string }> = {
   component: { type: 'ui_component', kind: 'standalone' },
+  directive: { type: 'ui_component', kind: 'directive' },
+  pipe: { type: 'provider', kind: 'pipe' },
   module: { type: 'module', kind: 'ngmodule' },
   injectable: { type: 'provider', kind: 'injectable' },
   plain: { type: 'provider', kind: 'injectable' },

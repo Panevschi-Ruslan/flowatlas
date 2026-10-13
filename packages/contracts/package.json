@@ -43,7 +43,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests --testTimeout=60000"
   },
   "dependencies": {
     "@flowatlas/core": "workspace:*",

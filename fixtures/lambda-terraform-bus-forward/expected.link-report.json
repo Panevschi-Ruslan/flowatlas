@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:37.000Z",
+  "configHash": "7399ea785fa8",
+  "services": [
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 5,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 491,
+      "packages": {
+        "name": "lending-library-audit",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 10,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 526,
+      "packages": {
+        "name": "lending-library-circulation",
+        "runtime": [
+          "@aws-sdk/client-eventbridge"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 4,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:circulation:http:POST:/loans",
+      "entry:circulation:http:POST:/loans/:param/renewals"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 23,
+    "edges": 20,
+    "types": 5,
+    "unresolved": 0
+  }
+}

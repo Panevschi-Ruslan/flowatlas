@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T09:12:43.197Z",
+  "services": [
+    {
+      "name": "catalogue",
+      "repo": "./catalogue",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalogue#infra/api.tf.json:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "catalogue",
+      "file": "infra/api.tf.json",
+      "line": 29,
+      "kind": "authorizer"
+    },
+    {
+      "id": "catalogue#src/items/add-item.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/items/add-item.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/items/get-item.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/items/get-item.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/items/items-table.ts:findItem",
+      "type": "function",
+      "label": "findItem",
+      "repo": "catalogue",
+      "file": "src/items/items-table.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalogue#Item|undefined"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/items/items-table.ts:saveItem",
+      "type": "function",
+      "label": "saveItem",
+      "repo": "catalogue",
+      "file": "src/items/items-table.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:catalogue#Item"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:catalogue:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "catalogue",
+      "file": "infra/api.tf.json",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/{itemId}",
+        "deployedBy": "terraform",
+        "api": "library-dev-catalogue",
+        "function": "library-dev-get-item",
+        "declaredAs": "aws_apigatewayv2_route.get_item",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:http:POST:/items",
+      "type": "entry",
+      "label": "POST /items",
+      "repo": "catalogue",
+      "file": "infra/api.tf.json",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items",
+        "rawPath": "/items",
+        "deployedBy": "terraform",
+        "api": "library-dev-catalogue",
+        "function": "library-dev-add-item",
+        "declaredAs": "aws_apigatewayv2_route.add_item",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:library-dev-add-item",
+      "type": "entry",
+      "label": "library-dev-add-item",
+      "repo": "catalogue",
+      "file": "infra/modules/function/main.tf.json",
+      "line": 11,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-dev-add-item",
+        "deployedBy": "terraform",
+        "name": "library-dev-add-item",
+        "runtime": "nodejs20.x",
+        "declaredAs": "module.add_item.aws_lambda_function.this",
+        "handler": "items/add-item.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:library-dev-get-item",
+      "type": "entry",
+      "label": "library-dev-get-item",
+      "repo": "catalogue",
+      "file": "infra/functions.tf.json",
+      "line": 4,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-dev-get-item",
+        "deployedBy": "terraform",
+        "name": "library-dev-get-item",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.get_item",
+        "handler": "items/get-item.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "ITEMS_TABLE": {
+            "written": "aws_dynamodb_table.items.name",
+            "value": "library-dev-items",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "repo:catalogue",
+      "type": "repo",
+      "label": "catalogue",
+      "repo": "catalogue",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalogue#src/items/add-item.ts:handler",
+      "to": "catalogue#src/items/items-table.ts:saveItem",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:catalogue#Item"
+      ],
+      "returns": "void",
+      "file": "src/items/add-item.ts",
+      "line": 7
+    },
+    {
+      "from": "catalogue#src/items/get-item.ts:handler",
+      "to": "catalogue#src/items/items-table.ts:findItem",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalogue#Item|undefined",
+      "file": "src/items/get-item.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:catalogue:http:GET:/items/:param",
+      "to": "catalogue#src/items/get-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items/get-item.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{itemId:string}"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:POST:/items",
+      "to": "catalogue#infra/api.tf.json:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/api.tf.json",
+      "line": 29,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:POST:/items",
+      "to": "catalogue#src/items/add-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:catalogue#Item",
+      "file": "src/items/add-item.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "body": "type:catalogue#Item",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:catalogue:invoke:library-dev-add-item",
+      "to": "catalogue#src/items/add-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items/add-item.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:catalogue:invoke:library-dev-get-item",
+      "to": "catalogue#src/items/get-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items/get-item.ts",
+      "line": 5
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:catalogue#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "catalogue#src/items/items-table.ts",
+      "structuralHash": "b65a35b1d3729a5b",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

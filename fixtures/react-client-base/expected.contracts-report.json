@@ -1,0 +1,93 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:28:18.242Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:11:3",
+        "to": "entry:app:http:POST:/api/documents.info",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:11:3|hits|entry:app:http:POST:/api/documents.info",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/server/documents.routes.ts:POST /documents.info@12 reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:11:3",
+        "to": "entry:app:http:POST:/api/documents.info",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:11:3|hits|entry:app:http:POST:/api/documents.info",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/app/documents.ts:readDocument declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:14:3",
+        "to": "entry:app:http:POST:/api/documents.update",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:14:3|hits|entry:app:http:POST:/api/documents.update",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/server/documents.routes.ts:POST /documents.update@16 reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:14:3",
+        "to": "entry:app:http:POST:/api/documents.update",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:14:3|hits|entry:app:http:POST:/api/documents.update",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/app/documents.ts:renameDocument declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:31:3",
+        "to": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:31:3|hits|entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15 reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:31:3",
+        "to": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:31:3|hits|entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/app/documents.ts:registerPasskey declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 6,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

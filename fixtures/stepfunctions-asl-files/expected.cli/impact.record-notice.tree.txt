@@ -1,0 +1,26 @@
+-> RecordNotice [Task dynamodb:putItem]                                   notifications/workflows/borrower-notifications.asl.yaml:30
+  -> SendEmail [Task lambda:invoke]                                       notifications/workflows/borrower-notifications.asl.yaml:14
+    -> ChooseChannel [Choice]                                             notifications/workflows/borrower-notifications.asl.yaml:4
+      @  workflow borrower-notifications                                  notifications/workflows/borrower-notifications.asl.yaml:1
+        => circulation -> NotifyBorrower [Task states:startExecution] ~heuristic  circulation/statemachine/loan-approval.asl.json:166
+          -> RecordLoan [Parallel]                                        circulation/statemachine/loan-approval.asl.json:131
+            -> AwaitLibrarianApproval [Task sqs:sendMessage]              circulation/statemachine/loan-approval.asl.json:109
+              -> ReserveCopies [Map]                                      circulation/statemachine/loan-approval.asl.json:75
+                -> CheckHolds [Task dynamodb:query]                       circulation/statemachine/loan-approval.asl.json:60
+                  -> IsBorrowerInGoodStanding [Choice]                    circulation/statemachine/loan-approval.asl.json:44
+                    -> CheckBorrowerStanding [Task lambda:invoke]         circulation/statemachine/loan-approval.asl.json:14
+                      -> ShapeApplication [Pass]                          circulation/statemachine/loan-approval.asl.json:5
+                        @  workflow loan-approval                         circulation/statemachine/loan-approval.asl.json:1
+  -> SendText [Task lambda:invoke]                                        notifications/workflows/borrower-notifications.asl.yaml:22
+    -> ChooseChannel [Choice]                                             notifications/workflows/borrower-notifications.asl.yaml:4
+      @  workflow borrower-notifications                                  notifications/workflows/borrower-notifications.asl.yaml:1
+        => circulation -> NotifyBorrower [Task states:startExecution] ~heuristic  circulation/statemachine/loan-approval.asl.json:166
+          -> RecordLoan [Parallel]                                        circulation/statemachine/loan-approval.asl.json:131
+            -> AwaitLibrarianApproval [Task sqs:sendMessage]              circulation/statemachine/loan-approval.asl.json:109
+              -> ReserveCopies [Map]                                      circulation/statemachine/loan-approval.asl.json:75
+                -> CheckHolds [Task dynamodb:query]                       circulation/statemachine/loan-approval.asl.json:60
+                  -> IsBorrowerInGoodStanding [Choice]                    circulation/statemachine/loan-approval.asl.json:44
+                    -> CheckBorrowerStanding [Task lambda:invoke]         circulation/statemachine/loan-approval.asl.json:14
+                      -> ShapeApplication [Pass]                          circulation/statemachine/loan-approval.asl.json:5
+                        @  workflow loan-approval                         circulation/statemachine/loan-approval.asl.json:1
+Reachable from: 2 workflows (circulation, notifications)

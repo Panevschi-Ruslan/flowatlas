@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-knex-raw",
-  "generatedAt": "2026-09-28T07:26:24.489Z",
+  "generatedAt": "2026-10-07T14:34:16.328Z",
   "nodes": [
     {
       "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:14:12",
@@ -280,7 +280,13 @@
       "label": "ReportsController.large",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController.open",
@@ -288,7 +294,13 @@
       "label": "ReportsController.open",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService",
@@ -308,7 +320,13 @@
       "label": "ReportsService.both",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.emails",
@@ -316,7 +334,13 @@
       "label": "ReportsService.emails",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 76
+      "line": 76,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.forCustomer",
@@ -324,7 +348,26 @@
       "label": "ReportsService.forCustomer",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            },
+            {
+              "name": "region",
+              "type": "string"
+            },
+            {
+              "name": "limit",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.large",
@@ -332,7 +375,18 @@
       "label": "ReportsService.large",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 66
+      "line": 66,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "min",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.open",
@@ -340,7 +394,18 @@
       "label": "ReportsService.open",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.picked",
@@ -348,7 +413,18 @@
       "label": "ReportsService.picked",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 93
+      "line": 93,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.ping",
@@ -356,7 +432,13 @@
       "label": "ReportsService.ping",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 57
+      "line": 57,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.prune",
@@ -364,7 +446,18 @@
       "label": "ReportsService.prune",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "before",
+              "type": "Date"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.purge",
@@ -372,7 +465,18 @@
       "label": "ReportsService.purge",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 51
+      "line": 51,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "table",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.total",
@@ -380,7 +484,13 @@
       "label": "ReportsService.total",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.touch",
@@ -388,7 +498,18 @@
       "label": "ReportsService.touch",
       "repo": "nest-knex-raw",
       "file": "src/reports/reports.service.ts",
-      "line": 84
+      "line": 84,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "column",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "repo:nest-knex-raw",

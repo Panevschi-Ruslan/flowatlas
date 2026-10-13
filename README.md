@@ -10,8 +10,8 @@ One map of a project that lives in several repositories.
 **A command-line tool that reads several TypeScript repositories with the
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
-Protocol.** It knows NestJS and Angular, React and Next.js, Express, Fastify,
-Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
+Protocol.** It knows NestJS and Angular, React and Next.js, SvelteKit and Remix,
+Express, Fastify, Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
 Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka, RabbitMQ,
 BullMQ and socket.io; and OpenAPI and AsyncAPI documents for the services whose
 source you do not have.
@@ -212,6 +212,8 @@ flowatlas flow "POST /orders"   # follow one request through
 
 ![one click in a browser, followed into a third repository](docs/media/04-flow.gif)
 
+![the Map of five repositories, then one route's types field by field in the Graph](docs/media/14-map-tour.gif)
+
 That is one button in an Angular template, followed through the gateway, into the
 orders service, to the row it reads. Three repositories, and `unresolved on this
 path: 0` says nothing along it was guessed.
@@ -241,6 +243,10 @@ place. Adding a sixth later is one more `link`.
 | `project-graph.json` | the whole graph, and the canonical artefact |
 | `link-report.json` | what joined, what did not, and why |
 | `graph.db` | the same graph as SQLite, which every query reads |
+
+What it keeps between builds, each service's own graph and file hashes, is in the
+same directory under `services/`. Nothing is written into the repositories it
+reads.
 
 ---
 
@@ -363,16 +369,26 @@ at a pull request.
 ### Seeing it
 
 ```sh
-flowatlas visualise                     # writes graph.html beside the graph
+flowatlas visualise                     # writes graph.html next to the configuration
 flowatlas visualise --out map.html --title "Ledger"
 ```
 
 One file with the graph inside it: no server and nothing to install. It asks
 Google Fonts for two typefaces and falls back to your own if it cannot reach
 them, so it reads offline and is not free of a third party until that is
-inlined. It opens on the reconciliation, lists every way in, follows
+inlined. It opens on a Map of the whole project - one box per service, in
+columns by what it is for, joined by what passes between them and counted, with
+families of services that open and close and a layer for the packages they are
+built from - then lists every way in, follows
 any one of them across service boundaries, and has a tab each for every crossing
-and for everything that did not join.
+and for everything that did not join. A fourth tab, Graph, draws the
+neighbourhood of any node you search for, with its details one click away, and
+walks on from there in either direction. It folds the plumbing round a route,
+groups a busy table's callers, finds a path between two nodes and what reaches
+one, marks the nodes with problems, and keeps a view as a link. Hovering a node
+shows what it takes and gives back - a method's parameters by name and type, a
+route's body, query and response - and any type opens to its fields; see
+[`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
 
 It is a report you can click, not a viewer you keep running. A page generated
 from a build can be attached to a review or kept beside a decision; a UI that
@@ -630,8 +646,11 @@ prove, and the path is given so you can run it.
 - **Routes declared by where a file is.** A file-system router is four values —
   its root, which file names declare a route, the prefix in front and which
   segment spellings it honours — so Next.js (app router, pages router, API
-  routes) and Medusa are rows of one reading (`fixtures/react-next`,
-  `fixtures/medusa-fs-router`). A verb a helper built, aliased or re-exported is
+  routes), Medusa, SvelteKit (`+server`, a page's `load` and form actions) and
+  Remix / React Router (flat routes, `app/routes.ts`, `flatRoutes()`) are rows
+  of one reading (`fixtures/react-next`, `fixtures/medusa-fs-router`,
+  `fixtures/sveltekit-server-routes`, `fixtures/remix-flat-routes`,
+  `fixtures/react-router-config`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -707,6 +726,26 @@ prove, and the path is given so you can run it.
   OpenAPI or AsyncAPI document, and joins and compares like any other end at
   `declared` confidence (`fixtures/multi-repo-declared`,
   `fixtures/multi-repo-asyncapi`).
+- **Serverless on AWS, wired in Terraform.** Lambda functions and the API
+  Gateway routes in front of them are read from the `.tf` files that deploy
+  them, through local modules and the public ones that ship described, with
+  each function named by what it is deployed as (`fixtures/lambda-terraform-rest`,
+  `fixtures/lambda-terraform-modules`, `fixtures/multi-repo-lambda`,
+  `fixtures/lambda-wrapped-handlers`). A Step Functions state machine is a way
+  in whose states are its steps, read from `*.asl.json` or from however the
+  Terraform writes its definition (`fixtures/stepfunctions-asl-files`,
+  `fixtures/stepfunctions-terraform`, `fixtures/multi-repo-stepfunctions`).
+  Publishing through the SDK to EventBridge, SQS and SNS meets the rule,
+  subscription or mapping the deployment declares, and a queue named by
+  `process.env` is completed from the function's environment block
+  (`fixtures/aws-sdk-publishers`, `fixtures/aws-sdk-not-installed`,
+  `fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
+  `fixtures/multi-repo-events`). Code that starts a workflow or invokes a
+  function by its deployed name is joined to it, whether it calls the SDK or a
+  helper of the project's own, read or described - one that records what to
+  start in one call and starts it by id in the next as well - so a route leads
+  into the workflow it starts (`fixtures/start-workflow-sdk`,
+  `fixtures/start-workflow-helper`, `fixtures/start-workflow-by-record`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —
@@ -730,10 +769,11 @@ prove, and the path is given so you can run it.
 
 Known gaps in what it can read:
 
-- A repository built on anything but the frameworks above. Nuxt, Remix, Vue and
-  Svelte are recognised by name and read by nothing: `init` and `build` both say
-  which repository and which framework, and the graph is smaller than the
-  project by exactly that much.
+- A repository built on anything but the frameworks above. Nuxt and Vue are
+  recognised by name and read by nothing: `init` and `build` both say which
+  repository and which framework, and the graph is smaller than the project by
+  exactly that much. Remix, React Router and SvelteKit are read for their file
+  routes, loads and actions, not for their components.
 - A file-system router nobody has described — `@fastify/autoload`, or a
   convention of the repository's own. The reader says it cannot tell such a
   repository from a library that merely depends on the framework, rather than

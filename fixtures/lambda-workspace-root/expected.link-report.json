@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:43.008Z",
+  "configHash": "f38fa4940897",
+  "services": [
+    {
+      "name": "lending",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 10,
+      "types": 5,
+      "unresolved": 1,
+      "durationMs": 504,
+      "packages": {
+        "name": "lending-library-loans",
+        "runtime": [
+          "@library/workflows"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:lending:http:POST:/loans"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 16,
+    "edges": 13,
+    "types": 5,
+    "unresolved": 0
+  }
+}

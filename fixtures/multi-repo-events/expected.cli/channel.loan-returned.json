@@ -1,0 +1,218 @@
+{
+  "channel": "channel:eventbridge/library/library.loans/LoanReturned",
+  "producers": 1,
+  "consumers": 2,
+  "root": {
+    "node": {
+      "id": "channel:eventbridge/library/library.loans/LoanReturned",
+      "type": "channel",
+      "label": "eventbridge/library/library.loans/LoanReturned",
+      "loc": "src/return-loan.ts:8",
+      "service": "loans"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "channel:eventbridge/library/library.loans/LoanReturned#producers",
+          "type": "group",
+          "label": "producers (1)"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "producer:loans#src/return-loan.ts:8:9",
+              "type": "producer",
+              "label": "event eventbridge/library/library.loans/LoanReturned",
+              "loc": "src/return-loan.ts:8",
+              "service": "loans",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "emits",
+              "confidence": "static",
+              "params": [
+                "type:loans#Loan"
+              ]
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "channel:eventbridge/library/library.loans/LoanReturned#consumers",
+          "type": "group",
+          "label": "consumers (2)"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+              "type": "consumer",
+              "label": "rule audit-rule",
+              "loc": "main.tf:19",
+              "service": "platform-events",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "consumes",
+              "confidence": "heuristic",
+              "because": [
+                "source \"library.loans\" matches prefix \"library.\"",
+                "detail-type is not filtered"
+              ]
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "producer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+                  "type": "producer",
+                  "label": "message sqs/library-audit",
+                  "loc": "main.tf:19",
+                  "service": "platform-events",
+                  "kind": "message"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "channel:sqs/library-audit",
+                      "type": "channel",
+                      "label": "sqs/library-audit",
+                      "loc": "main.tf:19",
+                      "service": "platform-events"
+                    },
+                    "edge": {
+                      "type": "emits",
+                      "confidence": "static"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": {
+              "id": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+              "type": "consumer",
+              "label": "rule library-loan-activity",
+              "loc": "rules.tf:63",
+              "service": "routing",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "consumes",
+              "confidence": "heuristic",
+              "because": [
+                "detail-type \"LoanReturned\" matches anything but \"LoanCreated\""
+              ]
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "producer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+                  "type": "producer",
+                  "label": "message sqs/library-loan-digest",
+                  "loc": "rules.tf:63",
+                  "service": "routing",
+                  "kind": "message"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "channel:sqs/library-loan-digest",
+                      "type": "channel",
+                      "label": "sqs/library-loan-digest",
+                      "loc": "rules.tf:63",
+                      "service": "routing"
+                    },
+                    "edge": {
+                      "type": "emits",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+                          "type": "consumer",
+                          "label": "mapping aws_lambda_event_source_mapping.loan_digest",
+                          "loc": "infra/main.tf:61",
+                          "service": "notifications",
+                          "kind": "message"
+                        },
+                        "edge": {
+                          "type": "consumes",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "entry:notifications:invoke:library-loan-digest",
+                              "type": "entry",
+                              "label": "library-loan-digest",
+                              "loc": "infra/main.tf:48",
+                              "service": "notifications",
+                              "kind": "invoke"
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "notifications#src/loan-digest.ts:handler",
+                                  "type": "function",
+                                  "label": "handler",
+                                  "loc": "src/loan-digest.ts:5",
+                                  "service": "notifications"
+                                },
+                                "edge": {
+                                  "type": "handles",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "notifications#src/outbox.ts:deliver",
+                                      "type": "function",
+                                      "label": "deliver",
+                                      "loc": "src/outbox.ts:3",
+                                      "service": "notifications"
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static",
+                                      "params": [
+                                        "string",
+                                        "string"
+                                      ],
+                                      "returns": "void"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

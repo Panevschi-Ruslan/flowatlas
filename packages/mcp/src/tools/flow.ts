@@ -17,7 +17,13 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
         entry: z
           .string()
           .describe('an entry: "POST /orders", "bot:order_confirm", or a full entry id'),
-        depth: z.number().int().positive().max(32).default(8).describe('how many hops to follow'),
+        depth: z
+          .number()
+          .int()
+          .positive()
+          .max(32)
+          .optional()
+          .describe('how many hops to follow; by default 8, and one more per step of a workflow'),
         ...commonInput,
       },
     },
@@ -36,7 +42,11 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           return { error: `no entry matches ${JSON.stringify(input.entry)}`, suggestions };
         }
 
-        const flow = buildFlowTree(db, ref.id, { depth: input.depth, maxNodes, detail });
+        const flow = buildFlowTree(db, ref.id, {
+          ...(input.depth === undefined ? {} : { depth: input.depth }),
+          maxNodes,
+          detail,
+        });
         return {
           root: flow.root,
           unresolvedOnPath: flow.unresolvedOnPath,

@@ -1,13 +1,59 @@
 import type { NameLocator } from './locator.js';
+import type { FlowatlasConfig } from '../config.js';
 import type { PackageJson } from './manifest.js';
+import type { DeployedEntryKind } from '../ids.js';
 
 /** What the transport calls the thing a message is addressed to. */
 export type ChannelKind = 'topic' | 'queue' | 'exchange' | 'channel';
 
+/**
+ * One part of an address written in several.
+ *
+ * Most transports address a message with one name. Some address it with
+ * several that only together say where it goes - a bus, a source within it and
+ * a kind of event from that source - and a channel named by one of them alone
+ * would join publishers that never meet. So an address is a list of parts,
+ * joined with `/` into the channel's name, and each part is either a word the
+ * description states or a place in the call where the code writes it.
+ */
+export type AddressPart =
+  /** A word every address of the pattern starts with, whatever the call says. */
+  | { readonly literal: string }
+  | {
+      /** Where the part is written, tried in order, as for `channel`. */
+      readonly at: readonly NameLocator[];
+      /**
+       * What the part is when the call writes nothing there.
+       *
+       * A library that fills in a value when it is left out has still been told
+       * where to send the message, and the address it reaches is that value's.
+       * Only for nothing written: a value that is written and cannot be read is
+       * never replaced by this, because that would be a guess.
+       */
+      readonly absent?: string;
+      /**
+       * Longer spellings the name may be written inside, each a regular
+       * expression whose first group is the name.
+       *
+       * The same thing is often addressed by a locator of its own - a URL, an
+       * identifier carrying its owner and region - and both ends of a channel
+       * have to arrive at one name however each of them spelled it. A value no
+       * expression matches is the name as written.
+       */
+      readonly forms?: readonly string[];
+    };
+
 /** A call shape that publishes a message. */
 export interface CallPattern {
-  /** Method name on the receiver, e.g. `emit`. */
+  /** Method name on the receiver, e.g. `emit`; or the function's name, for a function. */
   method: string;
+  /**
+   * How the call is written: on a receiver, `bus.publish(…)`, which is the
+   * default; or as a function of the project's own called by its name,
+   * `publish(…)`, which has no receiver to name and is told apart by the name
+   * it is declared with.
+   */
+  calledAs?: 'method' | 'function';
   /**
    * Shorthand for an address written as one plain argument: `channelArg: 0` says
    * exactly what `channel: [{ kind: 'argument', index: 0 }]` says, and `-1` says
@@ -27,6 +73,24 @@ export interface CallPattern {
    * way to say it at all. Overrides `channelArg` when present.
    */
   channel?: readonly NameLocator[];
+  /**
+   * The address in parts, for a transport that names a message with more than
+   * one word. Overrides `channel`, which is the one-part address written short.
+   *
+   * A locator that walks a list (`*`) makes one address per element, and every
+   * part walking the same list is read at the same element.
+   */
+  address?: readonly AddressPart[];
+  /**
+   * Where the message itself is written, as an expression, tried in order.
+   * Overrides `payloadArg`.
+   *
+   * For a call whose message is a property of its input rather than an argument
+   * of its own, and one per element where the address walks a list. A message
+   * sent as `JSON.stringify(value)` is read as the value, because that is what
+   * the receiver parses back out.
+   */
+  payload?: readonly NameLocator[];
   /** Index of the argument holding the payload, when there is one. */
   payloadArg?: number;
   /**
@@ -68,13 +132,66 @@ export interface CallPattern {
    * method that happens to share its name.
    */
   receiverPackages?: string[];
+  /**
+   * For a function: the package it is imported from. The call is then the
+   * function called by its name, or as a member of anything imported from the
+   * package - `run(...)` and `orchestrator.run(...)` alike - which is how a
+   * package of helpers is written. Matched on the import, so a package that is
+   * not installed is matched as readily as one that is.
+   */
+  module?: string;
   /** Recorded on the producer node, e.g. `event`, `rpc`, `job`, `message`. */
   kind?: string;
+  /**
+   * What the call starts, for a call that is not a publish at all: its address
+   * is the deployed name of an entry, and the call reaches that entry rather
+   * than a channel of that name (P24).
+   */
+  starts?: StartedEntry;
+}
+
+/**
+ * The entry a call starts by its deployed name, and what the call says about it.
+ *
+ * Starting a workflow or invoking a function has exactly one receiver, named
+ * by the deployment, and the caller often waits for it. Read as a channel, it
+ * would make every workflow a channel and every function a consumer of one, so
+ * the producer records a reference to the entry instead and the linker joins it
+ * by name like any other.
+ */
+export interface StartedEntry {
+  readonly entry: DeployedEntryKind;
+  /**
+   * What the code says, to the name it is deployed under, where the two differ.
+   * A key is what the address reads as, or the expression written there when
+   * that cannot be read (`Process.LoanApproval`). Somebody stated the mapping
+   * and nothing here can check it, so a join through it is `declared`.
+   */
+  readonly names?: Readonly<Record<string, string>>;
+  /**
+   * Where the call says whether it waits, and the kind each value written
+   * there makes it; nothing written, or a value not listed, leaves `kind`.
+   */
+  readonly kindAt?: { readonly at: readonly NameLocator[]; readonly kinds: Readonly<Record<string, string>> };
+  /**
+   * The call hands a run that is waiting its result rather than starting one.
+   * It names the run by a token and no workflow at all, so it is a leaf, and
+   * nothing is joined.
+   */
+  readonly resumes?: boolean;
 }
 
 export interface BrokerAdapter {
   name: string;
-  detect(pkg: PackageJson): boolean;
+  /**
+   * Whether the repository uses the transport.
+   *
+   * `repoDir` is offered for a transport whose package may be declared by a
+   * manifest below the repository's own - a repository of functions that keeps
+   * a manifest per function - and offered rather than promised: a caller with
+   * no directory to hand passes none, and the manifest answers alone.
+   */
+  detect(pkg: PackageJson, config?: FlowatlasConfig, repoDir?: string): boolean;
   producerPatterns: CallPattern[];
   /** Decorator names that mark a method as receiving from a channel. */
   consumerDecorators: string[];

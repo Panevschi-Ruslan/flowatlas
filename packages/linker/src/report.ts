@@ -14,6 +14,22 @@ export interface ServiceReport {
   types: number;
   unresolved: number;
   durationMs: number;
+  /**
+   * What the service's manifest says it is built from: the name it is
+   * published under, and the packages it depends on, at run time and for
+   * development only. Absent for a service with no `package.json` - one
+   * declared by a document, or a repository of nothing but Terraform.
+   */
+  packages?: ServicePackages;
+}
+
+/** A manifest's own name and the names of what it depends on, each list sorted. */
+export interface ServicePackages {
+  name?: string;
+  /** `dependencies`, `peerDependencies` and `optionalDependencies`. */
+  runtime: string[];
+  /** `devDependencies` not already needed at run time. */
+  dev: string[];
 }
 
 /**

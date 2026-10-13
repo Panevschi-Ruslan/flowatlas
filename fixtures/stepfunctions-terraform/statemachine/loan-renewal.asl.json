@@ -1,0 +1,158 @@
+{
+  "Comment": "Renews a borrower's loans: settles any late fee first, then extends every loan and asks for approval again where a loan was flagged.",
+  "StartAt": "CheckBorrowerStanding",
+  "States": {
+    "CheckBorrowerStanding": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${check_borrower_arn}",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId"
+        }
+      },
+      "ResultSelector": {
+        "standing.$": "$.Payload.standing"
+      },
+      "ResultPath": "$.borrower",
+      "Next": "HasOverdueItems"
+    },
+    "HasOverdueItems": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.borrower.standing",
+          "StringEquals": "suspended",
+          "Next": "RenewalRefused"
+        },
+        {
+          "Variable": "$.borrower.standing",
+          "StringEquals": "overdue",
+          "Next": "AssessLateFee"
+        }
+      ],
+      "Default": "ApplyBranchPolicy"
+    },
+    "AssessLateFee": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${assess_late_fee_arn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.fee",
+      "Next": "AwaitFeePayment"
+    },
+    "AwaitFeePayment": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${notify_borrower_arn}",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId",
+          "kind": "fee-due",
+          "taskToken.$": "$$.Task.Token"
+        }
+      },
+      "TimeoutSeconds": 604800,
+      "Catch": [
+        {
+          "ErrorEquals": ["States.Timeout"],
+          "Next": "RenewalRefused"
+        }
+      ],
+      "Next": "ApplyBranchPolicy"
+    },
+    "ApplyBranchPolicy": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${branch_policy_arn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.policy",
+      "Next": "ExtendLoans"
+    },
+    "ExtendLoans": {
+      "Type": "Map",
+      "ItemsPath": "$.loanIds",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "ExtendLoan",
+        "States": {
+          "ExtendLoan": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "${loans_table}",
+              "Key": {
+                "loanId": {
+                  "S.$": "$"
+                }
+              },
+              "UpdateExpression": "SET dueDate = :next",
+              "ExpressionAttributeValues": {
+                ":next": {
+                  "S.$": "$$.Execution.Input.nextDueDate"
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": null,
+      "Next": "RecordRenewal"
+    },
+    "RecordRenewal": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "NotifyRenewal",
+          "States": {
+            "NotifyRenewal": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${notify_borrower_arn}",
+                "Payload": {
+                  "borrowerId.$": "$.borrowerId",
+                  "kind": "renewed"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "ReapproveFlaggedLoans",
+          "States": {
+            "ReapproveFlaggedLoans": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Parameters": {
+                "StateMachineArn": "${loan_approval_arn}",
+                "Input": {
+                  "borrowerId.$": "$.borrowerId",
+                  "itemIds.$": "$.flaggedItemIds"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "RenewalComplete"
+    },
+    "RenewalComplete": {
+      "Type": "Succeed"
+    },
+    "RenewalRefused": {
+      "Type": "Fail",
+      "Error": "RenewalRefused",
+      "Cause": "The borrower is suspended, or did not pay the late fee in time."
+    }
+  }
+}

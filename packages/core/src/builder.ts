@@ -29,8 +29,14 @@ const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 const edgeKey = (edge: GraphEdge): string => `${edge.from}${SEP}${edge.type}${SEP}${edge.to}`;
 
+/**
+ * One row per thing to fix at one site. The message is in because a row about a
+ * node names the node and says in its message what about it was not read: two
+ * names of one call refused for the same reason are two rows on one producer
+ * (R177).
+ */
 const unresolvedKey = (row: Unresolved): string =>
-  `${row.file}${SEP}${row.line}${SEP}${row.reason}${SEP}${row.symbol ?? ''}`;
+  `${row.file}${SEP}${row.line}${SEP}${row.reason}${SEP}${row.symbol ?? ''}${SEP}${row.message ?? ''}`;
 
 /**
  * Folds every row below `action` to one per reason, counting the rest.
@@ -175,12 +181,31 @@ export class GraphBuilder {
     return existing;
   }
 
+  /**
+   * Takes back the rows a later reader answered.
+   *
+   * A row says a reader could not follow something; a later reader that did -
+   * a description matched the call whose receiver had no type - takes it back,
+   * rather than leave a row about a place the graph now draws (R173).
+   */
+  withdrawUnresolved(answered: (row: Unresolved) => boolean): void {
+    for (const [key, row] of this.#unresolved) if (answered(row)) this.#unresolved.delete(key);
+  }
+
   has(id: string): boolean {
     return this.#nodes.has(id);
   }
 
   getNode(id: string): GraphNode | undefined {
     return this.#nodes.get(id);
+  }
+
+  /**
+   * Every node collected so far, for a pass that must not draw again what an
+   * earlier one already drew.
+   */
+  get nodes(): readonly GraphNode[] {
+    return [...this.#nodes.values()];
   }
 
   /** Every edge collected so far, for a pass that annotates them. */

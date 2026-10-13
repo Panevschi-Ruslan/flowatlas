@@ -1,0 +1,165 @@
+{
+  "Comment": "Approves a loan: checks the borrower, reserves the copies, waits for a librarian, records the loan and tells the borrower.",
+  "StartAt": "CheckBorrowerStanding",
+  "States": {
+    "CheckBorrowerStanding": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "lending-check-borrower",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId"
+        }
+      },
+      "ResultSelector": {
+        "standing.$": "$.Payload.standing"
+      },
+      "ResultPath": "$.borrower",
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "RejectLoan"
+        }
+      ],
+      "Next": "IsBorrowerInGoodStanding"
+    },
+    "IsBorrowerInGoodStanding": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.borrower.standing",
+          "StringEquals": "good",
+          "Next": "ReserveCopies"
+        }
+      ],
+      "Default": "RejectLoan"
+    },
+    "ReserveCopies": {
+      "Type": "Map",
+      "ItemsPath": "$.itemIds",
+      "MaxConcurrency": 5,
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "ReserveCopy",
+        "States": {
+          "ReserveCopy": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "lending-copies",
+              "Key": {
+                "itemId": {
+                  "S.$": "$"
+                }
+              },
+              "UpdateExpression": "SET reserved = :yes",
+              "ExpressionAttributeValues": {
+                ":yes": {
+                  "BOOL": true
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": null,
+      "Next": "AwaitLibrarianApproval"
+    },
+    "AwaitLibrarianApproval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+      "Parameters": {
+        "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/000000000000/lending-librarian-approvals",
+        "MessageBody": {
+          "borrowerId.$": "$.borrowerId",
+          "itemIds.$": "$.itemIds",
+          "taskToken.$": "$$.Task.Token"
+        }
+      },
+      "HeartbeatSeconds": 86400,
+      "ResultPath": "$.approval",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.Timeout", "LoanDeclined"],
+          "ResultPath": "$.error",
+          "Next": "RejectLoan"
+        }
+      ],
+      "Next": "RecordLoan"
+    },
+    "RecordLoan": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "WriteLoan",
+          "States": {
+            "WriteLoan": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:putItem",
+              "Parameters": {
+                "TableName": "lending-loans",
+                "Item": {
+                  "borrowerId": {
+                    "S.$": "$.borrowerId"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "ScoreBorrower",
+          "States": {
+            "ScoreBorrower": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:eu-west-1:000000000000:function:lending-score-borrower",
+              "End": true
+            }
+          }
+        }
+      ],
+      "ResultPath": "$.recorded",
+      "Next": "NotifyBorrower"
+    },
+    "NotifyBorrower": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "lending-notify-borrower",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId",
+          "kind": "approved"
+        }
+      },
+      "Next": "LoanApproved"
+    },
+    "LoanApproved": {
+      "Type": "Succeed"
+    },
+    "RejectLoan": {
+      "Type": "Pass",
+      "Result": {
+        "approved": false
+      },
+      "Next": "LoanRejected"
+    },
+    "LoanRejected": {
+      "Type": "Fail",
+      "Error": "LoanRejected",
+      "Cause": "The borrower is not in good standing, or the librarian declined the loan."
+    }
+  }
+}

@@ -358,7 +358,16 @@ const compareShapeChoices = (
   const receivers = receiverAst.kind === 'union' ? receiverAst.members : [receiverAst];
   if (senders.length + receivers.length < 3) return false;
   const structural = (member: TypeRefAst): boolean => isStructural(walk, member);
-  if (!senders.every(structural) || !receivers.every(structural)) return false;
+  // A sender that may answer with a shape or with a plain value - `Order |
+  // string` - is the same choice with one arm that is not a shape. Each arm is
+  // compared on its own (P30), so the shape that agrees is not reported with
+  // the value that does not. A `null` arm is not one: whether the receiver
+  // tolerates nothing is its own question, asked before this.
+  const valueArm = (member: TypeRefAst): boolean =>
+    (member.kind === 'primitive' || member.kind === 'literal') && !isNothing(member) && !makesNoClaim(member);
+  const sendersCompare =
+    senders.every(structural) || (senders.some(structural) && senders.every((member) => structural(member) || valueArm(member)));
+  if (!sendersCompare || !receivers.every(structural)) return false;
   // Every arm is compared against every arm, so a pathological choice is the
   // one shape here that could take a noticeable amount of time. Past the cap
   // the pair is reported as uncompared rather than compared in part: half a

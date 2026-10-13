@@ -25,6 +25,7 @@ export {
   globalFiles,
   importsOf,
   openRepo,
+  packageFiles,
   reopenRepo,
   repoFiles,
 } from './incremental.js';

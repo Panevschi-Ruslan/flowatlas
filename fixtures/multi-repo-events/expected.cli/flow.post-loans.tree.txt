@@ -1,0 +1,13 @@
+@  POST /loans                                              loans/infra/main.tf:86
+  -> handler                                                loans/src/create-loan.ts:9
+    ~  event eventbridge/library/library.loans/LoanCreated  loans/src/create-loan.ts:11
+      ~  eventbridge/library/library.loans/LoanCreated      rules.tf:45
+        => platform-events ~  rule audit-rule ~heuristic    platform-events/main.tf:19
+          ~  message sqs/library-audit                      platform-events/main.tf:19
+            ~  sqs/library-audit                            main.tf:19
+        => routing ~  rule library-loan-created             routing/rules.tf:45
+          => notifications @  library-welcome-borrower      notifications/infra/main.tf:39
+            -> handler                                      notifications/src/welcome-borrower.ts:10
+              -> deliver                                    notifications/src/outbox.ts:3
+    $  EVENT_BUS_NAME                                       loans/src/create-loan.ts:15
+unresolved on this path: 0

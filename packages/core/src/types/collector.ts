@@ -5,7 +5,7 @@ import { Node, ts } from 'ts-morph';
 import type { GraphBuilder } from '../builder.js';
 import { makeTypeId, normalizeFilePath } from '../ids.js';
 import type { Unresolved } from '../model/graph.js';
-import type { TypeEntry, TypeField, TypeKind, TypeRegistry } from '../model/types.js';
+import type { Signature, TypeEntry, TypeField, TypeKind, TypeRegistry } from '../model/types.js';
 import { mergeFieldMeta, type FieldDeclaration, type FieldMetaReader } from './field-meta.js';
 import { DEFAULT_HASH_DEPTH, structuralHash } from './structural-hash.js';
 import { formatFieldKey, formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
@@ -26,6 +26,19 @@ export interface TypeCollectorOptions {
 
 /** Shapes the language provides that are written as references, not expanded. */
 const GENERIC_BUILTINS = new Set(['Map', 'Set', 'ReadonlyMap', 'ReadonlySet', 'Record', 'Promise']);
+
+/** The `import("…").` the checker writes in front of a name it cannot reach from the site. */
+const IMPORT_QUALIFIER = /import\("[^"]*"\)\./g;
+const SYMBOL_KEYED = '__@';
+
+/**
+ * A type written as it reads at the site: in its terms, and with no
+ * `import("/absolute/path").Name` left over for a name that site cannot
+ * reach - that path is the machine's, so a graph holding it differs between
+ * two checkouts of the same commit.
+ */
+const writtenAt = (type: Type, site: TsNode): string =>
+  type.getText(site).replace(IMPORT_QUALIFIER, '');
 
 /**
  * A declaration file belonging to the language itself rather than to a
@@ -203,13 +216,40 @@ export class TypeCollector {
     return current;
   }
 
+  /**
+   * The parameter types and return type of a function, and the same parameters
+   * with their names, as a `Signature` for the function's own node.
+   *
+   * A destructured parameter has no one name, so it is called by the pattern
+   * as written, which is what a reader would look for in the source.
+   */
   collectSignature(fn: {
-    getParameters(): Array<{ getType(): Type; getName(): string }>;
+    getParameters(): Array<{
+      getType(): Type;
+      getName(): string;
+      isOptional?(): boolean;
+      isRestParameter?(): boolean;
+    }>;
     getReturnType(): Type;
-  } & TsNode): { params: TypeRef[]; returns: TypeRef } {
-    const params = fn.getParameters().map((parameter) => this.collectType(parameter.getType(), fn));
+  } & TsNode): { params: TypeRef[]; returns: TypeRef; signature: Signature } {
+    const parameters = fn.getParameters();
+    const params = parameters.map((parameter) => this.collectType(parameter.getType(), fn));
     const returns = this.collectType(this.unwrapAsync(fn.getReturnType()), fn);
-    return { params, returns };
+    const signature: Signature = {
+      params: parameters.map((parameter, index) => {
+        // A rest parameter counts as optional to the checker; saying both
+        // would say the same thing twice.
+        const rest = parameter.isRestParameter?.() === true;
+        return {
+          name: parameter.getName(),
+          type: params[index] as TypeRef,
+          ...(!rest && parameter.isOptional?.() === true ? { optional: true as const } : {}),
+          ...(rest ? { rest: true as const } : {}),
+        };
+      }),
+      returns,
+    };
+    return { params, returns, signature };
   }
 
   collectType(type: Type, site: TsNode, depth = 0): TypeRef {
@@ -229,7 +269,7 @@ export class TypeCollector {
         line: site.getStartLineNumber(),
         reason: 'type-unresolved',
         hint: 'The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.',
-        symbol: type.getText(),
+        symbol: writtenAt(type, site),
       });
       return 'unknown';
     }
@@ -251,10 +291,10 @@ export class TypeCollector {
         line: site.getStartLineNumber(),
         reason: 'type-generic-uninstantiated',
         hint: 'The type argument is not known here, so the reference names the parameter.',
-        symbol: type.getText(),
+        symbol: writtenAt(type, site),
         level: 'info',
       });
-      return type.getText();
+      return writtenAt(type, site);
     }
 
     if (type.isStringLiteral()) return `'${String(type.getLiteralValue())}'`;
@@ -567,6 +607,9 @@ export class TypeCollector {
       // brought in and dropped every property written beside it, so
       // `{ ...stats, rate }` read as `stats` alone.
       if (declaration === undefined) continue;
+      // A symbol-keyed property (`[Symbol.metadata]`) is no data field, and its
+      // name carries the compiler's own numbering, which differs run to run.
+      if (property.getName().startsWith(SYMBOL_KEYED)) continue;
       const declared = isDataProperty(declaration) ? declaration : undefined;
       if (declared === undefined && !isLiteralProperty(declaration)) continue;
       const propertyType = answeredLiteral(declaration) ?? property.getTypeAtLocation(declaration);
@@ -627,7 +670,7 @@ export class TypeCollector {
         line: site.getStartLineNumber(),
         reason: 'type-depth-exceeded',
         hint: `Nesting is written out to ${this.#maxDepth} levels. Raise types.maxDepth to see further.`,
-        symbol: type.getText(),
+        symbol: writtenAt(type, site),
         level: 'info',
       });
       return 'object';

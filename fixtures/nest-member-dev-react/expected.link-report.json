@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T07:58:58.965Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:14.267Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1521
+      "durationMs": 595,
+      "packages": {
+        "name": "@member-dev-react/api",
+        "runtime": [
+          "@member-dev-react/mailer",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

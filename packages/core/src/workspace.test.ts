@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   isServiceSource,
+  serviceExtent,
   serviceSourceDirs,
   workspaceGlobs,
   workspaceMemberDirs,
@@ -226,10 +227,25 @@ describe('serviceSourceDirs', () => {
     expect(serviceSourceDirs(web)).toEqual([web]);
   });
 
-  it('gives a workspace root itself nothing but itself', () => {
+  it('gives a workspace root that declares none of its members nothing but itself', () => {
     const root = makeRoot();
     writePackage(root, { name: 'root', workspaces: ['packages/*'] });
     writePackage(join(root, 'packages', 'lib'), { name: '@p/lib' });
+    expect(serviceSourceDirs(root)).toEqual([root]);
+  });
+
+  it('gives a workspace root the members it declares, inside its own directory (R175)', () => {
+    const root = makeRoot();
+    writePackage(root, { name: 'loans', workspaces: ['packages/*'], dependencies: { '@p/workflows': 'workspace:*' } });
+    const workflows = writePackage(join(root, 'packages', 'workflows'), {
+      name: '@p/workflows',
+      dependencies: { '@p/ids': 'workspace:*' },
+    });
+    const ids = writePackage(join(root, 'packages', 'ids'), { name: '@p/ids' });
+    writePackage(join(root, 'packages', 'tools'), { name: '@p/tools' });
+    expect(serviceExtent(root).map((pkg) => pkg.dir)).toEqual([root, workflows, ids]);
+    // Nested inside the service, so no directory of their own: which of their
+    // files are read is the reading's question, asked of the extent.
     expect(serviceSourceDirs(root)).toEqual([root]);
   });
 });

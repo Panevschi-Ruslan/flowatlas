@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-catalogue",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Borrowers, holds and the catalogue of a lending library, deployed through Terraform modules.",
+  "dependencies": {
+    "@middy/core": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

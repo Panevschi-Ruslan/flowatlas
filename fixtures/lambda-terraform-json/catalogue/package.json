@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-catalogue",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A lending library's catalogue, as Lambda functions behind an HTTP API, deployed by Terraform written as JSON by a generator.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

@@ -1,6 +1,7 @@
 import { dirname, join, resolve } from 'node:path';
 import {
   declarationOf,
+  packageOfSpecifier,
   readPackageJson,
   suppliedTypes,
   workspacePackages,
@@ -64,24 +65,6 @@ import { generatedModules } from '../descriptors/index.js';
  * client. Every step is a statement of the repository being read; none of them
  * is a name that merely looks like a client.
  */
-
-/**
- * The package a module specifier names, or undefined when it names a file.
- *
- * The same rule `@flowatlas/adapters-entry` states for the entries side - a
- * subpath import of a package is an import of that package - and deliberately
- * not imported from there. One reader of specifiers belongs in
- * `@flowatlas/core`, where neither side owns it; moving it is a change to a
- * package two other tickets have open this batch, so it is written twice for
- * one batch and recorded here as the debt that is.
- */
-const packageOfSpecifier = (specifier: string): string | undefined => {
-  if (specifier === '' || specifier.startsWith('.') || specifier.startsWith('/')) return undefined;
-  const [first, second] = specifier.split('/');
-  if (first === undefined || first === '') return undefined;
-  if (!first.startsWith('@')) return first;
-  return second === undefined || second === '' ? undefined : `${first}/${second}`;
-};
 
 /**
  * The expression an initialiser states a type with, when it states one.

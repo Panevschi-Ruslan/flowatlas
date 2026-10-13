@@ -4,6 +4,7 @@ import {
   localBaseTableProperty,
   classifyDbCall,
   declaredParameterType,
+  forwardNoWorse,
   isUniversalMethod,
   narrowUnionByLiteral,
   writtenBodyOutward,
@@ -12,6 +13,7 @@ import {
   makeExternalApiId,
   makeLeafId,
   makeTableId,
+  DECLARED_CONFIDENCE,
   operationOf,
   packageNameOf,
   resolveTypeOrigin,
@@ -54,13 +56,14 @@ import {
 } from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
+import { configuredAccessOf, repositoryExports } from './leaves/configured.js';
 import { hostCallOf } from './leaves/fragment.js';
 import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
 import { handedBackBy } from './leaves/handed-back.js';
 import { handedOverOrigin, unconfirmedHandover } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
-import { analyzeUrl, composeAddress } from './leaves/url.js';
+import { analyzeUrl, composeAddress, surenessOf, type UrlInfo } from './leaves/url.js';
 import {
   deref,
   forwardedFrom,
@@ -68,7 +71,6 @@ import {
   parameterBehind,
   settingReader,
   splitAtParameterIn,
-  type SplitAddress,
 } from './leaves/trace.js';
 import { sqlOperation, sqlTables } from './sql.js';
 
@@ -165,8 +167,6 @@ const verbInSettings = (settings: TsNode | undefined, settled = false): string |
 
 /** How one request is recorded, beyond where and by whom. */
 interface RecordOptions {
-  /** The address's fixed half, when a caller supplied the rest. */
-  split?: SplitAddress;
   /** The settings of a `new Request(url, init)` the call was handed. */
   init?: TsNode;
   /**
@@ -239,6 +239,7 @@ const siteOf = (ctx: NestExtractContext, node: TsNode, file: string): Site => {
  * `orderCache` whose type comes from a database package proves everything.
  */
 export const extractLeaves = (ctx: NestExtractContext): void => {
+  const exported = repositoryExports();
   const configuredBases = ctx.config.adapters.db.localBaseClasses;
   const localBaseClasses = localBaseClassNames(configuredBases);
   const byPackage = new Map<string, DbDescriptor>();
@@ -1020,6 +1021,58 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return true;
   };
 
+  /**
+   * A call to a function the configuration names under `adapters.db.tables`:
+   * one query of the table its argument names, drawn as any other query is
+   * (P37). Taken before the libraries' own reading, because the configuration
+   * is the project saying what the call is. A table the argument does not name
+   * as a string keeps the query and gets the ordinary row.
+   */
+  const emitConfigured = (call: CallExpression, scope: Scope): boolean => {
+    const found = configuredAccessOf(call, ctx.config.adapters.db.tables, exported);
+    if (found === undefined) return false;
+    const { id: holderId, file } = scope;
+    const site = siteOf(ctx, call, file);
+    const id = makeLeafId('db_query', ctx.repo, file, site.line, site.column);
+    if (emitted.has(id)) return true;
+    emitted.add(id);
+    const tables = found.table === null ? [] : [found.table];
+    ctx.builder.addNode({
+      id,
+      type: 'db_query',
+      label: `${found.op ?? 'access'} ${found.table ?? '?'}`,
+      repo: ctx.repo,
+      file,
+      line: site.line,
+      meta: {
+        op: found.op,
+        table: found.table,
+        tables,
+        package: found.access.package ?? 'local',
+        method: found.access.name,
+        receiver: call.getExpression().getText().slice(0, 80),
+        source: 'configured',
+      },
+    });
+    scope.ensure();
+    ctx.builder.addEdge({ from: holderId, to: id, type: 'calls', confidence: DECLARED_CONFIDENCE, file, line: site.line });
+    for (const table of tables) {
+      const tableId = makeTableId(ctx.repo, table);
+      ctx.builder.addNode({ id: tableId, type: 'table', label: table, repo: ctx.repo });
+      ctx.builder.addEdge({ from: id, to: tableId, type: 'queries', confidence: DECLARED_CONFIDENCE, file, line: site.line });
+    }
+    if (found.table === null) {
+      ctx.report({
+        file,
+        line: site.line,
+        reason: 'dynamic-table-name',
+        hint: `The table ${found.access.name} touches is argument ${String(found.access.table)}, and it is not a literal or a constant here, so it cannot be read. Name it directly, or annotate the call.`,
+        symbol: call.getExpression().getText().slice(0, 60),
+      });
+    }
+    return true;
+  };
+
   const emitCache = (call: CallExpression, holder: Holder): boolean => {
     const { id: holderId, file } = holder;
     const callee = call.getExpression();
@@ -1223,13 +1276,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    */
   const recordHttp = (
     site: CallExpression,
-    urlArg: TsNode,
+    info: UrlInfo,
     method: string,
     owner: Holder,
     options: RecordOptions = {},
   ): void => {
-    const { split, init, readsSite = true } = options;
-    const info = composeAddress(analyzeUrl(urlArg), split);
+    const { init, readsSite = true } = options;
 
     // A second argument can carry the method for a generic request.
     let verb = method;
@@ -1362,36 +1414,41 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // client knows the base and takes the path as a parameter, so the request
     // belongs to whoever asked for it; recording it here instead would leave
     // one dead end standing in for every caller.
+    const here = analyzeUrl(urlArg);
     const split = isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
     if (split !== undefined) {
       const verbSource = verbParameterOf(call);
       const stated = statedVerbOf(call, recognised.method, request?.init);
-      const forwarded = forwardedFrom(split.parameter);
-      let recorded = 0;
-      for (const hop of forwarded.calls) {
-        const owner = ownerOf(hop.site);
-        if (owner === undefined || !Node.isCallExpression(hop.site)) continue;
+      // A caller is drawn on only where its argument leaves the address at
+      // least as sure as the request states it here: `bot${token}` with a
+      // token nobody can read stays the helper's static request.
+      const forwarding = forwardNoWorse(forwardedFrom(split.parameter), {
+        here: { owner: holder, info: here },
+        at: (hop) => {
+          const owner = ownerOf(hop.site);
+          if (owner === undefined || !Node.isCallExpression(hop.site)) return undefined;
+          return { owner, info: composeAddress(analyzeUrl(hop.argument), split) };
+        },
+        sureness: ({ info }) => surenessOf(info),
+      });
+      for (const { site, reading } of forwarding.callers) {
+        if (!Node.isCallExpression(site)) continue;
         // What the request states is the request's; a caller's name or
         // argument only stands in for a verb the request leaves open.
         const verb =
           stated?.verb ??
-          verbOfSite(hop.site) ??
-          verbFromSite(hop.site, verbSource) ??
+          verbOfSite(site) ??
+          verbFromSite(site, verbSource) ??
           recognised.method;
-        recordHttp(hop.site, hop.argument, verb, owner, {
-          split,
-          readsSite: stated?.settings !== true,
-        });
-        recorded += 1;
+        recordHttp(site, reading.info, verb, reading.owner, { readsSite: stated?.settings !== true });
       }
-      // A call through an interface this method implements may run it and may
-      // run a sibling, so what it passes is nobody's to attribute (R158). The
-      // request is still made from somewhere, and the one written here is the
-      // answer for it.
-      if (recorded > 0 && !forwarded.undecided) return true;
+      // A caller through an interface this method implements, or one whose
+      // argument says less than the request does here, is answered by the
+      // request written here (R158).
+      if (!forwarding.here) return true;
     }
 
-    recordHttp(call, urlArg, recognised.method, holder, { init: request?.init });
+    recordHttp(call, here, recognised.method, holder, { init: request?.init });
     return true;
   };
 
@@ -1490,6 +1547,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   for (const scope of scopesOf(ctx)) {
     forEachCall(scope.body, (call) => {
       const expression = call as unknown as CallExpression;
+      if (emitConfigured(expression, scope)) return;
       if (emitDb(expression, scope)) return;
       if (emitCache(expression, scope)) return;
       emitHttp(expression, scope);

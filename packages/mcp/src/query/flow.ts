@@ -1,4 +1,4 @@
-import type { DetailLevel, GraphEdge, GraphNode } from '@flowatlas/core';
+import { STEP_OF_META, STEPS_META, type DetailLevel, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import { projectDetail, projectEdge } from './detail.js';
 import { truncationMessage, type CompactNode, type FlowNode, type GuardRef } from './types.js';
@@ -42,7 +42,65 @@ const GUARD_EDGE = 'guarded_by';
  */
 export const REVERSE_EDGES = FORWARD_EDGES;
 
+/** How many hops a walk follows when nobody says. */
+export const DEFAULT_FLOW_DEPTH = 8;
+
+/** The steps a node that starts a chain says the chain holds (`STEPS_META`), or none. */
+const stepsOf = (node: Pick<GraphNode, 'meta'> | undefined): number => {
+  const steps = node?.meta?.[STEPS_META];
+  return typeof steps === 'number' && Number.isInteger(steps) && steps > 0 ? steps : 0;
+};
+
+/** Whether a node is one step of a chain (`STEP_OF_META`). */
+const isStep = (node: Pick<GraphNode, 'meta'>): boolean => node.meta?.[STEP_OF_META] !== undefined;
+
+/**
+ * How far a walk from an entry goes when nobody says how far.
+ *
+ * Eight hops is a request through a controller, a service and a repository,
+ * with room to spare. An entry that is a chain of steps is not: every step is
+ * a hop, and a workflow of a dozen steps would be cut off before its last one,
+ * never mind the handlers its steps invoke. So an entry that says how many
+ * steps it holds (`STEPS_META`) is walked one hop per step - the longest way
+ * through without going round a loop visits each step once - and the usual
+ * eight beyond that, into whatever the deepest step reaches. Nothing else is
+ * walked further, and `maxNodes` still bounds what is returned (I9).
+ */
+export const defaultFlowDepth = (entry: GraphNode | undefined): number => DEFAULT_FLOW_DEPTH + stepsOf(entry);
+
+/**
+ * How far a walk back towards the ways in goes when nobody says: the same rule,
+ * read the other way round.
+ *
+ * A walk down from a chain of steps is lengthened by the steps the chain holds,
+ * because it knows them before it starts. A walk back up from a handler does not:
+ * it arrives at a chain at whichever step reaches the handler and climbs from
+ * there, one hop per step, and the start that says how many steps there are is
+ * at the top of the climb, perhaps past where an unlengthened walk stops. So a
+ * walk back is lengthened by the steps it climbs (`STEP_OF_META`), each counted
+ * once however many paths reach it: it is walked again, further, whenever it
+ * climbed steps it was not lengthened for, until it climbs no new one. A longer
+ * walk reaches everything a shorter one did and a graph has so many steps, so
+ * this ends; and each walk is still bounded by its node limit (I9).
+ *
+ * `walk` takes a depth and returns what it reached; `base` is the depth a walk
+ * through no chain goes.
+ */
+export const walkBack = <T extends { readonly rows: readonly Pick<GraphNode, 'id' | 'meta'>[] }>(
+  base: number,
+  walk: (depth: number) => T,
+): T => {
+  let depth = base;
+  for (;;) {
+    const result = walk(depth);
+    const needed = base + new Set(result.rows.filter(isStep).map((row) => row.id)).size;
+    if (needed <= depth) return result;
+    depth = needed;
+  }
+};
+
 export interface FlowOptions {
+  /** Hops to follow; `defaultFlowDepth` of the entry when absent. */
   depth?: number;
   maxNodes?: number;
   detail?: DetailLevel;
@@ -62,8 +120,22 @@ const orderOf = (edge: GraphEdge): number => {
   return typeof order === 'number' ? order : Number.MAX_SAFE_INTEGER;
 };
 
-/** Call order, as written: by line where there is one, then by target. */
+const hasOrder = (edge: GraphEdge): boolean => typeof edge.meta?.['order'] === 'number';
+
+/**
+ * The order a node's edges are walked in: what it does itself, as written - by
+ * line, then by target - and then where control goes next, in the order the
+ * edges say it goes there.
+ *
+ * An edge carries `meta.order` where the order things happen in is not the
+ * order they are written in: a state's transitions, whose `Catch` may be
+ * written above its `Next` and is still the way out taken last, and every one
+ * of which leaves after the task the state runs. Line order would put the
+ * catch first and could put the task after both.
+ */
 const inCallOrder = (a: GraphEdge, b: GraphEdge): number =>
+  Number(hasOrder(a)) - Number(hasOrder(b)) ||
+  (hasOrder(a) ? orderOf(a) - orderOf(b) : 0) ||
   (a.line ?? Number.MAX_SAFE_INTEGER) - (b.line ?? Number.MAX_SAFE_INTEGER) ||
   (a.to < b.to ? -1 : a.to > b.to ? 1 : 0);
 
@@ -104,11 +176,11 @@ interface Pending {
  * followed, so a cycle ends the branch instead of the walk.
  */
 export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions = {}): FlowResult => {
-  const depth = options.depth ?? 8;
+  const start = db.node(entryId);
+  const depth = options.depth ?? defaultFlowDepth(start);
   const maxNodes = options.maxNodes ?? 150;
   const detail = options.detail ?? 1;
 
-  const start = db.node(entryId);
   const root: FlowNode = {
     node: start === undefined ? missingNode(entryId) : projectDetail(start, detail),
     children: [],
@@ -154,12 +226,14 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
         continue;
       }
 
+      // Every node the walk reaches is on the path, the ones past the budget
+      // and the entry a path ends at included: a function deployed with no body
+      // to read is where its path stops, and the row saying so is why (R168).
       const target = db.node(edge.to);
+      if (target === undefined || db.unresolvedFor(edge.to).length > 0) unresolvedIds.add(edge.to);
+
       let child: FlowNode | undefined;
       if (room) {
-        if (target === undefined) unresolvedIds.add(edge.to);
-        else if (db.unresolvedFor(edge.to).length > 0) unresolvedIds.add(edge.to);
-
         child = {
           node: target === undefined ? missingNode(edge.to) : projectDetail(target, detail),
           edge: projectEdge(edge, detail),

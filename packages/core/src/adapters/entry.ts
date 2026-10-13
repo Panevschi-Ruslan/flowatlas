@@ -1,9 +1,13 @@
 import type { ApplicationMap } from './applications.js';
 import type { FlowatlasConfig } from '../config.js';
+import type { Confidence } from '../model/edges.js';
 import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
 import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
+import type { Envelope } from '../envelope.js';
+import type { RequestReading } from '../request.js';
+import type { StatedSignature } from '../types/signatures.js';
 
 /** A method of a class, which is where most handlers live. */
 export interface MethodHandler {
@@ -77,6 +81,17 @@ export interface EntryNode {
    * why nothing can be pointed at.
    */
   handler?: EntryHandler;
+  /**
+   * How far the `handles` edge onto the handler can be trusted, when that is
+   * less than proven.
+   *
+   * Absent means `static`, which is what every reader that names its handler in
+   * the registration itself means. A way in declared somewhere else, whose code
+   * was found by searching for a module of the right name because nothing said
+   * where it was packaged from, is the case that needs it: the edge is real if
+   * the search found the only candidate, and it says so by being `heuristic`.
+   */
+  handlerConfidence?: Confidence;
   /** Repo-relative POSIX path of the declaration site. */
   file: string;
   line?: number;
@@ -90,6 +105,33 @@ export interface EntryNode {
    * that read the graph as a graph could see a middleware chain at all (R109).
    */
   wrapping?: readonly EntryWrapping[];
+  /**
+   * The ways a message may be wrapped in what the handler is handed.
+   *
+   * Described rather than read, like the handler: the extractor reads, for each,
+   * what the handler takes from that place - the declared type there, or what it
+   * parses the text there into - and records it on the entry under
+   * `meta.reads`, so a message delivered in any of these wrappings can be
+   * compared with what the handler actually reads (R172).
+   */
+  reads?: readonly Envelope[];
+  /**
+   * Where a request's parts sit in what the handler is handed, and how it
+   * answers, for a framework whose handler does not say so in its signature.
+   *
+   * Described rather than read, like `reads`: the extractor reads the handler
+   * by it and records what it found on the `handles` edge, under the keys a
+   * NestJS route's edge has always used, so every reader downstream sees one
+   * shape of route whatever framework declared it (P29).
+   */
+  request?: RequestReading;
+  /**
+   * What a way in that is not a function takes and answers, where the adapter
+   * found it in the declaration - a procedure's input schema and its resolver -
+   * pointed at rather than collected: the extractor records it on the entry's
+   * node as a function's node carries one (P35).
+   */
+  signature?: StatedSignature;
   meta?: Record<string, unknown>;
 }
 
@@ -117,8 +159,16 @@ export interface EntryAdapter {
    * here does a description decide whether an adapter runs at all: the broker
    * and data-layer descriptions are read by passes that go looking for them
    * whatever was detected, so nothing about them is waiting on this answer.
+   *
+   * `repoDir` is offered for the one kind of adapter whose evidence is neither
+   * the manifest nor the configuration: ways in declared in files that describe
+   * how the service is deployed. A repository of such files may have no manifest
+   * at all, and one with a manifest need not name anything that gives it away,
+   * so asking the manifest alone would switch the adapter off on exactly the
+   * repositories it exists for. Offered and not promised, like the
+   * configuration: a caller with no directory to hand passes none.
    */
-  detect(pkg: PackageJson, config?: FlowatlasConfig): boolean;
+  detect(pkg: PackageJson, config?: FlowatlasConfig, repoDir?: string): boolean;
   extractEntries(ctx: ExtractContext): EntryNode[];
   /**
    * Which applications this adapter reads in the service, for whoever has to

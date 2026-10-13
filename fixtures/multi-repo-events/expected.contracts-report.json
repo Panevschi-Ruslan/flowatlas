@@ -1,0 +1,312 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:27:29.373Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:loans#src/create-loan.ts:11:9",
+        "to": "consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/create-loan.ts:11:9|emits|consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "loans",
+        "typeId": "type:loans#Loan",
+        "symbol": "loans#src/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "notifications",
+        "typeId": "type:notifications#LoanDetail",
+        "symbol": "notifications#src/welcome-borrower.ts:handler"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:loans#src/create-loan.ts:11:9",
+            "to": "consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+            "type": "emits"
+          },
+          "edgeKey": "producer:loans#src/create-loan.ts:11:9|emits|consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+          "direction": "payload",
+          "sender": {
+            "service": "loans",
+            "typeId": "type:loans#Loan",
+            "symbol": "loans#src/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "notifications",
+            "typeId": "type:notifications#LoanDetail",
+            "symbol": "notifications#src/welcome-borrower.ts:handler"
+          },
+          "typeId": "type:notifications#LoanDetail",
+          "field": "itemId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender loans sends `itemId: string`; receiver notifications declares no such field; notifications reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:loans#src/return-loan.ts:8:9",
+        "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "loans",
+        "typeId": "{account:unknown;detail:type:loans#Loan;detail-type:unknown;id:unknown;region:unknown;resources:unknown;source:unknown;time:unknown;version:unknown}",
+        "symbol": "loans#src/return-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "notifications",
+        "typeId": "{borrowerId:string}",
+        "symbol": "notifications#src/loan-digest.ts:handler"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "producer:loans#src/return-loan.ts:8:9",
+            "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+            "type": "emits"
+          },
+          "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+          "direction": "payload",
+          "sender": {
+            "service": "loans",
+            "typeId": "{account:unknown;detail:type:loans#Loan;detail-type:unknown;id:unknown;region:unknown;resources:unknown;source:unknown;time:unknown;version:unknown}",
+            "symbol": "loans#src/return-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "notifications",
+            "typeId": "{borrowerId:string}",
+            "symbol": "notifications#src/loan-digest.ts:handler"
+          },
+          "typeId": "{borrowerId:string}",
+          "field": "borrowerId",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver notifications requires `borrowerId: string`; sender loans does not send it; routing hands it on as it is delivered, the message at detail; notifications reads the message at Records[].body of what it is handed, as text it parses",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:loans#src/return-loan.ts:8:9",
+            "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+            "type": "emits"
+          },
+          "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+          "direction": "payload",
+          "sender": {
+            "service": "loans",
+            "typeId": "{account:unknown;detail:type:loans#Loan;detail-type:unknown;id:unknown;region:unknown;resources:unknown;source:unknown;time:unknown;version:unknown}",
+            "symbol": "loans#src/return-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "notifications",
+            "typeId": "{borrowerId:string}",
+            "symbol": "notifications#src/loan-digest.ts:handler"
+          },
+          "typeId": "{borrowerId:string}",
+          "field": "detail",
+          "expected": null,
+          "actual": "type:loans#Loan",
+          "rule": null,
+          "message": "sender loans sends `detail: type:loans#Loan`; receiver notifications declares no such field; routing hands it on as it is delivered, the message at detail; notifications reads the message at Records[].body of what it is handed, as text it parses",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:account",
+        "any-unknown-skip:detail-type",
+        "any-unknown-skip:id",
+        "any-unknown-skip:region",
+        "any-unknown-skip:resources",
+        "any-unknown-skip:source",
+        "any-unknown-skip:time",
+        "any-unknown-skip:version"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:loans#src/create-loan.ts:11:9",
+        "to": "consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/create-loan.ts:11:9|emits|consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+      "direction": "payload",
+      "sender": {
+        "service": "loans",
+        "typeId": "type:loans#Loan",
+        "symbol": "loans#src/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "notifications",
+        "typeId": "type:notifications#LoanDetail",
+        "symbol": "notifications#src/welcome-borrower.ts:handler"
+      },
+      "typeId": "type:notifications#LoanDetail",
+      "field": "itemId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender loans sends `itemId: string`; receiver notifications declares no such field; notifications reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "producer:loans#src/return-loan.ts:8:9",
+        "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "direction": "payload",
+      "sender": {
+        "service": "loans",
+        "typeId": "{account:unknown;detail:type:loans#Loan;detail-type:unknown;id:unknown;region:unknown;resources:unknown;source:unknown;time:unknown;version:unknown}",
+        "symbol": "loans#src/return-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "notifications",
+        "typeId": "{borrowerId:string}",
+        "symbol": "notifications#src/loan-digest.ts:handler"
+      },
+      "typeId": "{borrowerId:string}",
+      "field": "borrowerId",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver notifications requires `borrowerId: string`; sender loans does not send it; routing hands it on as it is delivered, the message at detail; notifications reads the message at Records[].body of what it is handed, as text it parses",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:loans#src/return-loan.ts:8:9",
+        "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "direction": "payload",
+      "sender": {
+        "service": "loans",
+        "typeId": "{account:unknown;detail:type:loans#Loan;detail-type:unknown;id:unknown;region:unknown;resources:unknown;source:unknown;time:unknown;version:unknown}",
+        "symbol": "loans#src/return-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "notifications",
+        "typeId": "{borrowerId:string}",
+        "symbol": "notifications#src/loan-digest.ts:handler"
+      },
+      "typeId": "{borrowerId:string}",
+      "field": "detail",
+      "expected": null,
+      "actual": "type:loans#Loan",
+      "rule": null,
+      "message": "sender loans sends `detail: type:loans#Loan`; receiver notifications declares no such field; routing hands it on as it is delivered, the message at detail; notifications reads the message at Records[].body of what it is handed, as text it parses",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+        "to": "channel:sqs/library-audit",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-audit|emits|producer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-audit is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#src/create-loan.ts:11:9",
+        "to": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/create-loan.ts:11:9|emits|consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "direction": "payload",
+      "reason": "delivered-onward",
+      "message": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"] hands the message on to channel:sqs/library-audit rather than to code",
+      "hint": "Nothing to change: the message is compared with what reads it where it is handed on to."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#src/return-loan.ts:8:9",
+        "to": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "direction": "payload",
+      "reason": "delivered-onward",
+      "message": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"] hands the message on to channel:sqs/library-audit rather than to code",
+      "hint": "Nothing to change: the message is compared with what reads it where it is handed on to."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#src/return-loan.ts:8:9",
+        "to": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+      "direction": "payload",
+      "reason": "delivered-onward",
+      "message": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest hands the message on to channel:sqs/library-loan-digest rather than to code",
+      "hint": "Nothing to change: the message is compared with what reads it where it is handed on to."
+    },
+    {
+      "edge": {
+        "from": "producer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles",
+        "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles|emits|consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 2,
+    "unchecked": 5,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 2,
+    "ignored": 0
+  }
+}
