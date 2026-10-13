@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T13:52:15.408Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T07:28:17.968Z",
   "services": [
     {
       "name": "app",
@@ -17,7 +17,13 @@
       "repo": "app",
       "file": "src/app/DocumentsPanel.tsx",
       "line": 10,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/app/api-client.ts:ApiClient",
@@ -34,7 +40,23 @@
       "label": "ApiClient.get",
       "repo": "app",
       "file": "src/app/api-client.ts",
-      "line": 55
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "options",
+              "type": "{baseUrl?:string}",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/app/api-client.ts:ApiClient.post",
@@ -42,7 +64,28 @@
       "label": "ApiClient.post",
       "repo": "app",
       "file": "src/app/api-client.ts",
-      "line": 58
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "object",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "{baseUrl?:string}",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/app/api-client.ts:ApiClient.send",
@@ -50,7 +93,32 @@
       "label": "ApiClient.send",
       "repo": "app",
       "file": "src/app/api-client.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "method",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "object",
+              "optional": true
+            },
+            {
+              "name": "base",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/app/documents.ts:readDocument",
@@ -58,7 +126,18 @@
       "label": "readDocument",
       "repo": "app",
       "file": "src/app/documents.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/app/documents.ts:registerPasskey",
@@ -66,7 +145,18 @@
       "label": "registerPasskey",
       "repo": "app",
       "file": "src/app/documents.ts",
-      "line": 30
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/app/documents.ts:renameDocument",
@@ -74,7 +164,22 @@
       "label": "renameDocument",
       "repo": "app",
       "file": "src/app/documents.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/app/documents.ts:reportOpened",
@@ -82,7 +187,18 @@
       "label": "reportOpened",
       "repo": "app",
       "file": "src/app/documents.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/app/documents.ts:verifyPasskey",
@@ -90,7 +206,22 @@
       "label": "verifyPasskey",
       "repo": "app",
       "file": "src/app/documents.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "where",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/server/app.ts:express.json()",
@@ -107,7 +238,22 @@
       "label": "POST /passkeys.generateRegistrationOptions@15",
       "repo": "app",
       "file": "src/server/auth.routes.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/server/documents.routes.ts:POST /documents.info@12",
@@ -115,7 +261,22 @@
       "label": "POST /documents.info@12",
       "repo": "app",
       "file": "src/server/documents.routes.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "app#src/server/documents.routes.ts:POST /documents.update@16",
@@ -123,7 +284,22 @@
       "label": "POST /documents.update@16",
       "repo": "app",
       "file": "src/server/documents.routes.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "entry:app:http:POST:/api/documents.info",
@@ -462,6 +638,10 @@
       "to": "app#src/app/documents.ts:readDocument",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/DocumentsPanel.tsx",
       "line": 11
     },
@@ -470,6 +650,10 @@
       "to": "app#src/app/documents.ts:registerPasskey",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/DocumentsPanel.tsx",
       "line": 14
     },
@@ -478,6 +662,11 @@
       "to": "app#src/app/documents.ts:renameDocument",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/DocumentsPanel.tsx",
       "line": 12
     },
@@ -486,6 +675,10 @@
       "to": "app#src/app/documents.ts:reportOpened",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/DocumentsPanel.tsx",
       "line": 13
     },
@@ -494,6 +687,11 @@
       "to": "app#src/app/documents.ts:verifyPasskey",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/DocumentsPanel.tsx",
       "line": 15
     },
@@ -502,6 +700,13 @@
       "to": "app#src/app/api-client.ts:ApiClient.send",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "object",
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/api-client.ts",
       "line": 56
     },
@@ -518,6 +723,13 @@
       "to": "app#src/app/api-client.ts:ApiClient.send",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "object",
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/api-client.ts",
       "line": 59
     },
@@ -588,8 +800,12 @@
       "to": "app#src/server/documents.routes.ts:POST /documents.info@12",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:unknown}",
       "file": "src/server/documents.routes.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:app:http:POST:/api/documents.update",
@@ -610,8 +826,12 @@
       "to": "app#src/server/documents.routes.ts:POST /documents.update@16",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:unknown;title:unknown}",
       "file": "src/server/documents.routes.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
@@ -632,8 +852,12 @@
       "to": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:unknown}",
       "file": "src/server/auth.routes.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "ui_action:app#src/app/DocumentsPanel.tsx:19:15",
@@ -729,8 +953,37 @@
       }
     }
   ],
-  "types": {},
+  "types": {
+    "type:express#Request<object,unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
   "unresolved": [
+    {
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "app"
+    },
     {
       "file": "src/app/api-client.ts",
       "line": 56,
@@ -772,6 +1025,30 @@
       "message": "no configured service serves POST /passkeys.verify",
       "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /passkeys.verify */.",
       "symbol": "ui_api_call:app#src/app/documents.ts:34:3"
+    },
+    {
+      "file": "src/server/auth.routes.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "app"
+    },
+    {
+      "file": "src/server/documents.routes.ts",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "app"
+    },
+    {
+      "file": "src/server/documents.routes.ts",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "app"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
-  "contractsFormatVersion": 4,
-  "schemaVersion": 5,
-  "generatedAt": "2026-09-28T12:55:00.187Z",
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-08T07:27:51.341Z",
   "edges": [],
   "findings": [],
   "ignored": [],

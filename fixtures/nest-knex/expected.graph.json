@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-knex",
-  "generatedAt": "2026-09-27T09:26:42.104Z",
+  "generatedAt": "2026-10-07T14:34:15.766Z",
   "nodes": [
     {
       "id": "db_query:nest-knex#src/users/users.service.ts:13:12",
@@ -273,7 +273,13 @@
       "label": "UsersController.create",
       "repo": "nest-knex",
       "file": "src/users/users.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.controller.ts:UsersController.findAll",
@@ -281,7 +287,13 @@
       "label": "UsersController.findAll",
       "repo": "nest-knex",
       "file": "src/users/users.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.controller.ts:UsersController.remove",
@@ -289,7 +301,13 @@
       "label": "UsersController.remove",
       "repo": "nest-knex",
       "file": "src/users/users.controller.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService",
@@ -309,7 +327,18 @@
       "label": "UsersService.audit",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.byEmail",
@@ -317,7 +346,18 @@
       "label": "UsersService.byEmail",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.count",
@@ -325,7 +365,13 @@
       "label": "UsersService.count",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.create",
@@ -333,7 +379,18 @@
       "label": "UsersService.create",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.findAll",
@@ -341,7 +398,13 @@
       "label": "UsersService.findAll",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.findOne",
@@ -349,7 +412,18 @@
       "label": "UsersService.findOne",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.purge",
@@ -357,7 +431,18 @@
       "label": "UsersService.purge",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 64
+      "line": 64,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "table",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.remove",
@@ -365,7 +450,18 @@
       "label": "UsersService.remove",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.rename",
@@ -373,7 +469,22 @@
       "label": "UsersService.rename",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 46
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-knex#src/users/users.service.ts:UsersService.total",
@@ -381,7 +492,13 @@
       "label": "UsersService.total",
       "repo": "nest-knex",
       "file": "src/users/users.service.ts",
-      "line": 57
+      "line": 57,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "repo:nest-knex",

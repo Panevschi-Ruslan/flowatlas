@@ -23,6 +23,7 @@ import {
   type FsRouter,
   type FsRouteVerb,
 } from './fs-routes.js';
+import { MEDUSA_REQUEST, readingOf } from './request-readings.js';
 import { arrayElements, fileOfNode, handlerOfFunction, repoSources, unwrapValue } from './shared.js';
 
 const ADAPTER = 'medusa-routes';
@@ -36,6 +37,9 @@ const ADAPTER = 'medusa-routes';
  * in this monorepo declares. Either one means the file-system router below.
  */
 const PACKAGES = ['@medusajs/medusa', '@medusajs/framework'];
+
+/** How a route's handler is handed its request and answers it (P29). */
+const REQUEST = readingOf(MEDUSA_REQUEST);
 
 /**
  * The router, as a row of the description every file-system router here shares.
@@ -356,6 +360,7 @@ export const medusaRoutesAdapter: EntryAdapter = {
             : `${verb.method} ${verb.path} (${application})`,
         key,
         ...(verb.handler === undefined ? {} : { handler: handlerOfFunction(verb.handler, ctx) }),
+        request: REQUEST,
         // The route file is what the node points at, because the address is read
         // from where that file is; where the verb was written is recorded beside
         // it rather than folded into it (R99).
@@ -365,6 +370,8 @@ export const medusaRoutesAdapter: EntryAdapter = {
         meta: {
           method: verb.method,
           path: verb.path,
+          // The params as the directories name them, which the key renamed (P34).
+          ...(verb.rawPath === undefined ? {} : { rawPath: verb.rawPath }),
           adapter: ADAPTER,
           registration: 'api/route',
           // Only where the service holds more than one, which is where it says
@@ -405,6 +412,7 @@ export const medusaRoutesAdapter: EntryAdapter = {
       readVerbFile(ctx, sourceFile, {
         file,
         path: address.path,
+        rawPath: address.rawPath,
         adapter: ADAPTER,
         emit: (verb) => httpEntry(verb, address.application),
       });

@@ -1,0 +1,960 @@
+{
+  "schemaVersion": 6,
+  "repo": "lending-library-desk",
+  "generatedAt": "2026-10-07T18:36:35.899Z",
+  "nodes": [
+    {
+      "id": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
+      "type": "entry",
+      "label": "library-desk-cancel-hold",
+      "repo": "lending-library-desk",
+      "file": "infra/functions.tf",
+      "line": 40,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-cancel-hold",
+        "deployedBy": "terraform",
+        "name": "library-desk-cancel-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.cancel_hold",
+        "handler": "cancel-hold.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "wrapped",
+        "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#CancelHoldEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending-library-desk:invoke:library-desk-create-loan",
+      "type": "entry",
+      "label": "library-desk-create-loan",
+      "repo": "lending-library-desk",
+      "file": "infra/functions.tf",
+      "line": 4,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-create-loan",
+        "deployedBy": "terraform",
+        "name": "library-desk-create-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.create_loan",
+        "handler": "create-loan.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "inline",
+        "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#CreateLoanEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending-library-desk:invoke:library-desk-list-overdue",
+      "type": "entry",
+      "label": "library-desk-list-overdue",
+      "repo": "lending-library-desk",
+      "file": "infra/functions.tf",
+      "line": 58,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-list-overdue",
+        "deployedBy": "terraform",
+        "name": "library-desk-list-overdue",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.list_overdue",
+        "handler": "list-overdue.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "unread",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending-library-desk:invoke:library-desk-place-hold",
+      "type": "entry",
+      "label": "library-desk-place-hold",
+      "repo": "lending-library-desk",
+      "file": "infra/functions.tf",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-place-hold",
+        "deployedBy": "terraform",
+        "name": "library-desk-place-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.place_hold",
+        "handler": "place-hold.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "wrapped",
+        "wrapperUnread": "instrument comes from @lending/telemetry, which is not installed, so whether it runs the function it is handed was not read",
+        "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#HoldEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending-library-desk:invoke:library-desk-record-return",
+      "type": "entry",
+      "label": "library-desk-record-return",
+      "repo": "lending-library-desk",
+      "file": "infra/functions.tf",
+      "line": 22,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-record-return",
+        "deployedBy": "terraform",
+        "name": "library-desk-record-return",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.record_return",
+        "handler": "record-return.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "wrapped",
+        "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#ReturnEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending-library-desk:invoke:library-desk-renew-loan",
+      "type": "entry",
+      "label": "library-desk-renew-loan",
+      "repo": "lending-library-desk",
+      "file": "infra/functions.tf",
+      "line": 13,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-renew-loan",
+        "deployedBy": "terraform",
+        "name": "library-desk-renew-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.renew_loan",
+        "handler": "renew-loan.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "wrapped",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending-library-desk:invoke:library-desk-send-reminders",
+      "type": "entry",
+      "label": "library-desk-send-reminders",
+      "repo": "lending-library-desk",
+      "file": "infra/functions.tf",
+      "line": 49,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-send-reminders",
+        "deployedBy": "terraform",
+        "name": "library-desk-send-reminders",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.send_reminders",
+        "handler": "send-reminder.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "wrapped",
+        "wrapperUnread": "measured hands it on, and instrument comes from @lending/telemetry, which is not installed, so whether it runs the function it is handed was not read",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "lending-library-desk#src/handlers/cancel-hold.ts:cancelHold",
+      "type": "function",
+      "label": "cancelHold",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending-library-desk#CancelHoldEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/handlers/cancel-hold.ts:withSpan",
+      "type": "middleware",
+      "label": "withSpan",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 15,
+      "kind": "function"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/create-loan.ts:handler@15",
+      "type": "function",
+      "label": "handler@15",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/create-loan.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending-library-desk#CreateLoanEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/handlers/create-loan.ts:jsonBodyParser()",
+      "type": "middleware",
+      "label": "jsonBodyParser()",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/create-loan.ts",
+      "line": 27,
+      "kind": "call"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/create-loan.ts:traced",
+      "type": "middleware",
+      "label": "traced",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/create-loan.ts",
+      "line": 15,
+      "kind": "function"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/place-hold.ts:instrument",
+      "type": "middleware",
+      "label": "instrument",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/place-hold.ts",
+      "line": 16,
+      "kind": "function"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/place-hold.ts:jsonBodyParser()",
+      "type": "middleware",
+      "label": "jsonBodyParser()",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/place-hold.ts",
+      "line": 18,
+      "kind": "call"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/place-hold.ts:placeHold",
+      "type": "function",
+      "label": "placeHold",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/place-hold.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending-library-desk#HoldEvent"
+            }
+          ],
+          "returns": "{position:number}"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/handlers/record-return.ts:recordReturn",
+      "type": "function",
+      "label": "recordReturn",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/record-return.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending-library-desk#ReturnEvent"
+            }
+          ],
+          "returns": "{closed:boolean}"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/handlers/record-return.ts:withRetry",
+      "type": "middleware",
+      "label": "withRetry",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/record-return.ts",
+      "line": 14,
+      "kind": "function"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/renew-loan.ts:jsonBodyParser()",
+      "type": "middleware",
+      "label": "jsonBodyParser()",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 16,
+      "kind": "call"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/renew-loan.ts:renewLoan",
+      "type": "function",
+      "label": "renewLoan",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/handlers/renew-loan.ts:traced",
+      "type": "middleware",
+      "label": "traced",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 16,
+      "kind": "function"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/send-reminder.ts:measured",
+      "type": "middleware",
+      "label": "measured",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/send-reminder.ts",
+      "line": 11,
+      "kind": "function"
+    },
+    {
+      "id": "lending-library-desk#src/handlers/send-reminder.ts:sendReminders",
+      "type": "function",
+      "label": "sendReminders",
+      "repo": "lending-library-desk",
+      "file": "src/handlers/send-reminder.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{sent:number}"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/desk-table.ts:addHold",
+      "type": "function",
+      "label": "addHold",
+      "repo": "lending-library-desk",
+      "file": "src/lib/desk-table.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            },
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/desk-table.ts:closeLoan",
+      "type": "function",
+      "label": "closeLoan",
+      "repo": "lending-library-desk",
+      "file": "src/lib/desk-table.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            },
+            {
+              "name": "returnedOn",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-desk#Loan|undefined"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/desk-table.ts:dropHold",
+      "type": "function",
+      "label": "dropHold",
+      "repo": "lending-library-desk",
+      "file": "src/lib/desk-table.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            },
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/desk-table.ts:extendLoan",
+      "type": "function",
+      "label": "extendLoan",
+      "repo": "lending-library-desk",
+      "file": "src/lib/desk-table.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            },
+            {
+              "name": "days",
+              "type": "number"
+            }
+          ],
+          "returns": "type:lending-library-desk#Loan|undefined"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/desk-table.ts:loansDueBefore",
+      "type": "function",
+      "label": "loansDueBefore",
+      "repo": "lending-library-desk",
+      "file": "src/lib/desk-table.ts",
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "date",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-desk#Loan[]"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/desk-table.ts:saveLoan",
+      "type": "function",
+      "label": "saveLoan",
+      "repo": "lending-library-desk",
+      "file": "src/lib/desk-table.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:lending-library-desk#Loan"
+            }
+          ],
+          "returns": "type:lending-library-desk#Loan"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/http.ts:json",
+      "type": "function",
+      "label": "json",
+      "repo": "lending-library-desk",
+      "file": "src/lib/http.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "statusCode",
+              "type": "number"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "repo:lending-library-desk",
+      "type": "repo",
+      "label": "lending-library-desk",
+      "repo": "lending-library-desk",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
+      "to": "lending-library-desk#src/handlers/cancel-hold.ts:cancelHold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
+      "to": "lending-library-desk#src/handlers/cancel-hold.ts:withSpan",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withSpan"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-create-loan",
+      "to": "lending-library-desk#src/handlers/create-loan.ts:handler@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-create-loan",
+      "to": "lending-library-desk#src/handlers/create-loan.ts:jsonBodyParser()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 27,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-create-loan",
+      "to": "lending-library-desk#src/handlers/create-loan.ts:traced",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 15,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "traced"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-place-hold",
+      "to": "lending-library-desk#src/handlers/place-hold.ts:instrument",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/place-hold.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "instrument"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-place-hold",
+      "to": "lending-library-desk#src/handlers/place-hold.ts:jsonBodyParser()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/place-hold.ts",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-place-hold",
+      "to": "lending-library-desk#src/handlers/place-hold.ts:placeHold",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/handlers/place-hold.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-record-return",
+      "to": "lending-library-desk#src/handlers/record-return.ts:recordReturn",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/record-return.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-record-return",
+      "to": "lending-library-desk#src/handlers/record-return.ts:withRetry",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/record-return.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withRetry"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-renew-loan",
+      "to": "lending-library-desk#src/handlers/renew-loan.ts:jsonBodyParser()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 16,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-renew-loan",
+      "to": "lending-library-desk#src/handlers/renew-loan.ts:renewLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-renew-loan",
+      "to": "lending-library-desk#src/handlers/renew-loan.ts:traced",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "traced"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-send-reminders",
+      "to": "lending-library-desk#src/handlers/send-reminder.ts:measured",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/send-reminder.ts",
+      "line": 11,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "measured"
+      }
+    },
+    {
+      "from": "entry:lending-library-desk:invoke:library-desk-send-reminders",
+      "to": "lending-library-desk#src/handlers/send-reminder.ts:sendReminders",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/handlers/send-reminder.ts",
+      "line": 4
+    },
+    {
+      "from": "lending-library-desk#src/handlers/cancel-hold.ts:cancelHold",
+      "to": "lending-library-desk#src/lib/desk-table.ts:dropHold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 10,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/create-loan.ts:handler@15",
+      "to": "lending-library-desk#src/lib/desk-table.ts:saveLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 18,
+      "params": [
+        "type:lending-library-desk#Loan"
+      ],
+      "returns": "type:lending-library-desk#Loan"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/create-loan.ts:handler@15",
+      "to": "lending-library-desk#src/lib/http.ts:json",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 24,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/place-hold.ts:placeHold",
+      "to": "lending-library-desk#src/lib/desk-table.ts:addHold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/place-hold.ts",
+      "line": 11,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "number"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/record-return.ts:recordReturn",
+      "to": "lending-library-desk#src/lib/desk-table.ts:closeLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/record-return.ts",
+      "line": 9,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:lending-library-desk#Loan|undefined"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/renew-loan.ts:renewLoan",
+      "to": "lending-library-desk#src/lib/desk-table.ts:extendLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 11,
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "type:lending-library-desk#Loan|undefined"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/renew-loan.ts:renewLoan",
+      "to": "lending-library-desk#src/lib/http.ts:json",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 12,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/send-reminder.ts:sendReminders",
+      "to": "lending-library-desk#src/lib/desk-table.ts:loansDueBefore",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/send-reminder.ts",
+      "line": 5,
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending-library-desk#Loan[]"
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending-library-desk#CancelHoldEvent": {
+      "name": "CancelHoldEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/cancel-hold.ts",
+      "structuralHash": "0ff061d69a2c89fc",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending-library-desk#CreateLoanEvent": {
+      "name": "CreateLoanEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/create-loan.ts",
+      "structuralHash": "cd55c224a818dfe2",
+      "fields": [
+        {
+          "name": "body",
+          "type": "{borrowerId:string;isbn:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending-library-desk#HoldEvent": {
+      "name": "HoldEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/place-hold.ts",
+      "structuralHash": "cd55c224a818dfe2",
+      "fields": [
+        {
+          "name": "body",
+          "type": "{isbn:string;borrowerId:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending-library-desk#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/lib/desk-table.ts",
+      "structuralHash": "1d4f2355617972f3",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "returnedOn",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending-library-desk#ReturnEvent": {
+      "name": "ReturnEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/record-return.ts",
+      "structuralHash": "ef49f0bf6cde5464",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "infra/functions.tf",
+      "line": 58,
+      "symbol": "entry:lending-library-desk:invoke:library-desk-list-overdue",
+      "reason": "function-handler-unread",
+      "level": "info",
+      "message": "library-desk-list-overdue runs list-overdue.handler, and src/handlers/list-overdue.ts builds that export with firstOf(fromCache, fromTable), which is handed 2 functions, so which of them runs is not in the call",
+      "hint": "A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.",
+      "adapter": "aws-lambda"
+    }
+  ]
+}

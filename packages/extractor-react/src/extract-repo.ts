@@ -1,3 +1,4 @@
+import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
   AdapterRegistry,
@@ -28,6 +29,7 @@ import { functionsPass } from './passes/functions.js';
 import { httpPass } from './passes/http.js';
 import { proceduresPass } from './passes/procedures.js';
 import { routesPass } from './passes/routes.js';
+import { signaturesPass } from './passes/signatures.js';
 import type { ReactExtractorPass } from './passes/types.js';
 import { createReactProject } from './project.js';
 
@@ -48,7 +50,25 @@ export interface ExtractRepoOptions {
   noTypes?: boolean;
   /** How deep anonymous shapes are written out, overriding the configuration. */
   typesDepth?: number;
+  /**
+   * The repository already parsed by {@link openProject}, when the caller opened
+   * it to ask what the reading used as well as what it read.
+   */
+  project?: Project;
 }
+
+/** Parses a repository the way this reader needs it. */
+export const openProject = (options: ExtractRepoOptions): Project => {
+  const service = options.service ?? defaultService(options.repo, options.rootDir);
+  const tsconfig = options.tsconfig ?? service.tsconfig;
+  return createReactProject({
+    rootDir: options.rootDir,
+    ...(tsconfig === undefined ? {} : { tsconfig }),
+    ...(service.readTestDirectories === undefined
+      ? {}
+      : { readTestDirectories: service.readTestDirectories }),
+  });
+};
 
 /**
  * The built-in steps, in the order they run.
@@ -60,7 +80,8 @@ export interface ExtractRepoOptions {
  * a node the walk has already created; a procedure asked for by its path is a
  * request of the same standing and goes beside them; and the ways in are read
  * last, because the edge from a component to a server action needs the
- * component to exist.
+ * component to exist. What a function takes is written after all of them, once
+ * every edge into it is drawn.
  */
 export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   functionsPass,
@@ -70,6 +91,7 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   httpPass,
   proceduresPass,
   entriesPass,
+  signaturesPass,
 ];
 
 /**
@@ -115,6 +137,7 @@ export const extractReact = (base: ExtractContext, options: FrontendExtractOptio
   recordApplications(base);
 
   for (const pass of BUILT_IN_PASSES) {
+    if (options.noTypes === true && pass.name === 'types') continue;
     base.logger.debug(`pass ${pass.name}`);
     pass.run(ctx);
   }
@@ -161,14 +184,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const config = options.config ?? parseConfig({});
   const service = options.service ?? defaultService(repo, rootDir);
 
-  const tsconfig = options.tsconfig ?? service.tsconfig;
-  const project = createReactProject({
-    rootDir,
-    ...(tsconfig === undefined ? {} : { tsconfig }),
-    ...(service.readTestDirectories === undefined
-      ? {}
-      : { readTestDirectories: service.readTestDirectories }),
-  });
+  const project = options.project ?? openProject(options);
   // The manifest that answers what this repository can import, which on a
   // package inside a workspace is not the leaf manifest alone. Everything below
   // gates on it, so widening it here is what lets an adapter stay a statement

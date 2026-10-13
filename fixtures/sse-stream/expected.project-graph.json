@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:38:38.565Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T19:06:27.036Z",
   "services": [
     {
       "name": "api",
@@ -57,7 +57,22 @@
       "label": "Broadcaster.pSubscribe",
       "repo": "api",
       "file": "src/events/broadcaster.service.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/events/broadcaster.service.ts:Broadcaster.publish",
@@ -65,7 +80,22 @@
       "label": "Broadcaster.publish",
       "repo": "api",
       "file": "src/events/broadcaster.service.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "event",
+              "type": "type:api#DepotEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/events/event-bus.service.ts:EventBus",
@@ -85,7 +115,18 @@
       "label": "EventBus.count",
       "repo": "api",
       "file": "src/events/event-bus.service.ts",
-      "line": 48
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/events/event-bus.service.ts:EventBus.forDepot",
@@ -93,7 +134,18 @@
       "label": "EventBus.forDepot",
       "repo": "api",
       "file": "src/events/event-bus.service.ts",
-      "line": 52
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#DepotEvent"
+        }
+      }
     },
     {
       "id": "api#src/events/event-bus.service.ts:EventBus.listenTo",
@@ -101,7 +153,18 @@
       "label": "EventBus.listenTo",
       "repo": "api",
       "file": "src/events/event-bus.service.ts",
-      "line": 38
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/events/event-bus.service.ts:EventBus.onModuleInit",
@@ -109,7 +172,13 @@
       "label": "EventBus.onModuleInit",
       "repo": "api",
       "file": "src/events/event-bus.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/events/event-bus.service.ts:EventBus.receive",
@@ -117,7 +186,18 @@
       "label": "EventBus.receive",
       "repo": "api",
       "file": "src/events/event-bus.service.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/events/metrics.service.ts:Metrics",
@@ -137,7 +217,22 @@
       "label": "Metrics.pSubscribe",
       "repo": "api",
       "file": "src/events/metrics.service.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/events.controller.ts:EventsController",
@@ -157,7 +252,18 @@
       "label": "EventsController.stream",
       "repo": "api",
       "file": "src/orders/events.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController",
@@ -177,7 +283,22 @@
       "label": "OrdersController.cancel",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -197,7 +318,22 @@
       "label": "OrdersService.cancel",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "channel:depot:*:events",
@@ -546,7 +682,18 @@
       "label": "LiveEventsService.open",
       "repo": "web",
       "file": "src/app/live-events.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
@@ -556,6 +703,19 @@
       "file": "src/app/live-events.service.ts",
       "line": 42,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "token",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -577,7 +737,22 @@
       "label": "OrdersApiService.cancel",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent",
@@ -588,6 +763,10 @@
       "line": 9,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-orders"
       }
@@ -598,7 +777,13 @@
       "label": "OrdersComponent.cancel",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 39
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent.ngOnInit",
@@ -606,7 +791,13 @@
       "label": "OrdersComponent.ngOnInit",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent.watch",
@@ -614,7 +805,13 @@
       "label": "OrdersComponent.watch",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService",
@@ -636,6 +833,19 @@
       "file": "src/app/remembered-stream.service.ts",
       "line": 62,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -657,7 +867,22 @@
       "label": "RememberedStreamService.connect",
       "repo": "web",
       "file": "src/app/remembered-stream.service.ts",
-      "line": 30
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "url",
+              "type": "string"
+            },
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
@@ -665,7 +890,18 @@
       "label": "RememberedStreamService.open",
       "repo": "web",
       "file": "src/app/remembered-stream.service.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "p",
+              "type": "type:web#StreamParams"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/replay.service.ts:ReplayService",
@@ -699,6 +935,15 @@
       "file": "src/app/stream-wrapper.service.ts",
       "line": 17,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "url",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -708,7 +953,18 @@
       "label": "StreamWrapperService.openLater",
       "repo": "web",
       "file": "src/app/stream-wrapper.service.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "url",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/stream-wrapper.service.ts:WatchService",
@@ -730,6 +986,15 @@
       "file": "src/app/stream-wrapper.service.ts",
       "line": 44,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     }
@@ -909,6 +1174,10 @@
       "to": "api#src/events/event-bus.service.ts:EventBus.receive",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/events/event-bus.service.ts",
       "line": 30
     },
@@ -1107,6 +1376,11 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/orders.component.ts",
       "line": 40
     },
@@ -1115,6 +1389,11 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/orders.component.ts",
       "line": 32
     },
@@ -1123,6 +1402,10 @@
       "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/orders.component.ts",
       "line": 36
     },
@@ -1147,6 +1430,11 @@
       "to": "web#src/app/remembered-stream.service.ts:RememberedStreamService.connect",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/remembered-stream.service.ts",
       "line": 63
     },
@@ -1155,6 +1443,10 @@
       "to": "web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:web#StreamParams"
+      ],
+      "returns": "void",
       "file": "src/app/remembered-stream.service.ts",
       "line": 32
     },
@@ -1187,6 +1479,10 @@
       "to": "web#src/app/stream-wrapper.service.ts:StreamWrapperService.openLater",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/stream-wrapper.service.ts",
       "line": 45
     }
@@ -1220,6 +1516,28 @@
       "meta": {
         "declKind": "interface",
         "exported": true
+      }
+    },
+    "type:web#StreamParams": {
+      "name": "StreamParams",
+      "kind": "object",
+      "declaredIn": "web#src/app/remembered-stream.service.ts",
+      "structuralHash": "4baff707ef12e187",
+      "fields": [
+        {
+          "name": "url",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
       }
     }
   },

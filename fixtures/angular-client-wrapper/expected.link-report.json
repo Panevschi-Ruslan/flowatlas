@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:19.414Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:11.924Z",
   "configHash": "3a270910539f",
   "services": [
     {
@@ -10,9 +10,19 @@
       "extractor": "@flowatlas/extractor-angular",
       "nodes": 58,
       "edges": 56,
-      "types": 5,
-      "unresolved": 0,
-      "durationMs": 0
+      "types": 9,
+      "unresolved": 1,
+      "durationMs": 568,
+      "packages": {
+        "name": "angular-client-wrapper",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -46,7 +56,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 5,
+    "total": 9,
     "sharedPackage": 0
   },
   "unresolved": [
@@ -216,7 +226,7 @@
   "totals": {
     "nodes": 58,
     "edges": 56,
-    "types": 5,
-    "unresolved": 18
+    "types": 9,
+    "unresolved": 19
   }
 }

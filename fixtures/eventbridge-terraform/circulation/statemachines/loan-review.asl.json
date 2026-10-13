@@ -1,0 +1,38 @@
+{
+  "Comment": "Reviews a loan once it has been renewed often, and settles it either way.",
+  "StartAt": "ReviewLoan",
+  "States": {
+    "ReviewLoan": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "library-review-loan",
+        "Payload": {
+          "loanId.$": "$.detail.loanId"
+        }
+      },
+      "ResultSelector": {
+        "approved.$": "$.Payload.approved"
+      },
+      "Next": "Approved?"
+    },
+    "Approved?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.approved",
+          "BooleanEquals": true,
+          "Next": "Renewed"
+        }
+      ],
+      "Default": "Refused"
+    },
+    "Renewed": {
+      "Type": "Succeed"
+    },
+    "Refused": {
+      "Type": "Fail",
+      "Error": "RenewalRefused"
+    }
+  }
+}

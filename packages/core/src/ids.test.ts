@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { InvalidChannelNameError, InvalidIdError } from './errors.js';
 import {
+  entryReferenceOf,
   makeChannelId,
   makeEntryId,
+  makeEntryReference,
   makeHttpEntryKey,
+  makeStateId,
   makeSymbolId,
+  makeWorkflowEntryKey,
   makeTypeId,
   normalizeFilePath,
   normalizePath,
@@ -142,5 +146,36 @@ describe('id constructors', () => {
     expect(() => makeSymbolId('', 'a.ts', 'A')).toThrow(InvalidIdError);
     expect(() => makeTypeId('orders', '')).toThrow(InvalidIdError);
     expect(() => makeEntryId('orders', 'http', '')).toThrow(InvalidIdError);
+  });
+});
+
+describe('workflows and references by name', () => {
+  it('names a workflow entry by its deployed name and nothing else', () => {
+    expect(makeEntryId('library', 'workflow', makeWorkflowEntryKey('loan-approval'))).toBe(
+      'entry:library:workflow:loan-approval',
+    );
+  });
+
+  it('names a step as a symbol of the file its workflow is written in', () => {
+    expect(makeStateId('library', 'statemachine/loan.asl.json', 'loan-approval', 'CheckHolds')).toBe(
+      'library#statemachine/loan.asl.json:loan-approval/CheckHolds',
+    );
+  });
+
+  it('reads the reference an entry id answers to, with or without an application', () => {
+    expect(entryReferenceOf('entry:library:workflow:loan-approval')).toBe('workflow:loan-approval');
+    expect(entryReferenceOf('entry:loans@public:http:GET:/loans/:param')).toBe('http:GET:/loans/:param');
+    expect(entryReferenceOf('library#a.ts:fn')).toBeUndefined();
+  });
+
+  it('spells a reference the way an entry id ends', () => {
+    const reference = makeEntryReference('workflow', makeWorkflowEntryKey('loan-approval'));
+    const id = makeEntryId('anywhere', 'workflow', makeWorkflowEntryKey('loan-approval'));
+    expect(entryReferenceOf(id)).toBe(reference);
+  });
+
+  it('rejects an empty name', () => {
+    expect(() => makeWorkflowEntryKey(' ')).toThrow(InvalidIdError);
+    expect(() => makeStateId('library', 'a.asl.json', 'loan-approval', '')).toThrow(InvalidIdError);
   });
 });

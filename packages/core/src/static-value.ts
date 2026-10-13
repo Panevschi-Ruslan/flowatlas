@@ -59,10 +59,26 @@ const unwrap = (expr: TsNode): TsNode => {
   }
 };
 
-/** The declaration an identifier or a member access names, following imports. */
+/**
+ * The node the checker answers for when asked what an expression names.
+ *
+ * A member written in brackets with its name spelled out, `operations['archive']`,
+ * is the member `operations.archive` is, and the checker answers for the key
+ * inside the brackets. A key that is not written out names no member.
+ */
+const nameIn = (node: TsNode): TsNode | undefined => {
+  if (Node.isIdentifier(node) || Node.isPropertyAccessExpression(node)) return node;
+  if (!Node.isElementAccessExpression(node)) return undefined;
+  const key = node.getArgumentExpression();
+  return key !== undefined && (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key)) ? key : undefined;
+};
+
+/**
+ * The declaration an identifier or a member access names, following imports,
+ * and re-exports with them - `export { x } from` and `export *` (R168).
+ */
 export const declarationOf = (node: TsNode): TsNode | undefined => {
-  if (!Node.isIdentifier(node) && !Node.isPropertyAccessExpression(node)) return undefined;
-  const symbol = node.getSymbol();
+  const symbol = nameIn(node)?.getSymbol();
   if (symbol === undefined) return undefined;
   const aliased = symbol.getAliasedSymbol();
   return (aliased ?? symbol).getDeclarations()[0];
@@ -197,6 +213,15 @@ export const evaluateExpression = (expr: TsNode, depth = 0): StaticValue => {
       const initializer = declaration.getInitializer();
       if (initializer !== undefined) return evaluateExpression(initializer, depth + 1);
     }
+  }
+
+  // A property of a value bound at run time is bound at run time too:
+  // `event.detail.type` read off a parameter is whatever each caller handed in,
+  // and calling it a constant nobody could read is the same wrong advice R140
+  // removed for the parameter itself.
+  if (Node.isPropertyAccessExpression(node)) {
+    const owner = evaluateExpression(node.getExpression(), depth + 1);
+    if (!owner.resolved && RUN_TIME.has(owner.reason)) return unresolvedValue(node.getText(), owner.reason);
   }
 
   return unresolvedValue(node.getText());

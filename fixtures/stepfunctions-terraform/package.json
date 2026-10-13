@@ -1,0 +1,9 @@
+{
+  "name": "lending-library-loans",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loan approval, renewal, overdue reminders and hold expiry for a lending library, run as state machines over Lambda functions.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

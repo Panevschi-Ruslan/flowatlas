@@ -26,29 +26,42 @@ export {
   HTTP_METHODS,
   holeIn,
   PARAM_PLACEHOLDER,
+  REACHES_META,
+  STARTS_META,
+  STEP_OF_META,
+  STEPS_META,
   isChannelId,
+  isDeployedEntryKind,
+  makeDeployedReference,
   isEntryId,
   isHttpMethod,
   isTypeId,
   makeChannelId,
   makeConfigKeyId,
+  entryReferenceOf,
   makeEntryId,
+  makeEntryReference,
   makeExternalApiId,
   makeLeafId,
   makeTableId,
   makeHttpEntryKey,
+  makeInvokeEntryKey,
+  makeStateId,
   makeSymbolId,
+  makeUnnamedInvokeKey,
+  makeUnnamedWorkflowKey,
   makeTypeId,
+  makeWorkflowEntryKey,
   normalizeFilePath,
   normalizePath,
   SITE_LEAF_TYPES,
   UNREAD_SPAN,
   wasRead,
 } from './ids.js';
-export type { HttpMethod, SiteLeafType } from './ids.js';
+export type { DeployedEntryKind, HttpMethod, SiteLeafType } from './ids.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
-export { wayInBodyRead } from './model/way-in.js';
+export { SENDS_META, wayInBodyRead } from './model/way-in.js';
 export type { EntryKind, GraphNode, NodeType } from './model/nodes.js';
 
 export {
@@ -60,8 +73,15 @@ export {
 } from './model/edges.js';
 export type { Confidence, EdgeType, GraphEdge } from './model/edges.js';
 
-export { TYPE_KINDS } from './model/types.js';
-export type { TypeEntry, TypeField, TypeKind, TypeRegistry } from './model/types.js';
+export { SIGNATURE_META, TYPE_KINDS } from './model/types.js';
+export type {
+  Signature,
+  SignatureParam,
+  TypeEntry,
+  TypeField,
+  TypeKind,
+  TypeRegistry,
+} from './model/types.js';
 
 export {
   DEFAULT_DETAIL,
@@ -107,6 +127,7 @@ export {
   customBrokerSchema,
   customProducerSchema,
   customSubscriberSchema,
+  dbTableAccessSchema,
   entryHttpAppTypesSchema,
   entryHttpMiddlewareSchema,
   entryHttpMountSchema,
@@ -117,9 +138,11 @@ export {
   entryRegistrySchema,
   findConfig,
   flowatlasConfigSchema,
+  infraModuleSchema,
   loadConfig,
   parseConfig,
   serviceConfigSchema,
+  starterSchema,
 } from './config.js';
 export type {
   LocalBaseClass,
@@ -127,16 +150,73 @@ export type {
   CustomConsumerConfig,
   CustomProducerConfig,
   CustomSubscriberConfig,
+  DbTableAccess,
   EntryHttpConfig,
   EntryHttpDescription,
   EntryProcedureConfig,
   EntryProcedureDescription,
   EntryRegistryConfig,
   FlowatlasConfig,
+  InfraModuleConfig,
+  InfraModuleDescription,
   LoadConfigOptions,
+  StarterConfig,
   LoadedConfig,
   ServiceConfig,
 } from './config.js';
+export type {
+  DefinitionPosition,
+  DeployedDefinition,
+  DeployedDelivery,
+  DeployedFunction,
+  DeployedHandler,
+  DeployedKind,
+  DeployedRoute,
+  DeployedWorkflow,
+  DeployedSetting,
+  DeliveryKind,
+  DeliverySource,
+  DeliveryTarget,
+  Deployment,
+  DeploymentReader,
+  DeploymentReadOptions,
+  MessagePattern,
+  MessageTarget,
+  PublishedRoot,
+  RouteTarget,
+  ValueFilter,
+} from './adapters/deployment.js';
+export {
+  ADDRESS_SEPARATOR,
+  AWAITING_META,
+  CHANNEL_FORWARD_META,
+  CHANNEL_PATTERN_META,
+  ENVIRONMENT_META,
+  forwardedName,
+  matchChannelPattern,
+  nameInForms,
+  nameWithin,
+} from './channel-pattern.js';
+export type {
+  AwaitedAddress,
+  AwaitedPart,
+  ChannelForward,
+  ChannelPattern,
+  EnvironmentValue,
+  PatternMatch,
+} from './channel-pattern.js';
+export { OPERATION_VERBS, operationsOf } from './declared-operations.js';
+export type { DeclaredOperation } from './declared-operations.js';
+export {
+  documentOf,
+  DocumentSyntaxError,
+  fromValue,
+  readDocument,
+  readJson,
+  readYaml,
+  shifted,
+} from './positioned-document.js';
+export type { DefinitionFormat, PathStep, PositionedDocument } from './positioned-document.js';
 
 export {
   applicationOfFile,
@@ -152,6 +232,8 @@ export {
   allDependencies,
   hasAnyDependency,
   hasDependency,
+  manifestsWithin,
+  packageOfSpecifier,
   readPackageJson,
   readResolvedPackageJson,
   suppliedWith,
@@ -187,6 +269,7 @@ export type {
   TableOverride,
 } from './adapters/db.js';
 export {
+  boundDeclaration,
   declaredParameterType,
   entityNameOf,
   narrowUnionByLiteral,
@@ -201,9 +284,23 @@ export {
   writtenObjectLiteral,
 } from './origin.js';
 export type { BodyRead, Origin, ResolveOriginOptions, TypeOrigin } from './origin.js';
-export type { BrokerAdapter, CallPattern, ChannelKind } from './adapters/broker.js';
-export { locatedExpressions } from './adapters/locator.js';
-export type { IsOperation, LocatorContext, LocatorSite, NameLocator } from './adapters/locator.js';
+export type { AddressPart, BrokerAdapter, CallPattern, ChannelKind, StartedEntry } from './adapters/broker.js';
+export {
+  EVERY_ELEMENT,
+  locatedExpressions,
+  locatedSlots,
+  locatorApplies,
+  locatorIsCondition,
+  originsOf,
+} from './adapters/locator.js';
+export type {
+  IsOperation,
+  LocatedSlot,
+  LocatorContext,
+  LocatorSite,
+  NameLocator,
+  ValueOrigin,
+} from './adapters/locator.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
 
 export { ADAPTER_SLOTS, AdapterRegistry, noAdapters } from './adapters/registry.js';
@@ -246,11 +343,13 @@ export {
   countSources,
   createProject,
   findTsconfig,
+  installedFiles,
   listRepoSources,
   reportSkippedTestDirectories,
   reportUnreadableSources,
   SKIPPED_TEST_DIRECTORY_REASON,
   skippedTestDirectories,
+  sourceRootsOf,
   TSCONFIG_CANDIDATES,
   UNREADABLE_FILE_REASON,
 } from './project.js';
@@ -258,6 +357,7 @@ export type {
   CreateProjectOptions,
   RepoStats,
   SourceCounts,
+  SourceRootOptions,
   UnreadableSourceContext,
 } from './project.js';
 
@@ -279,6 +379,31 @@ export {
   placedFunction,
   placeOf,
 } from './functions.js';
+export {
+  CARRIES_ON_META,
+  ELEMENT,
+  ENVELOPE_META,
+  envelopePath,
+  messageTypeAt,
+  READS_META,
+} from './envelope.js';
+export type { Envelope } from './envelope.js';
+export {
+  callsHelper,
+  namesHelper,
+  CLAIMED_META,
+  extendReading,
+  FAILURES_META,
+  pathParamsOf,
+  readRequest,
+  REQUEST_PARTS,
+  REQUEST_READ_META,
+  requestReadingSchema,
+  routeOf,
+  routeShapeEdge,
+  STATUS_UNKNOWN_META,
+} from './request.js';
+export type { FoundType, RequestPart, RequestReading, RequestReadingDescription, RouteShape } from './request.js';
 export { suppliedTypes } from './supplied.js';
 export type { SuppliedTypes } from './supplied.js';
 export type { NamedFunction } from './functions.js';
@@ -344,6 +469,8 @@ export type {
 
 export { isLibFile, TypeCollector } from './types/collector.js';
 export type { TypeCollectorOptions } from './types/collector.js';
+export { functionLikeOf, recordSignatures, recordStatedSignatures } from './types/signatures.js';
+export type { FunctionLike, RecordedSignature, StatedPart, StatedSignature, StatedType } from './types/signatures.js';
 export { mergeFieldMeta } from './types/field-meta.js';
 export type { FieldDeclaration, FieldMetaReader, FieldMetaResult, UnreadAnnotation } from './types/field-meta.js';
 export { DEFAULT_HASH_DEPTH, normalizeStructure, structuralHash } from './types/structural-hash.js';
@@ -371,6 +498,7 @@ export {
   foldedChoices,
   literalChoices,
   forwardedFrom,
+  forwardNoWorse,
   isQueryTail,
   isReadable,
   parameterBehind,
@@ -388,6 +516,9 @@ export type {
   FiniteLookup,
   Forwarded,
   ForwardedCall,
+  Forwarder,
+  Forwarding,
+  ForwardReader,
   RootSettingOptions,
   SettingAddress,
   SplitAddress,
@@ -401,3 +532,4 @@ export {
   requestVerbOf,
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
+export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';

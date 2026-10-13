@@ -1,0 +1,19 @@
+unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 1 to act on over 1 row
+  channel-dynamic: 1 row
+    The channel name cannot be read here. Annotate publishLibraryEvent with the channel it uses.
+      circulation/src/lib/events.ts:15  publishLibraryEvent -> detailType
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 1 now, +1)
+  no baseline at <root>/fixtures/eventbridge-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  channel-dynamic: 0 → 1 (+1)
+  new (1):
+    circulation|src/lib/events.ts|producer:circulation#src/lib/events.ts:15:9|channel-dynamic

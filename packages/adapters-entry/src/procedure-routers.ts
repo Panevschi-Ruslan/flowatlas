@@ -5,6 +5,7 @@ import type {
   EntryNode,
   EntryWrapping,
   ExtractContext,
+  StatedSignature,
 } from '@flowatlas/core';
 import { hasAnyDependency, makeEntryId, placedFunction, suppliedTypes } from '@flowatlas/core';
 import type {
@@ -15,6 +16,7 @@ import type {
   Node as TsNode,
   SourceFile,
   Symbol as TsSymbol,
+  Type,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { ProcedureDialect } from './procedure-dialects.js';
@@ -217,6 +219,8 @@ interface Procedure {
   inlineAt?: TsNode;
   /** The shape a caller sends, as it is spelled. */
   input?: string;
+  /** What it takes and answers, as the schema and the resolver say (P35). */
+  signature: StatedSignature;
   /** Everything installed in front of it, in the order it applies. */
   guards: EntryWrapping[];
   site: Site;
@@ -266,6 +270,37 @@ const endingOf = (value: TsNode, dialect: ProcedureDialect): Ending | undefined 
   };
 };
 
+/**
+ * What a schema hands the resolver once it has checked the input, by how the
+ * library says it: zod and its kin carry it as `_output`, a schema with a
+ * `parse` method returns it, and a plain object or a function validator is
+ * read as what it is or returns (P35).
+ */
+const SCHEMA_OUTPUT: ReadonlyArray<(type: Type, site: TsNode) => Type | undefined> = [
+  (type, site) => type.getProperty('_output')?.getTypeAtLocation(site),
+  (type, site) => type.getProperty('parse')?.getTypeAtLocation(site).getCallSignatures()[0]?.getReturnType(),
+  (type) => type.getCallSignatures()[0]?.getReturnType(),
+  (type) => type,
+];
+
+const schemaOutput = (schema: TsNode): Type => {
+  const type = schema.getType();
+  for (const read of SCHEMA_OUTPUT) {
+    const found = read(type, schema);
+    if (found !== undefined) return found;
+  }
+  return type;
+};
+
+/** A procedure's input, and what its resolver answers - the promise it returns settled by the collector. */
+const procedureSignature = (input: TsNode | undefined, resolver: TsNode): StatedSignature => {
+  const answered = resolver.getType().getCallSignatures()[0]?.getReturnType();
+  return {
+    params: input === undefined ? [] : [{ name: 'input', type: schemaOutput(input), site: input }],
+    ...(answered === undefined ? {} : { returns: { type: answered, site: resolver } }),
+  };
+};
+
 /** The way in a value is, with the code behind it and everything in front of it. */
 const procedureOf = (
   value: TsNode,
@@ -298,6 +333,7 @@ const procedureOf = (
     handlerVia: via,
     ...(via === 'inline' ? { inlineAt: handlerArg } : {}),
     ...(input === undefined ? {} : { input: label(input) }),
+    signature: procedureSignature(input, handlerArg),
     guards: [...guardsBefore(base, dialect, new Set(), ctx), ...onChain],
     site: siteOf(node, ctx),
   };
@@ -803,6 +839,7 @@ export const procedureRoutersAdapter = (
         file: procedure.site.file,
         line: procedure.site.line,
         ...(procedure.guards.length > 0 ? { wrapping: procedure.guards } : {}),
+        signature: procedure.signature,
         meta: {
           // How a person names this way in, and the one string a caller of it
           // writes too: `viewer.bookings.get`.

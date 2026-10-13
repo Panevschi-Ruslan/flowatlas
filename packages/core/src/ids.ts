@@ -9,6 +9,18 @@ import type { EntryKind } from './model/nodes.js';
  *            <repo>#<file>:<fn>
  *   entry    entry:<service>:<kind>:<key>
  *            entry:<service>@<application>:<kind>:<key>
+ *            entry:<service>:invoke:<deployed-name>
+ *            entry:<service>:invoke:${…}@<declaration>   — a function whose name
+ *                                                        was not read
+ *            entry:<service>:workflow:<deployed-name>
+ *            entry:<service>:workflow:${…}@<declaration>  — a workflow whose
+ *                                                        name was not read
+ *   state    <repo>#<file>:<workflow>/<state>   — one step of a workflow; a
+ *                                                symbol id whose symbol is the
+ *                                                workflow's name and the step's
+ *   reference <kind>:<key>               — an entry named without its service,
+ *                                          which is how something that knows
+ *                                          only a deployed name points at one
  *   channel  channel:<name>              — never repo-prefixed
  *   type     type:<repo>#<TypeName>
  *
@@ -33,6 +45,15 @@ export const isHttpMethod = (value: string): value is HttpMethod =>
 
 /** `:id`, `{id}` and `<id>` are all the same hole in a route. */
 const PARAM_SEGMENT = /^(?::[^/]+|\{[^/]*\}|<[^/]*>)$/;
+
+/**
+ * A segment already read into holes among literal text (SvelteKit's `[a]-[b]`
+ * is `:param-:param`), which is its own address and not one hole: collapsing it
+ * would make it claim the bare `[id]` beside it.
+ */
+const HOLES_AMONG_TEXT = /^(?!:param$).*:param(?![\w$])/;
+
+const isParamSegment = (segment: string): boolean => PARAM_SEGMENT.test(segment) && !HOLES_AMONG_TEXT.test(segment);
 
 /**
  * How far from a route its data access is looked for.
@@ -114,7 +135,7 @@ export const normalizePath = (path: string): string => {
   const segments = raw
     .split('/')
     .filter((segment) => segment.length > 0)
-    .map((segment) => (PARAM_SEGMENT.test(segment) ? PARAM_PLACEHOLDER : segment));
+    .map((segment) => (isParamSegment(segment) ? PARAM_PLACEHOLDER : segment));
   return segments.length === 0 ? '/' : `/${segments.join('/')}`;
 };
 
@@ -212,6 +233,139 @@ export const makeEntryId = (
  */
 export const makeHttpEntryKey = (method: string, path: string): string =>
   `${required('method', method).toUpperCase()}:${normalizePath(path)}`;
+
+/**
+ * The `key` half of an `invoke` entry id: the name the function is deployed
+ * under, exactly as the deployment spells it.
+ *
+ * The name is the whole address. Whatever invokes a function - a route, a
+ * workflow, a rule, another function - names it and nothing else, and the
+ * linker joins the two on this key alone, across services.
+ */
+export const makeInvokeEntryKey = (name: string): string => required('name', name);
+
+/**
+ * The `key` of an `invoke` entry whose deployed name was not read.
+ *
+ * It still needs an id - the function exists, and its handler is often known -
+ * but nothing may join to it by name, so the key is built from where it is
+ * declared rather than from the parts of the name that did evaluate (I3). It
+ * starts with `UNREAD_SPAN`, which no deployed name can contain, so it can never
+ * be mistaken for one and `wasRead` says no to it.
+ */
+export const makeUnnamedInvokeKey = (declaration: string): string =>
+  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+
+/**
+ * The `key` half of a `workflow` entry id: the name the workflow is deployed
+ * under, exactly as the deployment spells it.
+ *
+ * The name is the whole address. Whatever starts a workflow - another
+ * workflow, a rule, a handler - names it and nothing else, so two sides that
+ * never read each other can still agree on it.
+ */
+export const makeWorkflowEntryKey = (name: string): string => required('name', name);
+
+/**
+ * The `key` of a `workflow` entry whose deployed name was not read, for the
+ * reason {@link makeUnnamedInvokeKey} gives: the steps are still worth drawing,
+ * and nothing may join to them by a name made of the parts that were read.
+ */
+export const makeUnnamedWorkflowKey = (declaration: string): string =>
+  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+
+/**
+ * `<repo>#<file>:<workflow>/<state>` — one step of a workflow.
+ *
+ * A symbol id like any other, so everything that walks functions walks steps.
+ * The step's name is unique within its workflow, and `/` is not part of any
+ * name a function or a class can have, so a step can never take the id of a
+ * declaration in the same file.
+ */
+export const makeStateId = (repo: string, file: string, workflow: string, state: string): string =>
+  makeSymbolId(repo, file, `${required('workflow', workflow)}/${required('state', state)}`);
+
+/**
+ * The keys of `meta` that make a chain of steps a chain to a walk, without the
+ * walk asking what kind of thing it is walking (I8).
+ *
+ * `STEPS_META` is on the node a chain starts from, and says how many steps the
+ * chain holds; `STEP_OF_META` is on each step, and names the chain it is one
+ * step of. A walk goes one hop per step, and a chain longer than the hops a walk
+ * is allowed would be cut off part-way, so a walk is lengthened by the steps it
+ * goes through: down from the start by the count, back up by the steps it
+ * climbs.
+ */
+export const STEPS_META = 'states';
+export const STEP_OF_META = 'workflow';
+
+/**
+ * `<kind>:<key>` — an entry named without the service it is in.
+ *
+ * Something that knows only the name a thing is deployed under - a step that
+ * starts another workflow, say - cannot know which service declares it, and
+ * must not guess. It records this instead, and the linker joins it to the one
+ * entry, in whichever service, whose id ends in it ({@link entryReferenceOf}).
+ * The key is built by the same helper on both sides, so the two cannot drift
+ * apart in how they spell one name, which is the argument for
+ * {@link makeHttpEntryKey} too.
+ */
+export const makeEntryReference = (kind: EntryKind, key: string): string =>
+  `${required('kind', kind)}:${required('key', key)}`;
+
+/**
+ * The key of a node's `meta` that holds the references it reaches by name.
+ *
+ * A list of {@link makeEntryReference} strings. The node does not draw the
+ * edges itself, because it cannot know which service declares what it names;
+ * the linker draws one `calls` edge per reference that names exactly one entry,
+ * and a row for each that names none or several.
+ */
+export const REACHES_META = 'reaches';
+
+/** The kinds of entry a deployed name is the whole address of. */
+export type DeployedEntryKind = Extract<EntryKind, 'invoke' | 'workflow'>;
+
+const DEPLOYED_KEYS: Readonly<Record<DeployedEntryKind, (name: string) => string>> = {
+  invoke: makeInvokeEntryKey,
+  workflow: makeWorkflowEntryKey,
+};
+
+export const isDeployedEntryKind = (value: unknown): value is DeployedEntryKind =>
+  typeof value === 'string' && Object.hasOwn(DEPLOYED_KEYS, value);
+
+/**
+ * The reference to whatever is deployed under `name` as an entry of `kind`,
+ * its key built by the helper that builds the entry's own.
+ */
+export const makeDeployedReference = (kind: DeployedEntryKind, name: string): string =>
+  makeEntryReference(kind, DEPLOYED_KEYS[kind](name));
+
+/**
+ * The key of a node's `meta` that says what it starts: the kind of entry the
+ * deployed name its address reads is the name of (P24).
+ *
+ * Code that starts a workflow or invokes a function addresses it the way code
+ * that publishes addresses a channel, often by a value of its environment, so
+ * its address waits on the deployment in the same shape (`meta.awaiting`). This
+ * says that the address, once complete, is a {@link REACHES_META} reference
+ * rather than a channel.
+ */
+export const STARTS_META = 'starts';
+
+/**
+ * The reference an entry id answers to, or `undefined` for an id that is not
+ * an entry's.
+ *
+ * `entry:loans@public:http:GET:/x` answers `http:GET:/x`: the service, and the
+ * application with it, are exactly what a reference leaves out.
+ */
+export const entryReferenceOf = (id: string): string | undefined => {
+  if (!isEntryId(id)) return undefined;
+  const rest = id.slice('entry:'.length);
+  const cut = rest.indexOf(':');
+  return cut < 0 ? undefined : rest.slice(cut + 1);
+};
 
 /**
  * `channel:<name>` — deliberately without a repo prefix, because the whole

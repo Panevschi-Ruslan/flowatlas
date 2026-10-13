@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "trpc-inferred-context",
-  "generatedAt": "2026-09-28T11:06:52.466Z",
+  "generatedAt": "2026-10-08T19:06:34.284Z",
   "nodes": [
     {
       "id": "db_query:trpc-inferred-context#src/procedures.ts:10:23",
@@ -107,6 +107,10 @@
       "line": 15,
       "kind": "rpc",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "key": "orders.archive",
         "adapter": "trpc-procedures",
         "call": "mutation",
@@ -124,6 +128,10 @@
       "line": 9,
       "kind": "rpc",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "key": "orders.clearDrafts",
         "adapter": "trpc-procedures",
         "call": "mutation",
@@ -141,6 +149,10 @@
       "line": 6,
       "kind": "rpc",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        },
         "key": "orders.mine",
         "adapter": "trpc-procedures",
         "call": "query",
@@ -158,6 +170,10 @@
       "line": 7,
       "kind": "rpc",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        },
         "key": "orders.stamp",
         "adapter": "trpc-procedures",
         "call": "mutation",
@@ -213,7 +229,18 @@
       "repo": "trpc-inferred-context",
       "file": "src/procedures.ts",
       "line": 16,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ next }",
+              "type": "object"
+            }
+          ],
+          "returns": "any"
+        }
+      }
     },
     {
       "id": "trpc-inferred-context#src/procedures.ts:orderOwnerProcedure.use@9",
@@ -222,7 +249,18 @@
       "repo": "trpc-inferred-context",
       "file": "src/procedures.ts",
       "line": 9,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ ctx, next }",
+              "type": "object"
+            }
+          ],
+          "returns": "any"
+        }
+      }
     },
     {
       "id": "trpc-inferred-context#src/procedures.ts:unusedProcedure.use@23",
@@ -230,7 +268,18 @@
       "label": "unusedProcedure.use@23",
       "repo": "trpc-inferred-context",
       "file": "src/procedures.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ ctx, next }",
+              "type": "object"
+            }
+          ],
+          "returns": "any"
+        }
+      }
     },
     {
       "id": "trpc-inferred-context#src/router.ts:orders.archive@15",
@@ -238,7 +287,18 @@
       "label": "orders.archive@15",
       "repo": "trpc-inferred-context",
       "file": "src/router.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ ctx }",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "trpc-inferred-context#src/router.ts:orders.clearDrafts@9",
@@ -246,7 +306,18 @@
       "label": "orders.clearDrafts@9",
       "repo": "trpc-inferred-context",
       "file": "src/router.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ ctx }",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "trpc-inferred-context#src/router.ts:orders.mine@6",
@@ -254,7 +325,18 @@
       "label": "orders.mine@6",
       "repo": "trpc-inferred-context",
       "file": "src/router.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ ctx }",
+              "type": "object"
+            }
+          ],
+          "returns": "any"
+        }
+      }
     },
     {
       "id": "trpc-inferred-context#src/router.ts:orders.stamp@7",
@@ -262,7 +344,13 @@
       "label": "orders.stamp@7",
       "repo": "trpc-inferred-context",
       "file": "src/router.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        }
+      }
     }
   ],
   "edges": [

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:33.295Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:53.231Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -12,7 +12,18 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 783
+      "durationMs": 798,
+      "packages": {
+        "name": "doctor-billing",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "gateway",
@@ -23,7 +34,20 @@
       "edges": 19,
       "types": 4,
       "unresolved": 7,
-      "durationMs": 887
+      "durationMs": 858,
+      "packages": {
+        "name": "doctor-gateway",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "axios",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "orders",
@@ -34,7 +58,20 @@
       "edges": 38,
       "types": 3,
       "unresolved": 17,
-      "durationMs": 785
+      "durationMs": 810,
+      "packages": {
+        "name": "doctor-orders",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "fake-orm",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

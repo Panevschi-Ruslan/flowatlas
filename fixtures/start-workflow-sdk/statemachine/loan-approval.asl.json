@@ -1,0 +1,51 @@
+{
+  "Comment": "Approves a loan: checks the borrower, waits for a librarian's review, and scores the borrower.",
+  "StartAt": "CheckBorrower",
+  "States": {
+    "CheckBorrower": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "lending-check-borrower",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId"
+        }
+      },
+      "ResultSelector": {
+        "standing.$": "$.Payload.standing"
+      },
+      "ResultPath": "$.borrower",
+      "Next": "AwaitLibrarianReview"
+    },
+    "AwaitLibrarianReview": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "lending-request-review",
+        "Payload": {
+          "loanId.$": "$.loanId",
+          "taskToken.$": "$$.Task.Token"
+        }
+      },
+      "ResultPath": "$.review",
+      "Catch": [
+        {
+          "ErrorEquals": ["LoanDeclined"],
+          "ResultPath": "$.error",
+          "Next": "LoanDeclined"
+        }
+      ],
+      "Next": "ScoreBorrower"
+    },
+    "ScoreBorrower": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:eu-west-1:111122223333:function:lending-score-borrower",
+      "End": true
+    },
+    "LoanDeclined": {
+      "Type": "Fail",
+      "Error": "LoanDeclined",
+      "Cause": "The librarian declined the loan."
+    }
+  }
+}

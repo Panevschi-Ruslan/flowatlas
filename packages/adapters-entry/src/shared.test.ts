@@ -5,7 +5,6 @@ import {
   decoratorsFrom,
   joinPath,
   packageOfCall,
-  packageOfSpecifier,
 } from './shared.js';
 
 describe('joinPath', () => {
@@ -29,23 +28,6 @@ describe('joinPath', () => {
   it('returns the root when there is nothing to join', () => {
     expect(joinPath()).toBe('/');
     expect(joinPath(undefined, undefined)).toBe('/');
-  });
-});
-
-describe('packageOfSpecifier', () => {
-  it('reads a subpath import as the package it is a subpath of', () => {
-    expect(packageOfSpecifier('@nestjs/common/decorators')).toBe('@nestjs/common');
-    expect(packageOfSpecifier('@nestjs/common')).toBe('@nestjs/common');
-    expect(packageOfSpecifier('express/lib/router')).toBe('express');
-  });
-
-  it('answers with nothing for a module that names a file', () => {
-    expect(packageOfSpecifier('./framework/nest')).toBeUndefined();
-    expect(packageOfSpecifier('../decorators')).toBeUndefined();
-    expect(packageOfSpecifier('/abs/path')).toBeUndefined();
-    expect(packageOfSpecifier('')).toBeUndefined();
-    // A scope with no package after it names nothing installable.
-    expect(packageOfSpecifier('@nestjs')).toBeUndefined();
   });
 });
 

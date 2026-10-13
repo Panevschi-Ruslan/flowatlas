@@ -43,3 +43,30 @@ export interface TypeEntry {
 }
 
 export type TypeRegistry = Record<string, TypeEntry>;
+
+/**
+ * One parameter of a signature: its name as declared, and a type reference.
+ * `rest` marks `...args`, whose type is the array the call's tail lands in.
+ */
+export interface SignatureParam {
+  name: string;
+  type: string;
+  optional?: true;
+  rest?: true;
+}
+
+/**
+ * What a function takes and gives back.
+ *
+ * Recorded once on the node of the function, under `SIGNATURE_META`, because
+ * the names are the function's and not any one caller's. The edges into it keep
+ * carrying the bare type references (`params`, `returns`), which is what
+ * comparing a caller against it needs; this is what a person reading it needs.
+ */
+export interface Signature {
+  params: SignatureParam[];
+  /** Type reference of the value it gives back, promises and streams unwrapped. */
+  returns: string;
+}
+
+export const SIGNATURE_META = 'signature';

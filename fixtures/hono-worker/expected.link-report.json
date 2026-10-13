@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T09:18:37.831Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:30.298Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -8,11 +8,22 @@
       "repo": "./api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 35,
-      "edges": 34,
-      "types": 1,
+      "nodes": 40,
+      "edges": 39,
+      "types": 4,
       "unresolved": 4,
-      "durationMs": 684
+      "durationMs": 676,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "@hono/zod-validator",
+          "@nestjs/common",
+          "@nestjs/core",
+          "hono",
+          "zod"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -23,7 +34,16 @@
       "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 541
+      "durationMs": 557,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -49,7 +69,7 @@
     "noProducers": []
   },
   "routes": {
-    "total": 11,
+    "total": 13,
     "called": 2,
     "uncalled": [
       "entry:api:http:ALL:/api/*",
@@ -58,21 +78,23 @@
       "entry:api:http:GET:/api/admin/orders/:param",
       "entry:api:http:GET:/api/depots/:param/stock-stream",
       "entry:api:http:GET:/health",
+      "entry:api:http:POST:/api/admin/notes",
       "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
       "entry:api:http:POST:/api/messenger/webhook",
-      "entry:api:http:POST:/internal/reload"
+      "entry:api:http:POST:/internal/reload",
+      "entry:api:http:PUT:/api/admin/notes/:param"
     ],
     "duplicated": []
   },
   "types": {
-    "total": 1,
+    "total": 4,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
-    "nodes": 48,
-    "edges": 45,
-    "types": 1,
+    "nodes": 53,
+    "edges": 50,
+    "types": 4,
     "unresolved": 4
   }
 }

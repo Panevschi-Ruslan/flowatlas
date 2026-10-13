@@ -1,0 +1,669 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T09:13:33.835Z",
+  "services": [
+    {
+      "name": "lending",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:lending:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "lending",
+      "file": "infra/api.tf",
+      "line": 31,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "api": "lending-loans",
+        "function": "lending-create-loan",
+        "declaredAs": "aws_api_gateway_method.create_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:http:POST:/runs/:param/resume",
+      "type": "entry",
+      "label": "POST /runs/:param/resume",
+      "repo": "lending",
+      "file": "infra/api.tf",
+      "line": 47,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/runs/:param/resume",
+        "rawPath": "/runs/{runId}/resume",
+        "deployedBy": "terraform",
+        "api": "lending-loans",
+        "function": "lending-resume-run",
+        "declaredAs": "aws_api_gateway_method.resume_run",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-check-borrower",
+      "type": "entry",
+      "label": "lending-check-borrower",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-check-borrower",
+        "deployedBy": "terraform",
+        "name": "lending-check-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.check_borrower",
+        "handler": "handlers/check-borrower.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-create-loan",
+      "type": "entry",
+      "label": "lending-create-loan",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 3,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-create-loan",
+        "deployedBy": "terraform",
+        "name": "lending-create-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.create_loan",
+        "handler": "handlers/create-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-notify-borrower",
+      "type": "entry",
+      "label": "lending-notify-borrower",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 39,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-notify-borrower",
+        "deployedBy": "terraform",
+        "name": "lending-notify-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.notify_borrower",
+        "handler": "handlers/notify-borrower.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{loanId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-resume-run",
+      "type": "entry",
+      "label": "lending-resume-run",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 11,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-resume-run",
+        "deployedBy": "terraform",
+        "name": "lending-resume-run",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.resume_run",
+        "handler": "handlers/resume-run.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:lending-send-overdue-notices",
+      "type": "entry",
+      "label": "lending-send-overdue-notices",
+      "repo": "lending",
+      "file": "infra/functions.tf",
+      "line": 21,
+      "kind": "invoke",
+      "meta": {
+        "key": "lending-send-overdue-notices",
+        "deployedBy": "terraform",
+        "name": "lending-send-overdue-notices",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.send_overdue_notices",
+        "handler": "handlers/send-overdue-notices.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:workflow:lending-loan-approval",
+      "type": "entry",
+      "label": "workflow lending-loan-approval",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "lending-loan-approval",
+        "name": "lending-loan-approval",
+        "nameFrom": "deployment",
+        "startAt": "CheckBorrower",
+        "states": 1,
+        "queryLanguage": "JSONPath",
+        "comment": "Approves a loan: checks the borrower.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.loan_approval",
+        "definitionFrom": "file",
+        "declaredIn": "infra/main.tf:35"
+      }
+    },
+    {
+      "id": "lending#src/handlers/check-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/check-borrower.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{borrowerId:string}"
+            }
+          ],
+          "returns": "{standing:type:lending#Standing}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/create-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/create-loan.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/notify-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/notify-borrower.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{loanId:string}"
+            }
+          ],
+          "returns": "{notified:string}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/resume-run.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/resume-run.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "lending#src/handlers/send-overdue-notices.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/handlers/send-overdue-notices.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "lending#src/lib/loans.ts:loanIdOf",
+      "type": "function",
+      "label": "loanIdOf",
+      "repo": "lending",
+      "file": "src/lib/loans.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:lending#LoanRequest"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "type": "function",
+      "label": "CheckBorrower [Task lambda:invoke]",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "lending-loan-approval",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "lending-check-borrower"
+        },
+        "reaches": [
+          "invoke:lending-check-borrower"
+        ],
+        "parameters": {
+          "FunctionName": "lending-check-borrower",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId"
+          }
+        }
+      }
+    },
+    {
+      "id": "producer:lending#src/handlers/create-loan.ts:19:9",
+      "type": "producer",
+      "label": "start lending-loan-approval",
+      "repo": "lending",
+      "file": "src/handlers/create-loan.ts",
+      "line": 19,
+      "kind": "start",
+      "meta": {
+        "kind": "start",
+        "adapter": "starters",
+        "method": "start",
+        "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "confidence": "declared",
+        "reaches": [
+          "workflow:lending-loan-approval"
+        ]
+      }
+    },
+    {
+      "id": "producer:lending#src/handlers/resume-run.ts:7:9",
+      "type": "producer",
+      "label": "start ?",
+      "repo": "lending",
+      "file": "src/handlers/resume-run.ts",
+      "line": 7,
+      "kind": "start",
+      "meta": {
+        "kind": "start",
+        "adapter": "starters",
+        "method": "start",
+        "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:lending",
+      "type": "repo",
+      "label": "lending",
+      "repo": "lending",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@library/notify": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:lending:http:POST:/loans",
+      "to": "lending#src/handlers/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{loanId:string;runId:unknown}",
+      "file": "src/handlers/create-loan.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true,
+        "body": "type:lending#LoanRequest",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:lending:http:POST:/runs/:param/resume",
+      "to": "lending#src/handlers/resume-run.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/resume-run.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{runId:string}"
+      }
+    },
+    {
+      "from": "entry:lending:invoke:lending-check-borrower",
+      "to": "lending#src/handlers/check-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/check-borrower.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:lending:invoke:lending-create-loan",
+      "to": "lending#src/handlers/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:lending:invoke:lending-notify-borrower",
+      "to": "lending#src/handlers/notify-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/notify-borrower.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:lending:invoke:lending-resume-run",
+      "to": "lending#src/handlers/resume-run.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/resume-run.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:lending:invoke:lending-send-overdue-notices",
+      "to": "lending#src/handlers/send-overdue-notices.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/send-overdue-notices.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:lending:workflow:lending-loan-approval",
+      "to": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 3
+    },
+    {
+      "from": "lending#src/handlers/create-loan.ts:handler",
+      "to": "lending#src/lib/loans.ts:loanIdOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:lending#LoanRequest"
+      ],
+      "returns": "string",
+      "file": "src/handlers/create-loan.ts",
+      "line": 15
+    },
+    {
+      "from": "lending#src/handlers/create-loan.ts:handler",
+      "to": "producer:lending#src/handlers/create-loan.ts:19:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 19
+    },
+    {
+      "from": "lending#src/handlers/resume-run.ts:handler",
+      "to": "producer:lending#src/handlers/resume-run.ts:7:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/handlers/resume-run.ts",
+      "line": 7
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "to": "entry:lending:invoke:lending-check-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:lending-check-borrower"
+      }
+    },
+    {
+      "from": "producer:lending#src/handlers/create-loan.ts:19:9",
+      "to": "entry:lending:workflow:lending-loan-approval",
+      "type": "calls",
+      "confidence": "declared",
+      "file": "src/handlers/create-loan.ts",
+      "line": 19,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:lending-loan-approval"
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending#LoanRequest": {
+      "name": "LoanRequest",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "07210ddb6676fb42",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending#Standing": {
+      "name": "Standing",
+      "kind": "union",
+      "declaredIn": "lending#src/handlers/check-borrower.ts",
+      "structuralHash": "8af2dd81749c2e41",
+      "members": [
+        "'good'",
+        "'suspended'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/handlers/create-loan.ts",
+      "line": 18,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 3,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "handler -> orchestrator.create",
+      "service": "lending"
+    },
+    {
+      "file": "src/handlers/create-loan.ts",
+      "line": 22,
+      "reason": "starter-undescribed",
+      "hint": "@library/notify is installed with its declared types only, so what send does is not read. It is called from a deployed function and the types it is declared with reach LambdaClient, which invokes functions. If it starts a workflow or invokes a function by its deployed name, describe it under adapters.starters as {\"module\":\"@library/notify\",\"function\":\"send\",\"target\":\"invoke\",\"name\":[{\"kind\":\"argument\",\"index\":0}]} (`\"target\": \"workflow\"` for a workflow); or make its source readable here, as a member of the workspace, so the call inside it is read.",
+      "symbol": "@library/notify send",
+      "meta": {
+        "package": "@library/notify",
+        "function": "send",
+        "description": {
+          "module": "@library/notify",
+          "function": "send",
+          "target": "invoke",
+          "name": [
+            {
+              "kind": "argument",
+              "index": 0
+            }
+          ]
+        }
+      },
+      "service": "lending"
+    },
+    {
+      "file": "src/handlers/create-loan.ts",
+      "line": 24,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "lending"
+    },
+    {
+      "file": "src/handlers/resume-run.ts",
+      "line": 7,
+      "reason": "start-name-unread",
+      "message": "handler -> orchestrator.start({ runId: event.pathParameters?.['runId'] ",
+      "hint": "The name of the workflow this starts is not written where it can be read. Write the deployed name or its ARN, or a value of the environment the deployment sets; where the code names it some other way, say how in the `names` table of a starter description.",
+      "symbol": "producer:lending#src/handlers/resume-run.ts:7:9",
+      "service": "lending"
+    },
+    {
+      "file": "src/handlers/send-overdue-notices.ts",
+      "line": 7,
+      "reason": "starter-undescribed",
+      "hint": "@library/jobs is not installed, so what submit does is not read. It is called from a deployed function and it is handed job.id, read off what prepare returned earlier in the same body. If it starts a workflow or invokes a function by its deployed name, describe it under adapters.starters as {\"module\":\"@library/jobs\",\"function\":\"submit\",\"target\":\"workflow\",\"name\":[{\"kind\":\"origin-call-argument\",\"call\":\"prepare\",\"path\":[\"kind\"]}],\"names\":{\"Job.OverdueNotices\":\"<deployed name>\"}} (`\"target\": \"invoke\"` for a function); or install the package, so its source is read.",
+      "symbol": "@library/jobs submit",
+      "meta": {
+        "package": "@library/jobs",
+        "function": "submit",
+        "description": {
+          "module": "@library/jobs",
+          "function": "submit",
+          "target": "workflow",
+          "name": [
+            {
+              "kind": "origin-call-argument",
+              "call": "prepare",
+              "path": [
+                "kind"
+              ]
+            }
+          ],
+          "names": {
+            "Job.OverdueNotices": "<deployed name>"
+          }
+        }
+      },
+      "service": "lending"
+    }
+  ]
+}

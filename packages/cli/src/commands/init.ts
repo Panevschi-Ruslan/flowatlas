@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, realpathSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
-import { basename, join, relative, resolve, sep } from 'node:path';
+import { basename, isAbsolute, join, parse, relative, resolve, sep } from 'node:path';
 import {
   CONFIG_FILENAME,
   DEFAULT_OUTPUT,
@@ -15,12 +15,14 @@ import {
 } from '@flowatlas/core';
 import type { Command } from 'commander';
 import {
-  guessUnread,
-  guessWorkspaceType,
+  declaresDeployment,
+  guessDirectoryType,
+  guessUnreadIn,
   looksLikeApplication,
   UNKNOWN_TYPE,
 } from '../stacks.js';
 import { READABLE_TYPES } from '../readers.js';
+import { NAMED_AT_MOST, unreadSummary } from './init-summary.js';
 import { installMcp } from './mcp.js';
 
 /** Directories that are never a service of their own. */
@@ -84,6 +86,25 @@ export const toPosixRelative = (from: string, to: string): string => {
 };
 
 /**
+ * A repository's path as the configuration writes it (R170).
+ *
+ * Relative to the configuration, so a project checked out somewhere else still
+ * loads — unless getting there climbs all the way to the root of the file
+ * system. That is a configuration written far from its repositories, `--out`
+ * in one tree and `--dir` in another, and the relative spelling of it is
+ * `../../../../../../../Users/<name>/…`: correct, unreadable, and no more
+ * portable than the absolute path it climbs to. So that one is written
+ * absolute.
+ */
+export const repoPathFor = (configDir: string, dir: string): string => {
+  const rel = relative(configDir, dir);
+  const climbs = rel.split(sep).filter((part) => part === '..').length;
+  const depth = relative(parse(configDir).root, configDir).split(sep).filter(Boolean).length;
+  const toRoot = isAbsolute(rel) || (climbs > 0 && climbs >= depth);
+  return toRoot ? dir.split(sep).join('/') : toPosixRelative(configDir, dir);
+};
+
+/**
  * The same list, with no two services sharing a name.
  *
  * A service name is the key everything else in the configuration refers to, and
@@ -138,11 +159,11 @@ const withDistinctNames = (candidates: readonly Candidate[]): Candidate[] => {
  */
 const servicesIn = (absPath: string, configDir: string, pkg: PackageJson): Candidate[] => {
   const asOne = (dir: string, manifest: PackageJson, root?: PackageJson): Candidate => {
-    const type = guessWorkspaceType(manifest, root);
-    const unread = type === UNKNOWN_TYPE ? guessUnread(manifest) : undefined;
+    const type = guessDirectoryType(dir, manifest, root);
+    const unread = type === UNKNOWN_TYPE ? guessUnreadIn(dir, manifest) : undefined;
     return {
       absPath: dir,
-      repo: toPosixRelative(configDir, dir),
+      repo: repoPathFor(configDir, dir),
       name: suggestName(manifest, dir),
       ...(typeof manifest.name === 'string' ? { declared: manifest.name } : {}),
       type,
@@ -202,7 +223,10 @@ export const scanCandidates = (scanDir: string, configDir: string): Candidate[] 
     if (entry.startsWith('.') || SKIPPED.has(entry)) continue;
     const absPath = join(root, entry);
     if (absPath === self) continue;
-    const pkg = readPackageJson(absPath);
+    // A directory counts when it holds a manifest, or when it holds the files
+    // that describe a deployment: a repository that is nothing but the
+    // Terraform for a shared API is a service with no code (P21).
+    const pkg = readPackageJson(absPath) ?? (declaresDeployment(absPath) ? {} : undefined);
     if (pkg === undefined) continue;
     found.push(...servicesIn(absPath, self, pkg));
   }
@@ -226,6 +250,11 @@ export interface InitOptions {
   yes?: boolean;
   /** Overwrite an existing configuration. */
   force?: boolean;
+  /**
+   * Name every repository nothing reads, however many there are. Without it,
+   * more than a handful are counted and grouped instead (R170).
+   */
+  listUnknown?: boolean;
   /** Where messages go. Defaults to stdout. */
   print?: (message: string) => void;
 }
@@ -310,37 +339,22 @@ export const runInit = async (options: InitOptions = {}): Promise<InitResult> =>
 
   await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
 
+  // A repository nothing reads is listed on its own line only while the list is
+  // short enough to read, or when asked; past that it is counted, below (R170).
+  const unread = selected.filter((service) => service.type === UNKNOWN_TYPE);
+  const named = options.listUnknown === true || unread.length <= NAMED_AT_MOST;
   if (selected.length === 0) {
     print(`No repositories found under ${scanDir}.`);
     print('Wrote an empty configuration. Add services by hand, or re-run with --dir <parent>.');
   } else {
     print(`Wrote ${configPath} with ${selected.length} service(s):`);
-    for (const service of selected) {
+    for (const service of named ? selected : selected.filter((each) => each.type !== UNKNOWN_TYPE)) {
       const found = service.unread === undefined ? '' : `  (looks like ${service.unread})`;
       print(`  ${service.name}  ${service.repo}  ${service.type}${found}`);
     }
+    if (!named) print(`  and ${unread.length} that nothing here reads:`);
   }
-
-  // Being told which stack it found and that there is no reader for it is the
-  // difference between a graph somebody can judge and one that quietly leaves a
-  // repository out. It is said here, where the configuration is written, and
-  // again on every build, where the counts are.
-  const unread = selected.filter((service) => service.unread !== undefined);
-  if (unread.length > 0) {
-    const named = unread.map((service) => `${service.name} (${service.unread ?? ''})`).join(', ');
-    print(`No reader yet for: ${named}.`);
-    print(
-      `flowatlas reads repositories of type ${READABLE_TYPES.join(' and ')} today.`,
-    );
-    print('Those repositories stay in the configuration and contribute nothing to the graph.');
-  }
-  const unknown = selected.filter(
-    (service) => service.type === UNKNOWN_TYPE && service.unread === undefined,
-  );
-  if (unknown.length > 0) {
-    print(`Could not tell the type of: ${unknown.map((s) => s.name).join(', ')}.`);
-    print('Detection is only a suggestion. Set the type by hand if you know it.');
-  }
+  for (const line of unreadSummary(unread, { readable: READABLE_TYPES, named })) print(line);
 
   // The repositories are known now, and the point of the tool is that a session
   // in any of them can ask about all of them. Registering the server is the last
@@ -366,6 +380,7 @@ export const registerInit = (program: Command): void => {
     .option('--out <file>', `where to write the configuration (default: ./${CONFIG_FILENAME})`)
     .option('-y, --yes', 'accept every suggestion without asking')
     .option('--force', 'overwrite an existing configuration')
+    .option('--list-unknown', 'name every repository nothing reads, however many there are')
     .option('--no-mcp', 'do not register the graph server in the repositories')
     .action(async (opts: InitOptions) => {
       await runInit(opts);

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "unreadable-file",
-  "generatedAt": "2026-09-27T09:27:03.841Z",
+  "generatedAt": "2026-10-07T14:35:07.732Z",
   "nodes": [
     {
       "id": "entry:unreadable-file:http:GET:/orders",
@@ -74,7 +74,13 @@
       "label": "OrdersController.list",
       "repo": "unreadable-file",
       "file": "src/orders/orders.controller.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     }
   ],
   "edges": [

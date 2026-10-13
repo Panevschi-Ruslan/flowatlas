@@ -43,7 +43,11 @@ status=0
 # `core/src/types/type-ref.ts`, where it is the ordinary English word for the
 # following element and has nothing to do with any framework. A list that cannot
 # carry a name says so here rather than looking incomplete.
-FORBIDDEN='typeorm|prisma|mongoose|mikro-orm|sequelize|knex|drizzle|kafka|rabbit|amqp|bullmq|ioredis|telegraf|angular|axios|express|fastify|react|svelte|vue|nuxt|remix'
+# The infrastructure words came with P21: a function and a route declared where
+# a service is deployed are read by `packages/terraform` and an entry adapter,
+# and the core's half of it - the reader interface, the `invoke` kind, the
+# module-description schema - says "deployment", "function" and "module".
+FORBIDDEN='typeorm|prisma|mongoose|mikro-orm|sequelize|knex|drizzle|kafka|rabbit|amqp|bullmq|ioredis|telegraf|angular|axios|express|fastify|react|svelte|vue|nuxt|remix|terraform|hcl|lambda|middy|apigateway|aws|serverless|cloudformation|cdk'
 
 check_I1() {
   echo "I1  core is technology-agnostic"

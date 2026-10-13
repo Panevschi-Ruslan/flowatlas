@@ -1,0 +1,49 @@
+{
+  "name": "@flowatlas/aws",
+  "version": "0.1.0",
+  "description": "How AWS names what it deploys: the ARN and URL forms a deployed name is written inside, and the channel names a publisher and a subscriber of a queue, a topic or a bus agree on. Compiled into the `flowatlas` command; not published on its own.",
+  "license": "MIT",
+  "author": {
+    "name": "Ruslan Panevschi",
+    "url": "https://github.com/Panevschi-Ruslan"
+  },
+  "homepage": "https://github.com/Panevschi-Ruslan/flowatlas#readme",
+  "bugs": {
+    "url": "https://github.com/Panevschi-Ruslan/flowatlas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panevschi-Ruslan/flowatlas.git",
+    "directory": "packages/aws"
+  },
+  "keywords": [
+    "aws",
+    "arn",
+    "static-analysis",
+    "dependency-graph"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests --testTimeout=60000"
+  },
+  "dependencies": {
+    "@flowatlas/core": "workspace:*"
+  },
+  "private": true
+}

@@ -1,0 +1,1973 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T07:28:33.582Z",
+  "services": [
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "notifications",
+      "repo": "./notifications",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/library-events/library.circulation/LoanApproved",
+      "type": "channel",
+      "label": "eventbridge/library-events/library.circulation/LoanApproved",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sns/loan-decisions",
+      "type": "channel",
+      "label": "sns/loan-decisions",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/librarian-approvals",
+      "type": "channel",
+      "label": "sqs/librarian-approvals",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "circulation#src/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "circulation",
+      "file": "src/app.ts",
+      "line": 14,
+      "kind": "function"
+    },
+    {
+      "id": "circulation#src/loans/request-loan.ts:requestLoan",
+      "type": "function",
+      "label": "requestLoan",
+      "repo": "circulation",
+      "file": "src/loans/request-loan.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:circulation#LoanRequest>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy",
+      "type": "function",
+      "label": "ApplyLateFeePolicy [Task lambda:invoke]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 216,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response"
+        },
+        "parameters": {
+          "FunctionName": "${LateFeePolicyFunctionArn}",
+          "Payload.$": "$"
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ArchiveApplication",
+      "type": "function",
+      "label": "ArchiveApplication [Task s3:putObject]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 195,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "service",
+          "service": "s3",
+          "action": "putObject",
+          "pattern": "request-response",
+          "sdk": true
+        },
+        "parameters": {
+          "Bucket": "library-loan-archive",
+          "Key.$": "States.Format('applications/{}.json', $.borrowerId)",
+          "Body.$": "$"
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
+      "type": "function",
+      "label": "AwaitLibrarianApproval [Task sqs:sendMessage]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "channel",
+          "service": "sqs",
+          "action": "sendMessage",
+          "pattern": "wait-for-task-token",
+          "transport": "queue",
+          "targets": [
+            "librarian-approvals"
+          ],
+          "channels": [
+            "sqs/librarian-approvals"
+          ]
+        },
+        "parameters": {
+          "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/123456789012/librarian-approvals",
+          "MessageBody": {
+            "borrowerId.$": "$.borrowerId",
+            "itemIds.$": "$.itemIds",
+            "taskToken.$": "$$.Task.Token"
+          }
+        },
+        "resultPath": "$.approval"
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding",
+      "type": "function",
+      "label": "CheckBorrowerStanding [Task lambda:invoke]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 14,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "check-borrower-standing"
+        },
+        "reaches": [
+          "invoke:check-borrower-standing"
+        ],
+        "parameters": {
+          "FunctionName": "check-borrower-standing",
+          "Payload": {
+            "borrowerId.$": "$.borrowerId"
+          }
+        },
+        "resultSelector": {
+          "standing.$": "$.Payload.standing"
+        },
+        "resultPath": "$.borrower",
+        "retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckHolds",
+      "type": "function",
+      "label": "CheckHolds [Task dynamodb:query]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 60,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "query",
+          "pattern": "request-response",
+          "sdk": true,
+          "op": "read",
+          "tables": [
+            "library-holds"
+          ]
+        },
+        "parameters": {
+          "TableName": "library-holds",
+          "KeyConditionExpression": "itemId = :itemId",
+          "ExpressionAttributeValues": {
+            ":itemId": {
+              "S.$": "$.itemIds[0]"
+            }
+          }
+        },
+        "resultPath": "$.holds"
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/IsBorrowerInGoodStanding",
+      "type": "function",
+      "label": "IsBorrowerInGoodStanding [Choice]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 44,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Choice"
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanApproved",
+      "type": "function",
+      "label": "LoanApproved [Succeed]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 231,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Succeed",
+        "end": true
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
+      "type": "function",
+      "label": "LoanRejected [Fail]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 243,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Fail",
+        "end": true
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy",
+      "type": "function",
+      "label": "LookUpBranchPolicy [Task lambda:invoke]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 206,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response"
+        },
+        "parameters": {
+          "FunctionName.$": "$.branch.policyFunction",
+          "Payload.$": "$"
+        },
+        "resultPath": "$.policy"
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower",
+      "type": "function",
+      "label": "NotifyBorrower [Task states:startExecution]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 166,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "workflow",
+          "service": "states",
+          "action": "startExecution",
+          "pattern": "sync:2",
+          "name": "borrower-notifications"
+        },
+        "reaches": [
+          "workflow:borrower-notifications"
+        ],
+        "parameters": {
+          "StateMachineArn": "arn:aws:states:eu-west-1:123456789012:stateMachine:borrower-notifications",
+          "Input": {
+            "borrowerId.$": "$.borrowerId",
+            "notice": "loan-approved"
+          }
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/PublishLoanApproved",
+      "type": "function",
+      "label": "PublishLoanApproved [Task events:putEvents]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "channel",
+          "service": "events",
+          "action": "putEvents",
+          "pattern": "request-response",
+          "transport": "bus",
+          "targets": [
+            "library-events"
+          ],
+          "channels": [
+            "eventbridge/library-events/library.circulation/LoanApproved"
+          ]
+        },
+        "parameters": {
+          "Entries": [
+            {
+              "EventBusName": "library-events",
+              "Source": "library.circulation",
+              "DetailType": "LoanApproved",
+              "Detail.$": "$"
+            }
+          ]
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
+      "type": "function",
+      "label": "RecordLoan [Parallel]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 131,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Parallel",
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+      "type": "function",
+      "label": "RejectLoan [Task sns:publish]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "task": {
+          "kind": "channel",
+          "service": "sns",
+          "action": "publish",
+          "pattern": "request-response",
+          "transport": "topic",
+          "targets": [
+            "loan-decisions"
+          ],
+          "channels": [
+            "sns/loan-decisions"
+          ]
+        },
+        "parameters": {
+          "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
+          "Message.$": "$"
+        }
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopies",
+      "type": "function",
+      "label": "ReserveCopies [Map]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 75,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Map",
+        "resultPath": null
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopy",
+      "type": "function",
+      "label": "ReserveCopy [Task dynamodb:updateItem]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 85,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "scope": [
+          "ReserveCopies"
+        ],
+        "end": true,
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "updateItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": [
+            "library-copies"
+          ]
+        },
+        "parameters": {
+          "TableName": "library-copies",
+          "Key": {
+            "itemId": {
+              "S.$": "$"
+            }
+          },
+          "UpdateExpression": "SET reserved = :yes",
+          "ExpressionAttributeValues": {
+            ":yes": {
+              "BOOL": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower",
+      "type": "function",
+      "label": "ScoreBorrower [Task function]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 155,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "scope": [
+          "RecordLoan[1]"
+        ],
+        "end": true,
+        "task": {
+          "kind": "function",
+          "name": "score-borrower"
+        },
+        "reaches": [
+          "invoke:score-borrower"
+        ]
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ShapeApplication",
+      "type": "function",
+      "label": "ShapeApplication [Pass]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Pass",
+        "parameters": {
+          "borrowerId.$": "$.borrowerId",
+          "itemIds.$": "$.itemIds",
+          "branch.$": "$.branch"
+        }
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/WaitForPickupWindow",
+      "type": "function",
+      "label": "WaitForPickupWindow [Wait]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 226,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Wait"
+      }
+    },
+    {
+      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/WriteLoan",
+      "type": "function",
+      "label": "WriteLoan [Task dynamodb:putItem]",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 137,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-approval",
+        "stateType": "Task",
+        "scope": [
+          "RecordLoan[0]"
+        ],
+        "end": true,
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "putItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": [
+            "library-loans"
+          ]
+        },
+        "parameters": {
+          "TableName": "library-loans",
+          "Item": {
+            "borrowerId": {
+              "S.$": "$.borrowerId"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "db_query:circulation#statemachine/loan-approval.asl.json:137:13",
+      "type": "db_query",
+      "label": "write library-loans",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 137,
+      "meta": {
+        "op": "write",
+        "table": "library-loans",
+        "tables": [
+          "library-loans"
+        ],
+        "service": "dynamodb",
+        "action": "putItem"
+      }
+    },
+    {
+      "id": "db_query:circulation#statemachine/loan-approval.asl.json:60:5",
+      "type": "db_query",
+      "label": "read library-holds",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 60,
+      "meta": {
+        "op": "read",
+        "table": "library-holds",
+        "tables": [
+          "library-holds"
+        ],
+        "service": "dynamodb",
+        "action": "query"
+      }
+    },
+    {
+      "id": "db_query:circulation#statemachine/loan-approval.asl.json:85:11",
+      "type": "db_query",
+      "label": "write library-copies",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 85,
+      "meta": {
+        "op": "write",
+        "table": "library-copies",
+        "tables": [
+          "library-copies"
+        ],
+        "service": "dynamodb",
+        "action": "updateItem"
+      }
+    },
+    {
+      "id": "db_query:notifications#workflows/borrower-notifications.asl.yaml:30:3",
+      "type": "db_query",
+      "label": "write library-notices",
+      "repo": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 30,
+      "meta": {
+        "op": "write",
+        "table": "library-notices",
+        "tables": [
+          "library-notices"
+        ],
+        "service": "dynamodb",
+        "action": "putItem"
+      }
+    },
+    {
+      "id": "db_query:notifications#workflows/overdue-reminders.asl.json:6:5",
+      "type": "db_query",
+      "label": "read library-loans",
+      "repo": "notifications",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 6,
+      "meta": {
+        "op": "read",
+        "table": "library-loans",
+        "tables": [
+          "library-loans"
+        ],
+        "service": "dynamodb",
+        "action": "scan"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "circulation",
+      "file": "src/app.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:circulation:workflow:loan-approval",
+      "type": "entry",
+      "label": "workflow loan-approval",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "loan-approval",
+        "name": "loan-approval",
+        "nameFrom": "file-name",
+        "nameConfidence": "heuristic",
+        "startAt": "ShapeApplication",
+        "states": 19,
+        "queryLanguage": "JSONPath",
+        "comment": "Approves a loan: checks the borrower and the holds, reserves the copies, waits for a librarian, records the loan and tells the borrower.",
+        "reads": {
+          "": "{borrowerId:unknown;branch:unknown;itemIds:unknown}"
+        },
+        "carriesOn": true
+      }
+    },
+    {
+      "id": "entry:notifications:http:GET:/notices/:param",
+      "type": "entry",
+      "label": "GET /notices/:param",
+      "repo": "notifications",
+      "file": "src/server.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/notices/:param",
+        "rawPath": "/notices/:borrowerId",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:notifications:workflow:borrower-notifications",
+      "type": "entry",
+      "label": "workflow borrower-notifications",
+      "repo": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "borrower-notifications",
+        "name": "borrower-notifications",
+        "nameFrom": "file-name",
+        "nameConfidence": "heuristic",
+        "startAt": "ChooseChannel",
+        "states": 4,
+        "queryLanguage": "JSONPath",
+        "comment": "Tells a borrower something, by the channel they prefer, and records that it was sent.",
+        "reads": {},
+        "carriesOn": true
+      }
+    },
+    {
+      "id": "entry:notifications:workflow:overdue-reminders",
+      "type": "entry",
+      "label": "workflow overdue-reminders",
+      "repo": "notifications",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "overdue-reminders",
+        "name": "overdue-reminders",
+        "nameFrom": "file-name",
+        "nameConfidence": "heuristic",
+        "startAt": "FindOverdueLoans",
+        "states": 4,
+        "queryLanguage": "JSONata",
+        "comment": "Finds the loans past their due date and reminds each borrower. Written in JSONata.",
+        "reads": {},
+        "carriesOn": true
+      }
+    },
+    {
+      "id": "notifications#src/server.ts:listNotices",
+      "type": "function",
+      "label": "listNotices",
+      "repo": "notifications",
+      "file": "src/server.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<{borrowerId:string},unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/ChooseChannel",
+      "type": "function",
+      "label": "ChooseChannel [Choice]",
+      "repo": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 4,
+      "kind": "state",
+      "meta": {
+        "workflow": "borrower-notifications",
+        "stateType": "Choice"
+      }
+    },
+    {
+      "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/RecordNotice",
+      "type": "function",
+      "label": "RecordNotice [Task dynamodb:putItem]",
+      "repo": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 30,
+      "kind": "state",
+      "meta": {
+        "workflow": "borrower-notifications",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "putItem",
+          "pattern": "request-response",
+          "sdk": true,
+          "op": "write",
+          "tables": [
+            "library-notices"
+          ]
+        },
+        "parameters": {
+          "TableName": "library-notices",
+          "Item": {
+            "borrowerId": {
+              "S.$": "$.borrowerId"
+            },
+            "notice": {
+              "S.$": "$.notice"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail",
+      "type": "function",
+      "label": "SendEmail [Task lambda:invoke]",
+      "repo": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 14,
+      "kind": "state",
+      "meta": {
+        "workflow": "borrower-notifications",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "send-borrower-email"
+        },
+        "reaches": [
+          "invoke:send-borrower-email"
+        ],
+        "parameters": {
+          "FunctionName": "arn:aws:lambda:eu-west-1:123456789012:function:send-borrower-email",
+          "Payload.$": "$"
+        },
+        "resultPath": "$.sent"
+      }
+    },
+    {
+      "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText",
+      "type": "function",
+      "label": "SendText [Task lambda:invoke]",
+      "repo": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 22,
+      "kind": "state",
+      "meta": {
+        "workflow": "borrower-notifications",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "send-borrower-text"
+        },
+        "reaches": [
+          "invoke:send-borrower-text"
+        ],
+        "parameters": {
+          "FunctionName": "123456789012:function:send-borrower-text",
+          "Payload.$": "$"
+        },
+        "resultPath": "$.sent"
+      }
+    },
+    {
+      "id": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/Done",
+      "type": "function",
+      "label": "Done [Succeed]",
+      "repo": "notifications",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 40,
+      "kind": "state",
+      "meta": {
+        "workflow": "overdue-reminders",
+        "stateType": "Succeed",
+        "end": true
+      }
+    },
+    {
+      "id": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/FindOverdueLoans",
+      "type": "function",
+      "label": "FindOverdueLoans [Task dynamodb:scan]",
+      "repo": "notifications",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 6,
+      "kind": "state",
+      "meta": {
+        "workflow": "overdue-reminders",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "scan",
+          "pattern": "request-response",
+          "sdk": true,
+          "op": "read",
+          "tables": [
+            "library-loans"
+          ]
+        },
+        "arguments": {
+          "TableName": "library-loans",
+          "FilterExpression": "dueDate < :today",
+          "ExpressionAttributeValues": {
+            ":today": {
+              "S": "{% $now() %}"
+            }
+          }
+        },
+        "output": "{% $states.result.Items %}"
+      }
+    },
+    {
+      "id": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/RemindEach",
+      "type": "function",
+      "label": "RemindEach [Map]",
+      "repo": "notifications",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 21,
+      "kind": "state",
+      "meta": {
+        "workflow": "overdue-reminders",
+        "stateType": "Map"
+      }
+    },
+    {
+      "id": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder",
+      "type": "function",
+      "label": "SendReminder [Task lambda:invoke]",
+      "repo": "notifications",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 27,
+      "kind": "state",
+      "meta": {
+        "workflow": "overdue-reminders",
+        "stateType": "Task",
+        "scope": [
+          "RemindEach"
+        ],
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response"
+        },
+        "arguments": {
+          "FunctionName": "{% $states.input.reminderFunction %}",
+          "Payload": "{% $states.input %}"
+        }
+      }
+    },
+    {
+      "id": "producer:circulation#statemachine/loan-approval.asl.json:109:5",
+      "type": "producer",
+      "label": "message sqs/librarian-approvals",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "definition",
+        "service": "sqs",
+        "action": "sendMessage"
+      }
+    },
+    {
+      "id": "producer:circulation#statemachine/loan-approval.asl.json:179:5",
+      "type": "producer",
+      "label": "event eventbridge/library-events/library.circulation/LoanApproved",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "definition",
+        "service": "events",
+        "action": "putEvents"
+      }
+    },
+    {
+      "id": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+      "type": "producer",
+      "label": "message sns/loan-decisions",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "definition",
+        "service": "sns",
+        "action": "publish"
+      }
+    },
+    {
+      "id": "repo:circulation",
+      "type": "repo",
+      "label": "circulation",
+      "repo": "circulation",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:notifications",
+      "type": "repo",
+      "label": "notifications",
+      "repo": "notifications",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:circulation#library-copies",
+      "type": "table",
+      "label": "library-copies",
+      "repo": "circulation"
+    },
+    {
+      "id": "table:circulation#library-holds",
+      "type": "table",
+      "label": "library-holds",
+      "repo": "circulation"
+    },
+    {
+      "id": "table:circulation#library-loans",
+      "type": "table",
+      "label": "library-loans",
+      "repo": "circulation"
+    },
+    {
+      "id": "table:notifications#library-loans",
+      "type": "table",
+      "label": "library-loans",
+      "repo": "notifications"
+    },
+    {
+      "id": "table:notifications#library-notices",
+      "type": "table",
+      "label": "library-notices",
+      "repo": "notifications"
+    }
+  ],
+  "edges": [
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/WaitForPickupWindow",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 224,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/ArchiveApplication",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 204,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 129,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 126,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "catch",
+            "errors": [
+              "States.Timeout",
+              "LoanDeclined"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
+      "to": "producer:circulation#statemachine/loan-approval.asl.json:109:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/IsBorrowerInGoodStanding",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 42,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 39,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "catch",
+            "errors": [
+              "States.ALL"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckHolds",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopies",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 73,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckHolds",
+      "to": "db_query:circulation#statemachine/loan-approval.asl.json:60:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 60
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/IsBorrowerInGoodStanding",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckHolds",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 50,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.borrower.standing",
+              "StringEquals": "good"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/IsBorrowerInGoodStanding",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 55,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.borrower.standing",
+              "StringEquals": "suspended"
+            }
+          },
+          {
+            "kind": "default"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 214,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/PublishLoanApproved",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 177,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower",
+      "to": "entry:notifications:workflow:borrower-notifications",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 166,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:borrower-notifications"
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/PublishLoanApproved",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/ArchiveApplication",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 193,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/PublishLoanApproved",
+      "to": "producer:circulation#statemachine/loan-approval.asl.json:179:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 164,
+      "meta": {
+        "order": 2,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 153,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "branch",
+            "branch": 1
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/WriteLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 135,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "branch",
+            "branch": 0
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 241,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+      "to": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopies",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 107,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopies",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopy",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 83,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "item-processor",
+            "field": "ItemProcessor"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopy",
+      "to": "db_query:circulation#statemachine/loan-approval.asl.json:85:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 85
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/ShapeApplication",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/WaitForPickupWindow",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanApproved",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 229,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/WriteLoan",
+      "to": "db_query:circulation#statemachine/loan-approval.asl.json:137:13",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 137
+    },
+    {
+      "from": "db_query:circulation#statemachine/loan-approval.asl.json:137:13",
+      "to": "table:circulation#library-loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 137
+    },
+    {
+      "from": "db_query:circulation#statemachine/loan-approval.asl.json:60:5",
+      "to": "table:circulation#library-holds",
+      "type": "queries",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 60
+    },
+    {
+      "from": "db_query:circulation#statemachine/loan-approval.asl.json:85:11",
+      "to": "table:circulation#library-copies",
+      "type": "queries",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 85
+    },
+    {
+      "from": "db_query:notifications#workflows/borrower-notifications.asl.yaml:30:3",
+      "to": "table:notifications#library-notices",
+      "type": "queries",
+      "confidence": "static",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 30
+    },
+    {
+      "from": "db_query:notifications#workflows/overdue-reminders.asl.json:6:5",
+      "to": "table:notifications#library-loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 6
+    },
+    {
+      "from": "entry:circulation:http:POST:/loans",
+      "to": "circulation#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:circulation:http:POST:/loans",
+      "to": "circulation#src/loans/request-loan.ts:requestLoan",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{borrowerId:string;items:number;status:string}",
+      "file": "src/loans/request-loan.ts",
+      "line": 16,
+      "meta": {
+        "requestRead": true,
+        "body": "type:circulation#LoanRequest"
+      }
+    },
+    {
+      "from": "entry:circulation:workflow:loan-approval",
+      "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/ShapeApplication",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 3
+    },
+    {
+      "from": "entry:notifications:http:GET:/notices/:param",
+      "to": "notifications#src/server.ts:listNotices",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{borrowerId:string;notices:undefined[]}",
+      "file": "src/server.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true,
+        "params": "{borrowerId:string}"
+      }
+    },
+    {
+      "from": "entry:notifications:workflow:borrower-notifications",
+      "to": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/ChooseChannel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 2
+    },
+    {
+      "from": "entry:notifications:workflow:overdue-reminders",
+      "to": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/FindOverdueLoans",
+      "type": "handles",
+      "confidence": "static",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 4
+    },
+    {
+      "from": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/ChooseChannel",
+      "to": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.borrower.prefers",
+              "StringEquals": "email"
+            }
+          },
+          {
+            "kind": "default"
+          }
+        ]
+      }
+    },
+    {
+      "from": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/ChooseChannel",
+      "to": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 12,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.borrower.prefers",
+              "StringEquals": "text"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "from": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/RecordNotice",
+      "to": "db_query:notifications#workflows/borrower-notifications.asl.yaml:30:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 30
+    },
+    {
+      "from": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail",
+      "to": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/RecordNotice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 21,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText",
+      "to": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/RecordNotice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 29,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/FindOverdueLoans",
+      "to": "db_query:notifications#workflows/overdue-reminders.asl.json:6:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 6
+    },
+    {
+      "from": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/FindOverdueLoans",
+      "to": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/RemindEach",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 19,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/RemindEach",
+      "to": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/Done",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 38,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/RemindEach",
+      "to": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 25,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "item-processor",
+            "field": "Iterator"
+          }
+        ]
+      }
+    },
+    {
+      "from": "producer:circulation#statemachine/loan-approval.asl.json:109:5",
+      "to": "channel:sqs/librarian-approvals",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109,
+      "meta": {
+        "payload": {
+          "MessageBody": {
+            "borrowerId.$": "$.borrowerId",
+            "itemIds.$": "$.itemIds",
+            "taskToken.$": "$$.Task.Token"
+          }
+        }
+      }
+    },
+    {
+      "from": "producer:circulation#statemachine/loan-approval.asl.json:179:5",
+      "to": "channel:eventbridge/library-events/library.circulation/LoanApproved",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179,
+      "meta": {
+        "payload": {
+          "Detail.$": "$"
+        }
+      }
+    },
+    {
+      "from": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+      "to": "channel:sns/loan-decisions",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234,
+      "meta": {
+        "payload": {
+          "Message.$": "$"
+        }
+      }
+    }
+  ],
+  "types": {
+    "type:circulation#LoanRequest": {
+      "name": "LoanRequest",
+      "kind": "object",
+      "declaredIn": "circulation#src/loans/request-loan.ts",
+      "structuralHash": "8f409ddcd316c608",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "branchId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:express#Request<unknown,unknown,type:circulation#LoanRequest>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<{borrowerId:string},unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 1,
+      "reason": "workflow-named-by-file",
+      "level": "info",
+      "message": "the workflow in statemachine/loan-approval.asl.json is named loan-approval after its file; nothing here says the name it is deployed under",
+      "hint": "A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.",
+      "symbol": "entry:circulation:workflow:loan-approval",
+      "service": "circulation"
+    },
+    {
+      "service": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 14,
+      "reason": "reference-not-found",
+      "message": "CheckBorrowerStanding [Task lambda:invoke] reaches the function check-borrower-standing, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding",
+      "meta": {
+        "reference": "invoke:check-borrower-standing"
+      }
+    },
+    {
+      "service": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 155,
+      "reason": "reference-not-found",
+      "message": "ScoreBorrower [Task function] reaches the function score-borrower, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower",
+      "meta": {
+        "reference": "invoke:score-borrower"
+      }
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 206,
+      "reason": "workflow-target-dynamic",
+      "level": "info",
+      "message": "LookUpBranchPolicy invokes a function chosen when the state runs: FunctionName is $.branch.policyFunction",
+      "hint": "The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy",
+      "meta": {
+        "field": "FunctionName",
+        "written": "$.branch.policyFunction"
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 216,
+      "reason": "workflow-template-unbound",
+      "message": "ApplyLateFeePolicy invokes a function named by ${LateFeePolicyFunctionArn}, and nothing here says what ${LateFeePolicyFunctionArn} stands for",
+      "hint": "Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy",
+      "meta": {
+        "field": "FunctionName",
+        "written": "${LateFeePolicyFunctionArn}",
+        "variables": [
+          "LateFeePolicyFunctionArn"
+        ]
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 1,
+      "reason": "workflow-named-by-file",
+      "level": "info",
+      "sites": 2,
+      "message": "the workflow in workflows/borrower-notifications.asl.yaml is named borrower-notifications after its file; nothing here says the name it is deployed under",
+      "hint": "A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.",
+      "symbol": "entry:notifications:workflow:borrower-notifications",
+      "service": "notifications"
+    },
+    {
+      "service": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 14,
+      "reason": "reference-not-found",
+      "message": "SendEmail [Task lambda:invoke] reaches the function send-borrower-email, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail",
+      "meta": {
+        "reference": "invoke:send-borrower-email"
+      }
+    },
+    {
+      "service": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 22,
+      "reason": "reference-not-found",
+      "message": "SendText [Task lambda:invoke] reaches the function send-borrower-text, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText",
+      "meta": {
+        "reference": "invoke:send-borrower-text"
+      }
+    },
+    {
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 27,
+      "reason": "workflow-target-dynamic",
+      "level": "info",
+      "message": "SendReminder invokes a function chosen when the state runs: FunctionName is {% $states.input.reminderFunction %}",
+      "hint": "The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.",
+      "symbol": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder",
+      "meta": {
+        "field": "FunctionName",
+        "written": "{% $states.input.reminderFunction %}"
+      },
+      "service": "notifications"
+    }
+  ]
+}

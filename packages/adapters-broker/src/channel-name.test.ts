@@ -82,7 +82,23 @@ export class Publisher {
   fromLookedUp() { return LOOKED_UP }
   fromParameter(topic: string) { return topic }
   computed(a: string) { return a.toUpperCase() }
+  fromParameterProperty(event: { detail: { type: string } }) { return event.detail.type }
+  fromEnvironment() { return process.env.ORDER_TOPIC }
+  fromEnvironmentKey() { return process.env['ORDER_TOPIC']! }
+  fromEnvironmentConst() { return ENV_TOPIC }
+  fromDestructured() { return RETURNS_QUEUE_URL }
+  fromEnvironmentRecord() { return SETTINGS.queueUrl }
+  fromFallbackConst() { return process.env.ORDER_TOPIC || DEFAULT_TOPIC }
+  fromFallbackEmpty() { return process.env.ORDER_TOPIC ?? '' }
+  fromTwoVariables() { return process.env.ORDER_TOPIC ?? process.env.OTHER_TOPIC ?? 'orders' }
+  fromDestructuredDefault() { return BUS }
 }
+declare const process: { env: Record<string, string | undefined> };
+const ENV_TOPIC = (process.env.ORDER_TOPIC as string) ?? 'orders';
+const { RETURNS_QUEUE_URL } = process.env;
+const SETTINGS = { queueUrl: process.env.SETTINGS_QUEUE_URL };
+const DEFAULT_TOPIC = 'orders.default';
+const { BUS = 'library' } = process.env;
 `;
 
 const config = parseConfig({ sharedPackages: ['@project/events'] });
@@ -287,6 +303,12 @@ describe('resolving which channel a call addresses', () => {
       expect(of('computed')).toEqual({ unresolved: 'channel-dynamic', text: 'a.toUpperCase()' });
     });
 
+    // A wrapper handed an event reads the name off it, and a property of a
+    // parameter is decided by each caller exactly as the parameter is.
+    it('reports a property of a parameter as decided at run time', () => {
+      expect(of('fromParameterProperty')).toEqual({ unresolved: 'channel-dynamic', text: 'event.detail.type' });
+    });
+
     /**
      * The judgement, pinned. An annotation wider than the value changes what the
      * type system lets other code assume, and nothing about what the binding
@@ -295,6 +317,54 @@ describe('resolving which channel a call addresses', () => {
      */
     it('reads a const annotated wider than the value it is written with', () => {
       expect(of('fromWidened')).toEqual({ name: 'order.widened', names: ['order.widened'], via: 'const' });
+    });
+  });
+
+  /**
+   * A name the deployment sets. The code names the variable and nothing else,
+   * and that is a different fact from a name built at run time: the remedy is
+   * to read the deployment, and the variable is the key to read it by.
+   */
+  describe('a name read from the environment', () => {
+    it('names the variable a property of the environment is', () => {
+      expect(of('fromEnvironment')).toEqual({
+        unresolved: 'channel-from-environment',
+        text: 'process.env.ORDER_TOPIC',
+        variable: 'ORDER_TOPIC',
+      });
+    });
+
+    it('reads a key written as an index, asserted', () => {
+      expect(of('fromEnvironmentKey')).toMatchObject({ variable: 'ORDER_TOPIC' });
+    });
+
+    it('follows a constant bound to one, past a fallback and an assertion', () => {
+      expect(of('fromEnvironmentConst')).toMatchObject({
+        unresolved: 'channel-from-environment',
+        variable: 'ORDER_TOPIC',
+      });
+    });
+
+    it('reads a name taken out of the environment by destructuring', () => {
+      expect(of('fromDestructured')).toMatchObject({ variable: 'RETURNS_QUEUE_URL' });
+    });
+
+    it('reads a property of a constant record holding one', () => {
+      expect(of('fromEnvironmentRecord')).toMatchObject({ variable: 'SETTINGS_QUEUE_URL' });
+    });
+
+    // The deployment's value wins where it is set, and the code's fallback is
+    // where it sends otherwise (R175).
+    it('keeps the one name the code falls back to, written or a const', () => {
+      expect(of('fromEnvironmentConst')).toMatchObject({ variable: 'ORDER_TOPIC', otherwise: 'orders' });
+      expect(of('fromFallbackConst')).toMatchObject({ variable: 'ORDER_TOPIC', otherwise: 'orders.default' });
+      expect(of('fromDestructuredDefault')).toMatchObject({ variable: 'BUS', otherwise: 'library' });
+    });
+
+    it('keeps no fallback that names nothing, nor one behind a second variable', () => {
+      expect(of('fromFallbackEmpty')).not.toHaveProperty('otherwise');
+      expect(of('fromTwoVariables')).not.toHaveProperty('otherwise');
+      expect(of('fromEnvironment')).not.toHaveProperty('otherwise');
     });
   });
 });

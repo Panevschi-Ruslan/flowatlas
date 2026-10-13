@@ -958,3 +958,105 @@ describe('a procedure asked for by its path', () => {
     expect(request?.message).toContain('takes OrderQuery');
   });
 });
+
+describe('a route whose handler reads its request and answers through what it is handed (P29)', () => {
+  /** A caller sending a body that lacks a field the route requires, and a route read by a description. */
+  const described = (handles: { returns?: string; meta: Record<string, unknown> }): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('caller#Client.create', 'method', 'caller'),
+          node('http_out:caller#1', 'http_out', 'caller'),
+          node('entry:api:http:POST:/orders', 'entry', 'api', { kind: 'http' }),
+          node('api#src/orders.ts:create', 'function', 'api'),
+        ],
+        edges: [
+          edge('caller#Client.create', 'calls', 'http_out:caller#1'),
+          edge('http_out:caller#1', 'http_calls', 'entry:api:http:POST:/orders', {
+            params: ['type:caller#Body'],
+            returns: 'type:caller#Answer',
+          }),
+          edge('entry:api:http:POST:/orders', 'handles', 'api#src/orders.ts:create', handles),
+        ],
+        types: {
+          ...registry,
+          'type:api#Body': object('Body', [field('id', 'string'), field('channel', 'string')]),
+        },
+      }),
+      { generatedAt: FIXED },
+    );
+
+  it('compares a body the route states as it compares any other', () => {
+    const report = described({ meta: { requestRead: true, body: 'type:api#Body' } });
+    const missing = report.findings.find((finding) => finding.field === 'channel');
+    expect(missing?.severity).toBe('error');
+    expect(missing?.receiver.claimed).toBeUndefined();
+  });
+
+  it('holds a finding against a body only a cast types to a warning, and says why', () => {
+    const report = described({ meta: { requestRead: true, body: 'type:api#Body', claimed: ['body'] } });
+    const missing = report.findings.find((finding) => finding.field === 'channel');
+    expect(missing?.severity).toBe('warning');
+    expect(missing?.receiver.claimed).toBe(true);
+    expect(missing?.message).toContain("api's type here is a cast in its code, which nothing checks");
+  });
+
+  it('says an answer sent only under a status the code works out could be either (P30)', () => {
+    const report = described({ meta: { requestRead: true, body: 'type:api#Body', statusUnknown: 'type:api#Answer' } });
+    const response = report.unchecked.find((row) => row.direction === 'response');
+    expect(response?.reason).toBe('no-type-on-sender');
+    expect(response?.message).toBe(
+      'api#src/orders.ts:create answers type:api#Answer under a status its code works out, so whether that is its answer or a failure is not known',
+    );
+  });
+
+  it('says an answer the handler states no type for is not stated, rather than declared as nothing', () => {
+    const report = described({ meta: { requestRead: true, body: 'type:api#Body' } });
+    const response = report.unchecked.find((row) => row.direction === 'response');
+    expect(response?.reason).toBe('no-type-on-sender');
+    expect(response?.message).toBe(
+      'api#src/orders.ts:create answers through the response it is handed, and states no type for the answer',
+    );
+  });
+});
+
+describe('a route that may answer with a shape or a plain value (P30)', () => {
+  /** A caller expecting an order from a route whose answer is one of `returns`. */
+  const answering = (returns: string): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('caller#Client.get', 'method', 'caller'),
+          node('http_out:caller#1', 'http_out', 'caller'),
+          node('entry:api:http:GET:/orders/:param', 'entry', 'api', { kind: 'http' }),
+          node('api#src/orders.ts:get', 'function', 'api'),
+        ],
+        edges: [
+          edge('caller#Client.get', 'calls', 'http_out:caller#1'),
+          edge('http_out:caller#1', 'http_calls', 'entry:api:http:GET:/orders/:param', { returns: 'type:caller#Order' }),
+          edge('entry:api:http:GET:/orders/:param', 'handles', 'api#src/orders.ts:get', {
+            returns,
+            meta: { requestRead: true },
+          }),
+        ],
+        types: {
+          'type:caller#Order': object('Order', [field('id', 'string'), field('total', 'number')]),
+          'type:api#Order': object('Order', [field('id', 'string'), field('total', 'number')]),
+        },
+      }),
+      { generatedAt: FIXED },
+    );
+
+  it('compares each arm on its own, so only the plain value is reported, and says which arm it is', () => {
+    const findings = answering('string|type:api#Order').findings.filter((finding) => finding.direction === 'response');
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.kind).toBe('type_mismatch');
+    expect(findings[0]?.severity).toBe('error');
+    expect(findings[0]?.message).toContain('on string, one of the 2 shapes this may answer with');
+  });
+
+  it('leaves a shape that may be null to the question of whether the caller tolerates nothing', () => {
+    const findings = answering('null|type:api#Order').findings.filter((finding) => finding.direction === 'response');
+    expect(findings.every((finding) => !finding.message.includes('shapes this may answer with'))).toBe(true);
+  });
+});

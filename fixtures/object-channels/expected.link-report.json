@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T15:28:14.113Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:41.240Z",
   "configHash": "a2182287a03c",
   "services": [
     {
@@ -12,7 +12,15 @@
       "edges": 21,
       "types": 4,
       "unresolved": 1,
-      "durationMs": 695
+      "durationMs": 660,
+      "packages": {
+        "name": "object-channels-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "worker",
@@ -23,7 +31,15 @@
       "edges": 7,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 687
+      "durationMs": 656,
+      "packages": {
+        "name": "object-channels-worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

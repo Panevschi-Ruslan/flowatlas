@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T09:19:35.952Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T18:56:41.329Z",
   "services": [
     {
       "name": "shop",
@@ -154,6 +154,7 @@
       "meta": {
         "method": "GET",
         "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
@@ -188,6 +189,7 @@
       "meta": {
         "method": "PATCH",
         "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
@@ -273,6 +275,7 @@
       "meta": {
         "method": "PUT",
         "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
@@ -368,7 +371,18 @@
       "label": "archiveOrder",
       "repo": "shop",
       "file": "app/actions/orders.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{archived:boolean}"
+        }
+      }
     },
     {
       "id": "shop#app/actions/orders.ts:renameOrder",
@@ -376,7 +390,22 @@
       "label": "renameOrder",
       "repo": "shop",
       "file": "app/actions/orders.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "shop#app/api/(admin)/invoices/route.ts:GET",
@@ -400,7 +429,18 @@
       "label": "serveJob@14",
       "repo": "shop",
       "file": "app/api/jobs/route.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "shop#app/api/orders/[id]/route.ts:GET",
@@ -408,7 +448,22 @@
       "label": "GET",
       "repo": "shop",
       "file": "app/api/orders/[id]/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_request",
+              "type": "Request"
+            },
+            {
+              "name": "context",
+              "type": "{params:{id:string}}"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#app/api/orders/[id]/route.ts:PATCH",
@@ -416,7 +471,22 @@
       "label": "PATCH",
       "repo": "shop",
       "file": "app/api/orders/[id]/route.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            },
+            {
+              "name": "context",
+              "type": "{params:{id:string}}"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#app/api/orders/route.ts:GET",
@@ -424,7 +494,13 @@
       "label": "GET",
       "repo": "shop",
       "file": "app/api/orders/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#app/api/orders/route.ts:POST",
@@ -432,7 +508,18 @@
       "label": "POST",
       "repo": "shop",
       "file": "app/api/orders/route.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#app/api/reports/route.ts:handler",
@@ -451,6 +538,15 @@
       "line": 7,
       "kind": "function",
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "props",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        },
         "route": "/orders"
       }
     },
@@ -460,7 +556,13 @@
       "label": "listInvoices",
       "repo": "shop",
       "file": "lib/invoices-store.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop#InvoiceRecord[]"
+        }
+      }
     },
     {
       "id": "shop#lib/orders-store.ts:archive",
@@ -468,7 +570,18 @@
       "label": "archive",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "shop#lib/orders-store.ts:findOrder",
@@ -476,7 +589,18 @@
       "label": "findOrder",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:@prisma/client#Order"
+        }
+      }
     },
     {
       "id": "shop#lib/orders-store.ts:listOrders",
@@ -484,7 +608,13 @@
       "label": "listOrders",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@prisma/client#Order[]"
+        }
+      }
     },
     {
       "id": "shop#lib/orders-store.ts:patchOrder",
@@ -492,7 +622,22 @@
       "label": "patchOrder",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "patch",
+              "type": "{id?:string;name?:string;userId?:string;total?:number;status?:string}"
+            }
+          ],
+          "returns": "type:@prisma/client#Order"
+        }
+      }
     },
     {
       "id": "shop#lib/orders-store.ts:saveOrder",
@@ -500,7 +645,18 @@
       "label": "saveOrder",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:@prisma/client#Order"
+            }
+          ],
+          "returns": "type:@prisma/client#Order"
+        }
+      }
     },
     {
       "id": "shop#lib/serve-job.ts:serveJob",
@@ -508,7 +664,18 @@
       "label": "serveJob",
       "repo": "shop",
       "file": "lib/serve-job.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{POST:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
     },
     {
       "id": "shop#lib/with-admin.ts:withAdmin",
@@ -516,7 +683,18 @@
       "label": "withAdmin",
       "repo": "shop",
       "file": "lib/with-admin.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
     },
     {
       "id": "shop#middleware.ts:middleware.ts",
@@ -533,7 +711,22 @@
       "label": "handler",
       "repo": "shop",
       "file": "pages/api/legacy-orders.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_request",
+              "type": "unknown"
+            },
+            {
+              "name": "response",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "table:shop#order",
@@ -707,7 +900,13 @@
       "label": "listInvoices",
       "repo": "web",
       "file": "src/api/orders.ts",
-      "line": 45
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/api/orders.ts:listOrders",
@@ -715,7 +914,13 @@
       "label": "listOrders",
       "repo": "web",
       "file": "src/api/orders.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:web#OrderDto[]"
+        }
+      }
     },
     {
       "id": "web#src/api/orders.ts:send",
@@ -723,7 +928,18 @@
       "label": "send",
       "repo": "web",
       "file": "src/api/orders.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/api/orders.ts:updateOrder",
@@ -731,7 +947,22 @@
       "label": "updateOrder",
       "repo": "web",
       "file": "src/api/orders.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "patch",
+              "type": "type:web#UpdateOrderDto"
+            }
+          ],
+          "returns": "type:web#OrderDto"
+        }
+      }
     },
     {
       "id": "web#src/components/InvoicesPanel.tsx:InvoicesPanel",
@@ -742,6 +973,10 @@
       "line": 10,
       "kind": "function",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
         "route": "/invoices"
       }
     },
@@ -754,6 +989,15 @@
       "line": 11,
       "kind": "function",
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "props",
+              "type": "{resourcePath:string}"
+            }
+          ],
+          "returns": "unknown"
+        },
         "route": "/orders"
       }
     },
@@ -764,7 +1008,13 @@
       "repo": "web",
       "file": "src/hooks/use-orders.ts",
       "line": 12,
-      "kind": "hook"
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{refresh:{prototype:any;length:number;arguments:any;caller:Function;name:string};rename:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
     },
     {
       "id": "web#src/hooks/use-resource.ts:useResource",
@@ -773,7 +1023,18 @@
       "repo": "web",
       "file": "src/hooks/use-resource.ts",
       "line": 12,
-      "kind": "hook"
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
     }
   ],
   "edges": [
@@ -828,8 +1089,12 @@
       "to": "shop#pages/api/legacy-orders.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order[]",
       "file": "pages/api/legacy-orders.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/invoices",
@@ -858,8 +1123,12 @@
       "to": "shop#app/api/orders/route.ts:GET",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order[]",
       "file": "app/api/orders/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/orders",
@@ -880,8 +1149,13 @@
       "to": "shop#app/api/orders/[id]/route.ts:GET",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/[id]/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/orders/:param",
@@ -924,8 +1198,13 @@
       "to": "shop#app/api/orders/[id]/route.ts:PATCH",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/[id]/route.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
     },
     {
       "from": "entry:shop:http:PATCH:/api/orders/:param",
@@ -990,8 +1269,12 @@
       "to": "shop#app/api/orders/route.ts:POST",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/route.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop:http:POST:/api/orders",
@@ -1034,8 +1317,13 @@
       "to": "shop#app/api/orders/[id]/route.ts:PATCH",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/[id]/route.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
     },
     {
       "from": "entry:shop:http:PUT:/api/orders/:param",
@@ -1072,6 +1360,10 @@
       "to": "shop#lib/orders-store.ts:archive",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "app/actions/orders.ts",
       "line": 14
     },
@@ -1080,6 +1372,11 @@
       "to": "shop#lib/orders-store.ts:patchOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "{id?:string;name?:string;userId?:string;total?:number;status?:string}"
+      ],
+      "returns": "type:@prisma/client#Order",
       "file": "app/actions/orders.ts",
       "line": 19
     },
@@ -1088,6 +1385,8 @@
       "to": "shop#lib/invoices-store.ts:listInvoices",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:shop#InvoiceRecord[]",
       "file": "app/api/(admin)/invoices/route.ts",
       "line": 18
     },
@@ -1096,6 +1395,10 @@
       "to": "shop#lib/with-admin.ts:withAdmin",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
       "file": "app/api/(admin)/invoices/route.ts",
       "line": 18
     },
@@ -1104,6 +1407,10 @@
       "to": "shop#lib/orders-store.ts:saveOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:@prisma/client#Order"
+      ],
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/jobs/route.ts",
       "line": 15
     },
@@ -1112,6 +1419,10 @@
       "to": "shop#lib/serve-job.ts:serveJob",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{POST:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
       "file": "app/api/jobs/route.ts",
       "line": 14
     },
@@ -1120,6 +1431,10 @@
       "to": "shop#lib/orders-store.ts:saveOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:@prisma/client#Order"
+      ],
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/jobs/route.ts",
       "line": 15
     },
@@ -1128,6 +1443,10 @@
       "to": "shop#lib/orders-store.ts:findOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/[id]/route.ts",
       "line": 5
     },
@@ -1136,6 +1455,11 @@
       "to": "shop#lib/orders-store.ts:patchOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "{id?:string;name?:string;userId?:string;total?:number;status?:string}"
+      ],
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/[id]/route.ts",
       "line": 15
     },
@@ -1144,6 +1468,8 @@
       "to": "shop#lib/orders-store.ts:listOrders",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:@prisma/client#Order[]",
       "file": "app/api/orders/route.ts",
       "line": 5
     },
@@ -1152,6 +1478,10 @@
       "to": "shop#lib/orders-store.ts:saveOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:@prisma/client#Order"
+      ],
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/route.ts",
       "line": 11
     },
@@ -1160,6 +1490,8 @@
       "to": "shop#lib/invoices-store.ts:listInvoices",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:shop#InvoiceRecord[]",
       "file": "app/api/reports/route.ts",
       "line": 14
     },
@@ -1168,6 +1500,10 @@
       "to": "shop#lib/with-admin.ts:withAdmin",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
       "file": "app/api/reports/route.ts",
       "line": 14
     },
@@ -1184,6 +1520,10 @@
       "to": "shop#app/actions/orders.ts:archiveOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{archived:boolean}",
       "file": "app/orders/page.tsx",
       "line": 8
     },
@@ -1192,6 +1532,11 @@
       "to": "shop#lib/orders-store.ts:patchOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "{id?:string;name?:string;userId?:string;total?:number;status?:string}"
+      ],
+      "returns": "type:@prisma/client#Order",
       "file": "lib/orders-store.ts",
       "line": 38
     },
@@ -1232,6 +1577,8 @@
       "to": "shop#lib/orders-store.ts:listOrders",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:@prisma/client#Order[]",
       "file": "pages/api/legacy-orders.ts",
       "line": 11
     },
@@ -1327,6 +1674,10 @@
       "to": "web#src/api/orders.ts:send",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/api/orders.ts",
       "line": 45
     },
@@ -1351,6 +1702,8 @@
       "to": "web#src/api/orders.ts:listInvoices",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "unknown",
       "file": "src/components/InvoicesPanel.tsx",
       "line": 13
     },
@@ -1359,6 +1712,8 @@
       "to": "web#src/hooks/use-orders.ts:useOrders",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "{refresh:{prototype:any;length:number;arguments:any;caller:Function;name:string};rename:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
       "file": "src/components/OrdersPanel.tsx",
       "line": 12
     },
@@ -1367,6 +1722,10 @@
       "to": "web#src/hooks/use-resource.ts:useResource",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
       "file": "src/components/OrdersPanel.tsx",
       "line": 13
     },
@@ -1375,6 +1734,8 @@
       "to": "web#src/api/orders.ts:listOrders",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:web#OrderDto[]",
       "file": "src/hooks/use-orders.ts",
       "line": 13
     },
@@ -1383,6 +1744,11 @@
       "to": "web#src/api/orders.ts:updateOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "type:web#UpdateOrderDto"
+      ],
+      "returns": "type:web#OrderDto",
       "file": "src/hooks/use-orders.ts",
       "line": 14
     },
@@ -1396,6 +1762,65 @@
     }
   ],
   "types": {
+    "type:@prisma/client#Order": {
+      "name": "Order",
+      "kind": "external",
+      "declaredIn": "@prisma/client",
+      "structuralHash": "17e2e3eff7b20b9f",
+      "meta": {
+        "declKind": "external",
+        "package": "@prisma/client"
+      }
+    },
+    "type:shop#InvoiceRecord": {
+      "name": "InvoiceRecord",
+      "kind": "object",
+      "declaredIn": "shop#lib/invoices-store.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:web#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "web#src/api/orders.ts",
+      "structuralHash": "ddbd444db60e49f4",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "archived",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
     "type:web#UpdateOrderDto": {
       "name": "UpdateOrderDto",
       "kind": "object",
@@ -1416,6 +1841,14 @@
   },
   "unresolved": [
     {
+      "file": "app/orders/page.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
       "file": "pages/api/legacy-orders.ts",
       "line": 11,
       "reason": "call-dynamic-receiver",
@@ -1423,6 +1856,22 @@
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "handler -> response.json",
       "service": "shop"
+    },
+    {
+      "file": "src/components/InvoicesPanel.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
     }
   ]
 }

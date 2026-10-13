@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T11:06:35.051Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:29:40.508Z",
   "services": [
     {
       "name": "api",
@@ -17,7 +17,18 @@
       "repo": "api",
       "file": "../../packages/mail/src/Receipt.tsx",
       "line": 4,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ children }",
+              "type": "{children:unknown}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#../../packages/mail/src/Receipt.tsx:Receipt",
@@ -26,7 +37,18 @@
       "repo": "api",
       "file": "../../packages/mail/src/Receipt.tsx",
       "line": 17,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ orderId }",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#../../packages/relay/src/index.ts:relay",
@@ -34,7 +56,22 @@
       "label": "relay",
       "repo": "api",
       "file": "../../packages/relay/src/index.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            },
+            {
+              "name": "html",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#../../packages/sdk/src/http.ts:request",
@@ -42,7 +79,18 @@
       "label": "request",
       "repo": "api",
       "file": "../../packages/sdk/src/http.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "api#../../packages/sdk/src/index.ts:lookupCustomer",
@@ -50,7 +98,18 @@
       "label": "lookupCustomer",
       "repo": "api",
       "file": "../../packages/sdk/src/index.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            }
+          ],
+          "returns": "{email:string}"
+        }
+      }
     },
     {
       "id": "api#../../packages/ui/src/index.tsx:ButtonLink",
@@ -59,7 +118,18 @@
       "repo": "api",
       "file": "../../packages/ui/src/index.tsx",
       "line": 2,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ href, label }",
+              "type": "{href:string;label:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/app.module.ts:AppModule",
@@ -95,7 +165,18 @@
       "label": "OrdersController.place",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{id:string;email:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "config_key:api#MAIL_RELAY_URL",
@@ -235,6 +316,10 @@
       "to": "api#../../packages/sdk/src/http.ts:request",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
       "file": "../../packages/sdk/src/index.ts",
       "line": 7
     },
@@ -243,6 +328,11 @@
       "to": "api#../../packages/relay/src/index.ts:relay",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 16
     },
@@ -251,6 +341,10 @@
       "to": "api#../../packages/sdk/src/index.ts:lookupCustomer",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{email:string}",
       "file": "src/orders/orders.controller.ts",
       "line": 15
     },
@@ -273,6 +367,22 @@
   "types": {},
   "unresolved": [
     {
+      "file": "../../packages/mail/src/Receipt.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "api"
+    },
+    {
+      "file": "../../packages/mail/src/Receipt.tsx",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "api"
+    },
+    {
       "service": "api",
       "file": "../../packages/relay/src/index.ts",
       "line": 3,
@@ -289,6 +399,14 @@
       "message": "no service declares PLATFORM_URL",
       "hint": "Add PLATFORM_URL to services[].baseUrlEnv of whichever service answers it.",
       "symbol": "http_out:api#../../packages/sdk/src/http.ts:3:3"
+    },
+    {
+      "file": "../../packages/ui/src/index.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "api"
     },
     {
       "file": "src/e2e/helpers.ts",

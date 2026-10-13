@@ -1,0 +1,24 @@
+@  POST /loans                                          lending/infra/api.tf:32
+  -> handler                                            lending/src/handlers/create-loan.ts:11
+    -> newLoan                                          lending/src/lib/loans.ts:11
+    -> payloadOf                                        lending/src/lib/clients.ts:9
+    ~  invoke lending-hold-copies                       lending/src/handlers/create-loan.ts:15
+      @  lending-hold-copies                            lending/infra/functions.tf:35
+        -> handler                                      lending/src/handlers/hold-copies.ts:3
+    ~  start lending-loan-approval                      lending/src/handlers/create-loan.ts:18
+      @  workflow lending-loan-approval                 lending/statemachine/loan-approval.asl.json:1
+        -> CheckBorrower [Task lambda:invoke]           lending/statemachine/loan-approval.asl.json:5
+          @  lending-check-borrower                     lending/infra/functions.tf:53
+            -> handler                                  lending/src/handlers/check-borrower.ts:3
+          -> AwaitLibrarianReview [Task lambda:invoke]  lending/statemachine/loan-approval.asl.json:20
+            @  lending-request-review                   lending/infra/functions.tf:61
+              -> handler                                lending/src/handlers/request-review.ts:2
+            -> ScoreBorrower [Task function]            lending/statemachine/loan-approval.asl.json:40
+              @  lending-score-borrower                 lending/infra/functions.tf:69
+                -> handler                              lending/src/handlers/score-borrower.ts:1
+            -> LoanDeclined [Fail]                      lending/statemachine/loan-approval.asl.json:45
+    $  LOAN_APPROVAL_ARN                                lending/src/handlers/create-loan.ts:20
+    ~  invoke-async lending-notify-borrower             lending/src/handlers/create-loan.ts:27
+      @  lending-notify-borrower                        lending/infra/functions.tf:43
+        -> handler                                      lending/src/handlers/notify-borrower.ts:1
+unresolved on this path: 0

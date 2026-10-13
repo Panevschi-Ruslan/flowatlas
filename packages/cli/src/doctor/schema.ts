@@ -105,7 +105,11 @@ export interface BaselineDelta {
 
 export interface DoctorVerdict {
   exitCode: 0 | 1 | 2;
-  /** One sentence per thing that decided the code; empty when nothing did. */
+  /**
+   * One sentence per thing the verdict says, in the order its rules say them;
+   * empty when nothing applies. Not every sentence decides the code: a service
+   * with no way in is said first and decides nothing (R170).
+   */
   reasons: string[];
 }
 
@@ -154,6 +158,15 @@ export interface DoctorReport {
      * `route-handler-unread` rows name.
      */
     waysIn: { found: number; read: number };
+    /**
+     * Services a server reader read, that hold code and have no way in at all,
+     * each with what its repository looks like (R170). Absent when there is
+     * none. The first thing the verdict names, and the first line of the text
+     * report, because it is what a reader of that service needs to hear first:
+     * nothing reaches its code, and installing its dependencies would not change
+     * that.
+     */
+    withoutWaysIn?: Array<{ service: string; looksLike: string }>;
   };
   markers: {
     status: SectionStatus;
@@ -267,6 +280,7 @@ export const doctorReportSchema = z.object({
       found: z.number().int().nonnegative(),
       read: z.number().int().nonnegative(),
     }),
+    withoutWaysIn: z.array(z.object({ service: z.string(), looksLike: z.string() })).optional(),
   }),
   markers: z.object({
     status,

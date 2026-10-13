@@ -1,0 +1,29 @@
+{
+  "services": [
+    { "name": "circulation", "repo": "./circulation", "type": "lambda" }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "library-events",
+          "channelKind": "topic",
+          "producers": [
+            {
+              "function": "publishLibraryEvent",
+              "address": [
+                { "literal": "eventbridge" },
+                { "literal": "library" },
+                { "literal": "library.returns" },
+                { "at": [{ "kind": "argument", "index": 0 }] }
+              ],
+              "payload": [{ "kind": "argument", "index": 1 }],
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

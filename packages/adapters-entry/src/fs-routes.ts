@@ -13,8 +13,8 @@ import {
   type Reach,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
-import { Node } from 'ts-morph';
-import { builtByFactory, builtExportFunction, handsOverWork, unwrapValue } from './shared.js';
+import { Node, SyntaxKind } from 'ts-morph';
+import { builtByFactory, builtExportFunction, handsOverWork, repoFunctionOf, unwrapValue } from './shared.js';
 
 /**
  * A router whose address space is the file system, described rather than
@@ -64,6 +64,15 @@ export interface FsRouter {
    * group that drops out would move every route under it.
    */
   readonly segments: readonly SegmentConvention[];
+  /**
+   * How a route's segments are laid out on disk, where not one per directory.
+   *
+   * `flat` is Remix's: a route is a file directly under the root, or a directory
+   * directly under it holding one of `routeFiles`, and its segments are the
+   * dots of that one name - `api.orders.$id.ts` is `/api/orders/:id`, and a dot
+   * inside brackets (`[sitemap.xml]`) is a literal one (P38).
+   */
+  readonly layout?: 'flat';
 }
 
 /**
@@ -73,7 +82,15 @@ export interface FsRouter {
  * tool reads have between them, and a framework with a fifth adds a name here
  * and a rule to the table below, which is one place rather than two files.
  */
-export type SegmentConvention = 'group' | 'slot' | 'private' | 'param' | 'catch-all';
+export type SegmentConvention =
+  | 'group'
+  | 'slot'
+  | 'private'
+  | 'param'
+  | 'catch-all'
+  | 'pathless'
+  | 'dollar'
+  | 'mixed';
 
 /** A directory that groups files without appearing in the address. */
 const GROUP = /^\(.*\)$/;
@@ -91,9 +108,66 @@ const SLOT = /^@/;
  */
 const PRIVATE = /^_/;
 
-/** `[id]` is one segment of any value; `[...rest]` and `[[...rest]]` are any number. */
+/**
+ * `[id]` is one segment of any value; `[...rest]` and `[[...rest]]` are any
+ * number; `[[lang]]` is one that may be absent, and `[id=integer]` names a
+ * matcher after the param, which is no part of its name (SvelteKit).
+ */
 const DYNAMIC = /^\[(\.\.\.)?(.+?)\]$/;
-const OPTIONAL_CATCH_ALL = /^\[\[\.\.\..+\]\]$/;
+const OPTIONAL = /^\[\[.+\]\]$/;
+
+/** `$id` is a param, `$` alone the rest of the path, `($lang)` an optional one (Remix). */
+const DOLLAR = /^(\()?\$([\w-]*)\)?$/;
+
+/** `(en)` is a literal segment that may be absent (Remix). */
+const OPTIONAL_LITERAL = /^\(([^$()][^()]*)\)$/;
+
+/** A segment that is one bracketed name and nothing else, which `param` and `catch-all` read. */
+const WHOLE_DYNAMIC = /^\[{1,2}(?:\.\.\.)?[^[\]]+\]{1,2}$/;
+
+/**
+ * The brackets inside a SvelteKit segment: `[x+2e]` and `[u+00e9]` are escaped
+ * characters, anything else a param (`foo-[id]`).
+ */
+const BRACKETED = /\[(?:([xu])\+([0-9a-fA-F]+)|([^\]]+))\]/g;
+
+/** The most hex digits an escape spells, and the last code point there is. */
+const ESCAPE_DIGITS = 6;
+const LAST_CODE_POINT = 0x10ffff;
+
+/** Characters an address reads as syntax: kept encoded, so `?` is not read as optional, `:` as a param or `/` as a segment. */
+const SYNTAX_CHARACTER = /^[?:/%#]$/;
+
+/**
+ * The character an escape stands for, or the escape as written when it stands
+ * for none (`[x+110000]`), which a router serves as literal text.
+ */
+const escapedCharacter = (code: string, written: string): string => {
+  const point = Number.parseInt(code, 16);
+  if (code.length > ESCAPE_DIGITS || point > LAST_CODE_POINT) return written;
+  const character = String.fromCodePoint(point);
+  return SYNTAX_CHARACTER.test(character) ? encodeURIComponent(character) : character;
+};
+
+/**
+ * One segment as a router reads it: what it contributes to the address (the
+ * key, every param renamed) and to the path as written (each param named, so a
+ * handler's params can be named by the route the way a registered path names
+ * them - P34).
+ */
+interface SegmentReading {
+  readonly read: string;
+  readonly raw: string;
+}
+
+/** A bracketed segment's name, without the brackets, the dots or a matcher. */
+const dynamicName = (segment: string): string | undefined =>
+  DYNAMIC.exec(segment.replace(/^\[(\[.*\])\]$/, '$1'))?.[2]?.replace(/=.*$/, '');
+
+const named = (read: string, name: string | undefined, optional: boolean): SegmentReading => ({
+  read,
+  raw: name === undefined || name === '' ? read : `:${name}${optional ? '?' : ''}`,
+});
 
 /**
  * What one segment contributes to an address, by the convention that claims it.
@@ -101,15 +175,18 @@ const OPTIONAL_CATCH_ALL = /^\[\[\.\.\..+\]\]$/;
  * A lookup rather than a chain of branches, so that a router's `segments` list
  * is the whole of what decides which spellings apply to it. Each rule answers
  * `undefined` when the segment is not its business, `null` when the segment
- * contributes nothing, and a string when it contributes that.
+ * contributes nothing, and a reading when it contributes that.
  *
  * `null` is a different answer from an empty string: a repository that spells a
  * group as a path serves `app/api/(admin)/users/route.ts` at `/api/users`, and
  * getting that wrong moves every route under it.
  */
-const SEGMENT_RULES: Readonly<
-  Record<SegmentConvention, (segment: string) => string | null | undefined>
-> = Object.freeze({
+type SegmentRule = (
+  segment: string,
+  rest: (segment: string) => SegmentReading | null,
+) => SegmentReading | null | undefined;
+
+const SEGMENT_RULES: Readonly<Record<SegmentConvention, SegmentRule>> = Object.freeze({
   group: (segment) => (GROUP.test(segment) ? null : undefined),
   slot: (segment) => (SLOT.test(segment) ? null : undefined),
   // Not a segment that drops out but a segment that cancels the route; the walk
@@ -117,34 +194,94 @@ const SEGMENT_RULES: Readonly<
   // which does not honour underscores is not read as if it did.
   private: (segment) => (PRIVATE.test(segment) ? null : undefined),
   'catch-all': (segment) => {
-    if (OPTIONAL_CATCH_ALL.test(segment)) return '*';
-    const dynamic = DYNAMIC.exec(segment);
-    return dynamic !== null && dynamic[1] !== undefined ? '*' : undefined;
+    const dynamic = DYNAMIC.exec(segment.replace(/^\[(\[.*\])\]$/, '$1'));
+    if (dynamic?.[1] === undefined) return undefined;
+    return named('*', dynamicName(segment), OPTIONAL.test(segment));
   },
   param: (segment) => {
-    const dynamic = DYNAMIC.exec(segment);
-    return dynamic !== null && dynamic[1] === undefined ? PARAM_PLACEHOLDER : undefined;
+    const dynamic = DYNAMIC.exec(segment.replace(/^\[(\[.*\])\]$/, '$1'));
+    if (dynamic === null || dynamic[1] !== undefined) return undefined;
+    return named(PARAM_PLACEHOLDER, dynamicName(segment), OPTIONAL.test(segment));
+  },
+  // Remix: a leading underscore is a layout that adds no segment (`_index`
+  // among them), and a trailing one only opts out of a parent's layout - what is
+  // left is read by the conventions after this one, so `$userId_` is a param.
+  pathless: (segment, rest) => {
+    if (PRIVATE.test(segment)) return null;
+    if (!segment.endsWith('_')) return undefined;
+    return rest(segment.slice(0, -1));
+  },
+  dollar: (segment) => {
+    const literal = OPTIONAL_LITERAL.exec(segment)?.[1];
+    if (literal !== undefined) return { read: literal, raw: `${literal}?` };
+    const dollar = DOLLAR.exec(segment);
+    if (dollar === null) return undefined;
+    const name = dollar[2] ?? '';
+    return name === '' ? { read: '*', raw: '*' } : named(PARAM_PLACEHOLDER, name, dollar[1] !== undefined);
+  },
+  // SvelteKit: brackets inside a segment. Each param among them is a hole in
+  // the key and the literal around it stays (`foo-[id]` is `/foo-:param`), so
+  // `foo-[id]` and `bar-[id]` beside each other are two addresses and either
+  // spells out more than a bare `[id]` beside them, which is how SvelteKit
+  // ranks them. The path as written names each param (`/foo-:id`). Escapes are
+  // the characters they stand for, save those an address reads as syntax.
+  mixed: (segment) => {
+    const parts = [...segment.matchAll(BRACKETED)];
+    if (parts.length === 0) return undefined;
+    const escaped = parts.some((part) => part[2] !== undefined);
+    if (!escaped && WHOLE_DYNAMIC.test(segment)) return undefined;
+    const spell = (name: (param: string) => string): string =>
+      segment.replace(BRACKETED, (whole, _kind: string, code: string | undefined, param: string | undefined) =>
+        param === undefined ? escapedCharacter(code as string, whole) : name(param),
+      );
+    return { read: spell(() => PARAM_PLACEHOLDER), raw: spell((param) => `:${param.replace(/=.*$/, '')}`) };
   },
 });
 
 /** The conventions, in the order a segment is offered to them. */
+// `mixed` stays before `catch-all` and `param`, which would read `foo-[id]` as one whole param.
 const CONVENTION_ORDER: readonly SegmentConvention[] = [
   'group',
   'slot',
   'private',
+  'pathless',
+  'mixed',
   'catch-all',
   'param',
+  'dollar',
 ];
 
 /** One segment of a directory path, as this router reads it. */
-const segmentOf = (segment: string, router: FsRouter): string | null => {
+const segmentOf = (segment: string, router: FsRouter, from = 0): SegmentReading | null => {
   if (segment === '') return null;
-  for (const convention of CONVENTION_ORDER) {
+  for (let index = from; index < CONVENTION_ORDER.length; index += 1) {
+    const convention = CONVENTION_ORDER[index] as SegmentConvention;
     if (!router.segments.includes(convention)) continue;
-    const read = SEGMENT_RULES[convention](segment);
+    const read = SEGMENT_RULES[convention](segment, (rest) => segmentOf(rest, router, index + 1));
     if (read !== undefined) return read;
   }
-  return segment;
+  return { read: segment, raw: segment };
+};
+
+/**
+ * The segments of one flat name: split at each dot outside brackets, and the
+ * brackets of every escaped run dropped (`[sitemap.xml]` and `sitemap[.]xml`
+ * are one literal segment each).
+ */
+const dottedSegments = (name: string): string[] =>
+  (name.match(/(?:\[[^\]]*\]|[^.])+/g) ?? []).map((part) => part.replace(/\[([^\]]*)\]/g, '$1'));
+
+/**
+ * The segments of a route laid out flat, or nothing when the file is not one:
+ * a route module directly under the root, or a folder's route file there.
+ */
+const flatSegments = (after: readonly string[], name: string, router: FsRouter): string[] | undefined => {
+  if (after.length === 0) return dottedSegments(name);
+  const [folder] = after;
+  if (after.length === 1 && folder !== undefined && router.routeFiles?.includes(name) === true) {
+    return dottedSegments(folder);
+  }
+  return undefined;
 };
 
 /** Whether a segment opts its whole subtree out of routing, for this router. */
@@ -222,11 +359,35 @@ const applicationOf = (before: readonly string[]): string => {
  * (R91, R111).
  */
 type FsFileReading =
-  | { readonly kind: 'route'; readonly path: string; readonly application: string }
+  | { readonly kind: 'route'; readonly path: string; readonly rawPath: string; readonly application: string }
   | { readonly kind: 'not-served'; readonly why: 'private' }
   | { readonly kind: 'elsewhere' };
 
 const ELSEWHERE: FsFileReading = { kind: 'elsewhere' };
+
+/**
+ * The segments of a route laid out one per directory, `private` when the
+ * convention takes it out of service, or nothing when it is not a route file.
+ */
+const directorySegments = (
+  after: string[],
+  name: string,
+  router: FsRouter,
+): string[] | 'private' | undefined => {
+  if (router.routeFiles !== undefined) {
+    if (!router.routeFiles.includes(name)) return undefined;
+  } else {
+    // The older router: the file name is the last segment, and a private file
+    // is not a route at all.
+    if (optsOut(name, router)) return 'private';
+    if (name !== 'index') after.push(name);
+  }
+
+  // A directory the underscore opts out of routing serves nothing at all, so a
+  // file under one is not a route with a segment missing — it is not a route.
+  if (after.some((segment) => optsOut(segment, router))) return 'private';
+  return after;
+};
 
 const readFsFile = (file: string, router: FsRouter): FsFileReading => {
   if (file.startsWith('../')) return ELSEWHERE;
@@ -243,27 +404,22 @@ const readFsFile = (file: string, router: FsRouter): FsFileReading => {
   const name = (after.pop() ?? '').replace(FILE_EXTENSION, '');
   if (name === '') return ELSEWHERE;
 
-  if (router.routeFiles !== undefined) {
-    if (!router.routeFiles.includes(name)) return ELSEWHERE;
-  } else {
-    // The older router: the file name is the last segment, and a private file
-    // is not a route at all.
-    if (optsOut(name, router)) return { kind: 'not-served', why: 'private' };
-    if (name !== 'index') after.push(name);
-  }
-
-  // A directory the underscore opts out of routing serves nothing at all, so a
-  // file under one is not a route with a segment missing — it is not a route.
-  if (after.some((segment) => optsOut(segment, router))) return { kind: 'not-served', why: 'private' };
+  const segments = router.layout === 'flat' ? flatSegments(after, name, router) : directorySegments(after, name, router);
+  if (segments === undefined) return ELSEWHERE;
+  if (segments === 'private') return { kind: 'not-served', why: 'private' };
 
   // A grouped or slot directory drops out; nothing else may, because a segment
   // that could not be read would make the address a different one.
-  const kept = after
-    .map((segment) => segmentOf(segment, router))
-    .filter((segment): segment is string => segment !== null);
+  const kept = segments.flatMap((segment) => {
+    const read = segmentOf(segment, router);
+    return read === null ? [] : [read];
+  });
+  const prefix = router.prefix ?? '';
   return {
     kind: 'route',
-    path: normalizePath(`${router.prefix ?? ''}/${kept.join('/')}`),
+    path: normalizePath(`${prefix}/${kept.map((segment) => segment.read).join('/')}`),
+    // Joined as written: normalising would rename every param `:param` again.
+    rawPath: `/${[...prefix.split('/'), ...kept.map((segment) => segment.raw)].filter((segment) => segment !== '').join('/')}`,
     application,
   };
 };
@@ -281,10 +437,28 @@ export const routePathOfFile = (file: string, router: FsRouter): string | null =
   return reading.kind === 'route' ? reading.path : null;
 };
 
+/**
+ * The address one file is served at by a router, its params named as written,
+ * or nothing: a route config's `flatRoutes()` hands its directory to the flat
+ * convention and places what it finds itself (P48).
+ */
+export const routeAddressOfFile = (
+  file: string,
+  router: FsRouter,
+): { readonly path: string; readonly rawPath: string } | null => {
+  const reading = readFsFile(file, router);
+  return reading.kind === 'route' ? { path: reading.path, rawPath: reading.rawPath } : null;
+};
+
 /** One address a file-system router serves, and which application serves it. */
 export interface FsAddress {
   /** What the framework answers on, with nothing in front of it. */
   readonly path: string;
+  /**
+   * The path with its params named, where it names any - the key has every
+   * param renamed - so a handler's params are named by the route (P34).
+   */
+  readonly rawPath?: string;
   /**
    * The qualifier the entry id carries, absent where the service holds one
    * application and the address is therefore the identity by itself.
@@ -348,7 +522,13 @@ export const fsAddressSpace = (map: ApplicationMap): FsAddressSpace => {
       const reading = readFsFile(file, router);
       if (reading.kind !== 'route') return null;
       const [application] = applicationsServing(map, reading.application);
-      return { path: reading.path, ...(application === undefined ? {} : { application }) };
+      return {
+        path: reading.path,
+        // The root is said as written too, so a layout or index at `/` names
+        // its address the way every other route does (P47).
+        ...(reading.rawPath === reading.path && reading.path !== '/' ? {} : { rawPath: reading.rawPath }),
+        ...(application === undefined ? {} : { application }),
+      };
     },
   };
 };
@@ -610,10 +790,150 @@ export const reportUnreadHandler = (
   });
 };
 
+/** The exports a route file answers by, where each is named after its verb. */
+const VERB_EXPORTS: ReadonlyMap<string, string> = new Map(HTTP_METHODS.map((method) => [method, method]));
+
+const NO_EXPORTS: ReadonlyMap<string, string> = new Map();
+
+const KNOWN_METHODS: ReadonlySet<string> = new Set(HTTP_METHODS);
+
+/** `request.method`, `method` taken out of it, or either upper- or lower-cased. */
+const isMethodRead = (node: TsNode): boolean => {
+  const value = unwrapValue(node);
+  if (Node.isCallExpression(value)) {
+    const callee = value.getExpression();
+    return Node.isPropertyAccessExpression(callee) && /^to(Upper|Lower)Case$/.test(callee.getName())
+      ? isMethodRead(callee.getExpression())
+      : false;
+  }
+  if (Node.isPropertyAccessExpression(value)) return value.getName() === 'method';
+  return Node.isIdentifier(value) && value.getText() === 'method';
+};
+
+/** A string literal's verb, when it is one. */
+const verbOf = (node: TsNode | undefined): string | undefined => {
+  if (node === undefined || !Node.isStringLiteral(node) && !Node.isNoSubstitutionTemplateLiteral(node)) return undefined;
+  const verb = node.getLiteralText().toUpperCase();
+  return KNOWN_METHODS.has(verb) ? verb : undefined;
+};
+
+const EQUALITY: ReadonlySet<SyntaxKind> = new Set([
+  SyntaxKind.EqualsEqualsEqualsToken,
+  SyntaxKind.EqualsEqualsToken,
+  SyntaxKind.ExclamationEqualsEqualsToken,
+  SyntaxKind.ExclamationEqualsToken,
+]);
+
+/** The verbs one comparison or one `case` names, by how it is written. */
+const COMPARED: ReadonlyMap<SyntaxKind, (node: TsNode) => string | undefined> = new Map([
+  [
+    SyntaxKind.BinaryExpression,
+    (node: TsNode) => {
+      if (!Node.isBinaryExpression(node) || !EQUALITY.has(node.getOperatorToken().getKind())) return undefined;
+      const [left, right] = [node.getLeft(), node.getRight()];
+      if (isMethodRead(left)) return verbOf(right);
+      return isMethodRead(right) ? verbOf(left) : undefined;
+    },
+  ],
+  [
+    SyntaxKind.CaseClause,
+    (node: TsNode) => {
+      const owner = node.getParent()?.getParent();
+      return Node.isCaseClause(node) && owner !== undefined && Node.isSwitchStatement(owner) && isMethodRead(owner.getExpression())
+        ? verbOf(node.getExpression())
+        : undefined;
+    },
+  ],
+]);
+
+/**
+ * The verbs a handler compares its request's method to, in the order written.
+ *
+ * Remix sends every verb but GET to a route's `action`, and an action that
+ * answers more than one says which by comparing `request.method` to them. Only
+ * literals count: a method compared to a name is a verb this cannot know.
+ */
+export const methodsCompared = (body: TsNode): string[] => {
+  const found = new Set<string>();
+  body.forEachDescendant((node) => {
+    const verb = COMPARED.get(node.getKind())?.(node);
+    if (verb !== undefined) found.add(verb);
+  });
+  return [...found];
+};
+
+/** The action a form posts to when it names none. */
+const DEFAULT_ACTION = 'default';
+
+/** One member of an object of ways in, and what stands behind it. */
+interface ActionMember {
+  readonly name: string;
+  readonly node: TsNode;
+  readonly handler?: NamedFunction;
+  readonly inline?: TsNode;
+}
+
+/** `{ … } satisfies Actions` and `({ … }) as Actions` are the object inside. */
+const objectOf = (value: TsNode): TsNode =>
+  Node.isSatisfiesExpression(value) ? objectOf(value.getExpression()) : unwrapValue(value);
+
+/**
+ * What one member of an exported object of ways in stands for, by how it was
+ * written: an arrow or function written there is its own handler; a name is
+ * the function it names. A method has no node a way in can point at, and says
+ * so through the unread row.
+ */
+const MEMBER_READINGS: ReadonlyMap<SyntaxKind, (property: TsNode) => Omit<ActionMember, 'name' | 'node'>> = new Map([
+  [
+    SyntaxKind.PropertyAssignment,
+    (property: TsNode) => {
+      const written = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+      const value = written === undefined ? undefined : unwrapValue(written);
+      if (value === undefined) return {};
+      if (Node.isArrowFunction(value) || Node.isFunctionExpression(value)) return { inline: value };
+      const fn = repoFunctionOf(value);
+      return fn === undefined ? {} : { handler: fn };
+    },
+  ],
+  [
+    SyntaxKind.ShorthandPropertyAssignment,
+    (property: TsNode) => {
+      // The name node's symbol is the property's; the value's is the function.
+      // An imported one is the import's until its alias is followed.
+      const symbol = Node.isShorthandPropertyAssignment(property) ? property.getValueSymbol() : undefined;
+      const declaration = (symbol?.isAlias() === true ? symbol.getAliasedSymbol() : symbol)?.getDeclarations()[0];
+      const fn = declaration === undefined ? undefined : namedFunction(declaration);
+      return fn === undefined ? {} : { handler: fn };
+    },
+  ],
+]);
+
+/**
+ * The members of an exported object whose every member is a way in.
+ *
+ * SvelteKit's `export const actions = { default: …, login: … }`: each key is an
+ * action a form posts to, and the page's address with `?/key` after it is the
+ * address of every one but the default (P42).
+ */
+const actionMembers = (declaration: TsNode): ActionMember[] => {
+  if (!Node.isVariableDeclaration(declaration)) return [];
+  const initializer = declaration.getInitializer();
+  const literal = initializer === undefined ? undefined : objectOf(initializer);
+  if (literal === undefined || !Node.isObjectLiteralExpression(literal)) return [];
+  return literal.getProperties().flatMap((property): ActionMember[] => {
+    if (Node.isSpreadAssignment(property)) return [];
+    const name = property.getName();
+    const reading = MEMBER_READINGS.get(property.getKind());
+    return [{ name, node: property, ...(reading === undefined ? {} : reading(property)) }];
+  });
+};
+
 /** One way in a file-system router declares, as the reader of one describes it. */
 export interface FsRouteVerb {
   method: string;
   path: string;
+  /** The path with its params named, where it names any (P34). */
+  rawPath?: string;
   /**
    * Where the way in was found, and where its verb was written.
    *
@@ -624,13 +944,21 @@ export interface FsRouteVerb {
    */
   at: Reach;
   handler?: NamedFunction;
+  /** A function written in place as the way in, found again by where it starts (P42). */
+  inline?: TsNode;
+  /**
+   * The named form action this way in is, where it is one: SvelteKit posts
+   * `?/login` to the page that declares `actions.login` (P42). The default
+   * action is the page's own POST and has none.
+   */
+  action?: string;
   /**
    * How the handler was named, as the entry's `handlerVia` says it: `unread`
    * where there is none, `call` where it is a factory the verb's call ran (R153).
    * Decided here rather than by each reader, which is how two readers of one
    * route file would come to say two things about it.
    */
-  handlerVia: VerbReading['via'] | 'unread';
+  handlerVia: VerbReading['via'] | 'inline' | 'unread';
   /** False when a handler was named and there is nothing behind the name. */
   bodyRead: boolean;
 }
@@ -656,27 +984,86 @@ export const readVerbFile = (
   options: {
     file: string;
     path: string;
+    rawPath?: string | undefined;
     adapter: string;
     emit: (verb: FsRouteVerb) => void;
+    /**
+     * Which exports are ways in, and the verb each answers: the verbs' own
+     * names unless the framework names them otherwise - Remix's `loader` is a
+     * GET and its `action` a POST (P38).
+     */
+    verbs?: ReadonlyMap<string, string>;
+    /**
+     * Whether a file exporting none of them is a page rather than a route with
+     * its verb missing, and so says nothing: every Remix route module is served,
+     * and most of them only render.
+     */
+    pagesServed?: boolean;
+    /**
+     * Exports that are objects of ways in, and the verb each member answers:
+     * SvelteKit's `actions`, every one of them a POST (P42).
+     */
+    actions?: ReadonlyMap<string, string>;
+    /**
+     * Exports whose verbs are the ones the handler compares `request.method`
+     * to, where it compares it to any: a Remix `action` that branches on
+     * `'DELETE'` and `'PUT'` answers those, not a POST (P43).
+     */
+    narrowed?: ReadonlySet<string>;
   },
 ): void => {
   const exported = sourceFile.getExportedDeclarations();
   let found = 0;
-  for (const method of HTTP_METHODS) {
-    const [declaration] = exported.get(method) ?? [];
+  for (const [name, method] of options.actions ?? NO_EXPORTS) {
+    const [declaration] = exported.get(name) ?? [];
     if (declaration === undefined) continue;
     found += 1;
-    const at = reachOf(declaration, sourceFile, method, ctx.repoDir);
+    for (const member of actionMembers(declaration)) {
+      const at = reachOf(member.node, sourceFile, `${name}.${member.name}`, ctx.repoDir);
+      const handled = member.handler !== undefined || member.inline !== undefined;
+      options.emit({
+        method,
+        path: options.path,
+        ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
+        ...(member.name === DEFAULT_ACTION ? {} : { action: member.name }),
+        at,
+        ...(member.handler === undefined ? {} : { handler: member.handler }),
+        ...(member.inline === undefined ? {} : { inline: member.inline }),
+        handlerVia: member.inline !== undefined ? 'inline' : handled ? 'function' : 'unread',
+        bodyRead: handled,
+      });
+      if (!handled) {
+        reportUnreadHandler(ctx, {
+          file: at.reached.file,
+          line: at.reached.line,
+          label: `${method} ${options.path}${member.name === DEFAULT_ACTION ? '' : `?/${member.name}`}`,
+          path: options.path,
+          why: 'none',
+          adapter: options.adapter,
+        });
+      }
+    }
+  }
+  for (const [name, method] of options.verbs ?? VERB_EXPORTS) {
+    const [declaration] = exported.get(name) ?? [];
+    if (declaration === undefined) continue;
+    found += 1;
+    const at = reachOf(declaration, sourceFile, name, ctx.repoDir);
     const reading = verbReading(declaration);
     const read = reading?.bodyRead === true;
-    options.emit({
-      method,
-      path: options.path,
-      at,
-      ...(reading === undefined ? {} : { handler: reading.fn }),
-      handlerVia: reading?.via ?? 'unread',
-      bodyRead: read,
-    });
+    const compared =
+      options.narrowed?.has(name) === true && reading?.via === 'function' ? methodsCompared(reading.fn.body) : [];
+    for (const answered of compared.length > 0 ? compared : [method]) {
+      options.emit({
+        method: answered,
+        path: options.path,
+        ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
+        at,
+        ...(reading === undefined ? {} : { handler: reading.fn }),
+        handlerVia: reading?.via ?? 'unread',
+        bodyRead: read,
+      });
+    }
     // The entry is still emitted, and the handler with it where there was one:
     // the route exists, the wrapper call is where the framework enters, and
     // dropping either would lose a fact that was read. What was missing was
@@ -693,7 +1080,7 @@ export const readVerbFile = (
     }
   }
 
-  if (found > 0) return;
+  if (found > 0 || options.pagesServed === true) return;
   ctx.builder.addUnresolved({
     file: options.file,
     line: 1,

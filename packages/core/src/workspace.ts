@@ -421,21 +421,31 @@ const extentByService = new Map<string, readonly ExtentPackage[]>();
  * The walk behind {@link serviceSourceDirs}, kept with its edges because one
  * question needs them: a peer dependency is supplied by whoever depends on the
  * package, so which of a service's packages run a framework depends on who
- * declares whom (see `suppliedWith` in `adapters/manifest.ts`). Unlike the list
- * of directories, this includes a member nested inside the service's own
- * directory, because it is still a package with a manifest of its own.
+ * declares whom (see `suppliedWith` in `adapters/manifest.ts`).
+ *
+ * A service that is itself the root of a workspace — functions in its own
+ * `src/`, the client they share in `packages/` — declares members of its own
+ * workspace, and those are its packages as much as a sibling's would be (R175).
+ * Names are looked up in the nearest workspace first.
  */
 export const serviceExtent = (repoDir: string): readonly ExtentPackage[] => {
   const own = resolve(repoDir);
   const cached = extentByService.get(own);
   if (cached !== undefined) return cached;
 
-  const root = workspaceRootOf(own);
+  const outer = workspaceRootOf(own);
+  const roots = [...(workspaceMemberDirs(own).length > 0 ? [own] : []), ...(outer === undefined ? [] : [outer])];
   const found: ExtentPackage[] = [];
-  if (root === undefined) {
+  if (roots.length === 0) {
     found.push({ dir: own, role: 'service', declares: [] });
   } else {
-    const byName = new Map(workspacePackages(root).map((pkg) => [pkg.name, pkg.dir]));
+    // Reversed, so the nearest workspace's name is the one the map keeps.
+    const byName = new Map(
+      roots
+        .flatMap((root) => workspacePackages(root))
+        .reverse()
+        .map((pkg) => [pkg.name, pkg.dir]),
+    );
     const seen = new Set<string>([own]);
     const queue = [own];
     while (queue.length > 0) {
@@ -478,11 +488,13 @@ const allDeclared = (pkg: PackageJson): Record<string, string> =>
  * workspace is left to the module resolver, which is what installed packages are
  * for. A member that contains the service — a root that somehow depends on its
  * own child — is left out, because taking it in would quietly turn one service
- * into the whole repository. And a directory that is not a workspace member gets
+ * into the whole repository. And a directory that belongs to no workspace gets
  * nothing but itself, so pointing the tool at a bare directory, or at a monorepo
  * root, reads exactly what it read before. A member nested inside the service's
  * own directory adds no directory, because its files are already under the first
- * one, though what it declares still belongs to the service.
+ * one, though what it declares still belongs to the service. Whether they are
+ * under the roots the service's own code is read from is another question, and
+ * the reading asks {@link serviceExtent} (R175).
  */
 export const serviceSourceDirs = (repoDir: string): readonly string[] => {
   const [own, ...members] = serviceExtent(repoDir).map((pkg) => pkg.dir) as [string, ...string[]];

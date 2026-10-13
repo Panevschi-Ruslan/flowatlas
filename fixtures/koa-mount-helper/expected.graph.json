@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "koa-mount-helper",
-  "generatedAt": "2026-09-27T17:32:41.638Z",
+  "generatedAt": "2026-10-08T07:27:08.206Z",
   "nodes": [
     {
       "id": "entry:koa-mount-helper:http:GET:/health",
@@ -81,7 +81,18 @@
       "label": "POST /documents.info@13",
       "repo": "koa-mount-helper",
       "file": "src/api/documents.routes.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-mount-helper#src/api/documents.routes.ts:POST /documents.list@17",
@@ -89,7 +100,18 @@
       "label": "POST /documents.list@17",
       "repo": "koa-mount-helper",
       "file": "src/api/documents.routes.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-mount-helper#src/health.routes.ts:GET /@7",
@@ -97,7 +119,18 @@
       "label": "GET /@7",
       "repo": "koa-mount-helper",
       "file": "src/health.routes.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-mount-helper#src/pages.ts:GET /pages.list@17",
@@ -105,7 +138,18 @@
       "label": "GET /pages.list@17",
       "repo": "koa-mount-helper",
       "file": "src/pages.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:koa-mount-helper",
@@ -135,7 +179,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/health.routes.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "string"
     },
     {
       "from": "entry:koa-mount-helper:http:GET:/pages.list",
@@ -143,7 +191,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/pages.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:koa-mount-helper:http:POST:/api/documents.info",
@@ -151,7 +202,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/documents.routes.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "entry:koa-mount-helper:http:POST:/api/documents.list",
@@ -159,10 +214,24 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/documents.routes.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
     }
   ],
-  "types": {},
+  "types": {
+    "type:koa#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "koa",
+      "structuralHash": "002a3105e543026c",
+      "meta": {
+        "declKind": "external",
+        "package": "koa"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "package.json",

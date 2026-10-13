@@ -1,10 +1,11 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openGraphDb, writeGraphDb, type GraphDb, type LinkReport, type ServiceReport } from '@flowatlas/linker';
-import { SCHEMA_VERSION, type GraphNode, type ProjectGraph, type Unresolved } from '@flowatlas/core';
+import { SCHEMA_VERSION, SENDS_META, type GraphNode, type ProjectGraph, type Unresolved } from '@flowatlas/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { snapshotOf, type Baseline } from './baseline.js';
+import { renderDoctorGithub, renderDoctorText } from './render.js';
 import { runDoctor } from './run.js';
 import { BASELINE_FORMAT_VERSION } from './schema.js';
 
@@ -56,10 +57,11 @@ afterAll(() => {
 });
 
 /**
- * How the body behind one way in stands: read, never reached by an edge, or
- * reached by an edge onto a handler its adapter said it could not follow.
+ * How the body behind one way in stands: read, never reached by an edge,
+ * reached by an edge onto a handler its adapter said it could not follow, or
+ * none by design, the way in's work being the message it sends.
  */
-type Way = 'read' | 'no-edge' | 'edge-unread';
+type Way = 'read' | 'no-edge' | 'edge-unread' | 'sends';
 
 const graphWith = (options: {
   name: string;
@@ -67,6 +69,8 @@ const graphWith = (options: {
   services: ServiceReport[];
   /** Ways in per service, each with how its body stands. */
   ways?: Record<string, readonly Way[]>;
+  /** Subscribers per service. */
+  consumers?: Record<string, number>;
 }): GraphDb => {
   const plain: GraphNode[] = Array.from({ length: options.nodes }, (_, index) => ({
     id: `gateway#node${index}`,
@@ -86,12 +90,21 @@ const graphWith = (options: {
         label: `GET /${id}`,
         repo,
         ...(way === 'edge-unread' ? { meta: { handlerBodyRead: false } } : {}),
+        ...(way === 'sends' ? { meta: { [SENDS_META]: 'sqs/holds' } } : {}),
       },
       { id: handler, type: 'method', label: handler, repo },
     ]),
+    ...Object.entries(options.consumers ?? {}).flatMap(([repo, count]) =>
+      Array.from({ length: count }, (_, index): GraphNode => ({
+        id: `${repo}#consumer${index}`,
+        type: 'consumer',
+        label: `consumer${index}`,
+        repo,
+      })),
+    ),
   ];
   const edges = ways
-    .filter(({ way }) => way !== 'no-edge')
+    .filter(({ way }) => way !== 'no-edge' && way !== 'sends')
     .map(({ id, handler }) => ({ from: id, to: handler, type: 'handles' as const, confidence: 'static' as const }));
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
@@ -197,6 +210,8 @@ describe('a graph that cannot be reported on', () => {
       name: 'no-reader',
       nodes: 3,
       services: [reportOf(), reportOf({ name: 'docs', extractor: null, nodes: 0, skipped: 'no-extractor' })],
+      // `orders` has a way in, so that what is asked is the service with no reader.
+      ways: { orders: ['read'] },
     });
     expect(runDoctor({ db, unresolved: [] }, { contracts: false }).verdict).toEqual({
       exitCode: 0,
@@ -214,6 +229,135 @@ describe('a graph that cannot be reported on', () => {
     expect(asked.verdict.exitCode).toBe(0);
     const about = runDoctor({ db, unresolved: [] }, { contracts: false, service: 'widget' });
     expect(about.verdict.exitCode).toBe(2);
+  });
+});
+
+/**
+ * A server whose code was read and that has no way in at all (R170).
+ *
+ * On a stack nothing reads, this was described as a partial read with its
+ * dependencies missing. What the repository looks like is the finding, and it
+ * is said first; it decides no exit code, because the bodies were read and the
+ * growth check still sees a change inside one.
+ */
+describe('a service with no way in', () => {
+  const described = (service: { name: string; type: string }): string =>
+    `it is built on Vue, which nothing here reads yet (${service.name}, ${service.type})`;
+
+  it('is named first in the verdict, with what its repository looks like, and decides nothing', () => {
+    const db = graphWith({
+      name: 'no-way-in',
+      nodes: 3,
+      services: [reportOf(), reportOf({ name: 'gateway', type: 'express' })],
+      ways: { orders: ['read'] },
+    });
+    const report = runDoctor(
+      { db, unresolved: [] },
+      { contracts: false, strict: true, baseline: { status: 'missing', note: 'no baseline' }, looksLike: described },
+    );
+    expect(report.unresolved.withoutWaysIn).toEqual([
+      { service: 'gateway', looksLike: 'it is built on Vue, which nothing here reads yet (gateway, express)' },
+    ]);
+    expect(report.verdict.reasons[0]).toBe(
+      'gateway: no way in was found — it is built on Vue, which nothing here reads yet (gateway, express).' +
+        ' Its code was read and nothing in this graph reaches it, so no flow starts there',
+    );
+    // The exit is the missing baseline's, which is said after it.
+    expect(report.verdict.exitCode).toBe(2);
+    expect(report.verdict.reasons).toHaveLength(2);
+    const ordinary = runDoctor({ db, unresolved: [] }, { contracts: false, strict: true, looksLike: described });
+    expect(ordinary.verdict.exitCode).toBe(0);
+  });
+
+  it('says only the configured type when nothing describes the repository', () => {
+    const db = graphWith({ name: 'no-way-in-bare', nodes: 1, services: [reportOf({ name: 'gateway' })] });
+    const report = runDoctor({ db, unresolved: [] }, { contracts: false });
+    expect(report.unresolved.withoutWaysIn).toEqual([{ service: 'gateway', looksLike: 'it is configured as nestjs' }]);
+  });
+
+  it('asks nothing of a browser, a service with no reader, or one that holds no node', () => {
+    const db = graphWith({
+      name: 'no-way-in-other',
+      nodes: 1,
+      services: [
+        reportOf({ name: 'web', type: 'angular', extractor: '@flowatlas/extractor-angular' }),
+        reportOf({ name: 'docs', extractor: null, nodes: 0, skipped: 'no-extractor' }),
+      ],
+    });
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false }).unresolved.withoutWaysIn).toBeUndefined();
+  });
+
+  it('counts a subscriber as a way in', () => {
+    const db = graphWith({ name: 'no-way-in-consumer', nodes: 1, services: [reportOf({ name: 'gateway' })] });
+    const withConsumer = graphWith({
+      name: 'no-way-in-consumer-2',
+      nodes: 1,
+      services: [reportOf({ name: 'gateway' })],
+      consumers: { gateway: 1 },
+    });
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false }).unresolved.withoutWaysIn).toHaveLength(1);
+    expect(runDoctor({ db: withConsumer, unresolved: [] }, { contracts: false }).unresolved.withoutWaysIn).toBeUndefined();
+  });
+
+  it('opens the text report, before the sentence about dependencies, which no longer names it', () => {
+    const root = mkdtempSync(join(tmpdir(), 'flowatlas-head-'));
+    mkdirSync(join(root, 'gateway'));
+    mkdirSync(join(root, 'orders'));
+    const db = graphWith({
+      name: 'no-way-in-head',
+      nodes: 1,
+      services: [reportOf(), reportOf({ name: 'gateway' })],
+      ways: { orders: ['read'] },
+    });
+    const report = runDoctor(
+      { db, unresolved: [row({ reason: 'type-unresolved' })] },
+      { contracts: false, looksLike: described },
+    );
+    const lines = renderDoctorText(report, {
+      repoDirs: new Map([
+        ['gateway', 'gateway'],
+        ['orders', 'orders'],
+      ]),
+      rootDir: root,
+    }).split('\n');
+    expect(lines[0]).toBe(
+      'gateway: no way in was found — it is built on Vue, which nothing here reads yet (gateway, nestjs).' +
+        ' Its code was read and nothing in this graph reaches it, so no flow starts there; its dependencies' +
+        ' are not installed either, and installing them would not give it one.',
+    );
+    expect(lines[2]).toMatch(/^orders’s dependencies are not installed, and 1 type could not be resolved/);
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('says nothing about a service declared by a document, by rule', () => {
+    const db = graphWith({
+      name: 'no-way-in-declared',
+      nodes: 1,
+      services: [reportOf({ name: 'gateway' })],
+    });
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false }).unresolved.withoutWaysIn).toHaveLength(1);
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false, declared: ['gateway'] }).unresolved.withoutWaysIn).toBeUndefined();
+  });
+
+  it('is a warning on the line of the configuration that names it, for a workflow', () => {
+    const db = graphWith({ name: 'no-way-in-github', nodes: 1, services: [reportOf({ name: 'gateway' })] });
+    const report = runDoctor({ db, unresolved: [] }, { contracts: false, looksLike: described });
+    const at = (service: string) => (service === 'gateway' ? { file: 'flowatlas.config.json', line: 4 } : undefined);
+    expect(renderDoctorGithub(report, { serviceAt: at }).split('\n')[0]).toBe(
+      '::warning file=flowatlas.config.json,line=4,title=gateway%3A no way in::gateway: no way in was found — it is built on Vue,' +
+        ' which nothing here reads yet (gateway, nestjs). Its code was read and nothing in this graph reaches it, so no flow starts there.',
+    );
+  });
+
+  it('narrows as the run does', () => {
+    const db = graphWith({
+      name: 'no-way-in-narrowed',
+      nodes: 1,
+      services: [reportOf(), reportOf({ name: 'gateway' })],
+      ways: { orders: ['read'] },
+    });
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false, service: 'orders' }).unresolved.withoutWaysIn).toBeUndefined();
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false, service: 'gateway' }).unresolved.withoutWaysIn).toHaveLength(1);
   });
 });
 
@@ -262,6 +406,18 @@ describe('a service whose ways in mostly have no body that was read', () => {
     expect(report.unresolved.waysIn).toEqual({ found: 5, read: 4 });
   });
 
+  it('counts a way in whose work is the message it sends as read, though it has no handler (R173)', () => {
+    const db = graphWith({
+      name: 'sends',
+      nodes: 1,
+      services: [reportOf({ name: 'shop' })],
+      ways: { shop: ['read', 'sends', 'sends', 'sends'] },
+    });
+    const report = runDoctor({ db, unresolved: [] }, { contracts: false });
+    expect(report.unresolved.waysIn).toEqual({ found: 4, read: 4 });
+    expect(report.verdict.exitCode).toBe(0);
+  });
+
   it('is decided per service, so a service read end to end cannot carry a hollow one', () => {
     const db = graphWith({
       name: 'outnumbered',
@@ -307,11 +463,12 @@ describe('what makes doctor fail a build', () => {
     expect(report.verdict.exitCode).toBe(0);
   });
 
-  it('leaves a missing baseline to the command, and reports rather than deciding', () => {
-    // The report says what it found; whether that stops a build is the
-    // command's call, and it is the one that turns this into exit 2. Asserted
-    // here so the split stays deliberate rather than becoming an oversight.
-    const report = runDoctor(
+  it('stops a strict run with no baseline, as one of the verdict rules, and says how to go on', () => {
+    // A gate with nothing to compare against is not a gate. This used to be
+    // decided by the command after the report was written; it is a rule of the
+    // verdict now, decided with the others (R170), and an ordinary run is not
+    // stopped by it.
+    const strictRun = runDoctor(
       { db: dbOf(), unresolved: [row()] },
       {
         strict: true,
@@ -320,8 +477,16 @@ describe('what makes doctor fail a build', () => {
         baselinePath: '/x',
       },
     );
-    expect(report.baseline.status).toBe('missing');
-    expect(report.verdict.exitCode).toBe(0);
+    expect(strictRun.baseline.status).toBe('missing');
+    expect(strictRun.verdict).toEqual({
+      exitCode: 2,
+      reasons: ['no baseline has been accepted — or pass --no-baseline to check annotations and contracts only'],
+    });
+    const ordinary = runDoctor(
+      { db: dbOf(), unresolved: [row()] },
+      { contracts: false, baseline: { status: 'missing', note: 'no baseline has been accepted' }, baselinePath: '/x' },
+    );
+    expect(ordinary.verdict).toEqual({ exitCode: 0, reasons: [] });
   });
 
   it('does not grow on an informational row, however many places it stands for', () => {
@@ -332,5 +497,57 @@ describe('what makes doctor fail a build', () => {
       { strict: true, contracts: false, baseline: { baseline: baselineOf([row()]) }, baselinePath: '/x' },
     );
     expect(report.verdict.exitCode).toBe(0);
+  });
+});
+
+describe('what a row is printed as', () => {
+  // A row about a node names it by id, so a walk counts it and a baseline keys
+  // it (R173, R177); the person reading the report reads its message instead,
+  // and the id stays in the JSON and in the key.
+  const producer = 'producer:orders#src/orders.service.ts:71:5';
+  const reportWith = (): ReturnType<typeof runDoctor> =>
+    runDoctor(
+      {
+        db: dbOf(),
+        unresolved: [
+          row({ reason: 'channel-from-config', symbol: producer, message: "OrdersService.tally -> this.config.get('SWEEP')" }),
+          row({
+            reason: 'workflow-named-by-file',
+            symbol: 'entry:orders:workflow:refunds',
+            message: 'the workflow in refunds.asl.json is named refunds after its file',
+          }),
+          row({
+            reason: 'reference-not-found',
+            symbol: 'orders#flows/refunds.asl.json:refunds/Pay',
+            message: 'Pay reaches the function pay, which no configured service declares',
+          }),
+          row({ reason: 'channel-dynamic', symbol: 'producer:orders#src/orders.service.ts:80:5' }),
+          row({ reason: 'dynamic-http-url', symbol: 'this.#http.get(`x:${id}`)', message: 'an address built at run time' }),
+        ],
+      },
+      { contracts: false, baseline: { status: 'missing', note: 'no baseline' }, baselinePath: '/x' },
+    );
+
+  it('prints the message where the symbol is the id of a node, and the source text otherwise', () => {
+    const text = renderDoctorText(reportWith());
+    expect(text).toContain("src/orders.service.ts:12  OrdersService.tally -> this.config.get('SWEEP')");
+    expect(text).toContain('src/orders.service.ts:12  the workflow in refunds.asl.json is named refunds after its file');
+    expect(text).toContain('src/orders.service.ts:12  Pay reaches the function pay, which no configured service declares');
+    expect(text).toContain('src/orders.service.ts:12  this.#http.get(`x:${id}`)');
+    // With no message of its own, a row has nothing better to say than its id.
+    expect(text).toContain('src/orders.service.ts:12  producer:orders#src/orders.service.ts:80:5');
+    expect(text).not.toContain(`:12  ${producer}`);
+  });
+
+  it('keeps the id in the baseline key and in the JSON', () => {
+    const report = reportWith();
+    expect(renderDoctorText(report)).toContain(`orders|src/orders.service.ts|${producer}|channel-from-config`);
+    const rows = report.unresolved.byReason.flatMap((group) => group.rows);
+    expect(rows.map((each) => each.symbol)).toContain(producer);
+  });
+
+  it('is printed the same way in the report a workflow annotates', () => {
+    const report = reportWith();
+    expect(renderDoctorGithub(report)).toContain(renderDoctorText(report));
   });
 });

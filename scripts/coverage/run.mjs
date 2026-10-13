@@ -453,8 +453,10 @@ const groundTruth = async (cloneDir, readRoots) => {
 /**
  * Everything a previous run of this target left where the tool will look.
  *
- * A service keeps its graph and its build cache in `.flowatlas` **inside the
- * repository it read**, and the harness used to remove only its own workspace. On
+ * Up to R166 a service kept its graph and its build cache in `.flowatlas`
+ * **inside the repository it read**; it now keeps them in the workspace, under
+ * `services/`, and the repository is only cleared of what an older build left
+ * there. The harness used to remove only its own workspace. On
  * a fresh run the clean that establishes the fresh state took the rest away as a
  * side effect; under `--install` there is no clean, so both survived from run to
  * run.

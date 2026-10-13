@@ -1,0 +1,666 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T09:12:43.772Z",
+  "services": [
+    {
+      "name": "catalogue",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalogue#infra/admin-api.tf:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "catalogue",
+      "file": "infra/admin-api.tf",
+      "line": 13,
+      "kind": "authorizer"
+    },
+    {
+      "id": "catalogue#infra/http-api.tf:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "catalogue",
+      "file": "infra/http-api.tf",
+      "line": 2,
+      "kind": "authorizer"
+    },
+    {
+      "id": "catalogue#src/handlers/get-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/handlers/get-borrower.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/get-title.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/handlers/get-title.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/register-borrower.ts:audited()",
+      "type": "middleware",
+      "label": "audited()",
+      "repo": "catalogue",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 16,
+      "kind": "call"
+    },
+    {
+      "id": "catalogue#src/handlers/register-borrower.ts:register",
+      "type": "function",
+      "label": "register",
+      "repo": "catalogue",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/search-titles.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/handlers/search-titles.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/lib/borrowers.ts:findBorrower",
+      "type": "function",
+      "label": "findBorrower",
+      "repo": "catalogue",
+      "file": "src/lib/borrowers.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalogue#Borrower|undefined"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/lib/borrowers.ts:registerBorrower",
+      "type": "function",
+      "label": "registerBorrower",
+      "repo": "catalogue",
+      "file": "src/lib/borrowers.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrower",
+              "type": "type:catalogue#Borrower"
+            }
+          ],
+          "returns": "type:catalogue#Borrower"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/lib/catalogue.ts:findTitle",
+      "type": "function",
+      "label": "findTitle",
+      "repo": "catalogue",
+      "file": "src/lib/catalogue.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalogue#Title|undefined"
+        }
+      }
+    },
+    {
+      "id": "catalogue#src/lib/catalogue.ts:searchTitles",
+      "type": "function",
+      "label": "searchTitles",
+      "repo": "catalogue",
+      "file": "src/lib/catalogue.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalogue#Title[]"
+        }
+      }
+    },
+    {
+      "id": "entry:catalogue:http:GET:/borrowers/:param",
+      "type": "entry",
+      "label": "GET /borrowers/:param",
+      "repo": "catalogue",
+      "file": "infra/admin-api.tf",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/borrowers/:param",
+        "rawPath": "/borrowers/{borrowerId}",
+        "deployedBy": "terraform",
+        "api": "catalogue-admin",
+        "function": "catalogue-get-borrower",
+        "declaredAs": "module.get_borrower_route.aws_api_gateway_method.this",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:http:GET:/titles",
+      "type": "entry",
+      "label": "GET /titles",
+      "repo": "catalogue",
+      "file": "infra/http-api.tf",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/titles",
+        "rawPath": "/titles",
+        "deployedBy": "terraform",
+        "api": "catalogue",
+        "function": "catalogue-search-titles",
+        "declaredAs": "module.http_api.aws_apigatewayv2_route.this[\"GET /titles\"]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:http:GET:/titles/:param",
+      "type": "entry",
+      "label": "GET /titles/:param",
+      "repo": "catalogue",
+      "file": "infra/http-api.tf",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/titles/:param",
+        "rawPath": "/titles/{isbn}",
+        "deployedBy": "terraform",
+        "api": "catalogue",
+        "function": "catalogue-get-title",
+        "declaredAs": "module.http_api.aws_apigatewayv2_route.this[\"GET /titles/{isbn}\"]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:http:POST:/borrowers",
+      "type": "entry",
+      "label": "POST /borrowers",
+      "repo": "catalogue",
+      "file": "infra/http-api.tf",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/borrowers",
+        "rawPath": "/borrowers",
+        "deployedBy": "terraform",
+        "api": "catalogue",
+        "function": "catalogue-register-borrower",
+        "declaredAs": "module.http_api.aws_apigatewayv2_route.this[\"POST /borrowers\"]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:catalogue-get-borrower",
+      "type": "entry",
+      "label": "catalogue-get-borrower",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 47,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalogue-get-borrower",
+        "deployedBy": "terraform",
+        "name": "catalogue-get-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "module.get_borrower.aws_lambda_function.this[0]",
+        "handler": "get-borrower.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:catalogue-get-title",
+      "type": "entry",
+      "label": "catalogue-get-title",
+      "repo": "catalogue",
+      "file": "infra/modules/function/main.tf",
+      "line": 26,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalogue-get-title",
+        "deployedBy": "terraform",
+        "name": "catalogue-get-title",
+        "runtime": "nodejs20.x",
+        "declaredAs": "module.get_title.aws_lambda_function.this",
+        "handler": "get-title.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:catalogue-register-borrower",
+      "type": "entry",
+      "label": "catalogue-register-borrower",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 33,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalogue-register-borrower",
+        "deployedBy": "terraform",
+        "name": "catalogue-register-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "module.register_borrower.aws_lambda_function.this[0]",
+        "handler": "register-borrower.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "wrapped",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:catalogue-search-titles",
+      "type": "entry",
+      "label": "catalogue-search-titles",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 23,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalogue-search-titles",
+        "deployedBy": "terraform",
+        "name": "catalogue-search-titles",
+        "runtime": "nodejs20.x",
+        "declaredAs": "module.search_titles.aws_lambda_function.this[0]",
+        "handler": "search-titles.handler",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "repo:catalogue",
+      "type": "repo",
+      "label": "catalogue",
+      "repo": "catalogue",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalogue#src/handlers/get-borrower.ts:handler",
+      "to": "catalogue#src/lib/borrowers.ts:findBorrower",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalogue#Borrower|undefined",
+      "file": "src/handlers/get-borrower.ts",
+      "line": 5
+    },
+    {
+      "from": "catalogue#src/handlers/get-title.ts:handler",
+      "to": "catalogue#src/lib/catalogue.ts:findTitle",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalogue#Title|undefined",
+      "file": "src/handlers/get-title.ts",
+      "line": 5
+    },
+    {
+      "from": "catalogue#src/handlers/register-borrower.ts:register",
+      "to": "catalogue#src/lib/borrowers.ts:registerBorrower",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:catalogue#Borrower"
+      ],
+      "returns": "type:catalogue#Borrower",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 12
+    },
+    {
+      "from": "catalogue#src/handlers/search-titles.ts:handler",
+      "to": "catalogue#src/lib/catalogue.ts:searchTitles",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalogue#Title[]",
+      "file": "src/handlers/search-titles.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:catalogue:http:GET:/borrowers/:param",
+      "to": "catalogue#infra/admin-api.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/admin-api.tf",
+      "line": 13,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:GET:/borrowers/:param",
+      "to": "catalogue#src/handlers/get-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/get-borrower.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{borrowerId:string}",
+        "statusUnknown": "object|type:catalogue#Borrower"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:GET:/titles",
+      "to": "catalogue#src/handlers/search-titles.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:catalogue#Title[]",
+      "file": "src/handlers/search-titles.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalogue:http:GET:/titles/:param",
+      "to": "catalogue#src/handlers/get-title.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/get-title.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{isbn:string}",
+        "statusUnknown": "object|type:catalogue#Title"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:POST:/borrowers",
+      "to": "catalogue#infra/http-api.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/http-api.tf",
+      "line": 2,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:POST:/borrowers",
+      "to": "catalogue#src/handlers/register-borrower.ts:audited()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:catalogue:http:POST:/borrowers",
+      "to": "catalogue#src/handlers/register-borrower.ts:register",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:catalogue#Borrower",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-get-borrower",
+      "to": "catalogue#src/handlers/get-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/get-borrower.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-get-title",
+      "to": "catalogue#src/handlers/get-title.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/get-title.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-register-borrower",
+      "to": "catalogue#src/handlers/register-borrower.ts:audited()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 16,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-register-borrower",
+      "to": "catalogue#src/handlers/register-borrower.ts:register",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:catalogue:invoke:catalogue-search-titles",
+      "to": "catalogue#src/handlers/search-titles.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/search-titles.ts",
+      "line": 4
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:catalogue#Borrower": {
+      "name": "Borrower",
+      "kind": "object",
+      "declaredIn": "catalogue#src/lib/borrowers.ts",
+      "structuralHash": "0befaf02f088a7f7",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:catalogue#Title": {
+      "name": "Title",
+      "kind": "object",
+      "declaredIn": "catalogue#src/lib/catalogue.ts",
+      "structuralHash": "a7ed5d485c9cdf84",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "copies",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "infra/main.tf",
+      "line": 59,
+      "reason": "infra-module-undescribed",
+      "message": "module.newsletter comes from git::https://git.example.com/library-platform/terraform-scheduled-function.git?ref=v1.4.0, which is not in this repository and is not described, so nothing it declares is read; it is given function_name, handler, source_dir, schedule",
+      "hint": "Describe it under adapters.infra.modules: its source, and each resource it declares as \"type.name\" with its arguments written over var.<input> — for example \"aws_lambda_function.this\": { \"function_name\": \"var.function_name\", \"handler\": \"var.handler\" }.",
+      "symbol": "git::https://git.example.com/library-platform/terraform-scheduled-function.git?ref=v1.4.0",
+      "adapter": "aws-lambda",
+      "meta": {
+        "module": "module.newsletter",
+        "source": "git::https://git.example.com/library-platform/terraform-scheduled-function.git?ref=v1.4.0",
+        "inputs": [
+          "function_name",
+          "handler",
+          "source_dir",
+          "schedule"
+        ]
+      },
+      "service": "catalogue"
+    }
+  ]
+}

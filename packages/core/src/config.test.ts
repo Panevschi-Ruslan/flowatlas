@@ -43,7 +43,9 @@ describe('parseConfig', () => {
         force: {},
         entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
-        db: { localBaseClasses: [] },
+        starters: [],
+        infra: { modules: [] },
+        db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
       },
       output: DEFAULT_OUTPUT,
@@ -70,7 +72,9 @@ describe('parseConfig', () => {
       force: {},
       entry: { registries: [], http: [], procedures: [] },
       broker: { custom: [] },
-      db: { localBaseClasses: [] },
+      starters: [],
+      infra: { modules: [] },
+      db: { localBaseClasses: [], tables: [] },
       frontend: { localClientClasses: [] },
     });
     expect(parseConfig({ types: {} }).types).toEqual({ maxDepth: DEFAULT_TYPE_MAX_DEPTH });
@@ -355,5 +359,46 @@ describe('a repository base that says where its classes name their table (R165)'
 
   it('refuses an entry with a key it does not know', () => {
     expect(() => bases([{ name: 'BaseRepository', table: 'x' }])).toThrow();
+  });
+});
+
+describe('a starter, described (P24)', () => {
+  const starter = {
+    module: '@library/orchestration',
+    function: 'run',
+    target: 'workflow',
+    name: [{ kind: 'argument', index: 0 }],
+    names: { 'Process.LoanApproval': 'loan-approval' },
+  };
+
+  it('accepts a helper named by its package and function, with a table of names', () => {
+    expect(parseConfig({ adapters: { starters: [starter] } }).adapters.starters).toEqual([starter]);
+  });
+
+  it('refuses one that is both a function and a method, or neither', () => {
+    expect(() => parseConfig({ adapters: { starters: [{ ...starter, method: 'run', receiverType: 'Orchestrator' }] } })).toThrow(/not both/);
+    expect(() => parseConfig({ adapters: { starters: [{ target: 'invoke', name: starter.name }] } })).toThrow(/names the function/);
+  });
+
+  it('refuses a target that is not something started by its deployed name', () => {
+    expect(() => parseConfig({ adapters: { starters: [{ ...starter, target: 'queue' }] } })).toThrow();
+  });
+});
+
+describe("a project's own request helpers, described (P30)", () => {
+  const request = {
+    helpers: [{ name: 'readJson', package: '@acme/http-kit', part: 'body' }],
+    answers: [{ by: 'helper', name: 'respond', package: '@acme/http-kit', statusArg: 0, arg: 1 }],
+  };
+
+  it('accepts helpers that answer and parse, with their defaults filled in', () => {
+    const parsed = parseConfig({ adapters: { entry: { request } } }).adapters.entry.request;
+    expect(parsed?.answers).toEqual([{ ...request.answers[0], at: [] }]);
+    expect(parsed?.helpers).toEqual([{ ...request.helpers[0], param: 0, arg: 0, claim: true }]);
+  });
+
+  it('refuses a helper that answers with a status no response has', () => {
+    const answers = [{ ...request.answers[0], statusArg: undefined, status: 1200 }];
+    expect(() => parseConfig({ adapters: { entry: { request: { answers } } } })).toThrow();
   });
 });

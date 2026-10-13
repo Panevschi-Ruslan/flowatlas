@@ -8,7 +8,7 @@
 
 export { angularFrontendAdapter, registerFrontendAdapters } from './adapter.js';
 
-export { BUILT_IN_PASSES, defaultOutputPath, extractAngular, extractRepo } from './extract-repo.js';
+export { ANGULAR_SOURCE_ROOTS, BUILT_IN_PASSES, defaultOutputPath, extractAngular, extractRepo, openProject } from './extract-repo.js';
 export type { ExtractRepoOptions } from './extract-repo.js';
 
 export { createAngularContext } from './context.js';

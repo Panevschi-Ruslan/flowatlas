@@ -113,19 +113,31 @@ const literal = (marker: RecordedMarker, index = 0): string | undefined => {
 };
 
 /**
+ * The body that makes the call a row names, when the row names a producer.
+ *
+ * A row about a publish or a start names the producer drawn for the call,
+ * which is the node a walk passes (R177); the annotation that would answer it
+ * is written on the body that calls it.
+ */
+export const callerOfProducer = (db: Pick<GraphDb, 'node' | 'edgesTo'>, id: string): string | undefined =>
+  db.node(id)?.type === 'producer' ? db.edgesTo(id, ['calls'])[0]?.from : undefined;
+
+/**
  * Whether a recorded row sits at this method.
  *
- * Rows name their symbol as it is written rather than by id — `OrdersService.archive`,
- * or `OrdersService.archive -> this.channelFor('archived')` — so the label the
- * graph gives the method is the join, within the one file it is declared in.
+ * A row about a publish names the producer the method calls. Other rows name
+ * their symbol as it is written rather than by id — `OrdersService.archive`, or
+ * `Bot.setup -> callbackRegistry.dispatch` — so the label the graph gives the
+ * method is the join, within the one file it is declared in.
  */
-const rowsAt = (rows: readonly Unresolved[], node: GraphNode): Unresolved[] =>
+const rowsAt = (rows: readonly Unresolved[], node: GraphNode, db: GraphDb): Unresolved[] =>
   rows.filter(
     (row) =>
-      (row.service ?? '') === node.repo &&
-      row.file === (node.file ?? '') &&
       row.symbol !== undefined &&
-      (row.symbol === node.label || row.symbol.startsWith(`${node.label} `)),
+      (callerOfProducer(db, row.symbol) === node.id ||
+        ((row.service ?? '') === node.repo &&
+          row.file === (node.file ?? '') &&
+          (row.symbol === node.label || row.symbol.startsWith(`${node.label} `)))),
   );
 
 /** What a route's first word has to be for the linker to use it. */
@@ -178,7 +190,7 @@ export const validateMarkers = (db: GraphDb, options: MarkerOptions = {}): Marke
   for (const node of db.allNodes()) {
     const markers = markersOn(node);
     if (markers.length === 0) continue;
-    const at = rowsAt(rows, node);
+    const at = rowsAt(rows, node, db);
     const blind = at.some((row) => BLIND_CHANNEL.test(row.reason));
 
     for (const marker of markers) {

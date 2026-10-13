@@ -1,0 +1,7 @@
+@  POST /holds                                                returns/infra/api.tf:57
+  ~  message sqs/library-hold-requests                        returns/infra/api.tf:57
+    ~  sqs/library-hold-requests                              infra/api.tf:57
+      ~  mapping aws_lambda_event_source_mapping.place_holds  returns/infra/mappings.tf:25
+        @  library-place-hold                                 returns/infra/functions.tf:75
+          -> handler                                          returns/src/holds/place-hold.ts:11
+unresolved on this path: 0

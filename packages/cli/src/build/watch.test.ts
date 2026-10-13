@@ -158,7 +158,7 @@ describe('watching a project', () => {
     writeFileSync(join(repoDir, SERVICE), withMethod('seven'));
     await rebuildsAfter(before);
 
-    const graph = readFileSync(join(repoDir, '.flowatlas', 'graph.json'), 'utf8');
+    const graph = readFileSync(join(scratch, '.flowatlas', 'services', 'orders', 'graph.json'), 'utf8');
     expect(graph).toContain('OrdersService.seven');
   }, 60_000);
 

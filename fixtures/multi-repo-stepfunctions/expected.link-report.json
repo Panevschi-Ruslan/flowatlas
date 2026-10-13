@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:56.629Z",
+  "configHash": "a7b646c99a88",
+  "services": [
+    {
+      "name": "catalogue",
+      "repo": "./catalogue",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 14,
+      "types": 3,
+      "unresolved": 1,
+      "durationMs": 546,
+      "packages": {
+        "name": "lending-library-catalogue",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 21,
+      "edges": 19,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 367
+    },
+    {
+      "name": "members",
+      "repo": "./members",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 10,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 537,
+      "packages": {
+        "name": "lending-library-members",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 4,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:members:http:POST:/checkouts"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 53,
+    "edges": 49,
+    "types": 6,
+    "unresolved": 1
+  }
+}

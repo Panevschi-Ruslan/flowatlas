@@ -1,0 +1,23 @@
+{
+  "Comment": "Approves a loan: checks the borrower, then scores them.",
+  "StartAt": "CheckBorrower",
+  "States": {
+    "CheckBorrower": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "lending-check-borrower",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId"
+        }
+      },
+      "ResultPath": "$.borrower",
+      "Next": "ScoreBorrower"
+    },
+    "ScoreBorrower": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:eu-west-1:111122223333:function:lending-score-borrower",
+      "End": true
+    }
+  }
+}

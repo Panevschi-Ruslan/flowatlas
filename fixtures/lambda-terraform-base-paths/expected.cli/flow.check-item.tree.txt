@@ -1,0 +1,8 @@
+@  library-kiosk-check-item                 kiosk/infra/main.tf:31
+  -> handler                                kiosk/src/kiosk/check-item.ts:7
+    $  LIBRARY_API_URL                      kiosk/src/kiosk/check-item.ts:9
+    ^  GET /v1/items/:param                 kiosk/src/kiosk/check-item.ts:9
+      => catalogue @  GET /v1/items/:param  catalogue/infra/catalogue-api.tf:20
+        -> handler                          catalogue/src/items/get-item.ts:5
+          -> findItem                       catalogue/src/items/items-table.ts:8
+unresolved on this path: 0

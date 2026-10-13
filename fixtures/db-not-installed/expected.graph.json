@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "db-not-installed",
-  "generatedAt": "2026-09-27T12:34:20.363Z",
+  "generatedAt": "2026-10-08T07:58:55.601Z",
   "nodes": [
     {
       "id": "db-not-installed#src/app.module.ts:AppModule",
@@ -38,7 +38,18 @@
       "label": "AssetsService.create",
       "repo": "db-not-installed",
       "file": "src/assets/assets.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/assets/assets.service.ts:AssetsService.findAll",
@@ -46,7 +57,13 @@
       "label": "AssetsService.findAll",
       "repo": "db-not-installed",
       "file": "src/assets/assets.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/assets/assets.service.ts:AssetsService.remove",
@@ -54,7 +71,18 @@
       "label": "AssetsService.remove",
       "repo": "db-not-installed",
       "file": "src/assets/assets.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/assets/with-faces.ts:withFaces",
@@ -62,7 +90,18 @@
       "label": "withFaces",
       "repo": "db-not-installed",
       "file": "src/assets/with-faces.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "eb",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/documents/documents.service.ts:DocumentsService",
@@ -82,7 +121,18 @@
       "label": "DocumentsService.create",
       "repo": "db-not-installed",
       "file": "src/documents/documents.service.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/documents/documents.service.ts:DocumentsService.findAll",
@@ -90,7 +140,13 @@
       "label": "DocumentsService.findAll",
       "repo": "db-not-installed",
       "file": "src/documents/documents.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "db_query:db-not-installed#src/assets/assets.service.ts:20:12",
@@ -361,6 +417,13 @@
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "AssetsService.findAll -> this.db.selectFrom('asset').selectAll().execute",
       "sites": 8
+    },
+    {
+      "file": "src/assets/with-faces.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ExpressionBuilder<DB, \"asset\">"
     }
   ]
 }

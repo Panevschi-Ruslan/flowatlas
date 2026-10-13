@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "medusa-fs-router",
-  "generatedAt": "2026-09-27T17:32:44.004Z",
+  "generatedAt": "2026-10-08T18:55:38.667Z",
   "nodes": [
     {
       "id": "entry:medusa-fs-router:http:GET:/admin/orders",
@@ -31,6 +31,7 @@
       "meta": {
         "method": "GET",
         "path": "/admin/orders/:param",
+        "rawPath": "/admin/orders/:id",
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
@@ -82,6 +83,7 @@
       "meta": {
         "method": "HEAD",
         "path": "/admin/orders/:param",
+        "rawPath": "/admin/orders/:id",
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
@@ -116,6 +118,7 @@
       "meta": {
         "method": "POST",
         "path": "/hooks/:param",
+        "rawPath": "/hooks/:provider",
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
@@ -146,7 +149,22 @@
       "label": "GET",
       "repo": "medusa-fs-router",
       "file": "src/api/admin/orders/[id]/route.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:@medusajs/framework#MedusaRequest<unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:@medusajs/framework#MedusaResponse<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "medusa-fs-router#src/api/admin/orders/middlewares.ts:authenticate",
@@ -172,7 +190,22 @@
       "label": "GET",
       "repo": "medusa-fs-router",
       "file": "src/api/admin/orders/route.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:@medusajs/framework#MedusaRequest<unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:@medusajs/framework#MedusaResponse<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "medusa-fs-router#src/api/middlewares.ts:authenticate",
@@ -189,7 +222,22 @@
       "label": "GET",
       "repo": "medusa-fs-router",
       "file": "src/api/store/(group)/route.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:@medusajs/framework#MedusaRequest<unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:@medusajs/framework#MedusaResponse<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "medusa-fs-router#src/api/store/products/route.ts:GET",
@@ -197,7 +245,22 @@
       "label": "GET",
       "repo": "medusa-fs-router",
       "file": "src/api/store/products/route.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:@medusajs/framework#MedusaRequest<unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:@medusajs/framework#MedusaResponse<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "medusa-fs-router#src/api/store/products/route.ts:POST",
@@ -205,7 +268,22 @@
       "label": "POST",
       "repo": "medusa-fs-router",
       "file": "src/api/store/products/route.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:@medusajs/framework#MedusaRequest<unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:@medusajs/framework#MedusaResponse<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "medusa-fs-router#src/services/orders.ts:listOrders",
@@ -213,7 +291,18 @@
       "label": "listOrders",
       "repo": "medusa-fs-router",
       "file": "src/services/orders.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "medusa-fs-router#src/services/orders.ts:oneOrder",
@@ -221,7 +310,18 @@
       "label": "oneOrder",
       "repo": "medusa-fs-router",
       "file": "src/services/orders.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "medusa-fs-router#src/services/products.ts:listProducts",
@@ -229,7 +329,13 @@
       "label": "listProducts",
       "repo": "medusa-fs-router",
       "file": "src/services/products.ts",
-      "line": 1
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "repo:medusa-fs-router",
@@ -275,7 +381,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/admin/orders/route.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:GET:/admin/orders/:param",
@@ -283,7 +392,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/admin/orders/[id]/route.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:GET:/admin/orders/:param",
@@ -305,7 +418,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/store/(group)/route.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{grouped:boolean}"
     },
     {
       "from": "entry:medusa-fs-router:http:GET:/store/products",
@@ -327,7 +444,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/store/products/route.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:HEAD:/admin/orders/:param",
@@ -335,7 +455,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/admin/orders/[id]/route.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:HEAD:/admin/orders/:param",
@@ -385,7 +509,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/store/products/route.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "medusa-fs-router#src/api/admin/orders/[id]/route.ts:GET",
@@ -393,7 +520,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/api/admin/orders/[id]/route.ts",
-      "line": 6
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
     },
     {
       "from": "medusa-fs-router#src/api/admin/orders/route.ts:GET",
@@ -401,7 +532,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/api/admin/orders/route.ts",
-      "line": 13
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown[]"
     },
     {
       "from": "medusa-fs-router#src/api/store/products/route.ts:GET",
@@ -409,10 +544,33 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/api/store/products/route.ts",
-      "line": 12
+      "line": 12,
+      "params": [],
+      "returns": "unknown[]"
     }
   ],
-  "types": {},
+  "types": {
+    "type:@medusajs/framework#MedusaRequest<unknown>": {
+      "name": "MedusaRequest",
+      "kind": "external",
+      "declaredIn": "@medusajs/framework",
+      "structuralHash": "59261a66769f6f60",
+      "meta": {
+        "declKind": "external",
+        "package": "@medusajs/framework"
+      }
+    },
+    "type:@medusajs/framework#MedusaResponse<unknown>": {
+      "name": "MedusaResponse",
+      "kind": "external",
+      "declaredIn": "@medusajs/framework",
+      "structuralHash": "47aaf7e0437bef6b",
+      "meta": {
+        "declKind": "external",
+        "package": "@medusajs/framework"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/api/admin/dead/route.ts",

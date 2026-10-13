@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:59.771Z",
+  "configHash": "f38fa4940897",
+  "services": [
+    {
+      "name": "lending",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 34,
+      "edges": 24,
+      "types": 6,
+      "unresolved": 1,
+      "durationMs": 506,
+      "packages": {
+        "name": "lending-library-loans",
+        "runtime": [
+          "@aws-sdk/client-lambda",
+          "@aws-sdk/client-sfn",
+          "aws-sdk"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 0,
+    "uncalled": [
+      "entry:lending:http:POST:/loans",
+      "entry:lending:http:POST:/loans/:param/renewals",
+      "entry:lending:http:POST:/reviews"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 34,
+    "edges": 31,
+    "types": 6,
+    "unresolved": 0
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "bike-share-stations",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stations and rentals for a bike-share scheme, as Lambda functions behind a REST API, answering through a shared HTTP kit.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@acme/http-kit": "^2.1.0",
+    "@middy/core": "^5.4.0",
+    "@middy/http-json-body-parser": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

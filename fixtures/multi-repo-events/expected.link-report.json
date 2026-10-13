@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:54.402Z",
+  "configHash": "e6bf14a6f63d",
+  "services": [
+    {
+      "name": "loans",
+      "repo": "./loans",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 8,
+      "types": 3,
+      "unresolved": 2,
+      "durationMs": 533,
+      "packages": {
+        "name": "lending-library-loans",
+        "runtime": [
+          "@aws-sdk/client-eventbridge"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "notifications",
+      "repo": "./notifications",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 6,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 524,
+      "packages": {
+        "name": "lending-library-notifications",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "platform-events",
+      "repo": "./platform-events",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 341
+    },
+    {
+      "name": "routing",
+      "repo": "./routing",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 339
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 3,
+    "noConsumers": [
+      "channel:sqs/library-audit"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:loans:http:POST:/loans",
+      "entry:loans:http:POST:/loans/:param/return"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "routing",
+      "file": "rules.tf",
+      "line": 79,
+      "reason": "subscription-matches-nothing",
+      "level": "info",
+      "message": "rule library-partner-titles takes events by a pattern that no publisher in the configured services matches",
+      "hint": "A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.",
+      "symbol": "consumer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles"
+    }
+  ],
+  "totals": {
+    "nodes": 30,
+    "edges": 27,
+    "types": 6,
+    "unresolved": 1
+  }
+}

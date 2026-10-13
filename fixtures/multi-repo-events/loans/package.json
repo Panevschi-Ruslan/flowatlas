@@ -1,0 +1,15 @@
+{
+  "name": "lending-library-loans",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loans for a lending library: puts an event on the shared bus for every loan made and returned.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

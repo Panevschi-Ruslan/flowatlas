@@ -7,6 +7,7 @@ import type {
   NamedFunction,
 } from '@flowatlas/core';
 import {
+  boundDeclaration,
   decoratorExportedName,
   decoratorModule,
   decoratorName,
@@ -14,6 +15,7 @@ import {
   namedFunction,
   normalizeFilePath,
   originOfValue,
+  packageOfSpecifier,
 } from '@flowatlas/core';
 import type {
   ClassDeclaration,
@@ -39,24 +41,6 @@ export const repoClasses = function* (ctx: ExtractContext): Generator<ClassDecla
 
 export const fileOfNode = (node: { getSourceFile(): SourceFile }, ctx: ExtractContext): string =>
   normalizeFilePath(node.getSourceFile().getFilePath(), ctx.repoDir);
-
-/**
- * The package a module specifier names, or undefined when it names a file.
- *
- * `@nestjs/common/decorators` is `@nestjs/common`: a subpath import of a package
- * is an import of that package, and a reader that matched the specifier exactly
- * skipped every controller written the second way. On a notification service that was 21 routes in
- * 3 files, dropped with no row to say so, while the classes and the methods
- * around them were read normally — so nothing in the output even hinted that a
- * file had been half read (R84).
- */
-export const packageOfSpecifier = (specifier: string): string | undefined => {
-  if (specifier === '' || specifier.startsWith('.') || specifier.startsWith('/')) return undefined;
-  const [first, second] = specifier.split('/');
-  if (first === undefined || first === '') return undefined;
-  if (!first.startsWith('@')) return first;
-  return second === undefined || second === '' ? undefined : `${first}/${second}`;
-};
 
 /**
  * The package the function a call names was imported from.
@@ -307,11 +291,8 @@ export const builtByFactory = (value: TsNode | undefined): NamedFunction | undef
   const node = unwrapValue(value);
   if (!Node.isCallExpression(node)) return undefined;
   if (node.getArguments().some(handsOverWork)) return undefined;
-  return factoryNamed(node.getExpression(), 0);
+  return factoryNamed(node.getExpression());
 };
-
-/** How far a factory written as another name is followed. */
-const FACTORY_ALIAS_DEPTH = 4;
 
 /**
  * The function of this repository a called name stands for, through the names
@@ -323,20 +304,11 @@ const FACTORY_ALIAS_DEPTH = 4;
  * binding, because a `const` whose value is a name is not a function declared
  * there - and it is right to, for every reader that asks what was declared.
  * What was *called* is another question, and the answer is whatever the chain
- * of names ends at. Followed a few links and then abandoned, as a verb written
- * as another verb's name is.
+ * of names ends at, which `boundDeclaration` follows for every reader that asks.
  */
-const factoryNamed = (callee: TsNode, depth: number): NamedFunction | undefined => {
-  const fn = repoFunctionOf(callee);
-  if (fn !== undefined || depth >= FACTORY_ALIAS_DEPTH) return fn;
+const factoryNamed = (callee: TsNode): NamedFunction | undefined => {
   const origin = originOfValue(callee);
-  if (origin.kind !== 'local' || !Node.isVariableDeclaration(origin.declaration)) return undefined;
-  const initializer = origin.declaration.getInitializer();
-  if (initializer === undefined) return undefined;
-  const bound = unwrapValue(initializer);
-  return Node.isIdentifier(bound) || Node.isPropertyAccessExpression(bound)
-    ? factoryNamed(bound, depth + 1)
-    : undefined;
+  return origin.kind === 'local' ? namedFunction(boundDeclaration(origin.declaration)) : undefined;
 };
 
 /** A function written where a handler was expected, or undefined for anything else. */

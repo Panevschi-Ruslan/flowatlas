@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:37:52.094Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:50:47.885Z",
   "configHash": "2325b3c105ab",
   "services": [
     {
@@ -12,7 +12,20 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 782,
+      "packages": {
+        "name": "admin",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "@nestjs/schedule",
+          "axios",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "billing",
@@ -23,7 +36,20 @@
       "edges": 21,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 821,
+      "packages": {
+        "name": "billing",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "axios",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "gateway",
@@ -34,7 +60,19 @@
       "edges": 20,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 783,
+      "packages": {
+        "name": "gateway",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "axios",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "orders",
@@ -45,7 +83,20 @@
       "edges": 43,
       "types": 1,
       "unresolved": 4,
-      "durationMs": 0
+      "durationMs": 886,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "axios",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -56,7 +107,14 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1257
+      "durationMs": 624,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "@angular/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

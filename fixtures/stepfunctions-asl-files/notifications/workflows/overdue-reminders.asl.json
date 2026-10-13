@@ -1,0 +1,44 @@
+{
+  "Comment": "Finds the loans past their due date and reminds each borrower. Written in JSONata.",
+  "QueryLanguage": "JSONata",
+  "StartAt": "FindOverdueLoans",
+  "States": {
+    "FindOverdueLoans": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+      "Arguments": {
+        "TableName": "library-loans",
+        "FilterExpression": "dueDate < :today",
+        "ExpressionAttributeValues": {
+          ":today": {
+            "S": "{% $now() %}"
+          }
+        }
+      },
+      "Output": "{% $states.result.Items %}",
+      "Next": "RemindEach"
+    },
+    "RemindEach": {
+      "Type": "Map",
+      "Items": "{% $states.input %}",
+      "Iterator": {
+        "StartAt": "SendReminder",
+        "States": {
+          "SendReminder": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Arguments": {
+              "FunctionName": "{% $states.input.reminderFunction %}",
+              "Payload": "{% $states.input %}"
+            },
+            "End": true
+          }
+        }
+      },
+      "Next": "Done"
+    },
+    "Done": {
+      "Type": "Succeed"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-28T11:06:35.051Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T10:51:25.438Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -11,8 +11,19 @@
       "nodes": 15,
       "edges": 8,
       "types": 0,
-      "unresolved": 1,
-      "durationMs": 0
+      "unresolved": 4,
+      "durationMs": 649,
+      "packages": {
+        "name": "@rendered-mail/api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@rendered-mail/mail",
+          "@rendered-mail/relay",
+          "@rendered-mail/sdk"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -73,6 +84,6 @@
     "nodes": 15,
     "edges": 8,
     "types": 0,
-    "unresolved": 3
+    "unresolved": 6
   }
 }

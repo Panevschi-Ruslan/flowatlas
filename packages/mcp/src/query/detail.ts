@@ -38,11 +38,19 @@ export const projectDetail = (node: GraphNode, level: DetailLevel): CompactNode 
 };
 
 /** The same, for the edge that led to a node. Confidence is never dropped. */
+/** The strings of a list kept on an edge, or none. */
+const strings = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+
 export const projectEdge = (edge: GraphEdge, level: DetailLevel): FlowEdge => {
   const projected: FlowEdge = { type: edge.type, confidence: edge.confidence };
   if (level <= 0) return projected;
   if (edge.params !== undefined && edge.params.length > 0) projected.params = [...edge.params];
   if (edge.returns !== undefined) projected.returns = edge.returns;
+  const because = strings(edge.meta?.['because']);
+  if (edge.confidence !== 'static' && because.length > 0) projected.because = because;
+  const notMatchedOn = strings(edge.meta?.['notMatchedOn']);
+  if (notMatchedOn.length > 0) projected.notMatchedOn = notMatchedOn;
   return projected;
 };
 

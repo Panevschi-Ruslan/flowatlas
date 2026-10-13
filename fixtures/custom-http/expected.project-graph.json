@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:17.886Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-07T18:36:11.904Z",
   "services": [
     {
       "name": "api",
@@ -16,7 +16,22 @@
       "label": "GET /health@16",
       "repo": "api",
       "file": "src/app.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:minihttp#Request"
+            },
+            {
+              "name": "res",
+              "type": "type:minihttp#Response"
+            }
+          ],
+          "returns": "type:minihttp#Response"
+        }
+      }
     },
     {
       "id": "api#src/app.ts:authenticate",
@@ -33,7 +48,22 @@
       "label": "cancelOrder",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:minihttp#Request"
+            },
+            {
+              "name": "res",
+              "type": "type:minihttp#Response"
+            }
+          ],
+          "returns": "type:minihttp#Response"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:createOrder",
@@ -41,7 +71,22 @@
       "label": "createOrder",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:minihttp#Request"
+            },
+            {
+              "name": "res",
+              "type": "type:minihttp#Response"
+            }
+          ],
+          "returns": "type:minihttp#Response"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:listOrders",
@@ -49,7 +94,22 @@
       "label": "listOrders",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:minihttp#Request"
+            },
+            {
+              "name": "res",
+              "type": "type:minihttp#Response"
+            }
+          ],
+          "returns": "type:minihttp#Response"
+        }
+      }
     },
     {
       "id": "entry:api:http:GET:/health",
@@ -240,7 +300,28 @@
       "line": 8
     }
   ],
-  "types": {},
+  "types": {
+    "type:minihttp#Request": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "minihttp",
+      "structuralHash": "193a53d42cf3bf55",
+      "meta": {
+        "declKind": "external",
+        "package": "minihttp"
+      }
+    },
+    "type:minihttp#Response": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "minihttp",
+      "structuralHash": "4c048936405d0396",
+      "meta": {
+        "declKind": "external",
+        "package": "minihttp"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "package.json",

@@ -73,6 +73,11 @@ export interface NestExtractContext extends ExtractContext {
    * asked about, and making them all nodes would be a much larger change.
    */
   readonly handlerFunctions: NamedFunction[];
+  /**
+   * Every function this reader made a node of, by that node's id, so that what
+   * it takes can be read off its declaration once the walk is done.
+   */
+  readonly drawnFunctions: ReadonlyMap<string, NamedFunction>;
   /** The type registry being built. */
   readonly types: TypeCollector;
 
@@ -171,6 +176,8 @@ export const createNestContext = (options: CreateContextOptions): NestExtractCon
     return found;
   };
 
+  const drawnFunctions = new Map<string, NamedFunction>();
+
   const fileOfFunction = (fn: NamedFunction): string =>
     fileOf(fn.declaration as never, repoDir);
 
@@ -184,6 +191,7 @@ export const createNestContext = (options: CreateContextOptions): NestExtractCon
     wrapping: emptyCollection(),
     entries: [],
     handlerFunctions: [],
+    drawnFunctions,
     types: collector,
 
     fileOf: (node) => fileOf(node as never, repoDir),
@@ -224,8 +232,10 @@ export const createNestContext = (options: CreateContextOptions): NestExtractCon
 
     ensureFunctionNode: (fn) => {
       const file = fileOfFunction(fn);
+      const id = makeSymbolId(repo, file, fn.name);
+      if (!drawnFunctions.has(id)) drawnFunctions.set(id, fn);
       return builder.addNode({
-        id: makeSymbolId(repo, file, fn.name),
+        id,
         type: 'function',
         label: fn.name,
         repo,

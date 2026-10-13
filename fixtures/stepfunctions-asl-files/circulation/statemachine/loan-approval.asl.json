@@ -1,0 +1,249 @@
+{
+  "Comment": "Approves a loan: checks the borrower and the holds, reserves the copies, waits for a librarian, records the loan and tells the borrower.",
+  "StartAt": "ShapeApplication",
+  "States": {
+    "ShapeApplication": {
+      "Type": "Pass",
+      "Parameters": {
+        "borrowerId.$": "$.borrowerId",
+        "itemIds.$": "$.itemIds",
+        "branch.$": "$.branch"
+      },
+      "Next": "CheckBorrowerStanding"
+    },
+    "CheckBorrowerStanding": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "check-borrower-standing",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId"
+        }
+      },
+      "ResultSelector": {
+        "standing.$": "$.Payload.standing"
+      },
+      "ResultPath": "$.borrower",
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "RejectLoan"
+        }
+      ],
+      "Next": "IsBorrowerInGoodStanding"
+    },
+    "IsBorrowerInGoodStanding": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.borrower.standing",
+          "StringEquals": "good",
+          "Next": "CheckHolds"
+        },
+        {
+          "Variable": "$.borrower.standing",
+          "StringEquals": "suspended",
+          "Next": "RejectLoan"
+        }
+      ],
+      "Default": "RejectLoan"
+    },
+    "CheckHolds": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:query",
+      "Parameters": {
+        "TableName": "library-holds",
+        "KeyConditionExpression": "itemId = :itemId",
+        "ExpressionAttributeValues": {
+          ":itemId": {
+            "S.$": "$.itemIds[0]"
+          }
+        }
+      },
+      "ResultPath": "$.holds",
+      "Next": "ReserveCopies"
+    },
+    "ReserveCopies": {
+      "Type": "Map",
+      "ItemsPath": "$.itemIds",
+      "MaxConcurrency": 5,
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "ReserveCopy",
+        "States": {
+          "ReserveCopy": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "library-copies",
+              "Key": {
+                "itemId": {
+                  "S.$": "$"
+                }
+              },
+              "UpdateExpression": "SET reserved = :yes",
+              "ExpressionAttributeValues": {
+                ":yes": {
+                  "BOOL": true
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": null,
+      "Next": "AwaitLibrarianApproval"
+    },
+    "AwaitLibrarianApproval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+      "Parameters": {
+        "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/123456789012/librarian-approvals",
+        "MessageBody": {
+          "borrowerId.$": "$.borrowerId",
+          "itemIds.$": "$.itemIds",
+          "taskToken.$": "$$.Task.Token"
+        }
+      },
+      "HeartbeatSeconds": 86400,
+      "ResultPath": "$.approval",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.Timeout", "LoanDeclined"],
+          "ResultPath": "$.error",
+          "Next": "RejectLoan"
+        }
+      ],
+      "Next": "RecordLoan"
+    },
+    "RecordLoan": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "WriteLoan",
+          "States": {
+            "WriteLoan": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:putItem",
+              "Parameters": {
+                "TableName": "library-loans",
+                "Item": {
+                  "borrowerId": {
+                    "S.$": "$.borrowerId"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "ScoreBorrower",
+          "States": {
+            "ScoreBorrower": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:eu-west-1:123456789012:function:score-borrower:live",
+              "End": true
+            }
+          }
+        }
+      ],
+      "ResultPath": null,
+      "Next": "NotifyBorrower"
+    },
+    "NotifyBorrower": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters": {
+        "StateMachineArn": "arn:aws:states:eu-west-1:123456789012:stateMachine:borrower-notifications",
+        "Input": {
+          "borrowerId.$": "$.borrowerId",
+          "notice": "loan-approved"
+        }
+      },
+      "ResultPath": null,
+      "Next": "PublishLoanApproved"
+    },
+    "PublishLoanApproved": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Parameters": {
+        "Entries": [
+          {
+            "EventBusName": "library-events",
+            "Source": "library.circulation",
+            "DetailType": "LoanApproved",
+            "Detail.$": "$"
+          }
+        ]
+      },
+      "ResultPath": null,
+      "Next": "ArchiveApplication"
+    },
+    "ArchiveApplication": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+      "Parameters": {
+        "Bucket": "library-loan-archive",
+        "Key.$": "States.Format('applications/{}.json', $.borrowerId)",
+        "Body.$": "$"
+      },
+      "ResultPath": null,
+      "Next": "LookUpBranchPolicy"
+    },
+    "LookUpBranchPolicy": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName.$": "$.branch.policyFunction",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.policy",
+      "Next": "ApplyLateFeePolicy"
+    },
+    "ApplyLateFeePolicy": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${LateFeePolicyFunctionArn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": null,
+      "Next": "WaitForPickupWindow"
+    },
+    "WaitForPickupWindow": {
+      "Type": "Wait",
+      "Seconds": 3600,
+      "Next": "LoanApproved"
+    },
+    "LoanApproved": {
+      "Type": "Succeed"
+    },
+    "RejectLoan": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
+        "Message.$": "$"
+      },
+      "Next": "LoanRejected"
+    },
+    "LoanRejected": {
+      "Type": "Fail",
+      "Error": "LoanRejected",
+      "Cause": "The borrower or the items did not qualify for a loan."
+    }
+  }
+}

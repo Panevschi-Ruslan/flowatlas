@@ -221,6 +221,28 @@ describe('walking the graph', () => {
     db.close();
   });
 
+  it('goes on to a node whose id is part of one already on the path', () => {
+    // The cycle check once asked whether the id appeared anywhere in the path,
+    // so `refresh` was never reached through `refreshToken`.
+    const db = built(
+      project({
+        nodes: [node('svc:Auth.refreshToken'), node('svc:Auth.refresh'), node('svc:Auth')],
+        edges: [edge('svc:Auth.refreshToken', 'svc:Auth.refresh'), edge('svc:Auth.refresh', 'svc:Auth')],
+      }),
+    );
+    expect(db.traverse({ from: 'svc:Auth.refreshToken', maxDepth: 5 }).rows.map((row) => row.id)).toEqual([
+      'svc:Auth.refreshToken',
+      'svc:Auth.refresh',
+      'svc:Auth',
+    ]);
+    expect(db.reverseReach('svc:Auth', { maxDepth: 5 }).rows.map((row) => row.id)).toEqual([
+      'svc:Auth',
+      'svc:Auth.refresh',
+      'svc:Auth.refreshToken',
+    ]);
+    db.close();
+  });
+
   it('follows only the kinds of edge it was asked for', () => {
     const db = built(
       project({

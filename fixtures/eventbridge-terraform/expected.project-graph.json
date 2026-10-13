@@ -1,0 +1,1661 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T09:12:30.721Z",
+  "services": [
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/default/aws.s3/Object Created",
+      "type": "channel",
+      "label": "eventbridge/default/aws.s3/Object Created",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 99,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/library/library.holds/HoldRequested",
+      "type": "channel",
+      "label": "eventbridge/library/library.holds/HoldRequested",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 74,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/library/library.loans/LoanCreated",
+      "type": "channel",
+      "label": "eventbridge/library/library.loans/LoanCreated",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 12,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/library/library.loans/LoanRenewed",
+      "type": "channel",
+      "label": "eventbridge/library/library.loans/LoanRenewed",
+      "repo": "circulation",
+      "file": "src/loans/renew-loan.ts",
+      "line": 29,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/library/library.returns/ItemReturned",
+      "type": "channel",
+      "label": "eventbridge/library/library.returns/ItemReturned",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 45,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge",
+          "library-events"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "circulation#src/covers/import-cover.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/covers/import-cover.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'Object Created',type:circulation#CoverUploaded>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/lib/events.ts:publishLibraryEvent",
+      "type": "function",
+      "label": "publishLibraryEvent",
+      "repo": "circulation",
+      "file": "src/lib/events.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "detailType",
+              "type": "string"
+            },
+            {
+              "name": "detail",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/lib/loans-table.ts:findLoan",
+      "type": "function",
+      "label": "findLoan",
+      "repo": "circulation",
+      "file": "src/lib/loans-table.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:circulation#Loan|undefined"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/lib/loans-table.ts:overdueLoans",
+      "type": "function",
+      "label": "overdueLoans",
+      "repo": "circulation",
+      "file": "src/lib/loans-table.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "today",
+              "type": "string"
+            }
+          ],
+          "returns": "type:circulation#Loan[]"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/lib/loans-table.ts:saveLoan",
+      "type": "function",
+      "label": "saveLoan",
+      "repo": "circulation",
+      "file": "src/lib/loans-table.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:circulation#Loan"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/lib/notices.ts:sendNotice",
+      "type": "function",
+      "label": "sendNotice",
+      "repo": "circulation",
+      "file": "src/lib/notices.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "notice",
+              "type": "type:circulation#Notice"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/loans/create-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/loans/create-loan.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/loans/renew-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/loans/renew-loan.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/notices/notify-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/notices/notify-borrower.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'HoldRequested'|'ItemReturned'|'LoanCreated',{borrowerId:string}>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/overdue/scan-overdue.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/overdue/scan-overdue.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#ScheduledEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/returns/record-return.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/returns/record-return.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "circulation#src/reviews/review-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/reviews/review-loan.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{loanId:string}"
+            }
+          ],
+          "returns": "type:circulation#Review"
+        }
+      }
+    },
+    {
+      "id": "circulation#statemachines/loan-review.asl.json:loan-review/Approved?",
+      "type": "function",
+      "label": "Approved? [Choice]",
+      "repo": "circulation",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 19,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-review",
+        "stateType": "Choice"
+      }
+    },
+    {
+      "id": "circulation#statemachines/loan-review.asl.json:loan-review/Refused",
+      "type": "function",
+      "label": "Refused [Fail]",
+      "repo": "circulation",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 33,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-review",
+        "stateType": "Fail",
+        "end": true
+      }
+    },
+    {
+      "id": "circulation#statemachines/loan-review.asl.json:loan-review/Renewed",
+      "type": "function",
+      "label": "Renewed [Succeed]",
+      "repo": "circulation",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 30,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-review",
+        "stateType": "Succeed",
+        "end": true
+      }
+    },
+    {
+      "id": "circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan",
+      "type": "function",
+      "label": "ReviewLoan [Task lambda:invoke]",
+      "repo": "circulation",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "loan-review",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "library-review-loan"
+        },
+        "reaches": [
+          "invoke:library-review-loan"
+        ],
+        "parameters": {
+          "FunctionName": "library-review-loan",
+          "Payload": {
+            "loanId.$": "$.detail.loanId"
+          }
+        },
+        "resultSelector": {
+          "approved.$": "$.Payload.approved"
+        }
+      }
+    },
+    {
+      "id": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.import_cover",
+      "type": "consumer",
+      "label": "rule library-cover-uploaded",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 99,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.import_cover",
+        "deployedBy": "terraform",
+        "name": "library-cover-uploaded",
+        "rule": "aws_cloudwatch_event_rule.cover_uploaded",
+        "notMatchedOn": [
+          "detail"
+        ],
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_hold",
+      "type": "consumer",
+      "label": "rule library-hold-requested",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.notify_on_hold",
+        "deployedBy": "terraform",
+        "name": "library-hold-requested",
+        "rule": "aws_cloudwatch_event_rule.hold_requested",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "type": "consumer",
+      "label": "rule library-loan-created",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 12,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.notify_on_loan",
+        "deployedBy": "terraform",
+        "name": "library-loan-created",
+        "rule": "aws_cloudwatch_event_rule.loan_created",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+      "type": "consumer",
+      "label": "rule library-item-returned",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 45,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.notify_on_return",
+        "deployedBy": "terraform",
+        "name": "library-item-returned",
+        "rule": "aws_cloudwatch_event_rule.item_returned",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
+      "type": "consumer",
+      "label": "rule library-renewal-review",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 67,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.review_renewal",
+        "deployedBy": "terraform",
+        "name": "library-renewal-review",
+        "rule": "aws_cloudwatch_event_rule.renewal_review",
+        "notMatchedOn": [
+          "detail"
+        ],
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
+        "channelPattern": {
+          "parts": [
+            {
+              "name": "service",
+              "filters": [
+                {
+                  "equals": "eventbridge"
+                }
+              ]
+            },
+            {
+              "name": "bus",
+              "filters": [
+                {
+                  "equals": "library"
+                }
+              ]
+            },
+            {
+              "name": "source",
+              "filters": [
+                {
+                  "prefix": "library."
+                }
+              ]
+            },
+            {
+              "name": "detail-type",
+              "filters": [
+                {
+                  "equals": "LoanRenewed"
+                }
+              ]
+            }
+          ]
+        },
+        "reaches": [
+          "workflow:loan-review"
+        ]
+      }
+    },
+    {
+      "id": "entry:circulation:cron:library-nightly-overdue",
+      "type": "entry",
+      "label": "cron library-nightly-overdue",
+      "repo": "circulation",
+      "file": "infra/rules.tf",
+      "line": 80,
+      "kind": "cron",
+      "meta": {
+        "key": "library-nightly-overdue",
+        "by": "schedule",
+        "declaredAs": "aws_cloudwatch_event_target.scan_overdue",
+        "deployedBy": "terraform",
+        "schedule": "cron(0 2 * * ? *)",
+        "function": "library-scan-overdue",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/holds",
+      "type": "entry",
+      "label": "POST /holds",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 74,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/holds",
+        "rawPath": "/holds",
+        "deployedBy": "terraform",
+        "api": "library-circulation",
+        "declaredAs": "aws_apigatewayv2_route.request_hold",
+        "integration": "bus",
+        "sends": "eventbridge/library/library.holds/HoldRequested",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "api": "library-circulation",
+        "function": "library-create-loan",
+        "declaredAs": "aws_apigatewayv2_route.create_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/loans/:param/renewals",
+      "type": "entry",
+      "label": "POST /loans/:param/renewals",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans/:param/renewals",
+        "rawPath": "/loans/{loanId}/renewals",
+        "deployedBy": "terraform",
+        "api": "library-circulation",
+        "function": "library-renew-loan",
+        "declaredAs": "aws_apigatewayv2_route.renew_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/returns",
+      "type": "entry",
+      "label": "POST /returns",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 39,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns",
+        "rawPath": "/returns",
+        "deployedBy": "terraform",
+        "api": "library-circulation",
+        "function": "library-record-return",
+        "declaredAs": "aws_apigatewayv2_route.record_return",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-create-loan",
+      "type": "entry",
+      "label": "library-create-loan",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 1,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-create-loan",
+        "deployedBy": "terraform",
+        "name": "library-create-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.create_loan",
+        "handler": "loans/create-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-import-cover",
+      "type": "entry",
+      "label": "library-import-cover",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 55,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-import-cover",
+        "deployedBy": "terraform",
+        "name": "library-import-cover",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.import_cover",
+        "handler": "covers/import-cover.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#EventBridgeEvent<'Object Created',type:circulation#CoverUploaded>",
+          "detail": "type:circulation#CoverUploaded"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-notify-borrower",
+      "type": "entry",
+      "label": "library-notify-borrower",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 28,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-notify-borrower",
+        "deployedBy": "terraform",
+        "name": "library-notify-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.notify_borrower",
+        "handler": "notices/notify-borrower.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#EventBridgeEvent<'HoldRequested'|'ItemReturned'|'LoanCreated',{borrowerId:string}>",
+          "detail": "{borrowerId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-record-return",
+      "type": "entry",
+      "label": "library-record-return",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 19,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-record-return",
+        "deployedBy": "terraform",
+        "name": "library-record-return",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.record_return",
+        "handler": "returns/record-return.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-renew-loan",
+      "type": "entry",
+      "label": "library-renew-loan",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 10,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-renew-loan",
+        "deployedBy": "terraform",
+        "name": "library-renew-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.renew_loan",
+        "handler": "loans/renew-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-review-loan",
+      "type": "entry",
+      "label": "library-review-loan",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-review-loan",
+        "deployedBy": "terraform",
+        "name": "library-review-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.review_loan",
+        "handler": "reviews/review-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{loanId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-scan-overdue",
+      "type": "entry",
+      "label": "library-scan-overdue",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 46,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scan-overdue",
+        "deployedBy": "terraform",
+        "name": "library-scan-overdue",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.scan_overdue",
+        "handler": "overdue/scan-overdue.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#ScheduledEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:workflow:loan-review",
+      "type": "entry",
+      "label": "workflow loan-review",
+      "repo": "circulation",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "loan-review",
+        "name": "loan-review",
+        "nameFrom": "deployment",
+        "startAt": "ReviewLoan",
+        "states": 4,
+        "queryLanguage": "JSONPath",
+        "comment": "Reviews a loan once it has been renewed often, and settles it either way.",
+        "reads": {
+          "": "{detail:{loanId:unknown}}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.loan_review",
+        "definitionFrom": "file",
+        "declaredIn": "infra/main.tf:65"
+      }
+    },
+    {
+      "id": "producer:circulation#infra/api.tf:aws_apigatewayv2_route.request_hold",
+      "type": "producer",
+      "label": "event eventbridge/library/library.holds/HoldRequested",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 74,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "deployment",
+        "by": "route",
+        "declaredAs": "aws_apigatewayv2_route.request_hold",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:circulation#src/lib/events.ts:15:9",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "circulation",
+      "file": "src/lib/events.ts",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "unresolved",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:circulation#src/loans/create-loan.ts:11:9",
+      "type": "producer",
+      "label": "event eventbridge/library/library.loans/LoanCreated",
+      "repo": "circulation",
+      "file": "src/loans/create-loan.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:circulation#src/loans/renew-loan.ts:29:9",
+      "type": "producer",
+      "label": "event eventbridge/library/library.loans/LoanRenewed",
+      "repo": "circulation",
+      "file": "src/loans/renew-loan.ts",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:circulation#src/returns/record-return.ts:13:9",
+      "type": "producer",
+      "label": "event eventbridge/library/library.returns/ItemReturned",
+      "repo": "circulation",
+      "file": "src/returns/record-return.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "library-events",
+        "channelVia": "literal",
+        "method": "publishLibraryEvent"
+      }
+    },
+    {
+      "id": "repo:circulation",
+      "type": "repo",
+      "label": "circulation",
+      "repo": "circulation",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-eventbridge": 3
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/default/aws.s3/Object Created",
+      "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.import_cover",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 99,
+      "meta": {
+        "by": "rule",
+        "notMatchedOn": [
+          "detail"
+        ]
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.holds/HoldRequested",
+      "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_hold",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 29,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.loans/LoanCreated",
+      "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 12,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.loans/LoanRenewed",
+      "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "infra/rules.tf",
+      "line": 67,
+      "meta": {
+        "via": "pattern",
+        "because": [
+          "source \"library.loans\" matches prefix \"library.\""
+        ],
+        "notMatchedOn": [
+          "detail"
+        ]
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.returns/ItemReturned",
+      "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 45,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "circulation#src/lib/events.ts:publishLibraryEvent",
+      "to": "producer:circulation#src/lib/events.ts:15:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/lib/events.ts",
+      "line": 15
+    },
+    {
+      "from": "circulation#src/loans/create-loan.ts:handler",
+      "to": "circulation#src/lib/loans-table.ts:saveLoan",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:circulation#Loan"
+      ],
+      "returns": "void",
+      "file": "src/loans/create-loan.ts",
+      "line": 10
+    },
+    {
+      "from": "circulation#src/loans/create-loan.ts:handler",
+      "to": "producer:circulation#src/loans/create-loan.ts:11:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/create-loan.ts",
+      "line": 11
+    },
+    {
+      "from": "circulation#src/loans/renew-loan.ts:handler",
+      "to": "circulation#src/lib/loans-table.ts:findLoan",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:circulation#Loan|undefined",
+      "file": "src/loans/renew-loan.ts",
+      "line": 14
+    },
+    {
+      "from": "circulation#src/loans/renew-loan.ts:handler",
+      "to": "circulation#src/lib/loans-table.ts:saveLoan",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:circulation#Loan"
+      ],
+      "returns": "void",
+      "file": "src/loans/renew-loan.ts",
+      "line": 17
+    },
+    {
+      "from": "circulation#src/loans/renew-loan.ts:handler",
+      "to": "producer:circulation#src/loans/renew-loan.ts:29:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/renew-loan.ts",
+      "line": 29
+    },
+    {
+      "from": "circulation#src/notices/notify-borrower.ts:handler",
+      "to": "circulation#src/lib/notices.ts:sendNotice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:circulation#Notice"
+      ],
+      "returns": "void",
+      "file": "src/notices/notify-borrower.ts",
+      "line": 9
+    },
+    {
+      "from": "circulation#src/overdue/scan-overdue.ts:handler",
+      "to": "circulation#src/lib/loans-table.ts:overdueLoans",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:circulation#Loan[]",
+      "file": "src/overdue/scan-overdue.ts",
+      "line": 7
+    },
+    {
+      "from": "circulation#src/overdue/scan-overdue.ts:handler",
+      "to": "circulation#src/lib/notices.ts:sendNotice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:circulation#Notice"
+      ],
+      "returns": "void",
+      "file": "src/overdue/scan-overdue.ts",
+      "line": 8
+    },
+    {
+      "from": "circulation#src/returns/record-return.ts:handler",
+      "to": "circulation#src/lib/events.ts:publishLibraryEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/returns/record-return.ts",
+      "line": 13
+    },
+    {
+      "from": "circulation#src/returns/record-return.ts:handler",
+      "to": "producer:circulation#src/returns/record-return.ts:13:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/returns/record-return.ts",
+      "line": 13
+    },
+    {
+      "from": "circulation#src/reviews/review-loan.ts:handler",
+      "to": "circulation#src/lib/loans-table.ts:findLoan",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:circulation#Loan|undefined",
+      "file": "src/reviews/review-loan.ts",
+      "line": 10
+    },
+    {
+      "from": "circulation#statemachines/loan-review.asl.json:loan-review/Approved?",
+      "to": "circulation#statemachines/loan-review.asl.json:loan-review/Refused",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 28,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "default"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachines/loan-review.asl.json:loan-review/Approved?",
+      "to": "circulation#statemachines/loan-review.asl.json:loan-review/Renewed",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 25,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.approved",
+              "BooleanEquals": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan",
+      "to": "circulation#statemachines/loan-review.asl.json:loan-review/Approved?",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan",
+      "to": "entry:circulation:invoke:library-review-loan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:library-review-loan"
+      }
+    },
+    {
+      "from": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.import_cover",
+      "to": "entry:circulation:invoke:library-import-cover",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 99,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_hold",
+      "to": "entry:circulation:invoke:library-notify-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 29,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "to": "entry:circulation:invoke:library-notify-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 12,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+      "to": "entry:circulation:invoke:library-notify-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 45,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
+      "to": "entry:circulation:workflow:loan-review",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/rules.tf",
+      "line": 67,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:loan-review"
+      }
+    },
+    {
+      "from": "entry:circulation:cron:library-nightly-overdue",
+      "to": "circulation#src/overdue/scan-overdue.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/overdue/scan-overdue.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:circulation:http:POST:/holds",
+      "to": "producer:circulation#infra/api.tf:aws_apigatewayv2_route.request_hold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 74,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:circulation:http:POST:/loans",
+      "to": "circulation#src/loans/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:circulation#Loan",
+      "file": "src/loans/create-loan.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "{borrowerId:string;itemId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:circulation:http:POST:/loans/:param/renewals",
+      "to": "circulation#src/loans/renew-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:circulation#Renewal",
+      "file": "src/loans/renew-loan.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true,
+        "params": "{loanId:string}"
+      }
+    },
+    {
+      "from": "entry:circulation:http:POST:/returns",
+      "to": "circulation#src/returns/record-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/record-return.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "type:circulation#ReturnedItem",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:circulation:invoke:library-create-loan",
+      "to": "circulation#src/loans/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/create-loan.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:circulation:invoke:library-import-cover",
+      "to": "circulation#src/covers/import-cover.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/covers/import-cover.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:circulation:invoke:library-notify-borrower",
+      "to": "circulation#src/notices/notify-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notices/notify-borrower.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:circulation:invoke:library-record-return",
+      "to": "circulation#src/returns/record-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/record-return.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:circulation:invoke:library-renew-loan",
+      "to": "circulation#src/loans/renew-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/renew-loan.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:circulation:invoke:library-review-loan",
+      "to": "circulation#src/reviews/review-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reviews/review-loan.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:circulation:invoke:library-scan-overdue",
+      "to": "circulation#src/overdue/scan-overdue.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/overdue/scan-overdue.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:circulation:workflow:loan-review",
+      "to": "circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachines/loan-review.asl.json",
+      "line": 3
+    },
+    {
+      "from": "producer:circulation#infra/api.tf:aws_apigatewayv2_route.request_hold",
+      "to": "channel:eventbridge/library/library.holds/HoldRequested",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 74,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+      "to": "channel:eventbridge/library/library.loans/LoanCreated",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:circulation#Loan"
+      ],
+      "file": "src/loans/create-loan.ts",
+      "line": 11
+    },
+    {
+      "from": "producer:circulation#src/loans/renew-loan.ts:29:9",
+      "to": "channel:eventbridge/library/library.loans/LoanRenewed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:circulation#Renewal"
+      ],
+      "file": "src/loans/renew-loan.ts",
+      "line": 29
+    },
+    {
+      "from": "producer:circulation#src/returns/record-return.ts:13:9",
+      "to": "channel:eventbridge/library/library.returns/ItemReturned",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:circulation#ReturnedItem"
+      ],
+      "file": "src/returns/record-return.ts",
+      "line": 13
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#EventBridgeEvent<'HoldRequested'|'ItemReturned'|'LoanCreated',{borrowerId:string}>": {
+      "name": "EventBridgeEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "927920068f37d58d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#EventBridgeEvent<'Object Created',type:circulation#CoverUploaded>": {
+      "name": "EventBridgeEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "927920068f37d58d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#ScheduledEvent": {
+      "name": "ScheduledEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "7e19b21586cc2fef",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:circulation#CoverUploaded": {
+      "name": "CoverUploaded",
+      "kind": "object",
+      "declaredIn": "circulation#src/covers/import-cover.ts",
+      "structuralHash": "ea2eb4833c108c9b",
+      "fields": [
+        {
+          "name": "bucket",
+          "type": "{name:string}",
+          "optional": false
+        },
+        {
+          "name": "object",
+          "type": "{key:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:circulation#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "circulation#src/lib/loans-table.ts",
+      "structuralHash": "3ee13450d8cd7ee7",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "renewals",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:circulation#Notice": {
+      "name": "Notice",
+      "kind": "object",
+      "declaredIn": "circulation#src/lib/notices.ts",
+      "structuralHash": "723028ddc54faa80",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:circulation#Renewal": {
+      "name": "Renewal",
+      "kind": "object",
+      "declaredIn": "circulation#src/loans/renew-loan.ts",
+      "structuralHash": "49070530ce462893",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "renewals",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:circulation#ReturnedItem": {
+      "name": "ReturnedItem",
+      "kind": "object",
+      "declaredIn": "circulation#src/returns/record-return.ts",
+      "structuralHash": "1e4a38f46990e1ac",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "returnedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:circulation#Review": {
+      "name": "Review",
+      "kind": "object",
+      "declaredIn": "circulation#src/reviews/review-loan.ts",
+      "structuralHash": "1ace70620fa03eaa",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "approved",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/lib/events.ts",
+      "line": 15,
+      "reason": "channel-dynamic",
+      "message": "publishLibraryEvent -> detailType",
+      "hint": "The channel name cannot be read here. Annotate publishLibraryEvent with the channel it uses.",
+      "symbol": "producer:circulation#src/lib/events.ts:15:9",
+      "service": "circulation"
+    }
+  ]
+}

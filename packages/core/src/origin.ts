@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
-import { Node, SymbolFlags } from 'ts-morph';
+import { Node, SymbolFlags, VariableDeclarationKind } from 'ts-morph';
+import { declarationOf } from './static-value.js';
 
 /**
  * Where the type of a value was declared.
@@ -533,14 +534,51 @@ export const originOfType = (node: TsNode): Origin => {
   return originOfDeclaration(declaration, node.getText());
 };
 
-/** Where the value an expression names comes from, following imports. */
+/**
+ * Where the value an expression names comes from, following imports and
+ * re-exports: a name, `ns.name` or `ns['name']`, as `declarationOf` reads them.
+ */
 export const originOfValue = (node: TsNode): Origin => {
-  if (!Node.isIdentifier(node) && !Node.isPropertyAccessExpression(node)) return { kind: 'unknown' };
-  const symbol = node.getSymbol();
-  if (symbol === undefined) return { kind: 'unknown' };
-  const declaration = (symbol.getAliasedSymbol() ?? symbol).getDeclarations()[0];
-  if (declaration === undefined) return { kind: 'unknown' };
-  return originOfDeclaration(declaration, node.getText());
+  const declaration = declarationOf(node);
+  return declaration === undefined ? { kind: 'unknown' } : originOfDeclaration(declaration, node.getText());
+};
+
+/** How many names bound to names are followed before the chain is given up. */
+const BINDING_DEPTH = 4;
+
+/** The value a `const` is bound to, as written, without parentheses or a cast. */
+const constValueOf = (declaration: TsNode): TsNode | undefined => {
+  if (!Node.isVariableDeclaration(declaration)) return undefined;
+  if (declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+  let value = declaration.getInitializer();
+  while (value !== undefined && (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isSatisfiesExpression(value))) {
+    value = value.getExpression();
+  }
+  return value;
+};
+
+/**
+ * What a declaration of this repository stands for, through the names it is
+ * bound to.
+ *
+ * `export const processReturns = operations.processReturns` declares nothing of
+ * its own: it is the function `operations` exports, wherever that is written and
+ * however many modules re-export it on the way. A `const` whose value is a name,
+ * a member of a namespace or a member in brackets is read as what that names,
+ * as long as it is declared in this repository; a name that ends in a package
+ * stops the reading where it is. Only a `const`, because a name assigned twice
+ * holds whichever value the program got to last (R168).
+ */
+export const boundDeclaration = (declaration: TsNode): TsNode => {
+  let current = declaration;
+  for (let depth = 0; depth < BINDING_DEPTH; depth += 1) {
+    // Anything but a name - a call, a function - is unknown here, and ends it.
+    const value = constValueOf(current);
+    const origin = value === undefined ? undefined : originOfValue(value);
+    if (origin?.kind !== 'local') return current;
+    current = origin.declaration;
+  }
+  return current;
 };
 
 /**

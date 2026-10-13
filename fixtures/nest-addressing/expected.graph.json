@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-addressing",
-  "generatedAt": "2026-09-27T09:26:33.897Z",
+  "generatedAt": "2026-10-07T14:34:02.902Z",
   "nodes": [
     {
       "id": "entry:nest-addressing:http:GET:/api/.well-known/health",
@@ -183,7 +183,13 @@
       "label": "HealthController.ping",
       "repo": "nest-addressing",
       "file": "src/health/health.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-addressing#src/legacy/legacy.controller.ts:LegacyController",
@@ -203,7 +209,13 @@
       "label": "LegacyController.list",
       "repo": "nest-addressing",
       "file": "src/legacy/legacy.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-addressing#src/legacy/legacy.controller.ts:LegacyController.replay",
@@ -211,7 +223,13 @@
       "label": "LegacyController.replay",
       "repo": "nest-addressing",
       "file": "src/legacy/legacy.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-addressing#src/topics/topics.v1.controller.ts:TopicsV1Controller",
@@ -231,7 +249,13 @@
       "label": "TopicsV1Controller.list",
       "repo": "nest-addressing",
       "file": "src/topics/topics.v1.controller.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-addressing#src/topics/topics.v1.controller.ts:TopicsV1Controller.one",
@@ -239,7 +263,18 @@
       "label": "TopicsV1Controller.one",
       "repo": "nest-addressing",
       "file": "src/topics/topics.v1.controller.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-addressing#src/topics/topics.v2.controller.ts:TopicsV2Controller",
@@ -259,7 +294,13 @@
       "label": "TopicsV2Controller.list",
       "repo": "nest-addressing",
       "file": "src/topics/topics.v2.controller.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-addressing#src/topics/topics.v2.controller.ts:TopicsV2Controller.one",
@@ -267,7 +308,18 @@
       "label": "TopicsV2Controller.one",
       "repo": "nest-addressing",
       "file": "src/topics/topics.v2.controller.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "repo:nest-addressing",

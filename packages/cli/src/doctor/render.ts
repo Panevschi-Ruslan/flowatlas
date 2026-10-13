@@ -8,10 +8,12 @@
  */
 import { resolve } from 'node:path';
 import type { ContractFinding } from '@flowatlas/contracts';
-import { partialReadNotice } from '../partial-read.js';
+import { NODE_TYPES } from '@flowatlas/core';
+import { isInstalled, partialReadNotice, type ReadRepo } from '../partial-read.js';
 import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
-import type { DoctorReport } from './schema.js';
+import type { DoctorReport, DoctorRow } from './schema.js';
+import { noWayInSentence } from './ways-in.js';
 
 /** `… 12 more rows; the whole list is in <file>` — never a silent cut (I9). */
 const more = (dropped: number | undefined, file?: string): string[] =>
@@ -96,6 +98,37 @@ export const placeOf = (symbol: string): { file: string; line: number } | undefi
   return { file, line: line === null ? 0 : Number(line[1]) };
 };
 
+/**
+ * Whether a row's symbol is the id of a node rather than text from the source.
+ *
+ * The two forms the identifier grammar in `@flowatlas/core` gives a node a row
+ * can be about: a typed id, `producer:orders#src/x.ts:71:5` or
+ * `entry:billing:workflow:refunds`, and a symbol id, `<repo>#<file>:<symbol>`,
+ * whose file ends in an extension. Source text has a space or a parenthesis
+ * where an id has neither, so `this.#cache.get(key)` is not taken for one.
+ */
+const TYPED_ID = new RegExp(`^(?:${NODE_TYPES.join('|')}):[^\\s:]`);
+const SYMBOL_ID = /^[^\s#]+#[^\s:#]+\.\w+:\S/;
+const isNodeId = (symbol: string): boolean => TYPED_ID.test(symbol) || SYMBOL_ID.test(symbol);
+
+/**
+ * What a row is about, in words a person can find at its place.
+ *
+ * A row names the node it is about by the node's id, so a walk through that
+ * node counts it and a baseline keys it (R173, R177). An id is not what anybody
+ * reads in the file the line already points at: it says the place a second
+ * time and the thing not at all. The row's message says the thing - the body
+ * and the expression of a publish whose name could not be read, the rule or
+ * the subscription a deployment declares - so where the symbol is an id, the
+ * message is what is printed. Whole, because a sentence cut short says less
+ * than it should; the id stays in `doctor.json` and in the baseline key.
+ */
+const shownAs = (row: DoctorRow, reason: string): string | undefined => {
+  if (row.symbol === null) return undefined;
+  if (isNodeId(row.symbol) && row.message !== reason) return oneLine(row.message, Infinity);
+  return oneLine(row.symbol);
+};
+
 /** What a group of one level is marked with, where it is not the ordinary case. */
 const LEVEL_TAG = {
   action: '',
@@ -142,7 +175,8 @@ const unresolvedSection = (
     );
     for (const row of group.rows) {
       const place = where(row.service, row.file, row.line, repoDirs);
-      lines.push(`      ${place}${row.symbol === null ? '' : `  ${oneLine(row.symbol)}`}`);
+      const what = shownAs(row, group.reason);
+      lines.push(`      ${place}${what === undefined ? '' : `  ${what}`}`);
       // The heading says what the kind means; this says what this place is.
       // Marked, because an unmarked sentence between two sites is read as
       // belonging to the one below it (R35), and indentation alone was not
@@ -268,7 +302,39 @@ const unresolvedTypes = (report: DoctorReport): number =>
     : (report.unresolved.byReason.find((group) => group.reason === 'type-unresolved')?.sites ?? 0);
 
 /**
- * The one sentence, at the head of the report (R129).
+ * What the report says above its first line, about how its services were read.
+ *
+ * One rule per kind of read that went wrong, most telling first. A service is
+ * spoken for by the first rule that takes it, and no later rule names it again:
+ * a service with no way in is told so, and is not then told to install its
+ * dependencies as if that were what it lacked (R170).
+ */
+interface HeadRule {
+  /** The services, of those no earlier rule took, that this rule speaks for. */
+  takes(report: DoctorReport, repos: readonly ReadRepo[]): readonly string[];
+  /** What it says about the services it took, a paragraph each. */
+  says(report: DoctorReport, repos: readonly ReadRepo[]): string[];
+}
+
+/**
+ * A service that has no way in, named before anything about its dependencies,
+ * because installing them would not give it one; where they are not installed
+ * either, it says so in the same breath.
+ */
+const NOT_INSTALLED_EITHER = '; its dependencies are not installed either, and installing them would not give it one';
+
+const noWayInHead: HeadRule = {
+  takes: (report) => (report.unresolved.withoutWaysIn ?? []).map(({ service }) => service),
+  says: (report, repos) =>
+    (report.unresolved.withoutWaysIn ?? []).map((service) => {
+      const repo = repos.find((each) => each.name === service.service);
+      const uninstalled = repo !== undefined && !isInstalled(repo.dir);
+      return `${noWayInSentence(service)}${uninstalled ? NOT_INSTALLED_EITHER : ''}.`;
+    }),
+};
+
+/**
+ * The one sentence about dependencies that are not installed (R129).
  *
  * At the head rather than beside the rows, and once rather than per row, because
  * hundreds of `type-unresolved` rows already imply it and a reader either infers
@@ -280,17 +346,33 @@ const unresolvedTypes = (report: DoctorReport): number =>
  * and resolving it is the difference between establishing that nothing is
  * installed and assuming it. Without a root, nothing is claimed.
  */
-const partialReadHead = (
+const partialReadHead: HeadRule = {
+  takes: (_report, repos) => repos.map((repo) => repo.name),
+  says: (report, repos) => {
+    const notice = partialReadNotice(repos, unresolvedTypes(report));
+    return notice === undefined ? [] : [notice];
+  },
+};
+
+const HEAD_RULES: readonly HeadRule[] = Object.freeze([noWayInHead, partialReadHead]);
+
+const headOf = (
   report: DoctorReport,
   repoDirs: ReadonlyMap<string, string>,
   rootDir: string | undefined,
 ): string[] => {
-  if (rootDir === undefined || repoDirs.size === 0) return [];
-  const notice = partialReadNotice(
-    [...repoDirs.entries()].map(([name, dir]) => ({ name, dir: resolve(rootDir, dir) })),
-    unresolvedTypes(report),
-  );
-  return notice === undefined ? [] : [notice, ''];
+  let left: readonly ReadRepo[] =
+    rootDir === undefined
+      ? []
+      : [...repoDirs.entries()].map(([name, dir]) => ({ name, dir: resolve(rootDir, dir) }));
+  const said: string[] = [];
+  for (const rule of HEAD_RULES) {
+    const taken = new Set(rule.takes(report, left));
+    if (taken.size === 0) continue;
+    said.push(...rule.says(report, left.filter((repo) => taken.has(repo.name))));
+    left = left.filter((repo) => !taken.has(repo.name));
+  }
+  return said.flatMap((paragraph) => [paragraph, '']);
 };
 
 export const renderDoctorText = (
@@ -313,7 +395,7 @@ export const renderDoctorText = (
       : ['verdict:', ...report.verdict.reasons.map((reason) => `  ${reason}`)];
 
   return `${[
-    ...partialReadHead(report, options.repoDirs ?? NO_REPOS, options.rootDir),
+    ...headOf(report, options.repoDirs ?? NO_REPOS, options.rootDir),
     summaryLine(report),
     '',
     ...blocks.flatMap((block) => [...block, '']),
@@ -352,6 +434,12 @@ export interface GithubOptions {
    * and without it every annotation lands on a path that does not exist.
    */
   repoDir?: (service: string) => string | undefined;
+  /**
+   * Where a service is written in the configuration, for a finding about the
+   * service as a whole rather than a line of its code: a service with no way
+   * in (R173).
+   */
+  serviceAt?: (service: string) => { file: string; line: number } | undefined;
 }
 
 const annotation = (
@@ -392,6 +480,12 @@ export const renderDoctorGithub = (report: DoctorReport, options: GithubOptions 
     line,
   });
 
+  // First, as the verdict says it first (R170): a warning, as it decides no exit.
+  for (const service of report.unresolved.withoutWaysIn ?? []) {
+    lines.push(
+      annotation('warning', options.serviceAt?.(service.service), `${service.service}: no way in`, `${noWayInSentence(service)}.`),
+    );
+  }
   for (const issue of report.markers.issues) {
     lines.push(
       annotation(

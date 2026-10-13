@@ -38,6 +38,6 @@ describe('the configuration example from the plan', () => {
     expect(config.sharedPackages).toEqual(['@project/contracts', '@project/events']);
     expect(config.output).toBe('.flowatlas');
     expect(config.types).toEqual({ maxDepth: 3 });
-    expect(config.adapters.db).toEqual({ localBaseClasses: [] });
+    expect(config.adapters.db).toEqual({ localBaseClasses: [], tables: [] });
   });
 });

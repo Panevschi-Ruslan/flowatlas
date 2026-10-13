@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-client-wrapper",
-  "generatedAt": "2026-09-28T08:35:39.698Z",
+  "generatedAt": "2026-10-07T14:34:05.893Z",
   "nodes": [
     {
       "id": "config_key:nest-client-wrapper#BILLING_URL",
@@ -213,7 +213,18 @@
       "label": "ApiClient.get",
       "repo": "nest-client-wrapper",
       "file": "src/api/api-client.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/api/api-client.ts:ApiClient.getFetcher",
@@ -221,7 +232,13 @@
       "label": "ApiClient.getFetcher",
       "repo": "nest-client-wrapper",
       "file": "src/api/api-client.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/api/api-client.ts:ApiClient.patch",
@@ -229,7 +246,23 @@
       "label": "ApiClient.patch",
       "repo": "nest-client-wrapper",
       "file": "src/api/api-client.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/api/api-client.ts:ApiClient.post",
@@ -237,7 +270,23 @@
       "label": "ApiClient.post",
       "repo": "nest-client-wrapper",
       "file": "src/api/api-client.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/api/api-client.ts:ApiClient.request",
@@ -245,7 +294,27 @@
       "label": "ApiClient.request",
       "repo": "nest-client-wrapper",
       "file": "src/api/api-client.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "method",
+              "type": "string"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/app.module.ts:AppModule",
@@ -283,7 +352,13 @@
       "label": "BillingService.base",
       "repo": "nest-client-wrapper",
       "file": "src/orders/billing.service.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/billing.service.ts:BillingService.getInvoice",
@@ -291,7 +366,18 @@
       "label": "BillingService.getInvoice",
       "repo": "nest-client-wrapper",
       "file": "src/orders/billing.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-client-wrapper#Invoice"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/billing.service.ts:BillingService.issue",
@@ -299,7 +385,18 @@
       "label": "BillingService.issue",
       "repo": "nest-client-wrapper",
       "file": "src/orders/billing.service.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "invoice",
+              "type": "type:nest-client-wrapper#Invoice"
+            }
+          ],
+          "returns": "type:nest-client-wrapper#Invoice"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/billing.service.ts:BillingService.req",
@@ -307,7 +404,27 @@
       "label": "BillingService.req",
       "repo": "nest-client-wrapper",
       "file": "src/orders/billing.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "method",
+              "type": "string"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService",
@@ -327,7 +444,13 @@
       "label": "NotifierService.ping",
       "repo": "nest-client-wrapper",
       "file": "src/orders/notifier.service.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService.send",
@@ -335,7 +458,22 @@
       "label": "NotifierService.send",
       "repo": "nest-client-wrapper",
       "file": "src/orders/notifier.service.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "token",
+              "type": "string"
+            },
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService.status",
@@ -343,7 +481,13 @@
       "label": "NotifierService.status",
       "repo": "nest-client-wrapper",
       "file": "src/orders/notifier.service.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/orders.service.ts:OrdersService",
@@ -363,7 +507,18 @@
       "label": "OrdersService.cancel",
       "repo": "nest-client-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-client-wrapper#Order"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/orders.service.ts:OrdersService.create",
@@ -371,7 +526,18 @@
       "label": "OrdersService.create",
       "repo": "nest-client-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-client-wrapper#Order"
+            }
+          ],
+          "returns": "type:nest-client-wrapper#Order"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/orders.service.ts:OrdersService.findOne",
@@ -379,7 +545,18 @@
       "label": "OrdersService.findOne",
       "repo": "nest-client-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-client-wrapper#Order"
+        }
+      }
     },
     {
       "id": "nest-client-wrapper#src/orders/orders.service.ts:OrdersService.search",
@@ -387,7 +564,18 @@
       "label": "OrdersService.search",
       "repo": "nest-client-wrapper",
       "file": "src/orders/orders.service.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "term",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-client-wrapper#Order[]"
+        }
+      }
     },
     {
       "id": "repo:nest-client-wrapper",

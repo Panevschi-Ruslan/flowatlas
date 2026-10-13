@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:18.770Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-09T08:17:43.660Z",
   "configHash": "b1d164ec2ac5",
   "services": [
     {
@@ -8,11 +8,21 @@
       "repo": ".",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 49,
-      "edges": 32,
+      "nodes": 54,
+      "edges": 34,
       "types": 2,
       "unresolved": 6,
-      "durationMs": 0
+      "durationMs": 843,
+      "packages": {
+        "name": "angular-basic",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
@@ -91,8 +101,8 @@
     }
   ],
   "totals": {
-    "nodes": 49,
-    "edges": 32,
+    "nodes": 54,
+    "edges": 34,
     "types": 2,
     "unresolved": 10
   }

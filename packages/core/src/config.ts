@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { isUniversalMethod } from './adapters/db.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
 import { ENTRY_KINDS } from './model/nodes.js';
+import { requestReadingSchema } from './request.js';
 
 export const CONFIG_FILENAME = 'flowatlas.config.json';
 export const DEFAULT_OUTPUT = '.flowatlas';
@@ -54,7 +55,7 @@ const DECLARED_SERVICE_TYPE = 'declared';
 const serviceEntrySchema = z.strictObject({
   name: z.string().min(1),
   /**
-   * Path to the repository, relative to the configuration file.
+   * Path to the repository, relative to the configuration file, or absolute.
    *
    * Absent for a declared service, where the directory holding the document
    * stands in for it: everything downstream asks a service where it lives, and
@@ -111,6 +112,21 @@ const serviceEntrySchema = z.strictObject({
   readTestDirectories: z.array(z.string().min(1)).optional(),
   /** Entry file where global wrapping is installed, when there is one. */
   bootstrap: z.string().min(1).optional(),
+  /**
+   * How this service's infrastructure is read, where its ways in are declared
+   * there rather than in its source.
+   *
+   * `vars` chooses the variable files a deployment is read with, in the order
+   * they apply, relative to the service's directory. A repository commonly keeps
+   * one file per environment, and a name that one of them spells one way and
+   * another spells another way is not a name until somebody says which
+   * environment is meant: without a choice it is reported, never picked.
+   *
+   * A word about what is being chosen rather than the tool that reads it,
+   * because this schema names no technology (I1); the reader that understands
+   * variable files is the one that reads them.
+   */
+  infra: z.strictObject({ vars: z.array(z.string().min(1)).default([]) }).optional(),
 });
 
 /** The directory part of a configured path, in the spelling it was written in. */
@@ -201,6 +217,63 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
     decorator: z.string().min(1),
     index: z.number().int().min(0),
   }),
+  z.strictObject({
+    kind: z.literal('argument-path'),
+    index: z.number().int().min(0),
+    /** Properties from the argument inwards; `*` is every element of an array. */
+    path: z.array(z.string().min(1)).min(1),
+  }),
+  z.strictObject({
+    kind: z.literal('constructed-argument-path'),
+    /** The class whose construction is an argument of the call. */
+    class: z.string().min(1),
+    /** Properties from the constructor's argument inwards; `*` is every element. */
+    path: z.array(z.string().min(1)),
+    /** Which argument of the constructor the path starts in. The first by default. */
+    index: z.number().int().min(0).optional(),
+  }),
+  z.strictObject({
+    kind: z.literal('origin-call-argument'),
+    /**
+     * The call, on the same receiver or from the same module, whose result a
+     * value this call is handed was read off: `create`, for a `start` handed
+     * `run.id` where `const run = await create(...)`. Followed within one body,
+     * through `const` bindings only (R171).
+     */
+    call: z.string().min(1),
+    /** Properties from that call's argument inwards; empty is the argument itself. */
+    path: z.array(z.string().min(1)),
+    /** Which argument of that call the path starts in. The first by default. */
+    index: z.number().int().min(0).optional(),
+  }),
+]);
+
+/** A regular expression, refused here rather than when the first call is read. */
+const patternSchema = z.string().min(1).refine((source) => {
+  try {
+    new RegExp(source);
+    return true;
+  } catch {
+    return false;
+  }
+}, 'not a regular expression');
+
+/**
+ * One part of an address written in several, described in configuration.
+ *
+ * Either a word every address starts with, or a place the call writes the part,
+ * with what it is when nothing is written there and the longer spellings it may
+ * be written inside. The parts are joined with `/` into the channel's name, so a
+ * description of a bus of one's own lands on the same node as a description of
+ * the library it wraps, when both say the same parts.
+ */
+const addressPartSchema = z.union([
+  z.strictObject({ literal: z.string().min(1) }),
+  z.strictObject({
+    at: z.array(nameLocatorSchema).min(1),
+    absent: z.string().min(1).optional(),
+    forms: z.array(patternSchema).min(1).optional(),
+  }),
 ]);
 
 /**
@@ -216,12 +289,31 @@ export const customProducerSchema = z.strictObject({
    * Type the call is made on. A list, because the same bus is often reached
    * through an interface at one call site and the class itself at another.
    */
-  receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]),
-  method: z.string().min(1),
+  receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
+  method: z.string().min(1).optional(),
+  /**
+   * A function of the project's own that publishes, called by its name rather
+   * than on a receiver: `publishEvent(new SendCommand({ ... }))`. In place
+   * of `receiverType` and `method`, because a helper written as a function is
+   * as ordinary a wrapper as one written as a class, and has no receiver to
+   * name. The name is the one the function is declared with, whatever an
+   * import renames it to.
+   */
+  function: z.string().min(1).optional(),
   /** Shorthand for a channel written as one plain argument. */
   channelArg: z.number().int().min(0).default(0),
   /** Where the channel is written, tried in order. Overrides `channelArg`. */
   channel: z.array(nameLocatorSchema).min(1).optional(),
+  /**
+   * The address in parts, for a call that names a message with several words.
+   * Overrides `channel`, which is a one-part address written short.
+   */
+  address: z.array(addressPartSchema).min(1).optional(),
+  /**
+   * Where the message is written, as an expression, tried in order. Overrides
+   * `payloadArg`, for a message that is a property of the call's input.
+   */
+  payload: z.array(nameLocatorSchema).min(1).optional(),
   payloadArg: z.number().int().min(0).optional(),
   /**
    * Where the message sits inside that argument, when the argument wraps it.
@@ -234,6 +326,21 @@ export const customProducerSchema = z.strictObject({
    */
   payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
+}).superRefine((producer, ctx) => {
+  const onReceiver = producer.receiverType !== undefined || producer.method !== undefined;
+  if (producer.function !== undefined && onReceiver) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['function'],
+      message: 'a producer is either a function, or a method with its receiverType, not both.',
+    });
+  } else if (producer.function === undefined && (producer.receiverType === undefined || producer.method === undefined)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [producer.receiverType === undefined ? 'receiverType' : 'method'],
+      message: 'a producer names the receiverType and method it is called as, or the function it is.',
+    });
+  }
 });
 
 /**
@@ -293,6 +400,63 @@ export const customBrokerSchema = z.strictObject({
   /** Calls that start receiving, for a bus that has no decorator to mark one. */
   subscribers: z.array(customSubscriberSchema).default([]),
 });
+
+/**
+ * A call that starts a workflow or invokes a function by the name it is
+ * deployed under, described in configuration (P24).
+ *
+ * The usual case is a helper from a package shared between a project's
+ * services - `orchestrator.run(Process.LoanApproval, input)` - whose source is
+ * not here to read: a private registry, a repository nobody here has cloned.
+ * The description says which call it is, where the name is written, what kind
+ * of thing it starts, and, where what the code says is not the deployed name,
+ * a table from one to the other.
+ *
+ * A fourth kind of description rather than a `broker.custom` producer, because
+ * the thing described is not a message. A start has exactly one receiver,
+ * addressed by a name the deployment owns, and the caller often waits for it;
+ * described as a publish, every workflow would be a channel and every function
+ * a consumer of one, and `dead` and the reverse walk would answer about them in
+ * channel terms.
+ */
+export const starterSchema = z
+  .strictObject({
+    /** The package the helper is imported from. */
+    module: z.string().min(1).optional(),
+    /** The function, called by its name or as a member of what `module` exports. */
+    function: z.string().min(1).optional(),
+    /** Or the type the call is made on, and the method, as for a producer. */
+    receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
+    method: z.string().min(1).optional(),
+    /** What the call starts: a workflow, or a function by its deployed name. */
+    target: z.enum(['workflow', 'invoke']),
+    /** Where the name is written, tried in order. */
+    name: z.array(nameLocatorSchema).min(1),
+    /**
+     * What the code says, to the name it is deployed under: a value the name
+     * reads as, or the expression written there when it cannot be read. A join
+     * through it is `declared`, because nothing here can check it.
+     */
+    names: z.record(z.string().min(1), z.string().min(1)).optional(),
+    /** Recorded on the node the call is drawn as. `start` or `invoke` by default. */
+    kind: z.string().min(1).optional(),
+  })
+  .superRefine((starter, ctx) => {
+    const onReceiver = starter.receiverType !== undefined || starter.method !== undefined;
+    if (starter.function !== undefined && onReceiver) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['function'],
+        message: 'a starter is either a function, or a method with its receiverType, not both.',
+      });
+    } else if (starter.function === undefined && (starter.receiverType === undefined || starter.method === undefined)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [starter.receiverType === undefined ? 'receiverType' : 'method'],
+        message: 'a starter names the function it is, or the receiverType and method it is called as.',
+      });
+    }
+  });
 
 /**
  * A table of handlers the project keeps itself.
@@ -475,6 +639,11 @@ export const entryHttpSchema = z.strictObject({
   mount: entryHttpMountSchema.optional(),
   middleware: entryHttpMiddlewareSchema.optional(),
   routeObject: entryHttpRouteObjectSchema.optional(),
+  /**
+   * Where a handler finds the parts of a request and how it answers - places,
+   * never code, read by the same reading every shipped framework is (P29).
+   */
+  request: requestReadingSchema.optional(),
 });
 
 /**
@@ -593,6 +762,88 @@ export const entryProcedureSchema = z.strictObject({
   mounts: z.array(entryProcedureMountSchema).default([]),
 });
 
+/**
+ * A literal in a description that holds expressions: a string is an expression
+ * in the infrastructure language, anything else is the value it says.
+ */
+/**
+ * One function a project's data access goes through, named so that its calls
+ * become queries of the table each one names (P37): `insert('orders', row)`
+ * from a data kit nobody installed.
+ */
+export const dbTableAccessSchema = z.strictObject({
+  name: z.string().min(1),
+  /** The package that exports it, matched by the import; absent for a function of the repository's own. */
+  package: z.string().min(1).optional(),
+  /**
+   * A function of the same package that makes a client, where `name` is a
+   * method of what it returns: `const db = createClient(); db.insert('orders')`
+   * (P39). The call is matched by following the receiver to that factory's call.
+   */
+  factory: z.string().min(1).optional(),
+  /**
+   * The type the same package names the factory's client by, so a client
+   * handed in - a parameter, an injected field - typed `DataClient` is one
+   * (P44). `ReturnType<typeof factory>` is recognised without it.
+   */
+  clientType: z.string().min(1).optional(),
+  /** The argument that is the table's name, or the table itself for a function that always touches one. */
+  table: z.union([z.number().int().min(0), z.string().min(1)]),
+  op: z.enum(['read', 'write', 'delete']).optional(),
+});
+
+export type DbTableAccess = z.infer<typeof dbTableAccessSchema>;
+
+const expressionValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+
+/** `type.name` or `data.type.name`, the address a resource has inside its module. */
+const RESOURCE_ADDRESS = /^(?:data\.)?[A-Za-z_][\w-]*\.[A-Za-z_][\w-]*$/;
+
+/**
+ * A module of infrastructure whose source is not in the repository, described.
+ *
+ * The fourth description this tool accepts instead of code, and it needs its
+ * own justification (P20): the three before it say where a name is written in
+ * source the tool reads, and this one stands in for source the tool cannot read
+ * at all - a module fetched from a registry or another repository when the
+ * deployment is planned. Nothing in the repository says what such a module
+ * declares, so a function or a route declared through one is invisible unless
+ * somebody writes it down.
+ *
+ * What is written down is what the module declares, in the module's own
+ * language: each resource it creates, by its address inside the module, with
+ * each argument as an expression over the module's inputs (`var.<input>`), the
+ * other resources it declares and `each`/`count` where it repeats one. That is a
+ * description rather than a program for the same reason the other three are -
+ * it says where things are - and it is read by the code that reads a module
+ * whose source is present, so a described module and a written one cannot be
+ * read two different ways.
+ *
+ * `outputs` say which of the module's outputs are which attribute, so a caller
+ * that hands one on - an integration naming the invoke address of a function
+ * the module created - lands on the resource that was described.
+ */
+export const infraModuleSchema = z.strictObject({
+  /**
+   * The module's source as a call writes it, or several spellings of it.
+   *
+   * A version pinned on the source (`?ref=v2.1.0`) is ignored, and `*` stands
+   * for any run of characters.
+   */
+  source: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
+  /** Inputs the module gives a default to, as expressions. */
+  variables: z.record(z.string().min(1), expressionValueSchema).default({}),
+  /** What the module declares, by address, each argument an expression. */
+  resources: z
+    .record(
+      z.string().regex(RESOURCE_ADDRESS, 'a resource is named "type.name" or "data.type.name"'),
+      z.record(z.string().min(1), expressionValueSchema),
+    )
+    .refine((resources) => Object.keys(resources).length > 0, 'a module description declares at least one resource'),
+  /** Outputs, each an expression over what the module declares. */
+  outputs: z.record(z.string().min(1), z.string().min(1)).default({}),
+});
+
 export const adapterForceSchema = z.strictObject({
   entry: adapterNamesSchema.optional(),
   db: adapterNamesSchema.optional(),
@@ -616,6 +867,13 @@ export const flowatlasConfigSchema = z
             http: z.array(entryHttpSchema).default([]),
             /** Frameworks whose ways in are the keys of a tree of object literals. */
             procedures: z.array(entryProcedureSchema).default([]),
+            /**
+             * Places, helpers and answers of the project's own, read beside every
+             * framework's: a helper that builds every answer, one that parses
+             * every body (P30). Where a request's parts and its answer are read
+             * at all, these are read too.
+             */
+            request: requestReadingSchema.optional(),
           })
           .default({ registries: [], http: [], procedures: [] }),
         broker: z
@@ -623,6 +881,18 @@ export const flowatlasConfigSchema = z
             custom: z.array(customBrokerSchema).default([]),
           })
           .default({ custom: [] }),
+        /** Calls that start a workflow or invoke a function by its deployed name. */
+        starters: z.array(starterSchema).default([]),
+        /**
+         * What a repository's infrastructure is read with, where its ways in are
+         * declared there.
+         */
+        infra: z
+          .strictObject({
+            /** Modules whose source is not in the repository, described. */
+            modules: z.array(infraModuleSchema).default([]),
+          })
+          .default({ modules: [] }),
         db: z
           .strictObject({
             /**
@@ -648,8 +918,17 @@ export const flowatlasConfigSchema = z
                 ]),
               )
               .default([]),
+            /**
+             * Functions that touch a table the call names, from a package that
+             * may not be installed: `insert('orders', row)` from a data kit of
+             * the project's own (P37). Matched like an answer helper - by the
+             * import in the calling file, or by a declaration of that name in
+             * the repository - and the table is the string argument at index
+             * `table`, or `table` itself when it is a name.
+             */
+            tables: z.array(dbTableAccessSchema).default([]),
           })
-          .default({ localBaseClasses: [] }),
+          .default({ localBaseClasses: [], tables: [] }),
         frontend: z
           .strictObject({
             /**
@@ -674,7 +953,9 @@ export const flowatlasConfigSchema = z
         force: {},
         entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
-        db: { localBaseClasses: [] },
+        starters: [],
+        infra: { modules: [] },
+        db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
       }),
     /** Directory for generated artefacts, relative to the configuration file. */
@@ -795,6 +1076,7 @@ export const flowatlasConfigSchema = z
   });
 
 export type CustomBrokerConfig = z.infer<typeof customBrokerSchema>;
+export type StarterConfig = z.infer<typeof starterSchema>;
 export type EntryHttpConfig = z.infer<typeof entryHttpSchema>;
 /**
  * A description as it is written, before the schema fills in what it leaves out.
@@ -815,6 +1097,13 @@ export type EntryProcedureConfig = z.infer<typeof entryProcedureSchema>;
  * the same schema, so a field only configuration had ever tested cannot exist.
  */
 export type EntryProcedureDescription = z.input<typeof entryProcedureSchema>;
+export type InfraModuleConfig = z.infer<typeof infraModuleSchema>;
+/**
+ * A module description as it is written, before the schema fills in what it
+ * leaves out; the descriptions shipped with the tool are written in this shape
+ * and go through the same schema a person's do.
+ */
+export type InfraModuleDescription = z.input<typeof infraModuleSchema>;
 export type CustomConsumerConfig = z.infer<typeof customConsumerSchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;

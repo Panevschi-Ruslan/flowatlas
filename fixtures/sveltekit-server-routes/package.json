@@ -1,0 +1,8 @@
+{
+  "name": "sveltekit-server-routes",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "@sveltejs/kit": "^2.8.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "lending-library-members",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Borrowers of a lending library: their standing, and the notices they are sent.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

@@ -32,6 +32,21 @@ describe('listing the sources of a repository without parsing them', () => {
     });
   }
 
+  // Handlers in `functions/` beside `src/`, named by the deployment and not by
+  // the tsconfig: both lists hold them, from the one function that names the
+  // roots (R170).
+  it('agrees with what the project holds when a deployment names a root', () => {
+    const rootDir = resolve(FIXTURES, 'lambda-functions-beside-src');
+    const deployed = ['functions'];
+    const parsed = createProject({ rootDir, deployed })
+      .getSourceFiles()
+      .map((sourceFile) => normalizeFilePath(sourceFile.getFilePath(), rootDir))
+      .sort();
+    expect(parsed).toContain('functions/shared/catalogue.ts');
+    expect(parsed).toContain('src/holds/holds-table.ts');
+    expect(listRepoSources(rootDir, undefined, { deployed })).toEqual(parsed);
+  });
+
   it('holds the markup files as well as the plain ones', () => {
     const files = listRepoSources(resolve(FIXTURES, 'react-next/shop'));
     expect(files).toContain('app/orders/page.tsx');

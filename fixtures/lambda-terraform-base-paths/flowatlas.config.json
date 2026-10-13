@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "catalogue", "repo": "./catalogue", "type": "lambda", "baseUrlEnv": ["LIBRARY_API_URL"] },
+    { "name": "kiosk", "repo": "./kiosk", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}
