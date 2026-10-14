@@ -34,6 +34,7 @@ resource "aws_lambda_function" "status_board" {
       EVENTS_API_URL = "https://events.branch.library.example"
       BRANCH_URL     = "https://branch.library.example"
       STAFF_LB_URL   = "https://staff.branch.library.example"
+      DESK_HOURS_URL = "https://desk.branch.library.example"
     }
   }
 }

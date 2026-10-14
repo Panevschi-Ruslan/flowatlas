@@ -259,9 +259,21 @@ const conditionValues = (rule: Instance, kind: string): string[] =>
     return block === undefined ? [] : textsOf(entryOf(block, 'values'));
   });
 
+/**
+ * What tells one listener of a load balancer from another: its protocol and
+ * port, `HTTPS:443`, or its address where neither is read (P61).
+ */
+const listenerLabelOf = (listener: Instance): string => {
+  const port = textOf(argument(listener, 'port'));
+  const protocol = textOf(argument(listener, 'protocol'));
+  if (port === undefined) return listener.address;
+  return protocol === undefined ? port : `${protocol.toUpperCase()}:${port}`;
+};
+
 /** A route per path and verb a listener or a rule forwards to each function behind it. */
 const routeFunctions = (
   owner: Instance,
+  listener: Instance | undefined,
   balancer: Instance | undefined,
   actions: readonly Value[],
   paths: readonly string[],
@@ -282,7 +294,11 @@ const routeFunctions = (
           rawPath: path,
           target,
           guards: [],
-          meta: { by: 'load-balancer', ...(hosts.length === 0 ? {} : { hosts }) },
+          meta: {
+            by: 'load-balancer',
+            ...(hosts.length === 0 ? {} : { hosts }),
+            ...(listener === undefined ? {} : { listener: listenerLabelOf(listener) }),
+          },
         });
       }
     }
@@ -290,7 +306,7 @@ const routeFunctions = (
 };
 
 const readListener: ResourceReader[1] = (listener, reading) =>
-  routeFunctions(listener, referenced(argument(listener, 'load_balancer_arn')), listener.module.nested(listener, 'default_action'), ['/*'], ['ALL'], [], reading);
+  routeFunctions(listener, listener, referenced(argument(listener, 'load_balancer_arn')), listener.module.nested(listener, 'default_action'), ['/*'], ['ALL'], [], reading);
 
 const readListenerRule: ResourceReader[1] = (rule, reading) => {
   const listener = referenced(argument(rule, 'listener_arn'));
@@ -299,6 +315,7 @@ const readListenerRule: ResourceReader[1] = (rule, reading) => {
   const methods = conditionValues(rule, 'http_request_method').map((method) => method.toUpperCase());
   routeFunctions(
     rule,
+    listener !== undefined && LISTENERS.has(listener.type) ? listener : undefined,
     balancer,
     rule.module.nested(rule, 'action'),
     paths.length === 0 ? ['/*'] : paths,

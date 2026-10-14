@@ -42,6 +42,14 @@ export const providersPass = definePass('providers', (ctx: NestExtractContext) =
     }
   }
 
+  // A plain class whose methods carry an annotation, as a function's code
+  // outside any container writes them: what they say is still read (P61).
+  for (const indexed of ctx.classes.all()) {
+    if (!wanted.has(indexed.declaration) && methodsOf(indexed.declaration).some((method) => readMarkers(method).length > 0)) {
+      wanted.set(indexed.declaration, indexed);
+    }
+  }
+
   for (const [declaration, indexed] of wanted) {
     ctx.ensureClassNode(declaration);
     for (const method of methodsOf(declaration)) {

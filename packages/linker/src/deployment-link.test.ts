@@ -133,3 +133,34 @@ describe('a route answered by a function deployed elsewhere', () => {
     expect(project.unresolved.map((row) => row.reason)).toEqual(['invoke-target-not-found']);
   });
 });
+
+describe('a route rooted where a route of another API already is (P61)', () => {
+  const own: GraphNode = {
+    id: 'entry:loans:http:POST:/v1/loans',
+    type: 'entry',
+    kind: 'http',
+    label: 'POST /v1/loans',
+    repo: 'loans',
+    file: 'infra/own.tf',
+    line: 3,
+    meta: { method: 'POST', path: '/v1/loans', api: 'loans-desk-api' },
+  };
+  const published = graph('platform', [platformRepo([{ key: STATE, path: '/v1', api: 'library' }])]);
+
+  it('keeps the two apart by their APIs', () => {
+    const { project } = linkGraphs([published, graph('loans', [rooted, own, handler], [handles])], config, { builtAt: FIXED });
+    const ids = project.nodes
+      .filter((node) => node.type === 'entry')
+      .map((node) => node.id)
+      .sort();
+    expect(ids).toEqual(['entry:loans:http:POST:/v1/loans@api:library', 'entry:loans:http:POST:/v1/loans@api:loans-desk-api']);
+    expect(project.edges).toEqual([{ ...handles, from: 'entry:loans:http:POST:/v1/loans@api:library' }]);
+    expect(project.unresolved).toEqual([]);
+  });
+
+  it('still says a route declared twice in one API is one too many', () => {
+    const same = { ...own, meta: { ...own.meta, api: 'library' } };
+    const { project } = linkGraphs([published, graph('loans', [rooted, same, handler], [handles])], config, { builtAt: FIXED });
+    expect(project.unresolved.map((row) => row.reason)).toEqual(['route-root-ambiguous']);
+  });
+});

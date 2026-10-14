@@ -240,9 +240,13 @@ export const makeHttpEntryKey = (method: string, path: string): string =>
  *
  * Used only where two APIs (or two load balancers) of one deployment serve the
  * same method and path, so a deployment with one API keeps the plain key.
+ * `api` is the API's name, or its declaration's address where the name is not
+ * read; `listener` is given where two listeners of one load balancer send the
+ * same method and path to different targets (P61):
+ * `GET:/health@api:staff-lb@listener:HTTPS:443`.
  */
-export const makeApiRouteEntryKey = (method: string, path: string, api: string): string =>
-  `${makeHttpEntryKey(method, path)}@api:${required('api', api)}`;
+export const makeApiRouteEntryKey = (method: string, path: string, api: string, listener?: string): string =>
+  `${makeHttpEntryKey(method, path)}@api:${required('api', api)}${listener === undefined ? '' : `@listener:${required('listener', listener)}`}`;
 
 /**
  * The `key` half of a function URL's entry id: `ALL:/*@card-lookup`.

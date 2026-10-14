@@ -1,4 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { HoursBoard } from './hours-board';
 
 /**
  * The kiosk's status board asks each API and load balancer of the branch how
@@ -11,6 +12,9 @@ export const handler = async (_event: APIGatewayProxyEvent): Promise<APIGatewayP
   const staff = await fetch(`${process.env.STAFF_LB_URL}/health`);
   // A setting named after neither API: which `/status` it reaches is not known.
   const branch = await fetch(`${process.env.BRANCH_URL}/status`);
-  const body = { loans: loans.status, events: events.status, staff: staff.status, branch: branch.status };
+  const hours = new HoursBoard();
+  const desk = await hours.deskHours('hours');
+  const any = await hours.anyHours(String(process.env.BRANCH_URL));
+  const body = { loans: loans.status, events: events.status, staff: staff.status, branch: branch.status, desk, any };
   return { statusCode: 200, body: JSON.stringify(body) };
 };

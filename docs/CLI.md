@@ -1313,6 +1313,23 @@ guess, drawn `heuristic` with `via: "apiName"` and a `route-api-guessed` row at
 `info`; a name that settles nothing (`BRANCH_URL`) joins nothing and is an
 `ambiguous-route-api` row naming the APIs (`fixtures/lambda-terraform-shared-paths`).
 
+An API whose name is not read (a variable with no value) is keyed by its
+declaration's address instead, `GET:/hours@api:aws_apigatewayv2_api.desk_hours`,
+and still kept apart; its address's last word is what a setting's name is
+compared with. Two listeners of one load balancer that send the same method and
+path to different targets are kept apart by the listener as well,
+`GET:/health@api:staff-lb@listener:HTTPS:443` (its protocol and port, or its
+address where neither is read); listeners that send it to one target are one
+route, since a caller reaches the same code on either port. A setting naming
+such a load balancer narrows the request to its listeners' routes and is an
+`ambiguous-route` row naming them. Routes are kept apart across every
+deployment a repository is read from, and a route hung from another
+repository's point that lands where a route of another API already is keeps
+both apart the same way. A `@CallsService` annotation names a service, not one
+of its APIs: where its route is served by several, the call's base URL setting,
+else the service's name, chooses as above, with the same `route-api-guessed`
+and `ambiguous-route-api` rows.
+
 **A relative request needs no configuration at all.** `fetch('/api/thing')` names
 no service and is rooted at no key, because it means the server the page came
 from. Such a request is resolved against the routes of the service it was written

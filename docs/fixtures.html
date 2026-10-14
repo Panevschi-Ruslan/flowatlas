@@ -484,12 +484,12 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>Lambda handlers whose ways in are declared in Terraform: one <code>aws_lambda_function</code> per handler, and a REST API built resource by resource in front of them.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
-      <li class="fixture" data-search="lambda-terraform-shared-paths serverless, wired in terraform two repositories: `branch` declares two http apis that both answer `get /status` and two application load balancers that both forward `get /health`, each to a function of its own; `kiosk` calls them (p59).">
+      <li class="fixture" data-search="lambda-terraform-shared-paths serverless, wired in terraform two repositories: `branch` declares two http apis that both answer `get /status`, two more whose names are not read that both answer `get /hours`, and two application load balancers that both forward `get /health`, each to a function of its own, the staff one from two listeners; `kiosk` calls them (p59, p61).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-shared-paths">lambda-terraform-shared-paths</a>
           <span class="kind">2 services</span>
         </div>
-        <p>Two repositories: <code>branch</code> declares two HTTP APIs that both answer <code>GET /status</code> and two application load balancers that both forward <code>GET /health</code>, each to a function of its own; <code>kiosk</code> calls them (P59).</p>
+        <p>Two repositories: <code>branch</code> declares two HTTP APIs that both answer <code>GET /status</code>, two more whose names are not read that both answer <code>GET /hours</code>, and two application load balancers that both forward <code>GET /health</code>, each to a function of its own, the staff one from two listeners; <code>kiosk</code> calls them (P59, P61).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="lambda-terraform-table-stream serverless, wired in terraform a write to a table reaches the function its stream runs (p51).">

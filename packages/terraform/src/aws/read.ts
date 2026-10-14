@@ -425,7 +425,14 @@ export class DeploymentReading implements ResourceReading {
         ...(resolvedTarget === undefined ? {} : { target: resolvedTarget }),
         ...(path.kind === 'root' ? { root: { key: path.key, below: normalizePath(path.below) } } : {}),
         ...(draft.guards.length === 0 ? {} : { guards: draft.guards }),
-        meta: { declaredAs: draft.address, key: makeHttpEntryKey(method, fullPath), ...address.meta, ...draft.meta },
+        meta: {
+          declaredAs: draft.address,
+          key: makeHttpEntryKey(method, fullPath),
+          // What keeps the route apart from another API's when the name is not read (P61).
+          ...(api === undefined ? {} : { apiAddress: api.address }),
+          ...address.meta,
+          ...draft.meta,
+        },
       });
     }
   }

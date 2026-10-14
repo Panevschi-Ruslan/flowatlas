@@ -121,6 +121,21 @@ only one of them moved.
   a `route-api-guessed` row at `info`; where the name settles nothing, an
   `ambiguous-route-api` row names the APIs and nothing is joined
   (`fixtures/lambda-terraform-shared-paths`).
+- **Routes kept apart by listener, by address, and across the repository
+  (P61).** Two listeners of one load balancer sending the same method and path
+  to different functions were one entry; they are now keyed with the listener,
+  `GET:/health@api:staff-lb@listener:HTTPS:443`, while listeners sending it to
+  one target stay one route. An API or load balancer whose name is not read is
+  keyed by its Terraform address, `GET:/hours@api:aws_apigatewayv2_api.desk_hours`,
+  instead of merging with the other. Routes are compared across every
+  deployment a repository is read from, and a route rooted at another
+  repository's point that lands on a route of another API keeps both apart
+  rather than reporting it declared twice. A `@CallsService` annotation whose
+  route several APIs serve now gets the same choice by name as a base URL
+  setting (`route-api-guessed`, `ambiguous-route-api`) instead of
+  `marker-route-not-found`, and annotations on methods of plain classes, as
+  a function's code writes them, are read. A route not shared keeps its id
+  (`fixtures/lambda-terraform-shared-paths`).
 
 ## [0.5.1][] - 2026-10-12
 

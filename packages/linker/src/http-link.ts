@@ -289,6 +289,13 @@ const MARKER_FINDINGS = {
   }),
 };
 
+/** The API a name points at among the routes a request is ambiguous between. */
+const chooseAmong = (routes: readonly GraphNode[], candidates: readonly string[], name: string) =>
+  chooseByApiName(
+    routes.filter((route) => candidates.includes(route.id)),
+    name,
+  );
+
 /** A caller may leave out a prefix the service adds to all of its routes. */
 const withGlobalPrefix = (path: string, routes: readonly GraphNode[]): string | undefined => {
   const prefix = routes
@@ -332,7 +339,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
 
   const single = index.markerOf(call.id);
   const markers = index.markersOf?.(call.id) ?? (single === undefined ? [] : [single]);
-  const reached: Array<{ entry: GraphNode; runnersUp: readonly string[]; mountAssumed?: readonly string[] }> = [];
+  const reached: Array<{ entry: GraphNode; runnersUp: readonly string[]; mountAssumed?: readonly string[]; guessed?: true }> = [];
   /** A match, with the row a join across a mount taken as empty carries. */
   const joined = (asked: string, askedPath: string, found: Extract<RouteResult, { entry: GraphNode }>) => {
     if (found.mountAssumed !== undefined) {
@@ -359,14 +366,30 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       const prefixed = withGlobalPrefix(marker.path, routes);
       if (prefixed !== undefined) found = matchRoute(marker.method, prefixed, routes, from);
     }
-    if (isMatch(found)) reached.push(joined(marker.method, marker.path, found));
-    else notes.push(MARKER_FINDINGS.routeNotFound(marker));
+    if (isMatch(found)) {
+      reached.push(joined(marker.method, marker.path, found));
+      continue;
+    }
+    // An annotation names the service, not which of its APIs at one address
+    // it means: the same choice by name a base URL setting gets, by the
+    // setting where the call has one and by the service otherwise (P61).
+    const choice = found.reason === 'ambiguous' ? chooseAmong(routes, found.candidates, typeof env === 'string' ? env : marker.service) : undefined;
+    if (choice?.kind === 'one') {
+      notes.push(apiGuessedFinding(marker.method, marker.path, typeof env === 'string' ? env : marker.service, choice.api, choice.apis));
+      reached.push({ entry: choice.entry, runnersUp: [], guessed: true });
+    } else if (choice?.kind === 'tie') {
+      notes.push(AMBIGUITY.api({ targetService: marker.service, method: marker.method, path: marker.path, candidates: found.candidates, apis: choice.apis }));
+    } else if (choice?.kind === 'narrowed') {
+      const candidates = choice.entries.map((entry) => entry.id);
+      notes.push(AMBIGUITY.route({ targetService: marker.service, method: marker.method, path: marker.path, candidates }));
+    } else notes.push(MARKER_FINDINGS.routeNotFound(marker));
   }
   const [first, ...rest] = reached;
   if (first !== undefined) {
+    const { guessed, ...linked } = first;
     return {
-      outcome: { kind: 'linked', via: 'marker', ...first },
-      ...(rest.length === 0 ? {} : { alsoLinked: rest.map(({ runnersUp: _, ...item }) => item) }),
+      outcome: { kind: 'linked', via: guessed === true ? 'apiName' : 'marker', ...linked },
+      ...(rest.length === 0 ? {} : { alsoLinked: rest.map(({ runnersUp: _, guessed: __, ...item }) => item) }),
       notes,
     };
   }
@@ -419,8 +442,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     return { outcome: { kind: 'linked', via: 'baseUrlEnv', ...joined(method, requested, found) }, notes };
   }
   if (found.reason === 'ambiguous') {
-    const candidates = routes.filter((route) => found.candidates.includes(route.id));
-    const choice = chooseByApiName(candidates, env);
+    const choice = chooseAmong(routes, found.candidates, env);
     if (choice.kind === 'one') {
       notes.push(apiGuessedFinding(method, requested, env, choice.api, choice.apis));
       return { outcome: { kind: 'linked', via: 'apiName', entry: choice.entry, runnersUp: [] }, notes };
@@ -431,7 +453,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
         targetService,
         method,
         path: requested,
-        candidates: found.candidates,
+        candidates: choice.kind === 'narrowed' ? choice.entries.map((entry) => entry.id) : found.candidates,
         ...(found.applications === undefined ? {} : { applications: found.applications }),
         ...(choice.kind === 'tie' ? { apis: choice.apis } : {}),
       },

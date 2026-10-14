@@ -476,29 +476,88 @@ const ownKeyOf = (route: DeployedRoute): string | undefined => {
   return typeof key === 'string' && key !== makeHttpEntryKey(route.method, route.path) ? key : undefined;
 };
 
-/**
- * The method-and-path keys more than one API (or load balancer) of a
- * deployment serves. Only these are kept apart by their API, so a deployment
- * with one API, and every route no other API also serves, keeps the id it
- * always had (P59).
- */
-export const keysSharedByApis = (routes: readonly DeployedRoute[]): ReadonlySet<string> => {
-  const apis = new Map<string, Set<string>>();
-  for (const route of routes) {
-    if (route.api === undefined || ownKeyOf(route) !== undefined) continue;
-    const key = makeHttpEntryKey(route.method, route.path);
-    apis.set(key, (apis.get(key) ?? new Set()).add(route.api));
-  }
-  return new Set([...apis].filter(([, names]) => names.size > 1).map(([key]) => key));
+/** The API a route belongs to: its name, else its declaration's address, so an API whose name is not read is still one of its own (P61). */
+export const apiIdOf = (route: DeployedRoute): string | undefined => {
+  const address = route.meta?.['apiAddress'];
+  return route.api ?? (typeof address === 'string' ? address : undefined);
 };
 
-/** A route's entry key: the reader's own, else its method and path, with its API beside them where another API serves those too. */
-export const keyOfRoute = (route: DeployedRoute, shared: ReadonlySet<string>): string => {
-  const own = ownKeyOf(route);
-  if (own !== undefined) return own;
-  const plain = makeHttpEntryKey(route.method, route.path);
-  return route.api !== undefined && shared.has(plain) ? makeApiRouteEntryKey(route.method, route.path, route.api) : plain;
+const listenerOf = (route: DeployedRoute): string | undefined => {
+  const listener = route.meta?.['listener'];
+  return typeof listener === 'string' ? listener : undefined;
 };
+
+/** A route of the repository, with what it reaches spelled so two deployments' targets compare. */
+export interface PlacedRoute {
+  readonly route: DeployedRoute;
+  readonly target: string;
+}
+
+/** How a route's key is kept apart from another's at its method and path. */
+export interface RouteKey {
+  readonly key: string;
+  /** Its API's address, where that and not the name keeps it apart. */
+  readonly apiAddress?: string;
+  /** Its listener, where that keeps it apart from the same load balancer's other listener. */
+  readonly listener?: string;
+}
+
+const groupBy = <T>(items: readonly T[], keyOf: (item: T) => string): Map<string, T[]> => {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = keyOf(item);
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  return groups;
+};
+
+/** The pair a load balancer's listeners are told apart within. */
+const apiAt = (plain: string, api: string): string => `${plain} ${api}`;
+
+/**
+ * The entry key of each route of a repository, across every deployment the
+ * repository is read from (P59, P61).
+ *
+ * A method and path more than one API (or load balancer) serves is keyed with
+ * each route's API; one load balancer's listeners sending the same method and
+ * path to different targets are keyed with the listener as well, while
+ * listeners sending it to one target stay one route, since a caller reaches
+ * the same code whichever port it uses. Every other route keeps the key it
+ * always had.
+ */
+export const routeKeysOf = (routes: readonly PlacedRoute[]): RouteKey[] => {
+  const plainOf = ({ route }: PlacedRoute): string => makeHttpEntryKey(route.method, route.path);
+  const apart = ({ route }: PlacedRoute): boolean => ownKeyOf(route) === undefined && apiIdOf(route) !== undefined;
+  const sharedByApis = new Set<string>();
+  const sharedByListeners = new Set<string>();
+  for (const [plain, serving] of groupBy(routes.filter(apart), plainOf)) {
+    const byApi = groupBy(serving, ({ route }) => apiIdOf(route) as string);
+    if (byApi.size > 1) sharedByApis.add(plain);
+    for (const [api, ofApi] of byApi) {
+      const listeners = groupBy(ofApi, ({ route }) => listenerOf(route) ?? '');
+      const targets = new Set(ofApi.map(({ target }) => target));
+      if (listeners.size > 1 && targets.size > 1) sharedByListeners.add(apiAt(plain, api));
+    }
+  }
+  return routes.map((placed) => {
+    const { route } = placed;
+    const own = ownKeyOf(route);
+    if (own !== undefined) return { key: own };
+    const plain = plainOf(placed);
+    const api = apiIdOf(route);
+    if (api === undefined) return { key: plain };
+    const listener = sharedByListeners.has(apiAt(plain, api)) ? listenerOf(route) : undefined;
+    if (!sharedByApis.has(plain) && listener === undefined) return { key: plain };
+    return {
+      key: makeApiRouteEntryKey(route.method, route.path, api, listener),
+      ...(route.api === undefined ? { apiAddress: api } : {}),
+      ...(listener === undefined ? {} : { listener }),
+    };
+  });
+};
+
+/** What the reader records to key a route by, which the entry holds only where it did. */
+const KEYING_META = new Set(['key', 'apiAddress', 'listener']);
 
 export const deployedFunctionsAdapter: EntryAdapter = {
   name: DEPLOYED_FUNCTIONS,
@@ -528,8 +587,19 @@ export const deployedFunctionsAdapter: EntryAdapter = {
 
     const entries: EntryNode[] = [];
     const roots: Array<Record<string, unknown>> = [];
-    for (const reader of readers) {
+    const deployments = readers.map((reader) => {
       const deployment: Deployment = reader.read({ repoDir: ctx.repoDir, service: ctx.service, config: ctx.config });
+      return { reader, deployment };
+    });
+    // Routes are kept apart across every deployment of the repository, not
+    // only within one: two readers may each declare an API at one address (P61).
+    const keys = routeKeysOf(
+      deployments.flatMap(({ deployment }, at) =>
+        deployment.routes.map((route) => ({ route, target: `${at}:${JSON.stringify(route.target ?? null)}` })),
+      ),
+    );
+    let placedAt = 0;
+    for (const { reader, deployment } of deployments) {
       const rows: Unresolved[] = [...deployment.rows];
       /** The node drawn for each declaration, by its address, for `reportRows`. */
       const drawn = new Map<string, string>();
@@ -565,8 +635,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
         });
       });
 
-      const shared = keysSharedByApis(deployment.routes);
       for (const route of deployment.routes) {
+        const keyed = keys[placedAt++] as RouteKey;
         const target = route.target;
         const local = target !== undefined && 'function' in target ? target.function : undefined;
         const fn = local === undefined ? undefined : deployment.functions[local];
@@ -581,7 +651,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
           kind: 'authorizer',
         }));
         const wrapping = [...guards, ...(reading?.wrapping ?? [])];
-        const key = keyOfRoute(route, shared);
+        const { key } = keyed;
         const id = makeEntryId(ctx.repo, 'http', key);
         const declaredAs = route.meta?.['declaredAs'];
         if (typeof declaredAs === 'string') drawn.set(declaredAs, id);
@@ -614,7 +684,9 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             // What the reader records about the route - where it is declared,
             // the domains, base path and stages it is reached at - less the
             // key, which is the entry's own.
-            ...Object.fromEntries(Object.entries(route.meta ?? {}).filter(([name]) => name !== 'key')),
+            ...Object.fromEntries(Object.entries(route.meta ?? {}).filter(([name]) => !KEYING_META.has(name))),
+            ...(keyed.apiAddress === undefined ? {} : { apiAddress: keyed.apiAddress }),
+            ...(keyed.listener === undefined ? {} : { listener: keyed.listener }),
             ...(target === undefined ? { integration: 'none' } : {}),
             ...(target !== undefined && 'sends' in target ? { integration: target.sends.kind, ...(sends === undefined ? {} : { [SENDS_META]: sends }) } : {}),
           },
