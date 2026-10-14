@@ -3,6 +3,7 @@ import {
   makeHttpEntryKey,
   normalizePath,
   UNREAD_SPAN,
+  type DeclaredStream,
   type DeployedDelivery,
   type DeployedFunction,
   type DeployedHandler,
@@ -59,6 +60,7 @@ export class DeploymentReading implements ResourceReading {
   readonly roots: PublishedRoot[] = [];
   readonly workflows: DeployedWorkflow[] = [];
   readonly deliveries: DeployedDelivery[] = [];
+  readonly streams: DeclaredStream[] = [];
   readonly rows: Unresolved[] = [];
   readonly #functionIndex = new Map<Instance, number>();
   readonly #instances: Instance[];
@@ -110,6 +112,7 @@ export class DeploymentReading implements ResourceReading {
       roots: this.roots,
       workflows: this.workflows,
       deliveries: this.deliveries,
+      streams: this.streams,
       rows: [...this.configuration.rows, ...this.rows],
     };
   }

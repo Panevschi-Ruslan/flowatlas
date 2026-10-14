@@ -25,6 +25,7 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { joinDeployments } from './deployment-link.js';
+import { keepWhereDeclared } from './declared-link.js';
 import { completeFromEnvironment } from './environment-link.js';
 import { mergeGraphs } from './merge.js';
 import {
@@ -431,6 +432,9 @@ export const linkGraphs = (
   // function that runs it is deployed with; then every rule that takes its
   // channels by a pattern, matched against every channel, those included (P23).
   found.push(...completeFromEnvironment(nodes, edges, merged.unresolved));
+  // A write onto a table's stream is a publish only where the stream is
+  // declared, which only the whole project knows (P51).
+  found.push(...keepWhereDeclared(nodes, edges, [merged.unresolved, found]));
   found.push(...joinChannelPatterns(nodes, edges));
   // What a consumer takes of its channel, asked of every publish onto it (P52).
   found.push(...matchTakenPublishes(nodes, edges));

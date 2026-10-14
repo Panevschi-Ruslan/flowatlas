@@ -365,7 +365,8 @@ const FALLBACK_CASES = [
 /**
  * Terraform shapes read since R174: configuration written as JSON, an API
  * created from its OpenAPI document, a WebSocket API, base paths a domain puts
- * in front of an API, and a rule that forwards to another bus by a pattern.
+ * in front of an API, a rule that forwards to another bus by a pattern, and a
+ * write to a table reaching the function its stream runs (P51).
  * Each fixture's health check is the proof it is read without a row; the walk
  * is what each shape adds.
  */
@@ -393,6 +394,10 @@ const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-bucket-notification', [
     ['flow.upload-cover.tree.txt', 'POST /covers/:param'],
     ['flow.make-thumbnail.tree.txt', 'invoke:library-make-thumbnail'],
+  ]),
+  terraformShape('lambda-terraform-table-stream', [
+    ['flow.cancel-order.tree.txt', 'POST /orders/:param/cancel'],
+    ['flow.track-click.tree.txt', 'POST /clicks'],
   ]),
 ];
 

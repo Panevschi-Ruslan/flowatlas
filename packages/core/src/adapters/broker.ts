@@ -164,6 +164,13 @@ export interface CallPattern {
    * than a channel of that name (P24).
    */
   starts?: StartedEntry;
+  /**
+   * A publish only where some deployment declares the channel it lands on: a
+   * write to a table is a message to the readers of its stream, and to nobody
+   * when the table has none, so the linker keeps it only on a declared channel
+   * (`CHANNEL_DECLARED_META`; P51).
+   */
+  whereDeclared?: boolean;
 }
 
 /**

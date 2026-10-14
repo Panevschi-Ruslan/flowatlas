@@ -1,0 +1,1095 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-14T10:38:20.535Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "returns",
+      "repo": "./returns",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:dynamodb/shop-orders",
+      "type": "channel",
+      "label": "dynamodb/shop-orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 6,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb",
+          "aws-dynamodb-document"
+        ],
+        "declaredBy": "aws_dynamodb_table.orders",
+        "producers": 4,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:kinesis/shop-clicks",
+      "type": "channel",
+      "label": "kinesis/shop-clicks",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 31,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "aws_kinesis_stream.clicks",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:returns#ORDERS_TABLE",
+      "type": "config_key",
+      "label": "ORDERS_TABLE",
+      "repo": "returns",
+      "file": "src/returns/clear-orders.ts",
+      "line": 18,
+      "meta": {
+        "key": "ORDERS_TABLE",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:shop#CARTS_TABLE",
+      "type": "config_key",
+      "label": "CARTS_TABLE",
+      "repo": "shop",
+      "file": "src/orders/place-order.ts",
+      "line": 20,
+      "meta": {
+        "key": "CARTS_TABLE",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:shop#ORDERS_TABLE",
+      "type": "config_key",
+      "label": "ORDERS_TABLE",
+      "repo": "shop",
+      "file": "src/orders/place-order.ts",
+      "line": 21,
+      "meta": {
+        "key": "ORDERS_TABLE",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.count_clicks",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 112,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.count_clicks",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.order_changed",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 100,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.order_changed",
+        "deployedBy": "terraform",
+        "unmatched": {
+          "filter": [
+            "{\"eventName\":[\"INSERT\",\"MODIFY\"]}"
+          ]
+        },
+        "notMatchedOn": [
+          "filter"
+        ]
+      }
+    },
+    {
+      "id": "entry:returns:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "repo": "returns",
+      "file": "infra/main.tf",
+      "line": 65,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/cancel",
+        "rawPath": "/orders/{orderId}/cancel",
+        "deployedBy": "terraform",
+        "api": "shop-returns",
+        "function": "shop-returns-cancel-order",
+        "declaredAs": "aws_apigatewayv2_route.cancel_order",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:http:POST:/orders/clear",
+      "type": "entry",
+      "label": "POST /orders/clear",
+      "repo": "returns",
+      "file": "infra/main.tf",
+      "line": 78,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/clear",
+        "rawPath": "/orders/clear",
+        "deployedBy": "terraform",
+        "api": "shop-returns",
+        "function": "shop-returns-clear-orders",
+        "declaredAs": "aws_apigatewayv2_route.clear_orders",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:shop-returns-cancel-order",
+      "type": "entry",
+      "label": "shop-returns-cancel-order",
+      "repo": "returns",
+      "file": "infra/main.tf",
+      "line": 29,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-returns-cancel-order",
+        "deployedBy": "terraform",
+        "name": "shop-returns-cancel-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.cancel_order",
+        "handler": "returns/cancel-order.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:shop-returns-clear-orders",
+      "type": "entry",
+      "label": "shop-returns-clear-orders",
+      "repo": "returns",
+      "file": "infra/main.tf",
+      "line": 38,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-returns-clear-orders",
+        "deployedBy": "terraform",
+        "name": "shop-returns-clear-orders",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.clear_orders",
+        "handler": "returns/clear-orders.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "data.aws_dynamodb_table.orders.name",
+            "value": "shop-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:event:dynamodb/shop-orders",
+      "type": "entry",
+      "label": "event dynamodb/shop-orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 100,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/shop-orders",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.order_changed",
+        "deployedBy": "terraform",
+        "changesOf": "table",
+        "name": "shop-orders",
+        "function": "shop-order-changed",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:event:kinesis/shop-clicks",
+      "type": "entry",
+      "label": "event kinesis/shop-clicks",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 112,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/shop-clicks",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.count_clicks",
+        "deployedBy": "terraform",
+        "changesOf": "stream",
+        "name": "shop-clicks",
+        "function": "shop-count-clicks",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/clicks",
+      "type": "entry",
+      "label": "POST /clicks",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 143,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/clicks",
+        "rawPath": "/clicks",
+        "deployedBy": "terraform",
+        "api": "shop",
+        "function": "shop-track-click",
+        "declaredAs": "aws_apigatewayv2_route.track_click",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 130,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "deployedBy": "terraform",
+        "api": "shop",
+        "function": "shop-place-order",
+        "declaredAs": "aws_apigatewayv2_route.place_order",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-count-clicks",
+      "type": "entry",
+      "label": "shop-count-clicks",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 89,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-count-clicks",
+        "deployedBy": "terraform",
+        "name": "shop-count-clicks",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.count_clicks",
+        "handler": "clicks/count-clicks.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#KinesisStreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-order-changed",
+      "type": "entry",
+      "label": "shop-order-changed",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 71,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-order-changed",
+        "deployedBy": "terraform",
+        "name": "shop-order-changed",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.order_changed",
+        "handler": "orders/order-changed.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#DynamoDBStreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-place-order",
+      "type": "entry",
+      "label": "shop-place-order",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 55,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-place-order",
+        "deployedBy": "terraform",
+        "name": "shop-place-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.place_order",
+        "handler": "orders/place-order.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "CARTS_TABLE": {
+            "written": "aws_dynamodb_table.carts.name",
+            "value": "shop-carts",
+            "kind": "table"
+          },
+          "ORDERS_TABLE": {
+            "written": "aws_dynamodb_table.orders.name",
+            "value": "shop-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-track-click",
+      "type": "entry",
+      "label": "shop-track-click",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 80,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-track-click",
+        "deployedBy": "terraform",
+        "name": "shop-track-click",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.track_click",
+        "handler": "clicks/track-click.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:returns#src/returns/cancel-order.ts:13:9",
+      "type": "producer",
+      "label": "write dynamodb/shop-orders",
+      "repo": "returns",
+      "file": "src/returns/cancel-order.ts",
+      "line": 13,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "literal",
+        "method": "send",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:returns#src/returns/clear-orders.ts:15:9",
+      "type": "producer",
+      "label": "write dynamodb/shop-orders",
+      "repo": "returns",
+      "file": "src/returns/clear-orders.ts",
+      "line": 15,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "dynamodb",
+              {
+                "environment": "ORDERS_TABLE",
+                "forms": [
+                  "^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$"
+                ]
+              }
+            ]
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:returns#src/returns/clear-orders.ts:22:9",
+      "type": "producer",
+      "label": "write dynamodb/shop-orders",
+      "repo": "returns",
+      "file": "src/returns/clear-orders.ts",
+      "line": 22,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb-document",
+        "channelVia": "literal",
+        "method": "delete",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:shop#src/clicks/track-click.ts:9:9",
+      "type": "producer",
+      "label": "record kinesis/shop-clicks",
+      "repo": "shop",
+      "file": "src/clicks/track-click.ts",
+      "line": 9,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/place-order.ts:21:9",
+      "type": "producer",
+      "label": "write dynamodb/shop-orders",
+      "repo": "shop",
+      "file": "src/orders/place-order.ts",
+      "line": 21,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb-document",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "dynamodb",
+              {
+                "environment": "ORDERS_TABLE",
+                "forms": [
+                  "^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$"
+                ]
+              }
+            ],
+            "payload": "{cart?:object;orderId:string;customerId:string;items:string[];status:'cancelled'|'placed'}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "repo:returns",
+      "type": "repo",
+      "label": "returns",
+      "repo": "returns",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-dynamodb": 2,
+            "aws-sdk": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/lib-dynamodb": 3,
+            "@aws-sdk/client-kinesis": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "returns#src/returns/cancel-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/returns/cancel-order.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "returns#src/returns/clear-orders.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/returns/clear-orders.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "shop#src/clicks/count-clicks.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/clicks/count-clicks.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#KinesisStreamEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/clicks/track-click.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/clicks/track-click.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/order-changed.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/orders/order-changed.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#DynamoDBStreamEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/place-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/orders/place-order.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:dynamodb/shop-orders",
+      "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 100,
+      "meta": {
+        "by": "mapping",
+        "notMatchedOn": [
+          "filter"
+        ]
+      }
+    },
+    {
+      "from": "channel:kinesis/shop-clicks",
+      "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 112,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
+      "to": "entry:shop:event:kinesis/shop-clicks",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 112,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
+      "to": "entry:shop:event:dynamodb/shop-orders",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 100,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:returns:http:POST:/orders/:param/cancel",
+      "to": "returns#src/returns/cancel-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/cancel-order.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:returns:http:POST:/orders/clear",
+      "to": "returns#src/returns/clear-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/clear-orders.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true,
+        "body": "{customerId:string;orderIds:string[]}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:returns:invoke:shop-returns-cancel-order",
+      "to": "returns#src/returns/cancel-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/cancel-order.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:returns:invoke:shop-returns-clear-orders",
+      "to": "returns#src/returns/clear-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/clear-orders.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:shop:event:dynamodb/shop-orders",
+      "to": "shop#src/orders/order-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/order-changed.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop:event:kinesis/shop-clicks",
+      "to": "shop#src/clicks/count-clicks.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/clicks/count-clicks.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop:http:POST:/clicks",
+      "to": "shop#src/clicks/track-click.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/clicks/track-click.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "{page:string;customerId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders",
+      "to": "shop#src/orders/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#Order",
+      "file": "src/orders/place-order.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true,
+        "body": "{customerId:string;items:string[]}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:invoke:shop-count-clicks",
+      "to": "shop#src/clicks/count-clicks.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/clicks/count-clicks.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop:invoke:shop-order-changed",
+      "to": "shop#src/orders/order-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/order-changed.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop:invoke:shop-place-order",
+      "to": "shop#src/orders/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:shop:invoke:shop-track-click",
+      "to": "shop#src/clicks/track-click.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/clicks/track-click.ts",
+      "line": 7
+    },
+    {
+      "from": "producer:returns#src/returns/cancel-order.ts:13:9",
+      "to": "channel:dynamodb/shop-orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{orderId:{S:string}}"
+      ],
+      "file": "src/returns/cancel-order.ts",
+      "line": 13
+    },
+    {
+      "from": "producer:returns#src/returns/clear-orders.ts:15:9",
+      "to": "channel:dynamodb/shop-orders",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/returns/clear-orders.ts",
+      "line": 15,
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_TABLE"
+        ],
+        "functions": [
+          "shop-returns-clear-orders"
+        ]
+      }
+    },
+    {
+      "from": "producer:returns#src/returns/clear-orders.ts:22:9",
+      "to": "channel:dynamodb/shop-orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
+      "file": "src/returns/clear-orders.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:shop#src/clicks/track-click.ts:9:9",
+      "to": "channel:kinesis/shop-clicks",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{page:string;customerId:string}"
+      ],
+      "file": "src/clicks/track-click.ts",
+      "line": 9
+    },
+    {
+      "from": "producer:shop#src/orders/place-order.ts:21:9",
+      "to": "channel:dynamodb/shop-orders",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 21,
+      "params": [
+        "{cart?:object;orderId:string;customerId:string;items:string[];status:'cancelled'|'placed'}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_TABLE"
+        ],
+        "functions": [
+          "shop-place-order"
+        ]
+      }
+    },
+    {
+      "from": "returns#src/returns/cancel-order.ts:handler",
+      "to": "producer:returns#src/returns/cancel-order.ts:13:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/returns/cancel-order.ts",
+      "line": 13
+    },
+    {
+      "from": "returns#src/returns/clear-orders.ts:handler",
+      "to": "config_key:returns#ORDERS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/returns/clear-orders.ts",
+      "line": 18,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-returns-clear-orders",
+            "written": "data.aws_dynamodb_table.orders.name",
+            "value": "shop-orders"
+          }
+        ]
+      }
+    },
+    {
+      "from": "returns#src/returns/clear-orders.ts:handler",
+      "to": "producer:returns#src/returns/clear-orders.ts:15:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/returns/clear-orders.ts",
+      "line": 15
+    },
+    {
+      "from": "returns#src/returns/clear-orders.ts:handler",
+      "to": "producer:returns#src/returns/clear-orders.ts:22:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/returns/clear-orders.ts",
+      "line": 22
+    },
+    {
+      "from": "shop#src/clicks/track-click.ts:handler",
+      "to": "producer:shop#src/clicks/track-click.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clicks/track-click.ts",
+      "line": 9
+    },
+    {
+      "from": "shop#src/orders/place-order.ts:handler",
+      "to": "config_key:shop#CARTS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 20,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-place-order",
+            "written": "aws_dynamodb_table.carts.name",
+            "value": "shop-carts"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#src/orders/place-order.ts:handler",
+      "to": "config_key:shop#ORDERS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 21,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-place-order",
+            "written": "aws_dynamodb_table.orders.name",
+            "value": "shop-orders"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#src/orders/place-order.ts:handler",
+      "to": "producer:shop#src/orders/place-order.ts:21:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 21
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#DynamoDBStreamEvent": {
+      "name": "DynamoDBStreamEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "426b6e41a64d2ec9",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#KinesisStreamEvent": {
+      "name": "KinesisStreamEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "e6e5fb34bea91d37",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:shop#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "shop#src/orders/place-order.ts",
+      "structuralHash": "a6d13676b5e95e6f",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "items",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "'cancelled'|'placed'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "infra/main.tf",
+      "line": 100,
+      "reason": "stream-filter-not-matched",
+      "level": "info",
+      "message": "aws_lambda_event_source_mapping.order_changed hands dynamodb/shop-orders on through a filter, which is recorded on its edge and not matched against what is written",
+      "hint": "Every write onto the stream is drawn as reaching the function; the filter decides at run time which of them do.",
+      "symbol": "entry:shop:event:dynamodb/shop-orders",
+      "adapter": "aws-lambda",
+      "service": "shop"
+    }
+  ]
+}

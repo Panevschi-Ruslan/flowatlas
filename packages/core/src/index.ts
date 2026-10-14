@@ -167,6 +167,7 @@ export type {
 export type {
   DefinitionPosition,
   DeployedDefinition,
+  DeclaredStream,
   DeployedDelivery,
   DeployedFunction,
   DeployedHandler,
@@ -189,6 +190,8 @@ export type {
 export {
   ADDRESS_SEPARATOR,
   AWAITING_META,
+  CHANNEL_DECLARED_META,
+  WHERE_DECLARED_META,
   CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVIRONMENT_META,
@@ -289,6 +292,7 @@ export type { BodyRead, Origin, ResolveOriginOptions, TypeOrigin } from './origi
 export type { AddressPart, BrokerAdapter, CallPattern, ChannelKind, StartedEntry } from './adapters/broker.js';
 export {
   EVERY_ELEMENT,
+  EVERY_KEY,
   locatedExpressions,
   locatedSlots,
   locatorApplies,

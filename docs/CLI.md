@@ -1193,7 +1193,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Terraform files and modules | `infra-file-unparsed`, `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
 | Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
-| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread` |
+| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread` |
 
@@ -1867,9 +1867,11 @@ it sends was built by its caller, which is what the description is for.
 
 ### The AWS SDK
 
-Publishing through EventBridge, SQS and SNS is read without configuration, from
-`@aws-sdk/client-eventbridge`, `@aws-sdk/client-sqs`, `@aws-sdk/client-sns` and, for writes to a bucket, `@aws-sdk/client-s3`, and
-`aws-sdk` (version 2). The package may be declared in the repository's own
+Publishing through EventBridge, SQS and SNS, writing to a bucket or a DynamoDB
+table and putting a record on a Kinesis stream are read without configuration,
+from `@aws-sdk/client-eventbridge`, `@aws-sdk/client-sqs`, `@aws-sdk/client-sns`,
+`@aws-sdk/client-s3`, `@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`,
+`@aws-sdk/client-kinesis` and `aws-sdk` (version 2). The package may be declared in the repository's own
 manifest or in any manifest below it, for a repository that keeps one per
 function. Three shapes of call are read for each operation: a command sent with
 `client.send(new XCommand(input))`, built in the call or in a `const`; version 3's
@@ -1883,6 +1885,8 @@ aggregated client, `client.putEvents(input)`; and version 2,
 | SNS `Publish`, `PublishBatch` | `sns/<topic name>`, from `TopicArn` | `Message` |
 | S3 `PutObject`, `CopyObject`, `CompleteMultipartUpload`, `DeleteObject`, `DeleteObjects`; version 2's `upload`; `@aws-sdk/lib-storage`'s `new Upload({ params }).done()` | `s3/<bucket name>`, from `Bucket` | none: recorded as the event it fires (`s3:ObjectCreated:Put`, `s3:ObjectRemoved:Delete`, any of `s3:ObjectCreated:*` for an upload), with the `Key` it writes |
 | `getSignedUrl` (`@aws-sdk/s3-request-presigner`) of a `PutObjectCommand` | the same | none: the browser handed the URL writes, so every edge is `heuristic` with `because: ["presigned"]` |
+| DynamoDB `PutItem`, `UpdateItem`, `DeleteItem`, `BatchWriteItem`, `TransactWriteItems`; the document client's `put`, `update`, `delete`, `batchWrite`, `transactWrite` (`PutCommand` and the rest from `@aws-sdk/lib-dynamodb`, `DocumentClient` in version 2) | `dynamodb/<table name>`, from `TableName`, each key of a batch's `RequestItems`, or each entry of a transaction — only where the table's stream is declared | `Item`, or `Key` |
+| Kinesis `PutRecord`, `PutRecords` | `kinesis/<stream name>`, from `StreamName` or `StreamARN` | `Data` |
 
 A channel is named by the deployed name, never by the URL or ARN the code holds:
 `https://sqs.eu-west-1.amazonaws.com/111122223333/returns` is `sqs/returns`, and
@@ -1900,6 +1904,16 @@ through the bucket from that write goes on to those alone. The edge stays
 filters on keys, or a filter reaches past what a template fixes, it is
 `heuristic` with the reason in `because`. A write nothing takes is an `info` row,
 `s3-write-matches-nothing` (`fixtures/lambda-terraform-bucket-notification`).
+
+**A write to a table is a publish only where its stream is.** A table's writes
+reach whatever a mapping from its stream runs, and nobody when it has none; the
+call does not say which, the deployment does, in whichever repository deploys
+the table. So a write is drawn onto `dynamodb/<table>`, and the linker keeps it
+only where some service's Terraform declares that stream — `stream_enabled =
+true` or a `stream_view_type` on `aws_dynamodb_table`, or a mapping reading its
+`stream_arn`. A write to a table with no stream is no channel: no edge, no row.
+A read — `GetItem`, `Query`, `Scan` — is not described and never joins. A record
+put on a Kinesis stream is always a publish (`fixtures/lambda-terraform-table-stream`).
 
 These are descriptions in the vocabulary above: each operation is the locators and
 parts a configuration could write, plus the one thing a configuration cannot say,
@@ -2581,7 +2595,8 @@ the grammar above. The two meet on one node, across repositories, by name.
 | `aws_cloudwatch_event_rule` with an `event_pattern` (`jsonencode`, heredoc or a string), and each of its `aws_cloudwatch_event_target`s | a consumer of every `eventbridge/<bus>/<source>/<detail type>` the pattern selects, reaching the target |
 | a rule with a `schedule_expression`, and `aws_scheduler_schedule` | a `cron` entry on its target, the entry keyed by the rule's or the schedule's name |
 | `aws_lambda_event_source_mapping` from a queue | a consumer of `sqs/<queue>` reaching the function |
-| the same from a DynamoDB table's stream or a Kinesis stream | an `event` entry, `dynamodb/<table>` or `kinesis/<stream>`, on the function |
+| the same from a DynamoDB table's stream or a Kinesis stream | an `event` entry, `dynamodb/<table>` or `kinesis/<stream>`, on the function, and a consumer of the channel of that name that `triggers` it: a write in code onto the table or the stream reaches the function through it; `filter_criteria` is on the edge and one `stream-filter-not-matched` row at `info` |
+| `aws_dynamodb_table` with `stream_enabled = true` or a `stream_view_type`, and `aws_kinesis_stream` | the channel `dynamodb/<table>` or `kinesis/<stream>`, declared: a table write lands only on a declared one |
 | `aws_sns_topic_subscription` with protocol `lambda` or `sqs` | a consumer of `sns/<topic>` reaching the function or the queue; any other protocol is read and not followed (`info`) |
 | `redrive_policy` on `aws_sqs_queue`, and `aws_sqs_queue_redrive_policy` | a `triggers` edge from the queue to a publisher onto its dead-letter queue — not a reader, so a queue nothing reads is still one `dead` reports |
 | `aws_pipes_pipe` | a consumer of its source reaching its target; a bus target with `eventbridge_event_bus_parameters` publishes exactly that event |
@@ -2600,7 +2615,13 @@ source and detail type, where that bus's rules see them. A rule that names its
 events exactly forwards those; one that takes them by a pattern forwards
 whichever channels the pattern matches across the project, each put on the other
 bus by the linker with the match's confidence and `forwardedFrom` on the edge, and
-a rule on that bus matches them in turn (`fixtures/lambda-terraform-bus-forward`). Each is named by a reference to what the
+a rule on that bus matches them in turn (`fixtures/lambda-terraform-bus-forward`).
+A table or a stream joins the same way: a handler's write onto `dynamodb/<table>`
+reaches the mapping from the table's stream, which triggers the `event` entry
+on the function it runs, so `flow` and `impact` follow Lambda A → table → stream
+→ Lambda B, across repositories when the writer and the table are in two
+(`fixtures/lambda-terraform-table-stream`). A declared stream something reads
+and nothing configured writes is one `stream-no-writer` row at `info`. Each is named by a reference to what the
 configuration declares or looks up, by an ARN or URL written out, or by a
 template whose name part is written out — `"arn:aws:lambda:${var.region}:${local.account}:function:library-notify"`
 names its function even though neither the region nor the account is known.

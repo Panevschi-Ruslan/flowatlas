@@ -2,6 +2,8 @@ import {
   AWS_SERVICE_PREFIX,
   BUCKET_CHANNEL,
   BUCKET_FIELDS,
+  CHANGES_CHANNELS,
+  CHANGES_PREFIX,
   DEPLOYED_CHANNELS,
   DEPLOYED_FORMS,
   FUNCTION_NAME_FORMS,
@@ -9,7 +11,9 @@ import {
   S3_UPLOAD,
   S3_WRITES,
   SDK_SENDS,
+  SDK_WRITES,
   type SendingService,
+  type WritingService,
 } from '@flowatlas/aws';
 import {
   hasAnyDependency,
@@ -58,6 +62,12 @@ import type { BrokerSpec } from './types.js';
  * (P24): an operation that `starts` reads its address as the deployed name of
  * an entry rather than of a channel, so the same three shapes of call, the
  * same locators and the same completion from the environment serve both.
+ *
+ * Writing to a DynamoDB table and putting a record on a Kinesis stream are rows
+ * too (P51): onto `dynamodb/<table>` and `kinesis/<stream>`, where the function
+ * a mapping from that stream runs reads them. A table write is a publish only
+ * where a deployment declares the table's stream, which no call says, so it is
+ * drawn as one `whereDeclared` and the linker keeps or drops it.
  */
 
 /** A part of an address, written against the operation's input rather than a call. */
@@ -65,6 +75,8 @@ type InputPart =
   | { readonly literal: string }
   | {
       readonly path: readonly string[];
+      /** Further paths tried after it, in order, at each element. */
+      readonly or?: readonly (readonly string[])[];
       readonly absent?: string;
       readonly forms?: readonly string[];
     };
@@ -93,6 +105,7 @@ interface Operation {
   /** What it is recorded as, where that is not the service's word. */
   readonly kind?: string;
   readonly starts?: Starts;
+  readonly whereDeclared?: boolean;
 }
 
 /** One service: its package, its clients, and what it publishes or starts. */
@@ -154,7 +167,7 @@ const BUCKET: readonly InputPart[] = [
   { path: [BUCKET_FIELDS.bucket], forms: DEPLOYED_FORMS.bucket },
 ];
 
-const writesTo = (): Operation[] =>
+const bucketWrites = (): Operation[] =>
   S3_WRITES.map((write) => ({
     ...(write.command === undefined ? {} : { command: write.command }),
     method: write.method,
@@ -196,6 +209,27 @@ const BUCKET_HELPERS: readonly CallPattern[] = [
   },
 ];
 
+/**
+ * The operations that write to a table or put a record on a stream, written
+ * against their input from the fields `@flowatlas/aws` states. A table's write
+ * is one only where its stream is declared; a record put on a stream is always
+ * on it.
+ */
+const writesTo = ({ changes, operations }: WritingService): Operation[] =>
+  operations.map((operation) => {
+    const [path = [], ...or] = operation.address;
+    return {
+      command: operation.command,
+      method: operation.method,
+      address: [
+        { literal: CHANGES_PREFIX[changes] },
+        { path, ...(or.length === 0 ? {} : { or }), forms: DEPLOYED_FORMS[changes] },
+      ],
+      ...(operation.message === undefined ? {} : { payload: operation.message }),
+      ...(changes === 'table' ? { whereDeclared: true } : {}),
+    };
+  });
+
 const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.workflow }];
 
 /** A task token names a waiting run, and no workflow: where it is read, nothing is. */
@@ -229,8 +263,33 @@ const SERVICES: readonly Service[] = [
     package: '@aws-sdk/client-s3',
     client: 'S3Client',
     service: 'S3',
-    operations: writesTo(),
+    operations: bucketWrites(),
     helpers: BUCKET_HELPERS,
+  },
+  {
+    ...CHANGES_CHANNELS.table,
+    package: '@aws-sdk/client-dynamodb',
+    client: 'DynamoDBClient',
+    service: 'DynamoDB',
+    operations: writesTo(SDK_WRITES.table),
+  },
+  {
+    ...CHANGES_CHANNELS.table,
+    // One adapter per client: the document client is a description of its own.
+    adapter: `${CHANGES_CHANNELS.table.adapter}-document`,
+    package: '@aws-sdk/lib-dynamodb',
+    client: 'DynamoDBDocumentClient',
+    service: 'DynamoDBDocument',
+    // `new AWS.DynamoDB.DocumentClient()` in version 2.
+    v2Service: 'DocumentClient',
+    operations: writesTo(SDK_WRITES.document),
+  },
+  {
+    ...CHANGES_CHANNELS.stream,
+    package: '@aws-sdk/client-kinesis',
+    client: 'KinesisClient',
+    service: 'Kinesis',
+    operations: writesTo(SDK_WRITES.stream),
   },
   {
     adapter: 'aws-stepfunctions',
@@ -304,7 +363,7 @@ const addressAt = (parts: readonly InputPart[], locate: InputLocator): AddressPa
     'literal' in part
       ? part
       : {
-          at: [locate(part.path)],
+          at: [part.path, ...(part.or ?? [])].map(locate),
           ...(part.absent === undefined ? {} : { absent: part.absent }),
           ...(part.forms === undefined ? {} : { forms: part.forms }),
         },
@@ -350,6 +409,7 @@ const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
     receiverPackages,
     kind: operation.kind ?? service.kind,
     ...(operation.starts === undefined ? {} : { starts: startsAt(operation.starts, locate) }),
+    ...(operation.whereDeclared === true ? { whereDeclared: true } : {}),
   }));
 };
 

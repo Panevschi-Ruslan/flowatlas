@@ -326,6 +326,21 @@ export interface DeployedWorkflow {
 }
 
 /** Everything one reader found in one repository. */
+/**
+ * A stream of records the deployment declares: a table's stream of changes, or
+ * a stream of its own. What is written to it is a message to whatever reads it,
+ * so a write onto it is a publish (P51).
+ */
+export interface DeclaredStream {
+  readonly file: string;
+  readonly line: number;
+  /** Where it is declared, in the deployment's own terms. */
+  readonly address: string;
+  readonly of: 'table' | 'stream';
+  /** The table's or the stream's deployed name. */
+  readonly name: string;
+}
+
 export interface Deployment {
   readonly functions: readonly DeployedFunction[];
   readonly routes: readonly DeployedRoute[];
@@ -333,6 +348,8 @@ export interface Deployment {
   readonly workflows: readonly DeployedWorkflow[];
   /** The subscribers it declares (P23). */
   readonly deliveries: readonly DeployedDelivery[];
+  /** The streams it declares, which a write in code publishes onto (P51). */
+  readonly streams?: readonly DeclaredStream[];
   /** What could not be read, with repo-relative files. */
   readonly rows: readonly Unresolved[];
 }

@@ -17,6 +17,9 @@
 export {
   AWS_SERVICE_PREFIX,
   bucketChannel,
+  CHANGES_CHANNELS,
+  CHANGES_PREFIX,
+  changesChannel,
   channelOfTarget,
   DEFAULT_EVENT_BUS,
   DEPLOYED_CHANNELS,
@@ -26,6 +29,7 @@ export {
   forwardedToBus,
   queueChannel,
   topicChannel,
+  type ChangesOf,
 } from './channels.js';
 export { deliveryEnvelope, ENVELOPES, ONWARD, STARTED, type DeliveryEnvelope } from './envelopes.js';
 export { GATEWAY_REQUEST } from './requests.js';
@@ -37,7 +41,6 @@ export {
   TABLE_CHANGES_FORMS,
   type DeployedName,
 } from './deployed.js';
-export { SDK_SENDS, type SendingService, type SendOperation } from './sends.js';
 export {
   BUCKET_CHANNEL,
   BUCKET_FIELDS,
@@ -48,3 +51,4 @@ export {
   S3_WRITES,
   type BucketWrite,
 } from './buckets.js';
+export { SDK_SENDS, SDK_WRITES, type SendingService, type SendOperation, type WriteOperation, type WritingService } from './sends.js';

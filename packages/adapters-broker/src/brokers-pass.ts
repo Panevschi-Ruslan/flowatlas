@@ -2,6 +2,7 @@ import {
   AWAITING_META,
   GUESSED_META,
   RECORDED_META,
+  WHERE_DECLARED_META,
   declaredParameterType,
   decoratorArgs,
   definePass,
@@ -438,6 +439,8 @@ export const extractBrokers = (ctx: PassContext): void => {
         // How far the call can be trusted once the address is complete, which
         // its edge cannot say while there is no channel to put it on.
         ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting, channelKind: spec.channelKind, confidence }),
+        // A write only some deployment makes a publish: kept or dropped by the linker.
+        ...(pattern.whereDeclared === true ? { [WHERE_DECLARED_META]: true } : {}),
       },
     });
     ctx.builder.addEdge({

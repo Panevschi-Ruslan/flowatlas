@@ -410,6 +410,13 @@ const decoratorArgument = (
 /** One step of a path that stands for every element of an array. */
 export const EVERY_ELEMENT = '*';
 
+/**
+ * One step of a path that stands for every key of a record, as the key is
+ * written: a record keyed by what it addresses - a batch keyed by the table
+ * each list of writes goes to - names its addresses in its keys (P51).
+ */
+export const EVERY_KEY = '[key]';
+
 const stopped = (expression: TsNode): LocatedSlot => ({ expression, reached: false });
 
 /**
@@ -498,6 +505,19 @@ const writtenProperty = (record: ObjectLiteralExpression, key: string): LocatedS
   return undefined;
 };
 
+/**
+ * A key of a record as an expression: what a computed key computes, or the
+ * key itself where it is a string. A key written as a bare word names itself
+ * and is no expression of anything, and a spread is whatever it spreads: both
+ * stop where they are.
+ */
+const writtenKey = (property: TsNode): LocatedSlot => {
+  if (!Node.isPropertyAssignment(property)) return stopped(property);
+  const name = property.getNameNode();
+  if (Node.isComputedPropertyName(name)) return { expression: name.getExpression(), reached: true };
+  return Node.isStringLiteral(name) || Node.isNoSubstitutionTemplateLiteral(name) ? { expression: name, reached: true } : stopped(name);
+};
+
 /** One step into what a slot holds. */
 const stepInto = (expression: TsNode, step: string): LocatedSlot[] => {
   const value = writtenValue(expression);
@@ -510,13 +530,15 @@ const stepInto = (expression: TsNode, step: string): LocatedSlot[] => {
       );
   }
   if (!Node.isObjectLiteralExpression(value)) return [stopped(expression)];
+  if (step === EVERY_KEY) return value.getProperties().map(writtenKey);
   return [writtenProperty(value, step)];
 };
 
 /**
  * Every place a path of properties reaches from one expression, in order.
  *
- * One slot per element wherever the path says `*`, so the result is as long as
+ * One slot per element wherever the path says `*`, and per key where it says
+ * `[key]`, so the result is as long as
  * the lists it went through. A slot that stopped stays where it stopped for the
  * rest of the path, and an absent key stays absent: both are answers about that
  * element, and dropping them would shift every later element onto the wrong

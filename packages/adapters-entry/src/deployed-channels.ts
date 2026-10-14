@@ -2,6 +2,8 @@ import {
   BUCKET_CHANNEL,
   BUCKET_FIELDS,
   bucketChannel,
+  CHANGES_CHANNELS,
+  changesChannel,
   channelOfTarget,
   deliveryEnvelope,
   DEPLOYED_CHANNELS,
@@ -13,6 +15,7 @@ import {
   topicChannel,
 } from '@flowatlas/aws';
 import {
+  CHANNEL_DECLARED_META,
   CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVELOPE_META,
@@ -29,6 +32,7 @@ import {
   TAKES_META,
   type ChannelForward,
   type Confidence,
+  type DeclaredStream,
   type DeployedDelivery,
   type DeployedFunction,
   type DeliverySource,
@@ -106,6 +110,31 @@ const channelNode = (drawing: Canvas, name: string, kind: keyof typeof CHANNELS,
   const adapters = [...new Set([...((existing?.meta?.['adapters'] as string[] | undefined) ?? []), adapter])];
   const node = ctx.builder.addNode({ id, type: 'channel', label: name, repo: ctx.repo, file, line, meta: { channelKind, adapters } });
   node.meta = { ...node.meta, adapters };
+  return id;
+};
+
+/**
+ * The channel of a stream a deployment declares, marked as declared by what
+ * declares it: a write in code lands on it only then (P51). A mapping that
+ * reads a table's stream declares it as surely as the table does.
+ */
+const streamChannelNode = (drawing: Canvas, stream: Omit<DeclaredStream, 'address'> & { readonly declaredBy: string }): string => {
+  const { ctx } = drawing;
+  const { adapter, channelKind } = CHANGES_CHANNELS[stream.of];
+  const id = makeChannelId(changesChannel(stream.of, stream.name));
+  const existing = ctx.builder.getNode(id);
+  const adapters = [...new Set([...((existing?.meta?.['adapters'] as string[] | undefined) ?? []), adapter])];
+  const declaredBy = (existing?.meta?.[CHANNEL_DECLARED_META] as string | undefined) ?? stream.declaredBy;
+  const node = ctx.builder.addNode({
+    id,
+    type: 'channel',
+    label: changesChannel(stream.of, stream.name),
+    repo: ctx.repo,
+    file: stream.file,
+    line: stream.line,
+    meta: { channelKind, adapters, [CHANNEL_DECLARED_META]: declaredBy },
+  });
+  node.meta = { ...node.meta, adapters, [CHANNEL_DECLARED_META]: declaredBy };
   return id;
 };
 
@@ -260,11 +289,37 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       ...(delivery.name === undefined ? { nameRead: false } : {}),
       ...(delivery.meta?.['disabled'] === true ? { disabled: true } : {}),
     }),
-  changes: (drawing, delivery) =>
-    entryOf(drawing, delivery, 'event', `${delivery.from.of === 'table' ? 'dynamodb' : 'kinesis'}/${delivery.from.name}`, {
-      changesOf: delivery.from.of,
-      name: delivery.from.name,
-    }),
+  // A stream read in order is an entry onto the function it runs, and the
+  // channel code writes onto: the mapping is a consumer of that channel that
+  // triggers the entry, so a write reaches the function through it (P51).
+  changes: (drawing, delivery) => {
+    const { of, name } = delivery.from;
+    const way = entryOf(drawing, delivery, 'event', changesChannel(of, name), { changesOf: of, name });
+    const channel = streamChannelNode(drawing, { of, name, file: delivery.file, line: delivery.line, declaredBy: delivery.address });
+    const consumer = consumerOf(drawing, delivery, CHANGES_CHANNELS[of].kind, CHANGES_CHANNELS[of].adapter);
+    consume(drawing, channel, consumer, delivery);
+    drawing.ctx.builder.addEdge({
+      from: consumer.id,
+      to: way.id,
+      type: 'triggers',
+      confidence: consumer.confidence,
+      file: delivery.file,
+      line: delivery.line,
+      meta: { via: 'deployment' },
+    });
+    if (notMatchedOn(delivery).length > 0) {
+      drawing.rows.push({
+        file: delivery.file,
+        line: delivery.line,
+        reason: 'stream-filter-not-matched',
+        level: 'info',
+        message: `${delivery.address} hands ${changesChannel(of, name)} on through a filter, which is recorded on its edge and not matched against what is written`,
+        hint: 'Every write onto the stream is drawn as reaching the function; the filter decides at run time which of them do.',
+        symbol: delivery.address,
+      });
+    }
+    return way;
+  },
   // A notification of a bucket takes what writes to it fire, and says which:
   // the linker asks each write whether it is taken (P52).
   bucket: (drawing, delivery) => {
@@ -449,6 +504,7 @@ export const drawDeliveries = (
   handlerOf: (index: number) => DeployedCode | undefined,
 ): EntryNode[] => {
   const drawing: Drawing = { ctx, deployment, deployedBy, rows, entries: new Map(), handlerOf };
+  for (const stream of deployment.streams ?? []) streamChannelNode(drawing, { ...stream, declaredBy: stream.address });
   for (const delivery of deployment.deliveries) {
     const way = drawSource(drawing, delivery);
     // A row about the delivery - a target not read, a forward not drawn - is

@@ -724,6 +724,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Code sends to the value of an environment variable, and a function that runs it is not deployed with that variable, so where it sends from that function is not known. Set the variable in the function\'s environment, or correct the name the code reads.',
   'environment-value-unread': () =>
     'Code sends to the value of an environment variable, and the value a function is deployed with is not read. Where the variable files disagree, choose the environment under services[].infra.vars; otherwise give the value something the files settle.',
+  'stream-filter-not-matched': () =>
+    'A mapping from a stream hands its function only the records its filter lets through, and the filter is recorded on the edge, not evaluated: every write onto the stream is drawn as reaching the function. Nothing to fix.',
+  'stream-no-writer': () =>
+    'A function reads a table\'s stream or a stream, and nothing the configured services write lands on it. The writer may be in a repository the configuration does not name, or outside any. Nothing to fix if it is.',
   'subscription-matches-nothing': () =>
     'A rule takes events by a pattern that nothing the configured services publish matches. A rule for events from outside - another account, a partner, the platform itself - is a way in, not a fault. Nothing to fix if that is what it is.',
 

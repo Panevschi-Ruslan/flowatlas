@@ -24,6 +24,23 @@ only one of them moved.
   `s3-write-matches-nothing` (info). A locator `receiver-constructed-path`
   reads what a receiver was constructed with
   (`fixtures/lambda-terraform-bucket-notification`).
+- **A table write reaches the function its stream runs.** DynamoDB writes -
+  `PutItem`, `UpdateItem`, `DeleteItem`, `BatchWriteItem`,
+  `TransactWriteItems`, the document client's `put`, `update`, `delete`,
+  `batchWrite` and `transactWrite`, from `@aws-sdk/client-dynamodb`,
+  `@aws-sdk/lib-dynamodb` and version 2 - are publishers onto
+  `dynamodb/<table>` wherever some service's Terraform declares that table's
+  stream (`stream_enabled`, `stream_view_type`, or a mapping from its
+  `stream_arn`), and the mapping from the stream is a consumer of that channel
+  triggering its `event` entry. `flow` and `impact` now follow Lambda A ->
+  table -> stream -> Lambda B, across repositories too. Kinesis `PutRecord` and
+  `PutRecords` land on `kinesis/<stream>` the same way. A table named by
+  `process.env` is completed from the function's deployed environment, as a
+  queue is. A write to a table with no stream, and any read, joins nothing and
+  says nothing. A mapping's `filter_criteria` is on the edge with a
+  `stream-filter-not-matched` row, and a stream something reads and nothing
+  writes is a `stream-no-writer` row, both at `info`
+  (`fixtures/lambda-terraform-table-stream`).
 
 ## [0.5.1][] - 2026-10-12
 

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-14T10:38:20.535Z",
+  "configHash": "a5e946016b04",
+  "services": [
+    {
+      "name": "returns",
+      "repo": "./returns",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 10,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 527,
+      "packages": {
+        "name": "corner-shop-returns",
+        "runtime": [
+          "@aws-sdk/client-dynamodb",
+          "aws-sdk"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 22,
+      "edges": 18,
+      "types": 5,
+      "unresolved": 3,
+      "durationMs": 530,
+      "packages": {
+        "name": "corner-shop",
+        "runtime": [
+          "@aws-sdk/client-kinesis",
+          "@aws-sdk/lib-dynamodb"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 0,
+    "uncalled": [
+      "entry:returns:http:POST:/orders/:param/cancel",
+      "entry:returns:http:POST:/orders/clear",
+      "entry:shop:http:POST:/clicks",
+      "entry:shop:http:POST:/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 32,
+    "edges": 29,
+    "types": 5,
+    "unresolved": 1
+  }
+}
