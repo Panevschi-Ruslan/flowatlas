@@ -21,6 +21,17 @@ only one of them moved.
   nobody could read, in code or in a definition; a batch or a transaction
   writes no single message, so it is no `payload-type-unknown` row
   (`fixtures/lambda-terraform-table-stream`).
+- **Function URL callers and Lambda destinations** (P54). A request rooted at
+  a setting no service claims joins the `ALL /*` entry of the function URL the
+  running function's environment names (`aws_lambda_function_url.x.function_url`,
+  directly or through a module output), `via: "functionUrl"`, `static` where the
+  path is read and `heuristic` where it is not; `process.env.X + '/path'` is
+  read as an address rooted at `X`. `aws_lambda_function_event_invoke_config`
+  `destination_config` and an event-source mapping's `on_failure` are
+  `triggers` edges from the run to the destination function or a publisher onto
+  its queue, topic or bus, with `meta.when: "success" | "failure"`; a result
+  put on a bus is the platform's `lambda` / `Lambda Function Invocation Result -
+  Success|Failure` event (`fixtures/lambda-terraform-destinations`).
 - S3 bucket notifications, and the writes that fire them (P52).
   `aws_s3_bucket_notification` is read from Terraform: each `lambda_function`,
   `queue` and `topic` block is a consumer of `s3/<bucket>` taking its `events`

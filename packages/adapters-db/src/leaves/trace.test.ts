@@ -464,3 +464,15 @@ describe('deciding whether an address can be read where it stands', () => {
     expect(isReadable(address(file))).toBe(false);
   });
 });
+
+describe('an address joined to a setting with +', () => {
+  it('reads the setting as its root and the text after it as the path', () => {
+    const file = parse(`export const go = () => fetch(process.env.CARD_LOOKUP_URL + '/cards');`);
+    expect(analyzeUrl(address(file))).toEqual({ url: '${CARD_LOOKUP_URL}/cards', path: '/cards', baseUrlEnv: 'CARD_LOOKUP_URL', host: null });
+  });
+
+  it('reads nothing where what follows the setting is not read', () => {
+    const file = parse(`export const go = (rest: string) => fetch(process.env.CARD_LOOKUP_URL + rest);`);
+    expect(analyzeUrl(address(file)).baseUrlEnv).toBeNull();
+  });
+});

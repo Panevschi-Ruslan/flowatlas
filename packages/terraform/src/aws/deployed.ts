@@ -17,7 +17,8 @@ import type { ResourceReading } from './reading.js';
 
 /** A deployed thing, by kind and deployed name. */
 export interface Deployed {
-  readonly kind: DeployedKind;
+  /** `url` is a function's own address, by the function's deployed name (P54). */
+  readonly kind: DeployedKind | 'url';
   readonly name: string;
   /** A function this deployment creates, by its position among `functions`. */
   readonly function?: number;
@@ -63,6 +64,9 @@ const IDENTITY = new Set([
 /** Types whose `function_name` names the function they stand in front of. */
 const FUNCTION_ALIASES = new Set(['aws_lambda_alias']);
 
+/** Types whose `function_url` is the address of the function they stand in front of. */
+const FUNCTION_URLS = new Set(['aws_lambda_function_url']);
+
 /**
  * What an ARN or URL written out names, if it is one, in the forms
  * `@flowatlas/aws` states for every reader. A region or an account the files
@@ -87,6 +91,15 @@ export const deployedOf = (value: Value, reading: Pick<ResourceReading, 'functio
   const target = value.kind === 'ref' ? value.target : value.kind === 'instance' ? value.instance : via?.target;
   if (target === undefined) return undefined;
   const attribute = value.kind === 'ref' ? String(value.attribute[0]) : value.kind === 'instance' ? undefined : via?.attribute;
+  // A function URL's address is the function's own way in, named by the
+  // function it stands in front of (P54).
+  if (FUNCTION_URLS.has(target.type)) {
+    const inner = attribute === 'function_url' ? argument(target, 'function_name') : undefined;
+    const found = inner === undefined ? undefined : deployedOf(inner, reading, depth + 1);
+    const name = found === undefined ? textOf(inner) : isBecause(found) ? undefined : found.name;
+    if (found !== undefined && isBecause(found)) return found;
+    return name === undefined ? undefined : { kind: 'url', name };
+  }
   if (attribute !== undefined && !IDENTITY.has(attribute)) return undefined;
   if (FUNCTION_ALIASES.has(target.type)) {
     const inner = argument(target, 'function_name');

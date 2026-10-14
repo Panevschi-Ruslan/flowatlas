@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-14T17:39:19.152Z",
+  "configHash": "a77a92768b90",
+  "services": [
+    {
+      "name": "lending",
+      "repo": "./lending",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 30,
+      "edges": 25,
+      "types": 4,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "lending-library-loans",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 1,
+    "noConsumers": [
+      "channel:sns/library-return-alerts",
+      "channel:sqs/library-loan-failures"
+    ],
+    "noProducers": [
+      "channel:kinesis/library-shelf-scans"
+    ]
+  },
+  "routes": {
+    "total": 1,
+    "called": 1,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "lending",
+      "file": "infra/destinations.tf",
+      "line": 60,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/library-shelf-scans is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/library-shelf-scans"
+    }
+  ],
+  "totals": {
+    "nodes": 30,
+    "edges": 27,
+    "types": 4,
+    "unresolved": 1
+  }
+}

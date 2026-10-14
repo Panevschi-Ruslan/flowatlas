@@ -1,0 +1,10 @@
+@  library-lending-kiosk    lending/infra/main.tf:54
+  -> handler                lending/src/kiosk/kiosk.ts:4
+    $  CARD_LOOKUP_URL      lending/src/kiosk/kiosk.ts:5
+    ^  GET /cards           lending/src/kiosk/kiosk.ts:5
+      @  ALL /*             lending/infra/modules/function-url/main.tf:6
+        -> handler          lending/src/cards/card-lookup.ts:4
+    ^  GET /${…}            lending/src/kiosk/kiosk.ts:7
+      @  ALL /* ~heuristic  lending/infra/modules/function-url/main.tf:6
+        -> handler          lending/src/cards/card-lookup.ts:4
+unresolved on this path: 0

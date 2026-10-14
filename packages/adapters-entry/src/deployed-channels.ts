@@ -79,6 +79,8 @@ interface WayIn {
    * an entry, `triggers` from a channel that hands on what its readers fail on.
    */
   readonly link?: 'calls' | 'triggers';
+  /** The outcome of a run it hands on, for a function's or a mapping's destination (P54). */
+  readonly when?: 'success' | 'failure';
 }
 
 /** The code a function this deployment creates runs, as its own entry was given it. */
@@ -97,6 +99,10 @@ interface Drawing extends Canvas {
   readonly entries: Map<string, EntryNode>;
   /** The handler of a function this deployment creates, by its position. */
   readonly handlerOf: (index: number) => DeployedCode | undefined;
+  /** The node each delivery drawn so far enters by, under its address. */
+  readonly drawn: ReadonlyMap<string, string>;
+  /** A function's `invoke` entry, by id: drawn by the extractor, not here. */
+  readonly invoked: (id: string) => EntryNode | undefined;
 }
 
 /** Every kind of channel a deployment draws: what a message is sent to, and a bucket (P52). */
@@ -350,6 +356,16 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       ...(delivery.name === undefined ? {} : { name: delivery.name }),
       ...(delivery.meta ?? {}),
     }),
+  // What a run ends in is handed on from the function's own entry, or from
+  // where the mapping that gave up took its batches in (P54).
+  outcome: (drawing, delivery) => {
+    const { of, when } = delivery.from;
+    const id = 'function' in of ? localFunction(drawing, of.function) : drawing.drawn.get(of.delivery);
+    if (id === undefined) return { ...consumerOf(drawing, delivery, 'result', 'aws-lambda'), link: 'triggers', when };
+    // An entry this module draws keeps its references on itself until it is returned.
+    const reaches = (drawing.entries.get(id)?.meta?.[REACHES_META] as string[] | undefined) ?? [];
+    return { id, file: delivery.file, line: delivery.line, reaches, confidence: confidenceOf(delivery), link: 'triggers', when };
+  },
 };
 
 /** Where a publisher a deployment declares sits, and what declares it. */
@@ -360,6 +376,9 @@ interface Declared {
   readonly by: string;
   readonly meta?: Record<string, unknown>;
 }
+
+/** What an edge out of a way in says: drawn from the deployment, and the outcome it carries. */
+const edgeMeta = (way: WayIn): Record<string, unknown> => ({ via: 'deployment', ...(way.when === undefined ? {} : { when: way.when }) });
 
 /** The publisher a delivery or a route is, reached from where its messages come in. */
 const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, label: string): string => {
@@ -384,7 +403,7 @@ const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: Mess
       ...(way.link === 'triggers' ? (delivery.meta ?? {}) : {}),
     },
   });
-  ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+  ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way) });
   return id;
 };
 
@@ -481,7 +500,7 @@ const TARGETS: { readonly [K in DeliveryTarget['kind']]: TargetDrawer<K> } = {
     }
     const to = localFunction(drawing, target.function);
     if (to === undefined) return;
-    drawing.ctx.builder.addEdge({ from: way.id, to, type: 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+    drawing.ctx.builder.addEdge({ from: way.id, to, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way) });
   },
   workflow: (_drawing, way, _delivery, target) => {
     way.reaches.push(makeEntryReference('workflow', makeWorkflowEntryKey(target.name)));
@@ -510,8 +529,9 @@ export const drawDeliveries = (
   rows: Unresolved[],
   drawn: Map<string, string>,
   handlerOf: (index: number) => DeployedCode | undefined,
+  invoked: (id: string) => EntryNode | undefined = () => undefined,
 ): EntryNode[] => {
-  const drawing: Drawing = { ctx, deployment, deployedBy, rows, entries: new Map(), handlerOf };
+  const drawing: Drawing = { ctx, deployment, deployedBy, rows, entries: new Map(), handlerOf, drawn, invoked };
   for (const stream of deployment.streams ?? []) streamChannelNode(drawing, { ...stream, declaredBy: stream.address });
   for (const delivery of deployment.deliveries) {
     const way = drawSource(drawing, delivery);
@@ -523,7 +543,7 @@ export const drawDeliveries = (
     // A consumer is drawn by this module and keeps its references on its own
     // node; an entry is drawn by the extractor from what is returned.
     if (way.reaches.length > 0 && !drawing.entries.has(way.id)) {
-      const node = ctx.builder.getNode(way.id);
+      const node = ctx.builder.getNode(way.id) ?? invoked(way.id);
       if (node !== undefined) node.meta = { ...node.meta, [REACHES_META]: [...new Set([...((node.meta?.[REACHES_META] as string[] | undefined) ?? []), ...way.reaches])] };
     }
   }

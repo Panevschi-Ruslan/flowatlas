@@ -42,7 +42,7 @@ import { cmp, edgeKey } from './order.js';
 const REACH = new Set(['handles', 'calls']);
 
 /** Every node each deployed function reaches, within its own service. */
-const reachedBy = (
+export const reachedBy = (
   nodes: ReadonlyMap<string, GraphNode>,
   edges: ReadonlyMap<string, GraphEdge>,
   functions: readonly GraphNode[],

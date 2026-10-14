@@ -45,12 +45,17 @@ export interface RouteIndex {
    * one call site and several targets, and says so with one annotation each.
    */
   markersOf?(callId: string): CallsServiceMarker[];
+  /**
+   * The function URLs a request rooted at a setting reaches, through the
+   * functions that run it and are deployed with that setting (P54).
+   */
+  functionUrlsOf?(callId: string): readonly GraphNode[];
 }
 
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
@@ -345,6 +350,16 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   }
 
   const claiming = index.claimantsOf(env);
+  // A setting no service claims may hold a function's own URL, which answers
+  // every verb and path: the request reaches the function whatever it asks.
+  const [url, ...urls] = claiming.length === 0 ? (index.functionUrlsOf?.(call.id) ?? []) : [];
+  if (url !== undefined) {
+    return {
+      outcome: { kind: 'linked', via: 'functionUrl', entry: url, runnersUp: [] },
+      ...(urls.length === 0 ? {} : { alsoLinked: urls.map((entry) => ({ entry })) }),
+      notes,
+    };
+  }
   const targetService = claiming.length === 1 ? claiming[0] : undefined;
   if (targetService === undefined) {
     return { outcome: { kind: 'unknownEnv', env, claiming }, notes };

@@ -61,6 +61,7 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
     };
   }
 
+  if (Node.isBinaryExpression(argument)) return fromConcatenation(argument);
   if (!Node.isTemplateExpression(argument)) return EMPTY;
 
   const head = argument.getHead().getLiteralText();
@@ -114,6 +115,20 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
   const absolute = fromAbsolute(rest);
   if (absolute !== null) return { ...absolute, url: written, baseUrlEnv };
   return { url: written, path: routePathOf(rest), baseUrlEnv, host: null };
+};
+
+/**
+ * `process.env.X + '/loans'`: an address rooted at a setting, joined with
+ * `+` rather than written as a template (P54). Only a setting followed by text
+ * that is read is an address; anything else is not read as one.
+ */
+const fromConcatenation = (argument: TsNode): UrlInfo => {
+  if (!Node.isBinaryExpression(argument) || argument.getOperatorToken().getText() !== '+') return EMPTY;
+  const root = readConfig(argument.getLeft());
+  const key = root !== null && root.dynamic !== true ? root.key : rootConfigKey(argument.getLeft());
+  const rest = evaluateExpression(argument.getRight());
+  if (key === null || !rest.resolved || typeof rest.value !== 'string') return EMPTY;
+  return { url: `\${${key}}${rest.value}`, path: routePathOf(rest.value), baseUrlEnv: key, host: null };
 };
 
 /** `scheme://host` at the start of an address, and the host inside it. */

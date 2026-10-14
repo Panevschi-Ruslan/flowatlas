@@ -96,9 +96,10 @@ export interface DeployedSetting {
    * What the value is an attribute of, when it is one of something deployed:
    * its URL, its ARN, its name. The name is the deployed name, which is what
    * everything joins on, so it is given even where the value itself - an ARN
-   * the provider assigns - is not known until the thing is created.
+   * the provider assigns - is not known until the thing is created. A `url`
+   * is a function's own address, named by the function (P54).
    */
-  readonly names?: { readonly kind: DeployedKind; readonly name: string };
+  readonly names?: { readonly kind: DeployedKind | 'url'; readonly name: string };
   /** Why the value is not read, when it is not. */
   readonly unread?: {
     readonly text: string;
@@ -190,10 +191,22 @@ export type DeliverySource =
    * `key` is the way in as the graph spells it, `cognito/<pool>/<trigger>` or
    * `iot/<topic filter>`.
    */
-  | { readonly kind: 'trigger'; readonly service: string; readonly key: string };
+  | { readonly kind: 'trigger'; readonly service: string; readonly key: string }
+  /**
+   * What a function's run ends in, handed on by the platform: an invocation's
+   * result to the destination for its success or its failure, or a batch a
+   * mapping gave up on (P54). `of` is the function, by its position in
+   * `functions`, or the address of the mapping's own delivery, which is drawn
+   * before this one.
+   */
+  | {
+      readonly kind: 'outcome';
+      readonly when: 'success' | 'failure';
+      readonly of: { readonly function: number } | { readonly delivery: string };
+    };
 
 /** What declares a delivery. */
-export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route' | 'notification' | 'trigger';
+export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route' | 'notification' | 'trigger' | 'destination';
 
 /**
  * One way messages reach something: a rule's target, a subscription, a mapping

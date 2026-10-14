@@ -1292,6 +1292,15 @@ and it is read like any other.
 is rooted at one of these keys, it resolves to that service's route. A key two
 services both claim resolves to neither, and says so.
 
+**A function URL needs no `baseUrlEnv`.** A request rooted at a setting no
+service claims - `fetch(process.env.CARD_LOOKUP_URL + '/cards')`, or the same as
+a template - is asked of the functions that run it: one deployed with that
+setting set to a function URL (`aws_lambda_function_url.x.function_url`,
+directly or through a module's output) reaches that function's `ALL /*` entry,
+`via: "functionUrl"` with the setting as `meta.variable`. The edge is `static`
+where the path was read and `heuristic` where it was not, since the URL answers
+every path either way (`fixtures/lambda-terraform-destinations`).
+
 **A relative request needs no configuration at all.** `fetch('/api/thing')` names
 no service and is rooted at no key, because it means the server the page came
 from. Such a request is resolved against the routes of the service it was written
@@ -2609,6 +2618,8 @@ the grammar above. The two meet on one node, across repositories, by name.
 | `aws_dynamodb_table` with `stream_enabled = true` or a `stream_view_type`, and `aws_kinesis_stream` | the channel `dynamodb/<table>` or `kinesis/<stream>`, declared: a table write lands only on a declared one |
 | `aws_sns_topic_subscription` with protocol `lambda` or `sqs` | a consumer of `sns/<topic>` reaching the function or the queue; any other protocol is read and not followed (`info`) |
 | `redrive_policy` on `aws_sqs_queue`, and `aws_sqs_queue_redrive_policy` | a `triggers` edge from the queue to a publisher onto its dead-letter queue — not a reader, so a queue nothing reads is still one `dead` reports |
+| `aws_lambda_function_event_invoke_config` with `destination_config` | a `triggers` edge from the function's `invoke` entry, `meta.when: "success"` or `"failure"`, to the destination function's entry or a publisher onto its queue, topic or bus; a result put on a bus is the event `eventbridge/<bus>/lambda/Lambda Function Invocation Result - Success` (or `- Failure`), which rules take by name; a function this deployment does not create is a `subscription-source-unread` row at `info` (`fixtures/lambda-terraform-destinations`) |
+| `destination_config.on_failure` on `aws_lambda_event_source_mapping` | the same, `when: "failure"`, from where the mapping's batches come in: the stream's `event` entry, or the queue's consumer |
 | `aws_pipes_pipe` | a consumer of its source reaching its target; a bus target with `eventbridge_event_bus_parameters` publishes exactly that event |
 | `aws_s3_bucket_notification`: each `lambda_function`, `queue` and `topic` block, with its `events`, `filter_prefix` and `filter_suffix` | a consumer of `s3/<bucket>` taking those events and keys, reaching the function, or a publisher onto `sqs/` or `sns/`; a block the files do not settle - a `dynamic` block over what is known only once deployed - is `bucket-notification-unread` |
 | the same with `eventbridge = true` | a consumer of `s3/<bucket>` per family of events a write fires, publishing onto `eventbridge/default/aws.s3/Object Created` and `.../Object Deleted`, where the default bus's rules take them as any event |

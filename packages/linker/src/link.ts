@@ -3,6 +3,7 @@ import {
   CONFIDENCE_RANK,
   namesGivenTo,
   SCHEMA_VERSION,
+  wasRead,
   wasMissed,
   type Confidence,
   type FlowatlasConfig,
@@ -27,6 +28,7 @@ import {
 import { joinDeployments } from './deployment-link.js';
 import { keepWhereDeclared } from './declared-link.js';
 import { completeFromEnvironment } from './environment-link.js';
+import { functionUrlsOf } from './function-url-link.js';
 import { mergeGraphs } from './merge.js';
 import {
   isProcedureEntry,
@@ -293,6 +295,19 @@ const mountMeta = (mountAssumed: readonly string[] | undefined): Record<string, 
   mountAssumed === undefined ? {} : { mountAssumedEmpty: [...mountAssumed] };
 
 /** The edge a resolved call becomes. */
+/**
+ * How far each way of joining a request is trusted. A function URL answers
+ * every path, so the join is as sure as the path it was asked with (P54).
+ */
+const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via'], (call: GraphNode) => Confidence>> = {
+  marker: () => 'marker',
+  baseUrlEnv: () => 'static',
+  functionUrl: (call) => {
+    const path = call.meta?.['path'];
+    return typeof path === 'string' && wasRead(path) ? 'static' : 'heuristic';
+  },
+};
+
 const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>): GraphEdge => {
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];
@@ -300,10 +315,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     from: call.id,
     to: outcome.entry.id,
     type: 'http_calls',
-    confidence: boundedByMount(
-      boundedByRoute(outcome.via === 'marker' ? 'marker' : 'static', outcome.entry),
-      outcome.mountAssumed,
-    ),
+    confidence: boundedByMount(boundedByRoute(JOINED_AS[outcome.via](call), outcome.entry), outcome.mountAssumed),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -311,6 +323,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     meta: {
       via: outcome.via,
       targetService: outcome.entry.repo,
+      ...(outcome.via === 'functionUrl' ? { variable: call.meta?.['baseUrlEnv'] } : {}),
       ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
         ? {}
@@ -443,7 +456,8 @@ export const linkGraphs = (
 
   const routesByService = routesByServiceOf(nodes);
   const servicesByEnv = servicesByEnvOf(config);
-  const index = buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv);
+  const urls = functionUrlsOf(nodes, edges);
+  const index: RouteIndex = { ...buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv), functionUrlsOf: (callId) => urls.get(callId) ?? [] };
   const uiIndex = buildUiIndex(config, routesByService, servicesByEnv);
   const procedureIndex = buildProcedureIndex(nodes, config);
 
@@ -493,7 +507,7 @@ export const linkGraphs = (
       httpOut.linked += 1;
       if (outcome.via === 'marker') httpOut.byMarker += 1;
       const routes = routesByService.get(outcome.entry.repo) ?? [];
-      if (answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
+      if (outcome.via !== 'functionUrl' && answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
     } else {
       httpOut[outcome.kind] += 1;
     }

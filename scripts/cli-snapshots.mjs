@@ -401,6 +401,10 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.fulfil-order.tree.txt', 'workflow:shop-fulfil-order'],
   ]),
   terraformShape('lambda-terraform-other-ways-in', [['flow.shelf-weight.tree.txt', 'event:iot/library/shelves/+/weight']]),
+  terraformShape('lambda-terraform-destinations', [
+    ['flow.kiosk.tree.txt', 'invoke:library-lending-kiosk'],
+    ['flow.return-item.tree.txt', 'invoke:library-lending-return-item'],
+  ]),
 ];
 
 /**

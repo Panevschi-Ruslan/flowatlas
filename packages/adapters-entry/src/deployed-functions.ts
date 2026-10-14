@@ -594,6 +594,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
         }
       }
 
+      // A function's entry, for what its runs end in to start from (P54).
+      const invokeEntries = new Map(entries.filter((entry) => entry.kind === 'invoke').map((entry) => [entry.id, entry]));
       // The subscribers the deployment declares: rules, subscriptions,
       // mappings, schedules, pipes and redrives, onto the channels code
       // publishes to (P23).
@@ -607,7 +609,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
                 ...(reading.confidence === undefined ? {} : { handlerConfidence: reading.confidence }),
                 ...(reading.wrapping.length === 0 ? {} : { wrapping: reading.wrapping }),
               };
-        }),
+        }, (id) => invokeEntries.get(id)),
       );
 
       for (const root of deployment.roots) roots.push({ ...root, deployedBy: reader.name });
