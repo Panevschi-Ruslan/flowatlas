@@ -1,4 +1,7 @@
 import {
+  BUCKET_CHANNEL,
+  BUCKET_FIELDS,
+  bucketChannel,
   channelOfTarget,
   deliveryEnvelope,
   DEPLOYED_CHANNELS,
@@ -23,6 +26,7 @@ import {
   makeWorkflowEntryKey,
   MOST_CHOICES,
   REACHES_META,
+  TAKES_META,
   type ChannelForward,
   type Confidence,
   type DeployedDelivery,
@@ -35,6 +39,7 @@ import {
   type ExtractContext,
   type MessagePattern,
   type MessageTarget,
+  type Takes,
   type Unresolved,
 } from '@flowatlas/core';
 
@@ -90,9 +95,12 @@ interface Drawing extends Canvas {
   readonly handlerOf: (index: number) => DeployedCode | undefined;
 }
 
-const channelNode = (drawing: Canvas, name: string, kind: MessageTarget['kind'], file: string, line: number): string => {
+/** Every kind of channel a deployment draws: what a message is sent to, and a bucket (P52). */
+const CHANNELS = { ...DEPLOYED_CHANNELS, bucket: BUCKET_CHANNEL };
+
+const channelNode = (drawing: Canvas, name: string, kind: keyof typeof CHANNELS, file: string, line: number): string => {
   const { ctx } = drawing;
-  const { adapter, channelKind } = DEPLOYED_CHANNELS[kind];
+  const { adapter, channelKind } = CHANNELS[kind];
   const id = makeChannelId(name);
   const existing = ctx.builder.getNode(id);
   const adapters = [...new Set([...((existing?.meta?.['adapters'] as string[] | undefined) ?? []), adapter])];
@@ -257,6 +265,20 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       changesOf: delivery.from.of,
       name: delivery.from.name,
     }),
+  // A notification of a bucket takes what writes to it fire, and says which:
+  // the linker asks each write whether it is taken (P52).
+  bucket: (drawing, delivery) => {
+    const { name, events, prefix, suffix } = delivery.from;
+    const takes: Takes = {
+      kinds: events,
+      ...(prefix === undefined && suffix === undefined
+        ? {}
+        : { by: { field: BUCKET_FIELDS.key, ...(prefix === undefined ? {} : { prefix }), ...(suffix === undefined ? {} : { suffix }) } }),
+    };
+    const way = consumerOf(drawing, delivery, 'object', BUCKET_CHANNEL.adapter, { [TAKES_META]: takes });
+    consume(drawing, channelNode(drawing, bucketChannel(name), 'bucket', delivery.file, delivery.line), way, delivery);
+    return way;
+  },
   // A route of a socket API is a way in of its own: nothing publishes to it
   // but a client holding a connection open (R174).
   connection: (drawing, delivery) =>

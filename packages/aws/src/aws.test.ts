@@ -1,12 +1,19 @@
 import { nameInForms } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { DEPLOYED_FORMS, deployedArn, deployedNameIn, eventChannel, queueChannel, topicChannel } from './index.js';
+import { bucketChannel, DEPLOYED_FORMS, deployedArn, deployedNameIn, eventChannel, queueChannel, topicChannel } from './index.js';
 
 describe('the channel grammar', () => {
   it('names each service and the default bus explicitly', () => {
     expect(queueChannel('returns')).toBe('sqs/returns');
     expect(topicChannel('borrower-notifications')).toBe('sns/borrower-notifications');
     expect(eventChannel(undefined, 'library.loans', 'LoanCreated')).toBe('eventbridge/default/library.loans/LoanCreated');
+  });
+
+  it('names a bucket by its name, read out of its ARN and not out of an object\'s', () => {
+    expect(bucketChannel('library-covers')).toBe('s3/library-covers');
+    expect(deployedNameIn('arn:aws:s3:::library-covers')).toEqual({ kind: 'bucket', name: 'library-covers' });
+    expect(deployedNameIn('arn:aws:s3:::library-covers/incoming/a.png')).toBeUndefined();
+    expect(deployedNameIn(deployedArn('bucket', 'library-covers'))).toEqual({ kind: 'bucket', name: 'library-covers' });
   });
 });
 

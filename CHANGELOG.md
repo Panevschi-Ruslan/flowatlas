@@ -6,6 +6,25 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+### Added
+
+- S3 bucket notifications, and the writes that fire them (P52).
+  `aws_s3_bucket_notification` is read from Terraform: each `lambda_function`,
+  `queue` and `topic` block is a consumer of `s3/<bucket>` taking its `events`
+  and keys by `filter_prefix`/`filter_suffix`, and `eventbridge = true` puts the
+  bucket's events on the default bus as `aws.s3`, where existing rules take
+  them. `PutObject`, `CopyObject`, `CompleteMultipartUpload`,
+  `DeleteObject(s)`, version 2's `upload` and `@aws-sdk/lib-storage`'s `Upload`
+  are publishers onto the bucket by `Bucket` - written out, from `process.env`
+  completed from the deployment, or a constant - recorded as the event they
+  fire with the key they write. Each write's edge says which notifications take
+  it (`takenBy`), `static` where the key as written says so and `heuristic` with
+  the reason otherwise; a URL signed for a `PutObjectCommand` is a `heuristic`
+  write, `because: ["presigned"]`. New rows `bucket-notification-unread` and
+  `s3-write-matches-nothing` (info). A locator `receiver-constructed-path`
+  reads what a receiver was constructed with
+  (`fixtures/lambda-terraform-bucket-notification`).
+
 ## [0.5.1][] - 2026-10-12
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things

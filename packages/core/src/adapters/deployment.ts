@@ -81,7 +81,7 @@ export interface DeployedFunction {
  * `stream` is an ordered log a reader walks; a `table`'s changes can be read in
  * order as well.
  */
-export type DeployedKind = 'function' | 'workflow' | 'queue' | 'topic' | 'bus' | 'table' | 'stream';
+export type DeployedKind = 'function' | 'workflow' | 'queue' | 'topic' | 'bus' | 'table' | 'stream' | 'bucket';
 
 /** One value a function is deployed with. */
 export interface DeployedSetting {
@@ -171,10 +171,22 @@ export type DeliverySource =
    * of the message. `api` is the API's name, or where it is declared when its
    * name is not read.
    */
-  | { readonly kind: 'connection'; readonly api: string; readonly route: string };
+  | { readonly kind: 'connection'; readonly api: string; readonly route: string }
+  /**
+   * The objects written to and removed from a bucket, as one notification of
+   * it takes them: the events it names as written (`s3:ObjectCreated:*`), and
+   * the start and end of the keys it filters on, when it filters (P52).
+   */
+  | {
+      readonly kind: 'bucket';
+      readonly name: string;
+      readonly events: readonly string[];
+      readonly prefix?: string;
+      readonly suffix?: string;
+    };
 
 /** What declares a delivery. */
-export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route';
+export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route' | 'notification';
 
 /**
  * One way messages reach something: a rule's target, a subscription, a mapping

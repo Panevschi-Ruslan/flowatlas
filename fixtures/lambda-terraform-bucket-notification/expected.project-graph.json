@@ -1,0 +1,1250 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-14T10:44:06.392Z",
+  "services": [
+    {
+      "name": "media",
+      "repo": "./media",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/default/aws.s3/Object Created",
+      "type": "channel",
+      "label": "eventbridge/default/aws.s3/Object Created",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 44,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/default/aws.s3/Object Deleted",
+      "type": "channel",
+      "label": "eventbridge/default/aws.s3/Object Deleted",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:s3/library-cover-archive",
+      "type": "channel",
+      "label": "s3/library-cover-archive",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-s3"
+        ],
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:s3/library-cover-uploads",
+      "type": "channel",
+      "label": "s3/library-cover-uploads",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-s3"
+        ],
+        "producers": 4,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:sqs/library-thumbnails",
+      "type": "channel",
+      "label": "sqs/library-thumbnails",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 22,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:media#UPLOADS_BUCKET",
+      "type": "config_key",
+      "label": "UPLOADS_BUCKET",
+      "repo": "media",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 17,
+      "meta": {
+        "key": "UPLOADS_BUCKET",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:media#infra/notifications.tf:aws_cloudwatch_event_target.cover_archived",
+      "type": "consumer",
+      "label": "rule library-cover-archived",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 44,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.cover_archived",
+        "deployedBy": "terraform",
+        "name": "library-cover-archived",
+        "rule": "aws_cloudwatch_event_rule.cover_archived",
+        "notMatchedOn": [
+          "detail"
+        ],
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:media#infra/notifications.tf:aws_lambda_event_source_mapping.index_thumbnail",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.index_thumbnail",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 22,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.index_thumbnail",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+      "type": "consumer",
+      "label": "notification aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+        "deployedBy": "terraform",
+        "eventbridge": true,
+        "takes": {
+          "kinds": [
+            "s3:ObjectCreated:*"
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+      "type": "consumer",
+      "label": "notification aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+        "deployedBy": "terraform",
+        "eventbridge": true,
+        "takes": {
+          "kinds": [
+            "s3:ObjectRemoved:*"
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.lambda_function[0]",
+      "type": "consumer",
+      "label": "notification make-thumbnail",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.uploads.lambda_function[0]",
+        "deployedBy": "terraform",
+        "name": "make-thumbnail",
+        "takes": {
+          "kinds": [
+            "s3:ObjectCreated:*"
+          ],
+          "by": {
+            "field": "Key",
+            "prefix": "incoming/",
+            "suffix": ".png"
+          }
+        }
+      }
+    },
+    {
+      "id": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.queue[0]",
+      "type": "consumer",
+      "label": "notification index-thumbnail",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.uploads.queue[0]",
+        "deployedBy": "terraform",
+        "name": "index-thumbnail",
+        "takes": {
+          "kinds": [
+            "s3:ObjectCreated:*"
+          ],
+          "by": {
+            "field": "Key",
+            "prefix": "thumbnails/"
+          }
+        }
+      }
+    },
+    {
+      "id": "entry:media:http:POST:/covers/:param",
+      "type": "entry",
+      "label": "POST /covers/:param",
+      "repo": "media",
+      "file": "infra/main.tf",
+      "line": 121,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/covers/:param",
+        "rawPath": "/covers/{isbn}",
+        "deployedBy": "terraform",
+        "api": "library-media",
+        "function": "library-upload-cover",
+        "declaredAs": "aws_apigatewayv2_route.upload_cover",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:media:http:POST:/covers/:param/url",
+      "type": "entry",
+      "label": "POST /covers/:param/url",
+      "repo": "media",
+      "file": "infra/main.tf",
+      "line": 134,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/covers/:param/url",
+        "rawPath": "/covers/{isbn}/url",
+        "deployedBy": "terraform",
+        "api": "library-media",
+        "function": "library-sign-cover",
+        "declaredAs": "aws_apigatewayv2_route.sign_cover",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:media:invoke:library-index-thumbnail",
+      "type": "entry",
+      "label": "library-index-thumbnail",
+      "repo": "media",
+      "file": "infra/main.tf",
+      "line": 91,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-index-thumbnail",
+        "deployedBy": "terraform",
+        "name": "library-index-thumbnail",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.index_thumbnail",
+        "handler": "uploads/index-thumbnail.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:media:invoke:library-make-thumbnail",
+      "type": "entry",
+      "label": "library-make-thumbnail",
+      "repo": "media",
+      "file": "infra/main.tf",
+      "line": 78,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-make-thumbnail",
+        "deployedBy": "terraform",
+        "name": "library-make-thumbnail",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.make_thumbnail",
+        "handler": "uploads/make-thumbnail.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "UPLOADS_BUCKET": {
+            "written": "aws_s3_bucket.uploads.id",
+            "value": "library-cover-uploads",
+            "kind": "bucket"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#S3Event"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:media:invoke:library-record-archived",
+      "type": "entry",
+      "label": "library-record-archived",
+      "repo": "media",
+      "file": "infra/main.tf",
+      "line": 100,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-record-archived",
+        "deployedBy": "terraform",
+        "name": "library-record-archived",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.record_archived",
+        "handler": "uploads/record-archived.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#EventBridgeEvent<'Object Created',{object:{key:string}}>",
+          "detail": "{object:{key:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:media:invoke:library-sign-cover",
+      "type": "entry",
+      "label": "library-sign-cover",
+      "repo": "media",
+      "file": "infra/main.tf",
+      "line": 65,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-sign-cover",
+        "deployedBy": "terraform",
+        "name": "library-sign-cover",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.sign_cover",
+        "handler": "uploads/sign-cover.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "UPLOADS_BUCKET": {
+            "written": "aws_s3_bucket.uploads.id",
+            "value": "library-cover-uploads",
+            "kind": "bucket"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:media:invoke:library-upload-cover",
+      "type": "entry",
+      "label": "library-upload-cover",
+      "repo": "media",
+      "file": "infra/main.tf",
+      "line": 52,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-upload-cover",
+        "deployedBy": "terraform",
+        "name": "library-upload-cover",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.upload_cover",
+        "handler": "uploads/upload-cover.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "UPLOADS_BUCKET": {
+            "written": "aws_s3_bucket.uploads.id",
+            "value": "library-cover-uploads",
+            "kind": "bucket"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "media#src/uploads/index-thumbnail.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "media",
+      "file": "src/uploads/index-thumbnail.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "media#src/uploads/make-thumbnail.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "media",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#S3Event"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "media#src/uploads/record-archived.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "media",
+      "file": "src/uploads/record-archived.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'Object Created',{object:{key:string}}>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "media#src/uploads/sign-cover.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "media",
+      "file": "src/uploads/sign-cover.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "media#src/uploads/upload-cover.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "media",
+      "file": "src/uploads/upload-cover.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+      "type": "producer",
+      "label": "event eventbridge/default/aws.s3/Object Created",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "deployment",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+      "type": "producer",
+      "label": "event eventbridge/default/aws.s3/Object Deleted",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "deployment",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.queue[0]",
+      "type": "producer",
+      "label": "message sqs/library-thumbnails",
+      "repo": "media",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.uploads.queue[0]",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:media#src/uploads/make-thumbnail.ts:19:11",
+      "type": "producer",
+      "label": "s3:ObjectCreated:* s3/library-cover-uploads",
+      "repo": "media",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 19,
+      "kind": "s3:ObjectCreated:*",
+      "meta": {
+        "kind": "s3:ObjectCreated:*",
+        "adapter": "aws-s3",
+        "channelVia": "environment",
+        "method": "done",
+        "recorded": {
+          "Key": [
+            "thumbnails/*.png"
+          ]
+        },
+        "awaiting": [
+          {
+            "parts": [
+              "s3",
+              {
+                "environment": "UPLOADS_BUCKET",
+                "forms": [
+                  "^arn:[^:]+:s3:::([^/:]+)$"
+                ]
+              }
+            ]
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:media#src/uploads/make-thumbnail.ts:20:11",
+      "type": "producer",
+      "label": "s3:ObjectCreated:Copy s3/library-cover-archive",
+      "repo": "media",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 20,
+      "kind": "s3:ObjectCreated:Copy",
+      "meta": {
+        "kind": "s3:ObjectCreated:Copy",
+        "adapter": "aws-s3",
+        "channelVia": "const",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "covers/*.png"
+          ]
+        }
+      }
+    },
+    {
+      "id": "producer:media#src/uploads/make-thumbnail.ts:21:11",
+      "type": "producer",
+      "label": "s3:ObjectRemoved:Delete s3/library-cover-uploads",
+      "repo": "media",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 21,
+      "kind": "s3:ObjectRemoved:Delete",
+      "meta": {
+        "kind": "s3:ObjectRemoved:Delete",
+        "adapter": "aws-s3",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "s3",
+              {
+                "environment": "UPLOADS_BUCKET",
+                "forms": [
+                  "^arn:[^:]+:s3:::([^/:]+)$"
+                ]
+              }
+            ]
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:media#src/uploads/sign-cover.ts:9:21",
+      "type": "producer",
+      "label": "s3:ObjectCreated:Put s3/library-cover-uploads",
+      "repo": "media",
+      "file": "src/uploads/sign-cover.ts",
+      "line": 9,
+      "kind": "s3:ObjectCreated:Put",
+      "meta": {
+        "kind": "s3:ObjectCreated:Put",
+        "adapter": "aws-s3",
+        "channelVia": "environment",
+        "method": "getSignedUrl",
+        "recorded": {
+          "Key": [
+            "incoming/*.png"
+          ]
+        },
+        "guessed": "presigned",
+        "awaiting": [
+          {
+            "parts": [
+              "s3",
+              {
+                "environment": "UPLOADS_BUCKET",
+                "forms": [
+                  "^arn:[^:]+:s3:::([^/:]+)$"
+                ]
+              }
+            ]
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:media#src/uploads/upload-cover.ts:8:9",
+      "type": "producer",
+      "label": "s3:ObjectCreated:Put s3/library-cover-uploads",
+      "repo": "media",
+      "file": "src/uploads/upload-cover.ts",
+      "line": 8,
+      "kind": "s3:ObjectCreated:Put",
+      "meta": {
+        "kind": "s3:ObjectCreated:Put",
+        "adapter": "aws-s3",
+        "channelVia": "environment",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "incoming/*.png"
+          ]
+        },
+        "awaiting": [
+          {
+            "parts": [
+              "s3",
+              {
+                "environment": "UPLOADS_BUCKET",
+                "forms": [
+                  "^arn:[^:]+:s3:::([^/:]+)$"
+                ]
+              }
+            ]
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:media",
+      "type": "repo",
+      "label": "media",
+      "repo": "media",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-s3": 3,
+            "@aws-sdk/lib-storage": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/default/aws.s3/Object Created",
+      "to": "consumer:media#infra/notifications.tf:aws_cloudwatch_event_target.cover_archived",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 44,
+      "meta": {
+        "by": "rule",
+        "notMatchedOn": [
+          "detail"
+        ]
+      }
+    },
+    {
+      "from": "channel:s3/library-cover-archive",
+      "to": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:s3/library-cover-archive",
+      "to": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:s3/library-cover-uploads",
+      "to": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.lambda_function[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:s3/library-cover-uploads",
+      "to": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.queue[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:sqs/library-thumbnails",
+      "to": "consumer:media#infra/notifications.tf:aws_lambda_event_source_mapping.index_thumbnail",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 22,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:media#infra/notifications.tf:aws_cloudwatch_event_target.cover_archived",
+      "to": "entry:media:invoke:library-record-archived",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 44,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:media#infra/notifications.tf:aws_lambda_event_source_mapping.index_thumbnail",
+      "to": "entry:media:invoke:library-index-thumbnail",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 22,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+      "to": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+      "to": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.lambda_function[0]",
+      "to": "entry:media:invoke:library-make-thumbnail",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.queue[0]",
+      "to": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.queue[0]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:media:http:POST:/covers/:param",
+      "to": "media#src/uploads/upload-cover.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{isbn:string}",
+      "file": "src/uploads/upload-cover.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "params": "{isbn:string}"
+      }
+    },
+    {
+      "from": "entry:media:http:POST:/covers/:param/url",
+      "to": "media#src/uploads/sign-cover.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{url:string}",
+      "file": "src/uploads/sign-cover.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "params": "{isbn:string}"
+      }
+    },
+    {
+      "from": "entry:media:invoke:library-index-thumbnail",
+      "to": "media#src/uploads/index-thumbnail.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/uploads/index-thumbnail.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:media:invoke:library-make-thumbnail",
+      "to": "media#src/uploads/make-thumbnail.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:media:invoke:library-record-archived",
+      "to": "media#src/uploads/record-archived.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/uploads/record-archived.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:media:invoke:library-sign-cover",
+      "to": "media#src/uploads/sign-cover.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/uploads/sign-cover.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:media:invoke:library-upload-cover",
+      "to": "media#src/uploads/upload-cover.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/uploads/upload-cover.ts",
+      "line": 6
+    },
+    {
+      "from": "media#src/uploads/make-thumbnail.ts:handler",
+      "to": "config_key:media#UPLOADS_BUCKET",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 17,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-make-thumbnail",
+            "written": "aws_s3_bucket.uploads.id",
+            "value": "library-cover-uploads"
+          }
+        ]
+      }
+    },
+    {
+      "from": "media#src/uploads/make-thumbnail.ts:handler",
+      "to": "producer:media#src/uploads/make-thumbnail.ts:19:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 19
+    },
+    {
+      "from": "media#src/uploads/make-thumbnail.ts:handler",
+      "to": "producer:media#src/uploads/make-thumbnail.ts:20:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 20
+    },
+    {
+      "from": "media#src/uploads/make-thumbnail.ts:handler",
+      "to": "producer:media#src/uploads/make-thumbnail.ts:21:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 21
+    },
+    {
+      "from": "media#src/uploads/sign-cover.ts:handler",
+      "to": "config_key:media#UPLOADS_BUCKET",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/uploads/sign-cover.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-sign-cover",
+            "written": "aws_s3_bucket.uploads.id",
+            "value": "library-cover-uploads"
+          }
+        ]
+      }
+    },
+    {
+      "from": "media#src/uploads/sign-cover.ts:handler",
+      "to": "producer:media#src/uploads/sign-cover.ts:9:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/uploads/sign-cover.ts",
+      "line": 9
+    },
+    {
+      "from": "media#src/uploads/upload-cover.ts:handler",
+      "to": "config_key:media#UPLOADS_BUCKET",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/uploads/upload-cover.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-upload-cover",
+            "written": "aws_s3_bucket.uploads.id",
+            "value": "library-cover-uploads"
+          }
+        ]
+      }
+    },
+    {
+      "from": "media#src/uploads/upload-cover.ts:handler",
+      "to": "producer:media#src/uploads/upload-cover.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/uploads/upload-cover.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]",
+      "to": "channel:eventbridge/default/aws.s3/Object Created",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Deleted\"]",
+      "to": "channel:eventbridge/default/aws.s3/Object Deleted",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 28,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.queue[0]",
+      "to": "channel:sqs/library-thumbnails",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 3,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:media#src/uploads/make-thumbnail.ts:19:11",
+      "to": "channel:s3/library-cover-uploads",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 19,
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "UPLOADS_BUCKET"
+        ],
+        "functions": [
+          "library-make-thumbnail"
+        ],
+        "takenBy": [
+          "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.queue[0]"
+        ]
+      }
+    },
+    {
+      "from": "producer:media#src/uploads/make-thumbnail.ts:20:11",
+      "to": "channel:s3/library-cover-archive",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 20,
+      "meta": {
+        "takenBy": [
+          "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.archive.eventbridge[\"Object Created\"]"
+        ]
+      }
+    },
+    {
+      "from": "producer:media#src/uploads/make-thumbnail.ts:21:11",
+      "to": "channel:s3/library-cover-uploads",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 21,
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "UPLOADS_BUCKET"
+        ],
+        "functions": [
+          "library-make-thumbnail"
+        ],
+        "takenBy": [],
+        "because": [
+          "nothing on the channel takes it"
+        ]
+      }
+    },
+    {
+      "from": "producer:media#src/uploads/sign-cover.ts:9:21",
+      "to": "channel:s3/library-cover-uploads",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/uploads/sign-cover.ts",
+      "line": 9,
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "UPLOADS_BUCKET"
+        ],
+        "functions": [
+          "library-sign-cover"
+        ],
+        "because": [
+          "presigned"
+        ],
+        "takenBy": [
+          "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.lambda_function[0]"
+        ]
+      }
+    },
+    {
+      "from": "producer:media#src/uploads/upload-cover.ts:8:9",
+      "to": "channel:s3/library-cover-uploads",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/uploads/upload-cover.ts",
+      "line": 8,
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "UPLOADS_BUCKET"
+        ],
+        "functions": [
+          "library-upload-cover"
+        ],
+        "takenBy": [
+          "consumer:media#infra/notifications.tf:aws_s3_bucket_notification.uploads.lambda_function[0]"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#EventBridgeEvent<'Object Created',{object:{key:string}}>": {
+      "name": "EventBridgeEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "927920068f37d58d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#S3Event": {
+      "name": "S3Event",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "debc039fb07befd0",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "media",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 21,
+      "reason": "s3-write-matches-nothing",
+      "level": "info",
+      "message": "the call at src/uploads/make-thumbnail.ts:21 is s3:ObjectRemoved:Delete on s3/library-cover-uploads, and none of its 2 notification(s) takes it",
+      "hint": "Each notification takes some events and, where it filters, keys with a given start and end. Nothing to fix if the write is meant to notify nobody.",
+      "symbol": "producer:media#src/uploads/make-thumbnail.ts:21:11",
+      "meta": {
+        "notifications": [
+          "notification index-thumbnail",
+          "notification make-thumbnail"
+        ]
+      }
+    }
+  ]
+}

@@ -118,7 +118,18 @@ export type NameLocator =
    * one such call: anything else reaches nothing, which a reader reports as a
    * name it could not read rather than guessing at (R171).
    */
-  | { kind: 'origin-call-argument'; call: string; path: readonly string[]; index?: number };
+  | { kind: 'origin-call-argument'; call: string; path: readonly string[]; index?: number }
+  /**
+   * A path inside what the receiver was constructed with.
+   *
+   * A helper built for one operation and then run - `new Upload({ client,
+   * params: { Bucket, Key } }).done()` - is told where it acts when it is made,
+   * and the call that acts says nothing. Followed through `const` bindings,
+   * as a command a statement earlier is; a receiver made any other way reaches
+   * nothing here (P52). `index` is the constructor's argument the path starts
+   * in, the first by default.
+   */
+  | { kind: 'receiver-constructed-path'; class: string; path: readonly string[]; index?: number };
 
 /**
  * What one locator found at one element of the address.
@@ -784,6 +795,14 @@ const resolvers: LocatorResolvers = {
     if (instance === undefined) return [];
     if (!Node.isNewExpression(instance)) return [stopped(instance)];
     const input = instance.getArguments()[locator.index ?? 0];
+    return input === undefined ? [undefined] : walkPath(input, locator.path);
+  },
+  'receiver-constructed-path': (site, locator) => {
+    const receiver = receiverOf(site);
+    if (receiver === undefined) return [];
+    const made = writtenValue(receiver);
+    if (!Node.isNewExpression(made) || constructedName(made) !== locator.class) return [stopped(receiver)];
+    const input = made.getArguments()[locator.index ?? 0];
     return input === undefined ? [undefined] : walkPath(input, locator.path);
   },
   'origin-call-argument': (site, locator) => {

@@ -26,6 +26,8 @@ export const DEPLOYED_FORMS: { readonly [K in DeployedKind]: readonly string[] }
   bus: ['^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$'],
   table: ['^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$'],
   stream: ['^arn:[^:]+:kinesis:[^:]*:[^:]*:stream/([^/]+)$'],
+  // A bucket's ARN has no region and no account; an object's has a key after it.
+  bucket: ['^arn:[^:]+:s3:::([^/:]+)$'],
 };
 
 /**
@@ -81,6 +83,7 @@ const ARN_OF: { readonly [K in DeployedKind]: (name: string) => string } = {
   bus: (name) => `arn:aws:events:::event-bus/${name}`,
   table: (name) => `arn:aws:dynamodb:::table/${name}`,
   stream: (name) => `arn:aws:kinesis:::stream/${name}`,
+  bucket: (name) => `arn:aws:s3:::${name}`,
 };
 
 export const deployedArn = (kind: DeployedKind, name: string): string => ARN_OF[kind](name);

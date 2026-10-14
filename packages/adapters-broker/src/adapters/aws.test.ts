@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { eventChannel, queueChannel, topicChannel } from '@flowatlas/aws';
+import { bucketChannel, eventChannel, queueChannel, topicChannel } from '@flowatlas/aws';
 import { parseConfig, type CallPattern } from '@flowatlas/core';
 import { Node, Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -39,8 +39,18 @@ export declare class SFNClient { constructor(config: object); send(command: unkn
   '@aws-sdk/client-lambda': `
 export declare class InvokeCommand { constructor(input: { FunctionName?: string; InvocationType?: string; Payload?: Uint8Array }); }
 export declare class LambdaClient { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
+  '@aws-sdk/client-s3': `
+export declare class PutObjectCommand { constructor(input: { Bucket?: string; Key?: string; Body?: string }); }
+export declare class DeleteObjectsCommand { constructor(input: { Bucket?: string; Delete: { Objects: { Key?: string }[] } }); }
+export declare class GetObjectCommand { constructor(input: { Bucket?: string; Key?: string }); }
+export declare class S3Client { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
+  '@aws-sdk/lib-storage': `
+export declare class Upload { constructor(options: { client: unknown; params: { Bucket?: string; Key?: string; Body?: string } }); done(): Promise<unknown>; }`,
+  '@aws-sdk/s3-request-presigner': `
+export declare function getSignedUrl(client: unknown, command: unknown, options?: object): Promise<string>;`,
   'aws-sdk': `
 declare class Request<T> { promise(): Promise<T>; }
+export declare class S3 { upload(input: { Bucket: string; Key: string; Body?: string }): Request<unknown>; }
 export declare class SQS { sendMessage(input: { QueueUrl: string; MessageBody: string }): Request<unknown>; }
 export declare class SNS { publish(input: { TopicArn?: string; Message: string }): Request<unknown>; }
 export declare class StepFunctions { startExecution(input: { stateMachineArn: string; input?: string }): Request<unknown>; }
@@ -67,6 +77,8 @@ const project = (installed: boolean, source: string): SourceFile => {
 
 interface Read {
   readonly adapter: string;
+  readonly kind?: string;
+  readonly recorded?: string[];
   readonly evidence: ReceiverEvidence;
   readonly names: string[];
   readonly payloads: (string | undefined)[];
@@ -96,8 +108,12 @@ const readCall = (file: SourceFile, method: string, specs: readonly BrokerSpec[]
         parseConfig({}),
         call.getText(),
       );
+      const key = pattern.recorded?.['Key'];
+      const recorded = key === undefined ? undefined : readAddress(call, [{ at: key }], undefined, {}, parseConfig({}), '');
       return {
         adapter: spec.name,
+        ...(key === undefined ? {} : { kind: pattern.kind }),
+        ...(recorded === undefined ? {} : { recorded: recorded.flatMap((element) => (isResolved(element.resolution) ? [...element.resolution.names] : [])) }),
         evidence,
         names: elements.flatMap((element) => (isResolved(element.resolution) ? [...element.resolution.names] : [])),
         payloads: elements.map((element) => element.payload?.getText()),
@@ -445,6 +461,77 @@ new SFNClient({}).send(new SendTaskSuccessCommand({ taskToken: token, output: '{
 new SFNClient({}).send(new DescribeExecutionCommand({ executionArn: 'x' }));`,
     );
     expect(readCall(described, 'send')).toBeUndefined();
+  });
+});
+
+describe('a write to a bucket (P52)', () => {
+  it('reads PutObject as the event it fires on the bucket, with the key it writes and no message', () => {
+    const file = project(
+      true,
+      `import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+declare const isbn: string;
+const s3 = new S3Client({});
+s3.send(new PutObjectCommand({ Bucket: 'arn:aws:s3:::library-covers', Key: \`incoming/\${isbn}.png\`, Body: 'x' }));`,
+    );
+    expect(readCall(file, 'send')).toMatchObject({
+      adapter: 'aws-s3',
+      kind: 's3:ObjectCreated:Put',
+      names: [bucketChannel('library-covers')],
+      recorded: ['incoming/*.png'],
+      payloads: [undefined],
+    });
+  });
+
+  it('reads every key a DeleteObjects removes, and nothing at a read', () => {
+    const file = project(
+      true,
+      `import { DeleteObjectsCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+const s3 = new S3Client({});
+s3.send(new DeleteObjectsCommand({ Bucket: 'library-covers', Delete: { Objects: [{ Key: 'a.png' }, { Key: 'b.png' }] } }));`,
+    );
+    expect(readCall(file, 'send')).toMatchObject({ kind: 's3:ObjectRemoved:Delete', names: [bucketChannel('library-covers')], recorded: ['a.png', 'b.png'] });
+    const read = project(
+      true,
+      `import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+new S3Client({}).send(new GetObjectCommand({ Bucket: 'library-covers', Key: 'a.png' }));`,
+    );
+    expect(readCall(read, 'send')).toBeUndefined();
+  });
+
+  it("reads version 2's upload, and lib-storage's Upload where it is made, as either kind of creation", () => {
+    const v2 = project(
+      true,
+      `import AWS from 'aws-sdk';
+const s3 = new AWS.S3();
+s3.upload({ Bucket: 'library-covers', Key: 'covers/a.png' }).promise();`,
+    );
+    expect(readCall(v2, 'upload')).toMatchObject({ kind: 's3:ObjectCreated:*', names: [bucketChannel('library-covers')], recorded: ['covers/a.png'] });
+    const storage = project(
+      true,
+      `import { Upload } from '@aws-sdk/lib-storage';
+const upload = new Upload({ client: {}, params: { Bucket: process.env.COVERS_BUCKET, Key: 'thumbnails/a.png' } });
+upload.done();`,
+    );
+    const call = storage.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'upload.done') as CallExpression;
+    const pattern = awsBrokerAdapters.flatMap((spec) => spec.producerPatterns).find((each) => each.method === 'done') as CallPattern;
+    expect(receiverEvidence((call.getExpression() as never as { getExpression(): Node }).getExpression(), pattern)).toBe('checked');
+    const [element] = readAddress(call, pattern.address ?? [], undefined, {}, parseConfig({}), '');
+    expect(element?.awaiting).toEqual(['s3', expect.objectContaining({ environment: 'COVERS_BUCKET' })]);
+  });
+
+  it('reads a URL signed for a PutObjectCommand as a guess, the browser being what writes', () => {
+    const file = project(
+      true,
+      `import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+getSignedUrl(new S3Client({}), new PutObjectCommand({ Bucket: 'library-covers', Key: 'incoming/a.png' }));`,
+    );
+    const call = file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'getSignedUrl') as CallExpression;
+    const pattern = awsBrokerAdapters.flatMap((spec) => spec.producerPatterns).find((each) => each.method === 'getSignedUrl') as CallPattern;
+    expect(pattern).toMatchObject({ calledAs: 'function', module: '@aws-sdk/s3-request-presigner', guessed: 'presigned', payload: [] });
+    expect(appliesAt(call, pattern)).toBe(true);
+    const [element] = readAddress(call, pattern.address ?? [], undefined, {}, parseConfig({}), '');
+    expect(element?.resolution).toMatchObject({ names: [bucketChannel('library-covers')] });
   });
 });
 

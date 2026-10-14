@@ -1,8 +1,13 @@
 import {
   AWS_SERVICE_PREFIX,
+  BUCKET_CHANNEL,
+  BUCKET_FIELDS,
   DEPLOYED_CHANNELS,
   DEPLOYED_FORMS,
   FUNCTION_NAME_FORMS,
+  PRESIGNER,
+  S3_UPLOAD,
+  S3_WRITES,
   SDK_SENDS,
   type SendingService,
 } from '@flowatlas/aws';
@@ -74,13 +79,17 @@ interface Starts {
 
 /** One operation that publishes, or starts something. */
 interface Operation {
-  /** The command class version 3 sends it as. */
-  readonly command: string;
+  /** The command class version 3 sends it as; absent for an operation only version 2 has. */
+  readonly command?: string;
   /** The method both clients that take the input directly call it as. */
   readonly method: string;
   readonly address: readonly InputPart[];
   /** Where in the input the message is, for an operation that sends one or starts something with one. */
   readonly payload?: readonly string[];
+  /** The operation hands its receivers no message of its own: a write to a bucket (P52). */
+  readonly silent?: boolean;
+  /** Fields of the input recorded on the publisher as written, by name. */
+  readonly recorded?: Readonly<Record<string, readonly string[]>>;
   /** What it is recorded as, where that is not the service's word. */
   readonly kind?: string;
   readonly starts?: Starts;
@@ -102,6 +111,8 @@ interface Service {
   /** The class version 2 names the service by, where it is not version 3's. */
   readonly v2Service?: string;
   readonly operations: readonly Operation[];
+  /** Calls of the service that are not an operation on its client: a helper of another package. */
+  readonly helpers?: readonly CallPattern[];
 }
 
 /** The version 2 SDK, one package for every service. */
@@ -132,6 +143,59 @@ const sendsTo = (target: MessageTarget['kind'], service: string): Operation[] =>
   });
 };
 
+/**
+ * The operations that write to a bucket, each a publisher onto it recorded as
+ * the event it fires there, with the key it writes, which a notification of the
+ * bucket filters on (P52). A notification is handed the service's notice of
+ * the write, never what was written, so no message is read.
+ */
+const BUCKET: readonly InputPart[] = [
+  { literal: AWS_SERVICE_PREFIX.s3 },
+  { path: [BUCKET_FIELDS.bucket], forms: DEPLOYED_FORMS.bucket },
+];
+
+const writesTo = (): Operation[] =>
+  S3_WRITES.map((write) => ({
+    ...(write.command === undefined ? {} : { command: write.command }),
+    method: write.method,
+    address: BUCKET,
+    silent: true,
+    recorded: { [BUCKET_FIELDS.key]: write.key ?? [BUCKET_FIELDS.key] },
+    kind: write.event,
+  }));
+
+/** A bucket written through a locator of the shape of call at hand. */
+const bucketAt = (at: (path: readonly string[]) => NameLocator, receiverPackages: string[]): Pick<CallPattern, 'channelArg' | 'address' | 'payload' | 'recorded' | 'receiverPackages'> => ({
+  channelArg: -1,
+  address: [{ literal: AWS_SERVICE_PREFIX.s3 }, { at: [at([BUCKET_FIELDS.bucket])], forms: DEPLOYED_FORMS.bucket }],
+  payload: [],
+  recorded: { [BUCKET_FIELDS.key]: [at([BUCKET_FIELDS.key])] },
+  receiverPackages,
+});
+
+/**
+ * Two writes that are not an operation on the client: `@aws-sdk/lib-storage`'s
+ * `Upload`, told where it writes when it is made and run by `done()`; and a
+ * URL signed for a `PutObjectCommand`, which the browser it is handed writes
+ * with - recorded as the signing, and drawn as a guess (P52).
+ */
+const BUCKET_HELPERS: readonly CallPattern[] = [
+  {
+    method: S3_UPLOAD.method,
+    ...bucketAt((path) => ({ kind: 'receiver-constructed-path', class: S3_UPLOAD.class, path: [...S3_UPLOAD.input, ...path] }), [S3_UPLOAD.package]),
+    receiverType: [S3_UPLOAD.class],
+    kind: S3_UPLOAD.event,
+  },
+  {
+    method: PRESIGNER.function,
+    calledAs: 'function',
+    module: PRESIGNER.package,
+    ...bucketAt((path) => ({ kind: 'constructed-argument-path', class: PRESIGNER.command, path }), [PRESIGNER.package]),
+    kind: PRESIGNER.event,
+    guessed: PRESIGNER.guessed,
+  },
+];
+
 const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.workflow }];
 
 /** A task token names a waiting run, and no workflow: where it is read, nothing is. */
@@ -158,6 +222,15 @@ const SERVICES: readonly Service[] = [
     client: 'SNSClient',
     service: 'SNS',
     operations: sendsTo('topic', AWS_SERVICE_PREFIX.sns),
+  },
+  {
+    ...BUCKET_CHANNEL,
+    kind: 'object',
+    package: '@aws-sdk/client-s3',
+    client: 'S3Client',
+    service: 'S3',
+    operations: writesTo(),
+    helpers: BUCKET_HELPERS,
   },
   {
     adapter: 'aws-stepfunctions',
@@ -245,14 +318,19 @@ const startsAt = (starts: Starts, locate: InputLocator): StartedEntry => ({
 
 /** The two patterns one operation is read through: a command sent, and a method called. */
 const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
+  const command = operation.command;
   const shapes: readonly { method: string; locate: InputLocator; receiverType: string[]; receiverPackages: string[] }[] = [
-    {
-      method: 'send',
-      locate: viaCommand(operation.command),
-      // The aggregated client sends commands too.
-      receiverType: [service.client, service.service],
-      receiverPackages: [service.package],
-    },
+    ...(command === undefined
+      ? []
+      : [
+          {
+            method: 'send',
+            locate: viaCommand(command),
+            // The aggregated client sends commands too.
+            receiverType: [service.client, service.service],
+            receiverPackages: [service.package],
+          },
+        ]),
     {
       method: operation.method,
       locate: viaInput,
@@ -264,7 +342,10 @@ const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
     method,
     channelArg: -1,
     address: addressAt(operation.address, locate),
-    ...(operation.payload === undefined ? {} : { payload: [locate(operation.payload)] }),
+    ...(operation.silent === true ? { payload: [] } : operation.payload === undefined ? {} : { payload: [locate(operation.payload)] }),
+    ...(operation.recorded === undefined
+      ? {}
+      : { recorded: Object.fromEntries(Object.entries(operation.recorded).map(([name, path]) => [name, [locate(path)]])) }),
     receiverType,
     receiverPackages,
     kind: operation.kind ?? service.kind,
@@ -286,7 +367,7 @@ const declaredAnywhere = (pkg: PackageJson, names: readonly string[], repoDir: s
 const specOf = (service: Service): BrokerSpec => ({
   name: service.adapter,
   detect: (pkg, _config, repoDir) => declaredAnywhere(pkg, [service.package, V2_PACKAGE], repoDir),
-  producerPatterns: service.operations.flatMap((operation) => patternsOf(service, operation)),
+  producerPatterns: [...service.operations.flatMap((operation) => patternsOf(service, operation)), ...(service.helpers ?? [])],
   consumerDecorators: [],
   consumerPatterns: [],
   // A service that only starts things names no channel, and this is never read.

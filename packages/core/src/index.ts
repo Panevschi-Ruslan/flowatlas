@@ -205,6 +205,8 @@ export type {
   EnvironmentValue,
   PatternMatch,
 } from './channel-pattern.js';
+export { GUESSED_META, isTaken, RECORDED_META, strongestTaken, TAKEN_BY_META, TAKES_META } from './takes.js';
+export type { Takes, Taken } from './takes.js';
 export { OPERATION_VERBS, operationsOf } from './declared-operations.js';
 export type { DeclaredOperation } from './declared-operations.js';
 export {

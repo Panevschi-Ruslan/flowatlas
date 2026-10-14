@@ -1193,7 +1193,8 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Terraform files and modules | `infra-file-unparsed`, `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
 | Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
-| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info) |
+| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread` |
+| Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread` |
 
 Three of these are worth knowing before they are met, because each is the
@@ -1776,6 +1777,7 @@ readable name wins. `channel` replaces `channelArg` where both are given.
 | `{ "kind": "chain-root-argument", "index": 0 }` | argument 0 of the call the chain started from |
 | `{ "kind": "argument-path", "index": 0, "path": ["Entries", "*", "DetailType"] }` | a path of properties inside argument 0; `*` is every element of an array |
 | `{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "DetailType"] }` | the same path inside what `PutEventsCommand` is constructed with, where the construction is an argument of the call — built in the call or in a `const` before it. `"index": 1` starts the path in the constructor's second argument |
+| `{ "kind": "receiver-constructed-path", "class": "Upload", "path": ["params", "Bucket"] }` | the path inside what the receiver was constructed with - `new Upload({ params: { Bucket } }).done()`, or the same `new` in a `const` before the call |
 | `{ "kind": "origin-call-argument", "call": "create", "path": ["process"] }` | the path inside the argument of the earlier `create(...)` that made a value this call is handed - `run.id` after `const run = await create(...)` - on the same receiver or from the same module, in the same body, through `const` bindings only. See [a start addressed by a record](#code-that-starts-a-workflow-or-a-function) |
 
 **A path through a list is one name per element.** `["Entries", "*", "DetailType"]`
@@ -1866,7 +1868,7 @@ it sends was built by its caller, which is what the description is for.
 ### The AWS SDK
 
 Publishing through EventBridge, SQS and SNS is read without configuration, from
-`@aws-sdk/client-eventbridge`, `@aws-sdk/client-sqs`, `@aws-sdk/client-sns` and
+`@aws-sdk/client-eventbridge`, `@aws-sdk/client-sqs`, `@aws-sdk/client-sns` and, for writes to a bucket, `@aws-sdk/client-s3`, and
 `aws-sdk` (version 2). The package may be declared in the repository's own
 manifest or in any manifest below it, for a repository that keeps one per
 function. Three shapes of call are read for each operation: a command sent with
@@ -1879,12 +1881,25 @@ aggregated client, `client.putEvents(input)`; and version 2,
 | EventBridge `PutEvents` | `eventbridge/<bus>/<source>/<detail type>`, one per entry; an entry with no `EventBusName` is on `default` | `Detail` |
 | SQS `SendMessage`, `SendMessageBatch` | `sqs/<queue name>`, from `QueueUrl` | `MessageBody` |
 | SNS `Publish`, `PublishBatch` | `sns/<topic name>`, from `TopicArn` | `Message` |
+| S3 `PutObject`, `CopyObject`, `CompleteMultipartUpload`, `DeleteObject`, `DeleteObjects`; version 2's `upload`; `@aws-sdk/lib-storage`'s `new Upload({ params }).done()` | `s3/<bucket name>`, from `Bucket` | none: recorded as the event it fires (`s3:ObjectCreated:Put`, `s3:ObjectRemoved:Delete`, any of `s3:ObjectCreated:*` for an upload), with the `Key` it writes |
+| `getSignedUrl` (`@aws-sdk/s3-request-presigner`) of a `PutObjectCommand` | the same | none: the browser handed the URL writes, so every edge is `heuristic` with `because: ["presigned"]` |
 
 A channel is named by the deployed name, never by the URL or ARN the code holds:
 `https://sqs.eu-west-1.amazonaws.com/111122223333/returns` is `sqs/returns`, and
 a bus's ARN is the bus's name. The service comes first because a queue and a topic
 are often given the same name and are not the same channel. A subscriber read from
 the deployment arrives at the same name, so the two meet on one node.
+
+**A write to a bucket is taken by the notifications that take it.** The writer
+records the event it fires and the key it writes, as written - a template is a
+pattern, `incoming/*.png`; each notification read from the deployment records
+the events and key filters it takes. The linker asks of every write which
+notifications take it, puts their ids on the edge as `takenBy`, and a walk
+through the bucket from that write goes on to those alone. The edge stays
+`static` where one surely does; where the key is not read and a notification
+filters on keys, or a filter reaches past what a template fixes, it is
+`heuristic` with the reason in `because`. A write nothing takes is an `info` row,
+`s3-write-matches-nothing` (`fixtures/lambda-terraform-bucket-notification`).
 
 These are descriptions in the vocabulary above: each operation is the locators and
 parts a configuration could write, plus the one thing a configuration cannot say,
@@ -2570,6 +2585,8 @@ the grammar above. The two meet on one node, across repositories, by name.
 | `aws_sns_topic_subscription` with protocol `lambda` or `sqs` | a consumer of `sns/<topic>` reaching the function or the queue; any other protocol is read and not followed (`info`) |
 | `redrive_policy` on `aws_sqs_queue`, and `aws_sqs_queue_redrive_policy` | a `triggers` edge from the queue to a publisher onto its dead-letter queue — not a reader, so a queue nothing reads is still one `dead` reports |
 | `aws_pipes_pipe` | a consumer of its source reaching its target; a bus target with `eventbridge_event_bus_parameters` publishes exactly that event |
+| `aws_s3_bucket_notification`: each `lambda_function`, `queue` and `topic` block, with its `events`, `filter_prefix` and `filter_suffix` | a consumer of `s3/<bucket>` taking those events and keys, reaching the function, or a publisher onto `sqs/` or `sns/`; a block the files do not settle - a `dynamic` block over what is known only once deployed - is `bucket-notification-unread` |
+| the same with `eventbridge = true` | a consumer of `s3/<bucket>` per family of events a write fires, publishing onto `eventbridge/default/aws.s3/Object Created` and `.../Object Deleted`, where the default bus's rules take them as any event |
 | an API Gateway integration with SQS (`arn:aws:apigateway:<region>:sqs:path/<account>/<queue>`, `sqs:action/SendMessage`), SNS (`sns:action/Publish`) or EventBridge (`events:action/PutEvents`, the HTTP API subtypes `SQS-SendMessage` and `EventBridge-PutEvents`) | the route is the way in and a publisher onto that channel: no function runs |
 
 **A target** is reached by what it is. A function this deployment creates is

@@ -390,6 +390,10 @@ const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-websocket', [['flow.ask-librarian.tree.txt', 'event:websocket/library-reading-room/askLibrarian']]),
   terraformShape('lambda-terraform-base-paths', [['flow.check-item.tree.txt', 'invoke:library-kiosk-check-item']]),
   terraformShape('lambda-terraform-bus-forward', [['flow.renew-loan.tree.txt', 'POST /loans/:param/renewals']]),
+  terraformShape('lambda-terraform-bucket-notification', [
+    ['flow.upload-cover.tree.txt', 'POST /covers/:param'],
+    ['flow.make-thumbnail.tree.txt', 'invoke:library-make-thumbnail'],
+  ]),
 ];
 
 /**

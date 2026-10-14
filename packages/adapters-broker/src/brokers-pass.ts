@@ -1,5 +1,7 @@
 import {
   AWAITING_META,
+  GUESSED_META,
+  RECORDED_META,
   declaredParameterType,
   decoratorArgs,
   definePass,
@@ -281,6 +283,15 @@ export const extractBrokers = (ctx: PassContext): void => {
         : call.getText().slice(0, 60),
     );
 
+    // Values the description keeps as written beside the address: the key a
+    // write to a bucket names, which a notification of the bucket filters on
+    // (P52). A value not read is left out, which a reader further on says.
+    const recordedRead = Object.entries(pattern.recorded ?? {}).flatMap(([name, at]) => {
+      const read = collapsed(readAddress(call, [{ at }], undefined, contextOf(receiver, owner), ctx.config, ''));
+      return isResolved(read) ? [[name, [...read.names]] as const] : [];
+    });
+    const recorded = recordedRead.length === 0 ? undefined : Object.fromEntries(recordedRead);
+
     const jobNameArg = pattern.nameArg === undefined ? undefined : args[pattern.nameArg];
     const jobName =
       jobNameArg === undefined
@@ -420,6 +431,8 @@ export const extractBrokers = (ctx: PassContext): void => {
         method: pattern.method,
         ...(jobName === undefined ? {} : { jobName }),
         ...(exchange === undefined ? {} : { exchange }),
+        ...(recorded === undefined ? {} : { [RECORDED_META]: recorded }),
+        ...(pattern.guessed === undefined ? {} : { [GUESSED_META]: pattern.guessed }),
         // The kind of channel it will be, for whoever completes the address:
         // only the transport knows it, and the deployment does not say.
         // How far the call can be trusted once the address is complete, which
@@ -469,14 +482,16 @@ export const extractBrokers = (ctx: PassContext): void => {
         from: producerId,
         to: channel.id,
         type: 'emits',
-        confidence,
+        confidence: pattern.guessed === undefined ? confidence : 'heuristic',
         file,
         line,
+        ...(pattern.guessed === undefined ? {} : { meta: { because: [pattern.guessed] } }),
         ...(payloadType === undefined ? {} : { params: [payloadType] }),
         ...(replyType === undefined ? {} : { returns: replyType }),
       });
     }
-    if (!carriesAny) {
+    // A call described as carrying nothing - an empty `payload` - has nothing to report.
+    if (!carriesAny && pattern.payload?.length !== 0) {
       ctx.report({
         file,
         line,

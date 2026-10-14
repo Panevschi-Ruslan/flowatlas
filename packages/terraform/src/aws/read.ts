@@ -25,6 +25,7 @@ import { integrationOfRoute, integrationType, resourceIntegration, sentBy, type 
 import { OPENAPI_BODY_READERS } from './openapi-body.js';
 import { PIPE_READERS } from './pipes.js';
 import { QUEUE_READERS } from './queues.js';
+import { BUCKET_READERS } from './buckets.js';
 import type { ResourceReading, RouteDraft, RouteGuard, RoutePath } from './reading.js';
 import { SOCKET_READERS } from './websocket.js';
 
@@ -95,6 +96,7 @@ export class DeploymentReading implements ResourceReading {
     ...[...OPENAPI_BODY_READERS, ...SOCKET_READERS, ...MAPPING_READERS, ...EVENT_READERS, ...QUEUE_READERS, ...PIPE_READERS].map(
       ([type, read]) => [type, (instance: Instance) => read(instance, this)] as const,
     ),
+    ...BUCKET_READERS.map(([type, read]) => [type, (instance: Instance) => read(instance, this)] as const),
   ];
 
   read(): Deployment {

@@ -246,6 +246,15 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
     /** Which argument of that call the path starts in. The first by default. */
     index: z.number().int().min(0).optional(),
   }),
+  z.strictObject({
+    kind: z.literal('receiver-constructed-path'),
+    /** The class the receiver is constructed from, in the call or in a `const` before it (P52). */
+    class: z.string().min(1),
+    /** Properties from the constructor's argument inwards; `*` is every element. */
+    path: z.array(z.string().min(1)),
+    /** Which argument of the constructor the path starts in. The first by default. */
+    index: z.number().int().min(0).optional(),
+  }),
 ]);
 
 /** A regular expression, refused here rather than when the first call is read. */

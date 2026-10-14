@@ -36,6 +36,7 @@ import {
   type ProcedureOutcome,
 } from './procedure-link.js';
 import { joinChannelPatterns } from './pattern-link.js';
+import { matchTakenPublishes } from './takes-link.js';
 import { joinReferences } from './reference-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard } from './route-match.js';
@@ -431,6 +432,8 @@ export const linkGraphs = (
   // channels by a pattern, matched against every channel, those included (P23).
   found.push(...completeFromEnvironment(nodes, edges, merged.unresolved));
   found.push(...joinChannelPatterns(nodes, edges));
+  // What a consumer takes of its channel, asked of every publish onto it (P52).
+  found.push(...matchTakenPublishes(nodes, edges));
   const httpOut = emptyHttpOut();
   const ui = emptyUi();
 

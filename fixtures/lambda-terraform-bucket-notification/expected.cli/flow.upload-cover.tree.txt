@@ -1,0 +1,16 @@
+@  POST /covers/:param                                             media/infra/main.tf:121
+  -> handler                                                       media/src/uploads/upload-cover.ts:6
+    ~  s3:ObjectCreated:Put s3/library-cover-uploads               media/src/uploads/upload-cover.ts:8
+      ~  s3/library-cover-uploads                                  infra/notifications.tf:3
+        ~  notification make-thumbnail                             media/infra/notifications.tf:3
+          @  library-make-thumbnail                                media/infra/main.tf:78
+            -> handler                                             media/src/uploads/make-thumbnail.ts:11
+              $  UPLOADS_BUCKET                                    media/src/uploads/make-thumbnail.ts:17
+              ~  s3:ObjectCreated:* s3/library-cover-uploads       media/src/uploads/make-thumbnail.ts:19
+                (cycle) channel:s3/library-cover-uploads
+              ~  s3:ObjectCreated:Copy s3/library-cover-archive    media/src/uploads/make-thumbnail.ts:20
+                ~  s3/library-cover-archive                        infra/notifications.tf:28
+              ~  s3:ObjectRemoved:Delete s3/library-cover-uploads  media/src/uploads/make-thumbnail.ts:21
+                (cycle) channel:s3/library-cover-uploads ~heuristic
+    $  UPLOADS_BUCKET                                              media/src/uploads/make-thumbnail.ts:17
+unresolved on this path: 1

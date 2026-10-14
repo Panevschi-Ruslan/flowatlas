@@ -89,8 +89,24 @@ export interface CallPattern {
    * of its own, and one per element where the address walks a list. A message
    * sent as `JSON.stringify(value)` is read as the value, because that is what
    * the receiver parses back out.
+   *
+   * An empty list says the call sends no message its receivers are handed: a
+   * write to a bucket, whose readers are handed the service's own notice of it
+   * rather than what was written, has nothing to compare and nothing to report.
    */
   payload?: readonly NameLocator[];
+  /**
+   * Values of the call recorded on its publisher as they are written, by the
+   * name a reader further on asks for them by: the `Key` of an object written,
+   * which a notification on the bucket filters on (P52). Not part of the address.
+   */
+  recorded?: Readonly<Record<string, readonly NameLocator[]>>;
+  /**
+   * Why the call is a publish only by somebody it hands something to - a URL
+   * signed for a browser to write with (P52). Recorded on the publisher, and
+   * every edge out of it is a guess for that reason.
+   */
+  guessed?: string;
   /** Index of the argument holding the payload, when there is one. */
   payloadArg?: number;
   /**

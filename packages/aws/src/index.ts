@@ -16,6 +16,7 @@
  */
 export {
   AWS_SERVICE_PREFIX,
+  bucketChannel,
   channelOfTarget,
   DEFAULT_EVENT_BUS,
   DEPLOYED_CHANNELS,
@@ -37,3 +38,13 @@ export {
   type DeployedName,
 } from './deployed.js';
 export { SDK_SENDS, type SendingService, type SendOperation } from './sends.js';
+export {
+  BUCKET_CHANNEL,
+  BUCKET_FIELDS,
+  PRESIGNER,
+  S3_DETAIL_TYPES,
+  S3_EVENT_SOURCE,
+  S3_UPLOAD,
+  S3_WRITES,
+  type BucketWrite,
+} from './buckets.js';

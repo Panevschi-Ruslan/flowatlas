@@ -19,13 +19,14 @@ import {
  * - a queue is `sqs/<queue name>`;
  * - a topic is `sns/<topic name>`;
  * - an event is `eventbridge/<bus>/<source>/<detail type>`, and the bus an
- *   entry leaves out is the one the service calls `default`, written out.
+ *   entry leaves out is the one the service calls `default`, written out;
+ * - the objects of a bucket are `s3/<bucket name>` (P52).
  *
  * Names are the deployed names, never a URL or an ARN: those are read through
  * `DEPLOYED_FORMS` to the name inside them, which is what a deployment names the
  * same resource by.
  */
-export const AWS_SERVICE_PREFIX = { sqs: 'sqs', sns: 'sns', eventbridge: 'eventbridge' } as const;
+export const AWS_SERVICE_PREFIX = { sqs: 'sqs', sns: 'sns', eventbridge: 'eventbridge', s3: 's3' } as const;
 
 /** The bus an event goes to when its entry names none. */
 export const DEFAULT_EVENT_BUS = 'default';
@@ -33,6 +34,8 @@ export const DEFAULT_EVENT_BUS = 'default';
 export const queueChannel = (name: string): string => [AWS_SERVICE_PREFIX.sqs, name].join(ADDRESS_SEPARATOR);
 
 export const topicChannel = (name: string): string => [AWS_SERVICE_PREFIX.sns, name].join(ADDRESS_SEPARATOR);
+
+export const bucketChannel = (name: string): string => [AWS_SERVICE_PREFIX.s3, name].join(ADDRESS_SEPARATOR);
 
 export const eventChannel = (bus: string | undefined, source: string, detailType: string): string =>
   [AWS_SERVICE_PREFIX.eventbridge, bus ?? DEFAULT_EVENT_BUS, source, detailType].join(ADDRESS_SEPARATOR);

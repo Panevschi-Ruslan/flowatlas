@@ -38,6 +38,7 @@ const DECLARED: ReadonlyMap<string, { readonly kind: DeployedKind; readonly name
   ['aws_cloudwatch_event_bus', { kind: 'bus', name: 'name' }],
   ['aws_dynamodb_table', { kind: 'table', name: 'name' }],
   ['aws_kinesis_stream', { kind: 'stream', name: 'name' }],
+  ['aws_s3_bucket', { kind: 'bucket', name: 'bucket' }],
 ]);
 
 /**
@@ -55,6 +56,8 @@ const IDENTITY = new Set([
   'qualified_arn',
   'qualified_invoke_arn',
   'stream_arn',
+  // A bucket's own name, which its `id` is too.
+  'bucket',
 ]);
 
 /** Types whose `function_name` names the function they stand in front of. */

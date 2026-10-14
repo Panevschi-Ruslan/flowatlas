@@ -1,4 +1,4 @@
-import { STEP_OF_META, STEPS_META, type DetailLevel, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { STEP_OF_META, STEPS_META, TAKEN_BY_META, type DetailLevel, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import { projectDetail, projectEdge } from './detail.js';
 import { truncationMessage, type CompactNode, type FlowNode, type GuardRef } from './types.js';
@@ -163,7 +163,18 @@ interface Pending {
   id: string;
   path: ReadonlySet<string>;
   level: number;
+  /**
+   * The consumers of the channel this is that take what the publisher the walk
+   * came from publishes, where the publisher's edge says (P52): a write to a
+   * bucket goes on to the notifications that take it, not to every one.
+   */
+  takenBy?: ReadonlySet<string>;
 }
+
+const takenByOf = (edge: GraphEdge): ReadonlySet<string> | undefined => {
+  const ids = edge.meta?.[TAKEN_BY_META];
+  return Array.isArray(ids) ? new Set(ids.map(String)) : undefined;
+};
 
 /**
  * Walks outward from an entry and builds the tree of what it reaches.
@@ -203,6 +214,7 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
     if (item.level >= depth) continue;
 
     for (const edge of db.edgesFrom(item.id, FORWARD_EDGES).sort(inCallOrder)) {
+      if (edge.type === 'consumes' && item.takenBy !== undefined && !item.takenBy.has(edge.to)) continue;
       scanned += 1;
       if (scanned > scanLimit) {
         overflow += 1;
@@ -246,11 +258,13 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
         item.flow?.children.push(child);
       }
 
+      const takenBy = takenByOf(edge);
       queue.push({
         flow: child,
         id: edge.to,
         path: new Set([...item.path, edge.to]),
         level: item.level + 1,
+        ...(takenBy === undefined ? {} : { takenBy }),
       });
     }
   }
