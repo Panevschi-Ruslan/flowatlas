@@ -1,0 +1,10 @@
+@  library-scans-import-batch                                             scans/infra/main.tf:48
+  -> handler                                                              scans/src/pages/import-batch.ts:12
+    ~  s3:ObjectCreated:* s3/library-page-scans                           scans/src/pages/import-batch.ts:13
+      ~  s3/library-page-scans ~heuristic                                 infra/notifications.tf:4
+        ~  notification catalogue-import                                  scans/infra/notifications.tf:4
+          ~  message sqs/library-scan-imports                             scans/infra/notifications.tf:4
+            ~  sqs/library-scan-imports                                   infra/main.tf:80
+              ~  mapping aws_lambda_event_source_mapping.catalogue_import  scans/infra/main.tf:80
+                @  library-scans-catalogue-import                         scans/infra/main.tf:48
+unresolved on this path: 0

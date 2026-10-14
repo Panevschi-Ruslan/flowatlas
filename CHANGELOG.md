@@ -74,6 +74,25 @@ only one of them moved.
   function and publishing onto the queue or topic its other actions name. An
   `aws_lambda_permission` for a principal none of these reads is an
   `invoker-not-read` row at `info`. `fixtures/lambda-terraform-other-ways-in`.
+- **More of what an IoT rule does.** A `kinesis` action publishes onto
+  `kinesis/<stream>`, a `dynamodb` or `dynamodbv2` action onto
+  `dynamodb/<table>` - so a rule reaches the function that table's stream
+  runs - and a `step_functions` action starts its state machine, as
+  `StartExecution` does. An `error_action`'s action is drawn the same way and
+  marked `when: "failure"`. Any other action (`firehose`, `s3`, `republish`,
+  ...) is an `iot-action-not-read` row at `info` naming it
+  (`fixtures/lambda-terraform-other-ways-in`).
+- **Bucket notifications in more forms, and versioned deletes.** The JSON form
+  of `aws_s3_bucket_notification` is read, and so is
+  `terraform-aws-modules/s3-bucket/aws//modules/notification`, whose
+  `lambda_notifications`, `sqs_notifications`, `sns_notifications` and
+  `eventbridge` become the same consumers. On a bucket that keeps versions
+  (`aws_s3_bucket_versioning` Enabled or Suspended), a `DeleteObject` or
+  `DeleteObjects` naming no `VersionId` is also taken as
+  `s3:ObjectRemoved:DeleteMarkerCreated`. A write's recorded value that is
+  written and not read is now kept as an empty list rather than left out, so
+  a version named by a variable still counts as named
+  (`fixtures/lambda-terraform-bucket-module`).
 
 ## [0.5.1][] - 2026-10-12
 

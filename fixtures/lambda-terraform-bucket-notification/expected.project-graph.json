@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T10:44:06.392Z",
+  "builtAt": "2026-10-14T17:48:59.836Z",
   "services": [
     {
       "name": "media",
@@ -641,6 +641,9 @@
         "adapter": "aws-s3",
         "channelVia": "environment",
         "method": "send",
+        "recorded": {
+          "Key": []
+        },
         "awaiting": [
           {
             "parts": [

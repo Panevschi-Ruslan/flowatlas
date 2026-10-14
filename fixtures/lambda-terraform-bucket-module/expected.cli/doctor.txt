@@ -1,0 +1,16 @@
+unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
+  s3-write-matches-nothing (info): 1 row
+    Each notification takes some events and, where it filters, keys with a given start and end. Nothing to fix if the write is meant to notify nobody.
+      scans/src/pages/purge-version.ts:12  the call at src/pages/purge-version.ts:12 is s3:ObjectRemoved:Delete on s3/library-page-scans, and none of its 3 notification(s) takes it
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 15 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 0 now, +0)
+  no baseline at <root>/fixtures/lambda-terraform-bucket-module/flowatlas.baseline.json; run flowatlas doctor --accept to write one

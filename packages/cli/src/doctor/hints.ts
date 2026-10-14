@@ -732,6 +732,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A rule takes events by a pattern that nothing the configured services publish matches. A rule for events from outside - another account, a partner, the platform itself - is a way in, not a fault. Nothing to fix if that is what it is.',
   'invoker-not-read': () =>
     'A permission lets a service run the function, and what that service runs it on is not read. The function is still a way in of its own, so nothing reaching it in the graph does not mean nothing runs it. Nothing to fix.',
+  'iot-action-not-read': () =>
+    'An IoT rule hands its messages to a service this reading does not follow - a delivery stream, a log group, an HTTP endpoint, another topic. Its other actions are drawn; nothing past this one is. Nothing to fix.',
 
   // Boundaries nothing could be compared on (contracts)
   ...Object.fromEntries(

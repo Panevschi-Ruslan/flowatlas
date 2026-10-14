@@ -137,3 +137,137 @@ describe('fixtures/lambda-terraform-bucket-notification', () => {
     expect(upload?.environment?.['UPLOADS_BUCKET']?.names).toEqual({ kind: 'bucket', name: 'library-cover-uploads' });
   });
 });
+
+const readFiles = (files: Readonly<Record<string, string>>): Deployment => {
+  const dir = mkdtempSync(join(tmpdir(), 'flowatlas-buckets-'));
+  scratch.push(dir);
+  for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, name), text);
+  return terraformReader.read({ repoDir: dir, config: parseConfig({}) });
+};
+
+describe('bucket notifications in other forms (P56)', () => {
+  it('reads the JSON form, where each target is a list of objects', () => {
+    const deployment = readFiles({
+      'main.tf': BUCKET,
+      'notification.tf.json': JSON.stringify({
+        resource: {
+          aws_s3_bucket_notification: {
+            covers: {
+              bucket: '${aws_s3_bucket.covers.id}',
+              lambda_function: [{ id: 'thumbnail', lambda_function_arn: '${aws_lambda_function.thumbnail.arn}', events: ['s3:ObjectCreated:*'], filter_suffix: '.png' }],
+              queue: [{ queue_arn: '${aws_sqs_queue.index.arn}', events: ['s3:ObjectRemoved:*'] }],
+            },
+          },
+        },
+      }),
+    });
+    expect(deployment.deliveries.map(({ address, name, from, to }) => ({ address, name, from, to }))).toEqual([
+      {
+        address: 'aws_s3_bucket_notification.covers.lambda_function[0]',
+        name: 'thumbnail',
+        from: { kind: 'bucket', name: 'library-covers', events: ['s3:ObjectCreated:*'], suffix: '.png' },
+        to: { kind: 'function', function: 0 },
+      },
+      {
+        address: 'aws_s3_bucket_notification.covers.queue[0]',
+        name: undefined,
+        from: { kind: 'bucket', name: 'library-covers', events: ['s3:ObjectRemoved:*'] },
+        to: { kind: 'queue', name: 'library-index' },
+      },
+    ]);
+  });
+
+  it("reads the s3-bucket module's notification submodule into the same deliveries", () => {
+    const deployment = readHcl(`${BUCKET}
+module "covers_notification" {
+  source  = "terraform-aws-modules/s3-bucket/aws//modules/notification"
+  version = "~> 4.0"
+
+  bucket      = aws_s3_bucket.covers.id
+  eventbridge = true
+
+  lambda_notifications = {
+    thumbnail = {
+      function_arn  = aws_lambda_function.thumbnail.arn
+      function_name = aws_lambda_function.thumbnail.function_name
+      events        = ["s3:ObjectCreated:*"]
+      filter_prefix = "incoming/"
+    }
+  }
+  sqs_notifications = {
+    index = {
+      queue_arn = aws_sqs_queue.index.arn
+      events    = ["s3:ObjectCreated:Put"]
+    }
+  }
+  sns_notifications = {
+    removed = {
+      topic_arn = aws_sns_topic.removed.arn
+      events    = ["s3:ObjectRemoved:*"]
+    }
+  }
+}`);
+    expect(deployment.deliveries.map(({ name, from, to }) => ({ name, from, to }))).toEqual([
+      {
+        name: 'thumbnail',
+        from: { kind: 'bucket', name: 'library-covers', events: ['s3:ObjectCreated:*'], prefix: 'incoming/' },
+        to: { kind: 'function', function: 0 },
+      },
+      { name: 'index', from: { kind: 'bucket', name: 'library-covers', events: ['s3:ObjectCreated:Put'] }, to: { kind: 'queue', name: 'library-index' } },
+      { name: 'removed', from: { kind: 'bucket', name: 'library-covers', events: ['s3:ObjectRemoved:*'] }, to: { kind: 'topic', name: 'library-removed' } },
+      {
+        name: undefined,
+        from: { kind: 'bucket', name: 'library-covers', events: ['s3:ObjectCreated:*'] },
+        to: { kind: 'bus', name: 'default', fields: { source: 'aws.s3', 'detail-type': 'Object Created' } },
+      },
+      {
+        name: undefined,
+        from: { kind: 'bucket', name: 'library-covers', events: ['s3:ObjectRemoved:*'] },
+        to: { kind: 'bus', name: 'default', fields: { source: 'aws.s3', 'detail-type': 'Object Deleted' } },
+      },
+    ]);
+  });
+
+  it('says a bucket keeps versions, by its versioning resource or its older block', () => {
+    const deployment = readHcl(`${BUCKET}
+resource "aws_s3_bucket_versioning" "covers" {
+  bucket = aws_s3_bucket.covers.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+resource "aws_s3_bucket" "old" {
+  bucket = "library-old"
+  versioning {
+    enabled = true
+  }
+}
+resource "aws_s3_bucket" "plain" { bucket = "library-plain" }
+resource "aws_s3_bucket_notification" "covers" {
+  bucket = aws_s3_bucket.covers.id
+  topic {
+    topic_arn = aws_sns_topic.removed.arn
+    events    = ["s3:ObjectRemoved:DeleteMarkerCreated"]
+  }
+}
+resource "aws_s3_bucket_notification" "old" {
+  bucket = aws_s3_bucket.old.id
+  topic {
+    topic_arn = aws_sns_topic.removed.arn
+    events    = ["s3:ObjectRemoved:*"]
+  }
+}
+resource "aws_s3_bucket_notification" "plain" {
+  bucket = aws_s3_bucket.plain.id
+  topic {
+    topic_arn = aws_sns_topic.removed.arn
+    events    = ["s3:ObjectRemoved:*"]
+  }
+}`);
+    expect(deployment.deliveries.map(({ from }) => [from.kind === 'bucket' ? from.name : '', from.kind === 'bucket' ? from.versioned : undefined])).toEqual([
+      ['library-covers', true],
+      ['library-old', true],
+      ['library-plain', undefined],
+    ]);
+  });
+});

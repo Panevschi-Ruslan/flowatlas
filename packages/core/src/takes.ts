@@ -16,7 +16,11 @@
 /** Where a consumer says what it takes. */
 export const TAKES_META = 'takes';
 
-/** Where a publisher keeps values of the call as written, by name, each a list of what was read. */
+/**
+ * Where a publisher keeps values of the call as written, by name, each a list
+ * of what was read: empty for a value written and not read, and no entry for a
+ * value not written at all.
+ */
 export const RECORDED_META = 'recorded';
 
 /**
@@ -38,6 +42,19 @@ export interface Takes {
   readonly kinds: readonly string[];
   /** The recorded value it filters on, by the start and the end it must have. */
   readonly by?: { readonly field: string; readonly prefix?: string; readonly suffix?: string };
+  /**
+   * Kinds a publish is also, on this channel, unless it wrote a field: a
+   * delete that names no version, on a bucket that keeps versions, leaves a
+   * delete marker (P56).
+   */
+  readonly also?: readonly TakenAlso[];
+}
+
+/** A publish of `kind` is also `as`, where it did not write `unless` at all. */
+export interface TakenAlso {
+  readonly kind: string;
+  readonly as: string;
+  readonly unless: string;
 }
 
 /** Whether a publish is taken: for certain, perhaps (and why), or not at all. */
@@ -102,7 +119,11 @@ const ENDS: Readonly<Record<'prefix' | 'suffix', { word: string; test: (value: s
  * consumer filters on it.
  */
 export const isTaken = (kind: string, recorded: Readonly<Record<string, readonly string[]>> | undefined, takes: Takes): Taken => {
-  const byKind = strongestTaken(takes.kinds.map((taken) => kindTaken(kind, taken)));
+  const kinds = [
+    kind,
+    ...(takes.also ?? []).filter((also) => also.kind === kind && recorded?.[also.unless] === undefined).map((also) => also.as),
+  ];
+  const byKind = strongestTaken(kinds.flatMap((written) => takes.kinds.map((taken) => kindTaken(written, taken))));
   const by = takes.by;
   const ends = (['prefix', 'suffix'] as const).filter((end) => (by?.[end] ?? '') !== '');
   if (byKind.taken === 'no' || by === undefined || ends.length === 0) return byKind;

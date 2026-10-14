@@ -1,16 +1,20 @@
 unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
-unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
+unresolved: 0 to act on over 2 rows, and 2 places static reading cannot see, folded into 2
+  ways in: 16 found, 15 with a handler that was read, 1 without
   invoker-not-read (info): 1 row
     The function is still a way in of its own; nothing here says it is unused because nothing drawn reaches it.
       members/infra/ways-in.tf:99  aws_lambda_permission.log_digest
+  iot-action-not-read (info): 1 row
+    The rule is still drawn with every action it has that runs a function, sends on, writes a table or a stream, or starts a state machine.
+      members/infra/returns.tf:40  aws_iot_topic_rule.book_returned
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
 
 desync: none
 
-contracts: no errors, 0 excused, 1 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 0 now, +0)
   no baseline at <root>/fixtures/lambda-terraform-other-ways-in/flowatlas.baseline.json; run flowatlas doctor --accept to write one

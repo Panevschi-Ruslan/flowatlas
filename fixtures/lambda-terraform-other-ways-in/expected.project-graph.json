@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T10:31:53.190Z",
+  "builtAt": "2026-10-14T17:49:05.894Z",
   "services": [
     {
       "name": "members",
@@ -11,19 +11,52 @@
   ],
   "nodes": [
     {
+      "id": "channel:dynamodb/library-members-returns",
+      "type": "channel",
+      "label": "dynamodb/library-members-returns",
+      "repo": "members",
+      "file": "infra/returns.tf",
+      "line": 5,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb"
+        ],
+        "declaredBy": "aws_dynamodb_table.returns",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
       "id": "channel:sqs/library-shelf-readings",
       "type": "channel",
       "label": "sqs/library-shelf-readings",
       "repo": "members",
-      "file": "infra/ways-in.tf",
-      "line": 22,
+      "file": "infra/returns.tf",
+      "line": 40,
       "meta": {
         "channelKind": "queue",
         "adapters": [
           "aws-sqs"
         ],
-        "producers": 1,
+        "producers": 2,
         "consumers": 0
+      }
+    },
+    {
+      "id": "consumer:members#infra/returns.tf:aws_lambda_event_source_mapping.return_desk",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.return_desk",
+      "repo": "members",
+      "file": "infra/returns.tf",
+      "line": 18,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.return_desk",
+        "deployedBy": "terraform"
       }
     },
     {
@@ -65,6 +98,47 @@
         "pool": "library-members",
         "trigger": "pre_sign_up",
         "function": "library-members-pre-sign-up",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:event:dynamodb/library-members-returns",
+      "type": "entry",
+      "label": "event dynamodb/library-members-returns",
+      "repo": "members",
+      "file": "infra/returns.tf",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/library-members-returns",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.return_desk",
+        "deployedBy": "terraform",
+        "changesOf": "table",
+        "name": "library-members-returns",
+        "function": "library-members-return-desk",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:event:iot/library/returns/+/dropped",
+      "type": "entry",
+      "label": "event iot/library/returns/+/dropped",
+      "repo": "members",
+      "file": "infra/returns.tf",
+      "line": 40,
+      "kind": "event",
+      "meta": {
+        "key": "iot/library/returns/+/dropped",
+        "by": "rule",
+        "declaredAs": "aws_iot_topic_rule.book_returned.dynamodbv2[0]",
+        "deployedBy": "terraform",
+        "service": "iot",
+        "name": "library_book_returned",
+        "rule": "aws_iot_topic_rule.book_returned",
+        "reaches": [
+          "workflow:library-members-restock"
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -136,7 +210,7 @@
       "label": "library-members-card-lookup",
       "repo": "members",
       "file": "infra/main.tf",
-      "line": 37,
+      "line": 39,
       "kind": "invoke",
       "meta": {
         "key": "library-members-card-lookup",
@@ -160,7 +234,7 @@
       "label": "library-members-kiosk",
       "repo": "members",
       "file": "infra/main.tf",
-      "line": 37,
+      "line": 39,
       "kind": "invoke",
       "meta": {
         "key": "library-members-kiosk",
@@ -184,7 +258,7 @@
       "label": "library-members-log-digest",
       "repo": "members",
       "file": "infra/main.tf",
-      "line": 37,
+      "line": 39,
       "kind": "invoke",
       "meta": {
         "key": "library-members-log-digest",
@@ -208,7 +282,7 @@
       "label": "library-members-post-confirmation",
       "repo": "members",
       "file": "infra/main.tf",
-      "line": 37,
+      "line": 39,
       "kind": "invoke",
       "meta": {
         "key": "library-members-post-confirmation",
@@ -232,7 +306,7 @@
       "label": "library-members-pre-sign-up",
       "repo": "members",
       "file": "infra/main.tf",
-      "line": 37,
+      "line": 39,
       "kind": "invoke",
       "meta": {
         "key": "library-members-pre-sign-up",
@@ -251,12 +325,60 @@
       }
     },
     {
+      "id": "entry:members:invoke:library-members-restock-shelf",
+      "type": "entry",
+      "label": "library-members-restock-shelf",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 39,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-restock-shelf",
+        "deployedBy": "terraform",
+        "name": "library-members-restock-shelf",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"restock-shelf\"]",
+        "handler": "returns/restock-shelf.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:members#Returned"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-return-desk",
+      "type": "entry",
+      "label": "library-members-return-desk",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 39,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-return-desk",
+        "deployedBy": "terraform",
+        "name": "library-members-return-desk",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"return-desk\"]",
+        "handler": "returns/return-desk.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:members#ReturnChanges"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
       "id": "entry:members:invoke:library-members-shelf-sensor",
       "type": "entry",
       "label": "library-members-shelf-sensor",
       "repo": "members",
       "file": "infra/main.tf",
-      "line": 37,
+      "line": 39,
       "kind": "invoke",
       "meta": {
         "key": "library-members-shelf-sensor",
@@ -272,6 +394,50 @@
           "": "type:members#ShelfReading"
         },
         "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:workflow:library-members-restock",
+      "type": "entry",
+      "label": "workflow library-members-restock",
+      "repo": "members",
+      "file": "infra/returns.tf",
+      "line": 28,
+      "kind": "workflow",
+      "meta": {
+        "key": "library-members-restock",
+        "name": "library-members-restock",
+        "nameFrom": "deployment",
+        "startAt": "Restock",
+        "states": 1,
+        "queryLanguage": "JSONPath",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.restock",
+        "definitionFrom": "jsonencode",
+        "declaredIn": "infra/returns.tf:24"
+      }
+    },
+    {
+      "id": "members#infra/returns.tf:library-members-restock/Restock",
+      "type": "function",
+      "label": "Restock [Task function]",
+      "repo": "members",
+      "file": "infra/returns.tf",
+      "line": 31,
+      "kind": "state",
+      "meta": {
+        "workflow": "library-members-restock",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "function",
+          "name": "library-members-restock-shelf"
+        },
+        "reaches": [
+          "invoke:library-members-restock-shelf"
+        ]
       }
     },
     {
@@ -351,6 +517,44 @@
       }
     },
     {
+      "id": "members#src/returns/restock-shelf.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/returns/restock-shelf.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "returned",
+              "type": "type:members#Returned"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "members#src/returns/return-desk.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/returns/return-desk.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "changes",
+              "type": "type:members#ReturnChanges"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "members#src/shelves/shelf-sensor.ts:handler",
       "type": "function",
       "label": "handler",
@@ -389,6 +593,41 @@
       }
     },
     {
+      "id": "producer:members#infra/returns.tf:aws_iot_topic_rule.book_returned.dynamodbv2[0]",
+      "type": "producer",
+      "label": "write dynamodb/library-members-returns",
+      "repo": "members",
+      "file": "infra/returns.tf",
+      "line": 40,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "deployment",
+        "by": "rule",
+        "declaredAs": "aws_iot_topic_rule.book_returned.dynamodbv2[0]",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:members#infra/returns.tf:aws_iot_topic_rule.book_returned.error_action[0].sqs[0]",
+      "type": "producer",
+      "label": "message sqs/library-shelf-readings",
+      "repo": "members",
+      "file": "infra/returns.tf",
+      "line": 40,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "rule",
+        "declaredAs": "aws_iot_topic_rule.book_returned.error_action[0].sqs[0]",
+        "deployedBy": "terraform",
+        "when": "failure"
+      }
+    },
+    {
       "id": "producer:members#infra/ways-in.tf:aws_iot_topic_rule.shelf_weight.sqs[0]",
       "type": "producer",
       "label": "message sqs/library-shelf-readings",
@@ -412,8 +651,8 @@
       "repo": "members",
       "meta": {
         "stats": {
-          "files": 6,
-          "filesRead": 6,
+          "files": 8,
+          "filesRead": 8,
           "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {}
@@ -427,6 +666,28 @@
     }
   ],
   "edges": [
+    {
+      "from": "channel:dynamodb/library-members-returns",
+      "to": "consumer:members#infra/returns.tf:aws_lambda_event_source_mapping.return_desk",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 18,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:members#infra/returns.tf:aws_lambda_event_source_mapping.return_desk",
+      "to": "entry:members:event:dynamodb/library-members-returns",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 18,
+      "meta": {
+        "via": "deployment"
+      }
+    },
     {
       "from": "entry:members:event:cognito/library-members/post_confirmation",
       "to": "members#src/accounts/post-confirmation.ts:handler",
@@ -442,6 +703,48 @@
       "confidence": "static",
       "file": "src/accounts/pre-sign-up.ts",
       "line": 4
+    },
+    {
+      "from": "entry:members:event:dynamodb/library-members-returns",
+      "to": "members#src/returns/return-desk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/return-desk.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:members:event:iot/library/returns/+/dropped",
+      "to": "entry:members:workflow:library-members-restock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 40,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:library-members-restock"
+      }
+    },
+    {
+      "from": "entry:members:event:iot/library/returns/+/dropped",
+      "to": "producer:members#infra/returns.tf:aws_iot_topic_rule.book_returned.dynamodbv2[0]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 40,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:members:event:iot/library/returns/+/dropped",
+      "to": "producer:members#infra/returns.tf:aws_iot_topic_rule.book_returned.error_action[0].sqs[0]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 40,
+      "meta": {
+        "via": "deployment"
+      }
     },
     {
       "from": "entry:members:event:iot/library/shelves/+/weight",
@@ -527,12 +830,70 @@
       "line": 4
     },
     {
+      "from": "entry:members:invoke:library-members-restock-shelf",
+      "to": "members#src/returns/restock-shelf.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/restock-shelf.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:members:invoke:library-members-return-desk",
+      "to": "members#src/returns/return-desk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/return-desk.ts",
+      "line": 7
+    },
+    {
       "from": "entry:members:invoke:library-members-shelf-sensor",
       "to": "members#src/shelves/shelf-sensor.ts:handler",
       "type": "handles",
       "confidence": "static",
       "file": "src/shelves/shelf-sensor.ts",
       "line": 8
+    },
+    {
+      "from": "entry:members:workflow:library-members-restock",
+      "to": "members#infra/returns.tf:library-members-restock/Restock",
+      "type": "handles",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 29
+    },
+    {
+      "from": "members#infra/returns.tf:library-members-restock/Restock",
+      "to": "entry:members:invoke:library-members-restock-shelf",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 31,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:library-members-restock-shelf"
+      }
+    },
+    {
+      "from": "producer:members#infra/returns.tf:aws_iot_topic_rule.book_returned.dynamodbv2[0]",
+      "to": "channel:dynamodb/library-members-returns",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 40,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:members#infra/returns.tf:aws_iot_topic_rule.book_returned.error_action[0].sqs[0]",
+      "to": "channel:sqs/library-shelf-readings",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/returns.tf",
+      "line": 40,
+      "meta": {
+        "via": "deployment"
+      }
     },
     {
       "from": "producer:members#infra/ways-in.tf:aws_iot_topic_rule.shelf_weight.sqs[0]",
@@ -617,6 +978,40 @@
         "package": "@types/aws-lambda"
       }
     },
+    "type:members#ReturnChanges": {
+      "name": "ReturnChanges",
+      "kind": "object",
+      "declaredIn": "members#src/returns/return-desk.ts",
+      "structuralHash": "1c566f51db5d0ff5",
+      "fields": [
+        {
+          "name": "Records",
+          "type": "{eventName:string}[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:members#Returned": {
+      "name": "Returned",
+      "kind": "object",
+      "declaredIn": "members#src/returns/restock-shelf.ts",
+      "structuralHash": "40e1145ffb119653",
+      "fields": [
+        {
+          "name": "chute",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
     "type:members#ShelfReading": {
       "name": "ShelfReading",
       "kind": "object",
@@ -641,6 +1036,20 @@
     }
   },
   "unresolved": [
+    {
+      "file": "infra/returns.tf",
+      "line": 40,
+      "reason": "iot-action-not-read",
+      "level": "info",
+      "message": "aws_iot_topic_rule.book_returned hands each message on to its firehose action, which is not read, so nothing past it is drawn",
+      "hint": "The rule is still drawn with every action it has that runs a function, sends on, writes a table or a stream, or starts a state machine.",
+      "symbol": "aws_iot_topic_rule.book_returned",
+      "adapter": "aws-lambda",
+      "meta": {
+        "action": "firehose"
+      },
+      "service": "members"
+    },
     {
       "file": "infra/ways-in.tf",
       "line": 99,

@@ -286,10 +286,15 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     // Values the description keeps as written beside the address: the key a
     // write to a bucket names, which a notification of the bucket filters on
-    // (P52). A value not read is left out, which a reader further on says.
+    // (P52). A value written and not read is recorded as no values, which a
+    // reader further on says; a field not written at all is left out, so the
+    // two stay apart: a delete naming a version nobody can read still names one
+    // (P56).
     const recordedRead = Object.entries(pattern.recorded ?? {}).flatMap(([name, at]) => {
-      const read = collapsed(readAddress(call, [{ at }], undefined, contextOf(receiver, owner), ctx.config, ''));
-      return isResolved(read) ? [[name, [...read.names]] as const] : [];
+      const elements = readAddress(call, [{ at }], undefined, contextOf(receiver, owner), ctx.config, '');
+      const read = collapsed(elements);
+      if (isResolved(read)) return [[name, [...read.names]] as const];
+      return elements.some((element) => element.written !== undefined) ? [[name, [] as string[]] as const] : [];
     });
     const recorded = recordedRead.length === 0 ? undefined : Object.fromEntries(recordedRead);
 

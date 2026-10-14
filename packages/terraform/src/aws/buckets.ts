@@ -1,6 +1,6 @@
 import { DEFAULT_EVENT_BUS, S3_DETAIL_TYPES, S3_EVENT_SOURCE } from '@flowatlas/aws';
 import { asText, type Because, type Instance, type Value } from '../eval/values.js';
-import { argument, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
+import { argument, blocksNamed, entryOf, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
 import { deployedInText, deployedOf, deployedOfValue, isBecause, targetOf } from './deployed.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
@@ -15,6 +15,13 @@ import type { ResourceReader, ResourceReading } from './reading.js';
  * the default bus besides, as source `aws.s3`, where the rules of that bus take
  * them as they take any event; it is read as a delivery onto the bus per family
  * of events a write fires.
+ *
+ * Each block may be written as a block, or - in the JSON form, and by the
+ * `s3-bucket` module's `notification` submodule, which builds them from its
+ * inputs - as a list of objects; both are read alike (P56). A bucket that keeps
+ * versions (`aws_s3_bucket_versioning` Enabled or Suspended, or the older
+ * `versioning` block of the bucket) is said on each delivery, so that a delete
+ * naming no version is matched as the delete marker it leaves.
  */
 
 /** The block of each kind of target, and the argument that names it. */
@@ -24,7 +31,7 @@ const TARGET_BLOCKS: ReadonlyMap<string, string> = new Map([
   ['topic', 'topic_arn'],
 ]);
 
-/** The bucket a notification is of: by reference, by ARN, or by its name written out. */
+/** The bucket a resource is of: by reference, by ARN, or by its name written out. */
 const bucketOf = (notification: Instance, reading: ResourceReading): string | Because => {
   const value = argument(notification, 'bucket');
   const referenced = value === undefined ? undefined : deployedOf(value, reading);
@@ -48,7 +55,30 @@ const filterOf = (entries: ReadonlyMap<string, Value>, name: string, what: strin
   return asText(value) ?? whyNot(value, what);
 };
 
-const readTarget = (notification: Instance, bucket: string, block: string, arn: string, value: Value, index: number, reading: ResourceReading): void => {
+/** The states of `versioning_configuration` in which a delete naming no version leaves a marker. */
+const KEEPS_VERSIONS = new Set(['Enabled', 'Suspended']);
+
+/** Whether a bucket keeps versions, by its versioning resource or its own older block. */
+const isVersioned = (bucket: string, reading: ResourceReading): boolean =>
+  reading.ofType('managed', 'aws_s3_bucket_versioning').some((versioning) => {
+    const status = textOf(entryOf(blocksNamed(versioning, 'versioning_configuration')[0], 'status'));
+    return status !== undefined && KEEPS_VERSIONS.has(status) && bucketOf(versioning, reading) === bucket;
+  }) ||
+  reading.ofType('managed', 'aws_s3_bucket').some((declared) => {
+    const enabled = entryOf(blocksNamed(declared, 'versioning')[0], 'enabled');
+    return enabled?.kind === 'bool' && enabled.value && textOf(argument(declared, 'bucket')) === bucket;
+  });
+
+const readTarget = (
+  notification: Instance,
+  bucket: string,
+  versioned: boolean,
+  block: string,
+  arn: string,
+  value: Value,
+  index: number,
+  reading: ResourceReading,
+): void => {
   const address = `${notification.address}.${block}[${index}]`;
   const what = `the ${block} block ${address}`;
   if (value.kind !== 'object') {
@@ -81,6 +111,7 @@ const readTarget = (notification: Instance, bucket: string, block: string, arn: 
       events,
       ...(typeof prefix === 'string' ? { prefix } : {}),
       ...(typeof suffix === 'string' ? { suffix } : {}),
+      ...(versioned ? { versioned } : {}),
     },
     ...(to === undefined ? {} : { to }),
   });
@@ -112,8 +143,9 @@ const readNotification = (notification: Instance, reading: ResourceReading): voi
     reading.rows.push(unreadRow(notification, 'bucket-notification-unread', `the bucket ${notification.address} notifies of`, bucket));
     return;
   }
+  const versioned = isVersioned(bucket, reading);
   for (const [block, arn] of TARGET_BLOCKS) {
-    notification.module.nested(notification, block).forEach((value, index) => readTarget(notification, bucket, block, arn, value, index, reading));
+    blocksNamed(notification, block).forEach((value, index) => readTarget(notification, bucket, versioned, block, arn, value, index, reading));
   }
   readEventBridge(notification, bucket, reading);
 };

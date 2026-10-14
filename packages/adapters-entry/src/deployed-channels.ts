@@ -12,6 +12,7 @@ import {
   eventChannelPattern,
   forwardedToBus,
   queueChannel,
+  S3_VERSIONED_DELETE,
   topicChannel,
 } from '@flowatlas/aws';
 import {
@@ -120,17 +121,19 @@ const channelNode = (drawing: Canvas, name: string, kind: keyof typeof CHANNELS,
 };
 
 /**
- * The channel of a stream a deployment declares, marked as declared by what
- * declares it: a write in code lands on it only then (P51). A mapping that
- * reads a table's stream declares it as surely as the table does.
+ * The channel of a stream, marked as declared by what declares it: a write in
+ * code lands on it only then (P51). A mapping that reads a table's stream
+ * declares it as surely as the table does; a service that writes to the table
+ * says nothing of a stream, and leaves `declaredBy` out (P56).
  */
-const streamChannelNode = (drawing: Canvas, stream: Omit<DeclaredStream, 'address'> & { readonly declaredBy: string }): string => {
+const streamChannelNode = (drawing: Canvas, stream: Omit<DeclaredStream, 'address'> & { readonly declaredBy?: string }): string => {
   const { ctx } = drawing;
   const { adapter, channelKind } = CHANGES_CHANNELS[stream.of];
   const id = makeChannelId(changesChannel(stream.of, stream.name));
   const existing = ctx.builder.getNode(id);
   const adapters = [...new Set([...((existing?.meta?.['adapters'] as string[] | undefined) ?? []), adapter])];
   const declaredBy = (existing?.meta?.[CHANNEL_DECLARED_META] as string | undefined) ?? stream.declaredBy;
+  const declared = declaredBy === undefined ? {} : { [CHANNEL_DECLARED_META]: declaredBy };
   const node = ctx.builder.addNode({
     id,
     type: 'channel',
@@ -138,9 +141,9 @@ const streamChannelNode = (drawing: Canvas, stream: Omit<DeclaredStream, 'addres
     repo: ctx.repo,
     file: stream.file,
     line: stream.line,
-    meta: { channelKind, adapters, [CHANNEL_DECLARED_META]: declaredBy },
+    meta: { channelKind, adapters, ...declared },
   });
-  node.meta = { ...node.meta, adapters, [CHANNEL_DECLARED_META]: declaredBy };
+  node.meta = { ...node.meta, adapters, ...declared };
   return id;
 };
 
@@ -329,9 +332,10 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
   // A notification of a bucket takes what writes to it fire, and says which:
   // the linker asks each write whether it is taken (P52).
   bucket: (drawing, delivery) => {
-    const { name, events, prefix, suffix } = delivery.from;
+    const { name, events, prefix, suffix, versioned } = delivery.from;
     const takes: Takes = {
       kinds: events,
+      ...(versioned === true ? { also: [S3_VERSIONED_DELETE] } : {}),
       ...(prefix === undefined && suffix === undefined
         ? {}
         : { by: { field: BUCKET_FIELDS.key, ...(prefix === undefined ? {} : { prefix }), ...(suffix === undefined ? {} : { suffix }) } }),
@@ -354,7 +358,7 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
     entryOf(drawing, delivery, 'event', delivery.from.key, {
       service: delivery.from.service,
       ...(delivery.name === undefined ? {} : { name: delivery.name }),
-      ...(delivery.meta ?? {}),
+      ...Object.fromEntries(Object.entries(delivery.meta ?? {}).filter(([key]) => key !== 'when')),
     }),
   // What a run ends in is handed on from the function's own entry, or from
   // where the mapping that gave up took its batches in (P54).
@@ -377,8 +381,17 @@ interface Declared {
   readonly meta?: Record<string, unknown>;
 }
 
-/** What an edge out of a way in says: drawn from the deployment, and the outcome it carries. */
-const edgeMeta = (way: WayIn): Record<string, unknown> => ({ via: 'deployment', ...(way.when === undefined ? {} : { when: way.when }) });
+/**
+ * When a delivery runs, where that is not on every message: an IoT rule's
+ * error action, on a failure of its other actions alone (P56). Kept on what the
+ * delivery draws, never on the entry its source shares with the others.
+ */
+const whenOf = (delivery: Declared): Record<string, unknown> =>
+  delivery.meta?.['when'] === undefined ? {} : { when: delivery.meta['when'] };
+
+/** What an edge out of a way in says: drawn from the deployment, and the outcome it carries (P54) or the delivery's own (P56). */
+const edgeMeta = (way: WayIn, delivery?: Declared): Record<string, unknown> =>
+  way.when === undefined ? { via: 'deployment', ...(delivery === undefined ? {} : whenOf(delivery)) } : { via: 'deployment', when: way.when };
 
 /** The publisher a delivery or a route is, reached from where its messages come in. */
 const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, label: string): string => {
@@ -400,6 +413,7 @@ const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: Mess
       by: delivery.by,
       declaredAs: delivery.address,
       deployedBy: drawing.deployedBy,
+      ...whenOf(delivery),
       ...(way.link === 'triggers' ? (delivery.meta ?? {}) : {}),
     },
   });
@@ -492,7 +506,7 @@ const runAsEntry = (drawing: Drawing, way: WayIn, target: Extract<DeliveryTarget
  * consumer does, because an entry has one handler.
  */
 const TARGETS: { readonly [K in DeliveryTarget['kind']]: TargetDrawer<K> } = {
-  function: (drawing, way, _delivery, target) => {
+  function: (drawing, way, delivery, target) => {
     if (runAsEntry(drawing, way, target)) return;
     if ('name' in target) {
       way.reaches.push(makeEntryReference('invoke', makeInvokeEntryKey(target.name)));
@@ -500,7 +514,7 @@ const TARGETS: { readonly [K in DeliveryTarget['kind']]: TargetDrawer<K> } = {
     }
     const to = localFunction(drawing, target.function);
     if (to === undefined) return;
-    drawing.ctx.builder.addEdge({ from: way.id, to, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way) });
+    drawing.ctx.builder.addEdge({ from: way.id, to, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way, delivery) });
   },
   workflow: (_drawing, way, _delivery, target) => {
     way.reaches.push(makeEntryReference('workflow', makeWorkflowEntryKey(target.name)));
@@ -508,6 +522,26 @@ const TARGETS: { readonly [K in DeliveryTarget['kind']]: TargetDrawer<K> } = {
   queue: sendOn,
   topic: sendOn,
   bus: sendOn,
+  // A write to a table or a record put on a stream, by the service itself: a
+  // publisher onto the channel the stream's readers take from (P56).
+  changes: (drawing, way, delivery, target) => {
+    const { adapter, kind } = CHANGES_CHANNELS[target.of];
+    const label = changesChannel(target.of, target.name);
+    const id = `producer:${makeSymbolId(drawing.ctx.repo, delivery.file, delivery.address)}`;
+    drawing.ctx.builder.addNode({
+      id,
+      type: 'producer',
+      label: `${kind} ${label}`,
+      repo: drawing.ctx.repo,
+      file: delivery.file,
+      line: delivery.line,
+      kind,
+      meta: { kind, adapter, channelVia: 'deployment', by: delivery.by, declaredAs: delivery.address, deployedBy: drawing.deployedBy, ...whenOf(delivery) },
+    });
+    drawing.ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+    const to = streamChannelNode(drawing, { of: target.of, name: target.name, file: delivery.file, line: delivery.line });
+    drawing.ctx.builder.addEdge({ from: id, to, type: 'emits', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+  },
 };
 
 const drawSource = (drawing: Drawing, delivery: DeployedDelivery): WayIn =>

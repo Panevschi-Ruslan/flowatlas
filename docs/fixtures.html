@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>144 fixtures</span>
-    <span>330 snapshot files</span>
+    <span>145 fixtures</span>
+    <span>334 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="21">21</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="22">22</span></h2>
     <ul>
       <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
         <div class="head">
@@ -410,6 +410,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">2 services</span>
         </div>
         <p>Two repositories: <code>catalogue</code> publishes two APIs on the library's own domain, <code>api.library.example</code>, each under a base path; <code>kiosk</code> calls them at that address (R174).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-terraform-bucket-module serverless, wired in terraform bucket notifications declared through the `s3-bucket` module's `notification` submodule and in terraform's json form, a bucket that keeps versions, and the writes p52 named but no fixture made (p56).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-bucket-module">lambda-terraform-bucket-module</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Bucket notifications declared through the <code>s3-bucket</code> module's <code>notification</code> submodule and in Terraform's JSON form, a bucket that keeps versions, and the writes P52 named but no fixture made (P56).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="lambda-terraform-bucket-notification serverless, wired in terraform functions run by what is written to s3 buckets (p52).">
@@ -460,12 +468,12 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A lending library's circulation service with two APIs created from OpenAPI documents rather than from resources and methods (R174).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
-      <li class="fixture" data-search="lambda-terraform-other-ways-in serverless, wired in terraform a lending library's members service: six functions, each run by something other than an api gateway route, a rule, a queue or a topic (p53).">
+      <li class="fixture" data-search="lambda-terraform-other-ways-in serverless, wired in terraform a lending library's members service: functions run by something other than an api gateway route, a rule, a queue or a topic (p53), and an iot rule whose actions write a table, start a workflow and fail over to a queue (p56).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-other-ways-in">lambda-terraform-other-ways-in</a>
           <span class="kind">one service</span>
         </div>
-        <p>A lending library's members service: six functions, each run by something other than an API Gateway route, a rule, a queue or a topic (P53).</p>
+        <p>A lending library's members service: functions run by something other than an API Gateway route, a rule, a queue or a topic (P53), and an IoT rule whose actions write a table, start a workflow and fail over to a queue (P56).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="lambda-terraform-rest serverless, wired in terraform lambda handlers whose ways in are declared in terraform: one `aws_lambda_function` per handler, and a rest api built resource by resource in front of them.">

@@ -1,0 +1,13 @@
+~  event iot/library/returns/+/dropped                        members/infra/returns.tf:40
+  @  workflow library-members-restock                         members/infra/returns.tf:28
+    -> Restock [Task function]                                members/infra/returns.tf:31
+      @  library-members-restock-shelf                        members/infra/main.tf:39
+        -> handler                                            members/src/returns/restock-shelf.ts:7
+  ~  write dynamodb/library-members-returns                   members/infra/returns.tf:40
+    ~  dynamodb/library-members-returns                       infra/returns.tf:5
+      ~  mapping aws_lambda_event_source_mapping.return_desk  members/infra/returns.tf:18
+        ~  event dynamodb/library-members-returns             members/infra/returns.tf:18
+          -> handler                                          members/src/returns/return-desk.ts:7
+  ~  message sqs/library-shelf-readings                       members/infra/returns.tf:40
+    ~  sqs/library-shelf-readings                             infra/returns.tf:40
+unresolved on this path: 0

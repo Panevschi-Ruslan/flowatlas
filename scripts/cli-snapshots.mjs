@@ -400,10 +400,17 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.track-click.tree.txt', 'POST /clicks'],
     ['flow.fulfil-order.tree.txt', 'workflow:shop-fulfil-order'],
   ]),
-  terraformShape('lambda-terraform-other-ways-in', [['flow.shelf-weight.tree.txt', 'event:iot/library/shelves/+/weight']]),
+  terraformShape('lambda-terraform-other-ways-in', [
+    ['flow.shelf-weight.tree.txt', 'event:iot/library/shelves/+/weight'],
+    ['flow.book-returned.tree.txt', 'event:iot/library/returns/+/dropped'],
+  ]),
   terraformShape('lambda-terraform-destinations', [
     ['flow.kiosk.tree.txt', 'invoke:library-lending-kiosk'],
     ['flow.return-item.tree.txt', 'invoke:library-lending-return-item'],
+  ]),
+  terraformShape('lambda-terraform-bucket-module', [
+    ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
+    ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],
   ]),
 ];
 

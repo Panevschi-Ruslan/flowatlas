@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T10:31:53.190Z",
+  "builtAt": "2026-10-14T17:49:05.894Z",
   "configHash": "c3d849be9f85",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./members",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 20,
-      "edges": 13,
-      "types": 8,
-      "unresolved": 1,
-      "durationMs": 483,
+      "nodes": 32,
+      "edges": 23,
+      "types": 10,
+      "unresolved": 2,
+      "durationMs": 541,
       "packages": {
         "name": "lending-library-members",
         "runtime": [],
@@ -39,8 +39,8 @@
     "byReason": {}
   },
   "channels": {
-    "total": 1,
-    "linked": 0,
+    "total": 2,
+    "linked": 1,
     "noConsumers": [
       "channel:sqs/library-shelf-readings"
     ],
@@ -56,14 +56,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 8,
+    "total": 10,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
-    "nodes": 20,
-    "edges": 13,
-    "types": 8,
-    "unresolved": 1
+    "nodes": 32,
+    "edges": 25,
+    "types": 10,
+    "unresolved": 2
   }
 }

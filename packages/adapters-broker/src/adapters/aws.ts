@@ -175,7 +175,10 @@ const bucketWrites = (): Operation[] =>
     method: write.method,
     address: BUCKET,
     silent: true,
-    recorded: { [BUCKET_FIELDS.key]: write.key ?? [BUCKET_FIELDS.key] },
+    recorded: {
+      [BUCKET_FIELDS.key]: write.key ?? [BUCKET_FIELDS.key],
+      ...(write.version === undefined ? {} : { [BUCKET_FIELDS.version]: write.version }),
+    },
     kind: write.event,
   }));
 

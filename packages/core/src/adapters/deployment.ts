@@ -130,6 +130,11 @@ export type DeliveryTarget =
   | { readonly kind: 'function'; readonly name: string }
   /** A workflow, by its deployed name: whoever declares it, here or elsewhere. */
   | { readonly kind: 'workflow'; readonly name: string }
+  /**
+   * A table written to or a stream put on, by its deployed name: a publisher
+   * onto the channel its stream's readers take from (P56).
+   */
+  | { readonly kind: 'changes'; readonly of: 'table' | 'stream'; readonly name: string }
   | MessageTarget;
 
 /**
@@ -184,6 +189,12 @@ export type DeliverySource =
       readonly events: readonly string[];
       readonly prefix?: string;
       readonly suffix?: string;
+      /**
+       * The bucket keeps versions: a delete that names no version removes
+       * nothing and leaves a delete marker, firing
+       * `s3:ObjectRemoved:DeleteMarkerCreated` (P56).
+       */
+      readonly versioned?: boolean;
     }
   /**
    * A service that runs a function itself, on a happening of its own nothing

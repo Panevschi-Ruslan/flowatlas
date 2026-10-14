@@ -18,7 +18,7 @@ export const BUCKET_CHANNEL: { readonly adapter: string; readonly channelKind: C
 };
 
 /** The fields of a write's input that name the bucket and the object. */
-export const BUCKET_FIELDS = { bucket: 'Bucket', key: 'Key' } as const;
+export const BUCKET_FIELDS = { bucket: 'Bucket', key: 'Key', version: 'VersionId' } as const;
 
 /** One operation that writes to a bucket, and the event it fires there. */
 export interface BucketWrite {
@@ -29,6 +29,8 @@ export interface BucketWrite {
   readonly event: string;
   /** Where the input names the object, when not at `Key`. */
   readonly key?: readonly string[];
+  /** Where the input names the version it removes, for a delete (P56). */
+  readonly version?: readonly string[];
 }
 
 /**
@@ -42,8 +44,14 @@ export const S3_WRITES: readonly BucketWrite[] = [
   { method: 'putObject', command: 'PutObjectCommand', event: 's3:ObjectCreated:Put' },
   { method: 'copyObject', command: 'CopyObjectCommand', event: 's3:ObjectCreated:Copy' },
   { method: 'completeMultipartUpload', command: 'CompleteMultipartUploadCommand', event: 's3:ObjectCreated:CompleteMultipartUpload' },
-  { method: 'deleteObject', command: 'DeleteObjectCommand', event: 's3:ObjectRemoved:Delete' },
-  { method: 'deleteObjects', command: 'DeleteObjectsCommand', event: 's3:ObjectRemoved:Delete', key: ['Delete', 'Objects', '*', 'Key'] },
+  { method: 'deleteObject', command: 'DeleteObjectCommand', event: 's3:ObjectRemoved:Delete', version: [BUCKET_FIELDS.version] },
+  {
+    method: 'deleteObjects',
+    command: 'DeleteObjectsCommand',
+    event: 's3:ObjectRemoved:Delete',
+    key: ['Delete', 'Objects', '*', BUCKET_FIELDS.key],
+    version: ['Delete', 'Objects', '*', BUCKET_FIELDS.version],
+  },
   { method: 'upload', event: 's3:ObjectCreated:*' },
 ];
 
@@ -60,6 +68,18 @@ export const PRESIGNER = {
   command: 'PutObjectCommand',
   event: 's3:ObjectCreated:Put',
   guessed: 'presigned',
+} as const;
+
+/**
+ * A delete on a bucket that keeps versions (P56): one that names no version
+ * removes nothing and leaves a delete marker, which fires
+ * `s3:ObjectRemoved:DeleteMarkerCreated`. A version written is one named,
+ * whether or not its value is read.
+ */
+export const S3_VERSIONED_DELETE = {
+  kind: 's3:ObjectRemoved:Delete',
+  as: 's3:ObjectRemoved:DeleteMarkerCreated',
+  unless: BUCKET_FIELDS.version,
 } as const;
 
 /** The source a bucket that sends its events to EventBridge puts them on the default bus under. */

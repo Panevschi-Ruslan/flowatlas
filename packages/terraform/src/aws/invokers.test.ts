@@ -47,7 +47,7 @@ describe('other ways a function is run (fixtures/lambda-terraform-other-ways-in)
 
   it('reads each step of a user pool and each action of an IoT rule as a delivery from a trigger', () => {
     expect(
-      deployment.deliveries.map((delivery) => {
+      deployment.deliveries.filter((delivery) => delivery.from.kind === 'trigger').map((delivery) => {
         const to = delivery.to;
         const target = to === undefined ? '-' : 'function' in to ? nameOf(to.function) : `${to.kind} ${to.name}`;
         return `${delivery.by} ${delivery.from.kind === 'trigger' ? delivery.from.key : delivery.from.kind} -> ${target}`;
@@ -55,6 +55,9 @@ describe('other ways a function is run (fixtures/lambda-terraform-other-ways-in)
     ).toEqual([
       'trigger cognito/library-members/pre_sign_up -> library-members-pre-sign-up',
       'trigger cognito/library-members/post_confirmation -> library-members-post-confirmation',
+      'rule iot/library/returns/+/dropped -> changes library-members-returns',
+      'rule iot/library/returns/+/dropped -> workflow library-members-restock',
+      'rule iot/library/returns/+/dropped -> queue library-shelf-readings',
       'rule iot/library/shelves/+/weight -> library-members-shelf-sensor',
       'rule iot/library/shelves/+/weight -> queue library-shelf-readings',
     ]);
@@ -157,5 +160,66 @@ resource "aws_lambda_permission" "other" {
 }
 `);
     expect(deployment.rows.filter((row) => row.reason === 'invoker-not-read').map((row) => row.meta?.['principal'])).toEqual(['123456789012']);
+  });
+});
+
+describe('the actions of an IoT rule (P56)', () => {
+  it('reads streams, tables and state machines as targets, an error action as on failure, and says what it does not follow', () => {
+    const deployment = readHcl(`${FUNCTION}
+resource "aws_kinesis_stream" "readings" { name = "library-readings" }
+resource "aws_dynamodb_table" "loans" {
+  name             = "library-loans"
+  hash_key         = "id"
+  stream_enabled   = true
+  stream_view_type = "NEW_IMAGE"
+}
+resource "aws_sfn_state_machine" "restock" {
+  name       = "library-restock"
+  definition = "{}"
+}
+resource "aws_iot_topic_rule" "r" {
+  name = "r"
+  sql  = "SELECT * FROM 'library/returns/+'"
+  kinesis {
+    stream_name = aws_kinesis_stream.readings.name
+  }
+  dynamodb {
+    table_name     = "library-shelves"
+    hash_key_field = "shelf"
+  }
+  dynamodbv2 {
+    put_item {
+      table_name = aws_dynamodb_table.loans.name
+    }
+  }
+  step_functions {
+    state_machine_name = aws_sfn_state_machine.restock.name
+  }
+  firehose {
+    delivery_stream_name = "library-archive"
+  }
+  error_action {
+    lambda {
+      function_arn = aws_lambda_function.f.arn
+    }
+  }
+  error_action {
+    cloudwatch_logs {
+      log_group_name = "library-iot-errors"
+    }
+  }
+}
+`);
+    expect(deployment.deliveries.map(({ address, to, meta }) => ({ address, to, when: meta?.['when'] }))).toEqual([
+      { address: 'aws_iot_topic_rule.r.kinesis[0]', to: { kind: 'changes', of: 'stream', name: 'library-readings' }, when: undefined },
+      { address: 'aws_iot_topic_rule.r.dynamodb[0]', to: { kind: 'changes', of: 'table', name: 'library-shelves' }, when: undefined },
+      { address: 'aws_iot_topic_rule.r.dynamodbv2[0]', to: { kind: 'changes', of: 'table', name: 'library-loans' }, when: undefined },
+      { address: 'aws_iot_topic_rule.r.step_functions[0]', to: { kind: 'workflow', name: 'library-restock' }, when: undefined },
+      { address: 'aws_iot_topic_rule.r.error_action[0].lambda[0]', to: { kind: 'function', function: 0 }, when: 'failure' },
+    ]);
+    expect(deployment.rows.filter((row) => row.reason === 'iot-action-not-read').map((row) => [row.meta?.['action'], row.meta?.['when']])).toEqual([
+      ['firehose', undefined],
+      ['cloudwatch_logs', 'failure'],
+    ]);
   });
 });

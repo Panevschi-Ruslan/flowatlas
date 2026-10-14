@@ -1193,7 +1193,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Terraform files and modules | `infra-file-unparsed`, `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
 | Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
-| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info) |
+| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info), `iot-action-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread` |
 
@@ -1892,7 +1892,7 @@ aggregated client, `client.putEvents(input)`; and version 2,
 | EventBridge `PutEvents` | `eventbridge/<bus>/<source>/<detail type>`, one per entry; an entry with no `EventBusName` is on `default` | `Detail` |
 | SQS `SendMessage`, `SendMessageBatch` | `sqs/<queue name>`, from `QueueUrl` | `MessageBody` |
 | SNS `Publish`, `PublishBatch` | `sns/<topic name>`, from `TopicArn` | `Message` |
-| S3 `PutObject`, `CopyObject`, `CompleteMultipartUpload`, `DeleteObject`, `DeleteObjects`; version 2's `upload`; `@aws-sdk/lib-storage`'s `new Upload({ params }).done()` | `s3/<bucket name>`, from `Bucket` | none: recorded as the event it fires (`s3:ObjectCreated:Put`, `s3:ObjectRemoved:Delete`, any of `s3:ObjectCreated:*` for an upload), with the `Key` it writes |
+| S3 `PutObject`, `CopyObject`, `CompleteMultipartUpload`, `DeleteObject`, `DeleteObjects`; version 2's `upload`; `@aws-sdk/lib-storage`'s `new Upload({ params }).done()` | `s3/<bucket name>`, from `Bucket` | none: recorded as the event it fires (`s3:ObjectCreated:Put`, `s3:ObjectRemoved:Delete`, any of `s3:ObjectCreated:*` for an upload), with the `Key` it writes and, for a delete, whether it names a `VersionId` |
 | `getSignedUrl` (`@aws-sdk/s3-request-presigner`) of a `PutObjectCommand` | the same | none: the browser handed the URL writes, so every edge is `heuristic` with `because: ["presigned"]` |
 | DynamoDB `PutItem`, `UpdateItem`, `DeleteItem`, `BatchWriteItem`, `TransactWriteItems`; the document client's `put`, `update`, `delete`, `batchWrite`, `transactWrite` (`PutCommand` and the rest from `@aws-sdk/lib-dynamodb`, `DocumentClient` in version 2) | `dynamodb/<table name>`, from `TableName`, each key of a batch's `RequestItems` (a string, a computed key, or a bare word or shorthand property, which names the table it spells), or each `Put`, `Update` or `Delete` of a transaction (a `ConditionCheck` writes nothing) — only where the table's stream is declared | `Item`, or `Key`; none for a batch or a transaction |
 | Kinesis `PutRecord`, `PutRecords` | `kinesis/<stream name>`, from `StreamName` or `StreamARN` | `Data` |
@@ -2481,7 +2481,7 @@ it sends to. `meta.authorization` records an authoriser on `$connect`
 | `aws_lambda_function_url` | an `http` entry `ALL /*` on the function; `AWS_IAM` authorisation is a guard |
 | `aws_lb_listener_rule` (or a listener's `default_action`) forwarding to an `aws_lb_target_group` with `target_type = "lambda"` and its `aws_lb_target_group_attachment` | an `http` entry per `path_pattern` and `http_request_method` (`ALL /*` where none is given) on each function registered; `host_header` values are kept as `meta.hosts` |
 | `aws_cognito_user_pool` with `lambda_config` | an `event` entry `cognito/<pool>/<trigger>` per step - `pre_sign_up`, `post_confirmation`, `custom_email_sender`... - on its function |
-| `aws_iot_topic_rule` | an `event` entry `iot/<topic filter>`, the filter read out of `sql`, running its `lambda` action's function and publishing onto the queue or topic of each `sqs` and `sns` action |
+| `aws_iot_topic_rule` | an `event` entry `iot/<topic filter>`, the filter read out of `sql`, running its `lambda` action's function, publishing onto the queue or topic of each `sqs` and `sns` action, onto `kinesis/<stream>` for each `kinesis` action and `dynamodb/<table>` for each `dynamodb` and `dynamodbv2` action (reaching whatever that stream runs), and starting the state machine of each `step_functions` action as `StartExecution` does; an `error_action`'s action is drawn the same way with `when: "failure"` on what it draws; any other action - `firehose`, `s3`, `republish`, `http`, `cloudwatch_logs` and the rest - is one `iot-action-not-read` row at `info` naming it |
 | `aws_lambda_permission` for any other principal - `logs.amazonaws.com`, another account | one `invoker-not-read` row at `info`, naming the principal: the function is run by something not read, and is still not called unused |
 
 **Base paths and stages.** A custom domain's `aws_api_gateway_base_path_mapping`
@@ -2622,6 +2622,8 @@ the grammar above. The two meet on one node, across repositories, by name.
 | `destination_config.on_failure` on `aws_lambda_event_source_mapping` | the same, `when: "failure"`, from where the mapping's batches come in: the stream's `event` entry, or the queue's consumer |
 | `aws_pipes_pipe` | a consumer of its source reaching its target; a bus target with `eventbridge_event_bus_parameters` publishes exactly that event |
 | `aws_s3_bucket_notification`: each `lambda_function`, `queue` and `topic` block, with its `events`, `filter_prefix` and `filter_suffix` | a consumer of `s3/<bucket>` taking those events and keys, reaching the function, or a publisher onto `sqs/` or `sns/`; a block the files do not settle - a `dynamic` block over what is known only once deployed - is `bucket-notification-unread` |
+| the same written as a list of objects: the JSON form (`.tf.json`), and `terraform-aws-modules/s3-bucket/aws//modules/notification`, whose `lambda_notifications`, `sqs_notifications` and `sns_notifications` are keyed by id and whose `eventbridge` is read as below | the same consumers |
+| a bucket that keeps versions: `aws_s3_bucket_versioning` with `status` `Enabled` or `Suspended`, or the bucket's older `versioning { enabled = true }` | each notification of it also takes a `DeleteObject` or `DeleteObjects` that names no `VersionId` as `s3:ObjectRemoved:DeleteMarkerCreated`, the marker it leaves; a delete that names a version, read or not, is `s3:ObjectRemoved:Delete` alone |
 | the same with `eventbridge = true` | a consumer of `s3/<bucket>` per family of events a write fires, publishing onto `eventbridge/default/aws.s3/Object Created` and `.../Object Deleted`, where the default bus's rules take them as any event |
 | an API Gateway integration with SQS (`arn:aws:apigateway:<region>:sqs:path/<account>/<queue>`, `sqs:action/SendMessage`), SNS (`sns:action/Publish`) or EventBridge (`events:action/PutEvents`, the HTTP API subtypes `SQS-SendMessage` and `EventBridge-PutEvents`) | the route is the way in and a publisher onto that channel: no function runs |
 
@@ -2699,8 +2701,9 @@ still a row: the default is not what runs there. A default that is not one
 name — an empty string, a pattern, or one behind a second variable — is not
 taken (`fixtures/sqs-environment-fallback`).
 
-`terraform-aws-modules/eventbridge/aws`, `terraform-aws-modules/sqs/aws` and
-`terraform-aws-modules/sns/aws` ship described, beside the function and route
+`terraform-aws-modules/eventbridge/aws`, `terraform-aws-modules/sqs/aws`,
+`terraform-aws-modules/sns/aws` and
+`terraform-aws-modules/s3-bucket/aws//modules/notification` ship described, beside the function and route
 modules (`fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
 `fixtures/multi-repo-events`).
 

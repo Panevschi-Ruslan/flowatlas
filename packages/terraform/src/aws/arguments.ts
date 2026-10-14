@@ -74,6 +74,17 @@ export const textWithHoles = (instance: Instance, name: string): string | undefi
 export const blockOrArgument = (instance: Instance, name: string): Value | undefined =>
   argument(instance, name) ?? instance.module.nested(instance, name)[0];
 
+/**
+ * Every block of a kind a resource nests, written as blocks, or as an argument
+ * holding one object or a list of them: the JSON form writes a nested block
+ * that way, and so does a module that builds it from its inputs (P56).
+ */
+export const blocksNamed = (instance: Instance, name: string): readonly Value[] => {
+  const written = argument(instance, name);
+  const listed = written === undefined || written.kind === 'null' ? [] : written.kind === 'list' ? written.items : [written];
+  return [...instance.module.nested(instance, name), ...listed];
+};
+
 /** A key of an object value. */
 export const entryOf = (value: Value | undefined, key: string): Value | undefined =>
   value?.kind === 'object' ? value.entries.get(key) : value?.kind === 'list' && value.items[0]?.kind === 'object' ? value.items[0].entries.get(key) : undefined;

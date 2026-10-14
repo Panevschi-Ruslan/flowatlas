@@ -12,6 +12,8 @@ locals {
     shelf-sensor      = "shelves/shelf-sensor.handler"
     kiosk             = "kiosk/kiosk.handler"
     log-digest        = "logs/log-digest.handler"
+    return-desk       = "returns/return-desk.handler"
+    restock-shelf     = "returns/restock-shelf.handler"
   }
 }
 

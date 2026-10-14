@@ -48,6 +48,7 @@ export {
   S3_DETAIL_TYPES,
   S3_EVENT_SOURCE,
   S3_UPLOAD,
+  S3_VERSIONED_DELETE,
   S3_WRITES,
   type BucketWrite,
 } from './buckets.js';
