@@ -11,13 +11,17 @@ Type-checked, never executed or deployed.
 `modules/function-url` declares `aws_lambda_function_url.this` and outputs its
 `function_url`; the kiosk is deployed with `CARD_LOOKUP_URL = module.card_lookup_url.url`.
 No service claims `CARD_LOOKUP_URL` as its base, so each request rooted at it is
-joined through the function that runs it, to the `http:ALL:/*` entry of
-`library-lending-card-lookup` (`meta.via: "functionUrl"`, `meta.variable`).
+joined through the function that runs it, to the `http:ALL:/*@library-lending-card-lookup`
+entry (`meta.via: "functionUrl"`, `meta.variable`). `LOAN_URL` names a second
+URL, `aws_lambda_function_url.request_loan` in `main.tf`: every function URL is
+`ALL /*`, so each entry's key carries the function it stands in front of, and
+the two stay apart.
 
 | Request in `kiosk/kiosk.ts` | Edge |
 |---|---|
 | `fetch(process.env.CARD_LOOKUP_URL + '/cards')` | `http_calls`, `static`: the path is read |
 | `` fetch(`${process.env.CARD_LOOKUP_URL}${extra}`) `` | `http_calls`, `heuristic`: the path is not read |
+| `fetch(process.env.LOAN_URL + '/loans', { method: 'POST' })` | `http_calls`, `static`, to `http:ALL:/*@library-lending-request-loan`, behind `AWS_IAM` |
 
 ## Destinations
 

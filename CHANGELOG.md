@@ -31,7 +31,9 @@ only one of them moved.
   `triggers` edges from the run to the destination function or a publisher onto
   its queue, topic or bus, with `meta.when: "success" | "failure"`; a result
   put on a bus is the platform's `lambda` / `Lambda Function Invocation Result -
-  Success|Failure` event (`fixtures/lambda-terraform-destinations`).
+  Success|Failure` event (`fixtures/lambda-terraform-destinations`) Each function URL's entry is keyed by the function
+  it stands in front of, `http:ALL:/*@<function>`, so two URLs in one
+  repository no longer merge into one entry.
 - S3 bucket notifications, and the writes that fire them (P52).
   `aws_s3_bucket_notification` is read from Terraform: each `lambda_function`,
   `queue` and `topic` block is a consumer of `s3/<bucket>` taking its `events`
@@ -88,8 +90,8 @@ only one of them moved.
   `lambda_notifications`, `sqs_notifications`, `sns_notifications` and
   `eventbridge` become the same consumers. On a bucket that keeps versions
   (`aws_s3_bucket_versioning` Enabled or Suspended), a `DeleteObject` or
-  `DeleteObjects` naming no `VersionId` is also taken as
-  `s3:ObjectRemoved:DeleteMarkerCreated`. A write's recorded value that is
+  `DeleteObjects` naming no `VersionId` is taken as
+  `s3:ObjectRemoved:DeleteMarkerCreated`, and not as `s3:ObjectRemoved:Delete`. A write's recorded value that is
   written and not read is now kept as an empty list rather than left out, so
   a version named by a variable still counts as named
   (`fixtures/lambda-terraform-bucket-module`).

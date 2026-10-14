@@ -79,11 +79,14 @@ export const blockOrArgument = (instance: Instance, name: string): Value | undef
  * holding one object or a list of them: the JSON form writes a nested block
  * that way, and so does a module that builds it from its inputs (P56).
  */
-export const blocksNamed = (instance: Instance, name: string): readonly Value[] => {
-  const written = argument(instance, name);
-  const listed = written === undefined || written.kind === 'null' ? [] : written.kind === 'list' ? written.items : [written];
-  return [...instance.module.nested(instance, name), ...listed];
-};
+export const blocksNamed = (instance: Instance, name: string): readonly Value[] => [
+  ...instance.module.nested(instance, name),
+  ...listed(argument(instance, name)),
+];
+
+/** The items of a value written as one object or as a list of them; none where it is absent. */
+export const listed = (value: Value | undefined): readonly Value[] =>
+  value === undefined || value.kind === 'null' ? [] : value.kind === 'list' ? value.items : [value];
 
 /** A key of an object value. */
 export const entryOf = (value: Value | undefined, key: string): Value | undefined =>

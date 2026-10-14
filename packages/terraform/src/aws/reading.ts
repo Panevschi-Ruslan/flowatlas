@@ -32,7 +32,11 @@ export interface RouteDraft {
   /** The API it belongs to, when the path does not already say. */
   readonly api?: Instance;
   readonly guards: readonly RouteGuard[];
-  /** What else the route's entry says about it: a host it answers on, what it is reached by. */
+  /**
+   * What else the route's entry says about it: a host it answers on, what it is
+   * reached by, and - as `key` - the key its entry is drawn under where its
+   * method and path do not tell it apart, as a function URL's do not.
+   */
   readonly meta?: Readonly<Record<string, unknown>>;
 }
 

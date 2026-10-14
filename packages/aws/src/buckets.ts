@@ -73,7 +73,7 @@ export const PRESIGNER = {
 /**
  * A delete on a bucket that keeps versions (P56): one that names no version
  * removes nothing and leaves a delete marker, which fires
- * `s3:ObjectRemoved:DeleteMarkerCreated`. A version written is one named,
+ * `s3:ObjectRemoved:DeleteMarkerCreated` and not `s3:ObjectRemoved:Delete`. A version written is one named,
  * whether or not its value is read.
  */
 export const S3_VERSIONED_DELETE = {

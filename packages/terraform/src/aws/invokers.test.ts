@@ -55,6 +55,8 @@ describe('other ways a function is run (fixtures/lambda-terraform-other-ways-in)
     ).toEqual([
       'trigger cognito/library-members/pre_sign_up -> library-members-pre-sign-up',
       'trigger cognito/library-members/post_confirmation -> library-members-post-confirmation',
+      // Read as written: a table with no stream is dropped by the linker, not here.
+      'rule iot/library/returns/+/dropped -> changes library-members-drops',
       'rule iot/library/returns/+/dropped -> changes library-members-returns',
       'rule iot/library/returns/+/dropped -> workflow library-members-restock',
       'rule iot/library/returns/+/dropped -> queue library-shelf-readings',

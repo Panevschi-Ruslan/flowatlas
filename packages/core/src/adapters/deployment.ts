@@ -356,7 +356,6 @@ export interface DeployedWorkflow {
   readonly meta?: Record<string, unknown>;
 }
 
-/** Everything one reader found in one repository. */
 /**
  * A stream of records the deployment declares: a table's stream of changes, or
  * a stream of its own. What is written to it is a message to whatever reads it,
@@ -372,6 +371,7 @@ export interface DeclaredStream {
   readonly name: string;
 }
 
+/** Everything one reader found in one repository. */
 export interface Deployment {
   readonly functions: readonly DeployedFunction[];
   readonly routes: readonly DeployedRoute[];

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T17:48:58.596Z",
+  "builtAt": "2026-10-14T18:16:12.674Z",
   "services": [
     {
       "name": "scans",
@@ -143,7 +143,7 @@
           "kinds": [
             "s3:ObjectCreated:*"
           ],
-          "also": [
+          "instead": [
             {
               "kind": "s3:ObjectRemoved:Delete",
               "as": "s3:ObjectRemoved:DeleteMarkerCreated",
@@ -176,7 +176,7 @@
           "kinds": [
             "s3:ObjectCreated:CompleteMultipartUpload"
           ],
-          "also": [
+          "instead": [
             {
               "kind": "s3:ObjectRemoved:Delete",
               "as": "s3:ObjectRemoved:DeleteMarkerCreated",
@@ -209,7 +209,7 @@
           "kinds": [
             "s3:ObjectRemoved:DeleteMarkerCreated"
           ],
-          "also": [
+          "instead": [
             {
               "kind": "s3:ObjectRemoved:Delete",
               "as": "s3:ObjectRemoved:DeleteMarkerCreated",

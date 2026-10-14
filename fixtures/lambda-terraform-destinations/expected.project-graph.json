@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T17:39:19.152Z",
+  "builtAt": "2026-10-14T18:10:24.969Z",
   "services": [
     {
       "name": "lending",
@@ -88,6 +88,18 @@
       }
     },
     {
+      "id": "config_key:lending#LOAN_URL",
+      "type": "config_key",
+      "label": "LOAN_URL",
+      "repo": "lending",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8,
+      "meta": {
+        "key": "LOAN_URL",
+        "source": "process.env"
+      }
+    },
+    {
       "id": "consumer:lending#infra/destinations.tf:aws_cloudwatch_event_target.audit_return",
       "type": "consumer",
       "label": "rule library-returned",
@@ -147,7 +159,7 @@
       }
     },
     {
-      "id": "entry:lending:http:ALL:/*",
+      "id": "entry:lending:http:ALL:/*@library-lending-card-lookup",
       "type": "entry",
       "label": "ALL /*",
       "repo": "lending",
@@ -161,6 +173,25 @@
         "deployedBy": "terraform",
         "function": "library-lending-card-lookup",
         "declaredAs": "module.card_lookup_url.aws_lambda_function_url.this",
+        "by": "function-url",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:http:ALL:/*@library-lending-request-loan",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 56,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/*",
+        "deployedBy": "terraform",
+        "function": "library-lending-request-loan",
+        "declaredAs": "aws_lambda_function_url.request_loan",
         "by": "function-url",
         "adapter": "aws-lambda"
       }
@@ -220,7 +251,7 @@
       "label": "library-lending-kiosk",
       "repo": "lending",
       "file": "infra/main.tf",
-      "line": 54,
+      "line": 61,
       "kind": "invoke",
       "meta": {
         "key": "library-lending-kiosk",
@@ -235,6 +266,11 @@
           "CARD_LOOKUP_URL": {
             "written": "module.card_lookup_url.aws_lambda_function_url.this.function_url",
             "value": "library-lending-card-lookup",
+            "kind": "url"
+          },
+          "LOAN_URL": {
+            "written": "aws_lambda_function_url.request_loan.function_url",
+            "value": "library-lending-request-loan",
             "kind": "url"
           }
         },
@@ -373,6 +409,32 @@
         "bodyType": null,
         "targetService": "lending"
       }
+    },
+    {
+      "id": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+      "type": "http_out",
+      "label": "POST /loans",
+      "repo": "lending",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8,
+      "meta": {
+        "method": "POST",
+        "url": "${LOAN_URL}/loans",
+        "path": "/loans",
+        "baseUrlEnv": "LOAN_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "lending"
+      }
+    },
+    {
+      "id": "lending#infra/main.tf:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 56,
+      "kind": "authorizer"
     },
     {
       "id": "lending#src/cards/card-lookup.ts:handler",
@@ -666,13 +728,38 @@
       }
     },
     {
-      "from": "entry:lending:http:ALL:/*",
+      "from": "entry:lending:http:ALL:/*@library-lending-card-lookup",
       "to": "lending#src/cards/card-lookup.ts:handler",
       "type": "handles",
       "confidence": "static",
       "returns": "{path:string}",
       "file": "src/cards/card-lookup.ts",
       "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:lending:http:ALL:/*@library-lending-request-loan",
+      "to": "lending#infra/main.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 56,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:lending:http:ALL:/*@library-lending-request-loan",
+      "to": "lending#src/loans/request-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/request-loan.ts",
+      "line": 2,
       "meta": {
         "requestRead": true
       }
@@ -783,7 +870,7 @@
     },
     {
       "from": "http_out:lending#src/kiosk/kiosk.ts:5:22",
-      "to": "entry:lending:http:ALL:/*",
+      "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
       "type": "http_calls",
       "confidence": "static",
       "file": "src/kiosk/kiosk.ts",
@@ -796,7 +883,7 @@
     },
     {
       "from": "http_out:lending#src/kiosk/kiosk.ts:7:25",
-      "to": "entry:lending:http:ALL:/*",
+      "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
       "type": "http_calls",
       "confidence": "heuristic",
       "file": "src/kiosk/kiosk.ts",
@@ -805,6 +892,19 @@
         "via": "functionUrl",
         "targetService": "lending",
         "variable": "CARD_LOOKUP_URL"
+      }
+    },
+    {
+      "from": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+      "to": "entry:lending:http:ALL:/*@library-lending-request-loan",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8,
+      "meta": {
+        "via": "functionUrl",
+        "targetService": "lending",
+        "variable": "LOAN_URL"
       }
     },
     {
@@ -826,6 +926,23 @@
     },
     {
       "from": "lending#src/kiosk/kiosk.ts:handler",
+      "to": "config_key:lending#LOAN_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-lending-kiosk",
+            "written": "aws_lambda_function_url.request_loan.function_url",
+            "value": "library-lending-request-loan"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#src/kiosk/kiosk.ts:handler",
       "to": "http_out:lending#src/kiosk/kiosk.ts:5:22",
       "type": "calls",
       "confidence": "static",
@@ -839,6 +956,14 @@
       "confidence": "static",
       "file": "src/kiosk/kiosk.ts",
       "line": 7
+    },
+    {
+      "from": "lending#src/kiosk/kiosk.ts:handler",
+      "to": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8
     },
     {
       "from": "producer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan.on_failure",

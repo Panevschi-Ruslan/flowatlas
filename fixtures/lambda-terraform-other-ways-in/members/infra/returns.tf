@@ -1,7 +1,19 @@
 # A book dropped in a returns chute: its IoT rule writes the return to a table
 # whose stream runs the return desk, starts the restocking workflow, archives
 # the message through a delivery stream nothing here reads, and queues the
-# message with the shelf readings when any of that fails.
+# message with the shelf readings when any of that fails. It also logs the drop
+# to a table with no stream, which is a write to nobody and draws no channel.
+resource "aws_dynamodb_table" "drops" {
+  name         = "library-members-drops"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "dropId"
+
+  attribute {
+    name = "dropId"
+    type = "S"
+  }
+}
+
 resource "aws_dynamodb_table" "returns" {
   name             = "library-members-returns"
   billing_mode     = "PAY_PER_REQUEST"
@@ -49,6 +61,13 @@ resource "aws_iot_topic_rule" "book_returned" {
     put_item {
       table_name = aws_dynamodb_table.returns.name
     }
+  }
+
+  dynamodb {
+    table_name      = aws_dynamodb_table.drops.name
+    hash_key_field  = "dropId"
+    hash_key_value  = "$${newuuid()}"
+    role_arn        = aws_iam_role.lambda.arn
   }
 
   step_functions {

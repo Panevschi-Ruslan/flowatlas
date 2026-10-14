@@ -235,6 +235,16 @@ export const makeHttpEntryKey = (method: string, path: string): string =>
   `${required('method', method).toUpperCase()}:${normalizePath(path)}`;
 
 /**
+ * The `key` half of a function URL's entry id: `ALL:/*@card-lookup`.
+ *
+ * A function URL answers every verb and every path, so its method and path are
+ * the same for every one; the function it stands in front of, and the alias
+ * where one is named, is what tells two of them apart.
+ */
+export const makeFunctionUrlEntryKey = (fn: string, qualifier?: string): string =>
+  `${makeHttpEntryKey('ALL', '/*')}@${required('fn', fn)}${qualifier === undefined ? '' : `:${qualifier}`}`;
+
+/**
  * The `key` half of an `invoke` entry id: the name the function is deployed
  * under, exactly as the deployment spells it.
  *

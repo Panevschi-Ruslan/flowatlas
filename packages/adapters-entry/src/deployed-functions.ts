@@ -547,7 +547,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
           kind: 'authorizer',
         }));
         const wrapping = [...guards, ...(reading?.wrapping ?? [])];
-        const key = makeHttpEntryKey(route.method, route.path);
+        // The reader's own key where it gives one: a function URL's, which its method and path cannot tell apart.
+        const key = typeof route.meta?.['key'] === 'string' ? route.meta['key'] : makeHttpEntryKey(route.method, route.path);
         const id = makeEntryId(ctx.repo, 'http', key);
         const declaredAs = route.meta?.['declaredAs'];
         if (typeof declaredAs === 'string') drawn.set(declaredAs, id);

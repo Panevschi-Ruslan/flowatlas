@@ -225,8 +225,8 @@ export const topicName = named('topic', QUEUE_OR_TOPIC);
 /** A table, from its name or its ARN. */
 export const tableName = named('table', /^[A-Za-z0-9_.\uE000-]+$/, (text) => text);
 
-/** An event bus, from its name or its ARN. */
 /** A Kinesis stream, by its name or its ARN. */
 export const streamName = named('stream', /^[A-Za-z0-9_.\uE000-]+$/, (text) => text);
 
+/** An event bus, from its name or its ARN. */
 export const eventBusName = named('bus', /^[A-Za-z0-9_./\uE000-]+$/, (text) => text);

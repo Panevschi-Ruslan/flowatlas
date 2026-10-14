@@ -7,7 +7,7 @@ unresolved: 0 to act on over 2 rows, and 2 places static reading cannot see, fol
       members/infra/ways-in.tf:99  aws_lambda_permission.log_digest
   iot-action-not-read (info): 1 row
     The rule is still drawn with every action it has that runs a function, sends on, writes a table or a stream, or starts a state machine.
-      members/infra/returns.tf:40  aws_iot_topic_rule.book_returned
+      members/infra/returns.tf:52  aws_iot_topic_rule.book_returned
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

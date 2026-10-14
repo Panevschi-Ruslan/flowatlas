@@ -294,7 +294,6 @@ const boundedByMount = (confidence: Confidence, mountAssumed: readonly string[] 
 const mountMeta = (mountAssumed: readonly string[] | undefined): Record<string, unknown> =>
   mountAssumed === undefined ? {} : { mountAssumedEmpty: [...mountAssumed] };
 
-/** The edge a resolved call becomes. */
 /**
  * How far each way of joining a request is trusted. A function URL answers
  * every path, so the join is as sure as the path it was asked with (P54).
@@ -308,6 +307,7 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
   },
 };
 
+/** The edge a resolved call becomes. */
 const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>): GraphEdge => {
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];

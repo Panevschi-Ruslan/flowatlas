@@ -31,6 +31,7 @@ import {
   MOST_CHOICES,
   REACHES_META,
   TAKES_META,
+  WHERE_DECLARED_META,
   type ChannelForward,
   type Confidence,
   type DeclaredStream,
@@ -106,46 +107,32 @@ interface Drawing extends Canvas {
   readonly invoked: (id: string) => EntryNode | undefined;
 }
 
-/** Every kind of channel a deployment draws: what a message is sent to, and a bucket (P52). */
-const CHANNELS = { ...DEPLOYED_CHANNELS, bucket: BUCKET_CHANNEL };
+/** What a channel is drawn as: the adapter that reads it, and its kind. */
+type ChannelKinds = { readonly adapter: string; readonly channelKind: string };
 
-const channelNode = (drawing: Canvas, name: string, kind: keyof typeof CHANNELS, file: string, line: number): string => {
+/**
+ * A channel, joined with the one any other delivery drew under its name. A
+ * stream's channel is marked as declared by what declares it: a write in code
+ * lands on it only then (P51). A mapping that reads a table's stream declares
+ * it as surely as the table does; a service that writes to the table says
+ * nothing of a stream, and leaves `declaredBy` out (P56).
+ */
+const channelNode = (drawing: Canvas, name: string, kinds: ChannelKinds, file: string, line: number, declaredBy?: string): string => {
   const { ctx } = drawing;
-  const { adapter, channelKind } = CHANNELS[kind];
+  const { adapter, channelKind } = kinds;
   const id = makeChannelId(name);
   const existing = ctx.builder.getNode(id);
   const adapters = [...new Set([...((existing?.meta?.['adapters'] as string[] | undefined) ?? []), adapter])];
-  const node = ctx.builder.addNode({ id, type: 'channel', label: name, repo: ctx.repo, file, line, meta: { channelKind, adapters } });
-  node.meta = { ...node.meta, adapters };
-  return id;
-};
-
-/**
- * The channel of a stream, marked as declared by what declares it: a write in
- * code lands on it only then (P51). A mapping that reads a table's stream
- * declares it as surely as the table does; a service that writes to the table
- * says nothing of a stream, and leaves `declaredBy` out (P56).
- */
-const streamChannelNode = (drawing: Canvas, stream: Omit<DeclaredStream, 'address'> & { readonly declaredBy?: string }): string => {
-  const { ctx } = drawing;
-  const { adapter, channelKind } = CHANGES_CHANNELS[stream.of];
-  const id = makeChannelId(changesChannel(stream.of, stream.name));
-  const existing = ctx.builder.getNode(id);
-  const adapters = [...new Set([...((existing?.meta?.['adapters'] as string[] | undefined) ?? []), adapter])];
-  const declaredBy = (existing?.meta?.[CHANNEL_DECLARED_META] as string | undefined) ?? stream.declaredBy;
-  const declared = declaredBy === undefined ? {} : { [CHANNEL_DECLARED_META]: declaredBy };
-  const node = ctx.builder.addNode({
-    id,
-    type: 'channel',
-    label: changesChannel(stream.of, stream.name),
-    repo: ctx.repo,
-    file: stream.file,
-    line: stream.line,
-    meta: { channelKind, adapters, ...declared },
-  });
+  const declarer = (existing?.meta?.[CHANNEL_DECLARED_META] as string | undefined) ?? declaredBy;
+  const declared = declarer === undefined ? {} : { [CHANNEL_DECLARED_META]: declarer };
+  const node = ctx.builder.addNode({ id, type: 'channel', label: name, repo: ctx.repo, file, line, meta: { channelKind, adapters, ...declared } });
   node.meta = { ...node.meta, adapters, ...declared };
   return id;
 };
+
+/** The channel of a table's changes or a stream's records. */
+const streamChannelNode = (drawing: Canvas, stream: Omit<DeclaredStream, 'address'> & { readonly declaredBy?: string }): string =>
+  channelNode(drawing, changesChannel(stream.of, stream.name), CHANGES_CHANNELS[stream.of], stream.file, stream.line, stream.declaredBy);
 
 /** Every (source, detail type) a pattern names exactly, or `undefined` where it does not name them. */
 const exactEvents = (pattern: MessagePattern): (readonly [string, string])[] | undefined => {
@@ -262,7 +249,7 @@ type SourceDrawer<K extends DeliverySource['kind']> = (
  */
 const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
   queue: (drawing, delivery) => {
-    const channel = channelNode(drawing, queueChannel(delivery.from.name), 'queue', delivery.file, delivery.line);
+    const channel = channelNode(drawing, queueChannel(delivery.from.name), DEPLOYED_CHANNELS.queue, delivery.file, delivery.line);
     // A redrive does not read the queue: what its readers fail on is handed on
     // by the queue itself, so a queue nothing reads still reads as one.
     if (delivery.by === 'redrive') {
@@ -274,7 +261,7 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
   },
   topic: (drawing, delivery) => {
     const way = consumerOf(drawing, delivery, 'message', DEPLOYED_CHANNELS.topic.adapter);
-    consume(drawing, channelNode(drawing, topicChannel(delivery.from.name), 'topic', delivery.file, delivery.line), way, delivery);
+    consume(drawing, channelNode(drawing, topicChannel(delivery.from.name), DEPLOYED_CHANNELS.topic, delivery.file, delivery.line), way, delivery);
     return way;
   },
   bus: (drawing, delivery) => {
@@ -288,7 +275,7 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       events === undefined ? { [CHANNEL_PATTERN_META]: eventChannelPattern(bus, pattern) } : {},
     );
     for (const [source, detailType] of events ?? []) {
-      consume(drawing, channelNode(drawing, eventChannel(bus, source, detailType), 'bus', delivery.file, delivery.line), way, delivery);
+      consume(drawing, channelNode(drawing, eventChannel(bus, source, detailType), DEPLOYED_CHANNELS.bus, delivery.file, delivery.line), way, delivery);
     }
     return events === undefined ? way : { ...way, events };
   },
@@ -335,13 +322,13 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
     const { name, events, prefix, suffix, versioned } = delivery.from;
     const takes: Takes = {
       kinds: events,
-      ...(versioned === true ? { also: [S3_VERSIONED_DELETE] } : {}),
+      ...(versioned === true ? { instead: [S3_VERSIONED_DELETE] } : {}),
       ...(prefix === undefined && suffix === undefined
         ? {}
         : { by: { field: BUCKET_FIELDS.key, ...(prefix === undefined ? {} : { prefix }), ...(suffix === undefined ? {} : { suffix }) } }),
     };
     const way = consumerOf(drawing, delivery, 'object', BUCKET_CHANNEL.adapter, { [TAKES_META]: takes });
-    consume(drawing, channelNode(drawing, bucketChannel(name), 'bucket', delivery.file, delivery.line), way, delivery);
+    consume(drawing, channelNode(drawing, bucketChannel(name), BUCKET_CHANNEL, delivery.file, delivery.line), way, delivery);
     return way;
   },
   // A route of a socket API is a way in of its own: nothing publishes to it
@@ -393,10 +380,16 @@ const whenOf = (delivery: Declared): Record<string, unknown> =>
 const edgeMeta = (way: WayIn, delivery?: Declared): Record<string, unknown> =>
   way.when === undefined ? { via: 'deployment', ...(delivery === undefined ? {} : whenOf(delivery)) } : { via: 'deployment', when: way.when };
 
-/** The publisher a delivery or a route is, reached from where its messages come in. */
-const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, label: string): string => {
+/** A producer a delivery or a route is, reached from where its messages come in. */
+const producerNode = (
+  drawing: Canvas,
+  way: WayIn,
+  delivery: Declared,
+  { adapter, kind }: { readonly adapter: string; readonly kind: string },
+  label: string,
+  meta: Record<string, unknown> = {},
+): string => {
   const { ctx } = drawing;
-  const { adapter, kind } = DEPLOYED_CHANNELS[target.kind];
   const id = `producer:${makeSymbolId(ctx.repo, delivery.file, delivery.address)}`;
   ctx.builder.addNode({
     id,
@@ -414,17 +407,21 @@ const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: Mess
       declaredAs: delivery.address,
       deployedBy: drawing.deployedBy,
       ...whenOf(delivery),
-      ...(way.link === 'triggers' ? (delivery.meta ?? {}) : {}),
+      ...meta,
     },
   });
   ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way) });
   return id;
 };
 
+/** The publisher a delivery or a route is onto a queue, a topic or a bus. */
+const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, label: string): string =>
+  producerNode(drawing, way, delivery, DEPLOYED_CHANNELS[target.kind], label, way.link === 'triggers' ? (delivery.meta ?? {}) : {});
+
 /** A publisher a delivery or a route is, onto the channel it sends to. */
 const forward = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, channel: string): void => {
   const id = publisher(drawing, way, delivery, target, channel);
-  const to = channelNode(drawing, channel, target.kind, delivery.file, delivery.line);
+  const to = channelNode(drawing, channel, DEPLOYED_CHANNELS[target.kind], delivery.file, delivery.line);
   drawing.ctx.builder.addEdge({ from: id, to, type: 'emits', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
 };
 
@@ -525,20 +522,10 @@ const TARGETS: { readonly [K in DeliveryTarget['kind']]: TargetDrawer<K> } = {
   // A write to a table or a record put on a stream, by the service itself: a
   // publisher onto the channel the stream's readers take from (P56).
   changes: (drawing, way, delivery, target) => {
-    const { adapter, kind } = CHANGES_CHANNELS[target.of];
-    const label = changesChannel(target.of, target.name);
-    const id = `producer:${makeSymbolId(drawing.ctx.repo, delivery.file, delivery.address)}`;
-    drawing.ctx.builder.addNode({
-      id,
-      type: 'producer',
-      label: `${kind} ${label}`,
-      repo: drawing.ctx.repo,
-      file: delivery.file,
-      line: delivery.line,
-      kind,
-      meta: { kind, adapter, channelVia: 'deployment', by: delivery.by, declaredAs: delivery.address, deployedBy: drawing.deployedBy, ...whenOf(delivery) },
-    });
-    drawing.ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+    // A table's changes are a channel only where its stream is declared, as
+    // they are for a write in code (P51); a stream's records always are.
+    const whereDeclared = target.of === 'table' ? { [WHERE_DECLARED_META]: true } : {};
+    const id = producerNode(drawing, way, delivery, CHANGES_CHANNELS[target.of], changesChannel(target.of, target.name), whereDeclared);
     const to = streamChannelNode(drawing, { of: target.of, name: target.name, file: delivery.file, line: delivery.line });
     drawing.ctx.builder.addEdge({ from: id, to, type: 'emits', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
   },

@@ -97,10 +97,17 @@ export class DeploymentReading implements ResourceReading {
     ['aws_api_gateway_method', (instance) => this.#restRoute(instance)],
     ['aws_apigatewayv2_route', (instance) => this.#httpRoute(instance)],
     ['aws_sfn_state_machine', (instance) => this.#workflow(instance)],
-    ...[...OPENAPI_BODY_READERS, ...SOCKET_READERS, ...MAPPING_READERS, ...EVENT_READERS, ...QUEUE_READERS, ...PIPE_READERS, ...INVOKER_READERS, ...DESTINATION_READERS].map(
-      ([type, read]) => [type, (instance: Instance) => read(instance, this)] as const,
-    ),
-    ...BUCKET_READERS.map(([type, read]) => [type, (instance: Instance) => read(instance, this)] as const),
+    ...[
+      ...OPENAPI_BODY_READERS,
+      ...SOCKET_READERS,
+      ...MAPPING_READERS,
+      ...EVENT_READERS,
+      ...QUEUE_READERS,
+      ...PIPE_READERS,
+      ...INVOKER_READERS,
+      ...DESTINATION_READERS,
+      ...BUCKET_READERS,
+    ].map(([type, read]) => [type, (instance: Instance) => read(instance, this)] as const),
   ];
 
   read(): Deployment {

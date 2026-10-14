@@ -45,10 +45,10 @@ describe('what a consumer takes of its channel', () => {
   });
 });
 
-describe('kinds a publish is also (P56)', () => {
+describe('kinds a publish is instead (P56)', () => {
   const MARKERS: Takes = {
     kinds: ['objects:Removed:Marker'],
-    also: [{ kind: 'objects:Removed:Delete', as: 'objects:Removed:Marker', unless: 'Version' }],
+    instead: [{ kind: 'objects:Removed:Delete', as: 'objects:Removed:Marker', unless: 'Version' }],
   };
 
   it('takes a publish as the kind it also is, unless it wrote the field, read or not', () => {
@@ -58,7 +58,10 @@ describe('kinds a publish is also (P56)', () => {
     expect(isTaken('objects:Created:Put', undefined, MARKERS)).toEqual({ taken: 'no' });
   });
 
-  it('still takes the kind as written', () => {
-    expect(isTaken('objects:Removed:Delete', undefined, { ...MARKERS, kinds: ['objects:Removed:Delete'] })).toEqual({ taken: 'static' });
+  it('takes it as the kind written only where it wrote the field', () => {
+    const deletes: Takes = { ...MARKERS, kinds: ['objects:Removed:Delete'] };
+    expect(isTaken('objects:Removed:Delete', undefined, deletes)).toEqual({ taken: 'no' });
+    expect(isTaken('objects:Removed:Delete', { Version: ['v1'] }, deletes)).toEqual({ taken: 'static' });
+    expect(isTaken('objects:Removed:Delete', undefined, { ...MARKERS, kinds: ['objects:Removed:*'] })).toEqual({ taken: 'static' });
   });
 });

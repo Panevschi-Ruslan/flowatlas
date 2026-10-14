@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T17:49:05.894Z",
+  "builtAt": "2026-10-14T18:16:20.329Z",
   "configHash": "c3d849be9f85",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./members",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 32,
-      "edges": 23,
+      "nodes": 34,
+      "edges": 25,
       "types": 10,
       "unresolved": 2,
-      "durationMs": 541,
+      "durationMs": 497,
       "packages": {
         "name": "lending-library-members",
         "runtime": [],
@@ -50,7 +50,7 @@
     "total": 2,
     "called": 0,
     "uncalled": [
-      "entry:members:http:ALL:/*",
+      "entry:members:http:ALL:/*@library-members-card-lookup",
       "entry:members:http:POST:/kiosk/checkout"
     ],
     "duplicated": []

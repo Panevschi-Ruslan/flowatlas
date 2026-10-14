@@ -96,8 +96,8 @@ export const deployedOf = (value: Value, reading: Pick<ResourceReading, 'functio
   if (FUNCTION_URLS.has(target.type)) {
     const inner = attribute === 'function_url' ? argument(target, 'function_name') : undefined;
     const found = inner === undefined ? undefined : deployedOf(inner, reading, depth + 1);
-    const name = found === undefined ? textOf(inner) : isBecause(found) ? undefined : found.name;
-    if (found !== undefined && isBecause(found)) return found;
+    if (found !== undefined) return isBecause(found) ? found : { kind: 'url', name: found.name };
+    const name = textOf(inner);
     return name === undefined ? undefined : { kind: 'url', name };
   }
   if (attribute !== undefined && !IDENTITY.has(attribute)) return undefined;

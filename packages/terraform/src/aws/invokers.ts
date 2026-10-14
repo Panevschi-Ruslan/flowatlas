@@ -1,6 +1,6 @@
-import type { DeliveryTarget, DeployedKind, RouteTarget } from '@flowatlas/core';
+import { makeFunctionUrlEntryKey, type DeliveryTarget, type DeployedKind, type RouteTarget } from '@flowatlas/core';
 import type { Because, Instance, Value } from '../eval/values.js';
-import { argument, blockOrArgument, blocksNamed, entryOf, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
+import { argument, blockOrArgument, blocksNamed, entryOf, listed, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
 import { deployedAt, deployedOfValue, isBecause, targetOf, type Deployed } from './deployed.js';
 import { functionAt } from './queues.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
@@ -49,6 +49,9 @@ const routeTargetOf = (found: Deployed | Because | undefined): RouteTarget | Bec
 const readFunctionUrl: ResourceReader[1] = (url, reading) => {
   const qualifier = textOf(argument(url, 'qualifier'));
   const authorization = textOf(argument(url, 'authorization_type'));
+  const found = functionAt(url, 'function_name', reading);
+  // Every function URL is `ALL /*`: the function is what keeps two apart.
+  const owner = found === undefined || isBecause(found) ? url.address : found.name;
   reading.route({
     ...siteOf(url),
     address: url.address,
@@ -56,9 +59,9 @@ const readFunctionUrl: ResourceReader[1] = (url, reading) => {
     method: 'ALL',
     path: { kind: 'path', path: '/*' },
     rawPath: '/*',
-    target: routeTargetOf(functionAt(url, 'function_name', reading)),
+    target: routeTargetOf(found),
     guards: authorization === 'AWS_IAM' ? [{ label: authorization, ...siteOf(url) }] : [],
-    meta: { by: 'function-url', ...(qualifier === undefined ? {} : { qualifier }) },
+    meta: { by: 'function-url', key: makeFunctionUrlEntryKey(owner, qualifier), ...(qualifier === undefined ? {} : { qualifier }) },
   });
 };
 
@@ -159,10 +162,6 @@ const actionTarget = (found: Deployed | Because | undefined, rule: Instance, wha
 /** The value at a path of keys inside a block. */
 const valueAt = (block: Value, at: readonly string[]): Value | undefined =>
   at.reduce<Value | undefined>((value, key) => (value === undefined ? undefined : entryOf(value, key)), block);
-
-/** The blocks of one action inside an `error_action`, written as blocks or as a list. */
-const listed = (value: Value | undefined): readonly Value[] =>
-  value === undefined || value.kind === 'null' ? [] : value.kind === 'list' ? value.items : [value];
 
 const readTopicRule: ResourceReader[1] = (rule, reading) => {
   const sql = argument(rule, 'sql');

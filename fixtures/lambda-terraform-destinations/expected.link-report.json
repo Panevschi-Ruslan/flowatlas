@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T17:39:19.152Z",
+  "builtAt": "2026-10-14T18:10:24.969Z",
   "configHash": "a77a92768b90",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./lending",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 30,
-      "edges": 25,
+      "nodes": 34,
+      "edges": 29,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 500,
       "packages": {
         "name": "lending-library-loans",
         "runtime": [],
@@ -23,8 +23,8 @@
     }
   ],
   "httpOut": {
-    "total": 2,
-    "linked": 2,
+    "total": 3,
+    "linked": 3,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
@@ -50,8 +50,8 @@
     ]
   },
   "routes": {
-    "total": 1,
-    "called": 1,
+    "total": 2,
+    "called": 2,
     "uncalled": [],
     "duplicated": []
   },
@@ -72,8 +72,8 @@
     }
   ],
   "totals": {
-    "nodes": 30,
-    "edges": 27,
+    "nodes": 34,
+    "edges": 32,
     "types": 4,
     "unresolved": 1
   }

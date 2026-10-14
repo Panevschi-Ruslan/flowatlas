@@ -43,15 +43,15 @@ export interface Takes {
   /** The recorded value it filters on, by the start and the end it must have. */
   readonly by?: { readonly field: string; readonly prefix?: string; readonly suffix?: string };
   /**
-   * Kinds a publish is also, on this channel, unless it wrote a field: a
-   * delete that names no version, on a bucket that keeps versions, leaves a
-   * delete marker (P56).
+   * Kinds a publish is instead, on this channel, unless it wrote a field: a
+   * delete that names no version, on a bucket that keeps versions, removes
+   * nothing and only leaves a delete marker (P56).
    */
-  readonly also?: readonly TakenAlso[];
+  readonly instead?: readonly TakenInstead[];
 }
 
-/** A publish of `kind` is also `as`, where it did not write `unless` at all. */
-export interface TakenAlso {
+/** A publish of `kind` is `as` instead, where it did not write `unless` at all. */
+export interface TakenInstead {
   readonly kind: string;
   readonly as: string;
   readonly unless: string;
@@ -119,11 +119,8 @@ const ENDS: Readonly<Record<'prefix' | 'suffix', { word: string; test: (value: s
  * consumer filters on it.
  */
 export const isTaken = (kind: string, recorded: Readonly<Record<string, readonly string[]>> | undefined, takes: Takes): Taken => {
-  const kinds = [
-    kind,
-    ...(takes.also ?? []).filter((also) => also.kind === kind && recorded?.[also.unless] === undefined).map((also) => also.as),
-  ];
-  const byKind = strongestTaken(kinds.flatMap((written) => takes.kinds.map((taken) => kindTaken(written, taken))));
+  const as = (takes.instead ?? []).find((instead) => instead.kind === kind && recorded?.[instead.unless] === undefined)?.as ?? kind;
+  const byKind = strongestTaken(takes.kinds.map((taken) => kindTaken(as, taken)));
   const by = takes.by;
   const ends = (['prefix', 'suffix'] as const).filter((end) => (by?.[end] ?? '') !== '');
   if (byKind.taken === 'no' || by === undefined || ends.length === 0) return byKind;

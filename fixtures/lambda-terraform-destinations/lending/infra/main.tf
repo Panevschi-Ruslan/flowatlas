@@ -51,6 +51,13 @@ module "card_lookup_url" {
   function_name = aws_lambda_function.fn["card-lookup"].function_name
 }
 
+# A second function URL, declared here: every one is `ALL /*`, and the
+# function it stands in front of keeps it apart from the card lookup's.
+resource "aws_lambda_function_url" "request_loan" {
+  function_name      = aws_lambda_function.fn["request-loan"].function_name
+  authorization_type = "AWS_IAM"
+}
+
 resource "aws_lambda_function" "kiosk" {
   function_name    = "${local.prefix}-kiosk"
   role             = aws_iam_role.lambda.arn
@@ -62,6 +69,7 @@ resource "aws_lambda_function" "kiosk" {
   environment {
     variables = {
       CARD_LOOKUP_URL = module.card_lookup_url.url
+      LOAN_URL        = aws_lambda_function_url.request_loan.function_url
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-14T17:39:19.474Z",
+  "generatedAt": "2026-10-14T18:10:25.261Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -45,10 +45,10 @@
     {
       "edge": {
         "from": "http_out:lending#src/kiosk/kiosk.ts:5:22",
-        "to": "entry:lending:http:ALL:/*",
+        "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:5:22|http_calls|entry:lending:http:ALL:/*",
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:5:22|http_calls|entry:lending:http:ALL:/*@library-lending-card-lookup",
       "direction": "request",
       "reason": "no-type-on-sender",
       "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it sends",
@@ -57,10 +57,10 @@
     {
       "edge": {
         "from": "http_out:lending#src/kiosk/kiosk.ts:5:22",
-        "to": "entry:lending:http:ALL:/*",
+        "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:5:22|http_calls|entry:lending:http:ALL:/*",
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:5:22|http_calls|entry:lending:http:ALL:/*@library-lending-card-lookup",
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it expects",
@@ -69,10 +69,10 @@
     {
       "edge": {
         "from": "http_out:lending#src/kiosk/kiosk.ts:7:25",
-        "to": "entry:lending:http:ALL:/*",
+        "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:7:25|http_calls|entry:lending:http:ALL:/*",
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:7:25|http_calls|entry:lending:http:ALL:/*@library-lending-card-lookup",
       "direction": "request",
       "reason": "no-type-on-sender",
       "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it sends",
@@ -81,14 +81,38 @@
     {
       "edge": {
         "from": "http_out:lending#src/kiosk/kiosk.ts:7:25",
-        "to": "entry:lending:http:ALL:/*",
+        "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:7:25|http_calls|entry:lending:http:ALL:/*",
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:7:25|http_calls|entry:lending:http:ALL:/*@library-lending-card-lookup",
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it expects",
       "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+        "to": "entry:lending:http:ALL:/*@library-lending-request-loan",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:8:22|http_calls|entry:lending:http:ALL:/*@library-lending-request-loan",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+        "to": "entry:lending:http:ALL:/*@library-lending-request-loan",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:8:22|http_calls|entry:lending:http:ALL:/*@library-lending-request-loan",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "lending#src/loans/request-loan.ts:handler answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
     },
     {
       "edge": {
@@ -108,7 +132,7 @@
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 8,
+    "unchecked": 10,
     "errors": 0,
     "warnings": 0,
     "infos": 0,
