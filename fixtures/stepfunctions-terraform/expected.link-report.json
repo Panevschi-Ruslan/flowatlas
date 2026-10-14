@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:52:01.875Z",
+  "builtAt": "2026-10-14T17:38:07.229Z",
   "configHash": "f38fa4940897",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": ".",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 63,
-      "edges": 60,
+      "nodes": 70,
+      "edges": 68,
       "types": 6,
       "unresolved": 1,
-      "durationMs": 468,
+      "durationMs": 543,
       "packages": {
         "name": "lending-library-loans",
         "runtime": [],

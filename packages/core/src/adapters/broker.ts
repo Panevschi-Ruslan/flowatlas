@@ -41,6 +41,12 @@ export type AddressPart =
        * expression matches is the name as written.
        */
       readonly forms?: readonly string[];
+      /**
+       * An element of a list that writes nothing here is no element at all,
+       * rather than an address nobody could read: a condition a transaction
+       * checks names a table under a kind of entry that writes nothing (P55).
+       */
+      readonly unwrittenIsNone?: boolean;
     };
 
 /** A call shape that publishes a message. */

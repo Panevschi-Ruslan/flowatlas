@@ -1885,7 +1885,7 @@ aggregated client, `client.putEvents(input)`; and version 2,
 | SNS `Publish`, `PublishBatch` | `sns/<topic name>`, from `TopicArn` | `Message` |
 | S3 `PutObject`, `CopyObject`, `CompleteMultipartUpload`, `DeleteObject`, `DeleteObjects`; version 2's `upload`; `@aws-sdk/lib-storage`'s `new Upload({ params }).done()` | `s3/<bucket name>`, from `Bucket` | none: recorded as the event it fires (`s3:ObjectCreated:Put`, `s3:ObjectRemoved:Delete`, any of `s3:ObjectCreated:*` for an upload), with the `Key` it writes |
 | `getSignedUrl` (`@aws-sdk/s3-request-presigner`) of a `PutObjectCommand` | the same | none: the browser handed the URL writes, so every edge is `heuristic` with `because: ["presigned"]` |
-| DynamoDB `PutItem`, `UpdateItem`, `DeleteItem`, `BatchWriteItem`, `TransactWriteItems`; the document client's `put`, `update`, `delete`, `batchWrite`, `transactWrite` (`PutCommand` and the rest from `@aws-sdk/lib-dynamodb`, `DocumentClient` in version 2) | `dynamodb/<table name>`, from `TableName`, each key of a batch's `RequestItems`, or each entry of a transaction — only where the table's stream is declared | `Item`, or `Key` |
+| DynamoDB `PutItem`, `UpdateItem`, `DeleteItem`, `BatchWriteItem`, `TransactWriteItems`; the document client's `put`, `update`, `delete`, `batchWrite`, `transactWrite` (`PutCommand` and the rest from `@aws-sdk/lib-dynamodb`, `DocumentClient` in version 2) | `dynamodb/<table name>`, from `TableName`, each key of a batch's `RequestItems` (a string, a computed key, or a bare word or shorthand property, which names the table it spells), or each `Put`, `Update` or `Delete` of a transaction (a `ConditionCheck` writes nothing) — only where the table's stream is declared | `Item`, or `Key`; none for a batch or a transaction |
 | Kinesis `PutRecord`, `PutRecords` | `kinesis/<stream name>`, from `StreamName` or `StreamARN` | `Data` |
 
 A channel is named by the deployed name, never by the URL or ARN the code holds:
@@ -2763,7 +2763,16 @@ and each is drawn as a way in of kind `workflow`. Nothing to configure.
   service deploys is a `reference-not-found` row.
 - **A task that reads or writes a table** (`dynamodb:getItem`, `putItem`,
   `updateItem`, `deleteItem`, and through the SDK `query`, `scan` and the batch
-  and transaction calls) is a `db_query` on that table.
+  and transaction calls) is a `db_query` on that table. A write - `putItem`,
+  `updateItem`, `deleteItem`, `batchWriteItem`, `transactWriteItems`, optimised
+  or `aws-sdk:` - is also a producer at the step onto `dynamodb/<table>`, kept
+  only where some service declares the table's stream, exactly as a function's
+  write is ("A write to a table is a publish only where its stream is"): so a workflow's write reaches the function the
+  stream runs. A transaction's `ConditionCheck` writes nothing and names no
+  table (P55).
+- **A task that puts a record on a stream** (`aws-sdk:kinesis:putRecord`,
+  `putRecords`, by `StreamName` or `StreamARN`) is a producer onto
+  `kinesis/<stream>`, joined to a mapping from that stream by name (P55).
 - **A task that sends a message** (`sqs:sendMessage`, `sns:publish`,
   `events:putEvents`, their batch forms, and the `aws-sdk:` spellings) is a
   producer at the step, the way a call that sends is one in code, `static`,

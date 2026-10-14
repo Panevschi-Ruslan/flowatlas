@@ -10,6 +10,7 @@ import {
   queueName,
   readText,
   stateMachineName,
+  streamName,
   tableName,
   topicName,
   type ParameterReader,
@@ -76,6 +77,8 @@ export type TaskTarget =
       readonly targets: readonly ChannelTarget[];
     }
   | { readonly kind: 'table'; readonly op: DbOp; readonly tables: readonly Reading[] }
+  /** Records put on a Kinesis stream, by its name or its ARN (P55). */
+  | { readonly kind: 'records'; readonly streams: readonly Reading[] }
   /** A call on a service that names nothing this tool joins: the step is the whole of it. */
   | { readonly kind: 'service' }
   | { readonly kind: 'activity'; readonly name: Reading }
@@ -228,7 +231,10 @@ const tablesOf = (parameters: ParameterReader): Reading[] => {
   if (Array.isArray(items)) {
     return items.flatMap((item) =>
       typeof item === 'object' && item !== null
-        ? Object.values(item as Record<string, unknown>).map((operation) => parameters.read('TableName', operation))
+        ? Object.entries(item as Record<string, unknown>)
+            // A condition checked changes nothing: its table is not written (P55).
+            .filter(([kind]) => kind !== 'ConditionCheck')
+            .map(([, operation]) => parameters.read('TableName', operation))
         : [],
     );
   }
@@ -244,11 +250,22 @@ const tables: TaskClassifier = {
   },
 };
 
+/** Putting records on a Kinesis stream: the SDK integration only, `StreamName` or `StreamARN`. */
+const records: TaskClassifier = {
+  services: ['kinesis'],
+  classify: (call, parameters) => {
+    if (!actionIs('putRecord', 'putRecords')(call)) return undefined;
+    const byName = parameters.read('StreamName');
+    const reading = byName.read === false && byName.cause === 'absent' ? parameters.read('StreamARN') : byName;
+    return { kind: 'records', streams: [nameIn(reading, streamName)] };
+  },
+};
+
 /**
  * Every classifier, in no particular order: each answers for its own services
  * and no two answer for the same one.
  */
-export const TASK_CLASSIFIERS: readonly TaskClassifier[] = [functions, workflows, ...sends, events, tables];
+export const TASK_CLASSIFIERS: readonly TaskClassifier[] = [functions, workflows, ...sends, events, tables, records];
 
 /**
  * The registry: a service's name to the one classifier that reads it.

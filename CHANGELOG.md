@@ -8,6 +8,19 @@ only one of them moved.
 
 ### Added
 
+- **A workflow's write reaches the function a stream runs (P55).** A Step
+  Functions task that writes to a table - `dynamodb:putItem`, `updateItem`,
+  `deleteItem`, and through `aws-sdk:` the batch and transaction writes - is a
+  producer onto `dynamodb/<table>` from that state, kept only where the
+  table's stream is declared, as a function's write is; `aws-sdk:kinesis:putRecord`
+  and `putRecords` land on `kinesis/<stream>`. A table chosen at run time
+  (`TableName.$`, JSONata) is the existing `workflow-target-dynamic` row. A
+  batch keyed by a bare word, `RequestItems: { orders: [...] }`, or by a
+  shorthand property, is read as the table that word names. A transaction's
+  `ConditionCheck` names no written table and no longer reads as an address
+  nobody could read, in code or in a definition; a batch or a transaction
+  writes no single message, so it is no `payload-type-unknown` row
+  (`fixtures/lambda-terraform-table-stream`).
 - S3 bucket notifications, and the writes that fire them (P52).
   `aws_s3_bucket_notification` is read from Terraform: each `lambda_function`,
   `queue` and `topic` block is a consumer of `s3/<bucket>` taking its `events`

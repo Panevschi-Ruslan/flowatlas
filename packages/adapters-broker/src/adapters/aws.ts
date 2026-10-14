@@ -16,6 +16,7 @@ import {
   type WritingService,
 } from '@flowatlas/aws';
 import {
+  EVERY_ELEMENT,
   hasAnyDependency,
   manifestsWithin,
   type AddressPart,
@@ -79,6 +80,7 @@ type InputPart =
       readonly or?: readonly (readonly string[])[];
       readonly absent?: string;
       readonly forms?: readonly string[];
+      readonly unwrittenIsNone?: boolean;
     };
 
 /** What an operation that starts something starts, written against its input. */
@@ -223,9 +225,16 @@ const writesTo = ({ changes, operations }: WritingService): Operation[] =>
       method: operation.method,
       address: [
         { literal: CHANGES_PREFIX[changes] },
-        { path, ...(or.length === 0 ? {} : { or }), forms: DEPLOYED_FORMS[changes] },
+        {
+          path,
+          ...(or.length === 0 ? {} : { or }),
+          forms: DEPLOYED_FORMS[changes],
+          // An entry of a list that names none - a transaction's condition check - writes nothing.
+          ...(path.includes(EVERY_ELEMENT) ? { unwrittenIsNone: true } : {}),
+        },
       ],
-      ...(operation.message === undefined ? {} : { payload: operation.message }),
+      // A batch or a transaction writes many items, none of them the message (P55).
+      ...(operation.message === undefined ? { silent: true } : { payload: operation.message }),
       ...(changes === 'table' ? { whereDeclared: true } : {}),
     };
   });
@@ -366,6 +375,7 @@ const addressAt = (parts: readonly InputPart[], locate: InputLocator): AddressPa
           at: [part.path, ...(part.or ?? [])].map(locate),
           ...(part.absent === undefined ? {} : { absent: part.absent }),
           ...(part.forms === undefined ? {} : { forms: part.forms }),
+          ...(part.unwrittenIsNone === true ? { unwrittenIsNone: true } : {}),
         },
   );
 

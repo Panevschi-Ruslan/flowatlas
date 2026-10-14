@@ -192,6 +192,44 @@ describe('emitWorkflow', () => {
     ]);
   });
 
+  it('draws a write to a table as a producer onto its stream, kept only where the stream is declared (P55)', () => {
+    const writes = emit({
+      StartAt: 'Lend',
+      States: {
+        Lend: {
+          Type: 'Task',
+          Resource: 'arn:aws:states:::dynamodb:putItem',
+          Parameters: { TableName: 'library-loans', Item: { loanId: { 'S.$': '$.loanId' } } },
+          Next: 'Look',
+        },
+        Look: { Type: 'Task', Resource: 'arn:aws:states:::dynamodb:getItem', Parameters: { TableName: 'library-loans' }, Next: 'Scan' },
+        Scan: {
+          Type: 'Task',
+          Resource: 'arn:aws:states:::aws-sdk:kinesis:putRecord',
+          Parameters: { StreamName: 'library-scans', 'Data.$': '$.loanId' },
+          Next: 'Elsewhere',
+        },
+        Elsewhere: { Type: 'Task', Resource: 'arn:aws:states:::aws-sdk:kinesis:putRecord', Parameters: { 'StreamName.$': '$.stream' }, End: true },
+      },
+    });
+    const producerOf = (state: string) =>
+      writes.edges.find((each) => each.from === stateId(state) && each.to.startsWith('producer:'))?.to;
+    const lend = writes.nodes.find((each) => each.id === producerOf('Lend'));
+    expect(lend?.meta).toEqual(expect.objectContaining({ adapter: 'aws-dynamodb', whereDeclared: true }));
+    expect(writes.edges.find((each) => each.from === lend?.id && each.type === 'emits')).toEqual(
+      expect.objectContaining({ to: 'channel:dynamodb/library-loans', meta: { payload: { Item: { loanId: { 'S.$': '$.loanId' } } } } }),
+    );
+    expect(producerOf('Look')).toBeUndefined();
+    const scan = writes.nodes.find((each) => each.id === producerOf('Scan'));
+    expect(scan?.meta).toEqual(expect.objectContaining({ adapter: 'aws-kinesis' }));
+    expect(scan?.meta?.['whereDeclared']).toBeUndefined();
+    expect(writes.edges.some((each) => each.from === scan?.id && each.to === 'channel:kinesis/library-scans')).toBe(true);
+    expect(producerOf('Elsewhere')).toBeUndefined();
+    expect(writes.rows).toEqual([
+      expect.objectContaining({ reason: 'workflow-target-dynamic', symbol: stateId('Elsewhere'), meta: expect.objectContaining({ field: 'StreamName' }) }),
+    ]);
+  });
+
   it('joins a placeholder once it is given what the placeholder stands for', () => {
     const filled = emit(HOLDS, {
       resolve: (name) => (name === 'PolicyFunctionArn' ? 'arn:aws:lambda:eu-west-1:123456789012:function:hold-policy' : undefined),

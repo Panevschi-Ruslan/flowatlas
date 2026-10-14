@@ -52,7 +52,7 @@ export declare function getSignedUrl(client: unknown, command: unknown, options?
 export declare class PutItemCommand { constructor(input: { TableName?: string; Item?: object }); }
 export declare class GetItemCommand { constructor(input: { TableName?: string; Key?: object }); }
 export declare class BatchWriteItemCommand { constructor(input: { RequestItems: Record<string, object[]> }); }
-export declare class TransactWriteItemsCommand { constructor(input: { TransactItems: { Put?: { TableName: string }; Update?: { TableName: string }; Delete?: { TableName: string } }[] }); }
+export declare class TransactWriteItemsCommand { constructor(input: { TransactItems: { ConditionCheck?: { TableName: string }; Put?: { TableName: string }; Update?: { TableName: string }; Delete?: { TableName: string } }[] }); }
 export declare class DynamoDBClient { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
   '@aws-sdk/lib-dynamodb': `
 export declare class PutCommand { constructor(input: { TableName?: string; Item?: object }); }
@@ -575,6 +575,26 @@ const CARTS = 'shop-carts';
 new DynamoDBClient({}).send(new BatchWriteItemCommand({ RequestItems: { 'shop-orders': [], [CARTS]: [] } }));`,
     );
     expect(readCall(file, 'send')?.names).toEqual([changesChannel('table', 'shop-orders'), changesChannel('table', 'shop-carts')]);
+  });
+
+  it('reads a key written as a bare word or a shorthand property as the table it names (P55)', () => {
+    const file = project(
+      true,
+      `import { BatchWriteItemCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+const audit: object[] = [];
+new DynamoDBClient({}).send(new BatchWriteItemCommand({ RequestItems: { orders: [], audit } }));`,
+    );
+    expect(readCall(file, 'send')?.names).toEqual([changesChannel('table', 'orders'), changesChannel('table', 'audit')]);
+  });
+
+  it('reads no table and no row for a condition a transaction checks (P55)', () => {
+    const file = project(
+      true,
+      `import { DynamoDBClient, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb';
+new DynamoDBClient({}).send(new TransactWriteItemsCommand({ TransactItems: [{ ConditionCheck: { TableName: 'shop-carts' } }, { Put: { TableName: 'shop-orders' } }] }));`,
+    );
+    expect(readCall(file, 'send')).toMatchObject({ names: [changesChannel('table', 'shop-orders')] });
+    expect(readCall(file, 'send')?.payloads).toHaveLength(1);
   });
 
   it('reads a transaction by the table each entry names under the kind of write it is', () => {

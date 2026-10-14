@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-14T10:38:20.816Z",
+  "generatedAt": "2026-10-14T17:36:30.772Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -44,6 +44,42 @@
     },
     {
       "edge": {
+        "from": "producer:shop#infra/main.tf:193:7",
+        "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#infra/main.tf:193:7|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "shop#infra/main.tf:shop-fulfil-order/MarkShipped declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#infra/main.tf:205:7",
+        "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#infra/main.tf:205:7|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "shop#infra/main.tf:shop-fulfil-order/NoteShipped declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#infra/main.tf:245:7",
+        "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#infra/main.tf:245:7|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "shop#infra/main.tf:shop-fulfil-order/CountShipment declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
         "from": "producer:shop#src/clicks/track-click.ts:9:9",
         "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
         "type": "emits"
@@ -56,15 +92,51 @@
     },
     {
       "edge": {
-        "from": "producer:shop#src/orders/place-order.ts:21:9",
+        "from": "producer:shop#src/orders/place-order.ts:31:9",
         "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
         "type": "emits"
       },
-      "edgeKey": "producer:shop#src/orders/place-order.ts:21:9|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
+      "edgeKey": "producer:shop#src/orders/place-order.ts:31:9|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
       "direction": "payload",
       "reason": "delivery-target-unread",
       "message": "nothing consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed delivers to is code this project reads",
       "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/place-order.ts:39:9",
+        "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/place-order.ts:39:9|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/orders/place-order.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/place-order.ts:41:9",
+        "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/place-order.ts:41:9|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/orders/place-order.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/place-order.ts:42:9",
+        "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/place-order.ts:42:9|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/orders/place-order.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     }
   ],
   "summary": {
@@ -72,7 +144,7 @@
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 5,
+    "unchecked": 11,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

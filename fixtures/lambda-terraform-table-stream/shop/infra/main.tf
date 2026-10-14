@@ -28,6 +28,21 @@ resource "aws_dynamodb_table" "carts" {
   }
 }
 
+# The audit table, named so a batch can key it with a bare word, with a stream
+# that also runs `order-changed`.
+resource "aws_dynamodb_table" "audit" {
+  name             = "audit"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "orderId"
+  stream_enabled   = true
+  stream_view_type = "NEW_IMAGE"
+
+  attribute {
+    name = "orderId"
+    type = "S"
+  }
+}
+
 resource "aws_kinesis_stream" "clicks" {
   name        = "shop-clicks"
   shard_count = 1
@@ -109,6 +124,12 @@ resource "aws_lambda_event_source_mapping" "order_changed" {
   }
 }
 
+resource "aws_lambda_event_source_mapping" "audit" {
+  event_source_arn  = aws_dynamodb_table.audit.stream_arn
+  function_name     = aws_lambda_function.order_changed.arn
+  starting_position = "LATEST"
+}
+
 resource "aws_lambda_event_source_mapping" "count_clicks" {
   event_source_arn  = aws_kinesis_stream.clicks.arn
   function_name     = aws_lambda_function.count_clicks.arn
@@ -144,4 +165,93 @@ resource "aws_apigatewayv2_route" "track_click" {
   api_id    = aws_apigatewayv2_api.shop.id
   route_key = "POST /clicks"
   target    = "integrations/${aws_apigatewayv2_integration.track_click.id}"
+}
+
+# A workflow that writes to the tables and the stream itself (P55): its writes
+# reach the functions the streams run, as a function's would.
+resource "aws_iam_role" "workflow" {
+  name = "shop-workflow"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Action    = "sts:AssumeRole"
+      Principal = { Service = "states.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_sfn_state_machine" "fulfil_order" {
+  name     = "shop-fulfil-order"
+  role_arn = aws_iam_role.workflow.arn
+
+  definition = jsonencode({
+    Comment = "Marks an order shipped, notes it, and counts it as a click."
+    StartAt = "MarkShipped"
+    States = {
+      MarkShipped = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::dynamodb:updateItem"
+        Parameters = {
+          TableName                 = aws_dynamodb_table.orders.name
+          Key                       = { orderId = { "S.$" = "$.orderId" } }
+          UpdateExpression          = "SET #status = :shipped"
+          ExpressionAttributeNames  = { "#status" = "status" }
+          ExpressionAttributeValues = { ":shipped" = { S = "shipped" } }
+        }
+        Next = "NoteShipped"
+      }
+      NoteShipped = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::aws-sdk:dynamodb:transactWriteItems"
+        Parameters = {
+          TransactItems = [
+            {
+              ConditionCheck = {
+                TableName           = aws_dynamodb_table.carts.name
+                Key                 = { customerId = { "S.$" = "$.customerId" } }
+                ConditionExpression = "attribute_exists(customerId)"
+              }
+            },
+            {
+              Put = {
+                TableName = aws_dynamodb_table.audit.name
+                Item      = { orderId = { "S.$" = "$.orderId" }, what = { S = "shipped" } }
+              }
+            },
+          ]
+        }
+        Next = "ForgetCart"
+      }
+      ForgetCart = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::dynamodb:deleteItem"
+        Parameters = {
+          TableName = aws_dynamodb_table.carts.name
+          Key       = { customerId = { "S.$" = "$.customerId" } }
+        }
+        Next = "ArchiveSomewhere"
+      }
+      ArchiveSomewhere = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::dynamodb:putItem"
+        Parameters = {
+          "TableName.$" = "$.archiveTable"
+          Item          = { orderId = { "S.$" = "$.orderId" } }
+        }
+        Next = "CountShipment"
+      }
+      CountShipment = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::aws-sdk:kinesis:putRecord"
+        Parameters = {
+          StreamName   = aws_kinesis_stream.clicks.name
+          PartitionKey = "shipments"
+          "Data.$"     = "$.orderId"
+        }
+        End = true
+      }
+    }
+  })
 }

@@ -144,7 +144,17 @@ export type NameLocator =
  * nothing is written there, which a description may fill with what the library
  * does when it is left out.
  */
-export type LocatedSlot = { readonly expression: TsNode; readonly reached: boolean } | undefined;
+export type LocatedSlot =
+  | {
+      readonly expression: TsNode;
+      readonly reached: boolean;
+      /**
+       * A key written as a bare word, `{ orders: [...] }` or `{ orders }`: it
+       * names itself, as text, and is no expression of anything (P55).
+       */
+      readonly key?: string;
+    }
+  | undefined;
 
 /**
  * Whether a method name is one of the library's own operations.
@@ -507,14 +517,19 @@ const writtenProperty = (record: ObjectLiteralExpression, key: string): LocatedS
 
 /**
  * A key of a record as an expression: what a computed key computes, or the
- * key itself where it is a string. A key written as a bare word names itself
- * and is no expression of anything, and a spread is whatever it spreads: both
- * stop where they are.
+ * key itself where it is a string. A key written as a bare word - or a
+ * shorthand property, whose key is the name it copies - names itself, and is
+ * handed over as that text (P55). A spread is whatever it spreads, and stops.
  */
 const writtenKey = (property: TsNode): LocatedSlot => {
+  if (Node.isShorthandPropertyAssignment(property)) {
+    const name = property.getNameNode();
+    return { expression: name, reached: true, key: name.getText() };
+  }
   if (!Node.isPropertyAssignment(property)) return stopped(property);
   const name = property.getNameNode();
   if (Node.isComputedPropertyName(name)) return { expression: name.getExpression(), reached: true };
+  if (Node.isIdentifier(name)) return { expression: name, reached: true, key: name.getText() };
   return Node.isStringLiteral(name) || Node.isNoSubstitutionTemplateLiteral(name) ? { expression: name, reached: true } : stopped(name);
 };
 

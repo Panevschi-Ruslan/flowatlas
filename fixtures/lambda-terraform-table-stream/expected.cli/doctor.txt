@@ -1,16 +1,19 @@
 unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
-unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
+unresolved: 0 to act on over 2 rows, and 2 places static reading cannot see, folded into 2
   stream-filter-not-matched (info): 1 row
     Every write onto the stream is drawn as reaching the function; the filter decides at run time which of them do.
-      shop/infra/main.tf:100  aws_lambda_event_source_mapping.order_changed hands dynamodb/shop-orders on through a filter, which is recorded on its edge and not matched against what is written
+      shop/infra/main.tf:115  aws_lambda_event_source_mapping.order_changed hands dynamodb/shop-orders on through a filter, which is recorded on its edge and not matched against what is written
+  workflow-target-dynamic (info): 1 row
+    The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.
+      shop/infra/main.tf:236  ArchiveSomewhere writes to a table chosen when the state runs: TableName is $.archiveTable
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
 
 desync: none
 
-contracts: no errors, 0 excused, 5 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 11 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 0 now, +0)
   no baseline at <root>/fixtures/lambda-terraform-table-stream/flowatlas.baseline.json; run flowatlas doctor --accept to write one

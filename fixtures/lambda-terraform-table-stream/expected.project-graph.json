@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T10:38:20.535Z",
+  "builtAt": "2026-10-14T17:39:38.522Z",
   "services": [
     {
       "name": "shop",
@@ -17,6 +17,24 @@
   ],
   "nodes": [
     {
+      "id": "channel:dynamodb/audit",
+      "type": "channel",
+      "label": "dynamodb/audit",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 33,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb",
+          "aws-dynamodb-document"
+        ],
+        "declaredBy": "aws_dynamodb_table.audit",
+        "producers": 3,
+        "consumers": 1
+      }
+    },
+    {
       "id": "channel:dynamodb/shop-orders",
       "type": "channel",
       "label": "dynamodb/shop-orders",
@@ -30,7 +48,7 @@
           "aws-dynamodb-document"
         ],
         "declaredBy": "aws_dynamodb_table.orders",
-        "producers": 4,
+        "producers": 6,
         "consumers": 1
       }
     },
@@ -40,14 +58,14 @@
       "label": "kinesis/shop-clicks",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 31,
+      "line": 46,
       "meta": {
         "channelKind": "topic",
         "adapters": [
           "aws-kinesis"
         ],
         "declaredBy": "aws_kinesis_stream.clicks",
-        "producers": 1,
+        "producers": 2,
         "consumers": 1
       }
     },
@@ -69,7 +87,7 @@
       "label": "CARTS_TABLE",
       "repo": "shop",
       "file": "src/orders/place-order.ts",
-      "line": 20,
+      "line": 30,
       "meta": {
         "key": "CARTS_TABLE",
         "source": "process.env"
@@ -81,10 +99,26 @@
       "label": "ORDERS_TABLE",
       "repo": "shop",
       "file": "src/orders/place-order.ts",
-      "line": 21,
+      "line": 31,
       "meta": {
         "key": "ORDERS_TABLE",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.audit",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 127,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.audit",
+        "deployedBy": "terraform"
       }
     },
     {
@@ -93,7 +127,7 @@
       "label": "mapping aws_lambda_event_source_mapping.count_clicks",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 112,
+      "line": 133,
       "kind": "record",
       "meta": {
         "kind": "record",
@@ -109,7 +143,7 @@
       "label": "mapping aws_lambda_event_source_mapping.order_changed",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 100,
+      "line": 115,
       "kind": "write",
       "meta": {
         "kind": "write",
@@ -125,6 +159,72 @@
         "notMatchedOn": [
           "filter"
         ]
+      }
+    },
+    {
+      "id": "db_query:shop#infra/main.tf:193:7",
+      "type": "db_query",
+      "label": "write shop-orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 193,
+      "meta": {
+        "op": "write",
+        "table": "shop-orders",
+        "tables": [
+          "shop-orders"
+        ],
+        "service": "dynamodb",
+        "action": "updateItem"
+      }
+    },
+    {
+      "id": "db_query:shop#infra/main.tf:205:7",
+      "type": "db_query",
+      "label": "write audit",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 205,
+      "meta": {
+        "op": "write",
+        "table": "audit",
+        "tables": [
+          "audit"
+        ],
+        "service": "dynamodb",
+        "action": "transactWriteItems"
+      }
+    },
+    {
+      "id": "db_query:shop#infra/main.tf:227:7",
+      "type": "db_query",
+      "label": "delete shop-carts",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 227,
+      "meta": {
+        "op": "delete",
+        "table": "shop-carts",
+        "tables": [
+          "shop-carts"
+        ],
+        "service": "dynamodb",
+        "action": "deleteItem"
+      }
+    },
+    {
+      "id": "db_query:shop#infra/main.tf:236:7",
+      "type": "db_query",
+      "label": "write ?",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 236,
+      "meta": {
+        "op": "write",
+        "table": null,
+        "tables": [],
+        "service": "dynamodb",
+        "action": "putItem"
       }
     },
     {
@@ -220,12 +320,31 @@
       }
     },
     {
+      "id": "entry:shop:event:dynamodb/audit",
+      "type": "entry",
+      "label": "event dynamodb/audit",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 127,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/audit",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.audit",
+        "deployedBy": "terraform",
+        "changesOf": "table",
+        "name": "audit",
+        "function": "shop-order-changed",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
       "id": "entry:shop:event:dynamodb/shop-orders",
       "type": "entry",
       "label": "event dynamodb/shop-orders",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 100,
+      "line": 115,
       "kind": "event",
       "meta": {
         "key": "dynamodb/shop-orders",
@@ -244,7 +363,7 @@
       "label": "event kinesis/shop-clicks",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 112,
+      "line": 133,
       "kind": "event",
       "meta": {
         "key": "kinesis/shop-clicks",
@@ -263,7 +382,7 @@
       "label": "POST /clicks",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 143,
+      "line": 164,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -282,7 +401,7 @@
       "label": "POST /orders",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 130,
+      "line": 151,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -301,7 +420,7 @@
       "label": "shop-count-clicks",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 89,
+      "line": 104,
       "kind": "invoke",
       "meta": {
         "key": "shop-count-clicks",
@@ -325,7 +444,7 @@
       "label": "shop-order-changed",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 71,
+      "line": 86,
       "kind": "invoke",
       "meta": {
         "key": "shop-order-changed",
@@ -349,7 +468,7 @@
       "label": "shop-place-order",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 55,
+      "line": 70,
       "kind": "invoke",
       "meta": {
         "key": "shop-place-order",
@@ -384,7 +503,7 @@
       "label": "shop-track-click",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 80,
+      "line": 95,
       "kind": "invoke",
       "meta": {
         "key": "shop-track-click",
@@ -400,6 +519,32 @@
           "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
         },
         "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:workflow:shop-fulfil-order",
+      "type": "entry",
+      "label": "workflow shop-fulfil-order",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 189,
+      "kind": "workflow",
+      "meta": {
+        "key": "shop-fulfil-order",
+        "name": "shop-fulfil-order",
+        "nameFrom": "deployment",
+        "startAt": "MarkShipped",
+        "states": 5,
+        "queryLanguage": "JSONPath",
+        "comment": "Marks an order shipped, notes it, and counts it as a click.",
+        "reads": {
+          "": "{orderId:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.fulfil_order",
+        "definitionFrom": "jsonencode",
+        "declaredIn": "infra/main.tf:185"
       }
     },
     {
@@ -466,6 +611,56 @@
       }
     },
     {
+      "id": "producer:shop#infra/main.tf:193:7",
+      "type": "producer",
+      "label": "write dynamodb/shop-orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 193,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "definition",
+        "service": "dynamodb",
+        "action": "updateItem",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:shop#infra/main.tf:205:7",
+      "type": "producer",
+      "label": "write dynamodb/audit",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 205,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "definition",
+        "service": "dynamodb",
+        "action": "transactWriteItems",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:shop#infra/main.tf:245:7",
+      "type": "producer",
+      "label": "record kinesis/shop-clicks",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 245,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "channelVia": "definition",
+        "service": "kinesis",
+        "action": "putRecord"
+      }
+    },
+    {
       "id": "producer:shop#src/clicks/track-click.ts:9:9",
       "type": "producer",
       "label": "record kinesis/shop-clicks",
@@ -481,12 +676,12 @@
       }
     },
     {
-      "id": "producer:shop#src/orders/place-order.ts:21:9",
+      "id": "producer:shop#src/orders/place-order.ts:31:9",
       "type": "producer",
       "label": "write dynamodb/shop-orders",
       "repo": "shop",
       "file": "src/orders/place-order.ts",
-      "line": 21,
+      "line": 31,
       "kind": "write",
       "meta": {
         "kind": "write",
@@ -505,6 +700,69 @@
               }
             ],
             "payload": "{cart?:object;orderId:string;customerId:string;items:string[];status:'cancelled'|'placed'}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/place-order.ts:39:9",
+      "type": "producer",
+      "label": "write dynamodb/audit",
+      "repo": "shop",
+      "file": "src/orders/place-order.ts",
+      "line": 39,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb-document",
+        "channelVia": "literal",
+        "method": "send",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/place-order.ts:41:9",
+      "type": "producer",
+      "label": "write dynamodb/audit",
+      "repo": "shop",
+      "file": "src/orders/place-order.ts",
+      "line": 41,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb-document",
+        "channelVia": "literal",
+        "method": "send",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/place-order.ts:42:9",
+      "type": "producer",
+      "label": "write dynamodb/shop-orders",
+      "repo": "shop",
+      "file": "src/orders/place-order.ts",
+      "line": 42,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb-document",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "dynamodb",
+              {
+                "environment": "ORDERS_TABLE",
+                "forms": [
+                  "^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$"
+                ]
+              }
+            ]
           }
         ],
         "channelKind": "topic",
@@ -547,7 +805,7 @@
           "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {
-            "@aws-sdk/lib-dynamodb": 3,
+            "@aws-sdk/lib-dynamodb": 6,
             "@aws-sdk/client-kinesis": 1
           }
         },
@@ -593,6 +851,187 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
+      "type": "function",
+      "label": "ArchiveSomewhere [Task dynamodb:putItem]",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 236,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "putItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": []
+        },
+        "parameters": {
+          "TableName.$": "$.archiveTable",
+          "Item": {
+            "orderId": {
+              "S.$": "$.orderId"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "shop#infra/main.tf:shop-fulfil-order/CountShipment",
+      "type": "function",
+      "label": "CountShipment [Task kinesis:putRecord]",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 245,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "records",
+          "service": "kinesis",
+          "action": "putRecord",
+          "pattern": "request-response",
+          "sdk": true,
+          "streams": [
+            "shop-clicks"
+          ]
+        },
+        "parameters": {
+          "StreamName": "shop-clicks",
+          "PartitionKey": "shipments",
+          "Data.$": "$.orderId"
+        }
+      }
+    },
+    {
+      "id": "shop#infra/main.tf:shop-fulfil-order/ForgetCart",
+      "type": "function",
+      "label": "ForgetCart [Task dynamodb:deleteItem]",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 227,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "deleteItem",
+          "pattern": "request-response",
+          "op": "delete",
+          "tables": [
+            "shop-carts"
+          ]
+        },
+        "parameters": {
+          "TableName": "shop-carts",
+          "Key": {
+            "customerId": {
+              "S.$": "$.customerId"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "shop#infra/main.tf:shop-fulfil-order/MarkShipped",
+      "type": "function",
+      "label": "MarkShipped [Task dynamodb:updateItem]",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 193,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "updateItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": [
+            "shop-orders"
+          ]
+        },
+        "parameters": {
+          "TableName": "shop-orders",
+          "Key": {
+            "orderId": {
+              "S.$": "$.orderId"
+            }
+          },
+          "UpdateExpression": "SET #status = :shipped",
+          "ExpressionAttributeNames": {
+            "#status": "status"
+          },
+          "ExpressionAttributeValues": {
+            ":shipped": {
+              "S": "shipped"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "shop#infra/main.tf:shop-fulfil-order/NoteShipped",
+      "type": "function",
+      "label": "NoteShipped [Task dynamodb:transactWriteItems]",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 205,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "transactWriteItems",
+          "pattern": "request-response",
+          "sdk": true,
+          "op": "write",
+          "tables": [
+            "audit"
+          ]
+        },
+        "parameters": {
+          "TransactItems": [
+            {
+              "ConditionCheck": {
+                "TableName": "shop-carts",
+                "Key": {
+                  "customerId": {
+                    "S.$": "$.customerId"
+                  }
+                },
+                "ConditionExpression": "attribute_exists(customerId)"
+              }
+            },
+            {
+              "Put": {
+                "TableName": "audit",
+                "Item": {
+                  "orderId": {
+                    "S.$": "$.orderId"
+                  },
+                  "what": {
+                    "S": "shipped"
+                  }
+                }
+              }
+            }
+          ]
         }
       }
     },
@@ -659,7 +1098,7 @@
       "label": "handler",
       "repo": "shop",
       "file": "src/orders/place-order.ts",
-      "line": 17,
+      "line": 27,
       "meta": {
         "signature": {
           "params": [
@@ -671,16 +1110,45 @@
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
         }
       }
+    },
+    {
+      "id": "table:shop#audit",
+      "type": "table",
+      "label": "audit",
+      "repo": "shop"
+    },
+    {
+      "id": "table:shop#shop-carts",
+      "type": "table",
+      "label": "shop-carts",
+      "repo": "shop"
+    },
+    {
+      "id": "table:shop#shop-orders",
+      "type": "table",
+      "label": "shop-orders",
+      "repo": "shop"
     }
   ],
   "edges": [
+    {
+      "from": "channel:dynamodb/audit",
+      "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 127,
+      "meta": {
+        "by": "mapping"
+      }
+    },
     {
       "from": "channel:dynamodb/shop-orders",
       "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.order_changed",
       "type": "consumes",
       "confidence": "static",
       "file": "infra/main.tf",
-      "line": 100,
+      "line": 115,
       "meta": {
         "by": "mapping",
         "notMatchedOn": [
@@ -694,9 +1162,20 @@
       "type": "consumes",
       "confidence": "static",
       "file": "infra/main.tf",
-      "line": 112,
+      "line": 133,
       "meta": {
         "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "to": "entry:shop:event:dynamodb/audit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 127,
+      "meta": {
+        "via": "deployment"
       }
     },
     {
@@ -705,7 +1184,7 @@
       "type": "triggers",
       "confidence": "static",
       "file": "infra/main.tf",
-      "line": 112,
+      "line": 133,
       "meta": {
         "via": "deployment"
       }
@@ -716,10 +1195,34 @@
       "type": "triggers",
       "confidence": "static",
       "file": "infra/main.tf",
-      "line": 100,
+      "line": 115,
       "meta": {
         "via": "deployment"
       }
+    },
+    {
+      "from": "db_query:shop#infra/main.tf:193:7",
+      "to": "table:shop#shop-orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 193
+    },
+    {
+      "from": "db_query:shop#infra/main.tf:205:7",
+      "to": "table:shop#audit",
+      "type": "queries",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 205
+    },
+    {
+      "from": "db_query:shop#infra/main.tf:227:7",
+      "to": "table:shop#shop-carts",
+      "type": "queries",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 227
     },
     {
       "from": "entry:returns:http:POST:/orders/:param/cancel",
@@ -765,6 +1268,14 @@
       "line": 13
     },
     {
+      "from": "entry:shop:event:dynamodb/audit",
+      "to": "shop#src/orders/order-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/order-changed.ts",
+      "line": 6
+    },
+    {
       "from": "entry:shop:event:dynamodb/shop-orders",
       "to": "shop#src/orders/order-changed.ts:handler",
       "type": "handles",
@@ -802,7 +1313,7 @@
       "confidence": "static",
       "returns": "type:shop#Order",
       "file": "src/orders/place-order.ts",
-      "line": 17,
+      "line": 27,
       "meta": {
         "requestRead": true,
         "body": "{customerId:string;items:string[]}",
@@ -833,7 +1344,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/place-order.ts",
-      "line": 17
+      "line": 27
     },
     {
       "from": "entry:shop:invoke:shop-track-click",
@@ -842,6 +1353,14 @@
       "confidence": "static",
       "file": "src/clicks/track-click.ts",
       "line": 7
+    },
+    {
+      "from": "entry:shop:workflow:shop-fulfil-order",
+      "to": "shop#infra/main.tf:shop-fulfil-order/MarkShipped",
+      "type": "handles",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 191
     },
     {
       "from": "producer:returns#src/returns/cancel-order.ts:13:9",
@@ -883,6 +1402,39 @@
       "line": 22
     },
     {
+      "from": "producer:shop#infra/main.tf:193:7",
+      "to": "channel:dynamodb/shop-orders",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 193,
+      "meta": {
+        "payload": {
+          "Key": {
+            "orderId": {
+              "S.$": "$.orderId"
+            }
+          }
+        }
+      }
+    },
+    {
+      "from": "producer:shop#infra/main.tf:205:7",
+      "to": "channel:dynamodb/audit",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 205
+    },
+    {
+      "from": "producer:shop#infra/main.tf:245:7",
+      "to": "channel:kinesis/shop-clicks",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 245
+    },
+    {
       "from": "producer:shop#src/clicks/track-click.ts:9:9",
       "to": "channel:kinesis/shop-clicks",
       "type": "emits",
@@ -894,15 +1446,48 @@
       "line": 9
     },
     {
-      "from": "producer:shop#src/orders/place-order.ts:21:9",
+      "from": "producer:shop#src/orders/place-order.ts:31:9",
       "to": "channel:dynamodb/shop-orders",
       "type": "emits",
       "confidence": "static",
       "file": "src/orders/place-order.ts",
-      "line": 21,
+      "line": 31,
       "params": [
         "{cart?:object;orderId:string;customerId:string;items:string[];status:'cancelled'|'placed'}"
       ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_TABLE"
+        ],
+        "functions": [
+          "shop-place-order"
+        ]
+      }
+    },
+    {
+      "from": "producer:shop#src/orders/place-order.ts:39:9",
+      "to": "channel:dynamodb/audit",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 39
+    },
+    {
+      "from": "producer:shop#src/orders/place-order.ts:41:9",
+      "to": "channel:dynamodb/audit",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 41
+    },
+    {
+      "from": "producer:shop#src/orders/place-order.ts:42:9",
+      "to": "channel:dynamodb/shop-orders",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 42,
       "meta": {
         "via": "environment",
         "variables": [
@@ -955,6 +1540,126 @@
       "line": 22
     },
     {
+      "from": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
+      "to": "db_query:shop#infra/main.tf:236:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 236
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
+      "to": "shop#infra/main.tf:shop-fulfil-order/CountShipment",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 243,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/CountShipment",
+      "to": "producer:shop#infra/main.tf:245:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 245
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/ForgetCart",
+      "to": "db_query:shop#infra/main.tf:227:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 227
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/ForgetCart",
+      "to": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 234,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/MarkShipped",
+      "to": "db_query:shop#infra/main.tf:193:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 193
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/MarkShipped",
+      "to": "producer:shop#infra/main.tf:193:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 193
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/MarkShipped",
+      "to": "shop#infra/main.tf:shop-fulfil-order/NoteShipped",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 203,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/NoteShipped",
+      "to": "db_query:shop#infra/main.tf:205:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 205
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/NoteShipped",
+      "to": "producer:shop#infra/main.tf:205:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 205
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/NoteShipped",
+      "to": "shop#infra/main.tf:shop-fulfil-order/ForgetCart",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 225,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
       "from": "shop#src/clicks/track-click.ts:handler",
       "to": "producer:shop#src/clicks/track-click.ts:9:9",
       "type": "calls",
@@ -968,7 +1673,7 @@
       "type": "reads_config",
       "confidence": "static",
       "file": "src/orders/place-order.ts",
-      "line": 20,
+      "line": 30,
       "meta": {
         "setBy": [
           {
@@ -985,7 +1690,7 @@
       "type": "reads_config",
       "confidence": "static",
       "file": "src/orders/place-order.ts",
-      "line": 21,
+      "line": 31,
       "meta": {
         "setBy": [
           {
@@ -998,11 +1703,35 @@
     },
     {
       "from": "shop#src/orders/place-order.ts:handler",
-      "to": "producer:shop#src/orders/place-order.ts:21:9",
+      "to": "producer:shop#src/orders/place-order.ts:31:9",
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/place-order.ts",
-      "line": 21
+      "line": 31
+    },
+    {
+      "from": "shop#src/orders/place-order.ts:handler",
+      "to": "producer:shop#src/orders/place-order.ts:39:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 39
+    },
+    {
+      "from": "shop#src/orders/place-order.ts:handler",
+      "to": "producer:shop#src/orders/place-order.ts:41:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 41
+    },
+    {
+      "from": "shop#src/orders/place-order.ts:handler",
+      "to": "producer:shop#src/orders/place-order.ts:42:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 42
     }
   ],
   "types": {
@@ -1082,13 +1811,28 @@
   "unresolved": [
     {
       "file": "infra/main.tf",
-      "line": 100,
+      "line": 115,
       "reason": "stream-filter-not-matched",
       "level": "info",
       "message": "aws_lambda_event_source_mapping.order_changed hands dynamodb/shop-orders on through a filter, which is recorded on its edge and not matched against what is written",
       "hint": "Every write onto the stream is drawn as reaching the function; the filter decides at run time which of them do.",
       "symbol": "entry:shop:event:dynamodb/shop-orders",
       "adapter": "aws-lambda",
+      "service": "shop"
+    },
+    {
+      "file": "infra/main.tf",
+      "line": 236,
+      "reason": "workflow-target-dynamic",
+      "level": "info",
+      "message": "ArchiveSomewhere writes to a table chosen when the state runs: TableName is $.archiveTable",
+      "hint": "The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.",
+      "symbol": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
+      "adapter": "aws-lambda",
+      "meta": {
+        "field": "TableName",
+        "written": "$.archiveTable"
+      },
       "service": "shop"
     }
   ]

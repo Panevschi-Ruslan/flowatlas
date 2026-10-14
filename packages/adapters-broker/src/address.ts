@@ -154,7 +154,9 @@ const readPart = (
       ? { unresolved: 'channel-dynamic', text: fallback }
       : { name: part.absent, names: [part.absent], via: 'literal' };
   }
-  const resolutions = written.map((slot) => resolveChannelName(slot.expression, config));
+  const resolutions = written.map((slot): ChannelResolution =>
+    slot.key === undefined ? resolveChannelName(slot.expression, config) : { name: slot.key, names: [slot.key], via: 'literal' },
+  );
   const found = resolutions.find(isResolved) ?? (resolutions[0] as ChannelResolution);
   return isResolved(found) ? withForms(found, part.forms) : found;
 };
@@ -323,7 +325,15 @@ export const readAddress = (
   );
   const payloads = (payload ?? []).map((locator) => locatedSlots(site, locator, context));
   const count = Math.max(1, ...located.flat().map((slots) => slots.length));
-  return Array.from({ length: count }, (_, index) => {
+  // An element a part says is none when nothing is written for it is left out.
+  const none = (index: number): boolean =>
+    parts.some(
+      (part, position) =>
+        !('literal' in part) &&
+        part.unwrittenIsNone === true &&
+        (located[position] ?? []).every((slots) => slotAt(slots, index) === undefined),
+    );
+  return Array.from({ length: count }, (_, index) => index).filter((index) => !none(index)).map((index) => {
     const readings = parts.map((part, position) =>
       readPart(part, located[position] ?? [], index, config, fallback),
     );
