@@ -1,0 +1,26 @@
+unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=1 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 1 to act on over 4 rows, and 3 places static reading cannot see, folded into 3
+  ambiguous-route-api: 1 row
+    Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.
+      kiosk/src/kiosk/status-board.ts:13  2 APIs in branch serve GET /status: library-events-api, library-loans-api
+  route-api-guessed (info): 3 rows
+    Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.
+      kiosk/src/kiosk/status-board.ts:9  GET /status is served by library-events-api, library-loans-api; library-loans-api is taken because the call's base URL is read from LOANS_API_URL
+      kiosk/src/kiosk/status-board.ts:10  GET /status is served by library-events-api, library-loans-api; library-events-api is taken because the call's base URL is read from EVENTS_API_URL
+      kiosk/src/kiosk/status-board.ts:11  GET /health is served by library-public-lb, library-staff-lb; library-staff-lb is taken because the call's base URL is read from STAFF_LB_URL
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: 1:
+  reason               where                               call         target  to do
+  ambiguous-route-api  kiosk src/kiosk/status-board.ts:13  GET /status  branch  Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.
+
+contracts: no errors, 0 excused, 6 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 1 now, +1)
+  no baseline at <root>/fixtures/lambda-terraform-shared-paths/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  ambiguous-route-api: 0 → 1 (+1)
+  new (1):
+    kiosk|src/kiosk/status-board.ts|http_out:kiosk#src/kiosk/status-board.ts:13:24|ambiguous-route-api

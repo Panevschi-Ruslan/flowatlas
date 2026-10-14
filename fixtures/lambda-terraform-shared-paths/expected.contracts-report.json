@@ -1,0 +1,93 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-14T21:17:56.721Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:kiosk#src/kiosk/status-board.ts:10:24",
+        "to": "entry:branch:http:GET:/status@api:library-events-api",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:kiosk#src/kiosk/status-board.ts:10:24|http_calls|entry:branch:http:GET:/status@api:library-events-api",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "kiosk#src/kiosk/status-board.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:kiosk#src/kiosk/status-board.ts:10:24",
+        "to": "entry:branch:http:GET:/status@api:library-events-api",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:kiosk#src/kiosk/status-board.ts:10:24|http_calls|entry:branch:http:GET:/status@api:library-events-api",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "kiosk#src/kiosk/status-board.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:kiosk#src/kiosk/status-board.ts:11:23",
+        "to": "entry:branch:http:GET:/health@api:library-staff-lb",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:kiosk#src/kiosk/status-board.ts:11:23|http_calls|entry:branch:http:GET:/health@api:library-staff-lb",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "kiosk#src/kiosk/status-board.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:kiosk#src/kiosk/status-board.ts:11:23",
+        "to": "entry:branch:http:GET:/health@api:library-staff-lb",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:kiosk#src/kiosk/status-board.ts:11:23|http_calls|entry:branch:http:GET:/health@api:library-staff-lb",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "kiosk#src/kiosk/status-board.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:kiosk#src/kiosk/status-board.ts:9:23",
+        "to": "entry:branch:http:GET:/status@api:library-loans-api",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:kiosk#src/kiosk/status-board.ts:9:23|http_calls|entry:branch:http:GET:/status@api:library-loans-api",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "kiosk#src/kiosk/status-board.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:kiosk#src/kiosk/status-board.ts:9:23",
+        "to": "entry:branch:http:GET:/status@api:library-loans-api",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:kiosk#src/kiosk/status-board.ts:9:23|http_calls|entry:branch:http:GET:/status@api:library-loans-api",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "kiosk#src/kiosk/status-board.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 6,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

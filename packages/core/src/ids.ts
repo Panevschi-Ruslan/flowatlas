@@ -235,6 +235,16 @@ export const makeHttpEntryKey = (method: string, path: string): string =>
   `${required('method', method).toUpperCase()}:${normalizePath(path)}`;
 
 /**
+ * The `key` half of an HTTP entry id for a route that one API, of several in a
+ * deployment serving the same method and path, answers: `GET:/orders@api:billing`.
+ *
+ * Used only where two APIs (or two load balancers) of one deployment serve the
+ * same method and path, so a deployment with one API keeps the plain key.
+ */
+export const makeApiRouteEntryKey = (method: string, path: string, api: string): string =>
+  `${makeHttpEntryKey(method, path)}@api:${required('api', api)}`;
+
+/**
  * The `key` half of a function URL's entry id: `ALL:/*@card-lookup`.
  *
  * A function URL answers every verb and every path, so its method and path are

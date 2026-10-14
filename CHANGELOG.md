@@ -96,6 +96,20 @@ only one of them moved.
   a version named by a variable still counts as named
   (`fixtures/lambda-terraform-bucket-module`).
 
+### Fixed
+
+- **Routes of two APIs at one address stay apart (P59).** Two API Gateway
+  APIs (REST, HTTP or WebSocket) or two load balancers of one deployment
+  serving the same method and path, each in front of its own function, were
+  one entry node. Such a route is now keyed `GET:/status@api:<api>`; a route
+  no other API of the deployment serves keeps its plain key, so existing ids
+  do not move. A request reaching them through a `baseUrlEnv` setting joins
+  the API whose name shares the most words with the setting's
+  (`LOANS_API_URL` → `library-loans-api`), `via: "apiName"`, `heuristic`, with
+  a `route-api-guessed` row at `info`; where the name settles nothing, an
+  `ambiguous-route-api` row names the APIs and nothing is joined
+  (`fixtures/lambda-terraform-shared-paths`).
+
 ## [0.5.1][] - 2026-10-12
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things

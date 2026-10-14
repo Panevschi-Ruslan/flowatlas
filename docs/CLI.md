@@ -1179,7 +1179,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
-| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
+| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key` |
@@ -1300,6 +1300,18 @@ directly or through a module's output) reaches that function's `ALL /*` entry,
 `via: "functionUrl"` with the setting as `meta.variable`. The edge is `static`
 where the path was read and `heuristic` where it was not, since the URL answers
 every path either way (`fixtures/lambda-terraform-destinations`).
+
+**Two APIs at one address are two entries.** Where two APIs (REST, HTTP or
+WebSocket) or two load balancers of one deployment serve the same method and
+path, each route is keyed with its API's name, `GET:/status@api:library-loans-api`;
+a route no other API of the deployment serves keeps its plain key. A stage or a
+base path already sits in the path, so two APIs mapped apart never meet here. A
+request reaching such an address through a `baseUrlEnv` setting is joined to the
+API whose name shares the most words with the setting's, generic words (`api`,
+`url`, `lb`...) aside: `LOANS_API_URL` means `library-loans-api`. That is a
+guess, drawn `heuristic` with `via: "apiName"` and a `route-api-guessed` row at
+`info`; a name that settles nothing (`BRANCH_URL`) joins nothing and is an
+`ambiguous-route-api` row naming the APIs (`fixtures/lambda-terraform-shared-paths`).
 
 **A relative request needs no configuration at all.** `fetch('/api/thing')` names
 no service and is rooted at no key, because it means the server the page came

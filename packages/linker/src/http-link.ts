@@ -7,6 +7,7 @@ import {
   verbsAnswering,
   type RouteResult,
 } from './route-match.js';
+import { chooseByApiName } from './api-choice.js';
 
 /** A reason, a sentence and what to do about it — everything but where it happened. */
 export interface Finding {
@@ -55,7 +56,7 @@ export interface RouteIndex {
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
@@ -83,6 +84,8 @@ interface Details {
     candidates: readonly string[];
     /** The applications answering, when the candidates are not all in one. */
     applications?: readonly string[];
+    /** The APIs answering, when the candidates are one route per API and the setting's name chose none (P59). */
+    apis?: readonly string[];
   };
 }
 
@@ -129,7 +132,8 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
             `Route renamed? Check ${detail.targetService}'s controllers, or annotate the call with @CallsService.`,
         }
       : unreadRouteFinding(detail),
-  ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'route' : 'application'](detail),
+  ambiguous: (detail) =>
+    AMBIGUITY[detail.apis !== undefined ? 'api' : detail.applications === undefined ? 'route' : 'application'](detail),
 };
 
 /**
@@ -145,9 +149,17 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
  * nothing is wrong with the path spends the afternoon on it.
  */
 const AMBIGUITY: Record<
-  'route' | 'application',
+  'route' | 'application' | 'api',
   (detail: Details['ambiguous']) => Finding
 > = {
+  // Two APIs of one deployment serving one address is a defect in nothing
+  // either; which one a caller reaches is the base URL it is given, and the
+  // setting's name did not say (P59).
+  api: ({ targetService, method, path, apis = [] }) => ({
+    reason: 'ambiguous-route-api',
+    message: `${apis.length} APIs in ${targetService} serve ${method} ${path}: ${apis.join(', ')}`,
+    hint: 'Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.',
+  }),
   route: ({ targetService, method, path, candidates }) => ({
     reason: 'ambiguous-route',
     message: `more than one route in ${targetService} answers ${method} ${path}`,
@@ -238,6 +250,24 @@ export const mountAssumedFinding = (
       'and this join is then wrong, so it is weaker than a join read in full.',
   };
 };
+
+/**
+ * What is said beside a join to one of several APIs serving one address,
+ * chosen by the name of the setting the base URL is read from (P59). `info`:
+ * the join is a guess and is drawn as one.
+ */
+export const apiGuessedFinding = (
+  method: string,
+  path: string,
+  setting: string,
+  api: string,
+  apis: readonly string[],
+): Finding => ({
+  reason: 'route-api-guessed',
+  level: 'info',
+  message: `${method} ${path} is served by ${apis.join(', ')}; ${api} is taken because the call's base URL is read from ${setting}`,
+  hint: 'Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.',
+});
 
 /** The finding an outcome carries, or nothing when the call resolved cleanly. */
 export const findingFor = (outcome: CallOutcome): Finding | undefined => {
@@ -389,6 +419,12 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     return { outcome: { kind: 'linked', via: 'baseUrlEnv', ...joined(method, requested, found) }, notes };
   }
   if (found.reason === 'ambiguous') {
+    const candidates = routes.filter((route) => found.candidates.includes(route.id));
+    const choice = chooseByApiName(candidates, env);
+    if (choice.kind === 'one') {
+      notes.push(apiGuessedFinding(method, requested, env, choice.api, choice.apis));
+      return { outcome: { kind: 'linked', via: 'apiName', entry: choice.entry, runnersUp: [] }, notes };
+    }
     return {
       outcome: {
         kind: 'ambiguous',
@@ -397,6 +433,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
         path: requested,
         candidates: found.candidates,
         ...(found.applications === undefined ? {} : { applications: found.applications }),
+        ...(choice.kind === 'tie' ? { apis: choice.apis } : {}),
       },
       notes,
     };

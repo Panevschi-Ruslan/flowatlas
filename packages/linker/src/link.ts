@@ -301,6 +301,8 @@ const mountMeta = (mountAssumed: readonly string[] | undefined): Record<string, 
 const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via'], (call: GraphNode) => Confidence>> = {
   marker: () => 'marker',
   baseUrlEnv: () => 'static',
+  // One API of several at one address, chosen by the setting's name (P59).
+  apiName: () => 'heuristic',
   functionUrl: (call) => {
     const path = call.meta?.['path'];
     return typeof path === 'string' && wasRead(path) ? 'static' : 'heuristic';

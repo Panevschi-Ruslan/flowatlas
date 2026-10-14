@@ -1,4 +1,5 @@
 import {
+  makeApiRouteEntryKey,
   makeEntryId,
   makeHttpEntryKey,
   normalizePath,
@@ -131,7 +132,10 @@ const rootRoutes = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>
     }
     const owner = owners[0] as Published;
     const full = normalizePath(`${owner.path}/${below}`);
-    const id = makeEntryId(entry.repo, 'http', makeHttpEntryKey(method, full));
+    // A route kept apart from another API's at the same address stays apart at its full one (P59).
+    const api = stringOf(entry.meta?.['api']);
+    const keptApart = api !== undefined && entry.id.endsWith(`@api:${api}`);
+    const id = makeEntryId(entry.repo, 'http', keptApart ? makeApiRouteEntryKey(method, full, api) : makeHttpEntryKey(method, full));
     if (nodes.has(id)) {
       findings.push(
         findingAt(entry, {

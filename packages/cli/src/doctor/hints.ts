@@ -663,6 +663,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'More than one route in the target service answers this. Make the path more specific, or annotate the call with @CallsService.',
   'ambiguous-route-application': () =>
     'Two applications inside one service serve this address, and each of them really does answer it. Nothing is wrong with the route: which one a request from outside reaches is decided by how they are deployed, and no source says. The row names both rather than guessing one.',
+  'ambiguous-route-api': () =>
+    'Two APIs or load balancers of one deployment serve this address, each in front of a function of its own, and the name of the setting the call reads its base URL from names neither. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.',
+  'route-api-guessed': () =>
+    'Several APIs or load balancers serve this address; the one whose name shares the most words with the setting the base URL is read from was taken, and the join is marked heuristic. Annotate the call with @CallsService where that is wrong.',
   'route-unguarded': () =>
     'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes.',
   'route-guard-skipped': () =>

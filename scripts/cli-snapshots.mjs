@@ -408,6 +408,7 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.kiosk.tree.txt', 'invoke:library-lending-kiosk'],
     ['flow.return-item.tree.txt', 'invoke:library-lending-return-item'],
   ]),
+  terraformShape('lambda-terraform-shared-paths', [['flow.status-board.tree.txt', 'invoke:library-branch-kiosk-status-board']]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],

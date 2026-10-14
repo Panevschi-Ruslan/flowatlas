@@ -4,6 +4,7 @@ import {
   boundDeclaration,
   hasAnyDependency,
   makeEntryId,
+  makeApiRouteEntryKey,
   makeHttpEntryKey,
   makeInvokeEntryKey,
   makeUnnamedInvokeKey,
@@ -467,6 +468,38 @@ const reportRows = (ctx: ExtractContext, rows: readonly Unresolved[], drawn: Rea
  * repository holds anything it reads: a repository of nothing but Terraform has
  * no manifest at all, and is still where an API's routes are declared.
  */
+type DeployedRoute = Deployment['routes'][number];
+
+/** Whether the reader gave the route a key of its own: a function URL's, which its method and path cannot tell apart. */
+const ownKeyOf = (route: DeployedRoute): string | undefined => {
+  const key = route.meta?.['key'];
+  return typeof key === 'string' && key !== makeHttpEntryKey(route.method, route.path) ? key : undefined;
+};
+
+/**
+ * The method-and-path keys more than one API (or load balancer) of a
+ * deployment serves. Only these are kept apart by their API, so a deployment
+ * with one API, and every route no other API also serves, keeps the id it
+ * always had (P59).
+ */
+export const keysSharedByApis = (routes: readonly DeployedRoute[]): ReadonlySet<string> => {
+  const apis = new Map<string, Set<string>>();
+  for (const route of routes) {
+    if (route.api === undefined || ownKeyOf(route) !== undefined) continue;
+    const key = makeHttpEntryKey(route.method, route.path);
+    apis.set(key, (apis.get(key) ?? new Set()).add(route.api));
+  }
+  return new Set([...apis].filter(([, names]) => names.size > 1).map(([key]) => key));
+};
+
+/** A route's entry key: the reader's own, else its method and path, with its API beside them where another API serves those too. */
+export const keyOfRoute = (route: DeployedRoute, shared: ReadonlySet<string>): string => {
+  const own = ownKeyOf(route);
+  if (own !== undefined) return own;
+  const plain = makeHttpEntryKey(route.method, route.path);
+  return route.api !== undefined && shared.has(plain) ? makeApiRouteEntryKey(route.method, route.path, route.api) : plain;
+};
+
 export const deployedFunctionsAdapter: EntryAdapter = {
   name: DEPLOYED_FUNCTIONS,
   // The platform invokes the function; nothing of an application the extractor
@@ -532,6 +565,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
         });
       });
 
+      const shared = keysSharedByApis(deployment.routes);
       for (const route of deployment.routes) {
         const target = route.target;
         const local = target !== undefined && 'function' in target ? target.function : undefined;
@@ -547,8 +581,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
           kind: 'authorizer',
         }));
         const wrapping = [...guards, ...(reading?.wrapping ?? [])];
-        // The reader's own key where it gives one: a function URL's, which its method and path cannot tell apart.
-        const key = typeof route.meta?.['key'] === 'string' ? route.meta['key'] : makeHttpEntryKey(route.method, route.path);
+        const key = keyOfRoute(route, shared);
         const id = makeEntryId(ctx.repo, 'http', key);
         const declaredAs = route.meta?.['declaredAs'];
         if (typeof declaredAs === 'string') drawn.set(declaredAs, id);

@@ -46,6 +46,7 @@ export {
   makeTableId,
   makeHttpEntryKey,
   makeFunctionUrlEntryKey,
+  makeApiRouteEntryKey,
   makeInvokeEntryKey,
   makeStateId,
   makeSymbolId,

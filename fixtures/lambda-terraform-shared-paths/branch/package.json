@@ -1,0 +1,12 @@
+{
+  "name": "library-branch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A library branch with two HTTP APIs and two load balancers that each answer the same path with a function of their own.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

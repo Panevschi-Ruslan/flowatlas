@@ -1,0 +1,12 @@
+{
+  "name": "library-branch-kiosk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The self-service kiosk of a lending library, calling the branch APIs and load balancers from Lambda functions.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

@@ -1,0 +1,815 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-14T21:17:56.411Z",
+  "services": [
+    {
+      "name": "branch",
+      "repo": "./branch",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "branch#src/health/public-health.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "branch",
+      "file": "src/health/public-health.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "type:@types/aws-lambda#ALBEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#ALBResult"
+        }
+      }
+    },
+    {
+      "id": "branch#src/health/staff-health.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "branch",
+      "file": "src/health/staff-health.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "type:@types/aws-lambda#ALBEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#ALBResult"
+        }
+      }
+    },
+    {
+      "id": "branch#src/status/events-status.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "branch",
+      "file": "src/status/events-status.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "branch#src/status/loans-status.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "branch",
+      "file": "src/status/loans-status.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "config_key:kiosk#BRANCH_URL",
+      "type": "config_key",
+      "label": "BRANCH_URL",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 13,
+      "meta": {
+        "key": "BRANCH_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:kiosk#EVENTS_API_URL",
+      "type": "config_key",
+      "label": "EVENTS_API_URL",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 10,
+      "meta": {
+        "key": "EVENTS_API_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:kiosk#LOANS_API_URL",
+      "type": "config_key",
+      "label": "LOANS_API_URL",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 9,
+      "meta": {
+        "key": "LOANS_API_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:kiosk#STAFF_LB_URL",
+      "type": "config_key",
+      "label": "STAFF_LB_URL",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 11,
+      "meta": {
+        "key": "STAFF_LB_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:branch:http:GET:/health@api:library-public-lb",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "branch",
+      "file": "infra/balancers.tf",
+      "line": 84,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "deployedBy": "terraform",
+        "api": "library-public-lb",
+        "function": "library-branch-public-health",
+        "declaredAs": "aws_lb_listener_rule.public_health",
+        "by": "load-balancer",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:branch:http:GET:/health@api:library-staff-lb",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "branch",
+      "file": "infra/balancers.tf",
+      "line": 32,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "deployedBy": "terraform",
+        "api": "library-staff-lb",
+        "function": "library-branch-staff-health",
+        "declaredAs": "aws_lb_listener_rule.staff_health",
+        "by": "load-balancer",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:branch:http:GET:/status@api:library-events-api",
+      "type": "entry",
+      "label": "GET /status",
+      "repo": "branch",
+      "file": "infra/apis.tf",
+      "line": 32,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "deployedBy": "terraform",
+        "api": "library-events-api",
+        "function": "library-branch-events-status",
+        "declaredAs": "aws_apigatewayv2_route.events_status",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:branch:http:GET:/status@api:library-loans-api",
+      "type": "entry",
+      "label": "GET /status",
+      "repo": "branch",
+      "file": "infra/apis.tf",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "deployedBy": "terraform",
+        "api": "library-loans-api",
+        "function": "library-branch-loans-status",
+        "declaredAs": "aws_apigatewayv2_route.loans_status",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:branch:invoke:library-branch-events-status",
+      "type": "entry",
+      "label": "library-branch-events-status",
+      "repo": "branch",
+      "file": "infra/main.tf",
+      "line": 32,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-branch-events-status",
+        "deployedBy": "terraform",
+        "name": "library-branch-events-status",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.events_status",
+        "handler": "status/events-status.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:branch:invoke:library-branch-loans-status",
+      "type": "entry",
+      "label": "library-branch-loans-status",
+      "repo": "branch",
+      "file": "infra/main.tf",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-branch-loans-status",
+        "deployedBy": "terraform",
+        "name": "library-branch-loans-status",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.loans_status",
+        "handler": "status/loans-status.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:branch:invoke:library-branch-public-health",
+      "type": "entry",
+      "label": "library-branch-public-health",
+      "repo": "branch",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-branch-public-health",
+        "deployedBy": "terraform",
+        "name": "library-branch-public-health",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.public_health",
+        "handler": "health/public-health.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#ALBEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:branch:invoke:library-branch-staff-health",
+      "type": "entry",
+      "label": "library-branch-staff-health",
+      "repo": "branch",
+      "file": "infra/main.tf",
+      "line": 40,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-branch-staff-health",
+        "deployedBy": "terraform",
+        "name": "library-branch-staff-health",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.staff_health",
+        "handler": "health/staff-health.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#ALBEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:kiosk:invoke:library-branch-kiosk-status-board",
+      "type": "entry",
+      "label": "library-branch-kiosk-status-board",
+      "repo": "kiosk",
+      "file": "infra/main.tf",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-branch-kiosk-status-board",
+        "deployedBy": "terraform",
+        "name": "library-branch-kiosk-status-board",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.status_board",
+        "handler": "kiosk/status-board.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "BRANCH_URL": {
+            "written": "\"https://branch.library.example\"",
+            "value": "https://branch.library.example"
+          },
+          "EVENTS_API_URL": {
+            "written": "\"https://events.branch.library.example\"",
+            "value": "https://events.branch.library.example"
+          },
+          "LOANS_API_URL": {
+            "written": "\"https://loans.branch.library.example\"",
+            "value": "https://loans.branch.library.example"
+          },
+          "STAFF_LB_URL": {
+            "written": "\"https://staff.branch.library.example\"",
+            "value": "https://staff.branch.library.example"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "http_out:kiosk#src/kiosk/status-board.ts:10:24",
+      "type": "http_out",
+      "label": "GET /status",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 10,
+      "meta": {
+        "method": "GET",
+        "url": "${EVENTS_API_URL}/status",
+        "path": "/status",
+        "baseUrlEnv": "EVENTS_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "branch"
+      }
+    },
+    {
+      "id": "http_out:kiosk#src/kiosk/status-board.ts:11:23",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "${STAFF_LB_URL}/health",
+        "path": "/health",
+        "baseUrlEnv": "STAFF_LB_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "branch"
+      }
+    },
+    {
+      "id": "http_out:kiosk#src/kiosk/status-board.ts:13:24",
+      "type": "http_out",
+      "label": "GET /status",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 13,
+      "meta": {
+        "method": "GET",
+        "url": "${BRANCH_URL}/status",
+        "path": "/status",
+        "baseUrlEnv": "BRANCH_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "branch"
+      }
+    },
+    {
+      "id": "http_out:kiosk#src/kiosk/status-board.ts:9:23",
+      "type": "http_out",
+      "label": "GET /status",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "${LOANS_API_URL}/status",
+        "path": "/status",
+        "baseUrlEnv": "LOANS_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "branch"
+      }
+    },
+    {
+      "id": "kiosk#src/kiosk/status-board.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "repo:branch",
+      "type": "repo",
+      "label": "branch",
+      "repo": "branch",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:kiosk",
+      "type": "repo",
+      "label": "kiosk",
+      "repo": "kiosk",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:branch:http:GET:/health@api:library-public-lb",
+      "to": "branch#src/health/public-health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{balancer:string;up:boolean}",
+      "file": "src/health/public-health.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:branch:http:GET:/health@api:library-staff-lb",
+      "to": "branch#src/health/staff-health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{balancer:string;up:boolean}",
+      "file": "src/health/staff-health.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:branch:http:GET:/status@api:library-events-api",
+      "to": "branch#src/status/events-status.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{api:string;up:boolean}",
+      "file": "src/status/events-status.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:branch:http:GET:/status@api:library-loans-api",
+      "to": "branch#src/status/loans-status.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{api:string;up:boolean}",
+      "file": "src/status/loans-status.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:branch:invoke:library-branch-events-status",
+      "to": "branch#src/status/events-status.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/status/events-status.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:branch:invoke:library-branch-loans-status",
+      "to": "branch#src/status/loans-status.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/status/loans-status.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:branch:invoke:library-branch-public-health",
+      "to": "branch#src/health/public-health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health/public-health.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:branch:invoke:library-branch-staff-health",
+      "to": "branch#src/health/staff-health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health/staff-health.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:kiosk:invoke:library-branch-kiosk-status-board",
+      "to": "kiosk#src/kiosk/status-board.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 8
+    },
+    {
+      "from": "http_out:kiosk#src/kiosk/status-board.ts:10:24",
+      "to": "entry:branch:http:GET:/status@api:library-events-api",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/kiosk/status-board.ts",
+      "line": 10,
+      "meta": {
+        "via": "apiName",
+        "targetService": "branch"
+      }
+    },
+    {
+      "from": "http_out:kiosk#src/kiosk/status-board.ts:11:23",
+      "to": "entry:branch:http:GET:/health@api:library-staff-lb",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/kiosk/status-board.ts",
+      "line": 11,
+      "meta": {
+        "via": "apiName",
+        "targetService": "branch"
+      }
+    },
+    {
+      "from": "http_out:kiosk#src/kiosk/status-board.ts:9:23",
+      "to": "entry:branch:http:GET:/status@api:library-loans-api",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/kiosk/status-board.ts",
+      "line": 9,
+      "meta": {
+        "via": "apiName",
+        "targetService": "branch"
+      }
+    },
+    {
+      "from": "kiosk#src/kiosk/status-board.ts:handler",
+      "to": "config_key:kiosk#BRANCH_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 13,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-branch-kiosk-status-board",
+            "written": "\"https://branch.library.example\"",
+            "value": "https://branch.library.example"
+          }
+        ]
+      }
+    },
+    {
+      "from": "kiosk#src/kiosk/status-board.ts:handler",
+      "to": "config_key:kiosk#EVENTS_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-branch-kiosk-status-board",
+            "written": "\"https://events.branch.library.example\"",
+            "value": "https://events.branch.library.example"
+          }
+        ]
+      }
+    },
+    {
+      "from": "kiosk#src/kiosk/status-board.ts:handler",
+      "to": "config_key:kiosk#LOANS_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-branch-kiosk-status-board",
+            "written": "\"https://loans.branch.library.example\"",
+            "value": "https://loans.branch.library.example"
+          }
+        ]
+      }
+    },
+    {
+      "from": "kiosk#src/kiosk/status-board.ts:handler",
+      "to": "config_key:kiosk#STAFF_LB_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 11,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-branch-kiosk-status-board",
+            "written": "\"https://staff.branch.library.example\"",
+            "value": "https://staff.branch.library.example"
+          }
+        ]
+      }
+    },
+    {
+      "from": "kiosk#src/kiosk/status-board.ts:handler",
+      "to": "http_out:kiosk#src/kiosk/status-board.ts:10:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 10
+    },
+    {
+      "from": "kiosk#src/kiosk/status-board.ts:handler",
+      "to": "http_out:kiosk#src/kiosk/status-board.ts:11:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 11
+    },
+    {
+      "from": "kiosk#src/kiosk/status-board.ts:handler",
+      "to": "http_out:kiosk#src/kiosk/status-board.ts:13:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 13
+    },
+    {
+      "from": "kiosk#src/kiosk/status-board.ts:handler",
+      "to": "http_out:kiosk#src/kiosk/status-board.ts:9:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/status-board.ts",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#ALBEvent": {
+      "name": "ALBEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "67439726a20f127b",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#ALBResult": {
+      "name": "ALBResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "bfa4c01231f2c501",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 9,
+      "reason": "route-api-guessed",
+      "level": "info",
+      "message": "GET /status is served by library-events-api, library-loans-api; library-loans-api is taken because the call's base URL is read from LOANS_API_URL",
+      "hint": "Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.",
+      "symbol": "http_out:kiosk#src/kiosk/status-board.ts:9:23"
+    },
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 10,
+      "reason": "route-api-guessed",
+      "level": "info",
+      "message": "GET /status is served by library-events-api, library-loans-api; library-events-api is taken because the call's base URL is read from EVENTS_API_URL",
+      "hint": "Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.",
+      "symbol": "http_out:kiosk#src/kiosk/status-board.ts:10:24"
+    },
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 11,
+      "reason": "route-api-guessed",
+      "level": "info",
+      "message": "GET /health is served by library-public-lb, library-staff-lb; library-staff-lb is taken because the call's base URL is read from STAFF_LB_URL",
+      "hint": "Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.",
+      "symbol": "http_out:kiosk#src/kiosk/status-board.ts:11:23"
+    },
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 13,
+      "reason": "ambiguous-route-api",
+      "message": "2 APIs in branch serve GET /status: library-events-api, library-loans-api",
+      "hint": "Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.",
+      "symbol": "http_out:kiosk#src/kiosk/status-board.ts:13:24"
+    }
+  ]
+}
