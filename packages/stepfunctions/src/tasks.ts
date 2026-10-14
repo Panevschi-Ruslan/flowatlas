@@ -76,7 +76,17 @@ export type TaskTarget =
       readonly transport: MessageTarget['kind'];
       readonly targets: readonly ChannelTarget[];
     }
-  | { readonly kind: 'table'; readonly op: DbOp; readonly tables: readonly Reading[] }
+  | {
+      readonly kind: 'table';
+      readonly op: DbOp;
+      readonly tables: readonly Reading[];
+      /**
+       * The field the tables are named by: `TableName`, or a batch's or a
+       * transaction's whole list, where that list is chosen at run time and the
+       * tables with it (P62).
+       */
+      readonly field: string;
+    }
   /** Records put on a Kinesis stream, by its name or its ARN (P55). */
   | { readonly kind: 'records'; readonly streams: readonly Reading[] }
   /** A call on a service that names nothing this tool joins: the step is the whole of it. */
@@ -220,8 +230,33 @@ const ITEM_OPERATIONS: Readonly<Record<string, DbOp>> = {
   deleteitem: 'delete',
 };
 
+/** The fields a batch or a transaction lists its tables in. */
+const TABLE_LISTS = ['RequestItems', 'TransactItems'] as const;
+
+/** Where an item operation names its tables, and what it names. */
+interface Tables {
+  readonly field: string;
+  readonly tables: readonly Reading[];
+}
+
+/**
+ * Where an item operation names its tables. A batch's or a transaction's list
+ * written as a path or an expression chooses its tables when the state runs:
+ * one reading of the whole list, so the state says so once rather than reading
+ * as a write that names no table (P62).
+ */
+const tablesOf = (parameters: ParameterReader): Tables => {
+  for (const field of TABLE_LISTS) {
+    const listed = parameters.written(field);
+    if (listed === undefined) continue;
+    const value = listed[field];
+    if (typeof value !== 'object' || value === null) return { field, tables: [parameters.read(field)] };
+  }
+  return { field: 'TableName', tables: namedTables(parameters) };
+};
+
 /** The table names an item operation writes: one field, the keys of a batch, or one per transaction item. */
-const tablesOf = (parameters: ParameterReader): Reading[] => {
+const namedTables = (parameters: ParameterReader): Reading[] => {
   const batch = parameters.raw('RequestItems');
   if (typeof batch === 'object' && batch !== null && !Array.isArray(batch)) {
     // A key ending in `.$` evaluates its value; the table it names is still the key.
@@ -246,7 +281,8 @@ const tables: TaskClassifier = {
   classify: (call, parameters) => {
     const op = ITEM_OPERATIONS[call.action.toLowerCase()];
     if (op === undefined) return undefined;
-    return { kind: 'table', op, tables: tablesOf(parameters).map((reading) => nameIn(reading, tableName)) };
+    const { field, tables } = tablesOf(parameters);
+    return { kind: 'table', op, field, tables: tables.map((reading) => nameIn(reading, tableName)) };
   },
 };
 

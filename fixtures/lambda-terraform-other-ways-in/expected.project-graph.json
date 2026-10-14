@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T21:18:16.583Z",
+  "builtAt": "2026-10-14T21:41:15.322Z",
   "services": [
     {
       "name": "members",
@@ -752,7 +752,8 @@
       "file": "infra/returns.tf",
       "line": 52,
       "meta": {
-        "via": "deployment"
+        "via": "deployment",
+        "when": "failure"
       }
     },
     {

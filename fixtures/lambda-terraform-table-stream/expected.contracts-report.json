@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-14T17:36:30.772Z",
+  "generatedAt": "2026-10-14T21:41:18.288Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -68,11 +68,11 @@
     },
     {
       "edge": {
-        "from": "producer:shop#infra/main.tf:245:7",
+        "from": "producer:shop#infra/main.tf:262:7",
         "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
         "type": "emits"
       },
-      "edgeKey": "producer:shop#infra/main.tf:245:7|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
+      "edgeKey": "producer:shop#infra/main.tf:262:7|emits|consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.count_clicks",
       "direction": "payload",
       "reason": "no-type-on-sender",
       "message": "shop#infra/main.tf:shop-fulfil-order/CountShipment declares no type for what it sends",

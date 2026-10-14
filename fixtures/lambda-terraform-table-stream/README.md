@@ -22,7 +22,9 @@ What is not joined, on purpose: `place-order.ts` also reads the carts table
 with `GetCommand`, and a read never joins; and it updates `shop-carts`, a table
 with no stream, which is no channel at all — no edge, no row. The workflow's
 `deleteItem` on the carts is dropped the same way, and its `putItem` with
-`TableName.$` is one `workflow-target-dynamic` row (P55).
+`TableName.$` is a `workflow-target-dynamic` row (P55); so are its
+`batchWriteItem` with `RequestItems.$` and its JSONata `transactWriteItems`
+whose `TransactItems` is an expression, one per state, naming the field (P62).
 
 `flow workflow:shop-fulfil-order` walks each step's write through the streams
 into `order-changed` and `count-clicks`.
@@ -31,5 +33,5 @@ into `order-changed` and `count-clicks`.
 write, the shop's table stream and its mapping, into `order-changed` in `shop`.
 
 `doctor` has two rows, both `info`: `stream-filter-not-matched` for the filter
-on the orders mapping, and `workflow-target-dynamic` for the table the
-workflow chooses at run time.
+on the orders mapping, and `workflow-target-dynamic` over three places, for
+the tables the workflow chooses at run time.

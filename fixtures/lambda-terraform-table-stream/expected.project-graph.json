@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T17:39:38.522Z",
+  "builtAt": "2026-10-14T21:41:18.005Z",
   "services": [
     {
       "name": "shop",
@@ -225,6 +225,36 @@
         "tables": [],
         "service": "dynamodb",
         "action": "putItem"
+      }
+    },
+    {
+      "id": "db_query:shop#infra/main.tf:245:7",
+      "type": "db_query",
+      "label": "write ?",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 245,
+      "meta": {
+        "op": "write",
+        "table": null,
+        "tables": [],
+        "service": "dynamodb",
+        "action": "batchWriteItem"
+      }
+    },
+    {
+      "id": "db_query:shop#infra/main.tf:253:7",
+      "type": "db_query",
+      "label": "write ?",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 253,
+      "meta": {
+        "op": "write",
+        "table": null,
+        "tables": [],
+        "service": "dynamodb",
+        "action": "transactWriteItems"
       }
     },
     {
@@ -534,7 +564,7 @@
         "name": "shop-fulfil-order",
         "nameFrom": "deployment",
         "startAt": "MarkShipped",
-        "states": 5,
+        "states": 7,
         "queryLanguage": "JSONPath",
         "comment": "Marks an order shipped, notes it, and counts it as a click.",
         "reads": {
@@ -645,12 +675,12 @@
       }
     },
     {
-      "id": "producer:shop#infra/main.tf:245:7",
+      "id": "producer:shop#infra/main.tf:262:7",
       "type": "producer",
       "label": "record kinesis/shop-clicks",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 245,
+      "line": 262,
       "kind": "record",
       "meta": {
         "kind": "record",
@@ -855,6 +885,31 @@
       }
     },
     {
+      "id": "shop#infra/main.tf:shop-fulfil-order/ArchiveBatch",
+      "type": "function",
+      "label": "ArchiveBatch [Task dynamodb:batchWriteItem]",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 245,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "batchWriteItem",
+          "pattern": "request-response",
+          "sdk": true,
+          "op": "write",
+          "tables": []
+        },
+        "parameters": {
+          "RequestItems.$": "$.archiveWrites"
+        }
+      }
+    },
+    {
       "id": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
       "type": "function",
       "label": "ArchiveSomewhere [Task dynamodb:putItem]",
@@ -889,7 +944,7 @@
       "label": "CountShipment [Task kinesis:putRecord]",
       "repo": "shop",
       "file": "infra/main.tf",
-      "line": 245,
+      "line": 262,
       "kind": "state",
       "meta": {
         "workflow": "shop-fulfil-order",
@@ -980,6 +1035,32 @@
               "S": "shipped"
             }
           }
+        }
+      }
+    },
+    {
+      "id": "shop#infra/main.tf:shop-fulfil-order/NoteEverywhere",
+      "type": "function",
+      "label": "NoteEverywhere [Task dynamodb:transactWriteItems]",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 253,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "queryLanguage": "JSONata",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "transactWriteItems",
+          "pattern": "request-response",
+          "sdk": true,
+          "op": "write",
+          "tables": []
+        },
+        "arguments": {
+          "TransactItems": "{% $states.input.notes %}"
         }
       }
     },
@@ -1427,12 +1508,12 @@
       "line": 205
     },
     {
-      "from": "producer:shop#infra/main.tf:245:7",
+      "from": "producer:shop#infra/main.tf:262:7",
       "to": "channel:kinesis/shop-clicks",
       "type": "emits",
       "confidence": "static",
       "file": "infra/main.tf",
-      "line": 245
+      "line": 262
     },
     {
       "from": "producer:shop#src/clicks/track-click.ts:9:9",
@@ -1540,6 +1621,30 @@
       "line": 22
     },
     {
+      "from": "shop#infra/main.tf:shop-fulfil-order/ArchiveBatch",
+      "to": "db_query:shop#infra/main.tf:245:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 245
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/ArchiveBatch",
+      "to": "shop#infra/main.tf:shop-fulfil-order/NoteEverywhere",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 251,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
       "from": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
       "to": "db_query:shop#infra/main.tf:236:7",
       "type": "calls",
@@ -1549,7 +1654,7 @@
     },
     {
       "from": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
-      "to": "shop#infra/main.tf:shop-fulfil-order/CountShipment",
+      "to": "shop#infra/main.tf:shop-fulfil-order/ArchiveBatch",
       "type": "calls",
       "confidence": "static",
       "file": "infra/main.tf",
@@ -1565,11 +1670,11 @@
     },
     {
       "from": "shop#infra/main.tf:shop-fulfil-order/CountShipment",
-      "to": "producer:shop#infra/main.tf:245:7",
+      "to": "producer:shop#infra/main.tf:262:7",
       "type": "calls",
       "confidence": "static",
       "file": "infra/main.tf",
-      "line": 245
+      "line": 262
     },
     {
       "from": "shop#infra/main.tf:shop-fulfil-order/ForgetCart",
@@ -1618,6 +1723,30 @@
       "confidence": "static",
       "file": "infra/main.tf",
       "line": 203,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/NoteEverywhere",
+      "to": "db_query:shop#infra/main.tf:253:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 253
+    },
+    {
+      "from": "shop#infra/main.tf:shop-fulfil-order/NoteEverywhere",
+      "to": "shop#infra/main.tf:shop-fulfil-order/CountShipment",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 260,
       "meta": {
         "order": 0,
         "transitions": [
@@ -1825,6 +1954,7 @@
       "line": 236,
       "reason": "workflow-target-dynamic",
       "level": "info",
+      "sites": 3,
       "message": "ArchiveSomewhere writes to a table chosen when the state runs: TableName is $.archiveTable",
       "hint": "The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.",
       "symbol": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",

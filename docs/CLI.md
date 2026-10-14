@@ -2812,7 +2812,10 @@ and each is drawn as a way in of kind `workflow`. Nothing to configure.
   only where some service declares the table's stream, exactly as a function's
   write is ("A write to a table is a publish only where its stream is"): so a workflow's write reaches the function the
   stream runs. A transaction's `ConditionCheck` writes nothing and names no
-  table (P55).
+  table (P55). A batch or a transaction whose whole list is chosen at run
+  time - `RequestItems.$`, `TransactItems.$`, or the list as a JSONata
+  expression - names no table, and is one `workflow-target-dynamic` row for
+  the state, naming that field (P62).
 - **A task that puts a record on a stream** (`aws-sdk:kinesis:putRecord`,
   `putRecords`, by `StreamName` or `StreamARN`) is a producer onto
   `kinesis/<stream>`, joined to a mapping from that stream by name (P55).

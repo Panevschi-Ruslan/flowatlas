@@ -441,7 +441,7 @@ const producerNode = (
       ...meta,
     },
   });
-  ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way) });
+  ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way, delivery) });
   return id;
 };
 
@@ -535,7 +535,9 @@ const runAsEntry = (drawing: Drawing, way: WayIn, target: Extract<DeliveryTarget
  */
 const TARGETS: { readonly [K in DeliveryTarget['kind']]: TargetDrawer<K> } = {
   function: (drawing, way, delivery, target) => {
-    if (runAsEntry(drawing, way, target)) return;
+    // An error action runs only when the others fail, so it is never the
+    // code the entry runs, whatever order the actions are read in.
+    if (delivery.meta?.['when'] === undefined && runAsEntry(drawing, way, target)) return;
     if ('name' in target) {
       reachByName(drawing, way, delivery, makeEntryReference('invoke', makeInvokeEntryKey(target.name)));
       return;

@@ -187,6 +187,13 @@ const TABLE_WORDS: Readonly<Record<Extract<Task, { kind: 'table' }>['op'], strin
   delete: 'deletes from a table',
 };
 
+/** The same, for a batch or a transaction whose whole list of tables is chosen at run time (P62). */
+const TABLES_WORDS: Readonly<Record<Extract<Task, { kind: 'table' }>['op'], string>> = {
+  read: 'reads tables',
+  write: 'writes to tables',
+  delete: 'deletes from tables',
+};
+
 /**
  * Where one target of a sending step goes, as a deployment would name it, or
  * the rows that say why it cannot be named.
@@ -362,7 +369,7 @@ const tableEffects = (site: Site, target: Extract<Task, { kind: 'table' }>): Eff
       ...writes.edges,
     ],
     rows: target.tables.flatMap((reading) =>
-      reading.read ? [] : [unreadRow(site, TABLE_WORDS[target.op], 'TableName', reading)],
+      reading.read ? [] : [unreadRow(site, (target.field === 'TableName' ? TABLE_WORDS : TABLES_WORDS)[target.op], target.field, reading)],
     ),
     task: { op: target.op, tables: read },
   };

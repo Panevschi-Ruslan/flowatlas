@@ -240,6 +240,23 @@ resource "aws_sfn_state_machine" "fulfil_order" {
           "TableName.$" = "$.archiveTable"
           Item          = { orderId = { "S.$" = "$.orderId" } }
         }
+        Next = "ArchiveBatch"
+      }
+      ArchiveBatch = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::aws-sdk:dynamodb:batchWriteItem"
+        Parameters = {
+          "RequestItems.$" = "$.archiveWrites"
+        }
+        Next = "NoteEverywhere"
+      }
+      NoteEverywhere = {
+        Type          = "Task"
+        QueryLanguage = "JSONata"
+        Resource      = "arn:aws:states:::aws-sdk:dynamodb:transactWriteItems"
+        Arguments = {
+          TransactItems = "{% $states.input.notes %}"
+        }
         Next = "CountShipment"
       }
       CountShipment = {

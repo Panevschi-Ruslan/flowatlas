@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T17:39:38.522Z",
+  "builtAt": "2026-10-14T21:41:18.005Z",
   "configHash": "a5e946016b04",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 692,
+      "durationMs": 522,
       "packages": {
         "name": "corner-shop-returns",
         "runtime": [
@@ -29,11 +29,11 @@
       "repo": "./shop",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 46,
-      "edges": 46,
+      "nodes": 50,
+      "edges": 50,
       "types": 5,
       "unresolved": 5,
-      "durationMs": 713,
+      "durationMs": 525,
       "packages": {
         "name": "corner-shop",
         "runtime": [
@@ -85,8 +85,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 54,
-    "edges": 56,
+    "nodes": 58,
+    "edges": 60,
     "types": 5,
     "unresolved": 2
   }

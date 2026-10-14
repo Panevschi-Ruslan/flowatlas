@@ -1,29 +1,33 @@
-@  workflow shop-fulfil-order                                            shop/infra/main.tf:189
-  -> MarkShipped [Task dynamodb:updateItem]                              shop/infra/main.tf:193
-    [] write shop-orders                                                 shop/infra/main.tf:193
+@  workflow shop-fulfil-order                                             shop/infra/main.tf:189
+  -> MarkShipped [Task dynamodb:updateItem]                               shop/infra/main.tf:193
+    [] write shop-orders                                                  shop/infra/main.tf:193
       #  shop-orders
-    ~  write dynamodb/shop-orders                                        shop/infra/main.tf:193
-      ~  dynamodb/shop-orders                                            infra/main.tf:6
-        ~  mapping aws_lambda_event_source_mapping.order_changed         shop/infra/main.tf:115
-          ~  event dynamodb/shop-orders                                  shop/infra/main.tf:115
-            -> handler                                                   shop/src/orders/order-changed.ts:6
-    -> NoteShipped [Task dynamodb:transactWriteItems]                    shop/infra/main.tf:205
-      [] write audit                                                     shop/infra/main.tf:205
+    ~  write dynamodb/shop-orders                                         shop/infra/main.tf:193
+      ~  dynamodb/shop-orders                                             infra/main.tf:6
+        ~  mapping aws_lambda_event_source_mapping.order_changed          shop/infra/main.tf:115
+          ~  event dynamodb/shop-orders                                   shop/infra/main.tf:115
+            -> handler                                                    shop/src/orders/order-changed.ts:6
+    -> NoteShipped [Task dynamodb:transactWriteItems]                     shop/infra/main.tf:205
+      [] write audit                                                      shop/infra/main.tf:205
         #  audit
-      ~  write dynamodb/audit                                            shop/infra/main.tf:205
-        ~  dynamodb/audit                                                infra/main.tf:33
-          ~  mapping aws_lambda_event_source_mapping.audit               shop/infra/main.tf:127
-            ~  event dynamodb/audit                                      shop/infra/main.tf:127
-              -> handler                                                 shop/src/orders/order-changed.ts:6
-      -> ForgetCart [Task dynamodb:deleteItem]                           shop/infra/main.tf:227
-        [] delete shop-carts                                             shop/infra/main.tf:227
+      ~  write dynamodb/audit                                             shop/infra/main.tf:205
+        ~  dynamodb/audit                                                 infra/main.tf:33
+          ~  mapping aws_lambda_event_source_mapping.audit                shop/infra/main.tf:127
+            ~  event dynamodb/audit                                       shop/infra/main.tf:127
+              -> handler                                                  shop/src/orders/order-changed.ts:6
+      -> ForgetCart [Task dynamodb:deleteItem]                            shop/infra/main.tf:227
+        [] delete shop-carts                                              shop/infra/main.tf:227
           #  shop-carts
-        -> ArchiveSomewhere [Task dynamodb:putItem]                      shop/infra/main.tf:236
-          [] write ?                                                     shop/infra/main.tf:236
-          -> CountShipment [Task kinesis:putRecord]                      shop/infra/main.tf:245
-            ~  record kinesis/shop-clicks                                shop/infra/main.tf:245
-              ~  kinesis/shop-clicks                                     infra/main.tf:46
-                ~  mapping aws_lambda_event_source_mapping.count_clicks  shop/infra/main.tf:133
-                  ~  event kinesis/shop-clicks                           shop/infra/main.tf:133
-                    -> handler                                           shop/src/clicks/count-clicks.ts:6
+        -> ArchiveSomewhere [Task dynamodb:putItem]                       shop/infra/main.tf:236
+          [] write ?                                                      shop/infra/main.tf:236
+          -> ArchiveBatch [Task dynamodb:batchWriteItem]                  shop/infra/main.tf:245
+            [] write ?                                                    shop/infra/main.tf:245
+            -> NoteEverywhere [Task dynamodb:transactWriteItems]          shop/infra/main.tf:253
+              [] write ?                                                  shop/infra/main.tf:253
+              -> CountShipment [Task kinesis:putRecord]                   shop/infra/main.tf:262
+                ~  record kinesis/shop-clicks                             shop/infra/main.tf:262
+                  ~  kinesis/shop-clicks                                  infra/main.tf:46
+                    ~  mapping aws_lambda_event_source_mapping.count_clicks  shop/infra/main.tf:133
+                      ~  event kinesis/shop-clicks                        shop/infra/main.tf:133
+                        -> handler                                        shop/src/clicks/count-clicks.ts:6
 unresolved on this path: 2

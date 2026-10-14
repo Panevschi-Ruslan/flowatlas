@@ -110,6 +110,16 @@ only one of them moved.
 
 ### Fixed
 
+- **Error actions and run-time batch lists (P62).** A function an IoT
+  rule's `error_action` names was taken as the code the rule's entry runs
+  (`meta.invokes`) when no other action had named one first; it is now
+  always a reference carrying `when: "failure"`. The edge to a queue, topic,
+  bus or stream an `error_action` publishes onto now carries
+  `meta.when: "failure"` as its producer already did. A Step Functions batch
+  or transaction whose whole list is a path (`RequestItems.$`,
+  `TransactItems.$`) or a JSONata expression is one `workflow-target-dynamic`
+  row per state naming that field, instead of a state whose `TableName` is
+  missing (`fixtures/lambda-terraform-table-stream`).
 - **Routes of two APIs at one address stay apart (P59).** Two API Gateway
   APIs (REST, HTTP or WebSocket) or two load balancers of one deployment
   serving the same method and path, each in front of its own function, were
