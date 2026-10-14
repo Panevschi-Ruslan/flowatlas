@@ -73,3 +73,27 @@ resource "aws_lambda_event_source_mapping" "shelf_scan" {
     }
   }
 }
+
+# The card lookup's failures go to an alert the members service deploys,
+# named by its ARN.
+resource "aws_lambda_function_event_invoke_config" "card_lookup" {
+  function_name = aws_lambda_function.fn["card-lookup"].function_name
+
+  destination_config {
+    on_failure {
+      destination = "arn:aws:lambda:eu-west-1:111122223333:function:library-members-alert"
+    }
+  }
+}
+
+# The members service's digest, configured from here: its results tell the
+# member through notify-member.
+resource "aws_lambda_function_event_invoke_config" "member_digest" {
+  function_name = "library-members-digest"
+
+  destination_config {
+    on_success {
+      destination = aws_lambda_function.fn["notify-member"].arn
+    }
+  }
+}

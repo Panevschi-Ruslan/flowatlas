@@ -27,6 +27,8 @@ export {
   holeIn,
   PARAM_PLACEHOLDER,
   REACHES_META,
+  REACHED_AS_META,
+  RESULT_OF_META,
   STARTS_META,
   STEP_OF_META,
   STEPS_META,
@@ -60,7 +62,7 @@ export {
   UNREAD_SPAN,
   wasRead,
 } from './ids.js';
-export type { DeployedEntryKind, HttpMethod, SiteLeafType } from './ids.js';
+export type { DeployedEntryKind, HttpMethod, ReachedAs, SiteLeafType } from './ids.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
 export { SENDS_META, wayInBodyRead } from './model/way-in.js';

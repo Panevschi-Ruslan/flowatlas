@@ -28,7 +28,7 @@ describe('destinations and function URL addresses (fixtures/lambda-terraform-des
   const describeOutcome = (delivery: DeployedDelivery): string => {
     const { from, to } = delivery;
     if (from.kind !== 'outcome') return '-';
-    const source = 'function' in from.of ? nameOf(from.of.function) : from.of.delivery;
+    const source = 'function' in from.of ? nameOf(from.of.function) : 'name' in from.of ? `named ${from.of.name}` : from.of.delivery;
     const target = to === undefined ? '-' : 'function' in to ? nameOf(to.function) : `${to.kind} ${to.name}`;
     return `${source} ${from.when} -> ${target}`;
   };
@@ -39,6 +39,8 @@ describe('destinations and function URL addresses (fixtures/lambda-terraform-des
       'library-lending-request-loan failure -> queue library-loan-failures',
       'library-lending-return-item success -> bus library-events',
       'library-lending-return-item failure -> topic library-return-alerts',
+      'library-lending-card-lookup failure -> function library-members-alert',
+      'named library-members-digest success -> library-lending-notify-member',
       'aws_lambda_event_source_mapping.shelf_scan failure -> topic library-return-alerts',
     ]);
   });
@@ -58,14 +60,35 @@ describe('destinations and function URL addresses (fixtures/lambda-terraform-des
   });
 });
 
-describe('destinations not drawn', () => {
-  it('says so for an invoke configuration of a function this deployment does not create', () => {
+describe('destinations of a function another deployment creates', () => {
+  it('names the function, for the linker to join wherever it is declared (P60)', () => {
     const deployment = readHcl(`
 resource "aws_sqs_queue" "failures" {
   name = "library-failures"
 }
 resource "aws_lambda_function_event_invoke_config" "elsewhere" {
   function_name = "library-elsewhere"
+  destination_config {
+    on_failure {
+      destination = aws_sqs_queue.failures.arn
+    }
+  }
+}
+`);
+    expect(deployment.deliveries.map((delivery) => [delivery.from, delivery.to?.kind])).toEqual([
+      [{ kind: 'outcome', when: 'failure', of: { name: 'library-elsewhere' } }, 'queue'],
+    ]);
+    expect(deployment.rows.filter((row) => row.reason === 'subscription-source-unread')).toEqual([]);
+  });
+});
+
+describe('destinations not drawn', () => {
+  it('says so for an invoke configuration that names no function', () => {
+    const deployment = readHcl(`
+resource "aws_sqs_queue" "failures" {
+  name = "library-failures"
+}
+resource "aws_lambda_function_event_invoke_config" "nameless" {
   destination_config {
     on_failure {
       destination = aws_sqs_queue.failures.arn

@@ -207,13 +207,14 @@ export type DeliverySource =
    * What a function's run ends in, handed on by the platform: an invocation's
    * result to the destination for its success or its failure, or a batch a
    * mapping gave up on (P54). `of` is the function, by its position in
-   * `functions`, or the address of the mapping's own delivery, which is drawn
-   * before this one.
+   * `functions`, the address of the mapping's own delivery, which is drawn
+   * before this one, or, for a function another deployment creates, its
+   * deployed name, which the linker joins to that function's entry (P60).
    */
   | {
       readonly kind: 'outcome';
       readonly when: 'success' | 'failure';
-      readonly of: { readonly function: number } | { readonly delivery: string };
+      readonly of: { readonly function: number } | { readonly delivery: string } | { readonly name: string };
     };
 
 /** What declares a delivery. */

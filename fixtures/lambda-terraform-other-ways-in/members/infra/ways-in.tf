@@ -14,7 +14,8 @@ resource "aws_cognito_user_pool" "members" {
   }
 }
 
-# Shelf sensors publish over IoT; one rule runs a function and queues a copy.
+# Shelf sensors publish over IoT; one rule runs a function and queues a copy,
+# and starts the restocking workflow when either fails.
 resource "aws_sqs_queue" "shelf_readings" {
   name = "library-shelf-readings"
 }
@@ -33,6 +34,13 @@ resource "aws_iot_topic_rule" "shelf_weight" {
     queue_url  = aws_sqs_queue.shelf_readings.id
     role_arn   = aws_iam_role.lambda.arn
     use_base64 = false
+  }
+
+  error_action {
+    step_functions {
+      state_machine_name = aws_sfn_state_machine.restock.name
+      role_arn           = aws_iam_role.lambda.arn
+    }
   }
 }
 

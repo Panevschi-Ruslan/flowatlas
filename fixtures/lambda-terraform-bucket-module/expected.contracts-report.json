@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-14T17:48:58.946Z",
+  "generatedAt": "2026-10-14T21:20:56.507Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -140,11 +140,11 @@
     },
     {
       "edge": {
-        "from": "producer:scans#src/pages/withdraw-page.ts:14:9",
+        "from": "producer:scans#src/pages/withdraw-page.ts:16:9",
         "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
         "type": "emits"
       },
-      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:14:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:16:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
       "direction": "payload",
       "reason": "no-type-on-sender",
       "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
@@ -152,11 +152,11 @@
     },
     {
       "edge": {
-        "from": "producer:scans#src/pages/withdraw-page.ts:14:9",
+        "from": "producer:scans#src/pages/withdraw-page.ts:16:9",
         "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
         "type": "emits"
       },
-      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:14:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:16:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
       "direction": "payload",
       "reason": "no-type-on-sender",
       "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
@@ -164,11 +164,11 @@
     },
     {
       "edge": {
-        "from": "producer:scans#src/pages/withdraw-page.ts:14:9",
+        "from": "producer:scans#src/pages/withdraw-page.ts:16:9",
         "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
         "type": "emits"
       },
-      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:14:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:16:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
       "direction": "payload",
       "reason": "no-type-on-sender",
       "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
@@ -176,11 +176,23 @@
     },
     {
       "edge": {
-        "from": "producer:scans#src/pages/withdraw-page.ts:15:9",
+        "from": "producer:scans#src/pages/withdraw-page.ts:17:9",
+        "to": "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:17:9|emits|consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/withdraw-page.ts:18:9",
         "to": "consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]",
         "type": "emits"
       },
-      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:15:9|emits|consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]",
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:18:9|emits|consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]",
       "direction": "payload",
       "reason": "no-type-on-sender",
       "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
@@ -192,7 +204,7 @@
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 15,
+    "unchecked": 16,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

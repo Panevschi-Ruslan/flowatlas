@@ -61,22 +61,25 @@ const push = (owner: Instance, of: Extract<DeliverySource, { kind: 'outcome' }>[
   }
 };
 
-/** An invoke configuration: the function's results, to the destinations it names. */
+/**
+ * An invoke configuration: the function's results, to the destinations it
+ * names. A function another deployment creates is named, and joined to its
+ * entry by the linker wherever it is declared (P60).
+ */
 const readInvokeConfig: ResourceReader[1] = (config, reading) => {
   if (destinationsIn(config, 'destination').length === 0) return;
   const found = functionAt(config, 'function_name', reading);
-  const index = found === undefined || isBecause(found) ? undefined : found.function;
-  if (index === undefined) {
-    const because =
-      found === undefined
-        ? { reason: 'absent', text: 'nothing names the function' }
-        : isBecause(found)
-          ? found
-          : { reason: 'unplaced', text: `${found.name} is not a function this deployment creates` };
-    reading.rows.push(unreadRow(config, 'subscription-source-unread', `the function ${config.address} hands results on from`, because, 'info'));
+  if (found !== undefined && !isBecause(found) && found.kind === 'function') {
+    push(config, found.function === undefined ? { name: found.name } : { function: found.function }, reading, 'destination');
     return;
   }
-  push(config, { function: index }, reading, 'destination');
+  const because =
+    found === undefined
+      ? { reason: 'absent', text: 'nothing names the function' }
+      : isBecause(found)
+        ? found
+        : { reason: 'unplaced', text: `${found.name} is not a function` };
+  reading.rows.push(unreadRow(config, 'subscription-source-unread', `the function ${config.address} hands results on from`, because, 'info'));
 };
 
 /**

@@ -43,7 +43,7 @@ const line = (delivery: DeployedDelivery): string => {
             : from.kind === 'trigger'
               ? `trigger ${from.key}`
               : from.kind === 'outcome'
-                ? `${from.when} of ${'function' in from.of ? from.of.function : from.of.delivery}`
+                ? `${from.when} of ${'function' in from.of ? from.of.function : 'name' in from.of ? from.of.name : from.of.delivery}`
                 : `${from.kind} ${from.name}`;
   const to = delivery.to;
   const target =

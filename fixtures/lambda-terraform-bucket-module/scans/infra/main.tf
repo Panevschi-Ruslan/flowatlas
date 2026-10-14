@@ -91,3 +91,28 @@ resource "aws_sns_topic_subscription" "note_withdrawal" {
   protocol  = "lambda"
   endpoint  = aws_lambda_function.fn["note-withdrawal"].arn
 }
+
+# The archive of withdrawn pages, through the s3-bucket module, keeps every
+# version by its versioning input: a delete naming none leaves a marker, which
+# is noted.
+module "archive" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "~> 4.0"
+
+  bucket = "library-page-archive"
+
+  versioning = {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket_notification" "archive" {
+  bucket = module.archive.s3_bucket_id
+
+  lambda_function {
+    id                  = "note-withdrawal"
+    lambda_function_arn = aws_lambda_function.fn["note-withdrawal"].arn
+    events              = ["s3:ObjectRemoved:DeleteMarkerCreated"]
+    filter_prefix       = "pages/"
+  }
+}

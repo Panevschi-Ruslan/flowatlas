@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T18:16:12.674Z",
+  "builtAt": "2026-10-14T21:20:56.203Z",
   "services": [
     {
       "name": "scans",
@@ -10,6 +10,22 @@
     }
   ],
   "nodes": [
+    {
+      "id": "channel:s3/library-page-archive",
+      "type": "channel",
+      "label": "s3/library-page-archive",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 109,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-s3"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
     {
       "id": "channel:s3/library-page-scans",
       "type": "channel",
@@ -95,6 +111,39 @@
             "body"
           ],
           "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+      "type": "consumer",
+      "label": "notification note-withdrawal",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 109,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.archive.lambda_function[0]",
+        "deployedBy": "terraform",
+        "name": "note-withdrawal",
+        "takes": {
+          "kinds": [
+            "s3:ObjectRemoved:DeleteMarkerCreated"
+          ],
+          "instead": [
+            {
+              "kind": "s3:ObjectRemoved:Delete",
+              "as": "s3:ObjectRemoved:DeleteMarkerCreated",
+              "unless": "VersionId"
+            }
+          ],
+          "by": {
+            "field": "Key",
+            "prefix": "pages/"
+          }
         }
       }
     },
@@ -533,12 +582,12 @@
       }
     },
     {
-      "id": "producer:scans#src/pages/withdraw-page.ts:14:9",
+      "id": "producer:scans#src/pages/withdraw-page.ts:16:9",
       "type": "producer",
       "label": "s3:ObjectRemoved:Delete s3/library-page-scans",
       "repo": "scans",
       "file": "src/pages/withdraw-page.ts",
-      "line": 14,
+      "line": 16,
       "kind": "s3:ObjectRemoved:Delete",
       "meta": {
         "kind": "s3:ObjectRemoved:Delete",
@@ -553,12 +602,32 @@
       }
     },
     {
-      "id": "producer:scans#src/pages/withdraw-page.ts:15:9",
+      "id": "producer:scans#src/pages/withdraw-page.ts:17:9",
+      "type": "producer",
+      "label": "s3:ObjectRemoved:Delete s3/library-page-archive",
+      "repo": "scans",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 17,
+      "kind": "s3:ObjectRemoved:Delete",
+      "meta": {
+        "kind": "s3:ObjectRemoved:Delete",
+        "adapter": "aws-s3",
+        "channelVia": "const",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "pages/*.tiff"
+          ]
+        }
+      }
+    },
+    {
+      "id": "producer:scans#src/pages/withdraw-page.ts:18:9",
       "type": "producer",
       "label": "s3:ObjectRemoved:Delete s3/library-page-thumbs",
       "repo": "scans",
       "file": "src/pages/withdraw-page.ts",
-      "line": 15,
+      "line": 18,
       "kind": "s3:ObjectRemoved:Delete",
       "meta": {
         "kind": "s3:ObjectRemoved:Delete",
@@ -586,7 +655,7 @@
           "classes": 0,
           "skippedExternalCalls": {
             "aws-sdk": 2,
-            "@aws-sdk/client-s3": 4
+            "@aws-sdk/client-s3": 5
           }
         },
         "adapters": {
@@ -735,7 +804,7 @@
       "label": "handler",
       "repo": "scans",
       "file": "src/pages/withdraw-page.ts",
-      "line": 13,
+      "line": 15,
       "meta": {
         "signature": {
           "params": [
@@ -750,6 +819,17 @@
     }
   ],
   "edges": [
+    {
+      "from": "channel:s3/library-page-archive",
+      "to": "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 109,
+      "meta": {
+        "by": "notification"
+      }
+    },
     {
       "from": "channel:s3/library-page-scans",
       "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
@@ -823,6 +903,17 @@
       "confidence": "static",
       "file": "infra/main.tf",
       "line": 80,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+      "to": "entry:scans:invoke:library-scans-note-withdrawal",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 109,
       "meta": {
         "via": "deployment"
       }
@@ -944,7 +1035,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/pages/withdraw-page.ts",
-      "line": 13
+      "line": 15
     },
     {
       "from": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
@@ -1012,12 +1103,12 @@
       }
     },
     {
-      "from": "producer:scans#src/pages/withdraw-page.ts:14:9",
+      "from": "producer:scans#src/pages/withdraw-page.ts:16:9",
       "to": "channel:s3/library-page-scans",
       "type": "emits",
       "confidence": "static",
       "file": "src/pages/withdraw-page.ts",
-      "line": 14,
+      "line": 16,
       "meta": {
         "takenBy": [
           "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]"
@@ -1025,12 +1116,25 @@
       }
     },
     {
-      "from": "producer:scans#src/pages/withdraw-page.ts:15:9",
+      "from": "producer:scans#src/pages/withdraw-page.ts:17:9",
+      "to": "channel:s3/library-page-archive",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 17,
+      "meta": {
+        "takenBy": [
+          "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]"
+        ]
+      }
+    },
+    {
+      "from": "producer:scans#src/pages/withdraw-page.ts:18:9",
       "to": "channel:s3/library-page-thumbs",
       "type": "emits",
       "confidence": "static",
       "file": "src/pages/withdraw-page.ts",
-      "line": 15,
+      "line": 18,
       "meta": {
         "takenBy": [
           "consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]"
@@ -1063,19 +1167,27 @@
     },
     {
       "from": "scans#src/pages/withdraw-page.ts:handler",
-      "to": "producer:scans#src/pages/withdraw-page.ts:14:9",
+      "to": "producer:scans#src/pages/withdraw-page.ts:16:9",
       "type": "calls",
       "confidence": "static",
       "file": "src/pages/withdraw-page.ts",
-      "line": 14
+      "line": 16
     },
     {
       "from": "scans#src/pages/withdraw-page.ts:handler",
-      "to": "producer:scans#src/pages/withdraw-page.ts:15:9",
+      "to": "producer:scans#src/pages/withdraw-page.ts:17:9",
       "type": "calls",
       "confidence": "static",
       "file": "src/pages/withdraw-page.ts",
-      "line": 15
+      "line": 17
+    },
+    {
+      "from": "scans#src/pages/withdraw-page.ts:handler",
+      "to": "producer:scans#src/pages/withdraw-page.ts:18:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 18
     }
   ],
   "types": {

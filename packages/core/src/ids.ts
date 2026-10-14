@@ -343,6 +343,30 @@ export const makeEntryReference = (kind: EntryKind, key: string): string =>
  */
 export const REACHES_META = 'reaches';
 
+/** How a node reaches one of its {@link REACHES_META} references, where that is not a plain `calls`. */
+export interface ReachedAs {
+  /** `triggers` for a run's outcome handed on (P54); `calls` otherwise. */
+  readonly type?: 'calls' | 'triggers';
+  /** The outcome the edge carries: a destination's, or an IoT rule's error action (P60). */
+  readonly when?: 'success' | 'failure';
+}
+
+/**
+ * The key of a node's `meta` that says, per reference it reaches, how: a map
+ * from a {@link REACHES_META} reference to its {@link ReachedAs}. A reference
+ * missing from it is reached by a plain `calls` edge, so a destination named
+ * elsewhere carries its outcome as surely as one this deployment creates (P60).
+ */
+export const REACHED_AS_META = 'reachedAs';
+
+/**
+ * The key of a node's `meta` naming the function whose run it hands on, where
+ * that function is created by another deployment: a
+ * {@link makeEntryReference} to its `invoke` entry, which the linker joins by
+ * a `triggers` edge into this node, carrying the outcome under `meta.when` (P60).
+ */
+export const RESULT_OF_META = 'resultOf';
+
 /** The kinds of entry a deployed name is the whole address of. */
 export type DeployedEntryKind = Extract<EntryKind, 'invoke' | 'workflow'>;
 

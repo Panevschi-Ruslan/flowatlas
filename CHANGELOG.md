@@ -8,6 +8,18 @@ only one of them moved.
 
 ### Added
 
+- **Failure paths for workflows and remote destinations, and module
+  versioning (P60).** A workflow or a function named elsewhere that an IoT
+  rule's `error_action` starts is joined with `meta.when: "failure"` on its
+  edge. A Lambda destination function another service deploys is joined by a
+  `triggers` edge carrying `meta.when`, as a local one is; an invoke
+  configuration of a function another service creates is joined from that
+  function's entry into its destinations instead of being a
+  `subscription-source-unread` row. `terraform-aws-modules/s3-bucket/aws`'s
+  `versioning` input marks its bucket as keeping versions, so a delete naming
+  no version is matched as the marker it leaves
+  (`fixtures/lambda-terraform-destinations`, `fixtures/lambda-terraform-other-ways-in`,
+  `fixtures/lambda-terraform-bucket-module`).
 - **A workflow's write reaches the function a stream runs (P55).** A Step
   Functions task that writes to a table - `dynamodb:putItem`, `updateItem`,
   `deleteItem`, and through `aws-sdk:` the batch and transaction writes - is a

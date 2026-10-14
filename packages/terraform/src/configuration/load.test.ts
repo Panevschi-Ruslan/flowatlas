@@ -239,6 +239,7 @@ describe('sources', () => {
       'terraform-aws-modules/eventbridge/aws',
       'terraform-aws-modules/sqs/aws',
       'terraform-aws-modules/sns/aws',
+      'terraform-aws-modules/s3-bucket/aws',
       'terraform-aws-modules/s3-bucket/aws//modules/notification',
     ]);
   });

@@ -1,10 +1,16 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T18:10:24.969Z",
+  "builtAt": "2026-10-14T21:18:11.947Z",
   "services": [
     {
       "name": "lending",
       "repo": "./lending",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "members",
+      "repo": "./members",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs"
     }
@@ -140,6 +146,24 @@
       }
     },
     {
+      "id": "consumer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.member_digest.on_success",
+      "type": "consumer",
+      "label": "destination aws_lambda_function_event_invoke_config.member_digest.on_success",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 91,
+      "kind": "result",
+      "meta": {
+        "kind": "result",
+        "adapter": "aws-lambda",
+        "by": "destination",
+        "declaredAs": "aws_lambda_function_event_invoke_config.member_digest.on_success",
+        "deployedBy": "terraform",
+        "when": "success",
+        "resultOf": "invoke:library-members-digest"
+      }
+    },
+    {
       "id": "entry:lending:event:kinesis/library-shelf-scans",
       "type": "entry",
       "label": "event kinesis/library-shelf-scans",
@@ -239,6 +263,15 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reachedAs": {
+          "invoke:library-members-alert": {
+            "type": "triggers",
+            "when": "failure"
+          }
+        },
+        "reaches": [
+          "invoke:library-members-alert"
+        ],
         "reads": {
           "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
         },
@@ -372,6 +405,54 @@
         "environment": {},
         "reads": {
           "": "type:@types/aws-lambda#KinesisStreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-alert",
+      "type": "entry",
+      "label": "library-members-alert",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-alert",
+        "deployedBy": "terraform",
+        "name": "library-members-alert",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.alert",
+        "handler": "alerts/alert.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{requestContext:{functionArn:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-digest",
+      "type": "entry",
+      "label": "library-members-digest",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 33,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-digest",
+        "deployedBy": "terraform",
+        "name": "library-members-digest",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.digest",
+        "handler": "digest/digest.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{memberId:string}"
         },
         "adapter": "aws-lambda"
       }
@@ -570,6 +651,44 @@
       }
     },
     {
+      "id": "members#src/alerts/alert.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/alerts/alert.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{requestContext:{functionArn:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "members#src/digest/digest.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/digest/digest.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{memberId:string}"
+            }
+          ],
+          "returns": "{memberId:string}"
+        }
+      }
+    },
+    {
       "id": "producer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan.on_failure",
       "type": "producer",
       "label": "message sns/library-return-alerts",
@@ -660,6 +779,26 @@
           ]
         }
       }
+    },
+    {
+      "id": "repo:members",
+      "type": "repo",
+      "label": "members",
+      "repo": "members",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
     }
   ],
   "edges": [
@@ -705,6 +844,18 @@
       "line": 65,
       "meta": {
         "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.member_digest.on_success",
+      "to": "entry:lending:invoke:library-lending-notify-member",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 91,
+      "meta": {
+        "via": "deployment",
+        "when": "success"
       }
     },
     {
@@ -771,6 +922,19 @@
       "confidence": "static",
       "file": "src/returns/audit-return.ts",
       "line": 4
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-card-lookup",
+      "to": "entry:members:invoke:library-members-alert",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 37,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:library-members-alert",
+        "when": "failure"
+      }
     },
     {
       "from": "entry:lending:invoke:library-lending-card-lookup",
@@ -867,6 +1031,35 @@
       "confidence": "static",
       "file": "src/shelves/shelf-scan.ts",
       "line": 4
+    },
+    {
+      "from": "entry:members:invoke:library-members-alert",
+      "to": "members#src/alerts/alert.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/alerts/alert.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:members:invoke:library-members-digest",
+      "to": "consumer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.member_digest.on_success",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 91,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:library-members-digest",
+        "when": "success"
+      }
+    },
+    {
+      "from": "entry:members:invoke:library-members-digest",
+      "to": "members#src/digest/digest.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/digest/digest.ts",
+      "line": 2
     },
     {
       "from": "http_out:lending#src/kiosk/kiosk.ts:5:22",

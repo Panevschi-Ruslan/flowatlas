@@ -1,5 +1,9 @@
-~  event iot/library/shelves/+/weight    members/infra/ways-in.tf:22
+~  event iot/library/shelves/+/weight    members/infra/ways-in.tf:23
   -> handler                             members/src/shelves/shelf-sensor.ts:8
-  ~  message sqs/library-shelf-readings  members/infra/ways-in.tf:22
+  @  workflow library-members-restock    members/infra/returns.tf:40
+    -> Restock [Task function]           members/infra/returns.tf:43
+      @  library-members-restock-shelf   members/infra/main.tf:39
+        -> handler                       members/src/returns/restock-shelf.ts:7
+  ~  message sqs/library-shelf-readings  members/infra/ways-in.tf:23
     ~  sqs/library-shelf-readings        infra/returns.tf:52
 unresolved on this path: 0

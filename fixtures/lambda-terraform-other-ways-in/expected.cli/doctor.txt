@@ -4,7 +4,7 @@ unresolved: 0 to act on over 2 rows, and 2 places static reading cannot see, fol
   ways in: 16 found, 15 with a handler that was read, 1 without
   invoker-not-read (info): 1 row
     The function is still a way in of its own; nothing here says it is unused because nothing drawn reaches it.
-      members/infra/ways-in.tf:99  aws_lambda_permission.log_digest
+      members/infra/ways-in.tf:107  aws_lambda_permission.log_digest
   iot-action-not-read (info): 1 row
     The rule is still drawn with every action it has that runs a function, sends on, writes a table or a stream, or starts a state machine.
       members/infra/returns.tf:52  aws_iot_topic_rule.book_returned

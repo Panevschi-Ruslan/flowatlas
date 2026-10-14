@@ -7,3 +7,6 @@ export const PAGES_BUCKET = 'library-page-scans';
 
 /** The thumbnails of the pages, one version each. */
 export const THUMBS_BUCKET = 'library-page-thumbs';
+
+/** The withdrawn pages, kept with every version through the s3-bucket module. */
+export const ARCHIVE_BUCKET = 'library-page-archive';

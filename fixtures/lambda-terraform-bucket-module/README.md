@@ -12,6 +12,7 @@ Type-checked, never executed or deployed.
 | `CompleteMultipartUploadCommand` in `store-page.ts` | `library-page-scans` | `s3:ObjectCreated:CompleteMultipartUpload`, `pages/*.tiff` | the module's `index-page`, `static` |
 | version 2's `s3.upload` in `import-batch.ts` | the same | any of `s3:ObjectCreated:*`, `imports/*.tiff` | the module's `catalogue-import` onto `sqs/library-scan-imports`, `heuristic`: it takes `CompleteMultipartUpload` alone |
 | `DeleteObjectCommand` naming no version in `withdraw-page.ts` | the same, versioned | `s3:ObjectRemoved:Delete` | the module's `withdrawn` (`s3:ObjectRemoved:DeleteMarkerCreated`) onto `sns/library-scan-withdrawn`, `static` |
+| the second `DeleteObjectCommand` naming no version in `withdraw-page.ts` | `library-page-archive`, the `s3-bucket` module's, versioned by its `versioning = { enabled = true }` input (P60) | `s3:ObjectRemoved:Delete` | `note-withdrawal` (`s3:ObjectRemoved:DeleteMarkerCreated`), `static` |
 | `DeleteObjectsCommand` in `withdraw-page.ts` | `library-page-thumbs` | `s3:ObjectRemoved:Delete`, both keys | `forget-thumbs`, declared in `thumbs.tf.json`, `static` |
 | `DeleteObjectCommand` with a `VersionId` in `purge-version.ts` | `library-page-scans` | `s3:ObjectRemoved:Delete`, `VersionId` written and not read | nothing: a delete naming a version leaves no marker, `s3-write-matches-nothing` (info) |
 

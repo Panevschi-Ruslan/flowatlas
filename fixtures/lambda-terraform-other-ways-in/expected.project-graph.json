@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T18:16:20.329Z",
+  "builtAt": "2026-10-14T21:18:16.583Z",
   "services": [
     {
       "name": "members",
@@ -148,7 +148,7 @@
       "label": "event iot/library/shelves/+/weight",
       "repo": "members",
       "file": "infra/ways-in.tf",
-      "line": 22,
+      "line": 23,
       "kind": "event",
       "meta": {
         "key": "iot/library/shelves/+/weight",
@@ -159,6 +159,14 @@
         "name": "library_shelf_weight",
         "rule": "aws_iot_topic_rule.shelf_weight",
         "function": "library-members-shelf-sensor",
+        "reachedAs": {
+          "workflow:library-members-restock": {
+            "when": "failure"
+          }
+        },
+        "reaches": [
+          "workflow:library-members-restock"
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -187,7 +195,7 @@
       "label": "POST /kiosk/checkout",
       "repo": "members",
       "file": "infra/ways-in.tf",
-      "line": 70,
+      "line": 78,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -634,7 +642,7 @@
       "label": "message sqs/library-shelf-readings",
       "repo": "members",
       "file": "infra/ways-in.tf",
-      "line": 22,
+      "line": 23,
       "kind": "message",
       "meta": {
         "kind": "message",
@@ -749,6 +757,19 @@
     },
     {
       "from": "entry:members:event:iot/library/shelves/+/weight",
+      "to": "entry:members:workflow:library-members-restock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/ways-in.tf",
+      "line": 23,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:library-members-restock",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:members:event:iot/library/shelves/+/weight",
       "to": "members#src/shelves/shelf-sensor.ts:handler",
       "type": "handles",
       "confidence": "static",
@@ -761,7 +782,7 @@
       "type": "calls",
       "confidence": "static",
       "file": "infra/ways-in.tf",
-      "line": 22,
+      "line": 23,
       "meta": {
         "via": "deployment"
       }
@@ -902,7 +923,7 @@
       "type": "emits",
       "confidence": "static",
       "file": "infra/ways-in.tf",
-      "line": 22,
+      "line": 23,
       "meta": {
         "via": "deployment"
       }
@@ -1053,7 +1074,7 @@
     },
     {
       "file": "infra/ways-in.tf",
-      "line": 99,
+      "line": 107,
       "reason": "invoker-not-read",
       "level": "info",
       "message": "library-members-log-digest may be run by logs.amazonaws.com, which is not read, so what runs it from there is not drawn",

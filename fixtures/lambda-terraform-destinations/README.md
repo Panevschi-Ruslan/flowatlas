@@ -2,7 +2,8 @@
 
 A lending library's loans service: a kiosk calling another function through its
 function URL, and functions whose results and failures the platform hands on to
-destinations (P54).
+destinations (P54). `members` deploys two functions the loans service's
+configuration names: a destination, and a function whose destination it sets (P60).
 
 Type-checked, never executed or deployed.
 
@@ -31,6 +32,8 @@ the two stay apart.
 | the same | the same | `failure` | a publisher onto `sqs/library-loan-failures` |
 | `aws_lambda_function_event_invoke_config.return_item` | `invoke:library-lending-return-item` | `success` | a publisher onto `eventbridge/library-events/lambda/Lambda Function Invocation Result - Success`, which the rule `library-returned` takes to `audit-return` |
 | the same | the same | `failure` | a publisher onto `sns/library-return-alerts` |
+| `aws_lambda_function_event_invoke_config.card_lookup` | `invoke:library-lending-card-lookup` | `failure` | `invoke:library-members-alert` in `members`, named by its ARN and joined by the linker (`via: "deployed-name"`) |
+| `aws_lambda_function_event_invoke_config.member_digest` | `invoke:library-members-digest` in `members`, named, joined by the linker into a `result` consumer here (`meta.resultOf`) | `success` | `invoke:library-lending-notify-member` |
 | `aws_lambda_event_source_mapping.shelf_scan`, `destination_config.on_failure` | `event:kinesis/library-shelf-scans` | `failure` | a publisher onto `sns/library-return-alerts` |
 
 Every edge out of the run is `triggers`, with `meta.when` saying which outcome

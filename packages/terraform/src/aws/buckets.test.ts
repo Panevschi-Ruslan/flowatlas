@@ -270,4 +270,43 @@ resource "aws_s3_bucket_notification" "plain" {
       ['library-plain', undefined],
     ]);
   });
+
+  it("says a bucket of the s3-bucket module keeps versions, by its versioning input in either spelling, suspended as well (P60)", () => {
+    const deployment = readHcl(`${BUCKET}
+module "enabled" {
+  source     = "terraform-aws-modules/s3-bucket/aws"
+  bucket     = "library-enabled"
+  versioning = { enabled = true }
+}
+module "status" {
+  source     = "terraform-aws-modules/s3-bucket/aws"
+  bucket     = "library-status"
+  versioning = { status = "Enabled" }
+}
+module "suspended" {
+  source     = "terraform-aws-modules/s3-bucket/aws"
+  bucket     = "library-suspended"
+  versioning = { enabled = false }
+}
+module "unset" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+  bucket = "library-unset"
+}
+resource "aws_s3_bucket_notification" "each" {
+  for_each = { enabled = module.enabled.s3_bucket_id, status = module.status.s3_bucket_id, suspended = module.suspended.s3_bucket_id, unset = module.unset.s3_bucket_id }
+  bucket   = each.value
+  topic {
+    topic_arn = aws_sns_topic.removed.arn
+    events    = ["s3:ObjectRemoved:*"]
+  }
+}`);
+    expect(
+      deployment.deliveries.map(({ from }) => [from.kind === 'bucket' ? from.name : '', from.kind === 'bucket' ? from.versioned : undefined]).sort(),
+    ).toEqual([
+      ['library-enabled', true],
+      ['library-status', true],
+      ['library-suspended', true],
+      ['library-unset', undefined],
+    ]);
+  });
 });

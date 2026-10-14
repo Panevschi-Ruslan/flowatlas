@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T17:48:58.596Z",
+  "builtAt": "2026-10-14T21:20:56.203Z",
   "configHash": "50bbc0bbbec5",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./scans",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 34,
-      "edges": 32,
+      "nodes": 37,
+      "edges": 36,
       "types": 7,
       "unresolved": 0,
-      "durationMs": 561,
+      "durationMs": 512,
       "packages": {
         "name": "lending-library-scans",
         "runtime": [
@@ -42,8 +42,8 @@
     "byReason": {}
   },
   "channels": {
-    "total": 4,
-    "linked": 4,
+    "total": 5,
+    "linked": 5,
     "noConsumers": [],
     "noProducers": []
   },
@@ -77,8 +77,8 @@
     }
   ],
   "totals": {
-    "nodes": 34,
-    "edges": 32,
+    "nodes": 37,
+    "edges": 36,
     "types": 7,
     "unresolved": 1
   }

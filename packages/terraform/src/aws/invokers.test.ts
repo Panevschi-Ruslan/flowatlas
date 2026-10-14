@@ -62,6 +62,7 @@ describe('other ways a function is run (fixtures/lambda-terraform-other-ways-in)
       'rule iot/library/returns/+/dropped -> queue library-shelf-readings',
       'rule iot/library/shelves/+/weight -> library-members-shelf-sensor',
       'rule iot/library/shelves/+/weight -> queue library-shelf-readings',
+      'rule iot/library/shelves/+/weight -> workflow library-members-restock',
     ]);
   });
 

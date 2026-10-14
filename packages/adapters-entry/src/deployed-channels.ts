@@ -29,7 +29,10 @@ import {
   makeUnnamedInvokeKey,
   makeWorkflowEntryKey,
   MOST_CHOICES,
+  REACHED_AS_META,
   REACHES_META,
+  RESULT_OF_META,
+  type ReachedAs,
   TAKES_META,
   WHERE_DECLARED_META,
   type ChannelForward,
@@ -351,6 +354,12 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
   // where the mapping that gave up took its batches in (P54).
   outcome: (drawing, delivery) => {
     const { of, when } = delivery.from;
+    // A function another deployment creates hands its run on into a node of
+    // this one's, which the linker joins to that function's entry (P60).
+    if ('name' in of) {
+      const resultOf = makeEntryReference('invoke', makeInvokeEntryKey(of.name));
+      return { ...consumerOf(drawing, delivery, 'result', 'aws-lambda', { [RESULT_OF_META]: resultOf }), link: 'triggers', when };
+    }
     const id = 'function' in of ? localFunction(drawing, of.function) : drawing.drawn.get(of.delivery);
     if (id === undefined) return { ...consumerOf(drawing, delivery, 'result', 'aws-lambda'), link: 'triggers', when };
     // An entry this module draws keeps its references on itself until it is returned.
@@ -379,6 +388,28 @@ const whenOf = (delivery: Declared): Record<string, unknown> =>
 /** What an edge out of a way in says: drawn from the deployment, and the outcome it carries (P54) or the delivery's own (P56). */
 const edgeMeta = (way: WayIn, delivery?: Declared): Record<string, unknown> =>
   way.when === undefined ? { via: 'deployment', ...(delivery === undefined ? {} : whenOf(delivery)) } : { via: 'deployment', when: way.when };
+
+/**
+ * A reference by deployed name, and how the linker is to draw the edge it
+ * becomes: the same type and outcome an edge to a target this deployment
+ * creates would carry (P60). A reference the way in already reaches plainly
+ * stays plain, so one edge does not claim an outcome only some of its
+ * deliveries carry.
+ */
+const reachByName = (drawing: Drawing, way: WayIn, delivery: Declared, reference: string): void => {
+  const plain = way.reaches.includes(reference);
+  way.reaches.push(reference);
+  const when = edgeMeta(way, delivery)['when'] as ReachedAs['when'];
+  const as: ReachedAs = { ...(way.link === 'triggers' ? { type: 'triggers' } : {}), ...(when === undefined ? {} : { when }) };
+  const node = drawing.entries.get(way.id) ?? drawing.ctx.builder.getNode(way.id) ?? drawing.invoked(way.id);
+  if (node === undefined) return;
+  const recorded = { ...((node.meta?.[REACHED_AS_META] as Record<string, ReachedAs> | undefined) ?? {}) };
+  if (plain && recorded[reference] === undefined) return;
+  if (Object.keys(as).length === 0) delete recorded[reference];
+  else recorded[reference] = as;
+  const { [REACHED_AS_META]: _old, ...rest } = node.meta ?? {};
+  node.meta = Object.keys(recorded).length === 0 ? rest : { ...rest, [REACHED_AS_META]: recorded };
+};
 
 /** A producer a delivery or a route is, reached from where its messages come in. */
 const producerNode = (
@@ -506,15 +537,15 @@ const TARGETS: { readonly [K in DeliveryTarget['kind']]: TargetDrawer<K> } = {
   function: (drawing, way, delivery, target) => {
     if (runAsEntry(drawing, way, target)) return;
     if ('name' in target) {
-      way.reaches.push(makeEntryReference('invoke', makeInvokeEntryKey(target.name)));
+      reachByName(drawing, way, delivery, makeEntryReference('invoke', makeInvokeEntryKey(target.name)));
       return;
     }
     const to = localFunction(drawing, target.function);
     if (to === undefined) return;
     drawing.ctx.builder.addEdge({ from: way.id, to, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way, delivery) });
   },
-  workflow: (_drawing, way, _delivery, target) => {
-    way.reaches.push(makeEntryReference('workflow', makeWorkflowEntryKey(target.name)));
+  workflow: (drawing, way, delivery, target) => {
+    reachByName(drawing, way, delivery, makeEntryReference('workflow', makeWorkflowEntryKey(target.name)));
   },
   queue: sendOn,
   topic: sendOn,
