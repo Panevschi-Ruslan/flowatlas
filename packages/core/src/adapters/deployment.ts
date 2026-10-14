@@ -183,10 +183,17 @@ export type DeliverySource =
       readonly events: readonly string[];
       readonly prefix?: string;
       readonly suffix?: string;
-    };
+    }
+  /**
+   * A service that runs a function itself, on a happening of its own nothing
+   * in code publishes: a sign-up in a user pool, a message on an IoT topic.
+   * `key` is the way in as the graph spells it, `cognito/<pool>/<trigger>` or
+   * `iot/<topic filter>`.
+   */
+  | { readonly kind: 'trigger'; readonly service: string; readonly key: string };
 
 /** What declares a delivery. */
-export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route' | 'notification';
+export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route' | 'notification' | 'trigger';
 
 /**
  * One way messages reach something: a rule's target, a subscription, a mapping

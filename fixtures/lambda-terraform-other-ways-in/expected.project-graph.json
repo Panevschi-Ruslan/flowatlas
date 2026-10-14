@@ -1,0 +1,660 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-14T10:31:53.190Z",
+  "services": [
+    {
+      "name": "members",
+      "repo": "./members",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/library-shelf-readings",
+      "type": "channel",
+      "label": "sqs/library-shelf-readings",
+      "repo": "members",
+      "file": "infra/ways-in.tf",
+      "line": 22,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "entry:members:event:cognito/library-members/post_confirmation",
+      "type": "entry",
+      "label": "event cognito/library-members/post_confirmation",
+      "repo": "members",
+      "file": "infra/ways-in.tf",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "key": "cognito/library-members/post_confirmation",
+        "by": "trigger",
+        "declaredAs": "aws_cognito_user_pool.members.lambda_config.post_confirmation",
+        "deployedBy": "terraform",
+        "service": "cognito",
+        "name": "post_confirmation",
+        "pool": "library-members",
+        "trigger": "post_confirmation",
+        "function": "library-members-post-confirmation",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:event:cognito/library-members/pre_sign_up",
+      "type": "entry",
+      "label": "event cognito/library-members/pre_sign_up",
+      "repo": "members",
+      "file": "infra/ways-in.tf",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "key": "cognito/library-members/pre_sign_up",
+        "by": "trigger",
+        "declaredAs": "aws_cognito_user_pool.members.lambda_config.pre_sign_up",
+        "deployedBy": "terraform",
+        "service": "cognito",
+        "name": "pre_sign_up",
+        "pool": "library-members",
+        "trigger": "pre_sign_up",
+        "function": "library-members-pre-sign-up",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:event:iot/library/shelves/+/weight",
+      "type": "entry",
+      "label": "event iot/library/shelves/+/weight",
+      "repo": "members",
+      "file": "infra/ways-in.tf",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "key": "iot/library/shelves/+/weight",
+        "by": "rule",
+        "declaredAs": "aws_iot_topic_rule.shelf_weight.lambda[0]",
+        "deployedBy": "terraform",
+        "service": "iot",
+        "name": "library_shelf_weight",
+        "rule": "aws_iot_topic_rule.shelf_weight",
+        "function": "library-members-shelf-sensor",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:http:ALL:/*",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "members",
+      "file": "infra/ways-in.tf",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/*",
+        "deployedBy": "terraform",
+        "function": "library-members-card-lookup",
+        "declaredAs": "aws_lambda_function_url.card_lookup",
+        "by": "function-url",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:http:POST:/kiosk/checkout",
+      "type": "entry",
+      "label": "POST /kiosk/checkout",
+      "repo": "members",
+      "file": "infra/ways-in.tf",
+      "line": 70,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/kiosk/checkout",
+        "rawPath": "/kiosk/checkout",
+        "deployedBy": "terraform",
+        "api": "library-kiosk",
+        "function": "library-members-kiosk",
+        "declaredAs": "aws_lb_listener_rule.kiosk_checkout",
+        "by": "load-balancer",
+        "hosts": [
+          "kiosk.library.example"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-card-lookup",
+      "type": "entry",
+      "label": "library-members-card-lookup",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-card-lookup",
+        "deployedBy": "terraform",
+        "name": "library-members-card-lookup",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"card-lookup\"]",
+        "handler": "url/card-lookup.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-kiosk",
+      "type": "entry",
+      "label": "library-members-kiosk",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-kiosk",
+        "deployedBy": "terraform",
+        "name": "library-members-kiosk",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"kiosk\"]",
+        "handler": "kiosk/kiosk.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#ALBEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-log-digest",
+      "type": "entry",
+      "label": "library-members-log-digest",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-log-digest",
+        "deployedBy": "terraform",
+        "name": "library-members-log-digest",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"log-digest\"]",
+        "handler": "logs/log-digest.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#CloudWatchLogsEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-post-confirmation",
+      "type": "entry",
+      "label": "library-members-post-confirmation",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-post-confirmation",
+        "deployedBy": "terraform",
+        "name": "library-members-post-confirmation",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"post-confirmation\"]",
+        "handler": "accounts/post-confirmation.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#PostConfirmationTriggerEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-pre-sign-up",
+      "type": "entry",
+      "label": "library-members-pre-sign-up",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-pre-sign-up",
+        "deployedBy": "terraform",
+        "name": "library-members-pre-sign-up",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"pre-sign-up\"]",
+        "handler": "accounts/pre-sign-up.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#PreSignUpTriggerEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-shelf-sensor",
+      "type": "entry",
+      "label": "library-members-shelf-sensor",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-shelf-sensor",
+        "deployedBy": "terraform",
+        "name": "library-members-shelf-sensor",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"shelf-sensor\"]",
+        "handler": "shelves/shelf-sensor.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:members#ShelfReading"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "members#src/accounts/post-confirmation.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/accounts/post-confirmation.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#PostConfirmationTriggerEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#PostConfirmationTriggerEvent"
+        }
+      }
+    },
+    {
+      "id": "members#src/accounts/pre-sign-up.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/accounts/pre-sign-up.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#PreSignUpTriggerEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#PreSignUpTriggerEvent"
+        }
+      }
+    },
+    {
+      "id": "members#src/kiosk/kiosk.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#ALBEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#ALBResult"
+        }
+      }
+    },
+    {
+      "id": "members#src/logs/log-digest.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/logs/log-digest.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#CloudWatchLogsEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "members#src/shelves/shelf-sensor.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/shelves/shelf-sensor.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reading",
+              "type": "type:members#ShelfReading"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "members#src/url/card-lookup.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/url/card-lookup.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "producer:members#infra/ways-in.tf:aws_iot_topic_rule.shelf_weight.sqs[0]",
+      "type": "producer",
+      "label": "message sqs/library-shelf-readings",
+      "repo": "members",
+      "file": "infra/ways-in.tf",
+      "line": 22,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "rule",
+        "declaredAs": "aws_iot_topic_rule.shelf_weight.sqs[0]",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "repo:members",
+      "type": "repo",
+      "label": "members",
+      "repo": "members",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:members:event:cognito/library-members/post_confirmation",
+      "to": "members#src/accounts/post-confirmation.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/accounts/post-confirmation.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:event:cognito/library-members/pre_sign_up",
+      "to": "members#src/accounts/pre-sign-up.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/accounts/pre-sign-up.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:event:iot/library/shelves/+/weight",
+      "to": "members#src/shelves/shelf-sensor.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shelves/shelf-sensor.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:members:event:iot/library/shelves/+/weight",
+      "to": "producer:members#infra/ways-in.tf:aws_iot_topic_rule.shelf_weight.sqs[0]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/ways-in.tf",
+      "line": 22,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:members:http:ALL:/*",
+      "to": "members#src/url/card-lookup.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/url/card-lookup.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "statusUnknown": "{card?:string}"
+      }
+    },
+    {
+      "from": "entry:members:http:POST:/kiosk/checkout",
+      "to": "members#src/kiosk/kiosk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{path:string}",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:members:invoke:library-members-card-lookup",
+      "to": "members#src/url/card-lookup.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/url/card-lookup.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:library-members-kiosk",
+      "to": "members#src/kiosk/kiosk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:library-members-log-digest",
+      "to": "members#src/logs/log-digest.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/logs/log-digest.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:library-members-post-confirmation",
+      "to": "members#src/accounts/post-confirmation.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/accounts/post-confirmation.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:library-members-pre-sign-up",
+      "to": "members#src/accounts/pre-sign-up.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/accounts/pre-sign-up.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:library-members-shelf-sensor",
+      "to": "members#src/shelves/shelf-sensor.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shelves/shelf-sensor.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:members#infra/ways-in.tf:aws_iot_topic_rule.shelf_weight.sqs[0]",
+      "to": "channel:sqs/library-shelf-readings",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/ways-in.tf",
+      "line": 22,
+      "meta": {
+        "via": "deployment"
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#ALBEvent": {
+      "name": "ALBEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "67439726a20f127b",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#ALBResult": {
+      "name": "ALBResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "bfa4c01231f2c501",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#CloudWatchLogsEvent": {
+      "name": "CloudWatchLogsEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "252ef7849d34404e",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#PostConfirmationTriggerEvent": {
+      "name": "PostConfirmationTriggerEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "93b6732077414ed0",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#PreSignUpTriggerEvent": {
+      "name": "PreSignUpTriggerEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "62e04c8090bd8c60",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:members#ShelfReading": {
+      "name": "ShelfReading",
+      "kind": "object",
+      "declaredIn": "members#src/shelves/shelf-sensor.ts",
+      "structuralHash": "bd97dd18ff8fc40a",
+      "fields": [
+        {
+          "name": "shelf",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "grams",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "infra/ways-in.tf",
+      "line": 99,
+      "reason": "invoker-not-read",
+      "level": "info",
+      "message": "library-members-log-digest may be run by logs.amazonaws.com, which is not read, so what runs it from there is not drawn",
+      "hint": "The function is still a way in of its own; nothing here says it is unused because nothing drawn reaches it.",
+      "symbol": "aws_lambda_permission.log_digest",
+      "adapter": "aws-lambda",
+      "meta": {
+        "principal": "logs.amazonaws.com",
+        "function": "library-members-log-digest"
+      },
+      "service": "members"
+    }
+  ]
+}

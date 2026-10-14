@@ -40,7 +40,9 @@ const line = (delivery: DeployedDelivery): string => {
           ? `changes of ${from.of} ${from.name}`
           : from.kind === 'connection'
             ? `connection ${from.api} ${from.route}`
-            : `${from.kind} ${from.name}`;
+            : from.kind === 'trigger'
+              ? `trigger ${from.key}`
+              : `${from.kind} ${from.name}`;
   const to = delivery.to;
   const target =
     to === undefined

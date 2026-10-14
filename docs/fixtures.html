@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>141 fixtures</span>
-    <span>318 snapshot files</span>
+    <span>143 fixtures</span>
+    <span>326 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="18">18</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="20">20</span></h2>
     <ul>
       <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
         <div class="head">
@@ -450,6 +450,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A lending library's circulation service with two APIs created from OpenAPI documents rather than from resources and methods (R174).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-terraform-other-ways-in serverless, wired in terraform a lending library's members service: six functions, each run by something other than an api gateway route, a rule, a queue or a topic (p53).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-other-ways-in">lambda-terraform-other-ways-in</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's members service: six functions, each run by something other than an API Gateway route, a rule, a queue or a topic (P53).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="lambda-terraform-rest serverless, wired in terraform lambda handlers whose ways in are declared in terraform: one `aws_lambda_function` per handler, and a rest api built resource by resource in front of them.">

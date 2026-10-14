@@ -1,0 +1,33 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-14T10:31:53.466Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:members#infra/ways-in.tf:aws_iot_topic_rule.shelf_weight.sqs[0]",
+        "to": "channel:sqs/library-shelf-readings",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-shelf-readings|emits|producer:members#infra/ways-in.tf:aws_iot_topic_rule.shelf_weight.sqs[0]",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-shelf-readings is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 1,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

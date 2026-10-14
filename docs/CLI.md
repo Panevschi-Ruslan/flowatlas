@@ -1193,7 +1193,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Terraform files and modules | `infra-file-unparsed`, `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
 | Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
-| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info) |
+| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread` |
 
@@ -2464,6 +2464,16 @@ value the route selection expression picks out of a message, `askLibrarian` -
 that runs whatever its integration invokes, or publishes onto the queue or bus
 it sends to. `meta.authorization` records an authoriser on `$connect`
 (`fixtures/lambda-terraform-websocket`).
+
+**Other ways a function is run** (`fixtures/lambda-terraform-other-ways-in`):
+
+| Declared as | Read as |
+|---|---|
+| `aws_lambda_function_url` | an `http` entry `ALL /*` on the function; `AWS_IAM` authorisation is a guard |
+| `aws_lb_listener_rule` (or a listener's `default_action`) forwarding to an `aws_lb_target_group` with `target_type = "lambda"` and its `aws_lb_target_group_attachment` | an `http` entry per `path_pattern` and `http_request_method` (`ALL /*` where none is given) on each function registered; `host_header` values are kept as `meta.hosts` |
+| `aws_cognito_user_pool` with `lambda_config` | an `event` entry `cognito/<pool>/<trigger>` per step - `pre_sign_up`, `post_confirmation`, `custom_email_sender`... - on its function |
+| `aws_iot_topic_rule` | an `event` entry `iot/<topic filter>`, the filter read out of `sql`, running its `lambda` action's function and publishing onto the queue or topic of each `sqs` and `sns` action |
+| `aws_lambda_permission` for any other principal - `logs.amazonaws.com`, another account | one `invoker-not-read` row at `info`, naming the principal: the function is run by something not read, and is still not called unused |
 
 **Base paths and stages.** A custom domain's `aws_api_gateway_base_path_mapping`
 or `aws_apigatewayv2_api_mapping` puts its base path in front of every route of

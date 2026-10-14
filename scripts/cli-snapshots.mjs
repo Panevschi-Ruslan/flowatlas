@@ -399,6 +399,7 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.cancel-order.tree.txt', 'POST /orders/:param/cancel'],
     ['flow.track-click.tree.txt', 'POST /clicks'],
   ]),
+  terraformShape('lambda-terraform-other-ways-in', [['flow.shelf-weight.tree.txt', 'event:iot/library/shelves/+/weight']]),
 ];
 
 /**

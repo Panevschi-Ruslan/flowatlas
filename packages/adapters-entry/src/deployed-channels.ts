@@ -342,6 +342,14 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       route: delivery.from.route,
       ...(delivery.meta ?? {}),
     }),
+  // A user pool or an IoT rule runs its function on something that happens
+  // in the service itself, which nothing in code publishes.
+  trigger: (drawing, delivery) =>
+    entryOf(drawing, delivery, 'event', delivery.from.key, {
+      service: delivery.from.service,
+      ...(delivery.name === undefined ? {} : { name: delivery.name }),
+      ...(delivery.meta ?? {}),
+    }),
 };
 
 /** Where a publisher a deployment declares sits, and what declares it. */

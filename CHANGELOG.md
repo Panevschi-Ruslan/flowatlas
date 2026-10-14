@@ -41,6 +41,15 @@ only one of them moved.
   `stream-filter-not-matched` row, and a stream something reads and nothing
   writes is a `stream-no-writer` row, both at `info`
   (`fixtures/lambda-terraform-table-stream`).
+- **Other ways a Lambda function is run, read from Terraform.** A function URL
+  and an Application Load Balancer target group of functions are `http`
+  entries on the function - `ALL /*` for a URL, each listener rule's path and
+  verb for a load balancer, its hosts kept on the entry. A user pool's
+  `lambda_config` is an `event` entry `cognito/<pool>/<trigger>` per step, and
+  an IoT topic rule is an `event` entry `iot/<topic filter>` running its
+  function and publishing onto the queue or topic its other actions name. An
+  `aws_lambda_permission` for a principal none of these reads is an
+  `invoker-not-read` row at `info`. `fixtures/lambda-terraform-other-ways-in`.
 
 ## [0.5.1][] - 2026-10-12
 

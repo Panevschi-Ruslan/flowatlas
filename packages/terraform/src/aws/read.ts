@@ -22,6 +22,7 @@ import { addressesOf, joinSegments, MAPPING_READERS } from './addresses.js';
 import { argument, siteOf, textOf, whyNot } from './arguments.js';
 import { environmentOf } from './environment.js';
 import { EVENT_READERS } from './events.js';
+import { INVOKER_READERS } from './invokers.js';
 import { integrationOfRoute, integrationType, resourceIntegration, sentBy, type Integration } from './integrations.js';
 import { OPENAPI_BODY_READERS } from './openapi-body.js';
 import { PIPE_READERS } from './pipes.js';
@@ -95,7 +96,7 @@ export class DeploymentReading implements ResourceReading {
     ['aws_api_gateway_method', (instance) => this.#restRoute(instance)],
     ['aws_apigatewayv2_route', (instance) => this.#httpRoute(instance)],
     ['aws_sfn_state_machine', (instance) => this.#workflow(instance)],
-    ...[...OPENAPI_BODY_READERS, ...SOCKET_READERS, ...MAPPING_READERS, ...EVENT_READERS, ...QUEUE_READERS, ...PIPE_READERS].map(
+    ...[...OPENAPI_BODY_READERS, ...SOCKET_READERS, ...MAPPING_READERS, ...EVENT_READERS, ...QUEUE_READERS, ...PIPE_READERS, ...INVOKER_READERS].map(
       ([type, read]) => [type, (instance: Instance) => read(instance, this)] as const,
     ),
     ...BUCKET_READERS.map(([type, read]) => [type, (instance: Instance) => read(instance, this)] as const),
@@ -416,7 +417,7 @@ export class DeploymentReading implements ResourceReading {
         ...(resolvedTarget === undefined ? {} : { target: resolvedTarget }),
         ...(path.kind === 'root' ? { root: { key: path.key, below: normalizePath(path.below) } } : {}),
         ...(draft.guards.length === 0 ? {} : { guards: draft.guards }),
-        meta: { declaredAs: draft.address, key: makeHttpEntryKey(method, fullPath), ...address.meta },
+        meta: { declaredAs: draft.address, key: makeHttpEntryKey(method, fullPath), ...address.meta, ...draft.meta },
       });
     }
   }
