@@ -3,6 +3,7 @@ import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type PackedMap } from './map-pack.js';
 import { packShapes, type PackedShapes } from './shapes.js';
+import { packSites, type PackedSites } from './sites.js';
 
 /**
  * The graph, small enough to ship inside one file.
@@ -73,7 +74,24 @@ export interface PackedGraph {
   shapes: PackedShapes;
   /** The project at the size of its services, for the Map tab. See `map.ts`. */
   map: PackedMap;
+  /** Each edge's place among its siblings, and which run on a failure or side by side. See `sites.ts`. */
+  sites: PackedSites;
+  /**
+   * What was seen at run time, when a trace was imported (P65). Absent, the
+   * page shows only what the code says.
+   *
+   * `joins` is keyed by an edge's position in `edges`, or by `fromKey>toKey`
+   * in the nodes' stable keys; `entries` by an entry's id (as `entryIds`
+   * names it) or its stable key.
+   */
+  observed?: PackedObserved;
   report: unknown;
+}
+
+export interface PackedObserved {
+  joins: Record<string, { count: number; lastSeen: string }>;
+  entries: Record<string, { hits: number }>;
+  unmatched: Array<{ service?: string; kind: string; name: string }>;
 }
 
 const dictionary = (values: Iterable<string>): [string[], Map<string, number>] => {
@@ -261,7 +279,8 @@ export const packGraph = (input: PackInput): PackedGraph => {
   ]);
 
   const known = (edge: GraphEdge): boolean => position.has(edge.from) && position.has(edge.to);
-  const edges = input.edges.filter(known).map((edge) => [
+  const kept = input.edges.filter(known);
+  const edges = kept.map((edge) => [
     position.get(edge.from) as number,
     position.get(edge.to) as number,
     edgeTypeIx.get(edge.type) as number,
@@ -326,6 +345,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
       answers: shapes.answers.map(([node, kind]) => [node, shapes.answerKinds[kind] as string]),
     }),
     shapes,
+    sites: packSites(kept),
     ...(input.editor === undefined
       ? {}
       : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),

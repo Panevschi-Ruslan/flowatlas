@@ -1602,6 +1602,69 @@
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
   }
+
+  /* ── steps: a way in as a waterfall (P64) ─────────────────────────────── */
+
+  .steps-view { padding: 0 0 12px; }
+  .s-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+    padding: 8px 14px; border-bottom: 1px solid var(--rule-soft);
+  }
+  .s-bar .hint { min-width: 0; }
+  .s-list { list-style: none; margin: 0; padding: 4px 0; overflow: auto; max-height: 620px; }
+  .s-row {
+    position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px;
+    padding: 3px 14px 3px calc(var(--depth) * 16px + 14px); min-width: 0;
+    border-left: 3px solid transparent;
+  }
+  .s-row[data-depth]:not([data-depth='0'])::before {
+    content: ''; position: absolute; left: calc(var(--depth) * 16px + 4px); top: 0; bottom: 0;
+    border-left: 1px solid var(--rule);
+  }
+  .s-row:hover, .s-row.is-lit { background: var(--raise); }
+  .s-row.is-together::before { border-left: 3px double var(--accent); }
+  .s-row.is-failure { border-left-color: var(--bad); }
+  .s-row.is-failure .s-label { color: var(--bad); }
+  .s-row.is-guess .s-label { text-decoration: underline dashed var(--warn); text-underline-offset: 3px; }
+  .s-what { display: inline-flex; align-items: baseline; gap: 7px; min-width: 0; max-width: 100%; }
+  .s-glyph {
+    flex: none; min-width: 26px; text-align: center; font-family: var(--f-mono); font-size: 10.5px;
+    color: var(--hue); border: 1px solid color-mix(in srgb, var(--hue) 55%, var(--rule)); border-radius: var(--radius);
+    padding: 0 3px;
+  }
+  .s-label { font-family: var(--f-mono); font-size: 12.5px; overflow-wrap: anywhere; }
+  .s-inline { font-family: var(--f-mono); font-size: 11.5px; color: var(--accent); overflow-wrap: anywhere; }
+  .s-marks { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+  .s-mark {
+    font-family: var(--f-mono); font-size: 10.5px; color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 9px; padding: 0 6px;
+  }
+  .s-mark.is-guess { color: var(--warn); border-color: var(--warn); border-style: dashed; }
+  .s-mark.is-certain { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, var(--rule)); }
+  .s-mark.is-failure { color: var(--bad); border-color: var(--bad); }
+  .s-mark.is-together { color: var(--accent); border-color: var(--accent); }
+  .s-mark.is-seen { color: var(--raise); background: var(--good); border-color: var(--good); }
+  .s-where { margin-left: auto; font-family: var(--f-mono); font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+  .s-where .to-graph { margin-left: 4px; }
+  .s-cut { margin: 8px 14px; }
+  .s-key { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 14px; }
+  .s-unmatched { list-style: none; margin: 0; padding: 0; }
+  .s-unmatched li { padding: 2px 0; font-family: var(--f-mono); font-size: 12px; overflow-wrap: anywhere; }
+  .g-node.is-hover .g-box { stroke: var(--accent); stroke-width: 2.6; }
+  #g-steps { max-height: min(340px, 40vh); overflow: auto; }
+  #g-steps .s-list { max-height: none; }
+  .row-seen { color: var(--good); font-family: var(--f-mono); }
+  .m-link.is-guess { stroke-dasharray: 6 4; }
+  .m-link.is-seen { stroke-opacity: 0.9; }
+  .m-more { cursor: pointer; }
+  .m-more text { fill: var(--muted); font-family: var(--f-mono); font-size: 11px; }
+  .m-more:hover text { fill: var(--accent); }
+  .m-hang { fill: none; stroke: var(--rule); stroke-width: 1; }
+  @media (max-width: 640px) {
+    .s-row { padding-left: calc(var(--depth) * 10px + 10px); padding-right: 10px; }
+    .s-row[data-depth]:not([data-depth='0'])::before { left: calc(var(--depth) * 10px + 2px); }
+    .s-where { margin-left: 0; flex-basis: 100%; }
+  }
 </style>
 
 <div class="shell">
@@ -1638,6 +1701,7 @@
         <div class="tabs" role="tablist">
           <button class="tab" role="tab" data-view="map" aria-selected="false">Map</button>
           <button class="tab" role="tab" data-view="walk" aria-selected="true">Walk</button>
+          <button class="tab" role="tab" data-view="steps" aria-selected="false">Steps</button>
           <button class="tab" role="tab" data-view="crossings" aria-selected="false">Crossings</button>
           <button class="tab" role="tab" data-view="missing" aria-selected="false">Not joined</button>
           <button class="tab" role="tab" data-view="graph" aria-selected="false">Graph</button>
@@ -1659,12 +1723,28 @@
         </label>
       </div>
       <div class="walk" id="walk"></div>
+      <div class="steps-view" id="steps-view" hidden>
+        <div class="s-bar">
+          <label class="hint">depth
+            <select id="s-depth"><option>4</option><option>8</option><option selected>12</option><option>24</option></select>
+          </label>
+          <button class="tool" id="s-copy" title="Copy this way in as Markdown for an assistant: steps, places, shapes, gaps, ids">Copy as prompt</button>
+          <span class="hint" id="s-note"></span>
+        </div>
+        <ol class="s-list" id="s-list" aria-label="Steps, in call order"></ol>
+      </div>
       <div class="map" id="map-view" hidden>
         <div class="g-bar">
           <span class="hint">links</span>
           <span id="m-kinds" class="g-filters" style="padding:0;border:0"></span>
           <label class="hint g-pick"><input type="checkbox" id="m-packages"> packages</label>
           <label class="hint g-pick" id="m-dev-pick" hidden><input type="checkbox" id="m-dev"> development too</label>
+          <label class="hint g-pick">layout
+            <select id="m-layout">
+              <option value="calls">call order</option>
+              <option value="role">by role</option>
+            </select>
+          </label>
           <label class="hint g-pick">check
             <select id="m-mark">
               <option value="">nothing</option>
@@ -1774,6 +1854,7 @@
           <button class="tool" id="g-clear" hidden>Back to the neighbourhood</button>
         </div>
         <div class="g-answer" id="g-answer" aria-live="polite" hidden></div>
+        <div class="g-answer" id="g-steps" aria-label="Steps of this way in" hidden></div>
         <div class="g-stage" id="g-stage">
           <div class="g-canvas" id="g-canvas">
             <svg id="g-svg" role="group" aria-roledescription="graph">
@@ -1828,6 +1909,9 @@ __FRAME_LOGIC__
 /* The map's logic - services, links, layout, checks - written in from map.js. */
 __MAP_LOGIC__
 
+/* A way in as its steps, and as a prompt - written in from steps.js. */
+__STEPS_LOGIC__
+
   (() => {
     const data = JSON.parse(document.getElementById('graph').textContent);
     const { types, repos, kinds, files, edgeTypes, confidences, reasons } = data.dicts;
@@ -1838,6 +1922,8 @@ __MAP_LOGIC__
     const TY = 0, LB = 1, RP = 2, KD = 3, FL = 4, LN = 5, MT = 6;
     const nodes = data.nodes;
     const keys = createKeys(data.keys, nodes.length);
+    /* What was seen at run time, when a trace was imported; nothing otherwise. */
+    const seen = createSeen(data, keys);
 
     const hueOf = (repoIndex) => `var(--s-${repoIndex % 5})`;
     const repoName = (i) => repos[nodes[i][RP]];
@@ -1992,12 +2078,14 @@ __MAP_LOGIC__
           : esc(nodes[i][LB]);
         b.innerHTML = `<span class="row-name">${name}</span>` +
           `<span class="row-meta">${esc(repoName(i))} &middot; ${esc(kinds[nodes[i][KD]] || typeName(i))}` +
-          (files[nodes[i][FL]] ? ' &middot; ' + esc(files[nodes[i][FL]].split('/').pop()) : '') + '</span>';
+          (files[nodes[i][FL]] ? ' &middot; ' + esc(files[nodes[i][FL]].split('/').pop()) : '') +
+          (seen.entry(i) ? ` &middot; <span class="row-seen" title="Hits seen at run time">seen &times;${seen.entry(i).toLocaleString()}</span>` : '') +
+          '</span>';
         b.addEventListener('click', () => {
           current = i;
           drawEntries();
-          // On the graph a way in is a focus; anywhere else it is a walk.
-          if (view === 'graph') graph.go(i); else showView('walk');
+          // On the graph a way in is a focus; on Steps its steps; anywhere else a walk.
+          if (view === 'graph') graph.go(i); else showView(view === 'steps' ? 'steps' : 'walk');
         });
         li.append(b);
         li.insertAdjacentHTML('beforeend', graphLink(i));
@@ -2144,7 +2232,26 @@ __MAP_LOGIC__
       sheet.className = 'sheet';
       sheet.append(table);
       walkEl.replaceChildren(sheet);
+      if (seen.unmatched.length > 0) {
+        const more = document.createElement('div');
+        more.className = 'sheet';
+        more.innerHTML = unmatchedHtml();
+        walkEl.append(more);
+      }
     }
+
+    /* What a trace saw that the code does not show: a check of its own. */
+    const UNMATCHED_LIMIT = 100;
+    const unmatchedHtml = () => {
+      const list = seen.unmatched;
+      return `<h4>Seen at run time, not found in code &middot; ${list.length.toLocaleString()}</h4>` +
+        '<p class="hint">Calls a trace recorded that match no join here: a way in, a call or a channel the reading missed, ' +
+        'or code that is not in the repositories read.</p><ul class="s-unmatched">' +
+        list.slice(0, UNMATCHED_LIMIT).map((item) => `<li><span class="tag">${esc(item.kind)}</span> ${esc(item.name)}` +
+          (item.service ? ` <span class="hint">${esc(item.service)}</span>` : '') + '</li>').join('') +
+        (list.length > UNMATCHED_LIMIT ? `<li class="hint">${(list.length - UNMATCHED_LIMIT).toLocaleString()} more</li>` : '') +
+        '</ul>';
+    };
 
     /* ── what did not join, and why ──────────────────────────────────── */
 
@@ -2160,11 +2267,14 @@ __MAP_LOGIC__
         // are written; when that row names a node, the node is one click away.
         const example = data.rows.find((row) => reasons[row[ROW.reason]] === u.reason);
         const anchor = example === undefined ? -1 : example[ROW.node];
+        const at = example === undefined ? -1 : data.rows.indexOf(example);
         tr.innerHTML =
           `<td><span class="tag${tone ? ' is-' + tone : ''}">${esc(u.reason)}</span></td>` +
           `<td class="num">${u.count.toLocaleString()}</td>` +
           `<td class="mono">${u.service ? esc(u.service) + ' &middot; ' : ''}${esc(u.example)}` +
-          `${anchor >= 0 ? ' ' + graphLink(anchor) : ''}</td>`;
+          `${anchor >= 0 ? ' ' + graphLink(anchor) : ''}` +
+          (at >= 0 ? ` <button class="tool" data-prompt="row:${at}" title="Copy this row as Markdown for an assistant">Copy as prompt</button>` : '') +
+          '</td>';
         body.append(tr);
       }
       table.append(body);
@@ -3173,7 +3283,8 @@ __MAP_LOGIC__
         (row[ROW.sites] > 1 ? ` &middot; ${row[ROW.sites]} places` : '') +
         (file ? ' &middot; ' + opener(row[ROW.repo], row[ROW.file], row[ROW.line], file) : '') + '</span>' +
         `<p>${esc(row[ROW.message])}</p>` +
-        (hint ? `<p class="hint-text">${esc(hint)}</p>` : '') + '</div>';
+        (hint ? `<p class="hint-text">${esc(hint)}</p>` : '') +
+        `<button class="tool" data-prompt="row:${r}" title="Copy as Markdown for an assistant">Copy as prompt</button></div>`;
     };
 
     /* What a node takes and gives back, worded by what kind of thing it is. */
@@ -3358,6 +3469,10 @@ __MAP_LOGIC__
               `not in the flow, drawn faded as context (O)">${ALSO_SAYS[others.look].ask} &middot; ${others.count.toLocaleString()}</button>`
             : '') +
           (DOORS.has(t) ? '<button class="tool" data-act="walk">Open in Walk</button>' : '') +
+          (DOORS.has(t) ? '<button class="tool" data-act="steps" title="This way in as a waterfall, in call order">Steps</button>' : '') +
+          (DOORS.has(t) || t === 'channel'
+            ? `<button class="tool" data-prompt="${t === 'channel' ? 'channel' : 'entry'}:${v}" title="Copy as Markdown for an assistant">Copy as prompt</button>`
+            : '') +
         '</div>' +
         (context
           ? `<p class="hint">Not in the flow: drawn as context, it ${esc(ALSO_SAYS[context.look].mark(context.of))}. ` +
@@ -3573,7 +3688,8 @@ __MAP_LOGIC__
         'line; a node carrying one is badged with the count.</p>' +
         listHtml('ways', 'Ways in with problems', ways, 'Every way in has a handler that was read, and no row.') +
         listHtml('crossings', 'Crossings with problems', crossed, 'No crossing has a row at either end.') +
-        listHtml('calls', 'Calls that did not join, or carry rows', unjoined, 'Every call joined, and none carries a row.');
+        listHtml('calls', 'Calls that did not join, or carry rows', unjoined, 'Every call joined, and none carries a row.') +
+        (seen.unmatched.length > 0 ? unmatchedHtml() : '');
     };
 
     const pathHtml = (hood) => {
@@ -4102,6 +4218,7 @@ __MAP_LOGIC__
       else if (target.dataset.act === 'expand') expand(v);
       else if (target.dataset.act === 'also') toggleAlso(v);
       else if (target.dataset.act === 'walk') { current = v; drawEntries(); showView('walk'); }
+      else if (target.dataset.act === 'steps') stepsInGraph.toggle(v);
     });
     panel.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') { event.preventDefault(); closeDetails(); return; }
@@ -4681,7 +4798,7 @@ __MAP_LOGIC__
     const mapNotice = document.getElementById('m-notice');
     const mapState = {
       toggled: new Set(), hidden: new Set(), packages: false, dev: false,
-      focus: null, selected: null, link: null, mark: null,
+      focus: null, selected: null, link: null, mark: null, layout: 'calls',
     };
     let mapDrawn = null;
     let mapFit = true;
@@ -4744,7 +4861,7 @@ __MAP_LOGIC__
       selected: mapState.link === null ? mapState.selected : null,
       link: mapState.link,
       focus: mapState.focus, toggled: mapState.toggled, hidden: mapState.hidden,
-      mark: mapState.mark, packages: mapState.packages, dev: mapState.dev,
+      mark: mapState.mark, packages: mapState.packages, dev: mapState.dev, layout: mapState.layout,
     });
     const writeMapHash = () => {
       if (view !== 'map') return;
@@ -4801,7 +4918,8 @@ __MAP_LOGIC__
 
     function drawMap(refit) {
       const shown = mapView(mapModel, mapState, confidences);
-      const laid = mapLayout(mapModel, shown);
+      const laid = mapState.layout === 'role' ? mapLayout(mapModel, shown) : mapCallOrder(mapModel, shown);
+      const notDrawn = laid.hidden || new Set();
       const cycles = mapCycles(shown);
       const marks = mapState.mark ? mapMarks(mapModel, shown, mapState.mark, cycles) : new Map();
       mapDrawn = { view: shown, laid, cycles };
@@ -4810,7 +4928,7 @@ __MAP_LOGIC__
 
       const out = [];
       for (const column of laid.columns) {
-        out.push(svgEl('text', { class: 'm-col', x: column.x, y: -22 }, COLUMN_SAYS[column.name]));
+        out.push(svgEl('text', { class: 'm-col', x: column.x, y: -22 }, column.label || COLUMN_SAYS[column.name]));
       }
       for (const frame of laid.frames) {
         const cluster = mapModel.clusters.get(frame.cluster);
@@ -4831,22 +4949,37 @@ __MAP_LOGIC__
         if (!a || !b) continue;
         const d = mapPath(a, b);
         const conf = link.worst >= 0 ? confidences[link.worst] : '';
-        const width = Math.min(6, 1.2 + Math.log2(link.count));
+        const seenTimes = seen.any ? mapSeenCount(mapModel, link, seen.join) : 0;
+        const width = Math.min(6, 1.2 + Math.log2(link.count)) + (seenTimes > 0 ? Math.min(4, 1.5 + Math.log10(seenTimes)) : 0);
+        const guessed = conf !== '' && conf !== 'static' && conf !== 'marker';
         const cls = ['m-link', 'm-k-' + link.kind,
-          conf === 'heuristic' ? 'is-heuristic' : '', link.kind === 'package' && link.dev ? 'is-dev' : '',
+          guessed ? 'is-guess' : '', conf === 'heuristic' ? 'is-heuristic' : '', seenTimes > 0 ? 'is-seen' : '',
+          link.kind === 'package' && link.dev ? 'is-dev' : '',
           mapState.mark === 'cycles' && cycles.links.has(link.id) ? 'is-cycle' : '',
           mapState.link === link.id ? 'is-open' : ''].filter(Boolean).join(' ');
         const say = `${unitName(shown.units.get(link.from))} → ${unitName(shown.units.get(link.to))}: ` +
           `${plural(link.count, KIND_SAYS[link.kind] === 'depends on' ? 'package' : 'edge', KIND_SAYS[link.kind] === 'depends on' ? 'packages' : 'edges')}, ${link.kind}` +
-          (conf ? `, ${conf} at worst` : '');
+          (conf ? `, ${conf} at worst` : '') + (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '');
         const hit = svgEl('path', { class: 'm-hit', d, 'data-link': link.id });
         hit.append(svgEl('title', {}, say));
         linkLayer.append(hit,
           svgEl('path', { class: cls, d, 'stroke-width': width, 'marker-end': 'url(#m-arrow)', 'data-for': link.id }));
       }
       out.push(linkLayer);
+      for (const more of laid.more || []) {
+        const group = svgEl('g', { class: 'm-more', 'data-more': more.owner, tabindex: 0, role: 'button',
+          'aria-label': `${more.n} more under ${unitName(shown.units.get(more.owner))}`, transform: `translate(${more.x} ${more.y})` });
+        group.append(svgEl('text', { x: 4, y: 13 }, `+${more.n} more`));
+        group.append(svgEl('title', {}, 'Stores and outside hosts not drawn here; click for the whole list'));
+        out.push(group);
+      }
       for (const [id, unit] of shown.units) {
+        if (notDrawn.has(id)) continue;
         const at = laid.placed.get(id);
+        if (at.under) {
+          const top = laid.placed.get(at.under);
+          out.push(svgEl('path', { class: 'm-hang', d: `M${top.x + 8} ${top.y + top.h} V${at.y + at.h / 2} H${at.x}` }));
+        }
         const name = unitName(unit);
         const group = svgEl('g', {
           class: ['m-unit', unit.closed ? 'is-cluster' : '', mapState.selected === id ? 'is-open' : '',
@@ -4922,6 +5055,15 @@ __MAP_LOGIC__
       '<button class="g-close" data-map-close aria-label="Close" title="Close (Escape)">&times;</button></div>' +
       `<div class="g-place">${sub}</div>` + (actions ? `<div class="g-actions">${actions}</div>` : '') + '</header>';
 
+    const TOP_SAYS = { tables: 'Busiest tables', channels: 'Busiest channels' };
+    const topTargetsHtml = (repo) => {
+      const top = mapTopTargets(data, repo);
+      return Object.entries(TOP_SAYS).filter(([key]) => top[key].length > 0).map(([key, title]) =>
+        `<section><h4>${title}</h4><ul class="m-list">` +
+        top[key].map(({ node, n }) => `<li><span class="m-what">${toGraph(node, nodes[node][LB])}</span>` +
+          `<span class="m-n">${plural(n, 'edge', 'edges')}</span></li>`).join('') + '</ul></section>').join('');
+    };
+
     const serviceDetails = (unit) => {
       const i = unit.members[0];
       const box = mapModel.boxes[i];
@@ -4958,6 +5100,7 @@ __MAP_LOGIC__
         (s.unread ? '<dt>read</dt><dd>no: nothing could read it</dd>' : '') +
         '</dl></section>' +
         linksOf(unit.id) +
+        topTargetsHtml(box.n) +
         (inside.ways.length ? `<section><h4>Ways in · ${(inside.ways.length + inside.waysLeft).toLocaleString()}</h4><ul class="m-list">` +
           inside.ways.map((v) => `<li><span class="m-what">${toGraph(v, nodes[v][LB])}</span>` +
             `<span class="m-n">${esc(kinds[nodes[v][KD]])}</span></li>`).join('') +
@@ -5001,6 +5144,7 @@ __MAP_LOGIC__
       }[kind] || '';
       const what = { channel: 'a channel', data: `the tables ${esc(box.n)} reads and writes`, external: 'an outside API', package: 'a package' }[kind];
       const actions = (box.a >= 0 ? `<a class="tool" href="#graph/${keys.keyOf(box.a)}">Open in Graph</a>` : '') +
+        (kind === 'channel' && box.a >= 0 ? `<button class="tool" data-prompt="channel:${box.a}" title="Copy as Markdown for an assistant">Copy as prompt</button>` : '') +
         `<button class="tool" data-map-focus="${esc(unit.id)}">${mapState.focus === unit.id ? 'Whole map' : 'Only this and what it touches'}</button>`;
       return mapHead(unitName(unit), what, actions) +
         `<section><dl class="g-meta">${facts}</dl></section>` + linksOf(unit.id);
@@ -5112,6 +5256,8 @@ __MAP_LOGIC__
       if (head) { toggleCluster(head.dataset.cluster); return; }
       const hit = event.target.closest('.m-hit');
       if (hit) { mapState.link = hit.dataset.link; mapState.selected = null; drawMap(false); return; }
+      const moreEl = event.target.closest('.m-more');
+      if (moreEl) { mapState.selected = moreEl.dataset.more; mapState.link = null; drawMap(false); return; }
       const unitEl = event.target.closest('.m-unit');
       if (!unitEl) return;
       const unit = mapDrawn.view.units.get(unitEl.dataset.unit);
@@ -5180,6 +5326,8 @@ __MAP_LOGIC__
     const packagesBox = document.getElementById('m-packages');
     const devBox = document.getElementById('m-dev');
     const markSel = document.getElementById('m-mark');
+    const layoutSel = document.getElementById('m-layout');
+    layoutSel.addEventListener('change', () => { mapState.layout = layoutSel.value === 'role' ? 'role' : 'calls'; drawMap(true); });
     packagesBox.addEventListener('change', () => { mapState.packages = packagesBox.checked; drawMap(true); });
     devBox.addEventListener('change', () => { mapState.dev = devBox.checked; drawMap(true); });
     markSel.addEventListener('change', () => { mapState.mark = markSel.value || null; drawMap(false); });
@@ -5337,7 +5485,7 @@ __MAP_LOGIC__
     /* A link's view, by name: what it names and this page does not hold is said. */
     const mapController = {
       show() { titleEl.textContent = 'The whole project'; drawKindChips(); packagesBox.checked = mapState.packages; devBox.checked = mapState.dev;
-        markSel.value = mapState.mark || ''; drawMap(mapFit); },
+        markSel.value = mapState.mark || ''; layoutSel.value = mapState.layout; drawMap(mapFit); },
       apply(asked) {
         mapSay.clear();
         mapState.toggled = new Set(asked.toggled.filter((id) => mapModel.clusters.has(id)));
@@ -5345,6 +5493,7 @@ __MAP_LOGIC__
         mapState.packages = asked.packages;
         mapState.dev = asked.dev;
         mapState.mark = asked.mark;
+        mapState.layout = asked.layout;
         mapState.link = asked.link;
         const known = (id) => id !== null && (mapModel.byId.has(id) || mapModel.clusters.has(id));
         const missing = [asked.selected, asked.focus].filter((id) => id !== null && !known(id));
@@ -5365,6 +5514,144 @@ __MAP_LOGIC__
         }
       },
     };
+
+    /* ── steps: a way in as a waterfall, and Copy as prompt ──────────── */
+
+    /* steps.js says what the steps are; this draws them. A row opens its
+       place in the editor when the page has editor links, its node in the
+       Graph tab, and lights that node in the drawing while hovered. */
+    const stepsView = document.getElementById('steps-view');
+    const stepsList = document.getElementById('s-list');
+    const stepsDepth = document.getElementById('s-depth');
+    const stepsNote = document.getElementById('s-note');
+    const STEP_MARKS = [
+      [(row) => row.kind !== 'answer' && row.edge >= 0 && row.certain, (row) => ['is-certain', 'certain', `joined ${row.confidence}: the code says so`]],
+      [(row) => row.edge >= 0 && !row.certain && row.confidence !== 'runtime', (row) => ['is-guess', 'best guess', `joined ${row.confidence}: inferred, may be wrong`]],
+      [(row) => row.failure, () => ['is-failure', 'on failure', 'Runs only when what comes before it fails']],
+      [(row) => row.together, () => ['is-together', 'side by side', 'Runs beside its siblings, not after them']],
+      [(row) => row.seen > 0, (row) => ['is-seen', 'seen ×' + row.seen.toLocaleString(), 'Seen this many times at run time']],
+      [(row) => row.crosses, (row) => ['', 'into ' + repoName(row.node), 'Leaves one service for another']],
+      [(row) => row.again, () => ['', 'listed above', 'Reached again; its steps are listed where it first appears']],
+      [(row) => row.loop, () => ['', 'loops back', 'Already on this path']],
+    ];
+    const stepRowHtml = (row, at) => {
+      const v = row.node;
+      const label = row.kind === 'answer' ? 'answers ' + row.inline : nodes[v][LB];
+      const inline = row.kind !== 'answer' && row.inline && row.inline !== label ? `<span class="s-inline">${esc(row.inline)}</span>` : '';
+      const marks = STEP_MARKS.filter(([when]) => when(row)).map(([, say]) => {
+        const [tone, text, title] = say(row);
+        return `<span class="s-mark ${tone}" title="${esc(title)}">${esc(text)}</span>`;
+      }).join('');
+      const where = files[nodes[v][FL]] ? files[nodes[v][FL]] + (nodes[v][LN] ? ':' + nodes[v][LN] : '') : repoName(v);
+      const cls = ['s-row', row.failure ? 'is-failure' : '', row.edge >= 0 && !row.certain ? 'is-guess' : '',
+        row.together ? 'is-together' : ''].filter(Boolean).join(' ');
+      return `<li class="${cls}" data-node="${v}" data-depth="${row.depth}" data-at="${at}" ` +
+        `style="--depth:${row.depth};--hue:${hueOf(nodes[v][RP])}">` +
+        `<span class="s-what"><span class="s-glyph" title="${esc(STEP_KINDS[row.kind].say)}">${esc(STEP_KINDS[row.kind].glyph)}</span>` +
+        `<span class="s-label">${esc(label)}</span>${inline}</span>` +
+        (marks ? `<span class="s-marks">${marks}</span>` : '') +
+        (row.kind === 'answer' ? '' : `<span class="s-where">${opener(nodes[v][RP], nodes[v][FL], nodes[v][LN], where)}${graphLink(v)}</span>`) +
+        '</li>';
+    };
+    const stepsHtml = (entry, depth) => {
+      const found = stepsOf(model, entry, { depth, answersOf, seen });
+      return {
+        found,
+        html: found.rows.map(stepRowHtml).join('') +
+          (found.more > 0 ? `<li class="cut s-cut">${plural(found.more, 'more step', 'more steps')} not listed: raise the depth, or open it in the graph.</li>` : ''),
+      };
+    };
+    const stepsSaid = (found) => {
+      const guesses = found.rows.filter((row) => row.edge >= 0 && !row.certain).length;
+      const failing = found.rows.filter((row) => row.failure).length;
+      return [plural(found.rows.length, 'step', 'steps'), guesses ? plural(guesses, 'best guess', 'best guesses') : '',
+        failing ? failing + ' on failure' : '', seen.entry(found.rows[0].node) ? 'seen ×' + seen.entry(found.rows[0].node).toLocaleString() : '']
+        .filter(Boolean).join(' · ');
+    };
+    function drawSteps() {
+      if (current === null) return;
+      titleEl.textContent = nodes[current][LB];
+      const { found, html } = stepsHtml(current, Number(stepsDepth.value));
+      stepsList.innerHTML = html;
+      stepsNote.textContent = stepsSaid(found) + ' · in call order, as the source reads; not timed.';
+    }
+    stepsDepth.addEventListener('change', drawSteps);
+
+    /* Hovering a step lights its node wherever the drawing has it. */
+    const lightNode = (v) => {
+      for (const el of world.querySelectorAll('.g-node.is-hover')) el.classList.remove('is-hover');
+      if (v === null) return;
+      world.querySelector(`.g-node[data-node="${v}"]`)?.classList.add('is-hover');
+    };
+    const lightSteps = (list) => {
+      list.addEventListener('pointerover', (event) => {
+        const row = event.target.closest('.s-row');
+        lightNode(row ? Number(row.dataset.node) : null);
+      });
+      list.addEventListener('pointerleave', () => lightNode(null));
+      list.addEventListener('focusin', (event) => {
+        const row = event.target.closest('.s-row');
+        if (row) lightNode(Number(row.dataset.node));
+      });
+    };
+    lightSteps(stepsList);
+
+    /* On the Graph tab, a way in's steps open above the drawing, so a row
+       lights the box it names. */
+    const stepsInGraph = (() => {
+      const el = document.getElementById('g-steps');
+      let of = null;
+      lightSteps(el);
+      el.addEventListener('click', (event) => {
+        if (event.target.closest('[data-steps-close]')) { of = null; el.hidden = true; lightNode(null); }
+      });
+      return {
+        toggle(v) {
+          if (of === v) { of = null; el.hidden = true; lightNode(null); return; }
+          of = v;
+          const { found, html } = stepsHtml(v, STEP_BOUNDS.depth);
+          el.innerHTML = `<div class="g-head"><p><b>Steps of ${esc(nodes[v][LB])}</b> · ${esc(stepsSaid(found))}</p>` +
+            `<span><button class="tool" data-prompt="entry:${v}">Copy as prompt</button> ` +
+            '<button class="g-close" data-steps-close aria-label="Close steps" title="Close">&times;</button></span></div>' +
+            `<ol class="s-list">${html}</ol>`;
+          el.hidden = false;
+        },
+      };
+    })();
+
+    /* Copy as prompt: one handler for every button that asks, on any tab. */
+    const entryIdOf = new Map(Object.entries(data.entryIds || {}).map(([id, i]) => [i, id]));
+    const promptKit = {
+      keyOf: keys.keyOf,
+      idOf: (i) => entryIdOf.get(i) || (typeName(i) === 'channel' ? nodes[i][LB] : null),
+      faceLine,
+      answersOf,
+      seen,
+    };
+    const promptOf = (asked) => {
+      const [kind, at] = asked.split(':');
+      return promptFor(model, { [kind]: Number(at) }, promptKit);
+    };
+    const copyPrompt = async (button, asked) => {
+      const text = promptOf(asked);
+      if (text === '') return;
+      if (await copyText(text)) flash(button, 'Copied');
+      else window.prompt('Copy this prompt', text);
+    };
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-prompt]');
+      if (!button) return;
+      event.preventDefault();
+      copyPrompt(button, button.dataset.prompt);
+    });
+    document.getElementById('s-copy').addEventListener('click', (event) => {
+      if (current !== null) copyPrompt(event.currentTarget, 'entry:' + current);
+    });
+    if (seen.any) {
+      const total = [...entryIx].reduce((sum, i) => sum + seen.entry(i), 0);
+      stat('Seen at run time', total.toLocaleString() + ' hits',
+        seen.unmatched.length.toLocaleString() + ' not found in code', seen.unmatched.length ? 'warn' : 'good');
+    }
 
     /* ── wiring ──────────────────────────────────────────────────────── */
 
@@ -5398,16 +5685,27 @@ __MAP_LOGIC__
 
     const swatch = (kind) => `<span class="m-swatch m-k-${kind}"></span>`;
     const MAP_LEGEND =
-      '<span><b>columns</b> left to right as a request travels: front ends, APIs, channels, workers, ' +
+      '<span><b>call order</b> a column per step from the front ends, queues and topics between, ' +
+      'stores and outside hosts under the app that uses them &middot; <b>by role</b> front ends, APIs, channels, workers, ' +
       'libraries, data, the outside, packages</span>' +
       `<span>${swatch('http')} requests &middot; ${swatch('message')} messages &middot; ${swatch('workflow')} workflow starts ` +
       `&middot; ${swatch('invoke')} invokes &middot; ${swatch('db')} queries &middot; ${swatch('external')} outside &middot; ` +
       `${swatch('calls')} calls &middot; ${swatch('package')} depends on</span>` +
-      '<span><b>thicker</b> more edges &middot; <b>dashed</b> a guess among them</span>' +
+      '<span><b>thicker</b> more edges, or seen at run time &middot; <b>solid</b> certain &middot; <b>dashed</b> a best guess among them</span>' +
+      '<span><b>hover</b> dims what a box does not touch</span>' +
       '<span><b>stacked box</b> a family of names, closed; click to open &middot; <b>frame</b> an open family; ' +
       'its name closes it</span>' +
       '<span><b>keys</b> Tab moves &middot; Enter opens &middot; F full screen &middot; Escape closes &middot; ' +
       'double-click draws one box and what it touches</span>';
+
+    const STEPS_LEGEND =
+      '<span><b>order</b> depth first, as the source calls: a handler, its services, the stores, calls and ' +
+      'publishes they make, then the next service&rsquo;s way in</span>' +
+      '<span><b>in</b> handler &middot; <b>fn</b> service &middot; <b>db</b> store &middot; <b>http</b> outbound call &middot; ' +
+      '<b>ch</b> queue or topic &middot; <b>&lambda;</b> function &middot; <b>wf</b> workflow</span>' +
+      '<span><b class="g-key-bad">red</b> a failure path &middot; <b>side by side</b> runs beside its siblings &middot; ' +
+      '<b>best guess</b> a join that was inferred, dashed &middot; <b>seen &times;n</b> seen at run time</span>' +
+      '<span><b>hover</b> a row lights its node on the Graph tab&rsquo;s drawing</span>';
 
     function showView(name, asked) {
       if (name !== 'graph') fullScreen.set(false);
@@ -5416,14 +5714,16 @@ __MAP_LOGIC__
       root.classList.toggle('is-map', name === 'map');
       for (const tab of tabs) tab.setAttribute('aria-selected', String(tab.dataset.view === name));
       controls.hidden = name !== 'walk';
-      walkEl.hidden = name === 'graph' || name === 'map';
+      walkEl.hidden = name === 'graph' || name === 'map' || name === 'steps';
+      stepsView.hidden = name !== 'steps';
       graphView.hidden = name !== 'graph';
       mapViewEl.hidden = name !== 'map';
-      legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : name === 'map' ? MAP_LEGEND : WALK_LEGEND;
+      legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : name === 'map' ? MAP_LEGEND : name === 'steps' ? STEPS_LEGEND : WALK_LEGEND;
       if ((name !== 'graph' && location.hash.startsWith('#graph')) || (name !== 'map' && location.hash.startsWith('#map'))) {
         history.replaceState(null, '', location.pathname + location.search);
       }
       if (name === 'walk') drawWalk();
+      else if (name === 'steps') drawSteps();
       else if (name === 'crossings') drawCrossings();
       else if (name === 'missing') drawMissing();
       else if (name === 'map') mapController.show();

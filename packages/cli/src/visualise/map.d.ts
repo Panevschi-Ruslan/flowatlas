@@ -98,7 +98,29 @@ export interface MapHash {
   mark: string | null;
   packages: boolean;
   dev: boolean;
+  layout: 'calls' | 'role';
 }
+
+export interface MapCallOrder extends MapLayout {
+  columns: Array<{ name: string; label: string; x: number }>;
+  placed: Map<string, MapPlaced & { under?: string }>;
+  more: Array<{ owner: string; n: number } & MapPlaced>;
+  hidden: Set<string>;
+}
+
+export declare const MAP_HANG: Readonly<{ under: number; indent: number; more: number }>;
+export declare const mapCallOrder: (map: MapModel, view: MapView, hang?: number) => MapCallOrder;
+export declare const mapTouching: (view: MapView, id: string) => Set<string>;
+export declare const mapTopTargets: (
+  data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'>,
+  repo: string,
+  limit?: number,
+) => { tables: Array<{ node: number; n: number }>; channels: Array<{ node: number; n: number }> };
+export declare const mapSeenCount: (
+  map: MapModel,
+  link: MapViewLink,
+  seenJoin: (edge: number) => { count: number } | null,
+) => number;
 
 export declare const boxId: (box: MapBox) => string;
 export declare const clusterId: (box: MapBox) => string;
@@ -129,6 +151,7 @@ export interface MapHashState {
   mark?: string | null;
   packages?: boolean;
   dev?: boolean;
+  layout?: 'calls' | 'role';
 }
 
 export declare const formatMapHash: (state: MapHashState) => string;

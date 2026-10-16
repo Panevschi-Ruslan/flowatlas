@@ -35,7 +35,8 @@ const template = (): string =>
   part('page.html')
     .replace('__GRAPH_LOGIC__', () => part('graph.js'))
     .replace('__FRAME_LOGIC__', () => part('frame.js'))
-    .replace('__MAP_LOGIC__', () => part('map.js'));
+    .replace('__MAP_LOGIC__', () => part('map.js'))
+    .replace('__STEPS_LOGIC__', () => part('steps.js'));
 
 /**
  * A name for the project, since the configuration does not carry one.
