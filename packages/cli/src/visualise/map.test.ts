@@ -370,6 +370,7 @@ describe('a map view in the address', () => {
       mark: 'dead',
       packages: true,
       dev: true,
+      layout: 'calls',
     });
   });
 

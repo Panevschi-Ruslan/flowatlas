@@ -1,0 +1,157 @@
+import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import type { LinkReport } from '@flowatlas/linker';
+import { describe, expect, it } from 'vitest';
+import { createKeys } from './frame.js';
+import { answersOf, createModel, type GraphModel } from './graph.js';
+import { createMap, mapCallOrder, mapSeenCount, mapTopTargets, mapView } from './map.js';
+import { packGraph, type PackedGraph } from './pack.js';
+import { packSites } from './sites.js';
+import { createSeen, promptFor, stepsOf } from './steps.js';
+
+/**
+ * A synthetic shop: a route calls a service that reads a table, publishes to
+ * a channel a worker consumes, and calls a payments host; a guessed call and
+ * a failure destination hang off the service.
+ */
+const report = {
+  httpOut: {}, channels: {}, routes: { total: 0, called: 0, duplicated: 0 }, types: {}, totals: {},
+  services: [{ name: 'shop-api', type: 'nestjs' }, { name: 'shop-worker', type: 'nestjs' }],
+} as unknown as LinkReport;
+
+const n = (id: string, type: GraphNode['type'], repo: string, extra: Partial<GraphNode> = {}): GraphNode => ({
+  id, type, repo, label: extra.label ?? id, file: 'src/a.ts', line: 1, ...extra,
+});
+const nodes: GraphNode[] = [
+  n('entry:shop-api:http:POST:/orders', 'entry', 'shop-api', { kind: 'http', label: 'POST /orders', line: 4 }),
+  n('shop-api#Orders.place', 'method', 'shop-api', { label: 'Orders.place', line: 10 }),
+  n('db:shop-api#1', 'db_query', 'shop-api', { label: 'insert', line: 12, meta: { table: 'orders', op: 'write' } }),
+  n('table:shop-api#orders', 'table', 'shop-api', { label: 'orders' }),
+  n('producer:shop-api#1', 'producer', 'shop-api', { label: 'publish order.created', line: 14 }),
+  n('channel:order.created', 'channel', 'shop-api', { label: 'order.created' }),
+  n('consumer:shop-worker#1', 'consumer', 'shop-worker', { label: 'onOrderCreated' }),
+  n('shop-api#Orders.guess', 'method', 'shop-api', { label: 'Orders.guess', line: 20 }),
+  n('shop-api#Orders.onFail', 'method', 'shop-api', { label: 'Orders.onFail', line: 30 }),
+];
+const e = (from: number, to: number, type: GraphEdge['type'], over: Partial<GraphEdge> = {}): GraphEdge => ({
+  from: nodes[from]!.id, to: nodes[to]!.id, type, confidence: 'static', ...over,
+});
+const edges: GraphEdge[] = [
+  e(0, 1, 'handles'),
+  e(1, 4, 'calls', { line: 14 }),
+  e(1, 2, 'calls', { line: 12 }),
+  e(2, 3, 'queries'),
+  e(4, 5, 'emits'),
+  e(5, 6, 'consumes'),
+  e(1, 7, 'calls', { line: 20, confidence: 'heuristic', meta: { concurrent: true } }),
+  e(1, 8, 'triggers', { line: 30, meta: { when: 'failure' } }),
+];
+
+const pack = (): PackedGraph => packGraph({ builtAt: '2026-01-01T00:00:00Z', nodes, edges, unresolved: [], report });
+const modelOf = (data: PackedGraph): GraphModel => createModel(data) as GraphModel;
+
+describe('sites', () => {
+  it('orders by a workflow place or the line, and marks failures and declared side-by-side steps', () => {
+    const sites = packSites(edges);
+    expect(sites.order[1]).toBe(14);
+    expect(sites.failure).toEqual([7]);
+    expect(sites.concurrent).toEqual([6]);
+    const branch = packSites([e(1, 2, 'calls', { meta: { order: 0, transitions: [{ kind: 'branch' }] } }),
+      e(1, 3, 'calls', { meta: { order: 1, transitions: [{ kind: 'catch' }] } })]);
+    expect(branch).toEqual({ order: [0, 1], failure: [1], concurrent: [0] });
+  });
+});
+
+describe('steps', () => {
+  it('walks depth first in call order, with inline tables and channels, guesses and failure paths', () => {
+    const data = pack();
+    const model = modelOf(data);
+    const { rows } = stepsOf(model, 0, { answersOf });
+    const labels = rows.map((row) => `${row.depth}:${model.nodes[row.node]![1]}`);
+    expect(labels).toEqual([
+      '0:POST /orders', '1:Orders.place', '2:insert', '3:orders', '2:publish order.created',
+      '3:order.created', '4:onOrderCreated', '2:Orders.guess', '2:Orders.onFail',
+    ]);
+    expect(rows[2]!.inline).toBe('write orders');
+    expect(rows[2]!.kind).toBe('db');
+    expect(rows[5]!.kind).toBe('channel');
+    expect(rows[6]!.crosses).toBe(true);
+    expect(rows[7]!).toMatchObject({ certain: false, together: true, failure: false });
+    expect(rows[8]!.failure).toBe(true);
+  });
+
+  it('stops at its depth and counts what it left', () => {
+    const model = modelOf(pack());
+    const found = stepsOf(model, 0, { depth: 1 });
+    expect(found.rows).toHaveLength(2);
+    expect(found.more).toBe(4);
+  });
+});
+
+describe('observed', () => {
+  const observed = (data: PackedGraph, keys: ReturnType<typeof createKeys>) => ({
+    joins: {
+      '2': { count: 5, lastSeen: '2026-01-02' },
+      [`${keys.keyOf(4)}>${keys.keyOf(5)}:emits`]: { count: 3, lastSeen: '2026-01-03' },
+    },
+    entries: { [nodes[0]!.id]: { hits: 7 } },
+    unmatched: [{ service: 'shop-api', kind: 'http', name: 'GET /health' }],
+    _size: data.edges.length,
+  });
+
+  it('is nothing when absent', () => {
+    const data = pack();
+    const seen = createSeen(data, createKeys(data.keys, data.nodes.length));
+    expect(seen.any).toBe(false);
+    expect(stepsOf(modelOf(data), 0, { seen }).rows.every((row) => row.seen === 0)).toBe(true);
+  });
+
+  it('marks seen joins on the steps, hits on the entry, and keeps what matched nothing', () => {
+    const data = pack();
+    const keys = createKeys(data.keys, data.nodes.length);
+    data.observed = observed(data, keys);
+    const seen = createSeen(data, keys);
+    const { rows } = stepsOf(modelOf(data), 0, { seen });
+    expect(rows[0]!.seen).toBe(7);
+    expect(rows.find((row) => row.edge === 2)!.seen).toBe(5);
+    expect(rows.find((row) => row.edge === 4)!.seen).toBe(3);
+    expect(seen.unmatched).toEqual([{ service: 'shop-api', kind: 'http', name: 'GET /health' }]);
+    const map = createMap(data.map);
+    const view = mapView(map, { toggled: new Set(), hidden: new Set() }, data.dicts.confidences);
+    const total = view.links.reduce((sum, link) => sum + mapSeenCount(map, link, seen.join), 0);
+    expect(total).toBe(3);
+  });
+});
+
+describe('prompt', () => {
+  it('writes the steps with places, marks, gaps and ids, within its bound', () => {
+    const data = pack();
+    const model = modelOf(data);
+    const keys = createKeys(data.keys, data.nodes.length);
+    const kit = { keyOf: keys.keyOf, idOf: (i: number) => (i === 0 ? nodes[0]!.id : null) };
+    const text = promptFor(model, { entry: 0 }, kit);
+    expect(text).toContain('# Way in: POST /orders');
+    expect(text).toContain('`entry:shop-api:http:POST:/orders`');
+    expect(text).toContain('`shop-api: src/a.ts:12`');
+    expect(text).toContain('best guess: heuristic');
+    expect(text).toContain('on failure');
+    const short = promptFor(model, { entry: 0 }, { ...kit, chars: 200 });
+    expect(short.length).toBeLessThan(300);
+    expect(short).toMatch(/more lines cut/);
+    expect(promptFor(model, { channel: 5 }, kit)).toContain('## Consumed by · 1');
+  });
+});
+
+describe('map in call order', () => {
+  it('puts the channel between its two apps and the store under its app', () => {
+    const data = pack();
+    const map = createMap(data.map);
+    const view = mapView(map, { toggled: new Set(), hidden: new Set() }, data.dicts.confidences);
+    const laid = mapCallOrder(map, view);
+    const x = (id: string) => laid.placed.get(id)!.x;
+    expect(x('service:shop-api')).toBeLessThan(x('channel:order.created'));
+    expect(x('channel:order.created')).toBeLessThan(x('service:shop-worker'));
+    const data_ = [...laid.placed.entries()].find(([id]) => id.startsWith('data:'));
+    if (data_) expect(data_[1]).toMatchObject({ under: 'service:shop-api' });
+    expect(mapTopTargets(data, 'shop-api').channels.map((t) => t.node)).toEqual([5]);
+  });
+});

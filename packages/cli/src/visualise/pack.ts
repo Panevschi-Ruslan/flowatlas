@@ -4,7 +4,10 @@ import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type PackedMap } from './map-pack.js';
 import type { Observed } from '../observe/match.js';
 import { packObserved, type PackedObserved } from './observed.js';
+
+export type { PackedObserved };
 import { packShapes, type PackedShapes } from './shapes.js';
+import { packSites, type PackedSites } from './sites.js';
 
 /**
  * The graph, small enough to ship inside one file.
@@ -75,15 +78,20 @@ export interface PackedGraph {
   shapes: PackedShapes;
   /** The project at the size of its services, for the Map tab. See `map.ts`. */
   map: PackedMap;
+  /** Each edge's place among its siblings, and which run on a failure or side by side. See `sites.ts`. */
+  sites: PackedSites;
   /**
-   * What run-time traces confirmed, from `flowatlas observe`; absent without
-   * `observed.json`. Shape (see `observed.ts`):
-   * `{ joins: {[edgeId]: {count,lastSeen}}, entries: {[entryKey]: {hits}}, unmatched: [{service?,kind,name}] }`,
-   * edgeId being the position in `edges` and entryKey an entry node id.
+   * What was seen at run time, when a trace was imported (P65). Absent, the
+   * page shows only what the code says.
+   *
+   * `joins` is keyed by an edge's position in `edges`, or by `fromKey>toKey`
+   * in the nodes' stable keys; `entries` by an entry's id (as `entryIds`
+   * names it) or its stable key.
    */
   observed?: PackedObserved;
   report: unknown;
 }
+
 
 const dictionary = (values: Iterable<string>): [string[], Map<string, number>] => {
   const list = [...new Set(values)].sort();
@@ -338,6 +346,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
       answers: shapes.answers.map(([node, kind]) => [node, shapes.answerKinds[kind] as string]),
     }),
     shapes,
+    sites: packSites(packedEdges),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
     ...(input.editor === undefined
       ? {}
