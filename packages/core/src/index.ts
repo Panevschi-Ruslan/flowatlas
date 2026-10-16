@@ -543,3 +543,19 @@ export {
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
+export {
+  ACCEPTED_FILE,
+  ACCEPTED_FORMAT_VERSION,
+  acceptedFor,
+  acceptedPathFor,
+  covers,
+  gapIdOf,
+  isGapId,
+  loadAccepted,
+  parseGapId,
+  saveAccepted,
+  splitAccepted,
+  withAccepted,
+  withoutAccepted,
+} from './accepted.js';
+export type { AcceptedFile, AcceptedGap, GapLike } from './accepted.js';

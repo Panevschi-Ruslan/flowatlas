@@ -1,3 +1,4 @@
+import { loadAccepted } from '@flowatlas/core';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 import { loadConfig } from '@flowatlas/core';
@@ -127,6 +128,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
   const editor = editorFor(options);
   const db = openDbFromOptions(options);
   const observed = loadObserved(dbPathFor(options));
+  const accepted = loadAccepted(dbPathFor(options));
   let packed;
   let counts;
   try {
@@ -143,6 +145,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       report,
       typeOf: (id) => db.type(id),
       ...(observed === undefined ? {} : { observed }),
+      ...(accepted.length === 0 ? {} : { accepted }),
       ...(editor === undefined ? {} : { editor }),
     });
   } finally {

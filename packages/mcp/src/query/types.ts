@@ -49,6 +49,8 @@ export interface FlowNode {
   node: CompactNode;
   edge?: FlowEdge;
   guards?: GuardRef[];
+  /** Times real traffic went through this row, from `observed.json` (P72); absent when nothing saw it. */
+  observed?: number;
   children: FlowNode[];
 }
 

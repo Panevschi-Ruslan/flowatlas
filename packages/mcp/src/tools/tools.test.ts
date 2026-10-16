@@ -52,7 +52,7 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the twelve the project promises', async () => {
+  it('are exactly the fourteen the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'check_contract',
@@ -63,7 +63,9 @@ describe('the tools a session is offered', () => {
       'get_type',
       'impact',
       'list_entries',
+      'search',
       'start_here',
+      'what_changed',
       'who_calls',
       'who_consumes',
       'who_emits',
