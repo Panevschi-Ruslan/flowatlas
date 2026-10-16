@@ -73,9 +73,9 @@ export const shown = (
  * Findings a strip cannot lose anything by, counted rather than listed.
  *
  * A handler that reaches no write cannot lose data by dropping a field, and on
- * one real project twenty-five of the fifty-six strips were on handlers like
- * that — a pricing preview being sent the caller's whole working object on
- * purpose. Every one of them is still in `--format json` (R30).
+ * a real project a large share of the strips were on handlers like that — a
+ * preview being sent the caller's whole working object on purpose. Every one
+ * of them is still in `--format json` (R30).
  */
 export const harmless = (findings: readonly ContractFinding[]): ContractFinding[] =>
   findings.filter((finding) => finding.impact === 'none');

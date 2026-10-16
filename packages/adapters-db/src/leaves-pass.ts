@@ -265,7 +265,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    *
    * A base of the project's own has no description to carry the fact, so the
    * configuration states it: the property each subclass sets to its table. With
-   * it, a call through `menuItemRepository` reads the table the class it is typed
+   * it, a call through `productRepository` reads the table the class it is typed
    * as states; without it, the base is read as before and the row that says the
    * table is unread names the key that would read it.
    */
@@ -808,7 +808,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
           });
     // Inside a class of a configured base, a query made through `this` whose
     // chain names nothing is on the class's own table: `this.coll().find()` in
-    // `MenuRepository` is a query on what `MenuRepository` sets its table
+    // `ProductRepository` is a query on what `ProductRepository` sets its table
     // property to. The chain is asked first, so a collection named outright
     // still wins (R165).
     const located =

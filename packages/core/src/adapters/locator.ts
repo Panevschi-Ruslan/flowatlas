@@ -63,7 +63,7 @@ export type NameLocator =
    *
    * The other way a class per name states the name once: not by handing it to
    * `super(...)` but by setting a field the base reads,
-   * `protected readonly collectionName = 'menuItems'`. The class itself first,
+   * `protected readonly collectionName = 'products'`. The class itself first,
    * then each class it extends, so a name stated on an intermediate base is
    * found as readily as one on the leaf (R165).
    */

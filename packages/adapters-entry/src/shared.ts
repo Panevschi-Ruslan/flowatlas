@@ -436,8 +436,8 @@ export const arrayElements = (elements: readonly TsNode[], depth = 0): TsNode[] 
  * Only what the function gives back is considered. An inline route handler is
  * plumbing and then an answer — boot the container, read the body, and then
  * hand over — and the plumbing is usually the only part written as a call to a
- * function of this repository. Reading every call made `getNestContext` the
- * code behind eight of the real project's worker routes, which is where the
+ * function of this repository. Reading every call made the container-boot
+ * helper the code behind a real project's worker routes, which is where the
  * request starts rather than where it is answered.
  *
  * A call whose result is bound to a name and used further down is not an answer

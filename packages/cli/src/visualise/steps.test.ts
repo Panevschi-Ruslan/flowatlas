@@ -258,8 +258,8 @@ describe('who covers a way in, and accepting every gap like one (P76)', () => {
     expect(
       acceptCommandFor({ reason: 'route-unguarded', service: 'inventory', message: 'GET /levels/:param/low has no guard in front of it.' }),
     ).toBe("flowatlas accept route-unguarded --service inventory --path 'GET /levels/:param/*' --note '<why these are fine>'");
-    expect(acceptCommandFor({ reason: 'dynamic-channel-name', service: 'billing' })).toBe(
-      "flowatlas accept dynamic-channel-name --service billing --note '<why these are fine>'",
+    expect(acceptCommandFor({ reason: 'channel-dynamic', service: 'billing' })).toBe(
+      "flowatlas accept channel-dynamic --service billing --note '<why these are fine>'",
     );
     expect(acceptCommandFor({ reason: 'r', service: "it's" })).toContain("--service 'it'\\''s'");
   });

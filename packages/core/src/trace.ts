@@ -1128,9 +1128,9 @@ export const addressAt = (
  * It is also a bound on work. `callSitesOf` is `findReferencesAsNodes`, asked
  * up to four times per body argument of every POST, PUT and PATCH; a shared
  * helper with two hundred callers then had two hundred literals' types read and
- * unioned. The 0.4.0 review measured the cold build on the project this is
- * developed against at 5.5s with and without the walk, so the cap is a guard
- * against a repository shaped differently rather than a saving here (R43).
+ * unioned. The 0.4.0 review measured the cold build on a real project at the
+ * same time with and without the walk, so the cap is a guard against a
+ * repository shaped differently rather than a saving here (R43).
  *
  * Twelve, the same dozen `MOST_CHOICES` draws the line at, and for the same
  * reason: a set that size is a domain rather than an enumeration of what some
@@ -1779,7 +1779,7 @@ export interface Forwarding<R> {
  * what a call starts - is drawn.
  *
  * Following a value out to a caller says who decided it, and must never cost
- * what the helper states: `sendViaTelegram(token, job)` with a token nobody can
+ * what the helper states: `sendViaWebhook(token, job)` with a token nobody can
  * read made a static request in the helper a heuristic one at the caller, and
  * took the helper's node and the caller's call into it with it. So a caller is
  * drawn on only where its reading is at least as sure as the helper's own; the

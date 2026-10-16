@@ -672,7 +672,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'base-url-from-files': () =>
     'No service claims the setting a request\'s base address is read from, and the value a file gives it names one: an example environment file, a container\'s environment, a deployment\'s variables, or the code\'s own fallback. Only the address is kept, and the join is marked heuristic unless the value is the one a function running the request is deployed with. Add the setting to services[].baseUrlEnv to say so outright; settingFiles.read: false turns the reading off.',
   'base-url-from-name': () =>
-    'No service claims the setting a request\'s base address is read from and nothing read gives it a value, and the setting is named after exactly one service (MENU_URL for menu), which was taken. The join is marked heuristic. Add the setting to services[].baseUrlEnv of the service it really is.',
+    'No service claims the setting a request\'s base address is read from and nothing read gives it a value, and the setting is named after exactly one service (CATALOG_URL for catalog), which was taken. The join is marked heuristic. Add the setting to services[].baseUrlEnv of the service it really is.',
   'route-api-guessed': () =>
     'Several APIs or load balancers serve this address; the one whose name shares the most words with the setting the base URL is read from was taken, and the join is marked heuristic. Annotate the call with @CallsService where that is wrong.',
   'route-unguarded': () =>

@@ -939,7 +939,7 @@ export const flowatlasConfigSchema = z
                     /**
                      * The property each class extending the base sets to the name
                      * of its table: `collectionName` for
-                     * `protected readonly collectionName = 'menuItems'` (R165).
+                     * `protected readonly collectionName = 'products'` (R165).
                      */
                     tableProperty: z.string().min(1).optional(),
                   }),

@@ -665,21 +665,21 @@ describe('a request made through a wrapper', () => {
 @Injectable({ providedIn: 'root' })
 export class DealsClient {
   constructor(private readonly api: ApiClient) {}
-  deals(): Observable<OrderDto[]> { return this.api.get<OrderDto[]>('/telegram/me/deals'); }
+  deals(): Observable<OrderDto[]> { return this.api.get<OrderDto[]>('/portal/me/deals'); }
   one(id: string): Observable<OrderDto> {
-    return this.api.get<OrderDto>(\`/telegram/deals/\${id}\`, { params: { lang: 'en' } });
+    return this.api.get<OrderDto>(\`/portal/deals/\${id}\`, { params: { lang: 'en' } });
   }
   claim(id: string, body: CreateOrderDto): Observable<OrderDto> {
-    return this.api.post<OrderDto>(\`/telegram/deals/\${id}/claim\`, body);
+    return this.api.post<OrderDto>(\`/portal/deals/\${id}/claim\`, body);
   }
 }
 `,
     );
     const calls = callsOf(graph);
     expect(calls.map((call) => `${String(call.meta?.['method'])} ${String(call.meta?.['path'])}`).sort()).toEqual([
-      'GET /telegram/deals/:param',
-      'GET /telegram/me/deals',
-      'POST /telegram/deals/:param/claim',
+      'GET /portal/deals/:param',
+      'GET /portal/me/deals',
+      'POST /portal/deals/:param/claim',
     ]);
     expect(calls.every((call) => call.meta?.['baseUrlEnv'] === 'apiUrl')).toBe(true);
     expect(calls.every((call) => call.file === 'orders-api.service.ts')).toBe(true);

@@ -23,11 +23,11 @@ const AT = '2026-01-01T00:00:00.000Z';
 
 describe('accepted gaps', () => {
   it('name a gap by service, file and reason, and read the name back', () => {
-    const id = gapIdOf({ service: 'orders', file: 'src/a.ts', reason: 'dynamic-channel-name' });
-    expect(id).toBe('gap:orders|src/a.ts|dynamic-channel-name');
-    expect(parseGapId(id)).toEqual({ service: 'orders', file: 'src/a.ts', reason: 'dynamic-channel-name' });
+    const id = gapIdOf({ service: 'orders', file: 'src/a.ts', reason: 'channel-dynamic' });
+    expect(id).toBe('gap:orders|src/a.ts|channel-dynamic');
+    expect(parseGapId(id)).toEqual({ service: 'orders', file: 'src/a.ts', reason: 'channel-dynamic' });
     expect(parseGapId('gap:||')).toBeUndefined();
-    expect(parseGapId('dynamic-channel-name')).toBeUndefined();
+    expect(parseGapId('channel-dynamic')).toBeUndefined();
   });
 
   it('cover a reason everywhere, or only where they say', () => {

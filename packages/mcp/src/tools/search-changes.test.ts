@@ -57,7 +57,7 @@ const graph: ProjectGraph = {
     } as never,
   },
   unresolved: [
-    { service: 'orders', file: 'src/orders.service.ts', line: 12, reason: 'dynamic-channel-name', message: 'order channel built at run time' },
+    { service: 'orders', file: 'src/orders.service.ts', line: 12, reason: 'channel-dynamic', message: 'order channel built at run time' },
     { service: 'orders', file: 'src/orders.repo.ts', line: 30, reason: 'db-receiver-name-only', message: 'orders table read by name only' },
   ] as never,
 };
@@ -152,7 +152,7 @@ describe('search', () => {
   it('marks accepted gaps and lists the new ones first', async () => {
     const found = await call('search', { query: 'orders', kinds: ['gaps'] });
     expect(found.results.gaps.map((gap: { id: string }) => gap.id)).toEqual([
-      'gap:orders|src/orders.service.ts|dynamic-channel-name',
+      'gap:orders|src/orders.service.ts|channel-dynamic',
       'gap:orders|src/orders.repo.ts|db-receiver-name-only',
     ]);
     expect(found.results.gaps[0].accepted).toBeUndefined();

@@ -418,7 +418,7 @@ describe('drawing a forwarded request no less surely than the helper does', () =
     const callers = `
       import { Api } from './client';
       export const nearby = (api: Api, lat: number) => {
-        let path = \`/restaurants/nearby?lat=\${lat}\`;
+        let path = \`/stores/nearby?lat=\${lat}\`;
         if (lat > 0) path += '&north=1';
         return api.get(path);
       };

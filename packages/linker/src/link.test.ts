@@ -129,7 +129,7 @@ describe('merging', () => {
   it('tags every unresolved row with the repository it came from', () => {
     const { project } = link([
       graph('orders', {
-        unresolved: [{ file: 'a.ts', line: 1, reason: 'dynamic-channel-name' }],
+        unresolved: [{ file: 'a.ts', line: 1, reason: 'channel-dynamic' }],
       }),
     ]);
     expect(project.unresolved[0]?.service).toBe('orders');

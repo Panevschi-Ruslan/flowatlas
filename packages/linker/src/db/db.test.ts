@@ -118,7 +118,7 @@ describe('writing and reading back', () => {
       ],
       types: { 'type:orders#OrderDto': type() },
       unresolved: [
-        { service: 'orders', file: 'src/a.ts', line: 3, reason: 'dynamic-channel-name', message: 'built at run time' },
+        { service: 'orders', file: 'src/a.ts', line: 3, reason: 'channel-dynamic', message: 'built at run time' },
       ],
     });
     const db = built(graph);

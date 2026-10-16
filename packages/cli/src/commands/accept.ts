@@ -152,7 +152,7 @@ export const registerAccept = (program: Command): void => {
   program
     .command('accept')
     .description('accept a known gap by reason or gap id, or every gap like one by rule, so doctor and the checks show only new ones')
-    .argument('[reason-or-id]', 'a reason such as dynamic-channel-name, or a gap id gap:<service>|<file>|<reason>')
+    .argument('[reason-or-id]', 'a reason such as channel-dynamic, or a gap id gap:<service>|<file>|<reason>')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--service <name>', 'accept the reason only in this service')

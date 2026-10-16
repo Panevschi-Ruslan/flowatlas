@@ -17,19 +17,19 @@ export interface ClaimDealDto {
 export class DealsClient {
   constructor(private readonly api: ApiClient) {}
 
-  mine(initData: string): Observable<Deal[]> {
-    return this.api.get<Deal[]>('/telegram/me/deals', { initData });
+  mine(sessionToken: string): Observable<Deal[]> {
+    return this.api.get<Deal[]>('/portal/me/deals', { sessionToken });
   }
 
   one(id: string, lang: string): Observable<Deal> {
-    return this.api.get<Deal>(`/telegram/deals/${id}`, { params: { lang } });
+    return this.api.get<Deal>(`/portal/deals/${id}`, { params: { lang } });
   }
 
   claim(body: ClaimDealDto): Observable<Deal> {
-    return this.api.post<Deal>(`/telegram/deals/${body.dealId}/claim`, body);
+    return this.api.post<Deal>(`/portal/deals/${body.dealId}/claim`, body);
   }
 
   forget(id: string): Observable<void> {
-    return this.api.delete<void>(`/telegram/deals/${id}`);
+    return this.api.delete<void>(`/portal/deals/${id}`);
   }
 }

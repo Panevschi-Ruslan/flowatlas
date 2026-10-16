@@ -42,7 +42,7 @@ export interface FoundValue {
   readonly deployed: boolean;
   /**
    * True where no value settled anything and the setting's own name is the
-   * name of exactly one service: `MENU_URL` for `menu`. `value` is then empty.
+   * name of exactly one service: `CATALOG_URL` for `catalog`. `value` is then empty.
    */
   readonly byName?: boolean;
   /** For a setting taken by its name: the files that set it and whose values are never read. */

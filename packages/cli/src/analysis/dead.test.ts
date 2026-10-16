@@ -63,7 +63,7 @@ describe('entries nothing reaches', () => {
     // are a probe; three segments in they are a route somebody wrote.
     const uncalled = [
       'entry:orders:http:GET:/api/orders/:param/status',
-      'entry:orders:http:GET:/api/restaurants/:param/metrics',
+      'entry:orders:http:GET:/api/stores/:param/metrics',
       'entry:orders:http:GET:/api/events',
     ];
     const db = buildTestDb({

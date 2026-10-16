@@ -194,7 +194,7 @@ describe('a route nothing guards', () => {
   it('matches a configured route by verb and pattern', () => {
     expect(matchesRoutePattern('* /api/health', 'GET', '/api/health')).toBe(true);
     expect(matchesRoutePattern('POST /api/*', 'GET', '/api/x')).toBe(false);
-    expect(matchesRoutePattern('GET /api/:param/menu', 'GET', '/api/:param/menu')).toBe(true);
+    expect(matchesRoutePattern('GET /api/:param/catalog', 'GET', '/api/:param/catalog')).toBe(true);
   });
 });
 

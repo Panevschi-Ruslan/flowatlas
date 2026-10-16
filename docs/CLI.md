@@ -1878,13 +1878,13 @@ property, and the table is then read from the class each call is made through:
 }
 ```
 
-`class MenuRepository extends BaseRepository<MenuItem> { protected readonly
-collectionName = 'menuItems'; }` makes every call through a `MenuRepository`
-a query on `menuItems`, whether the value is a literal or a constant; the class
+`class ProductRepository extends BaseRepository<Product> { protected readonly
+collectionName = 'products'; }` makes every call through a `ProductRepository`
+a query on `products`, whether the value is a literal or a constant; the class
 itself first, then each class it extends. The stated name wins over the type
 argument. Inside such a class, a query made through `this` whose chain names no
 collection is on the class's own table: `const c = await this.coll();
-c.find(…)` in `MenuRepository` is a query on `menuItems`. A query written inside
+c.find(…)` in `ProductRepository` is a query on `products`. A query written inside
 the base itself runs for every class that extends it, so it has no one table; it
 is an `info` row saying so, and each call through a subclass carries that
 subclass's table. A base named as a plain string

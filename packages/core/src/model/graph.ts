@@ -71,7 +71,7 @@ export interface Unresolved {
   /** Repo-relative POSIX path. */
   file: string;
   line: number;
-  /** Stable kebab-case cause, e.g. `dynamic-channel-name`. */
+  /** Stable kebab-case cause, e.g. `channel-dynamic`. */
   reason: string;
   /** How to read this row. Absent means `action`. */
   level?: UnresolvedLevel;

@@ -185,7 +185,7 @@ therefore collapse into **one** entry node with **two** `handles` edges —
 So the pair here is a duplicate-route detector, not an `ambiguous-route`
 producer: `matchRoute` is handed one candidate and cannot return two. It is
 reported as `routes.duplicated`, which is a real drift detector in its own right
-— the same fault turned up four times in the project this tool was built for.
+— the same fault turns up in real projects.
 
 Genuine ambiguity needs two differently spelled paths that both match one client
 path (`/a/:param/x` and `/a/x/:param` for a client asking `/a/x/x`), and that
