@@ -28,6 +28,7 @@ import { callShapePass } from './passes/call-shape.js';
 import { callsPass } from './passes/calls.js';
 import { diPass } from './passes/di.js';
 import { entriesPass } from './passes/entries.js';
+import { failuresPass } from './failures/pass.js';
 import { heldCallsPass } from './passes/held-calls.js';
 import { logsPass } from './passes/logs.js';
 import { modulesPass } from './passes/modules.js';
@@ -99,7 +100,7 @@ export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
  * what a function takes is written on every edge into it once the last of
  * those edges is drawn.
  */
-export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, callShapePass, typesPass, logsPass];
+export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, callShapePass, typesPass, logsPass, failuresPass];
 
 /** Parses a repository, honouring the tsconfig the caller or the service names. */
 export const createRepoProject = (options: ExtractRepoOptions): Project => {

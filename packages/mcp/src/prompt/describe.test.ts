@@ -56,4 +56,23 @@ describe('a chain written for a prompt', () => {
   it('says so when nothing is open on the chain', () => {
     expect(describeForPrompt(subject({ gaps: [] }))).toContain('- none recorded on this chain');
   });
+
+  it('leads with what the way in can fail with, status first (P68)', () => {
+    const text = describeForPrompt(
+      subject({
+        fails: [
+          { status: 404, exception: 'NotFoundException', at: 'shop#src/carts.service.ts:CartsService.create', loc: 'src/carts.service.ts:9', source: 'throw' },
+          { exception: 'RpcException', at: 'shop#src/carts.service.ts:CartsService.create', source: 'throw' },
+        ],
+      }),
+    );
+    expect(text).toContain('## Can fail with');
+    expect(text).toContain('- **404** `NotFoundException` — throw at `src/carts.service.ts:9` (`shop#src/carts.service.ts:CartsService.create`)');
+    expect(text).toContain('- **no status** `RpcException`');
+    expect(text.indexOf('## Can fail with')).toBeLessThan(text.indexOf('## Chain'));
+  });
+
+  it('writes no failure section for a subject that has none', () => {
+    expect(describeForPrompt(subject())).not.toContain('Can fail with');
+  });
 });

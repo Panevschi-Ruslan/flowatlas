@@ -1,0 +1,648 @@
+{
+  "schemaVersion": 6,
+  "repo": "nest-failures",
+  "generatedAt": "2026-10-16T11:22:48.287Z",
+  "nodes": [
+    {
+      "id": "entry:nest-failures:http:DELETE:/orders/:param",
+      "type": "entry",
+      "label": "DELETE /orders/:param",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-failures#src/orders/orders.controller.ts:OrdersController.remove",
+            "file": "src/orders/orders.controller.ts",
+            "line": 36,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          },
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-failures#src/guards/owner.guard.ts:OwnerGuard.canActivate",
+            "file": "src/guards/owner.guard.ts",
+            "line": 7,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-failures#src/guards/owner.guard.ts:OwnerGuard",
+            "file": "src/orders/orders.controller.ts",
+            "line": 35,
+            "source": "guard"
+          },
+          {
+            "status": 500,
+            "exception": "Error",
+            "at": "nest-failures#src/orders/orders.service.ts:OrdersService.remove",
+            "file": "src/orders/orders.service.ts",
+            "line": 38,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-failures:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-failures#src/orders/orders.controller.ts:OrdersController.findOne",
+            "file": "src/orders/orders.controller.ts",
+            "line": 24,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-failures#src/orders/orders.service.ts:OrdersService.findOne",
+            "file": "src/orders/orders.service.ts",
+            "line": 19,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-failures:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+            "file": "src/orders/orders.controller.ts",
+            "line": 29,
+            "source": "pipe"
+          },
+          {
+            "status": 400,
+            "exception": "CouponRejectedError",
+            "at": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+            "file": "src/orders/orders.service.ts",
+            "line": 25,
+            "source": "throw"
+          },
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          },
+          {
+            "status": 409,
+            "exception": "HttpException",
+            "at": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+            "file": "src/orders/orders.service.ts",
+            "line": 24,
+            "source": "throw"
+          },
+          {
+            "status": 422,
+            "exception": "OutOfStockError",
+            "at": "nest-failures#src/orders/stock.ts:assertInStock",
+            "file": "src/orders/stock.ts",
+            "line": 7,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-failures#node_modules/@nestjs/common:ValidationPipe",
+      "type": "pipe",
+      "label": "ValidationPipe",
+      "repo": "nest-failures",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "pipe",
+      "label": "ValidationPipe({\"whitelist\":true})",
+      "repo": "nest-failures",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-failures#node_modules/@nestjs/passport:AuthGuard",
+      "type": "guard",
+      "label": "AuthGuard",
+      "repo": "nest-failures",
+      "file": "node_modules/@nestjs/passport",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/passport",
+        "external": true,
+        "factoryArgs": [
+          "jwt"
+        ]
+      }
+    },
+    {
+      "id": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+      "type": "guard",
+      "label": "AuthGuard(\"jwt\")",
+      "repo": "nest-failures",
+      "file": "node_modules/@nestjs/passport",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/passport",
+        "external": true,
+        "factoryArgs": [
+          "jwt"
+        ]
+      }
+    },
+    {
+      "id": "nest-failures#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-failures",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService",
+          "OwnerGuard"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-failures#src/guards/owner.guard.ts:OwnerGuard",
+      "type": "guard",
+      "label": "OwnerGuard",
+      "repo": "nest-failures",
+      "file": "src/guards/owner.guard.ts",
+      "line": 3,
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-failures#src/guards/owner.guard.ts:OwnerGuard.canActivate",
+      "type": "method",
+      "label": "OwnerGuard.canActivate",
+      "repo": "nest-failures",
+      "file": "src/guards/owner.guard.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "nest-failures#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-failures#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{id:number;sku:string;quantity:number;coupon?:string}"
+            }
+          ],
+          "returns": "type:nest-failures#Order"
+        }
+      }
+    },
+    {
+      "id": "nest-failures#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ],
+          "returns": "type:nest-failures#Order"
+        }
+      }
+    },
+    {
+      "id": "nest-failures#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-failures#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-failures#Order"
+            }
+          ],
+          "returns": "type:nest-failures#Order"
+        }
+      }
+    },
+    {
+      "id": "nest-failures#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ],
+          "returns": "type:nest-failures#Order"
+        }
+      }
+    },
+    {
+      "id": "nest-failures#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "nest-failures",
+      "file": "src/orders/orders.service.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:nest-failures",
+      "type": "repo",
+      "label": "nest-failures",
+      "repo": "nest-failures",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {
+            "@nestjs/common": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-failures:http:DELETE:/orders/:param",
+      "to": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-failures:http:DELETE:/orders/:param",
+      "to": "nest-failures#src/guards/owner.guard.ts:OwnerGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "meta": {
+        "order": 1,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-failures:http:DELETE:/orders/:param",
+      "to": "nest-failures#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 34,
+      "params": [
+        "number"
+      ],
+      "returns": "void",
+      "meta": {
+        "params": "{id:number}"
+      }
+    },
+    {
+      "from": "entry:nest-failures:http:GET:/orders/:param",
+      "to": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-failures:http:GET:/orders/:param",
+      "to": "nest-failures#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "params": [
+        "number"
+      ],
+      "returns": "type:nest-failures#Order",
+      "meta": {
+        "params": "{id:number}"
+      }
+    },
+    {
+      "from": "entry:nest-failures:http:POST:/orders",
+      "to": "nest-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "meta": {
+        "order": 1,
+        "scope": "method",
+        "layer": "pipe",
+        "source": "UsePipes"
+      }
+    },
+    {
+      "from": "entry:nest-failures:http:POST:/orders",
+      "to": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-failures:http:POST:/orders",
+      "to": "nest-failures#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "params": [
+        "{id:number;sku:string;quantity:number;coupon?:string}"
+      ],
+      "returns": "type:nest-failures#Order",
+      "meta": {
+        "body": "{id:number;sku:string;quantity:number;coupon?:string}"
+      }
+    },
+    {
+      "from": "nest-failures#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-failures#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "nest-failures#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 31,
+      "params": [
+        "type:nest-failures#Order"
+      ],
+      "returns": "type:nest-failures#Order"
+    },
+    {
+      "from": "nest-failures#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "nest-failures#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "params": [
+        "number"
+      ],
+      "returns": "type:nest-failures#Order"
+    },
+    {
+      "from": "nest-failures#src/orders/orders.controller.ts:OrdersController.remove",
+      "to": "nest-failures#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 37,
+      "params": [
+        "number"
+      ],
+      "returns": "void"
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:nest-failures#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "nest-failures#src/orders/orders.service.ts",
+      "structuralHash": "d951241eb8f264a7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "coupon",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": []
+}

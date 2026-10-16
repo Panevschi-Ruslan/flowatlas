@@ -18,6 +18,15 @@ only one of them moved.
   copied out of the workspace, `module-import-dynamic` 1 → 0,
   `di-token-unknown` 1 → 0, `type-unresolved` 12 → 0. Turn off with
   `builtInShapes: false`, project-wide or per service.
+- **What each route can fail with (P68).** A NestJS entry carries
+  `meta.fails: [{status, exception, at, file, line, source}]`: the built-in
+  exceptions and `new HttpException(..., status)` thrown by its handler, the
+  services and helpers it calls and the exception classes they extend, a
+  guard's refusal (403, 401 for passport's `AuthGuard`), and the framework's
+  pipes (400) on the route or on a parameter. Throws caught in the same body
+  and rethrows are left out; a non-HTTP entry keeps the exception and no
+  status. `get_flow` shows `fails` on each entry, and `describe_for_prompt`
+  leads with a "Can fail with" section (`fixtures/nest-failures`).
 - **`flowatlas observe <file...>`: run-time traces confirm static joins
   (P65).** Reads OTLP/JSON and @nestjs/observe trace files, keeps only the
   names that place a span in code (method, route template, `Class.method`,

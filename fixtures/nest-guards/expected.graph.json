@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-guards",
-  "generatedAt": "2026-10-07T14:34:11.064Z",
+  "generatedAt": "2026-10-16T11:25:08.274Z",
   "nodes": [
     {
       "id": "entry:nest-guards:http:GET:/admin/audit",
@@ -24,7 +24,33 @@
             ]
           }
         ],
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+            "file": "src/main.ts",
+            "line": 10,
+            "source": "pipe"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "guard"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+            "file": "src/admin/admin.controller.ts",
+            "line": 30,
+            "source": "guard"
+          }
+        ]
       }
     },
     {
@@ -41,7 +67,25 @@
         "rawPath": "/admin/handover",
         "controller": "AdminController",
         "authNote": "a signed header is resolved in the body and overrides the caller's claim",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+            "file": "src/main.ts",
+            "line": 10,
+            "source": "pipe"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "guard"
+          }
+        ]
       }
     },
     {
@@ -57,7 +101,25 @@
         "path": "/admin/stats",
         "rawPath": "/admin/stats",
         "controller": "AdminController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+            "file": "src/main.ts",
+            "line": 10,
+            "source": "pipe"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "guard"
+          }
+        ]
       }
     },
     {
@@ -81,7 +143,49 @@
             ]
           }
         ],
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+            "file": "src/main.ts",
+            "line": 10,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "guard"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/throttle.guard.ts:ThrottleGuard",
+            "file": "src/orders/orders.controller.ts",
+            "line": 25,
+            "source": "guard"
+          }
+        ]
       }
     },
     {
@@ -97,7 +201,41 @@
         "path": "/orders/health",
         "rawPath": "/orders/health",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+            "file": "src/main.ts",
+            "line": 10,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "guard"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          }
+        ]
       }
     },
     {
@@ -113,7 +251,49 @@
         "path": "/orders",
         "rawPath": "/orders",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+            "file": "src/main.ts",
+            "line": 10,
+            "source": "pipe"
+          },
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+            "file": "src/orders/orders.controller.ts",
+            "line": 40,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "guard"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+            "file": "src/orders/orders.controller.ts",
+            "line": 19,
+            "source": "guard"
+          }
+        ]
       }
     },
     {

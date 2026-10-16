@@ -1,3 +1,4 @@
+import type { FailRef } from './fails.js';
 import type { DetailLevel } from '@flowatlas/core';
 
 /**
@@ -51,6 +52,8 @@ export interface FlowNode {
   guards?: GuardRef[];
   /** Times real traffic went through this row, from `observed.json` (P72); absent when nothing saw it. */
   observed?: number;
+  /** What a way in can fail with, on an entry that says (P68). */
+  fails?: FailRef[];
   children: FlowNode[];
 }
 

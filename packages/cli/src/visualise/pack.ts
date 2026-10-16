@@ -12,6 +12,9 @@ import { packBusiest, type PackedBusiest } from './busiest.js';
 import type { PackedChanges } from './changes.js';
 
 export type { PackedBusiest, PackedChanges };
+import { packFails, type PackedFails } from './fails.js';
+
+export type { PackedFails };
 
 /**
  * The graph, small enough to ship inside one file.
@@ -104,6 +107,8 @@ export interface PackedGraph {
   busiest: PackedBusiest;
   /** What a branch changed, when the page was made with `--diff <ref>` (P73). See `changes.ts`. */
   changes?: PackedChanges;
+  /** What each way in can fail with, by entry position (P68). Absent when none says. See `fails.ts`. */
+  fails?: PackedFails;
   report: unknown;
 }
 
@@ -279,6 +284,7 @@ const packAccepted = (
   });
   return out;
 };
+const withFails = (fails: PackedFails | undefined): { fails?: PackedFails } => (fails === undefined ? {} : { fails });
 
 export const packGraph = (input: PackInput): PackedGraph => {
   const rowsIn = input.unresolved;
@@ -384,6 +390,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     sites: packSites(packedEdges),
     busiest: packBusiest(input.nodes, packedEdges, position),
     ...(input.changes === undefined ? {} : { changes: input.changes }),
+    ...withFails(packFails(input.nodes, position)),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
     ...(input.accepted === undefined || input.accepted.length === 0
       ? {}

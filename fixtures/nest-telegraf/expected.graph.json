@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-telegraf",
-  "generatedAt": "2026-10-07T14:34:32.678Z",
+  "generatedAt": "2026-10-16T11:25:27.179Z",
   "nodes": [
     {
       "id": "entry:nest-telegraf:bot_callback:/^order_(\\d+)$/",
@@ -88,7 +88,16 @@
         "trigger": "'order_confirm'",
         "callbackData": "order_confirm",
         "updateClass": "OrdersUpdate",
-        "adapter": "nestjs-telegraf"
+        "adapter": "nestjs-telegraf",
+        "fails": [
+          {
+            "exception": "ForbiddenException",
+            "at": "nest-telegraf#src/admin.guard.ts:AdminGuard",
+            "file": "src/orders.update.ts",
+            "line": 47,
+            "source": "guard"
+          }
+        ]
       }
     },
     {

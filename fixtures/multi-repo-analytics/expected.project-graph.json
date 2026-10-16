@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:04.058Z",
+  "builtAt": "2026-10-16T11:22:23.452Z",
   "services": [
     {
       "name": "gateway",
@@ -669,7 +669,17 @@
         "path": "/orders",
         "rawPath": "/orders",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "gateway#src/auth/auth.guard.ts:AuthGuard",
+            "file": "src/orders/orders.controller.ts",
+            "line": 8,
+            "source": "guard"
+          }
+        ]
       }
     },
     {

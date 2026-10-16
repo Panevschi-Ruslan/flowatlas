@@ -569,3 +569,5 @@ export {
   withoutAccepted,
 } from './accepted.js';
 export type { AcceptedFile, AcceptedGap, GapLike } from './accepted.js';
+export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, settleFailures } from './failures.js';
+export type { Failure, FailureSource } from './failures.js';
