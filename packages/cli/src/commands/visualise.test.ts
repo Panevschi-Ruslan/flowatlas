@@ -46,6 +46,24 @@ describe('writing the graph as a page', () => {
     expect(Object.keys(data.entryIds).length).toBeGreaterThan(0);
   });
 
+  it('ships the busiest methods, and no Changes tab unless --diff asked for one', () => {
+    const data = dataOf(page);
+    expect(data.busiest.rows.length).toBeGreaterThan(0);
+    expect(data.changes).toBeUndefined();
+    expect(page).toContain('id="tab-changes" hidden');
+  });
+
+  it('carries what --diff found when it is given', () => {
+    const changed = join(scratch, 'changed.html');
+    const changes = {
+      base: 'main', head: null, routes: { added: [], removed: [] }, stillCalled: [], shapes: [], gaps: [],
+      unresolved: { base: 0, head: 0 },
+      counts: { nodesAdded: 0, nodesRemoved: 0, nodesChanged: 0, edgesAdded: 0, edgesRemoved: 0 },
+    };
+    runVisualise({ config: CONFIG, out: changed, changes, print: () => {} });
+    expect(dataOf(readFileSync(changed, 'utf8')).changes).toEqual(changes);
+  });
+
   it('carries the report, so the page can say what joined', () => {
     const { report } = dataOf(page);
     expect(report.httpOut.total).toBeGreaterThan(0);

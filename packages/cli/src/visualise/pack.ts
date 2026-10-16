@@ -8,6 +8,10 @@ import { packObserved, type PackedObserved } from './observed.js';
 export type { PackedObserved };
 import { packShapes, type PackedShapes } from './shapes.js';
 import { packSites, type PackedSites } from './sites.js';
+import { packBusiest, type PackedBusiest } from './busiest.js';
+import type { PackedChanges } from './changes.js';
+
+export type { PackedBusiest, PackedChanges };
 
 /**
  * The graph, small enough to ship inside one file.
@@ -89,6 +93,10 @@ export interface PackedGraph {
    * names it) or its stable key.
    */
   observed?: PackedObserved;
+  /** The methods most things lean on, as `hotspots` ranks them (P73). See `busiest.ts`. */
+  busiest: PackedBusiest;
+  /** What a branch changed, when the page was made with `--diff <ref>` (P73). See `changes.ts`. */
+  changes?: PackedChanges;
   report: unknown;
 }
 
@@ -243,6 +251,8 @@ export interface PackInput {
   typeOf?: (id: string) => TypeEntry | undefined;
   /** What `flowatlas observe` wrote, when it did. */
   observed?: Observed;
+  /** What `visualise --diff` compared, already packed. */
+  changes?: PackedChanges;
 }
 
 export const packGraph = (input: PackInput): PackedGraph => {
@@ -347,6 +357,8 @@ export const packGraph = (input: PackInput): PackedGraph => {
     }),
     shapes,
     sites: packSites(packedEdges),
+    busiest: packBusiest(input.nodes, packedEdges, position),
+    ...(input.changes === undefined ? {} : { changes: input.changes }),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
     ...(input.editor === undefined
       ? {}

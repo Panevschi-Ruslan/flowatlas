@@ -786,6 +786,115 @@ export const search = (model, query, limit = 40) => {
   return { total: found.length, hits: found.slice(0, limit).map((hit) => hit[2]) };
 };
 
+/* ── One search over everything (P73) ── */
+
+/** The first node whose face names each type, so a type found opens somewhere. */
+const typeUsers = (model) => {
+  const { refs, faces } = shapesOf(model);
+  const typesOfRef = refs.map(([, spans]) => {
+    const out = [];
+    for (let k = 2; k < spans.length; k += 3) if (spans[k] >= 0) out.push(spans[k]);
+    return out;
+  });
+  const first = new Map();
+  for (const face of faces) {
+    const flat = face[FACE.params];
+    const used = [face[FACE.returns]];
+    for (let k = 1; k < flat.length; k += 3) used.push(flat[k]);
+    for (const r of used) {
+      for (const t of r >= 0 ? typesOfRef[r] || [] : []) if (!first.has(t)) first.set(t, face[FACE.node]);
+    }
+  }
+  return first;
+};
+
+const nodesOfType = (model, wanted) => {
+  const { types, repos } = model.data.dicts;
+  const out = [];
+  model.nodes.forEach((node, i) => {
+    if (types[node[FIELD.type]] === wanted) out.push({ label: node[FIELD.label], sub: repos[node[FIELD.repo]], node: i });
+  });
+  return out;
+};
+
+/**
+ * What one search box looks through, as a strategy per group: each says what
+ * its items are called and lists them as `{ label, sub, node }`, `node` being
+ * the position a hit opens, or -1 when there is none to open.
+ */
+export const FIND_GROUPS = Object.freeze({
+  routes: Object.freeze({ say: 'Routes and ways in', items: (model) => nodesOfType(model, 'entry') }),
+  channels: Object.freeze({ say: 'Channels', items: (model) => nodesOfType(model, 'channel') }),
+  tables: Object.freeze({ say: 'Tables', items: (model) => nodesOfType(model, 'table') }),
+  types: Object.freeze({
+    say: 'Types',
+    items: (model) => {
+      const users = typeUsers(model);
+      return shapesOf(model).types.map(([name, kind, declaredIn], t) => ({
+        label: name, sub: kind + (declaredIn ? ' · ' + declaredIn.replace('#', ': ') : ''), node: users.get(t) ?? -1,
+      }));
+    },
+  }),
+  gaps: Object.freeze({
+    say: 'Gaps',
+    items: (model) => {
+      const { reasons, files } = model.data.dicts;
+      return (model.data.rows || []).map((row) => ({
+        label: String(row[ROW.message]),
+        sub: reasons[row[ROW.reason]] + (row[ROW.file] >= 0 && files[row[ROW.file]] ? ' · ' + files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : ''),
+        node: row[ROW.node],
+      }));
+    },
+  }),
+  classes: Object.freeze({
+    say: 'Classes',
+    items: (model) => {
+      const { types, repos } = model.data.dicts;
+      const found = new Map();
+      model.nodes.forEach((node, i) => {
+        const type = types[node[FIELD.type]];
+        const label = node[FIELD.label];
+        const dot = label.indexOf('.');
+        const name = type === 'provider' || type === 'ui_component' ? label
+          : (type === 'method' || type === 'function') && dot > 0 ? label.slice(0, dot) : '';
+        if (name === '') return;
+        const key = repos[node[FIELD.repo]] + ' ' + name;
+        const had = found.get(key);
+        // The class itself, when it is a node, opens rather than its first method.
+        if (!had || (type !== 'method' && type !== 'function' && had.member)) {
+          found.set(key, { label: name, sub: repos[node[FIELD.repo]], node: i, member: type === 'method' || type === 'function' });
+        }
+      });
+      return [...found.values()].map(({ label, sub, node }) => ({ label, sub, node }));
+    },
+  }),
+});
+
+/**
+ * Every route, channel, table, type, gap and class whose name or note holds
+ * every word typed, a group at a time: a name that starts with the words
+ * first, shorter names before longer. Each group carries its total, so the
+ * list can say how many it did not show.
+ */
+export const findEverything = (model, query, limit = 8) => {
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return [];
+  if (!model.findIndex) {
+    model.findIndex = Object.entries(FIND_GROUPS).map(([key, group]) => ({
+      key, say: group.say,
+      items: group.items(model).map((item) => ({ ...item, hay: (item.label + ' ' + item.sub).toLowerCase() })),
+    }));
+  }
+  const text = terms.join(' ');
+  return model.findIndex.map(({ key, say, items }) => {
+    const hits = items
+      .filter((item) => terms.every((term) => item.hay.includes(term)))
+      .map((item) => [item.label.toLowerCase().startsWith(text) ? 0 : 1, item.label.length, item]);
+    hits.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    return { key, say, total: hits.length, hits: hits.slice(0, limit).map(([, , { label, sub, node }]) => ({ label, sub, node })) };
+  }).filter((group) => group.total > 0);
+};
+
 /**
  * What the details panel says about one node, unfiltered.
  *
