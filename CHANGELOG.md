@@ -614,7 +614,7 @@ up to date as well.
   by service, edge type and confidence, light and dark, phone width. Inline SVG
   and plain JavaScript; nothing is fetched. The page carries the node metadata
   and the rows the panel shows, packed, and a word the label already says is not
-  shipped again: on a project of twelve thousand nodes it grows by about a tenth.
+  shipped again, so the page grows by much less than the metadata it carries.
 - **A graph you can read.** The Graph tab folds guards, interceptors, pipes and
   middleware into a chip on the way in they wrap (`2 guards · 3 interceptors ·
   1 pipe`), drawn beside it on a click or all at once from a toggle, so a NestJS
@@ -643,9 +643,8 @@ up to date as well.
   come to share offers both. *Copy link* copies that
   address; *SVG* and *PNG* save the drawing as it stands, at its own size, the
   PNG drawn from the SVG in the page with nothing fetched. Two fingers pan and
-  pinch to zoom. The keys add six bytes a node: on a project of twelve thousand
-  nodes the page goes from 1,268 to 1,369 KB, on the largest fixture from 103 to
-  134 KB.
+  pinch to zoom. The keys add six bytes a node: on the largest fixture the page
+  goes from 103 to 134 KB.
 - **Checking tools in the Graph tab.** *Problems*: a node with rows naming it, or
   rows at its line, carries the count, the two said apart (`badgesFor(node)` is
   the hook the drawing reads); *problems only* cuts the drawing to them and what
@@ -720,20 +719,16 @@ up to date as well.
   edge carries them only where what the handler returns is what the request is
   answered with (a controller method), since the contracts read it as that. A
   way in that is not a request - a template event, a bot command, a consumer -
-  shows what it hands its handler (`onSave(order: Order) → void`). On the same
-  project every method and function of all five services now has one (5,648,
-  from 2,645), every edge between two functions carries its types, and every
-  one of its 2,350 ways in shows its handler's; the graph grows by 7% and the
-  page from 2,035 KB to 2,195 KB. Eight fixtures whose graphs held no types
-  before now hold some, so `contracts` reads them and their reports are
-  snapshotted. The page ships only the types those reach:
-  on a real five-service project 3,808 nodes have a face and 1,180 types are
-  shipped, and the page grows from 1,466 KB to 1,998 KB. Hovering a node, or
-  moving the keys onto it, shows the same in a card beside it with one level of
-  each type it names (four types of eight rows at most, the rest counted), and
-  hovering a type in the details peeks at its fields without opening it; the
-  card replaces the node's browser tooltip and never shows on a touch. The
-  pointer can move onto the card, which scrolls, and what it counted opens
+  shows what it hands its handler (`onSave(order: Order) → void`). Every method
+  and function of every service now has one, every edge between two functions
+  carries its types, and every way in shows its handler's. Eight fixtures whose
+  graphs held no types before now hold some, so `contracts` reads them and their
+  reports are snapshotted. The page ships only the types those reach.
+  Hovering a node, or moving the keys onto it, shows the same in a card beside
+  it with one level of each type it names (four types of eight rows at most, the
+  rest counted), and hovering a type in the details peeks at its fields without
+  opening it; the card replaces the node's browser tooltip and never shows on a
+  touch. The pointer can move onto the card, which scrolls, and what it counted opens
   there: *+N more — show* on a type, the rest of a long face, the types it left
   out, up to 200 rows a card. A type's name on it, its title, or a click on its
   node opens the details with what the card showed already open.
@@ -872,16 +867,14 @@ up to date as well.
   *also uses …*, grouped by service and class, with a legend entry; `+N`
   counts only the flow. The address carries it as a sixth segment, after the
   filters. **Links made before still open**, and the nodes they expanded are
-  expanded in the flow, so such a link now draws less than it did. On a real
-  five-service project, a route with seven helpers expanded drew 35 nodes and
-  12 groups, most of them other routes' callers; it now draws 25 nodes, all of
-  the flow.
+  expanded in the flow, so such a link now draws less than it did: a route with
+  its helpers expanded used to draw mostly other routes' callers, and now draws
+  only the flow.
 - **A walk goes on to a node whose id is part of another's.** The cycle check of
   every walk - `flow`, `impact`, the graph server's - asked whether a node's id
   appeared anywhere in the path so far, so `Auth.refresh` was never
-  reached through `Auth.refreshToken`. It now compares whole ids.
-  On a real five-service project, `impact` on a busy channel reached 37 nodes
-  where 50 reach it.
+  reached through `Auth.refreshToken`. It now compares whole ids,
+  so `impact` on a busy channel no longer stops short of nodes that do reach it.
 - **The `visualise` page draws a label as text.** A label holding markup -
   `requireSecret<Ctx>(...)`, `click="save()"` - was written into the page as
   HTML and broke the row it was in; a title or label holding `$'` or `$&` was
@@ -1862,15 +1855,12 @@ and that is a change to their signatures.
 
 0.3.0 stopped the tool claiming things it had not checked. This does the same
 one level down: the lists it produces are now short enough to read by hand, and
-reading them by hand showed that the last few rows were wrong. Measured on the
-five-repository project this is developed against, same configuration, same
-commits: the one row saying a front end asks for something the back end does not
-serve is gone, and it is gone because the two routes joined; the one contract
-error is gone; findings to act on went from 30 to 22; contract warnings from
-1,069 to 1,014; and four routes that read as having no guard now say that
-somebody took the guard off on purpose. A channel that never existed — a
-template wildcard standing for three real events — is gone too, which took the
-project from 18 channels to 17.
+reading them by hand showed that the last few rows were wrong. A row saying a
+front end asks for something the back end does not serve can now be gone
+because the routes joined; a false contract error is gone; findings to act on
+and contract warnings went down; and a route that read as having no guard can
+now say that somebody took the guard off on purpose. A channel that never
+existed — a template wildcard standing for several real events — is gone too.
 
 ### Added
 
@@ -1892,8 +1882,8 @@ project from 18 channels to 17.
 - A `whitelist-strip` finding carries an `impact`: `none` when the receiving
   handler reaches no write and therefore cannot lose data, `stored` when it
   writes a document that declares the field, `unknown` otherwise. The `none`
-  rows are counted on one line rather than listed — 25 of 56 on that project —
-  and every one is still in `--format json`.
+  rows are counted on one line rather than listed, and every one is still in
+  `--format json`.
 - `@Emits`, `@Consumes` and the routes of `@CallsService` take a name, several
   names, or a list of them, and every form means what a stack of single
   annotations means. **This is a signature change in `@flowatlas/markers`**, so
@@ -1954,8 +1944,8 @@ project from 18 channels to 17.
   it, or by the one caller of the method that makes the request says what it
   does send — and where several callers each write one, their keys together. A
   spread of a wider object into a literal still puts its keys on the wire and
-  is still reported. 28 rows on that project, all of them a client echoing back
-  a key the server owns.
+  is still reported. The rows this removes were a client echoing back a key the
+  server owns.
 - A message about a shape read from a declared type says "permits" rather than
   "sends", and never "always sent". Response and payload wording is unchanged.
 - A finding on one arm of a handler that answers with a choice of shapes names
@@ -1989,16 +1979,14 @@ project from 18 channels to 17.
 
 `@flowatlas/cli` only. `@flowatlas/markers` is unchanged at 0.1.1.
 
-Everything here was found by reading the tool's own output on the project it is
-developed against, and most of it is about saying true things rather than
-reading new ones. Measured on that project, same configuration, same commits:
-browser requests matched to a route went from 489 of 495 to 493 of 499, routes
-something reaches from 502 to 506, and the routes nothing appears to call from
-62 to 58 — of which 14 are declared public and 7 are health probes, leaving 37
-worth reading. The lists a person actually reads got shorter without anything
-being hidden: 721 unresolved sites became 321 that say something was not read
-and 397 that say nothing joins there, and 1,445 field rows became 63 the
-receiving side really throws away.
+Everything here was found by reading the tool's own output on a real project,
+and most of it is about saying true things rather than reading new ones. More
+browser requests are matched to a route, more routes are reached, and the
+routes nothing appears to call say why each is there. The lists a person
+actually reads got shorter without anything being hidden: the unresolved sites
+are split into those that say something was not read and those that say
+nothing joins there, and the field rows shrink to the ones the receiving side
+really throws away.
 
 ### Added
 
@@ -2010,18 +1998,17 @@ receiving side really throws away.
 - A third level for an unresolved row, `nothing`, for a place where no edge
   exists to draw — a template binding that assigns to a field has no method
   behind it. Counted apart from the places it could not read, in `build`, in
-  `doctor` and in the baseline. On the project this is developed against that is
-  397 places that were being counted as gaps and are not.
+  `doctor` and in the baseline, so places that were being counted as gaps no
+  longer are.
 - `dead` gives a route nothing calls the reason it is in the list: declared
   public under `doctor.publicRoutes`, a health or status probe, an event stream,
   or nothing of the sort, and orders them so that the rows nothing explains come
-  first and `--max` cuts from the other end. Of the 58 rows on that project, 21
-  are one of the first three and 37 are worth reading.
+  first and `--max` cuts from the other end.
 - A request made through a wrapper that remembers what it was given —
   `this.params = { url, key }`, opened later from `this.params` — is followed to
   the caller that wrote the address. A field two places write is refused rather
-  than guessed at. On the project this is developed against that is five stream
-  subscriptions read and four routes that stop reading as never called.
+  than guessed at, so stream subscriptions opened that way are read and the
+  routes they reach stop reading as never called.
 - A call on a module of functions is followed from a method body, not only from
   a function's, and a brace-less arrow body is walked for the calls in it.
 - `dead` says when a channel with no consumer belongs to a service that serves
@@ -2037,8 +2024,7 @@ receiving side really throws away.
   other. A field assigned a function from elsewhere is still reported.
 - `dead --kind fields` lists the fields something happens to — the ones a
   receiver's whitelisting pipe removes on arrival, read from that receiver's own
-  validation — and counts the rest on one line. On the project this is developed
-  against that is 1,445 rows become 63 and a number. Every row is still in
+  validation — and counts the rest on one line. Every row is still in
   `--format json`, with its direction and whether it is dropped.
 
 ### Changed
@@ -2057,12 +2043,9 @@ receiving side really throws away.
 
 `@flowatlas/cli` only. `@flowatlas/markers` is unchanged at 0.1.1.
 
-Measured on the five-repository project this is developed against, with the
-same configuration and the same commit of every repository read by both
-versions: routes reported as never called went from 220 to 62, browser requests
-matched to a route from 318 to 489, and edges crossing a repository boundary from
-366 to 537. The routes 0.1.1 called unused were being called through wrappers it
-could not read.
+Far fewer routes are reported as never called, more browser requests are
+matched to a route, and more edges cross a repository boundary. The routes 0.1.1
+called unused were being called through wrappers it could not read.
 
 ### Added
 

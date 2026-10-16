@@ -45,9 +45,9 @@ const packLogs = (nodes: readonly GraphNode[]): { logs?: PackedLogs } => {
  *
  * Every repeated string becomes an index into a dictionary and every node loses
  * its id, since the page never shows one and a position identifies a node just
- * as well within the page. On a project of eleven thousand nodes that is
- * thirteen megabytes down to one, which is the difference between a page that
- * opens and one that does not. What a link carries from one build's page to the
+ * as well within the page. On a large project that shrinks the page many times
+ * over, which is the difference between a page that opens and one that does
+ * not. What a link carries from one build's page to the
  * next is a six-character key hashed from the id, not the id.
  */
 export interface PackedGraph {
@@ -176,7 +176,7 @@ const dictionary = (values: Iterable<string>): [string[], Map<string, number>] =
 /**
  * Node metadata the page shows, as `[field, key, enumerated]`.
  *
- * Keys are short because there is one per node and eleven thousand nodes;
+ * Keys are short because there is one per node and thousands of nodes;
  * everything not listed is dropped rather than shipped unread. A field marked
  * enumerated takes a handful of values across the whole graph (`read`,
  * `template-env`, `nestjs-http`), so it ships as an index into one shared list
@@ -283,7 +283,7 @@ const metaPacker = (nodes: readonly GraphNode[], position: ReadonlyMap<string, n
       if (!shippable(value, either)) return;
       // Past the fields the lists read, a word the label already says is not
       // said twice: `write orders` carries its table, `click="save()"` its
-      // event and handler. On a real project that is a third of what the
+      // event and handler. On a real project that is a good share of what the
       // panel would otherwise add to the page.
       if (index >= LISTED && typeof value === 'string' && node.label.includes(value)) return;
       out[key] = isEnum && typeof value === 'string' ? valueIx.get(value) : value;

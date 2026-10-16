@@ -130,16 +130,21 @@ lists them all, generated from their READMEs.
 
 ## What to expect on a first build
 
-Not everything joins, and the tool says so rather than guessing. Five
-repositories that ship as one product, three NestJS services and two Angular
-frontends with a shared package of types between them, measured with 0.5.0:
+Not everything joins, and the tool says so rather than guessing. Measured with
+0.5.1 on the demo project,
+[`fixtures/multi-repo`](https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo):
+three NestJS services and an Angular frontend in four repositories, with a
+shared package of types between them. It is synthetic, and holds every kind of
+join exactly once, including the ones that fail, so the rows that did not join
+are there on purpose:
 
 | | first build | configured |
 |---|---|---|
-| HTTP routes found | 564 | 564 |
-| Browser requests matched to a route | 494 of 503 | 494 of 503 |
-| Calls between services matched | 1 of 43 | 41 of 43 |
-| Routes something reaches | 483 | 508 |
+| HTTP routes found | 15 | 15 |
+| Browser requests matched to a route | 4 of 13 | 6 of 13 |
+| Calls between services matched | 2 of 6 | 2 of 6 |
+| Routes something reaches | 6 | 7 |
+| Edges that cross a repository boundary | 9 | 11 |
 
 The first column is what `init` writes and nothing more. The second adds the
 settings `init` cannot know: `baseUrlEnv`, the settings key that addresses a

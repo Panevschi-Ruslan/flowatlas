@@ -270,8 +270,9 @@ flowatlas build            # after pulling, or after your own change
 flowatlas build --watch    # rebuild on every save, project held open
 ```
 
-A rebuild of a five-repository project takes about five seconds cold and under
-one when nothing moved.
+A rebuild with nothing moved reads only what changed, so it is a fraction of a
+cold build; the [README](../README.md#measured-on-the-demo-project) has both
+timed on the demo project.
 
 ---
 

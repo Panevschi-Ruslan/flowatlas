@@ -831,7 +831,7 @@ The **Map** tab is the whole project at the size of its services:
   is said. *Copy link*, and SVG and PNG export, as on the Graph tab.
 
 The **Graph** tab draws the neighbourhood of one node rather than the whole
-graph, which on a real project is ten thousand boxes and says nothing:
+graph, which on a real project is far too many boxes to say anything:
 
 - **Choosing a focus.** Search over every node, by label, type, kind, service or
   file: `table orders` is the table called `orders`. Every way in on the left,
@@ -864,7 +864,7 @@ graph, which on a real project is ten thousand boxes and says nothing:
   busiest seven and one group holding the rest. Clicking a group opens it in
   place, into its classes and then into its nodes; *Group again* under the
   drawing closes them all. Grouping comes before the cap, so a table with two
-  hundred queries is a handful of groups, not "348 more". What lies past a
+  hundred queries is a handful of groups, not one long "N more". What lies past a
   closed group within the hops is counted under the drawing and drawn once the
   group is open.
 - **Hover shows the way.** Hovering a node, or moving the keys onto it, lights

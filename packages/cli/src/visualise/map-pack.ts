@@ -9,7 +9,7 @@ import type { AnchoredUnresolvedRow, ServiceReport } from '@flowatlas/linker';
  * it, a service's tables are one box beside it (its data), and an outside API
  * is a box. An edge whose two ends are owned by different boxes is part of a
  * link between them, counted, with the edges kept so the page can list them.
- * Nothing is drawn per node: a project of twelve thousand nodes is a hairball
+ * Nothing is drawn per node: a project of thousands of nodes is a hairball
  * at any zoom, and the shape a person asks for first is the services and what
  * joins them.
  *

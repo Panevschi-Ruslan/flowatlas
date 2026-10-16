@@ -61,35 +61,36 @@ reason about all of them.
 
 ---
 
-## Measured on a real project
+## Measured on the demo project
 
-Five repositories that ship as one product: three NestJS services and two Angular
-frontends, with a shared package of types between them. It is the project this
-was built against, which is worth knowing when you read the numbers: they are
-reproducible, and they are from one codebase whose author also wrote the tool.
-Measured with 0.5.0.
+The demo project is [`fixtures/multi-repo`](fixtures/multi-repo), the same one
+the walkthrough on the [project page](https://panevschi-ruslan.github.io/flowatlas/)
+is recorded against. It is synthetic: four repositories, three NestJS services
+(`gateway`, `orders`, `billing`) and an Angular frontend (`web`), with a shared
+package of types between them, written for the test suite. It holds every kind
+of join the linker makes exactly once, including the ones that fail, so the
+figures are small and the rows that did not join are there on purpose. Anyone
+can rebuild them from a checkout. Measured with 0.5.1.
 
 | | |
 |---|---|
-| Source read | 1,312 files, 229,680 lines of TypeScript and templates, tests left out |
-| Cold build | 8.0 s |
-| Rebuild with nothing changed | 1.1 s |
-| Graph | 11,668 nodes, 20,523 edges |
-| **Edges that cross a repository boundary** | **543** |
+| Source read | 27 files, 927 lines of TypeScript |
+| Cold build | 1.2 s |
+| Rebuild with nothing changed | 0.3 s |
+| Graph | 126 nodes, 109 edges |
+| **Edges that cross a repository boundary** | **11** |
 
-That last row is the point. Five hundred and forty three connections that no
-compiler in any of those five checkouts can see, because each one only ever
-reads its own.
+That last row is the point. Eleven connections that no compiler in any of
+those four checkouts can see, because each one only ever reads its own.
 
-**Where the edges come from.** 20,323 were read from the code, 178 were
-inferred and marked `heuristic`, and 22 were declared by an annotation. Every
-edge says which of the three it is.
+**Where the edges come from.** 99 were read from the code, 5 were inferred and
+marked `heuristic`, and 5 were declared by an annotation. Every edge says which
+of the three it is.
 
-**Ways in.** 564 HTTP routes, 64 more through a bot — 13 commands, 45 button
-callbacks, 6 events — and 2 event streams. Something in the project reaches 508
-of the routes. Nothing it can see calls the other 56 — and of those, 12 are
-declared public in the configuration and 7 look like health probes, which leaves
-37 worth a look.
+**Ways in.** 15 HTTP routes and 2 message handlers. Something in the project
+reaches 7 of the routes. Nothing it can see calls the other 8, and
+`flowatlas dead` lists each with the reason. One route is claimed by two
+handlers.
 
 **What joined across the boundaries.** Two columns, because the first build of
 any project is not the one to judge it by and quoting only the second would be
@@ -97,82 +98,56 @@ selling you something:
 
 | | first build | configured |
 |---|---|---|
-| Browser requests matched to the route that answers them | 494 of 503 | 494 of 503 |
-| Calls between services matched to a route | **1 of 43** | 41 of 43 |
-| Routes something in the project reaches | 483 | 508 |
-| Message channels with a handler | 7 of 19 | 7 of 19 |
+| Browser requests matched to the route that answers them | 4 of 13 | 6 of 13 |
+| Calls between services matched to a route | 2 of 6 | 2 of 6 |
+| Routes something in the project reaches | 6 | 7 |
+| Message channels with both a publisher and a handler | 1 of 3 | 1 of 3 |
+| Edges that cross a repository boundary | 9 | 11 |
+| Edges inferred and marked `heuristic` | 9 | 5 |
+| Types read from the shared package | 0 | 4 |
 
-The configuration behind the second column names the settings key that
-addresses a service (`baseUrlEnv`), the key a frontend's requests are rooted at
-and where it points (`apiBaseEnv`, `apiTarget`), and the shared package of
-types (`sharedPackages`). Nothing can work those out for you: a string in one
+The first build already joins two of the six calls between services, but one of
+them only by guessing the service from the name of the setting, and it says so.
+The configuration behind the second column, the fixture's own
+`flowatlas.config.json`, names the settings key that addresses a service
+(`baseUrlEnv`), the key a frontend's requests are rooted at and where it points
+(`apiBaseEnv`, `apiTarget`), and the shared package of types
+(`sharedPackages`). Nothing can work those out for you: a string in one
 repository and a route in another are joined by a fact only the person who
 deployed them knows. `flowatlas doctor` names what is missing, with the file and
-the line that wants it.
-
-**What each version changed, on the same repositories.** The same configuration
-and the same commit of every repository, read by each:
-
-| | 0.1.1 | 0.2.0 | 0.3.0 | 0.4.0 | 0.5.0 |
-|---|---|---|---|---|---|
-| Browser requests found | 343 | 495 | 499 | 499 | 503 |
-| …matched to the route that answers them | 318 | 489 | 493 | 493 | 494 |
-| Routes nothing appears to call | 220 | 62 | 58 | 57 | 56 |
-| Edges that cross a repository boundary | 366 | 537 | 541 | 542 | 543 |
-| Boundaries a contract could be compared on | 337 | 636 | 636 | 636 | 636 |
-| Contract errors | 37 | 1 | 1 | 0 | 0 |
-| Contract warnings | 398 | 1,069 | 1,069 | 1,014 | 1,014 |
-| Front ends asking for a route nothing serves | — | 2 | 1 | **0** | **0** |
-
-Most of the first step is requests made through a wrapper — a pass-through
-client, a base service whose resource a subclass decides — that 0.1.1 followed
-as far as the wrapper and no further. The routes 0.1.1 reported as never called
-were being called all along. The contract rows move in opposite directions on
-purpose: nearly twice as many boundaries can be compared, several kinds of false
-error were removed, and a request from a method nothing references is now a
-warning rather than an error, because nothing proves it runs.
-
-The second step is smaller and the same shape: the four streams the application
-holds open, opened through a wrapper that remembers what it was given rather
-than using it there and then, which is how a subscription survives being
-backgrounded. The third is smaller again, and is mostly about saying true
-things rather than reading new ones: the one contract error and the one route
-the front end appeared to ask for and the back end appeared not to serve were
-both false, and both are gone.
-
-The fourth step moves the joins by one or two and moves the data layer a great
-deal. Queries through the project's own repository classes now name the
-collection each class states, and a collection named in the driver's chain is
-read from there: 1,867 of 1,974 query sites name a real collection, where 0.4.0
-put a table called `Document` on every untyped one. A plain `fetch` in a
-browser is read, and an outgoing request keeps the verb and host its own code
-states. The cold build is slower for reading all of that.
+the line that wants it. The four calls that stay unjoined are the fixture's
+deliberate ones: a route the target renamed, a setting no service claims, a
+third party, and an address built at run time.
 
 **What it found once they were joined.**
 
 | | |
 |---|---|
-| Names declared more than one way in two repositories | 64 |
-| Channels published to and handled nowhere | 12 |
-| Contract errors, over 636 compared boundaries | 0 |
-| Front ends asking for a route nothing serves | 0 |
+| Names declared more than one way in two repositories | 1 |
+| Channels published to and handled nowhere | 1 |
+| Channels handled and published to nowhere | 1 |
+| Contract errors, over 6 compared boundaries | 0 |
+| Front-end requests for a route nothing serves | 2 |
 
-**What it says it cannot see.** 145 findings to act on, and 328 places static
-reading cannot reach at all, folded into 24 rows so the list stays readable.
-None of it is guessed at; each row carries a file, a line and a reason. The
-findings went up from 0.4.0's 22 because the tool stopped being quiet: a query
-whose collection is decided at run time, or reached only by a name, is now a
-row saying so, where 0.4.0 said nothing or guessed.
+**What it says it cannot see.** 11 findings to act on, over 13 rows, and 2
+places static reading cannot reach at all. None of it is guessed at; each row
+carries a file, a line and a reason.
 
-A further 397 places are listed apart from both, because nothing joins them to
-anything: a template binding that assigns to a field has no method behind it, in
-this project or any other. They are places, not gaps, and adding them to the
-figure above would make it say something untrue.
+To reproduce, from a checkout after `pnpm install && pnpm -r build`:
 
 ```sh
-flowatlas stats     # the tables above, for your own project
-flowatlas doctor    # the findings, grouped by reason, with what to change
+repo=$PWD
+scripts/demo/reset.sh            # the fixture as four git repositories, in /tmp/flowatlas-demo
+cd /tmp/flowatlas-demo && export PATH="$PWD/.bin:$PATH"
+flowatlas init --dir . --yes && flowatlas build && flowatlas stats    # the first column
+cp "$repo/fixtures/multi-repo/flowatlas.config.json" . && flowatlas build && flowatlas stats    # the second
+flowatlas doctor                 # the findings, grouped by reason, with what to change
+# the edges that cross a repository boundary
+node -e 'const g=require("./.flowatlas/project-graph.json"),r=new Map(g.nodes.map(n=>[n.id,n.repo]));console.log(g.edges.filter(e=>r.get(e.from)&&r.get(e.to)&&r.get(e.from)!==r.get(e.to)).length)'
 ```
+
+`flowatlas stats` and `flowatlas doctor` print the same figures for your own
+project.
 
 ---
 
@@ -273,8 +248,9 @@ flowatlas build --no-cache         # read everything again
 flowatlas build --timing           # how long each phase took
 ```
 
-On the 259,000-line project measured above: 5.5 seconds cold, one second when
-nothing changed, about two seconds for a one-file edit under `--watch`.
+On the demo project measured above: 1.2 seconds cold, 0.3 seconds when nothing
+changed, and about a second when one file did, because the service holding it is
+read again and the others come from the cache.
 
 ### Asking
 
@@ -629,7 +605,7 @@ some routes and not the rest says how many. The one failure this tool is built
 not to have is silence that reads as a clean result.
 
 An edge is never drawn on a guess *silently*. Some are drawn on a guess and say
-so: on the project measured above, 19,406 edges were read from the code and 397
+so: on the demo project measured above, 99 edges were read from the code and 5
 were inferred and carry `confidence: "heuristic"`. An inference is a guess with
 its reasoning attached, and the field is there so you can filter on it, not so
 the word can be avoided. What cannot be inferred either is recorded as
@@ -669,8 +645,8 @@ is `heuristic` and carries the settings it assumed.
 
 ## Where it stands
 
-Working, verified against the five-repository project measured above, and held
-to a fixture for every shape below. Each fixture's README says what it exists to
+Working, checked against real multi-repository projects, and held to a fixture
+for every shape below. Each fixture's README says what it exists to
 prove, and the path is given so you can run it.
 
 - **Routes declared by a decorator.** NestJS controllers, with modules,
@@ -903,8 +879,8 @@ Known gaps in what it can read:
   edge.
 - A channel whose name only exists as run-time data on both sides.
 
-What it does on the five-repository project it was built against is
-[measured at the top of this file](#measured-on-a-real-project). Every figure
+What it does on the demo project is
+[measured at the top of this file](#measured-on-the-demo-project). Every figure
 there was read off a build rather than estimated, and the places it still cannot
 read are listed above rather than rounded away.
 

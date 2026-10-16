@@ -554,9 +554,9 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
    *
    * The other sections are tables with a row each; this one is a list of
    * locations, and one reason can hold hundreds of them. A real project
-   * answered `doctor` with 691 rows of `db-receiver-name-only`, all saying the
-   * same sentence, and the command the README calls "the one to run after a
-   * first build" was six hundred lines nobody reads. What a reader needs from a
+   * answered `doctor` with a long run of `db-receiver-name-only` rows, all saying
+   * the same sentence, and the command the README calls "the one to run after a
+   * first build" was a wall of lines nobody reads. What a reader needs from a
    * reason is the advice, how many places it covers, and enough of them to
    * recognise the shape; `--max-nodes` is there for the rest, and the written
    * file always has all of it.

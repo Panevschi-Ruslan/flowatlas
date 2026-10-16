@@ -388,8 +388,8 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   const format = oneOf(options.format, FORMATS, 'text', '--format');
   // Left undefined when nobody asked, so the check can hold two defaults: a
   // section of rows is bounded at 150, and the places listed under one
-  // reason at a handful. One number for both made `doctor` six hundred
-  // lines on a project whose commonest reason covered seven hundred places.
+  // reason at a handful. One number for both made `doctor` hundreds of
+  // lines on a project whose commonest reason covered hundreds of places.
   const maxNodes =
     options.maxNodes === undefined ? undefined : whole(options.maxNodes, 150, '--max-nodes');
   const sections: Section[] =

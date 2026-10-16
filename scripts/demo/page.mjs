@@ -158,7 +158,7 @@ h1 {
 }
 .asks li::before { content: "? "; color: var(--accent); }
 
-/* ---- the real project ---- */
+/* ---- the demo project ---- */
 .figures { margin: 52px 0 0; }
 .figures .eyebrow { margin-bottom: 10px; }
 .fig-lede { max-width: 62ch; }
@@ -320,70 +320,76 @@ flowatlas build          <span class="c"># read them all and join them</span></c
 </header>
 
 <section class="figures">
-  <p class="eyebrow">measured on a real project</p>
-  <p class="fig-lede">Five repositories that ship as one product: three NestJS
-    services and two Angular frontends, with a shared package of types between
-    them. Read in full, from cold, in about five seconds. It is the project this
-    was built against — reproducible, and from one codebase whose author also
-    wrote the tool.</p>
+  <p class="eyebrow">measured on the demo project</p>
+  <p class="fig-lede">The demo project is
+    <a href="${BLOB}/fixtures/multi-repo"><code>fixtures/multi-repo</code></a>,
+    the same one the walkthrough below is recorded against: four repositories,
+    three NestJS services and an Angular frontend, with a shared package of types
+    between them. It is synthetic, written for the test suite, and holds every
+    kind of join exactly once, including the ones that fail, so the figures are
+    small and the rows that did not join are there on purpose. Anyone can
+    rebuild them from a checkout; the README has the commands.</p>
 
   <div class="tiles">
-    <div><b>259,337</b><span>lines of TypeScript and templates, over 1,523 files</span></div>
-    <div><b>11,352</b><span>nodes, joined by 19,825 edges</span></div>
-    <div class="lead"><b>542</b><span>of those edges cross a repository boundary</span></div>
-    <div><b>5.5s</b><span>to read all five; 0.7s when nothing changed</span></div>
+    <div><b>927</b><span>lines of TypeScript, over 27 files</span></div>
+    <div><b>126</b><span>nodes, joined by 109 edges</span></div>
+    <div class="lead"><b>11</b><span>of those edges cross a repository boundary</span></div>
+    <div><b>1.2s</b><span>to read all four; 0.3s when nothing changed</span></div>
   </div>
 
-  <p class="fig-note">The third figure is the one that matters. Five hundred
-    and forty one connections that no compiler in any of those five checkouts
-    can see, because each one only ever reads its own. 19,403 of the edges were
-    read from the code, 397 were inferred and marked <code>heuristic</code>, and
-    17 were declared by an annotation. Every edge says which of the three it is.</p>
+  <p class="fig-note">The third figure is the one that matters. Eleven
+    connections that no compiler in any of those four checkouts can see,
+    because each one only ever reads its own. 99 of the edges were read from
+    the code, 5 were inferred and marked <code>heuristic</code>, and 5 were
+    declared by an annotation. Every edge says which of the three it is.
+    Measured with 0.5.1.</p>
 
   <div class="pair">
     <div>
       <h3>ways in</h3>
       <div class="tw"><table>
-        <tr><td>HTTP routes</td><td>564</td></tr>
-        <tr><td>bot commands, callbacks and events</td><td>64</td></tr>
-        <tr><td>routes something in the project reaches</td><td>507</td></tr>
-        <tr><td>routes nothing it can see calls</td><td>57, of which 38 unexplained</td></tr>
+        <tr><td>HTTP routes</td><td>15</td></tr>
+        <tr><td>message handlers</td><td>2</td></tr>
+        <tr><td>routes something in the project reaches</td><td>7</td></tr>
+        <tr><td>routes nothing it can see calls</td><td>8</td></tr>
       </table></div>
     </div>
     <div>
-      <h3>joined — first build, then after two settings</h3>
+      <h3>joined — first build, then configured</h3>
       <div class="tw"><table>
-        <tr><td>browser requests matched to their route</td><td>493 → 493 / 499</td></tr>
-        <tr><td>calls between services matched</td><td>1 → 41 / 61</td></tr>
-        <tr><td>routes something reaches</td><td>481 → 507</td></tr>
-        <tr><td>message channels with a handler</td><td>0 → 7 / 17</td></tr>
+        <tr><td>browser requests matched to their route</td><td>4 → 6 / 13</td></tr>
+        <tr><td>calls between services matched</td><td>2 → 2 / 6</td></tr>
+        <tr><td>routes something reaches</td><td>6 → 7</td></tr>
+        <tr><td>edges across a repository boundary</td><td>9 → 11</td></tr>
       </table></div>
     </div>
     <div>
       <h3>found once they were joined</h3>
       <div class="tw"><table>
-        <tr><td>contract errors, over 636 boundaries</td><td>1</td></tr>
-        <tr><td>names declared more than one way</td><td>64</td></tr>
-        <tr><td>channels handled nowhere</td><td>10</td></tr>
-              </table></div>
+        <tr><td>contract errors, over 6 boundaries</td><td>0</td></tr>
+        <tr><td>names declared more than one way</td><td>1</td></tr>
+        <tr><td>channels handled nowhere</td><td>1</td></tr>
+        <tr><td>front-end requests for a route nothing serves</td><td>2</td></tr>
+      </table></div>
     </div>
     <div>
       <h3>what it says it cannot see</h3>
       <div class="tw"><table>
-        <tr><td>findings to act on</td><td>22</td></tr>
-        <tr><td>places static reading cannot reach</td><td>291</td></tr>
-        <tr><td>rows they are folded into</td><td>12</td></tr>
-        <tr><td>edges inferred, and marked so</td><td>397</td></tr>
-        <tr><td>places where nothing joins, counted apart</td><td>397</td></tr>
+        <tr><td>findings to act on</td><td>11</td></tr>
+        <tr><td>rows they are listed in</td><td>13</td></tr>
+        <tr><td>places static reading cannot reach</td><td>2</td></tr>
+        <tr><td>edges inferred, and marked so</td><td>5</td></tr>
       </table></div>
     </div>
   </div>
 
-  <p class="fig-note">The first column is what a first build gives you. The two
-    settings behind the second say which settings key addresses a service and
-    where a frontend's key points: a string in one repository and a route in
-    another are joined by a fact only the person who deployed them knows, and
-    <code>flowatlas doctor</code> names both with the line that wants them.</p>
+  <p class="fig-note">The first column is what a first build gives you. The
+    configuration behind the second, the fixture's own, says which settings key
+    addresses a service, where a frontend's key points and which package holds
+    the shared types: a string in one repository and a route in another are
+    joined by a fact only the person who deployed them knows, and
+    <code>flowatlas doctor</code> names each with the line that wants it. The
+    four calls that stay unjoined are the fixture's deliberate ones.</p>
 
   <p class="fig-note">Nothing in that last table is dropped or rounded away.
     Each row carries a file, a line, a reason and the one thing to change.
@@ -394,10 +400,10 @@ flowatlas build          <span class="c"># read them all and join them</span></c
 <section>
   <div class="col">
     <p class="sub">The rest of this page is a walkthrough, recorded against
-      <a href="${BLOB}/fixtures/multi-repo"><code>fixtures/multi-repo</code></a>
-      rather than the project above: four services that do not share a
+      <a href="${BLOB}/fixtures/multi-repo"><code>fixtures/multi-repo</code></a>,
+      the demo project measured above: four services that do not share a
       repository, small enough to read in a sitting, and already carrying the
-      same kinds of problem. A scene is a shell script, so what is on screen is
+      kinds of problem a real project has. A scene is a shell script, so what is on screen is
       what actually ran.</p>
   </div>
   <nav class="toc">${toc}</nav>

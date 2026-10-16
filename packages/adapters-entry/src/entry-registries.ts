@@ -81,8 +81,8 @@ const throughThis = (expr: TsNode): boolean =>
  * A call that looks like it installs a handler and nothing claimed.
  *
  * Deliberately narrow: a key written as a literal, a function beside it, and a
- * receiver whose type is declared here. On the two real bots this matches the
- * one hand-written registry and nothing else — the shape alone matches every
+ * receiver whose type is declared here. On real bots this matches a
+ * hand-written registry and nothing else — the shape alone matches every
  * route and every event listener in the project.
  */
 const looksLikeRegistration = (site: MemberCall): boolean =>

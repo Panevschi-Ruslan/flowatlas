@@ -86,7 +86,7 @@ export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
  * What a field the receiver throws away can cost.
  *
  * A whitelisting pipe removes an undeclared field before the handler runs, and
- * seventy-nine of those on one project are not seventy-nine problems. Two
+ * many of those on one project are not as many problems. Two
  * things the graph already knows tell them apart, and neither is the spelling
  * of the name (R30):
  *

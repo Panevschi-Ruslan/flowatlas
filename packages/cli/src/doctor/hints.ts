@@ -309,8 +309,7 @@ const drawsFrom =
  * Answered only where the annotation can be about nothing else: a method whose
  * annotations — the ones that say something no readable request in the method
  * already says — are at least as many as its unreadable requests. One of each is
- * the ordinary shape and the only one the project this is developed against
- * has. Two unreadable requests and one annotation is ambiguous, and silencing
+ * the ordinary shape. Two unreadable requests and one annotation is ambiguous, and silencing
  * both rows would hide a real gap behind an annotation that was never about
  * it — which is the fault this release exists to stop, not one to add.
  */

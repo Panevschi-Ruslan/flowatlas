@@ -539,10 +539,10 @@ const declaresPath = (
 /**
  * What a field the receiver strips off the body actually costs.
  *
- * Dozens of rows on one project, every one of them true, one of them a bug that
+ * Many rows on one project, every one of them true, and among them a bug that
  * had been in production unnoticed: a field one screen sets, another screen
- * groups by, and the DTO does not declare. Finding it cost an afternoon of
- * reading all the others, which is the afternoon the tool exists to save (R30).
+ * groups by, and the DTO does not declare. Finding it meant reading all the
+ * others, which is the reading the tool exists to save (R30).
  *
  * Neither test is a name heuristic. `_id` and `createdAt` need no special case:
  * they fail the second test on their own, because the handler does not read
