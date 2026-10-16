@@ -1,0 +1,34 @@
+{
+  "services": [
+    {
+      "name": "loans-api",
+      "repo": "./loans-api",
+      "type": "nestjs"
+    },
+    {
+      "name": "money-lib",
+      "repo": "./money-lib",
+      "type": "nestjs"
+    }
+  ],
+  "shapes": ["./flowatlas-shapes/*.d.ts"],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "loan-bus",
+          "channelKind": "topic",
+          "producers": [
+            {
+              "receiverType": "QueueClient",
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

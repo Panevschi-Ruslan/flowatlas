@@ -2,7 +2,9 @@ import { join, resolve } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { openGraphDb } from '@flowatlas/linker';
 import { createFlowatlasServer } from '../server.js';
+import { cantFollowFor } from './cant-follow.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const CONFIG = join(ROOT, 'fixtures', 'cant-follow', 'flowatlas.config.json');
@@ -66,5 +68,49 @@ describe('cant_follow', () => {
     expect(ledger.causes.every((cause: { services: string[] }) => cause.services.join() === 'payments')).toBe(true);
     const elsewhere = await call({ service: 'storefront', package: '@shopkit/ledger' });
     expect(elsewhere.total).toEqual({ rows: 0, sites: 0 });
+  });
+});
+
+describe('cant_follow on a project read without an install (P78)', () => {
+  const STANDINS = join(ROOT, 'fixtures', 'uninstalled-internal-packages');
+  let standIns: Client;
+
+  beforeAll(async () => {
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+    await createFlowatlasServer({ configPath: join(STANDINS, 'flowatlas.config.json') }).connect(serverSide);
+    standIns = new Client({ name: 'test', version: '0' });
+    await standIns.connect(clientSide);
+  });
+
+  afterAll(async () => {
+    await standIns.close();
+  });
+
+  it('names shapes --suggest for a package nothing stands in for', async () => {
+    const response = (await standIns.callTool({ name: 'cant_follow', arguments: { cause: 'module-not-installed' } })) as {
+      content: Array<{ text: string }>;
+    };
+    const answer = JSON.parse(response.content[0]!.text);
+    const [pkg] = answer.causes[0].packages;
+    expect(pkg.package).toBe('@acme/feature-flags');
+    expect(pkg.coveredBy).toBeUndefined();
+    expect(answer.next).toContain('run: flowatlas shapes --suggest --package "@acme/feature-flags"');
+  });
+
+  it('marks the places of a package the configuration now covers', () => {
+    const db = openGraphDb(join(STANDINS, '.flowatlas', 'graph.db'), { readonly: true });
+    try {
+      const answer = cantFollowFor(
+        db,
+        db.allUnresolved(),
+        { cause: 'module-not-installed', top: 10, samples: 3 },
+        new Map([['@acme/feature-flags', { by: 'shape' as const, from: 'flowatlas-shapes/flags.d.ts' }]]),
+      );
+      const [pkg] = answer.causes[0]!.packages;
+      expect(pkg).toMatchObject({ coveredBy: 'shape', coveredFrom: 'flowatlas-shapes/flags.d.ts' });
+      expect(pkg!.samples.every((sample) => sample.coveredBy === 'shape')).toBe(true);
+    } finally {
+      db.close();
+    }
   });
 });

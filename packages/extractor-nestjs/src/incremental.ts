@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileOf, hasDecorator, installedFiles, normalizeFilePath, type RepoGraph } from '@flowatlas/core';
+import { fileOf, hasDecorator, installedFiles, normalizeFilePath, standInFiles, type RepoGraph } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 import { findBootstrapFile } from './bootstrap.js';
 import { createRepoProject, extractRepo, type ExtractRepoOptions } from './extract-repo.js';
@@ -54,7 +54,12 @@ const sourceFilesOf = (repo: WarmRepo): SourceFile[] =>
     .filter((sourceFile) => !sourceFile.getFilePath().includes('/node_modules/'));
 
 /** Files out of installed packages the open program read; see {@link installedFiles}. */
-export const packageFiles = (repo: WarmRepo): string[] => installedFiles(repo.project, repo.options.rootDir);
+export const packageFiles = (repo: WarmRepo): string[] => [
+  ...installedFiles(repo.project, repo.options.rootDir),
+  // And what stood in for a package that is not installed (P78): a package
+  // source read in its place, its manifest, and the shape files listed.
+  ...standInFiles(repo.project, repo.options.rootDir),
+];
 
 /**
  * What each file of the repository imports, one level, repo-relative.

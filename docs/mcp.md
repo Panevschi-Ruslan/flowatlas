@@ -208,6 +208,15 @@ under its own reason. Gaps accepted with `flowatlas accept` are left out and
 counted apart. `next` offers `get_source` on the first place and the calls that
 narrow to its cause and its package.
 
+Under `module-not-installed`, a package the configuration as it stands would
+read in its place once rebuilt (P78) - its source in a repository read here, or a
+listed shape file - carries `coveredBy: "repo" | "shape"` and `coveredFrom`, and
+so does each of its places; `next` then says to rebuild. One nothing would read
+in its place gets `run: flowatlas shapes --suggest --package <name>` in `next`,
+the command that lists the names the project uses of it. A step drawn through
+types such a stand-in supplied says so on its edge in `get_flow`: `because:
+["package-from-repo"]` or `["shape-file"]`, and `typedBy` naming the package.
+
 ### What a branch changed
 
 | Tool | Answers | Takes |

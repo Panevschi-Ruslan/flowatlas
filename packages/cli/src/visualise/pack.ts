@@ -157,6 +157,13 @@ export interface PackedGraph {
    * accepted (P75). Absent when everything read was followed. See `cant-follow.ts`.
    */
   cantFollow?: PackedCantFollow;
+  /**
+   * Edges drawn through types a stand-in supplied (P78): the source of a
+   * package nobody installed, or a shape file the project wrote. `edges` maps
+   * an edge's position in `edges` to `[how, package]`, both positions in
+   * `via` and `packages`. Absent when no edge was.
+   */
+  standIns?: { via: string[]; packages: string[]; edges: Record<string, [number, number]> };
   report: unknown;
 }
 
@@ -348,6 +355,25 @@ const packAccepted = (
 const withFails = (fails: PackedFails | undefined): { fails?: PackedFails } => (fails === undefined ? {} : { fails });
 const withAccess = (access: PackedAccess | undefined): { access?: PackedAccess } => (access === undefined ? {} : { access });
 
+/** The ways a stand-in supplies an edge's types (P78), as `meta.because` names them. */
+const STAND_IN_VIA: readonly string[] = ['package-from-repo', 'shape-file'];
+
+/** Which edges a stand-in typed, by position, with how and whose types. */
+const packStandIns = (edges: readonly GraphEdge[]): Pick<PackedGraph, 'standIns'> => {
+  const packages: string[] = [];
+  const marked: Record<string, [number, number]> = {};
+  edges.forEach((edge, index) => {
+    const because = Array.isArray(edge.meta?.['because']) ? (edge.meta?.['because'] as unknown[]) : [];
+    const via = STAND_IN_VIA.findIndex((word) => because.includes(word));
+    const pkg = edge.meta?.['typedBy'];
+    if (via === -1 || typeof pkg !== 'string') return;
+    let at = packages.indexOf(pkg);
+    if (at === -1) at = packages.push(pkg) - 1;
+    marked[String(index)] = [via, at];
+  });
+  return packages.length === 0 ? {} : { standIns: { via: [...STAND_IN_VIA], packages, edges: marked } };
+};
+
 export const packGraph = (input: PackInput): PackedGraph => {
   const rowsIn = input.unresolved;
   const [types, typeIx] = dictionary(input.nodes.map((node) => node.type));
@@ -460,6 +486,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
       ? {}
       : { accepted: packAccepted(input.accepted, rowsIn) }),
     ...packCantFollow(splitAccepted(input.accepted ?? [], rowsIn).fresh, position),
+    ...packStandIns(packedEdges),
     ...(input.editor === undefined
       ? {}
       : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),

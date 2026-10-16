@@ -77,6 +77,30 @@ only one of them moved.
   environment where no deployed function sets it (`environment-from-files`).
   `settingFiles.read: false` turned it off and `settingFiles.environment`
   chose one environment (`fixtures/multi-repo-base-urls`).
+- **Sources for uninstalled internal packages, and shape files (P78).** An
+  import of a package that was not installed resolved to that package's source
+  where a configured repository, a workspace member of one, or a directory
+  directly under the configuration had a `package.json` whose `name` was the
+  package: through its `exports`, `types`, `typings` or `main`, the same under
+  `src/` for a build nobody ran, then `src/index.ts`, with its own tsconfig
+  `paths`. It was read for its types alone, at the path an install would have,
+  so no node of it was minted in the importer. A new top-level and per-service
+  `shapes` key listed `.d.ts` files of the project's own holding
+  `declare module '<package>' { ... }` blocks, read in memory like a built-in
+  shape. The order was fixed: installed, source, shape file, built-in shape;
+  `packageSources: false` (or `"services"`) turned the first off (or kept it to
+  configured repositories). An edge drawn through those types was `heuristic`,
+  with `because: ["package-from-repo" | "shape-file"]` and `typedBy`, shown as a
+  small mark on the page's steps and in `get_flow`. New rows:
+  `package-from-repo` and `shape-file-unmatched` (at `nothing`),
+  `package-version-differs` (info), `package-source-ambiguous`,
+  `shape-file-unread`. `flowatlas shapes --suggest` listed the missing packages
+  most places needed with the names used of each (`--top`, `--service`,
+  `--package`, `--members`, `--json`), and `--out <dir>` wrote a starter `.d.ts`
+  per package, names only and every type `any`, never into a repository and
+  never over a file. `cant_follow` places gained `coveredBy` and its `next` named
+  the command; the build cache recorded the source files and shape files read,
+  so editing one re-read the importer (`fixtures/uninstalled-internal-packages`).
 - **What the reader could not follow, grouped by cause (P75).** A row about a
   step that could not be followed recorded why, as the code states it, under
   `meta.cause`, and the package it points into under `meta.package`; a folded

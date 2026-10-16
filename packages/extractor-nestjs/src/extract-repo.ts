@@ -9,9 +9,12 @@ import {
   normalizeFilePath,
   parseConfig,
   readResolvedPackageJson,
+  closeStandIns,
   reportSkippedTestDirectories,
+  reportStandIns,
   reportUnreadableSources,
   silentLogger,
+  standInsFor,
   type ExtractContext,
   type FlowatlasConfig,
   type Logger,
@@ -45,6 +48,13 @@ export interface ExtractRepoOptions {
   repo: string;
   service?: ServiceConfig;
   config?: FlowatlasConfig;
+  /**
+   * The directory of the configuration the service is read under, which the
+   * stand-ins of P78 resolve against: the shape files it lists and the
+   * repositories whose source may stand in for a package. Without it neither
+   * is read.
+   */
+  configDir?: string;
   /** Adapters to use. Without one, no entry points are found. */
   registry?: AdapterRegistry;
   tsconfig?: string;
@@ -106,6 +116,7 @@ export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, call
 export const createRepoProject = (options: ExtractRepoOptions): Project => {
   const tsconfig = options.tsconfig ?? options.service?.tsconfig;
   const readTestDirectories = options.service?.readTestDirectories;
+  const standIns = standInsFor({ config: options.config, service: options.service, configDir: options.configDir });
   return createProject({
     rootDir: options.rootDir,
     // Read only where the package itself does not resolve, and not at all where
@@ -114,6 +125,7 @@ export const createRepoProject = (options: ExtractRepoOptions): Project => {
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(readTestDirectories === undefined ? {} : { readTestDirectories }),
     ...(options.deployed === undefined ? {} : { deployed: options.deployed }),
+    ...(standIns === undefined ? {} : { standIns }),
   });
 };
 
@@ -236,6 +248,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // disagree about how many files were read.
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
+  reportStandIns(base);
   const sources = countSources(project);
 
   // The other half of the same directory. A repository built on a file-system
@@ -321,6 +334,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       entry: adapters.entry.map((adapter) => adapter.name),
     },
   };
+
+  // Last, once every edge is drawn: one whose receiver a stand-in typed is a guess (P78).
+  closeStandIns(base);
 
   return builder.build();
 };

@@ -310,6 +310,7 @@ flowatlas doctor --section desync      # calls that no longer match a route
 flowatlas doctor --service gateway     # narrow every section to one repository
 flowatlas doctor --strict              # exit 1 on a broken annotation or a contract error
 flowatlas doctor --unresolved          # what it could not follow, by cause and package
+flowatlas shapes --suggest             # which missing packages to describe, with the names used of each
 flowatlas doctor --accept              # write today's numbers as the baseline
 ```
 
@@ -814,7 +815,11 @@ prove, and the path is given so you can run it.
   base address no `baseUrlEnv` claims is read from the repository's own files
   (`fixtures/multi-repo-base-urls`). What still cannot be followed is grouped
   by cause and package, so the one package to install is named
-  (`fixtures/cant-follow`).
+  (`fixtures/cant-follow`). An internal package nobody installed is read from
+  its source when a repository of the project is that package, and from a
+  shape file the project lists under `shapes` when none is;
+  `flowatlas shapes --suggest` says which to write and with which names
+  (`fixtures/uninstalled-internal-packages`).
 - **Comparing** what each side of a boundary declares, field by field, with the
   rules of the JSON wire applied so a date meeting a string is not a finding
   (`fixtures/multi-repo-contracts`).

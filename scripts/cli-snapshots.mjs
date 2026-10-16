@@ -23,6 +23,7 @@ import {
   runDoctorCommand,
   runFlow,
   runImpact,
+  runShapesSuggest,
   runStats,
   runTypes,
 } from '../packages/cli/dist/index.js';
@@ -401,6 +402,19 @@ const CANT_FOLLOW_CASES = [
   ['doctor.txt', (io) => runDoctorCommand({ config: cantFollowPlain.config }, io)],
 ];
 
+/**
+ * A project read with nothing installed, where a repository's source and a
+ * shape file stand in for two of its packages and nothing for the third (P78):
+ * what is still missing, and what `shapes --suggest` says to write for it.
+ */
+const standInsPlain = plainFor('uninstalled-internal-packages');
+
+const STAND_IN_CASES = [
+  ['doctor.unresolved.txt', (io) => runCantFollowCommand({ config: standInsPlain.config }, io)],
+  ['shapes.suggest.txt', (io) => runShapesSuggest({ config: standInsPlain.config, suggest: true }, io)],
+  ['shapes.suggest.json', (io) => runShapesSuggest({ config: standInsPlain.config, suggest: true, json: true }, io)],
+];
+
 const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
   terraformShape('lambda-terraform-openapi', [
@@ -464,6 +478,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'lambda-workspace-root', 'expected.cli'), owned: true, cases: WORKSPACE_ROOT_CASES },
   { dir: join(root, 'fixtures', 'sqs-environment-fallback', 'expected.cli'), owned: true, cases: FALLBACK_CASES },
   { dir: join(root, 'fixtures', 'cant-follow', 'expected.cli'), owned: true, cases: CANT_FOLLOW_CASES },
+  { dir: join(root, 'fixtures', 'uninstalled-internal-packages', 'expected.cli'), owned: true, cases: STAND_IN_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

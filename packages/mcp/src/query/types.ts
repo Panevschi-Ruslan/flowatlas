@@ -34,6 +34,13 @@ export interface FlowEdge {
    * nothing about it leaves a reader to guess which part to doubt.
    */
   because?: string[];
+  /**
+   * The package whose types the edge was drawn through, when a stand-in read
+   * in place of an install supplied them (P78): its source in a repository
+   * read here (`because: ["package-from-repo"]`) or a shape file of the
+   * project's own (`["shape-file"]`). From L1.
+   */
+  typedBy?: string;
   /** Filters the join recorded and did not match on, from L1. */
   notMatchedOn?: string[];
   /**

@@ -198,3 +198,30 @@ describe('naming nodes in a link', () => {
     expect(keyAt(moved.keys, 2)).toBe(keyAt(packed.keys, 1));
   });
 });
+
+describe('edges a stand-in typed (P78)', () => {
+  it('ships how and whose types, by edge position, and nothing when none was', () => {
+    expect(packed.standIns).toBeUndefined();
+    const marked = packGraph({
+      builtAt: '2026-10-07T00:00:00.000Z',
+      nodes,
+      edges: [
+        { from: nodes[0]!.id, to: nodes[1]!.id, type: 'calls', confidence: 'static' },
+        {
+          from: nodes[1]!.id,
+          to: nodes[0]!.id,
+          type: 'calls',
+          confidence: 'heuristic',
+          meta: { because: ['shape-file'], typedBy: '@acme/queue-client' },
+        },
+      ],
+      unresolved: [],
+      report,
+    });
+    expect(marked.standIns).toEqual({
+      via: ['package-from-repo', 'shape-file'],
+      packages: ['@acme/queue-client'],
+      edges: { '1': [1, 0] },
+    });
+  });
+});

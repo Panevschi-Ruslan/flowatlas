@@ -7,9 +7,12 @@ import {
   parseConfig,
   readResolvedPackageJson,
   recordApplications,
+  closeStandIns,
   reportSkippedTestDirectories,
+  reportStandIns,
   reportUnreadableSources,
   silentLogger,
+  standInsFor,
   suppliedWith,
   type ExtractContext,
   type FlowatlasConfig,
@@ -40,6 +43,13 @@ export interface ExtractRepoOptions {
   repo: string;
   service?: ServiceConfig;
   config?: FlowatlasConfig;
+  /**
+   * The directory of the configuration the service is read under, which the
+   * stand-ins of P78 resolve against: the shape files it lists and the
+   * repositories whose source may stand in for a package. Without it neither
+   * is read.
+   */
+  configDir?: string;
   /** Adapters to use. Without a frontend adapter nothing is read. */
   registry?: AdapterRegistry;
   tsconfig?: string;
@@ -61,12 +71,14 @@ export interface ExtractRepoOptions {
 export const openProject = (options: ExtractRepoOptions): Project => {
   const service = options.service ?? defaultService(options.repo, options.rootDir);
   const tsconfig = options.tsconfig ?? service.tsconfig;
+  const standIns = standInsFor({ config: options.config, service, configDir: options.configDir });
   return createReactProject({
     rootDir: options.rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(service.readTestDirectories === undefined
       ? {}
       : { readTestDirectories: service.readTestDirectories }),
+    ...(standIns === undefined ? {} : { standIns }),
   });
 };
 
@@ -224,6 +236,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // does the count of them the repository node carries.
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
+  reportStandIns(base);
 
   // Every adapter goes through the registry, this one included: a repository no
   // frontend adapter recognises is read by none of them.
@@ -237,6 +250,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     });
   }
 
+  closeStandIns(base);
   return builder.build();
 };
 

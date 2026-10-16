@@ -104,6 +104,7 @@ export const watchProject = async (options: WatchOptions = {}): Promise<WatchHan
       service,
       repoDir: loaded.repoDir(service),
       config: loaded.config,
+      configDir: loaded.rootDir,
     });
     if (session !== undefined) sessions.set(service.name, session);
   }

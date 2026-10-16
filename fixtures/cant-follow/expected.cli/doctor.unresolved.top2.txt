@@ -1,7 +1,7 @@
 can't follow: 21 places over 10 rows, by cause
 
   module-not-installed: 12 places  2 services
-    Install the repository's dependencies so the package resolves; until then nothing typed by it can be followed.
+    Install the repository's dependencies so the package resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.
     rows: call-dynamic-receiver, di-type-unresolved, type-unresolved
     module-not-installed:@shopkit/mailer: 7 places
       storefront/src/notify/notify.service.ts:19  NotifyService.confirm -> this.mail.attach

@@ -26,6 +26,8 @@ export interface DbHandleOptions {
 export class DbHandle implements SourceRoots {
   readonly path: string;
   readonly config: FlowatlasConfig | undefined;
+  /** The configuration's directory, which its relative paths are written against. */
+  readonly configDir: string | undefined;
   readonly #repoDirs = new Map<string, string>();
   #db: GraphDb | undefined;
   #openedAt = 0;
@@ -35,6 +37,7 @@ export class DbHandle implements SourceRoots {
     if (options.configPath !== undefined) {
       const loaded = loadConfig(options.configPath);
       this.config = loaded.config;
+      this.configDir = loaded.rootDir;
       for (const service of loaded.config.services) {
         this.#repoDirs.set(service.name, loaded.repoDir(service));
       }

@@ -17,6 +17,7 @@ import { registerInit } from './commands/init.js';
 import { registerLink } from './commands/link.js';
 import { registerMcp } from './commands/mcp.js';
 import { registerObserve } from './commands/observe.js';
+import { registerShapes } from './commands/shapes.js';
 import { registerStats } from './commands/stats.js';
 import { registerTypes } from './commands/types.js';
 import { registerVisualise } from './commands/visualise.js';
@@ -44,6 +45,7 @@ export const createProgram = (): Command => {
   registerCycles(program);
   registerDead(program);
   registerDoctor(program);
+  registerShapes(program);
   registerConfig(program);
   registerHotspots(program);
   registerVisualise(program);
@@ -161,6 +163,16 @@ export {
 export type { CantFollowRun, DoctorFormat, DoctorOptions, DoctorRun } from './commands/doctor.js';
 export { CANT_FOLLOW_FORMAT_VERSION, cantFollowReport, renderCantFollowJson, renderCantFollowText } from './doctor/cant-follow.js';
 export type { CantFollowReport } from './doctor/cant-follow.js';
+export {
+  registerShapes,
+  renderShapesJson,
+  renderShapesText,
+  runShapesSuggest,
+  shapeFileName,
+  shapesSuggest,
+  SHAPES_SUGGEST_FORMAT_VERSION,
+} from './commands/shapes.js';
+export type { ShapeFileSummary, ShapesOptions, ShapesRun, ShapesSuggestReport, ShapeSuggestion, SuggestedExport } from './commands/shapes.js';
 export { runDoctor } from './doctor/run.js';
 export type { DoctorInput, DoctorSettings } from './doctor/run.js';
 export {
