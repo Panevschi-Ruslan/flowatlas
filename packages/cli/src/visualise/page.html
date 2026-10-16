@@ -2154,7 +2154,7 @@ __STEPS_LOGIC__
         if (!shown.has(repoName(i))) return false;
         if (kind && kinds[nodes[i][KD]] !== kind) return false;
         if (!q) return true;
-        return nodes[i][LB].toLowerCase().includes(q);
+        return nodes[i][LB].toLowerCase().includes(q) || repoName(i).toLowerCase().includes(q);
       });
     };
 
@@ -6037,6 +6037,8 @@ __STEPS_LOGIC__
       stepsView.hidden = name !== 'steps';
       graphView.hidden = name !== 'graph';
       mapViewEl.hidden = name !== 'map';
+      // Busiest and Changes draw none of the marks a legend explains.
+      legendEl.hidden = name === 'busiest' || name === 'changes';
       legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : name === 'map' ? MAP_LEGEND : name === 'steps' ? STEPS_LEGEND : WALK_LEGEND;
       if ((name !== 'graph' && location.hash.startsWith('#graph')) || (name !== 'map' && location.hash.startsWith('#map'))) {
         history.replaceState(null, '', location.pathname + location.search);
@@ -6081,6 +6083,12 @@ __STEPS_LOGIC__
         return true;
       }
       if (asked.hidden !== null) graph.setHidden(asked.hidden);
+      // A way in opened from a link or a search hit is the one picked everywhere:
+      // the left list marks it and Steps and Walk show it when next opened.
+      if (asked.focus !== current && entryIx.includes(asked.focus)) {
+        current = asked.focus;
+        drawEntries();
+      }
       showView('graph', asked.focus);
       const answered = asked.ask === null || graph.ask(asked.ask, asked.focus);
       if (asked.expanded.length > 0 || asked.also.length > 0) reopen(asked.expanded, asked.also);
