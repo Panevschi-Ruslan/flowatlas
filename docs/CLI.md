@@ -1094,6 +1094,31 @@ installed, and what a service with no way in looks like.
 | `--max-nodes <n>` | 6 per reason | most places named under one reason; the written file is always complete |
 | `--format <name>` | `text` | `text`, `json`, `github` |
 | `--out <dir>` | configured output | where `doctor.json` goes |
+| `--unresolved` | off | instead of the report, what the reader could not follow, grouped by cause and by package |
+| `--top <n>` | 10 | with `--unresolved`: most causes, and packages per cause, to list |
+| `--samples <n>` | 3 | with `--unresolved`: places listed per package under a cause |
+| `--cause <code>` | every one | with `--unresolved`: only this cause, e.g. `module-not-installed` |
+| `--package <name>` | every one | with `--unresolved`: only what points into this package or module |
+| `--json` | off | shorthand for `--format json` |
+
+**`--unresolved`: why the reader stopped.** The report lists rows by reason,
+and a reason says what was not read - a call, a type, an injection. A row about
+a step that could not be followed also records the cause the code states for it,
+and the package it points into, and `--unresolved` groups every place by those:
+a package that is not installed (`module-not-installed:<package>`), an import of
+a path or alias that resolves to no file (`import-unresolved`), a module that
+resolves and does not export the name (`re-export-missing`), a value typed `any`
+by the project, by a package or by the language (`any-typed`, `language-any`),
+a parameter nobody typed (`untyped-parameter`, `callback-param`), a method
+picked by key (`dynamic-member`), a receiver typed by an interface or a union
+(`interface-type`, `union-receiver`), a field given its function from elsewhere
+(`function-field`), a value provided through a token (`untyped-di-token`), and a
+receiver of a data layer named by spelling only (`data-layer-unnamed`). A row
+with no finer cause counts under its own reason, so the total is always the
+report's `sites`. Most places first, each cause with what to do and a few
+`file:line` to open, then the packages on their own: "install this one" is a
+question about a package. Accepted gaps are left out and counted apart, as in
+the report. `--json` prints the same as data (`cantFollowFormatVersion: 1`).
 
 `--strict` on a project with no baseline yet exits 2, not 1: there is nothing to
 compare against, which is a different answer from "something got worse". Write

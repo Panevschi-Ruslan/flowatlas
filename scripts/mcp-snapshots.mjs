@@ -57,6 +57,8 @@ const CASES = [
   ['who_calls.by-service', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 6, service: 'gateway' }],
   ['describe_for_prompt.entry', 'describe_for_prompt', { id: 'entry:gateway:http:POST:/orders/:param/cancel' }],
   ['describe_for_prompt.channel', 'describe_for_prompt', { id: 'order.created' }],
+  ['cant_follow.all', 'cant_follow', {}],
+  ['cant_follow.by-service', 'cant_follow', { service: 'gateway' }],
   ['describe_for_prompt.symbol', 'describe_for_prompt', { id: 'orders#src/orders/orders.service.ts:OrdersService.findOne' }],
 ];
 

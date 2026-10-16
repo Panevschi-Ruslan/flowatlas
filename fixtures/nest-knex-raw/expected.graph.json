@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-knex-raw",
-  "generatedAt": "2026-10-16T11:08:00.243Z",
+  "generatedAt": "2026-10-16T15:11:47.605Z",
   "nodes": [
     {
       "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:14:12",
@@ -830,6 +830,31 @@
       "level": "info",
       "hint": "db on ReportsService is a field assigned a function from elsewhere, so there is no one body to follow. Declare it as a method to make the edge visible.",
       "symbol": "ReportsService.large -> this.db",
+      "meta": {
+        "causes": [
+          {
+            "cause": "function-field",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/reports/reports.service.ts",
+                "line": 67,
+                "symbol": "ReportsService.large -> this.db"
+              },
+              {
+                "file": "src/reports/reports.service.ts",
+                "line": 78,
+                "symbol": "ReportsService.emails -> this.db"
+              },
+              {
+                "file": "src/reports/reports.service.ts",
+                "line": 86,
+                "symbol": "ReportsService.touch -> this.db"
+              }
+            ]
+          }
+        ]
+      },
       "sites": 3
     }
   ]

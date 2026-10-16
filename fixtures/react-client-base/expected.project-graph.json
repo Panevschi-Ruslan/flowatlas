@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:17.968Z",
+  "builtAt": "2026-10-16T15:12:27.827Z",
   "services": [
     {
       "name": "app",
@@ -1032,6 +1032,9 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
+      "meta": {
+        "cause": "untyped-value"
+      },
       "service": "app"
     },
     {
@@ -1040,6 +1043,9 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
+      "meta": {
+        "cause": "untyped-value"
+      },
       "service": "app"
     },
     {
@@ -1048,6 +1054,9 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
+      "meta": {
+        "cause": "untyped-value"
+      },
       "service": "app"
     }
   ]

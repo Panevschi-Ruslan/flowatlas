@@ -1,9 +1,11 @@
 import {
+  causeMeta,
   findMethod,
   forEachCall,
   lineOf,
   methodBodies,
   resolveReceiver,
+  whyNoClass,
   type NamedFunction,
 } from '@flowatlas/core';
 import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
@@ -89,6 +91,7 @@ const walkCalls = (
           level: 'info',
           hint: 'The method is chosen at run time; nothing static to point at.',
           symbol: `${caller.label} -> ${callee.getText()}`,
+          ...causeMeta({ cause: 'dynamic-member' }),
         });
       }
       return;
@@ -123,6 +126,7 @@ const walkCalls = (
           reason: 'call-module-ref',
           hint: 'Resolved through the container at run time; inject the class instead to make the edge visible.',
           symbol: `${caller.label} -> ${receiver.text}.${calledName}`,
+          ...causeMeta({ cause: 'container-lookup' }),
         });
         return;
       }
@@ -137,6 +141,7 @@ const walkCalls = (
         reason: 'call-through-token',
         hint: `Cannot follow a value provided for ${receiver.token}; provide it with useClass to make calls visible.`,
         symbol: `${caller.label} -> ${receiver.text}.${calledName}`,
+        ...causeMeta({ cause: 'untyped-di-token' }),
       });
       return;
     }
@@ -149,6 +154,9 @@ const walkCalls = (
         level: 'info',
         hint: 'The receiver has no single class type; inject a class to make the edge visible.',
         symbol: `${caller.label} -> ${receiver.text}.${calledName}`,
+        // Why it has none, as the code says it (P75): a package nobody
+        // installed, a callback nobody typed, a method picked by a key.
+        ...causeMeta(whyNoClass(receiverExpr, caller.owner)),
       });
       return;
     }
@@ -169,6 +177,7 @@ const walkCalls = (
         level: 'info',
         hint: `${calledName} on ${receiver.classDecl.getName() ?? receiver.text} is a field assigned a function from elsewhere, so there is no one body to follow. Declare it as a method to make the edge visible.`,
         symbol: `${caller.label} -> ${receiver.text}.${calledName}`,
+        ...causeMeta({ cause: 'function-field' }),
       });
       return;
     }

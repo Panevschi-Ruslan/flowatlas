@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "bot-registry",
-  "generatedAt": "2026-10-07T18:36:10.894Z",
+  "generatedAt": "2026-10-16T15:10:34.783Z",
   "nodes": [
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",
@@ -761,6 +761,37 @@
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "Bot.setup -> callbackRegistry.dispatch",
+      "meta": {
+        "causes": [
+          {
+            "cause": "object-literal",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/bot.ts",
+                "line": 27,
+                "symbol": "Bot.setup -> callbackRegistry.dispatch"
+              },
+              {
+                "file": "src/bot.ts",
+                "line": 27,
+                "symbol": "on callback_query@26 -> callbackRegistry.dispatch"
+              }
+            ]
+          },
+          {
+            "cause": "function-field",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/bot.ts",
+                "line": 51,
+                "symbol": "Bot.ready -> this.onReady"
+              }
+            ]
+          }
+        ]
+      },
       "sites": 3
     },
     {

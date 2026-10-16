@@ -62,6 +62,8 @@ export interface UnresolvedRow {
  */
 export interface AnchoredUnresolvedRow extends UnresolvedRow {
   node: string | null;
+  /** What the row recorded beside its reason - why its step could not be followed (P75). Absent when nothing. */
+  meta?: Record<string, unknown>;
 }
 
 export interface SearchOptions {
@@ -287,12 +289,25 @@ export class GraphDb {
 
   /** Every finding, in the order a reader would walk them, with the symbol it names. */
   allUnresolved(): AnchoredUnresolvedRow[] {
-    return this.#db
-      .prepare(
-        `SELECT service, file, line, reason, level, sites, message, hint, node_id AS node
-           FROM unresolved ORDER BY service, file, line`,
-      )
-      .all() as AnchoredUnresolvedRow[];
+    // A database written before rows carried their meta has no column for it,
+    // and is still read: without the causes, not without the rows.
+    const select = (meta: string): Array<Omit<AnchoredUnresolvedRow, 'meta'> & { meta: string }> =>
+      this.#db
+        .prepare(
+          `SELECT service, file, line, reason, level, sites, message, hint, node_id AS node, ${meta} AS meta
+             FROM unresolved ORDER BY service, file, line`,
+        )
+        .all() as Array<Omit<AnchoredUnresolvedRow, 'meta'> & { meta: string }>;
+    let rows;
+    try {
+      rows = select('meta');
+    } catch {
+      rows = select("'{}'");
+    }
+    return rows.map(({ meta, ...row }) => {
+      const parsed = parse(meta);
+      return Object.keys(parsed).length === 0 ? row : { ...row, meta: parsed };
+    });
   }
 
   search(text: string, options: SearchOptions = {}): GraphNode[] {

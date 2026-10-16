@@ -153,11 +153,14 @@ export { runCycles, CYCLE_EDGES } from './commands/cycles.js';
 export { runDead } from './commands/dead.js';
 export {
   registerDoctor,
+  runCantFollowCommand,
   runDoctorCommand,
   BASELINE_FILE,
   DOCTOR_FILE,
 } from './commands/doctor.js';
-export type { DoctorFormat, DoctorOptions, DoctorRun } from './commands/doctor.js';
+export type { CantFollowRun, DoctorFormat, DoctorOptions, DoctorRun } from './commands/doctor.js';
+export { CANT_FOLLOW_FORMAT_VERSION, cantFollowReport, renderCantFollowJson, renderCantFollowText } from './doctor/cant-follow.js';
+export type { CantFollowReport } from './doctor/cant-follow.js';
 export { runDoctor } from './doctor/run.js';
 export type { DoctorInput, DoctorSettings } from './doctor/run.js';
 export {

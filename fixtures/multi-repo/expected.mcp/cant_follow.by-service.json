@@ -1,0 +1,98 @@
+{
+  "total": {
+    "rows": 3,
+    "sites": 3
+  },
+  "causes": [
+    {
+      "cause": "dynamic-http-url",
+      "label": "dynamic-http-url",
+      "sites": 1,
+      "reasons": [
+        "dynamic-http-url"
+      ],
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "services": [
+        "gateway"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "dynamic-http-url",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "gateway",
+              "file": "src/clients/billing.client.ts",
+              "line": 33,
+              "symbol": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i",
+              "loc": "src/clients/billing.client.ts:33"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "target-route-not-found",
+      "label": "target-route-not-found",
+      "sites": 1,
+      "reasons": [
+        "target-route-not-found"
+      ],
+      "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+      "services": [
+        "gateway"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "target-route-not-found",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "gateway",
+              "file": "src/clients/orders.client.ts",
+              "line": 44,
+              "symbol": "http_out:gateway#src/clients/orders.client.ts:44:12",
+              "loc": "src/clients/orders.client.ts:44",
+              "id": "http_out:gateway#src/clients/orders.client.ts:44:12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "unknown-base-url-env",
+      "label": "unknown-base-url-env",
+      "sites": 1,
+      "reasons": [
+        "unknown-base-url-env"
+      ],
+      "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
+      "services": [
+        "gateway"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "unknown-base-url-env",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "gateway",
+              "file": "src/clients/payments.client.ts",
+              "line": 24,
+              "symbol": "http_out:gateway#src/clients/payments.client.ts:24:12",
+              "loc": "src/clients/payments.client.ts:24",
+              "id": "http_out:gateway#src/clients/payments.client.ts:24:12"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "packages": [],
+  "next": [
+    "cant_follow({cause: \"dynamic-http-url\"})"
+  ]
+}

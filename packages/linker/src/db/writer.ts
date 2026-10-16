@@ -33,7 +33,7 @@ const statementsOf = (db: Database.Database) => ({
     'INSERT INTO types (id, name, kind, repo, declared_in, structural_hash, fields, members, meta) VALUES (?,?,?,?,?,?,?,?,?)',
   ),
   row: db.prepare(
-    'INSERT INTO unresolved (service, file, line, reason, level, sites, message, hint, node_id) VALUES (?,?,?,?,?,?,?,?,?)',
+    'INSERT INTO unresolved (service, file, line, reason, level, sites, message, hint, node_id, meta) VALUES (?,?,?,?,?,?,?,?,?,?)',
   ),
 });
 
@@ -96,6 +96,7 @@ const insertRow = (statements: Statements, item: Unresolved, service?: string): 
     // one. Anchoring it lets a reader ask what is wrong with a node rather than
     // reading the whole list.
     item.symbol ?? null,
+    JSON.stringify(item.meta ?? {}),
   );
 };
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "db-not-installed",
-  "generatedAt": "2026-10-08T07:58:55.601Z",
+  "generatedAt": "2026-10-16T15:10:40.830Z",
   "nodes": [
     {
       "id": "db-not-installed#src/app.module.ts:AppModule",
@@ -407,6 +407,10 @@
       "line": 17,
       "reason": "di-type-unresolved",
       "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "kysely"
+      },
       "symbol": "AssetsService.constructor[0]"
     },
     {
@@ -416,6 +420,48 @@
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "AssetsService.findAll -> this.db.selectFrom('asset').selectAll().execute",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "kysely",
+            "sites": 6,
+            "samples": [
+              {
+                "file": "src/assets/assets.service.ts",
+                "line": 20,
+                "symbol": "AssetsService.findAll -> this.db.selectFrom('asset').selectAll().execute"
+              },
+              {
+                "file": "src/assets/assets.service.ts",
+                "line": 20,
+                "symbol": "AssetsService.findAll -> this.db.selectFrom('asset').selectAll"
+              },
+              {
+                "file": "src/assets/assets.service.ts",
+                "line": 24,
+                "symbol": "AssetsService.create -> this.db.insertInto('asset').values({ id }).execute"
+              }
+            ]
+          },
+          {
+            "cause": "function-field",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/documents/documents.service.ts",
+                "line": 14,
+                "symbol": "DocumentsService.findAll -> Document.findAll"
+              },
+              {
+                "file": "src/documents/documents.service.ts",
+                "line": 18,
+                "symbol": "DocumentsService.create -> Document.create"
+              }
+            ]
+          }
+        ]
+      },
       "sites": 8
     },
     {
@@ -423,7 +469,11 @@
       "line": 15,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "ExpressionBuilder<DB, \"asset\">"
+      "symbol": "ExpressionBuilder<DB, \"asset\">",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "kysely"
+      }
     }
   ]
 }

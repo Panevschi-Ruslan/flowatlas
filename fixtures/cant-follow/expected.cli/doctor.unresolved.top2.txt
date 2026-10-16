@@ -1,0 +1,28 @@
+can't follow: 21 places over 10 rows, by cause
+
+  module-not-installed: 12 places  2 services
+    Install the repository's dependencies so the package resolves; until then nothing typed by it can be followed.
+    rows: call-dynamic-receiver, di-type-unresolved, type-unresolved
+    module-not-installed:@shopkit/mailer: 7 places
+      storefront/src/notify/notify.service.ts:19  NotifyService.confirm -> this.mail.attach
+      storefront/src/notify/notify.service.ts:20  NotifyService.confirm -> this.mail.deliver
+      storefront/src/notify/notify.service.ts:16  Receipt
+    module-not-installed:@shopkit/ledger: 4 places
+      payments/src/charges/charges.controller.ts:10  LedgerEntry
+      payments/src/charges/charges.service.ts:8  LedgerEntry
+      payments/src/charges/charges.service.ts:9  ChargesService.create -> this.ledger.reserve
+    … 1 more package
+
+  import-unresolved: 2 places  storefront
+    The import resolves to no file: check the path, or the tsconfig paths and baseUrl it relies on.
+    rows: call-dynamic-receiver
+    import-unresolved:../legacy/templates: 1 place
+      storefront/src/notify/notify.service.ts:17  NotifyService.confirm -> this.templates.render
+    import-unresolved:@storefront/audit: 1 place
+      storefront/src/notify/notify.service.ts:18  NotifyService.confirm -> this.audit.record
+
+by package:
+  @shopkit/mailer      7  module-not-installed 7
+  @shopkit/ledger      4  module-not-installed 4
+
+… 6 more causes and 3 more packages; --top 4 lists more, --json lists them as data

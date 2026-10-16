@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:13:33.835Z",
+  "builtAt": "2026-10-16T15:12:41.243Z",
   "services": [
     {
       "name": "lending",
@@ -594,6 +594,39 @@
       "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "handler -> orchestrator.create",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "@library/jobs",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/handlers/send-overdue-notices.ts",
+                "line": 6,
+                "symbol": "handler -> jobs.prepare"
+              },
+              {
+                "file": "src/handlers/send-overdue-notices.ts",
+                "line": 7,
+                "symbol": "handler -> jobs.submit"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "@library/orchestration",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/handlers/create-loan.ts",
+                "line": 18,
+                "symbol": "handler -> orchestrator.create"
+              }
+            ]
+          }
+        ]
+      },
       "service": "lending"
     },
     {

@@ -1,4 +1,4 @@
-import { acceptedFor, gapIdOf, STEP_OF_META, type AcceptedGap, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
+import { acceptedFor, gapIdOf, splitAccepted, STEP_OF_META, type AcceptedGap, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type PackedMap } from './map-pack.js';
@@ -13,8 +13,9 @@ import type { PackedChanges } from './changes.js';
 
 export type { PackedBusiest, PackedChanges };
 import { packFails, type PackedFails } from './fails.js';
+import { packCantFollow, type PackedCantFollow } from './cant-follow.js';
 
-export type { PackedFails };
+export type { PackedFails, PackedCantFollow };
 
 export type PackedLogs = Record<number, Array<[level: string, line: number, text?: string]>>;
 
@@ -134,6 +135,11 @@ export interface PackedGraph {
    * `[level, line, template?]`. Absent when nothing logs.
    */
   logs?: PackedLogs;
+  /**
+   * What the reader could not follow, by cause and package, less what was
+   * accepted (P75). Absent when everything read was followed. See `cant-follow.ts`.
+   */
+  cantFollow?: PackedCantFollow;
   report: unknown;
 }
 
@@ -424,6 +430,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     ...(input.accepted === undefined || input.accepted.length === 0
       ? {}
       : { accepted: packAccepted(input.accepted, rowsIn) }),
+    ...packCantFollow(splitAccepted(input.accepted ?? [], rowsIn).fresh, position),
     ...(input.editor === undefined
       ? {}
       : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),

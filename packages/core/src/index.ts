@@ -572,3 +572,38 @@ export {
 export type { AcceptedFile, AcceptedGap, GapLike } from './accepted.js';
 export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, settleFailures } from './failures.js';
 export type { Failure, FailureSource } from './failures.js';
+
+export {
+  CAUSE_META,
+  CAUSE_SAMPLES,
+  CAUSES_META,
+  CauseTally,
+  PACKAGE_META,
+  causeLabel,
+  causeMeta,
+  causeOfRow,
+  causePartsOf,
+  groupCantFollow,
+  hintForCause,
+  isKnownCause,
+  placeIdOf,
+} from './cant-follow.js';
+export type {
+  CantFollow,
+  CantFollowByPackage,
+  CantFollowCause,
+  CantFollowOptions,
+  CantFollowPackage,
+  CantFollowRow,
+  CantFollowSample,
+  CausePart,
+  CauseSample,
+} from './cant-follow.js';
+export {
+  causeOfParameterType,
+  causeOfTypeNode,
+  causeOfUnresolvedType,
+  whyNoClass,
+  whyUntyped,
+} from './follow-cause.js';
+export type { FollowCause } from './follow-cause.js';

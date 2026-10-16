@@ -17,6 +17,7 @@ import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'nod
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  runCantFollowCommand,
   runChannel,
   runContracts,
   runDoctorCommand,
@@ -382,6 +383,24 @@ const terraformShape = (name, cases) => {
   };
 };
 
+/**
+ * What the reader could not follow, grouped by cause and package (P75): the
+ * breakdown as a terminal prints it and as a script reads it, the whole
+ * project and narrowed to one package.
+ */
+const cantFollowPlain = plainFor('cant-follow');
+
+const CANT_FOLLOW_CASES = [
+  ['doctor.unresolved.txt', (io) => runCantFollowCommand({ config: cantFollowPlain.config }, io)],
+  ['doctor.unresolved.json', (io) => runCantFollowCommand({ config: cantFollowPlain.config, json: true }, io)],
+  [
+    'doctor.unresolved.ledger.txt',
+    (io) => runCantFollowCommand({ config: cantFollowPlain.config, package: '@shopkit/ledger', samples: '1' }, io),
+  ],
+  ['doctor.unresolved.top2.txt', (io) => runCantFollowCommand({ config: cantFollowPlain.config, top: '2' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: cantFollowPlain.config }, io)],
+];
+
 const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
   terraformShape('lambda-terraform-openapi', [
@@ -444,6 +463,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'start-workflow-function-helper', 'expected.cli'), owned: true, cases: FUNCTION_START_CASES },
   { dir: join(root, 'fixtures', 'lambda-workspace-root', 'expected.cli'), owned: true, cases: WORKSPACE_ROOT_CASES },
   { dir: join(root, 'fixtures', 'sqs-environment-fallback', 'expected.cli'), owned: true, cases: FALLBACK_CASES },
+  { dir: join(root, 'fixtures', 'cant-follow', 'expected.cli'), owned: true, cases: CANT_FOLLOW_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-unknown-orm",
-  "generatedAt": "2026-10-07T14:34:36.664Z",
+  "generatedAt": "2026-10-16T15:12:11.441Z",
   "nodes": [
     {
       "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:30:12",
@@ -431,14 +431,20 @@
       "line": 51,
       "reason": "db-receiver-name-only",
       "hint": "this.localRepo is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
-      "symbol": "this.localRepo.find"
+      "symbol": "this.localRepo.find",
+      "meta": {
+        "cause": "data-layer-unnamed"
+      }
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 58,
       "reason": "db-receiver-name-only",
       "hint": "this.jobRepository is typed as JobBus, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
-      "symbol": "this.jobRepository.enqueue"
+      "symbol": "this.jobRepository.enqueue",
+      "meta": {
+        "cause": "data-layer-unnamed"
+      }
     }
   ]
 }

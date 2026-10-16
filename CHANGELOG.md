@@ -8,6 +8,19 @@ only one of them moved.
 
 ### Added
 
+- **What the reader could not follow, grouped by cause (P75).** A row about a
+  step that could not be followed now records why, as the code states it, under
+  `meta.cause` and the package it points into under `meta.package`; a folded
+  row lists the same per cause under `meta.causes`, with a few places each, so
+  folding never loses why. Causes include `module-not-installed:<package>`,
+  `import-unresolved`, `re-export-missing`, `any-typed`, `language-any`,
+  `untyped-parameter`, `callback-param`, `dynamic-member`, `interface-type`,
+  `function-field` and `data-layer-unnamed`; a row with no finer answer counts
+  under its own reason. `flowatlas doctor --unresolved` prints them by cause
+  and by package (`--top`, `--samples`, `--cause`, `--package`, `--json`),
+  the page shows a "Can't follow" sheet under Not joined, and the MCP tool
+  `cant_follow` answers the same with `next` hints (`fixtures/cant-follow`).
+  The graph database keeps each row's meta in a new `unresolved.meta` column.
 - **Built-in declaration shapes for uninstalled Nest repositories (P70).**
   Where `rxjs`, `@nestjs/common`, `@nestjs/core` or `@nestjs/microservices`
   does not resolve, the Nest reader reads a few hand-written declarations of

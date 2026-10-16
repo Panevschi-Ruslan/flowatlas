@@ -1,0 +1,10 @@
+{
+  "name": "payments",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@shopkit/ledger": "^3.1.0"
+  }
+}

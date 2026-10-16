@@ -1726,6 +1726,32 @@
     .busiest-table .hide-narrow { display: none; }
   }
   .s-unmatched { list-style: none; margin: 0; padding: 0; }
+  /* ── what the reader could not follow, by cause (P75) ──────────────── */
+  .cf-total { margin: 0 0 10px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+  .cf-total b { color: var(--ink); font-weight: 600; }
+  .cf-cause { border-top: 1px solid var(--rule-soft); padding: 6px 0; }
+  .cf-cause > summary {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; cursor: pointer; list-style: none;
+  }
+  .cf-cause > summary::-webkit-details-marker { display: none; }
+  .cf-cause > summary::before { content: '\25B8'; color: var(--faint); font-size: 10px; width: 10px; }
+  .cf-cause[open] > summary::before { content: '\25BE'; }
+  .cf-count { font-family: var(--f-mono); font-size: 12px; }
+  .cf-bar { display: inline-flex; width: 120px; height: 6px; background: var(--rule-soft); border-radius: 3px; overflow: hidden; }
+  .cf-bar span { display: block; height: 100%; background: var(--warn); }
+  .cf-body { margin: 4px 0 2px 20px; }
+  .cf-body > .hint { margin: 0 0 6px; }
+  .cf-pkgs { list-style: none; margin: 0; padding: 0; }
+  .cf-pkgs > li { padding: 3px 0; }
+  .cf-pkg { font-family: var(--f-mono); font-size: 12px; overflow-wrap: anywhere; }
+  .cf-pkg .hint { margin-left: 6px; }
+  .cf-pkgs .s-unmatched { margin: 2px 0 0 14px; color: var(--muted); }
+  .cf-by-pkg { margin-top: 10px; }
+  .cf-by-pkg td:first-child { font-family: var(--f-mono); font-size: 12px; overflow-wrap: anywhere; }
+  @media (max-width: 640px) {
+    .cf-bar { width: 60px; }
+    .cf-body { margin-left: 10px; }
+  }
   .stat.is-link { cursor: pointer; }
   .stat.is-link:hover, .stat.is-link:focus-visible { background: var(--raise); }
   .s-unmatched li.is-bad { color: var(--bad); }
@@ -2491,6 +2517,47 @@ __STEPS_LOGIC__
       return '<table class="accepted-table"><thead><tr><th>Accepted &middot; ' + items.length.toLocaleString() +
         '</th><th>Where</th><th>Why it was accepted</th></tr></thead>' + `<tbody>${items.join('')}</tbody></table>`;
     };
+    /* What the reader could not follow (P75): every row that says a step was not
+       read, by why - a package nobody installed, an import that points nowhere,
+       a value typed any - then by the package it points into, a few places each.
+       The same breakdown flowatlas doctor --unresolved prints. */
+    const cantFollow = data.cantFollow || null;
+    const cfPlace = ([service, file, line, symbol, node]) =>
+      `<li>${service ? esc(service) + ' &middot; ' : ''}${esc(file)}${line ? ':' + line : ''}` +
+      (symbol ? ` <span class="hint">${esc(symbol.length > 110 ? symbol.slice(0, 109) + '\u2026' : symbol)}</span>` : '') +
+      (node >= 0 ? ' ' + graphLink(node) : '') + '</li>';
+    const cantFollowHtml = () => {
+      if (cantFollow === null) return '';
+      const top = cantFollow.causes[0] ? cantFollow.causes[0].s : 1;
+      const causes = cantFollow.causes.map((cause, index) => {
+        const named = cause.p.length > 1 || cause.l === cause.c;
+        const packages = cause.p.map((pkg) =>
+          `<li><div class="cf-pkg">${pkg.n === null ? (named ? '<span class="hint">no package</span>' : '') : esc(pkg.n)}` +
+          (named || pkg.n !== null ? ` <span class="hint">${plural(pkg.s, 'place', 'places')}</span>` : '') + '</div>' +
+          `<ul class="s-unmatched">${pkg.x.map(cfPlace).join('')}</ul></li>`).join('');
+        const reasons = cause.r.filter((reason) => reason !== cause.c);
+        return `<details class="cf-cause"${index === 0 ? ' open' : ''}><summary>` +
+          `<span class="tag is-warn">${esc(cause.l)}</span>` +
+          `<span class="cf-count"><b>${cause.s.toLocaleString()}</b> ${cause.s === 1 ? 'place' : 'places'}</span>` +
+          `<span class="cf-bar" aria-hidden="true"><span style="width:${Math.max(2, Math.round((cause.s / top) * 100))}%"></span></span>` +
+          `<span class="hint">${cause.v.length === 1 ? esc(cause.v[0]) : plural(cause.v.length, 'service', 'services')}</span></summary>` +
+          `<div class="cf-body"><p class="hint">${esc(cause.h)}${reasons.length ? ' Rows: ' + reasons.map(esc).join(', ') + '.' : ''}</p>` +
+          `<ul class="cf-pkgs">${packages}</ul>` +
+          (cause.more ? `<p class="hint">${plural(cause.more, 'more package', 'more packages')}</p>` : '') + '</div></details>';
+      }).join('');
+      const byPackage = cantFollow.packages.length === 0 ? '' :
+        '<table class="cf-by-pkg"><thead><tr><th>Package</th><th class="num">Places</th><th>Because</th></tr></thead><tbody>' +
+        cantFollow.packages.map((pkg) => `<tr><td>${esc(pkg.n)}</td><td class="num">${pkg.s.toLocaleString()}</td>` +
+          `<td>${pkg.c.map(([cause, n]) => esc(cause) + ' ' + n.toLocaleString()).join(', ')}</td></tr>`).join('') + '</tbody></table>';
+      const more = cantFollow.more
+        ? `<p class="hint">${[cantFollow.more.causes ? plural(cantFollow.more.causes, 'more cause', 'more causes') : '',
+            cantFollow.more.packages ? plural(cantFollow.more.packages, 'more package', 'more packages') : '']
+            .filter(Boolean).join(' and ')}; <code>flowatlas doctor --unresolved --top 50</code> lists them.</p>` : '';
+      return '<div class="sheet is-padded" id="cant-follow"><h4>Can\'t follow</h4>' +
+        `<p class="cf-total"><b>${cantFollow.total.sites.toLocaleString()}</b> ${cantFollow.total.sites === 1 ? 'place' : 'places'} the reader could not follow, ` +
+        `over ${plural(cantFollow.total.rows, 'row', 'rows')}, by cause and then by package</p>` +
+        causes + byPackage + more + '</div>';
+    };
     function drawMissing() {
       titleEl.textContent = 'What did not join';
       const byReason = acceptedByReason();
@@ -2531,6 +2598,7 @@ __STEPS_LOGIC__
       sheet.append(table);
       if (showAccepted && accepted.rows.length > 0) sheet.insertAdjacentHTML('beforeend', acceptedListHtml());
       walkEl.replaceChildren(...(accepted.rows.length > 0 ? [bar] : []), sheet);
+      if (cantFollow !== null) walkEl.insertAdjacentHTML('beforeend', cantFollowHtml());
       appendUnmatched();
     }
 

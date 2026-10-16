@@ -1,0 +1,228 @@
+{
+  "total": {
+    "rows": 13,
+    "sites": 13
+  },
+  "causes": [
+    {
+      "cause": "route-unguarded",
+      "label": "route-unguarded",
+      "sites": 4,
+      "reasons": [
+        "route-unguarded"
+      ],
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "services": [
+        "orders"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "route-unguarded",
+          "sites": 4,
+          "samples": [
+            {
+              "service": "orders",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19,
+              "symbol": "GET /orders/latest",
+              "loc": "src/orders/orders.controller.ts:19"
+            },
+            {
+              "service": "orders",
+              "file": "src/orders/orders.controller.ts",
+              "line": 25,
+              "symbol": "GET /orders/:param",
+              "loc": "src/orders/orders.controller.ts:25"
+            },
+            {
+              "service": "orders",
+              "file": "src/orders/orders.controller.ts",
+              "line": 31,
+              "symbol": "POST /orders",
+              "loc": "src/orders/orders.controller.ts:31"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "api-path-dynamic",
+      "label": "api-path-dynamic",
+      "sites": 3,
+      "reasons": [
+        "api-path-dynamic"
+      ],
+      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.",
+      "services": [
+        "web"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "api-path-dynamic",
+          "sites": 3,
+          "samples": [
+            {
+              "service": "web",
+              "file": "src/app/orders-api.service.ts",
+              "line": 124,
+              "symbol": "this.http.get<unknown>(this.opaque())",
+              "loc": "src/app/orders-api.service.ts:124"
+            },
+            {
+              "service": "web",
+              "file": "src/app/orders-api.service.ts",
+              "line": 139,
+              "symbol": "this.http.post<unknown>(this.opaque(), {})",
+              "loc": "src/app/orders-api.service.ts:139"
+            },
+            {
+              "service": "web",
+              "file": "src/app/orders-api.service.ts",
+              "line": 140,
+              "symbol": "this.http.get<unknown>(this.opaque())",
+              "loc": "src/app/orders-api.service.ts:140"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "target-route-not-found",
+      "label": "target-route-not-found",
+      "sites": 3,
+      "reasons": [
+        "target-route-not-found"
+      ],
+      "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+      "services": [
+        "gateway",
+        "web"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "target-route-not-found",
+          "sites": 3,
+          "samples": [
+            {
+              "service": "gateway",
+              "file": "src/clients/orders.client.ts",
+              "line": 44,
+              "symbol": "http_out:gateway#src/clients/orders.client.ts:44:12",
+              "loc": "src/clients/orders.client.ts:44",
+              "id": "http_out:gateway#src/clients/orders.client.ts:44:12"
+            },
+            {
+              "service": "web",
+              "file": "src/app/orders-api.service.ts",
+              "line": 26,
+              "symbol": "ui_api_call:web#src/app/orders-api.service.ts:26:12",
+              "loc": "src/app/orders-api.service.ts:26",
+              "id": "ui_api_call:web#src/app/orders-api.service.ts:26:12"
+            },
+            {
+              "service": "web",
+              "file": "src/app/orders-api.service.ts",
+              "line": 106,
+              "symbol": "ui_api_call:web#src/app/orders-api.service.ts:106:12",
+              "loc": "src/app/orders-api.service.ts:106",
+              "id": "ui_api_call:web#src/app/orders-api.service.ts:106:12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "ambiguous-route-target",
+      "label": "ambiguous-route-target",
+      "sites": 1,
+      "reasons": [
+        "ambiguous-route-target"
+      ],
+      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
+      "services": [
+        "web"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "ambiguous-route-target",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "web",
+              "file": "src/app/orders-api.service.ts",
+              "line": 34,
+              "symbol": "ui_api_call:web#src/app/orders-api.service.ts:34:12",
+              "loc": "src/app/orders-api.service.ts:34",
+              "id": "ui_api_call:web#src/app/orders-api.service.ts:34:12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "dynamic-http-url",
+      "label": "dynamic-http-url",
+      "sites": 1,
+      "reasons": [
+        "dynamic-http-url"
+      ],
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "services": [
+        "gateway"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "dynamic-http-url",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "gateway",
+              "file": "src/clients/billing.client.ts",
+              "line": 33,
+              "symbol": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i",
+              "loc": "src/clients/billing.client.ts:33"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "unknown-base-url-env",
+      "label": "unknown-base-url-env",
+      "sites": 1,
+      "reasons": [
+        "unknown-base-url-env"
+      ],
+      "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
+      "services": [
+        "gateway"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "label": "unknown-base-url-env",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "gateway",
+              "file": "src/clients/payments.client.ts",
+              "line": 24,
+              "symbol": "http_out:gateway#src/clients/payments.client.ts:24:12",
+              "loc": "src/clients/payments.client.ts:24",
+              "id": "http_out:gateway#src/clients/payments.client.ts:24:12"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "packages": [],
+  "next": [
+    "cant_follow({cause: \"route-unguarded\"})"
+  ]
+}
