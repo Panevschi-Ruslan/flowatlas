@@ -3,7 +3,8 @@ import { basename, dirname, resolve } from 'node:path';
 import { loadConfig } from '@flowatlas/core';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
-import { openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
+import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
+import { loadObserved } from '../observe/store.js';
 import { EDITOR_NAMES } from '../visualise/graph.js';
 import { packGraph, type PackInput } from '../visualise/pack.js';
 import { shipped } from '../own-path.js';
@@ -124,6 +125,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
   const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
   const editor = editorFor(options);
   const db = openDbFromOptions(options);
+  const observed = loadObserved(dbPathFor(options));
   let packed;
   let counts;
   try {
@@ -139,6 +141,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       unresolved: db.allUnresolved(),
       report,
       typeOf: (id) => db.type(id),
+      ...(observed === undefined ? {} : { observed }),
       ...(editor === undefined ? {} : { editor }),
     });
   } finally {

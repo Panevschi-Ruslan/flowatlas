@@ -8,6 +8,14 @@ only one of them moved.
 
 ### Added
 
+- **`flowatlas observe <file...>`: run-time traces confirm static joins
+  (P65).** Reads OTLP/JSON and @nestjs/observe trace files, keeps only the
+  names that place a span in code (method, route template, `Class.method`,
+  queue or topic, collection), drops every value, and matches spans to entries,
+  handlers, channels, outbound calls and cross-service joins. Writes
+  `.flowatlas/observed.json` (per join a count and last seen, per entry its
+  hits, and the spans no code accounts for); `visualise` adds it to the page
+  data as `observed` (`fixtures/multi-repo/traces`).
 - **Failure paths for workflows and remote destinations, and module
   versioning (P60).** A workflow or a function named elsewhere that an IoT
   rule's `error_action` starts is joined with `meta.when: "failure"` on its

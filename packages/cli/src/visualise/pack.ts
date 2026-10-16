@@ -2,6 +2,8 @@ import { STEP_OF_META, type GraphEdge, type GraphNode, type TypeEntry } from '@f
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type PackedMap } from './map-pack.js';
+import type { Observed } from '../observe/match.js';
+import { packObserved, type PackedObserved } from './observed.js';
 import { packShapes, type PackedShapes } from './shapes.js';
 
 /**
@@ -73,6 +75,13 @@ export interface PackedGraph {
   shapes: PackedShapes;
   /** The project at the size of its services, for the Map tab. See `map.ts`. */
   map: PackedMap;
+  /**
+   * What run-time traces confirmed, from `flowatlas observe`; absent without
+   * `observed.json`. Shape (see `observed.ts`):
+   * `{ joins: {[edgeId]: {count,lastSeen}}, entries: {[entryKey]: {hits}}, unmatched: [{service?,kind,name}] }`,
+   * edgeId being the position in `edges` and entryKey an entry node id.
+   */
+  observed?: PackedObserved;
   report: unknown;
 }
 
@@ -224,6 +233,8 @@ export interface PackInput {
   editor?: { name: string; rootOf: (service: string) => string | undefined };
   /** The type registry, one entry at a time; without it no type opens to its fields. */
   typeOf?: (id: string) => TypeEntry | undefined;
+  /** What `flowatlas observe` wrote, when it did. */
+  observed?: Observed;
 }
 
 export const packGraph = (input: PackInput): PackedGraph => {
@@ -261,7 +272,8 @@ export const packGraph = (input: PackInput): PackedGraph => {
   ]);
 
   const known = (edge: GraphEdge): boolean => position.has(edge.from) && position.has(edge.to);
-  const edges = input.edges.filter(known).map((edge) => [
+  const packedEdges = input.edges.filter(known);
+  const edges = packedEdges.map((edge) => [
     position.get(edge.from) as number,
     position.get(edge.to) as number,
     edgeTypeIx.get(edge.type) as number,
@@ -326,6 +338,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
       answers: shapes.answers.map(([node, kind]) => [node, shapes.answerKinds[kind] as string]),
     }),
     shapes,
+    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
     ...(input.editor === undefined
       ? {}
       : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),

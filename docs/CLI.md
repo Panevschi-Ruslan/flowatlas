@@ -1029,6 +1029,47 @@ graph, which on a real project is ten thousand boxes and says nothing:
 A link carries the page's own address, which for a file on disk is that file's
 path: it opens on the machine that has the file, at that path.
 
+### `flowatlas observe <file...>`
+
+Lays trace files you already have over the built graph and writes
+`.flowatlas/observed.json` beside `graph.db`: which joins real traffic went
+through, how often each way in was hit, and what ran that the code does not
+show. Local only: it reads the files named and sends nothing anywhere.
+
+```
+flowatlas observe traces/checkout.otlp.json traces/billing.observe.json
+```
+
+Two formats, picked by looking at each file:
+
+- **OTLP/JSON** (`resourceSpans` / `scopeSpans` / `spans`, one document or one
+  per line). Read: `service.name`, span kind, `http.request.method` /
+  `http.method`, `http.route`, the path of `url.full` / `http.url`,
+  `messaging.destination.name`, `code.namespace` + `code.function` (or
+  `code.function.name`), `db.collection.name`, `rpc.service` / `rpc.method`.
+- **@nestjs/observe** request snapshots: `ti` trace id, `p` path, `op`
+  operation, `a.m` method, and the span tree (`n` name, `c` class, `m` method
+  key, `ch` children). A snapshot names its service with `sv`; otherwise pass
+  `--service`.
+
+Every other attribute is dropped on read: headers, query strings, user ids,
+message keys, statements. A path segment holding a value (any digit, or a long
+token) becomes `:value`, which only a route parameter matches.
+
+A server span is matched to an entry by method and route template (the most
+literal template wins); a `Class.method` to a handler or method; a messaging
+destination to a channel, and to the emits or consumes edge of the span's
+service; a client span to the outbound call with that method and path; and a
+server span whose parent is in another service to the join from that service
+into the entry. What matches nothing is listed as seen at run time, not found
+in code. `visualise` ships the file into the page when it is there.
+
+| Flag | Meaning |
+|---|---|
+| `--config <path>` / `--db <path>` | which graph to match against |
+| `--service <name>` | service of spans the file does not name one for |
+| `--format json` | print `observed.json` instead of the summary |
+
 ---
 
 ## Checking

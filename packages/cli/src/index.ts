@@ -15,6 +15,7 @@ import { registerImpact } from './commands/impact.js';
 import { registerInit } from './commands/init.js';
 import { registerLink } from './commands/link.js';
 import { registerMcp } from './commands/mcp.js';
+import { registerObserve } from './commands/observe.js';
 import { registerStats } from './commands/stats.js';
 import { registerTypes } from './commands/types.js';
 import { registerVisualise } from './commands/visualise.js';
@@ -46,6 +47,7 @@ export const createProgram = (): Command => {
   registerHotspots(program);
   registerVisualise(program);
   registerDiff(program);
+  registerObserve(program);
   return program;
 };
 
@@ -99,6 +101,10 @@ export { linkRepos, unlinkRepos } from './commands/link.js';
 export type { LinkOptions, LinkResult, UnlinkResult } from './commands/link.js';
 export { installMcp, serverEntry, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
 export { runChannel } from './commands/channel.js';
+export { runObserve, readTraceFiles } from './commands/observe.js';
+export type { ObserveOptions, ObserveRun } from './commands/observe.js';
+export { indexGraph, matchSpans, edgeIdOf, OBSERVED_FORMAT_VERSION } from './observe/match.js';
+export type { Observed } from './observe/match.js';
 export { runFlow } from './commands/flow.js';
 export { runImpact } from './commands/impact.js';
 export { runStats, collectStats, summariseStats } from './commands/stats.js';

@@ -1,0 +1,28 @@
+[
+  {
+    "ti": "e1000000000000000000000000000001",
+    "sv": "billing",
+    "p": "/invoices?customer=cus-311",
+    "op": "POST /invoices",
+    "a": { "m": "POST", "h": { "authorization": "Bearer not-a-real-token" } },
+    "ts": 1760600010000,
+    "s": {
+      "n": "InvoicesController.create",
+      "c": "InvoicesController",
+      "m": "create",
+      "d": 6,
+      "ch": [
+        { "n": "InvoicesService.create", "c": "InvoicesService", "m": "create", "d": 3 },
+        { "n": "LedgerClient.post", "c": "LedgerClient", "m": "post", "d": 2, "e": "timeout" }
+      ]
+    }
+  },
+  {
+    "ti": "e1000000000000000000000000000002",
+    "sv": "billing",
+    "p": "/invoices/inv-9001",
+    "a": { "m": "GET" },
+    "ts": 1760600011000,
+    "s": { "n": "InvoicesController.findOne", "c": "InvoicesController", "m": "findOne", "d": 1 }
+  }
+]
