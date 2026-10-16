@@ -6,7 +6,8 @@ import { projectDetail, projectEdge, truncate } from '../query/detail.js';
 import { REVERSE_EDGES, walkBack } from '../query/flow.js';
 import { truncationMessage, type FlowNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
-import { bound, commonInput, withDb, type ToolContext } from './common.js';
+import { nextFor, withNext } from '../query/next.js';
+import { bound, commonInput, inService, serviceInput, withDb, type ToolContext } from './common.js';
 
 /** Accepts an id, or a name close enough to identify one thing. */
 const findTarget = (db: GraphDb, symbol: string): GraphNode | GraphNode[] => {
@@ -75,6 +76,34 @@ const callersOf = (
   };
 };
 
+/**
+ * The callers tree with only the branches that lead to the service asked for.
+ *
+ * A branch is kept when it or anything below it is in the service, so the path
+ * from the target to a caller in that service survives whole.
+ */
+const keepService = (db: GraphDb, nodes: FlowNode[], service: string | undefined): FlowNode[] => {
+  if (service === undefined) return nodes;
+  const kept: FlowNode[] = [];
+  for (const item of nodes) {
+    const children = keepService(db, item.children, service);
+    // Looked up rather than read off the row: at detail 0 a row names no service.
+    if (db.node(item.node.id)?.repo === service || children.length > 0) kept.push({ ...item, children });
+  }
+  return kept;
+};
+
+/** The first node of a tree, breadth first, that passes a test. */
+const findFirst = (nodes: readonly FlowNode[], test: (item: FlowNode) => boolean): FlowNode | undefined => {
+  const queue = [...nodes];
+  while (queue.length > 0) {
+    const item = queue.shift()!;
+    if (test(item)) return item;
+    queue.push(...item.children);
+  }
+  return undefined;
+};
+
 export const registerReach = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'who_calls',
@@ -85,6 +114,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
       inputSchema: {
         symbol: z.string().describe('a node id, or a name close enough to identify one'),
         depth: z.number().int().positive().max(16).default(3).describe('how many hops back'),
+        service: serviceInput,
         ...commonInput,
       },
     },
@@ -95,16 +125,21 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         if (Array.isArray(found)) {
           return found.length === 0
             ? { error: `no symbol matches ${JSON.stringify(input.symbol)}` }
-            : { candidates: found.map((node) => projectDetail(node, detail)) };
+            : withNext({ candidates: found.map((node) => projectDetail(node, detail)) }, nextFor(found[0]));
         }
 
-        const { callers, truncated } = callersOf(db, found.id, input.depth, maxNodes, detail);
-        return {
-          target: projectDetail(found, detail),
-          callers,
-          ...(truncated === undefined ? {} : { truncated }),
-          ...(note === undefined ? {} : { note }),
-        };
+        const walked = callersOf(db, found.id, input.depth, maxNodes, detail);
+        const callers = keepService(db, walked.callers, input.service);
+        const firstEntry = findFirst(callers, (item) => item.node.type === 'entry');
+        return withNext(
+          {
+            target: projectDetail(found, detail),
+            callers,
+            ...(walked.truncated === undefined ? {} : { truncated: walked.truncated }),
+            ...(note === undefined ? {} : { note }),
+          },
+          nextFor(firstEntry?.node, found),
+        );
       }),
   );
 
@@ -116,6 +151,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         'Every entry point that can reach a symbol, which services they belong to, and which services the chain runs into without an entry point above them. What would have to be retested if this changed.',
       inputSchema: {
         symbol: z.string().describe('a node id, or a name close enough to identify one'),
+        service: serviceInput,
         ...commonInput,
       },
     },
@@ -126,7 +162,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         if (Array.isArray(found)) {
           return found.length === 0
             ? { error: `no symbol matches ${JSON.stringify(input.symbol)}` }
-            : { candidates: found.map((node) => projectDetail(node, detail)) };
+            : withNext({ candidates: found.map((node) => projectDetail(node, detail)) }, nextFor(found[0]));
         }
 
         // Twelve hops back, and one more per step of every workflow the walk climbs through.
@@ -145,7 +181,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
             reachedByService[node.repo] = (reachedByService[node.repo] ?? 0) + 1;
           }
           if (row.type === 'channel') channels.add(row.id);
-          if (row.type !== 'entry' || node === undefined) continue;
+          if (row.type !== 'entry' || node === undefined || !inService(input.service)(node)) continue;
           entries.push(node);
           entriesByService[node.repo] = (entriesByService[node.repo] ?? 0) + 1;
         }
@@ -160,7 +196,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
 
         entries.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
         const { items, truncated } = truncate(entries, maxNodes);
-        return {
+        return withNext({
           target: projectDetail(found, detail),
           entries: items.map((entry) => projectDetail(entry, detail)),
           // How many things reach it at all, so no entry points is telling
@@ -173,7 +209,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           ...(truncated === undefined ? {} : { truncated }),
           ...(reach.truncated ? { note: 'reachability stopped at the walk limit' } : {}),
           ...(note === undefined ? {} : { note }),
-        };
+        }, nextFor(items[0]));
       }),
   );
 };

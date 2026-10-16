@@ -7,5 +7,10 @@
       "loc": "src/clients/orders.client.ts:32",
       "service": "gateway"
     }
+  ],
+  "next": [
+    "who_calls({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",
+    "impact({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",
+    "get_source({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})"
   ]
 }

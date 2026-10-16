@@ -16,5 +16,9 @@
       "service": "orders",
       "kind": "http"
     }
+  ],
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
   ]
 }

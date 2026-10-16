@@ -2,6 +2,7 @@ import type { TypeEntry } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { withNext } from '../query/next.js';
 import { bound, commonInput, withDb, type ToolContext } from './common.js';
 
 /** Type ids mentioned by a type's fields, so nesting can be followed. */
@@ -78,21 +79,29 @@ export const registerTypes = (server: McpServer, ctx: ToolContext): void => {
         if (!asked.startsWith('type:')) {
           const named = db.typesByName(asked);
           if (named.length === 0) return { error: `no type named ${JSON.stringify(asked)}` };
-          if (named.length > 1) return { candidates: named.map((entry) => entry.id) };
+          if (named.length > 1) {
+            return withNext(
+              { candidates: named.map((entry) => entry.id) },
+              named.slice(0, 2).map((entry) => `get_type({type: ${JSON.stringify(entry.id)}})`),
+            );
+          }
           id = named[0]!.id;
         }
 
         const entry = db.type(id);
         if (entry === undefined) return { error: `no type with id ${JSON.stringify(id)}` };
         const expanded = expandType(db, id, input.depth, maxNodes);
-        return {
-          type: entry,
-          nested: expanded.nested,
-          ...(expanded.cut === 0
-            ? {}
-            : { cut: `${expanded.cut} more referenced type(s); raise maxNodes` }),
-          ...(note === undefined ? {} : { note }),
-        };
+        return withNext(
+          {
+            type: entry,
+            nested: expanded.nested,
+            ...(expanded.cut === 0
+              ? {}
+              : { cut: `${expanded.cut} more referenced type(s); raise maxNodes` }),
+            ...(note === undefined ? {} : { note }),
+          },
+          [`find_symbol({query: ${JSON.stringify(entry.name)}})`],
+        );
       }),
   );
 };

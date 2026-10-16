@@ -123,5 +123,10 @@
       }
     ]
   },
-  "unresolvedOnPath": 1
+  "unresolvedOnPath": 1,
+  "next": [
+    "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
+    "impact({symbol: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
+    "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.cancel\"})"
+  ]
 }

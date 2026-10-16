@@ -4,6 +4,7 @@ import { projectDetail } from '../query/detail.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { buildFlowTree } from '../query/flow.js';
 import { rankMatches } from './entries.js';
+import { withNext } from '../query/next.js';
 import { bound, commonInput, withDb, type ToolContext } from './common.js';
 
 export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
@@ -16,7 +17,7 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
       inputSchema: {
         entry: z
           .string()
-          .describe('an entry: "POST /orders", "bot:order_confirm", or a full entry id'),
+          .describe('an entry: "POST /orders", "bot:order_confirm", or the id any list tool returns'),
         depth: z
           .number()
           .int()
@@ -34,7 +35,10 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
 
         if (!isResolved(ref)) {
           if (ref.candidates.length > 0) {
-            return { candidates: ref.candidates.map((node) => projectDetail(node, detail)) };
+            return withNext(
+              { candidates: ref.candidates.map((node) => projectDetail(node, detail)) },
+              ref.candidates.slice(0, 2).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`),
+            );
           }
           const suggestions = rankMatches(db.nodesByType('entry'), input.entry)
             .slice(0, 5)
@@ -47,12 +51,20 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           maxNodes,
           detail,
         });
-        return {
-          root: flow.root,
-          unresolvedOnPath: flow.unresolvedOnPath,
-          ...(flow.truncated === undefined ? {} : { truncated: flow.truncated }),
-          ...(note === undefined ? {} : { note }),
-        };
+        const id = JSON.stringify(ref.id);
+        return withNext(
+          {
+            root: flow.root,
+            unresolvedOnPath: flow.unresolvedOnPath,
+            ...(flow.truncated === undefined ? {} : { truncated: flow.truncated }),
+            ...(note === undefined ? {} : { note }),
+          },
+          [
+            `describe_for_prompt({id: ${id}})`,
+            `impact({symbol: ${id}})`,
+            ...(flow.root.children[0] === undefined ? [] : [`get_source({symbol: ${JSON.stringify(flow.root.children[0].node.id)}})`]),
+          ],
+        );
       }),
   );
 };

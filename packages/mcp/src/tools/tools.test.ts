@@ -52,16 +52,18 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the ten the project promises', async () => {
+  it('are exactly the twelve the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'check_contract',
+      'describe_for_prompt',
       'find_symbol',
       'get_flow',
       'get_source',
       'get_type',
       'impact',
       'list_entries',
+      'start_here',
       'who_calls',
       'who_consumes',
       'who_emits',
@@ -350,5 +352,81 @@ describe('reading the code itself', () => {
 
   it('says so when the symbol is unknown', async () => {
     expect((await call('get_source', { symbol: 'nope' })).error).toContain('no symbol with id');
+  });
+});
+
+describe('answers that hand on the id the next question needs', () => {
+  it('starts a session with counts, gaps and ids that get_flow takes as they are', async () => {
+    const start = await call('start_here');
+    expect(start.services.map((row: { service: string }) => row.service)).toEqual(['billing', 'gateway', 'orders', 'web']);
+    expect(start.channels.noConsumers).toEqual(['channel:order.archived']);
+    expect(start.channels.noProducers).toEqual(['channel:invoice.requested']);
+    expect(start.topGaps.length).toBeGreaterThan(0);
+    expect(start.topGaps.length).toBeLessThanOrEqual(5);
+    for (const service of ['billing', 'gateway', 'orders']) {
+      expect(start.startFrom.filter((row: { service: string }) => row.service === service).length).toBeLessThanOrEqual(3);
+    }
+    const flow = await call('get_flow', { entry: start.startFrom[0].id });
+    expect(flow.root.node.id).toBe(start.startFrom[0].id);
+    expect(start.next[0]).toBe(`get_flow({entry: ${JSON.stringify(start.startFrom[0].id)}})`);
+  });
+
+  it('narrows start_here to one service', async () => {
+    const start = await call('start_here', { service: 'billing' });
+    expect(start.services.map((row: { service: string }) => row.service)).toEqual(['billing']);
+    expect(start.startFrom.every((row: { service: string }) => row.service === 'billing')).toBe(true);
+    expect(start.channels.noConsumers).toEqual([]);
+  });
+
+  it('ends a list with the call that takes its first id', async () => {
+    const listed = await call('list_entries', { service: 'billing' });
+    expect(listed.next[0]).toBe(`get_flow({entry: ${JSON.stringify(listed.entries[0].id)}})`);
+    const channel = await call('who_consumes', { channel: 'order.created' });
+    expect(channel.next[0]).toBe('who_emits({channel: "channel:order.created"})');
+    const handler = await call('who_calls', { symbol: channel.consumers[0].id });
+    expect(handler.target.id).toBe(channel.consumers[0].id);
+  });
+
+  it('takes the same service filter on every list tool', async () => {
+    const callers = await call('who_calls', {
+      symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne',
+      depth: 6,
+      service: 'gateway',
+    });
+    const services = new Set<string>();
+    const walk = (nodes: FlowNode[]): void => {
+      for (const item of nodes) {
+        if (item.children.length === 0) services.add(String(item.node.service));
+        walk(item.children);
+      }
+    };
+    walk(callers.callers);
+    expect([...services]).toEqual(['gateway']);
+    const impact = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', service: 'orders' });
+    expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param']);
+    expect((await call('who_emits', { channel: 'order.created', service: 'billing' })).producers).toEqual([]);
+  });
+
+  it('describes an entry as bounded Markdown with places, shapes, gaps and ids', async () => {
+    const answer = await call('describe_for_prompt', { id: 'entry:gateway:http:POST:/orders/:param/cancel' });
+    expect(answer.id).toBe('entry:gateway:http:POST:/orders/:param/cancel');
+    expect(answer.markdown).toMatch(/^# POST \/orders\/:param\/cancel/);
+    expect(answer.markdown).toContain('## Chain');
+    expect(answer.markdown).toMatch(/`src\/[^`]+:\d+`/);
+    expect(answer.markdown).toContain('`target-route-not-found`');
+    expect(answer.markdown).toContain('## Ask next');
+    expect(answer.next[0]).toContain('get_flow');
+  });
+
+  it('describes a channel with what publishes onto it', async () => {
+    const answer = await call('describe_for_prompt', { id: 'order.created' });
+    expect(answer.id).toBe('channel:order.created');
+    expect(answer.markdown).toContain('## Published by');
+  });
+
+  it('keeps the Markdown under the ceiling it was given', async () => {
+    const answer = await call('describe_for_prompt', { id: 'entry:gateway:http:GET:/orders/:param', maxChars: 500 });
+    expect(answer.markdown.length).toBeLessThanOrEqual(500);
+    expect(answer.markdown).toContain('cut to stay under 500 characters');
   });
 });

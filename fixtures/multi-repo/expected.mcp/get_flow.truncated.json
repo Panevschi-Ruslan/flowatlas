@@ -78,5 +78,10 @@
     ]
   },
   "unresolvedOnPath": 0,
-  "truncated": "5 more nodes, increase depth or narrow scope"
+  "truncated": "5 more nodes, increase depth or narrow scope",
+  "next": [
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})"
+  ]
 }

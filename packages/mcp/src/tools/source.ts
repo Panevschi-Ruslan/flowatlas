@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { nextFor, withNext } from '../query/next.js';
 import { withDb, type ToolContext } from './common.js';
 
 /**
@@ -73,13 +74,16 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
         const from = Math.max(start - input.context, 0);
         const to = Math.min(end + input.context, lines.length - 1);
 
-        return {
-          id: node.id,
-          file: node.file,
-          line: from + 1,
-          endLine: to + 1,
-          code: lines.slice(from, to + 1).join('\n'),
-        };
+        return withNext(
+          {
+            id: node.id,
+            file: node.file,
+            line: from + 1,
+            endLine: to + 1,
+            code: lines.slice(from, to + 1).join('\n'),
+          },
+          nextFor(node).filter((hint) => !hint.startsWith('get_source')),
+        );
       }),
   );
 };

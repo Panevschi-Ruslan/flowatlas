@@ -26,5 +26,10 @@
     }
   ],
   "total": 17,
-  "truncated": "14 more nodes, increase depth or narrow scope"
+  "truncated": "14 more nodes, increase depth or narrow scope",
+  "next": [
+    "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
+    "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",
+    "impact({symbol: \"entry:billing:event:invoice.requested\"})"
+  ]
 }

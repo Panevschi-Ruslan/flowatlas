@@ -67,12 +67,39 @@ and let it talk on stdin and stdout.
 
 ---
 
-## The ten tools
+## The twelve tools
 
 Every tool takes `detail` (0 to 3, how much of each node comes back) and
 `maxNodes` (the ceiling on the answer), except `get_source`, which takes
 `context` and a line limit instead. Answers are bounded and say when they
 were cut, rather than filling a context window.
+
+### Ids, `next`, and where to begin
+
+Every row any tool returns carries an `id`, and every other tool takes that id
+as it is: an entry id goes to `get_flow`, a channel id to `who_emits` and
+`who_consumes`, a symbol id to `who_calls`, `impact` and `get_source`, a type id
+to `get_type`. Every answer ends with `next`, at most four calls written out
+with the ids it just returned, so an assistant never re-types or guesses a
+name:
+
+```
+start_here → get_flow({entry: id}) → get_source({symbol: id})
+who_emits / who_consumes({channel: id}) → get_flow on a handler
+find_symbol → who_calls / impact({symbol: id}) → get_flow on an entry
+```
+
+The server's instructions describe the same chains. `list_entries`,
+`find_symbol`, `who_calls`, `impact`, `who_emits`, `who_consumes` and
+`start_here` all take the same optional `service` filter.
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `start_here` | nodes, entries by kind and open gaps per service, the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
+| `describe_for_prompt` | one entry, channel or symbol as Markdown to hand on: the chain in call order with repo-relative `file:line`, shapes in and out, gaps with their reasons, and the ids to ask next. No source code; bounded by `maxSteps` and `maxChars` | `id` (required), `maxSteps`, `maxChars` |
+
+`describe_for_prompt` is rendered by `describeForPrompt`, a pure function
+exported from `@flowatlas/mcp`, so a page can copy the same text.
 
 ### Finding your way in
 

@@ -1,7 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
-import { bound, commonInput, withDb, type ToolContext } from './common.js';
+import { nextFor, withNext } from '../query/next.js';
+import { bound, commonInput, inService, serviceInput, withDb, type ToolContext } from './common.js';
 
 /** `order.created` and `channel:order.created` are the same thing. */
 const channelId = (ref: string): string => {
@@ -23,6 +24,7 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
         description,
         inputSchema: {
           channel: z.string().describe('a channel name, with or without the "channel:" prefix'),
+          service: serviceInput,
           ...commonInput,
         },
       },
@@ -39,15 +41,20 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
           const nodes = edges
             .map((edge) => db.node(key === 'producers' ? edge.from : edge.to))
             .filter((node) => node !== undefined)
+            .filter(inService(input.service))
             .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
           const { items, truncated } = truncate(nodes, maxNodes);
-          return {
-            channel: projectDetail(channel, detail),
-            [key]: items.map((node) => projectDetail(node, detail)),
-            ...(truncated === undefined ? {} : { truncated }),
-            ...(note === undefined ? {} : { note }),
-          };
+          const other = key === 'producers' ? 'who_consumes' : 'who_emits';
+          return withNext(
+            {
+              channel: projectDetail(channel, detail),
+              [key]: items.map((node) => projectDetail(node, detail)),
+              ...(truncated === undefined ? {} : { truncated }),
+              ...(note === undefined ? {} : { note }),
+            },
+            [`${other}({channel: ${JSON.stringify(id)}})`, ...nextFor(items[0])].slice(0, 4),
+          );
         }),
     );
   };
