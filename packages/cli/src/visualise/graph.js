@@ -846,6 +846,29 @@ export const FIND_GROUPS = Object.freeze({
       }));
     },
   }),
+  fails: Object.freeze({
+    say: 'Fails with',
+    // One item per exception and way in: the exception and its status are the
+    // name, the way in it fails is what opens (P68).
+    items: (model) => {
+      const { repos } = model.data.dicts;
+      const out = [];
+      for (const [at, fails] of Object.entries(model.data.fails || {})) {
+        const entry = Number(at);
+        const node = model.nodes[entry];
+        if (!node) continue;
+        const seen = new Set();
+        for (const fail of fails) {
+          const label = fail.s === undefined ? fail.x : fail.s + ' ' + fail.x;
+          if (seen.has(label)) continue;
+          seen.add(label);
+          // Found by the exception and status only, not by the way in's path.
+          out.push({ label, sub: node[FIELD.label] + ' · ' + repos[node[FIELD.repo]], node: entry, hay: label });
+        }
+      }
+      return out;
+    },
+  }),
   classes: Object.freeze({
     say: 'Classes',
     items: (model) => {
@@ -871,7 +894,7 @@ export const FIND_GROUPS = Object.freeze({
 });
 
 /**
- * Every route, channel, table, type, gap and class whose name or note holds
+ * Every route, channel, table, type, gap, failure and class whose name or note holds
  * every word typed, a group at a time: a name that starts with the words
  * first, shorter names before longer. Each group carries its total, so the
  * list can say how many it did not show.
@@ -882,7 +905,7 @@ export const findEverything = (model, query, limit = 8) => {
   if (!model.findIndex) {
     model.findIndex = Object.entries(FIND_GROUPS).map(([key, group]) => ({
       key, say: group.say,
-      items: group.items(model).map((item) => ({ ...item, hay: (item.label + ' ' + item.sub).toLowerCase() })),
+      items: group.items(model).map((item) => ({ ...item, hay: (item.hay ?? item.label + ' ' + item.sub).toLowerCase() })),
     }));
   }
   const text = terms.join(' ');

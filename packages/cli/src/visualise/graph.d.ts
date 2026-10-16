@@ -382,8 +382,10 @@ export interface FindHit {
   label: string;
   sub: string;
   node: number;
+  /** What the item is found by, when not its label and sub. */
+  hay?: string;
 }
-export type FindGroupKey = 'routes' | 'channels' | 'tables' | 'types' | 'gaps' | 'classes';
+export type FindGroupKey = 'routes' | 'channels' | 'tables' | 'types' | 'gaps' | 'fails' | 'classes';
 export declare const FIND_GROUPS: Readonly<
   Record<FindGroupKey, Readonly<{ say: string; items: (model: GraphModel) => FindHit[] }>>
 >;

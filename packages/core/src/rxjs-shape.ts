@@ -1,5 +1,11 @@
+import type { DeclarationShape } from './declaration-shapes.js';
+
 /**
- * The part of the stream library a Nest service hands values back through.
+ * The part of the stream library a server hands values back through, and a
+ * browser client answers every request with.
+ *
+ * The one shape more than one reader carries: the library belongs to no
+ * framework, so it is held here and each reader lists it beside its own.
  *
  * Written by hand against the library's documented surface, and only as much
  * of it as a reading needs: `Observable<T>` with the `T` the checker unwraps,
@@ -67,3 +73,6 @@ export declare function take<T>(count: number): MonoTypeOperatorFunction<T>;
 export declare function timeout<T>(each: number): MonoTypeOperatorFunction<T>;
 export declare function retry<T>(count?: number): MonoTypeOperatorFunction<T>;
 `;
+
+/** The stream library's shape, as a reader lists it. */
+export const RXJS_DECLARATION_SHAPE: DeclarationShape = Object.freeze({ package: 'rxjs', declarations: RXJS_SHAPE });
