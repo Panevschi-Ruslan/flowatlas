@@ -24,6 +24,7 @@ import { addressingFindings, findBootstrapFile, readBootstrap } from './bootstra
 import { createNestContext, type NestStats } from './context.js';
 import { buildClassIndex } from './index-classes.js';
 import { applicationsPass } from './passes/applications.js';
+import { callShapePass } from './passes/call-shape.js';
 import { callsPass } from './passes/calls.js';
 import { diPass } from './passes/di.js';
 import { entriesPass } from './passes/entries.js';
@@ -98,7 +99,7 @@ export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
  * what a function takes is written on every edge into it once the last of
  * those edges is drawn.
  */
-export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, typesPass, logsPass];
+export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, callShapePass, typesPass, logsPass];
 
 /** Parses a repository, honouring the tsconfig the caller or the service names. */
 export const createRepoProject = (options: ExtractRepoOptions): Project => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:30.721Z",
+  "builtAt": "2026-10-16T11:06:18.133Z",
   "services": [
     {
       "name": "circulation",
@@ -1111,7 +1111,13 @@
       ],
       "returns": "void",
       "file": "src/overdue/scan-overdue.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 7
+        }
+      }
     },
     {
       "from": "circulation#src/returns/record-return.ts:handler",

@@ -13,4 +13,4 @@
               ~  s3:ObjectRemoved:Delete s3/library-cover-uploads  media/src/uploads/make-thumbnail.ts:21
                 (cycle) channel:s3/library-cover-uploads ~heuristic
     $  UPLOADS_BUCKET                                              media/src/uploads/make-thumbnail.ts:17
-unresolved on this path: 1
+unresolved on this path: 2

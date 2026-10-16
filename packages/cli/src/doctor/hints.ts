@@ -637,6 +637,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A notification of a bucket is not read: the bucket it is of, a target block the files do not settle (a dynamic block over what is known only once deployed), its events or a key filter. Write it so the files settle it - a literal, or a reference to the bucket, function, queue or topic the configuration declares.',
   's3-write-matches-nothing': () =>
     'A write to a bucket fires an event that none of the bucket\'s notifications takes, by its events or by the start and end of the key. Nothing to fix if the write is meant to notify nobody; otherwise the notification\'s events or filters are not the ones meant.',
+  'query-in-loop': () =>
+    'A query, cache call, HTTP call or publish runs once per item of a loop - directly, or through a function the loop calls - so a list of n items costs n round trips (likely N+1). Read every item in one call before the loop, or batch the calls; nothing to fix if the list is known to stay small.',
   'event-pattern-unread': () =>
     'A rule\'s event pattern is not read, so the rule is on no channel. Write it as JSON, a heredoc or jsonencode of what the files settle.',
   'api-body-unread': () =>

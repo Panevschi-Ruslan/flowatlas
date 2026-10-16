@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:26.018Z",
+  "builtAt": "2026-10-16T11:10:25.139Z",
   "services": [
     {
       "name": "returns",
@@ -690,7 +690,13 @@
       ],
       "returns": "void",
       "file": "src/returns/bulk-return.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 7
+        }
+      }
     },
     {
       "from": "returns#src/returns/process-return.ts:handler",
@@ -706,7 +712,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/returns/process-return.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 20
+        }
+      }
     },
     {
       "from": "returns#src/returns/process-return.ts:handler",
@@ -714,7 +726,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/returns/process-return.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 20
+        }
+      }
     },
     {
       "from": "returns#src/returns/record-return.ts:handler",
@@ -793,5 +811,61 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "src/returns/bulk-return.ts",
+      "line": 7,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A call made once per item of a `for-of` loop reaches a publish: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "returns#src/returns/bulk-return.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 7
+        },
+        "reaches": "producer:returns#src/lib/returns-queue.ts:18:9",
+        "via": "returns#src/lib/returns-queue.ts:queueReturn"
+      },
+      "service": "returns"
+    },
+    {
+      "file": "src/returns/process-return.ts",
+      "line": 22,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "returns#src/returns/process-return.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 20
+        },
+        "reaches": "producer:returns#src/returns/process-return.ts:22:11"
+      },
+      "service": "returns"
+    },
+    {
+      "file": "src/returns/process-return.ts",
+      "line": 28,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "returns#src/returns/process-return.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 20
+        },
+        "reaches": "producer:returns#src/returns/process-return.ts:28:11"
+      },
+      "service": "returns"
+    }
+  ]
 }

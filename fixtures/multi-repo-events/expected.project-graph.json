@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:29.094Z",
+  "builtAt": "2026-10-16T11:07:29.846Z",
   "services": [
     {
       "name": "platform-events",
@@ -1055,7 +1055,13 @@
       ],
       "returns": "void",
       "file": "src/loan-digest.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 6
+        }
+      }
     },
     {
       "from": "notifications#src/welcome-borrower.ts:handler",

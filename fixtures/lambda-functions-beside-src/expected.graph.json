@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-hold-shelf",
-  "generatedAt": "2026-10-07T18:36:26.685Z",
+  "generatedAt": "2026-10-16T11:06:43.800Z",
   "nodes": [
     {
       "id": "entry:lending-library-hold-shelf:invoke:library-holds-cancel-hold",
@@ -408,6 +408,12 @@
       "confidence": "static",
       "file": "functions/expire-holds.ts",
       "line": 7,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 6
+        }
+      },
       "params": [
         "string"
       ],
@@ -432,6 +438,12 @@
       "confidence": "static",
       "file": "functions/expire-holds.ts",
       "line": 8,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 6
+        }
+      },
       "params": [
         "string",
         "string"

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:40.428Z",
+  "builtAt": "2026-10-16T11:10:23.259Z",
   "services": [
     {
       "name": "api",
@@ -660,7 +660,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/live/peer-sockets.ts",
-      "line": 62
+      "line": 62,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 61
+        }
+      }
     },
     {
       "from": "api#src/live/peer-sockets.ts:PeerSockets.sendState",
@@ -1012,5 +1018,24 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "src/live/peer-sockets.ts",
+      "line": 62,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "api#src/live/peer-sockets.ts:PeerSockets.sendNotification",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 61
+        },
+        "reaches": "producer:api#src/live/peer-sockets.ts:62:7"
+      },
+      "service": "api"
+    }
+  ]
 }
