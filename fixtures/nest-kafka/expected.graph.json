@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-kafka",
-  "generatedAt": "2026-10-07T18:29:25.186Z",
+  "generatedAt": "2026-10-16T11:07:56.607Z",
   "nodes": [
     {
       "id": "channel:get.order",
@@ -1580,7 +1580,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 51
+      "line": 51,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 50
+        }
+      }
     },
     {
       "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.markPaid",
@@ -1897,6 +1903,23 @@
       "hint": "Use a literal or a const pattern; a computed one cannot be matched to a producer.",
       "symbol": "OrdersController.onAnything",
       "adapter": "nestjs-microservice"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 51,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "nest-kafka#src/orders/orders.service.ts:OrdersService.importAll",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 50
+        },
+        "reaches": "producer:nest-kafka#src/orders/orders.service.ts:51:9"
+      }
     },
     {
       "file": "src/orders/orders.service.ts",

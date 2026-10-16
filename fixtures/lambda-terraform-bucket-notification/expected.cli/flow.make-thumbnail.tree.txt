@@ -17,4 +17,4 @@
                 @  library-record-archived                                media/infra/main.tf:100
     ~  s3:ObjectRemoved:Delete s3/library-cover-uploads                   media/src/uploads/make-thumbnail.ts:21
       ~  s3/library-cover-uploads ~heuristic                              infra/notifications.tf:3
-unresolved on this path: 1
+unresolved on this path: 2

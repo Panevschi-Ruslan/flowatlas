@@ -543,3 +543,5 @@ export {
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
+export { callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
+export type { CallShape, ConcurrentShape, LoopShape } from './call-shape.js';

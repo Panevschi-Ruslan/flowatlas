@@ -1,9 +1,15 @@
 unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
 unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
+  3 sites with nothing to join, folded into 3 rows, counted in none of the above
   s3-write-matches-nothing (info): 1 row
     Each notification takes some events and, where it filters, keys with a given start and end. Nothing to fix if the write is meant to notify nobody.
       media/src/uploads/make-thumbnail.ts:21  the call at src/uploads/make-thumbnail.ts:21 is s3:ObjectRemoved:Delete on s3/library-cover-uploads, and none of its 2 notification(s) takes it
+  query-in-loop (nothing to join): 3 rows
+    Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
+      media/src/uploads/make-thumbnail.ts:19  A publish runs once per item of a `for-of` loop: likely N+1.
+      media/src/uploads/make-thumbnail.ts:20  A publish runs once per item of a `for-of` loop: likely N+1.
+      media/src/uploads/make-thumbnail.ts:21  A publish runs once per item of a `for-of` loop: likely N+1.
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

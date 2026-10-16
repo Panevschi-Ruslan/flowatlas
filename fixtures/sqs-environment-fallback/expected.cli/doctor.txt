@@ -1,6 +1,12 @@
 unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
-unresolved: none
+unresolved: 0 to act on over 0 rows
+  3 sites with nothing to join, folded into 3 rows, counted in none of the above
+  query-in-loop (nothing to join): 3 rows
+    Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
+      returns/src/returns/bulk-return.ts:7  A call made once per item of a `for-of` loop reaches a publish: likely N+1.
+      returns/src/returns/process-return.ts:22  A publish runs once per item of a `for-of` loop: likely N+1.
+      returns/src/returns/process-return.ts:28  A publish runs once per item of a `for-of` loop: likely N+1.
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

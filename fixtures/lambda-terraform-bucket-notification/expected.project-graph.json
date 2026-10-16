@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T17:48:59.836Z",
+  "builtAt": "2026-10-16T11:06:50.758Z",
   "services": [
     {
       "name": "media",
@@ -981,7 +981,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/uploads/make-thumbnail.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 12
+        }
+      }
     },
     {
       "from": "media#src/uploads/make-thumbnail.ts:handler",
@@ -989,7 +995,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/uploads/make-thumbnail.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 12
+        }
+      }
     },
     {
       "from": "media#src/uploads/make-thumbnail.ts:handler",
@@ -997,7 +1009,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/uploads/make-thumbnail.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 12
+        }
+      }
     },
     {
       "from": "media#src/uploads/sign-cover.ts:handler",
@@ -1233,6 +1251,60 @@
     }
   },
   "unresolved": [
+    {
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 19,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "media#src/uploads/make-thumbnail.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 12
+        },
+        "reaches": "producer:media#src/uploads/make-thumbnail.ts:19:11"
+      },
+      "service": "media"
+    },
+    {
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 20,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "media#src/uploads/make-thumbnail.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 12
+        },
+        "reaches": "producer:media#src/uploads/make-thumbnail.ts:20:11"
+      },
+      "service": "media"
+    },
+    {
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 21,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "media#src/uploads/make-thumbnail.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 12
+        },
+        "reaches": "producer:media#src/uploads/make-thumbnail.ts:21:11"
+      },
+      "service": "media"
+    },
     {
       "service": "media",
       "file": "src/uploads/make-thumbnail.ts",

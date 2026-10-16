@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:27.100Z",
+  "builtAt": "2026-10-16T11:10:28.248Z",
   "services": [
     {
       "name": "returns",
@@ -1342,7 +1342,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/notices/notify-borrower.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 17
+        }
+      }
     },
     {
       "from": "returns#src/returns/bulk-return.ts:handler",
@@ -1354,7 +1360,13 @@
       ],
       "returns": "void",
       "file": "src/returns/bulk-return.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 10
+        }
+      }
     },
     {
       "from": "returns#src/returns/process-return.ts:handler",
@@ -1395,7 +1407,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/returns/process-return.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 19
+        }
+      }
     },
     {
       "from": "returns#src/returns/process-return.ts:handler",
@@ -1403,7 +1421,13 @@
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/returns/process-return.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 19
+        }
+      }
     },
     {
       "from": "returns#src/returns/record-return.ts:handler",
@@ -1587,6 +1611,61 @@
       }
     },
     {
+      "file": "src/notices/notify-borrower.ts",
+      "line": 20,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "returns#src/notices/notify-borrower.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 17
+        },
+        "reaches": "producer:returns#src/notices/notify-borrower.ts:20:11"
+      },
+      "service": "returns"
+    },
+    {
+      "file": "src/returns/bulk-return.ts",
+      "line": 10,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A call made once per item of a `for-of` loop reaches a publish: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "returns#src/returns/bulk-return.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 10
+        },
+        "reaches": "producer:returns#src/lib/returns-queue.ts:17:9",
+        "via": "returns#src/lib/returns-queue.ts:queueReturn"
+      },
+      "service": "returns"
+    },
+    {
+      "file": "src/returns/process-return.ts",
+      "line": 21,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "returns#src/returns/process-return.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 19
+        },
+        "reaches": "producer:returns#src/returns/process-return.ts:21:11"
+      },
+      "service": "returns"
+    },
+    {
       "service": "returns",
       "file": "src/returns/process-return.ts",
       "line": 28,
@@ -1602,6 +1681,24 @@
           "infra/env/prod.tfvars": "\"https://sqs.eu-west-1.amazonaws.com/444455556666/library-audit\""
         }
       }
+    },
+    {
+      "file": "src/returns/process-return.ts",
+      "line": 28,
+      "reason": "query-in-loop",
+      "level": "nothing",
+      "sites": 1,
+      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "returns#src/returns/process-return.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 19
+        },
+        "reaches": "producer:returns#src/returns/process-return.ts:28:11"
+      },
+      "service": "returns"
     }
   ]
 }

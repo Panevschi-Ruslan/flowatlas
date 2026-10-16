@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-knex-raw",
-  "generatedAt": "2026-10-07T14:34:16.328Z",
+  "generatedAt": "2026-10-16T11:08:00.243Z",
   "nodes": [
     {
       "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:14:12",
@@ -717,7 +717,14 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/reports/reports.service.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "concurrent": true,
+        "together": {
+          "by": "Promise.all",
+          "line": 43
+        }
+      }
     },
     {
       "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.both",
@@ -725,7 +732,14 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/reports/reports.service.ts",
-      "line": 45
+      "line": 45,
+      "meta": {
+        "concurrent": true,
+        "together": {
+          "by": "Promise.all",
+          "line": 43
+        }
+      }
     },
     {
       "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.emails",
