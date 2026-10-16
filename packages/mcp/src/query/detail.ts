@@ -51,6 +51,10 @@ export const projectEdge = (edge: GraphEdge, level: DetailLevel): FlowEdge => {
   if (edge.confidence !== 'static' && because.length > 0) projected.because = because;
   const notMatchedOn = strings(edge.meta?.['notMatchedOn']);
   if (notMatchedOn.length > 0) projected.notMatchedOn = notMatchedOn;
+  const baseUrlFrom = edge.meta?.['baseUrlFrom'];
+  if (typeof baseUrlFrom === 'string') projected.baseUrlFrom = baseUrlFrom;
+  const baseUrl = edge.meta?.['baseUrl'];
+  if (typeof baseUrl === 'string') projected.baseUrl = baseUrl;
   return projected;
 };
 

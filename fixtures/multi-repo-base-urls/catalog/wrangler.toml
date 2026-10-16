@@ -1,0 +1,11 @@
+name = "catalog"
+main = "dist/worker.js"
+
+[vars]
+ORDERS_FEED_URL = "http://localhost:3001"
+
+[env.staging]
+vars = { ORDERS_FEED_URL = "https://orders.staging.example.com" }
+
+[dev]
+port = 3002

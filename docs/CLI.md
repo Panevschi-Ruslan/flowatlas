@@ -1220,7 +1220,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
-| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
+| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key` |
@@ -1236,7 +1236,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info), `iot-action-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
-| Values a deployment gives the code | `environment-not-set`, `environment-value-unread` |
+| Values a deployment gives the code | `environment-not-set`, `environment-value-unread`, `environment-from-files` |
 
 Three of these are worth knowing before they are met, because each is the
 tool declining to guess:
@@ -1312,6 +1312,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
+| `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
 | `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi", "path": … }`, path relative to this file |
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
@@ -1342,6 +1343,42 @@ directly or through a module's output) reaches that function's `ALL /*` entry,
 `via: "functionUrl"` with the setting as `meta.variable`. The edge is `static`
 where the path was read and `heuristic` where it was not, since the URL answers
 every path either way (`fixtures/lambda-terraform-destinations`).
+
+**A setting nobody claims is read from what the repositories write down.** Where
+no service lists the setting under `baseUrlEnv` and it holds no function URL, its
+value is looked for, strongest first: the environment a function that runs the
+request is deployed with (that alone, where it says); otherwise the files at the
+top of the caller's repository - `.env.example`, `.env.sample`, `.env.template`,
+`.env.development`, the `environment:` and `env_file:` of the compose container
+built from it (in its own `docker-compose*.yml` or one beside this file),
+`serverless.yml` `provider.environment` and `functions.*.environment`, and a
+worker's `wrangler.json`, `wrangler.jsonc` or `wrangler.toml` `vars` - and the
+code's own fallback, `process.env.X ?? 'http://…'`, `|| '…'`,
+`config.get('X', '…')`, or a settings factory's (`registerAs('orders', () => ({
+url: process.env.ORDERS_URL ?? '…' }))`, which also makes `orders.url` the
+variable `ORDERS_URL`). `.env`, `.env.local` and the files for any other
+environment are read for the names they set and never for a value. Only an
+address is kept, and of it only the scheme, the host and the path: a setting
+whose name says it is a secret, a value with credentials, a query or a token in
+its path, and anything that is not an `http`, `https`, `ws` or `arn:` address are
+dropped before anything is stored.
+
+The host is then matched against the configured services: a service's name, its
+`hosts`, the names a compose file gives the container built from it, and
+`localhost:<port>` for a port the compose file publishes or the service's own
+example files run it on. One service named by every value is the answer, joined
+`via: "baseUrlValue"`, `heuristic` (`static` where the value is the one the
+function is deployed with), with `baseUrl` and `baseUrlFrom` on the edge and on
+the request and one `base-url-from-files` row at level `info` per value taken. A
+host outside the project is a third party, drawn as one. Values naming two
+services, or none, stay an `unknown-base-url-env` row that says which values
+were found where, and which files set the setting without being read. A setting
+nothing gives a value whose name is the name of exactly one service
+(`ORDERS_SERVICE_URL` for `orders`) is taken as that service, `heuristic`, with
+a `base-url-from-name` row; a browser's request is not, because `apiTarget` is
+what names its service. `settingFiles.read: false` turns all of it off;
+`settingFiles.environment` chooses one environment where files name several
+(`fixtures/multi-repo-base-urls`).
 
 **Two APIs at one address are two entries.** Where two APIs (REST, HTTP or
 WebSocket) or two load balancers of one deployment serve the same method and
@@ -1432,6 +1469,8 @@ worked example of a document that declares routes.
 |---|---|---|---|
 | `sharedPackages` | string[] | `[]` | packages whose types are one declaration rather than two copies |
 | `builtInShapes` | boolean | `true` | where a repository has not installed `rxjs`, `@nestjs/common`, `@nestjs/core` or `@nestjs/microservices`, read a few hand-written declarations of their public surface in their place, so `ClientsModule.register` tokens, `ClientProxy` calls and `Observable<T>` returns resolve; an installed package always wins. `false` turns them off |
+| `settingFiles.read` | boolean | `true` | whether a base address and an address waiting on the environment are completed from what the repositories' own files and the code's own fallbacks say a setting is; only addresses are kept, never a secret |
+| `settingFiles.environment` | string | none | the environment read where files name several (`.env.development` and `.env.staging`, `docker-compose.prod.yml`, a worker's `env.<name>.vars`): that environment's files, and the files for none in particular |
 | `output` | string | `.flowatlas` | where everything a build writes goes, relative to this file: the three outputs, the cache and each service's own graph under `services/`. Nothing is written into the repositories |
 | `types.maxDepth` | number | `3` | how deep an anonymous shape is written out before it becomes a reference |
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |
@@ -2759,6 +2798,14 @@ naming both; a value two variable files set differently is an
 `environment-value-unread` row naming the files, and `services[].infra.vars`
 chooses. Every settings key a function sets says where its value comes from on
 the `reads_config` edge that reads it (`setBy`).
+
+A variable no function that runs the code is deployed with, and that the code
+writes no default for, is read from the files at the top of the repository, the
+same ones and under the same rules as a base address: written once, the same
+way everywhere, it completes the address, the edge is `heuristic` with
+`fromFiles` naming the file, and an `environment-from-files` row at level `info`
+stands where `environment-not-set` would have. A producer no deployed function
+runs at all is completed the same way, from the files alone.
 
 **A default the code writes beside the variable** —
 `process.env.RETURNS_QUEUE_URL ?? '<url>'`, `|| DEFAULT_TOPIC` with a `const`,

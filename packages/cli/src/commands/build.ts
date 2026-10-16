@@ -67,6 +67,7 @@ import {
 } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import { deploymentFiles } from '../build/deployment-files.js';
+import { settingsOfProject } from '../build/settings/index.js';
 import {
   hashGraphFile,
   planRebuild,
@@ -1086,6 +1087,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   });
   const result = linkGraphs(graphs, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
+    settings: settingsOfProject(loaded),
     services: extracted.map((item) => {
       const packages = packagesOf(readPackageJson(loaded.repoDir(item.service)));
       return packages === undefined ? item.report : { ...item.report, packages };

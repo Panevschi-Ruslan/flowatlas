@@ -1,5 +1,10 @@
 import type { Node as TsNode } from 'ts-morph';
-import { rootSettingKey as rootSettingKeyIn, type RootSettingOptions } from '@flowatlas/core';
+import {
+  rootSettingAddress,
+  rootSettingKey as rootSettingKeyIn,
+  type RootSettingOptions,
+  type SettingAddress,
+} from '@flowatlas/core';
 import { readConfig } from './config.js';
 
 export {
@@ -22,7 +27,14 @@ export const settingReader: RootSettingOptions = {
     const found = readConfig(node);
     return found !== null && found.dynamic !== true ? found.key : null;
   },
+  settingDefault: (node: TsNode): string | undefined => {
+    const found = readConfig(node);
+    return typeof found?.defaultValue === 'string' && found.defaultValue !== '' ? found.defaultValue : undefined;
+  },
 };
+
+/** The settings key a string value is rooted at, with what the code falls back to where it writes one (P77). */
+export const rootConfigAddress = (value: TsNode): SettingAddress | null => rootSettingAddress(value, settingReader);
 
 /** Follows a string value back to the settings key it is rooted at. */
 export const rootConfigKey = (value: TsNode, budget?: number): string | null =>

@@ -207,6 +207,9 @@ const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerate
   // When a schedule fires, and in which zone (P71).
   ['expression', 'ex', false],
   ['timeZone', 'tz', true],
+  // The value a request's base address was taken from, and the file it is in (P77).
+  ['baseUrl', 'bu', false],
+  ['baseUrlFrom', 'bf', true],
 ];
 
 /** How many of `META_FIELDS` the walk and the lists read, and so always ship. */

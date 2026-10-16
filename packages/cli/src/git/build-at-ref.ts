@@ -33,6 +33,7 @@ import { VERSION } from '../version.js';
 import { GraphCache } from './graph-cache.js';
 import { isGitRepo, pruneWorktrees, resolveSha, withWorktree, type NodeModules } from './worktree.js';
 import { ownBin } from '../own-path.js';
+import { settingsOfProject } from '../build/settings/index.js';
 
 const run = promisify(execFile);
 
@@ -326,8 +327,12 @@ export const buildAtRef = async (
   const ordered = loaded.config.services.flatMap((service) =>
     repoGraphs[service.name] === undefined ? [] : [repoGraphs[service.name] as RepoGraph],
   );
+  // The files at the top of each repository are read as they stand, for both
+  // sides alike: a setting's value completes a join the same way on each, so a
+  // comparison shows what the code changed rather than what a checkout lacks.
   const linked = linkGraphs(ordered, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
+    settings: settingsOfProject(loaded),
   });
 
   const dbPath = join(options.workDir, `${options.side}.db`);

@@ -8,6 +8,7 @@ import {
   type RouteResult,
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
+import { whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
 
 /** A reason, a sentence and what to do about it — everything but where it happened. */
 export interface Finding {
@@ -51,21 +52,32 @@ export interface RouteIndex {
    * functions that run it and are deployed with that setting (P54).
    */
   functionUrlsOf?(callId: string): readonly GraphNode[];
+  /**
+   * What the values a request's setting is given say its base address is,
+   * where no service claims the setting (P77).
+   */
+  baseUrlOf?(call: GraphNode): BaseUrlAnswer | undefined;
 }
 
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
     mountAssumed?: readonly string[];
   };
-  external: Record<never, never>;
+  /** The host, when it was found from the value the setting is given rather than written in the call (P77). */
+  external: { host?: string };
   /** The service is known when the address said so; the route never was. */
   dynamic: { targetService?: string };
-  unknownEnv: { env: string; claiming: readonly string[] };
+  unknownEnv: {
+    env: string;
+    claiming: readonly string[];
+    /** What the setting's values said, where they settled nothing (P77). */
+    values?: Extract<BaseUrlAnswer, { kind: 'unsettled' }>;
+  };
   noRoute: {
     targetService: string;
     method: string;
@@ -99,6 +111,8 @@ export interface Resolution {
   alsoLinked?: Array<{ entry: GraphNode; mountAssumed?: readonly string[] }>;
   /** Findings that did not decide the outcome, such as an annotation that missed. */
   notes: Finding[];
+  /** The value the base address was taken from, where a setting's value decided it (P77). */
+  baseUrl?: FoundValue;
 }
 
 /**
@@ -111,17 +125,20 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
   linked: null,
   external: null,
   dynamic: null,
-  unknownEnv: ({ env, claiming }) => ({
-    reason: 'unknown-base-url-env',
-    message:
-      claiming.length === 0
-        ? `no service declares ${env}`
-        : `${env} is declared on services ${claiming.join(' and ')}`,
-    hint:
-      claiming.length === 0
-        ? `Add ${env} to services[].baseUrlEnv of whichever service answers it.`
-        : `Leave ${env} on the one service that answers it.`,
-  }),
+  unknownEnv: ({ env, claiming, values }) =>
+    claiming.length === 0 && values !== undefined
+      ? unsettledFinding(env, values)
+      : {
+          reason: 'unknown-base-url-env',
+          message:
+            claiming.length === 0
+              ? `no service declares ${env}`
+              : `${env} is declared on services ${claiming.join(' and ')}`,
+          hint:
+            claiming.length === 0
+              ? `Add ${env} to services[].baseUrlEnv of whichever service answers it.`
+              : `Leave ${env} on the one service that answers it.`,
+        },
   noRoute: (detail) =>
     detail.unread.length === 0
       ? {
@@ -135,6 +152,63 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
   ambiguous: (detail) =>
     AMBIGUITY[detail.apis !== undefined ? 'api' : detail.applications === undefined ? 'route' : 'application'](detail),
 };
+
+/** How many of a setting's values a row names before it counts the rest. */
+const VALUES_NAMED = 3;
+
+/**
+ * What is said of a setting no service claims whose values were found and
+ * settled nothing (P77): which values, where, and why each is not a service.
+ */
+const unsettledFinding = (env: string, answer: Extract<BaseUrlAnswer, { kind: 'unsettled' }>): Finding => {
+  const named = answer.values.slice(0, VALUES_NAMED).map((found) => `${found.value} in ${whereFound(found)}`);
+  const more = answer.values.length > VALUES_NAMED ? ` and ${answer.values.length - VALUES_NAMED} more` : '';
+  const values = named.length === 0 ? '' : `; its value is ${named.join(', ')}${more}`;
+  const why =
+    answer.services.length > 1
+      ? `, which name ${answer.services.join(' and ')}, not one service`
+      : named.length === 0
+        ? ''
+        : `, and no configured service is reached at ${answer.values.length === 1 ? 'that host' : 'those hosts'}`;
+  const unread =
+    answer.namedOnly.length === 0
+      ? ''
+      : `${named.length === 0 ? '; it' : '. It'} is set in ${answer.namedOnly.join(', ')}, whose values are never read`;
+  return {
+    reason: 'unknown-base-url-env',
+    message: `no service declares ${env}${values}${why}${unread}`,
+    hint:
+      answer.services.length > 1
+        ? `Choose the environment to read under settingFiles.environment, or add ${env} to services[].baseUrlEnv of the service that answers it.`
+        : `Add ${env} to services[].baseUrlEnv of whichever service answers it, or the host to its services[].hosts.`,
+  };
+};
+
+/**
+ * What is said beside a request whose base address was taken from the value
+ * its setting is given (P77). `info`: nothing is wrong; the row is there so
+ * the join is never mistaken for one the configuration made.
+ */
+export const baseUrlTakenFinding = (found: FoundValue, target: string): Finding =>
+  found.byName === true
+    ? {
+        reason: 'base-url-from-name',
+        level: 'info',
+        message:
+          `no service declares ${found.variable} and ` +
+          `${found.unmatched === undefined ? 'nothing read gives it a value' : `no configured service is reached at ${found.unmatched.join(', ')}`}` +
+          `${found.namedOnly === undefined ? '' : ` (it is set in ${found.namedOnly.join(', ')}, whose values are never read)`}` +
+          `, so it is taken as ${target}, the one service it is named after`,
+        hint: `Only the setting's name chose the service. Add ${found.variable} to services[].baseUrlEnv of ${target} to say so outright, or of the service it really is.`,
+      }
+    : {
+        reason: 'base-url-from-files',
+        level: 'info',
+        message: `${found.variable} is ${found.value} in ${whereFound(found)}, which is taken as ${target}`,
+        hint: found.deployed
+          ? 'The value is the one the function is deployed with.'
+          : `The value is one the repository writes down for running it, not necessarily the deployed one. Add ${found.variable} to services[].baseUrlEnv of ${target} to say so outright.`,
+      };
 
 /**
  * Two ways one request can answer to more than one entry, which are not one way.
@@ -402,7 +476,11 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     return { outcome, notes };
   }
 
-  const claiming = index.claimantsOf(env);
+  // A key a settings factory builds from a variable of the environment is
+  // claimed by whoever claims the variable (P77).
+  const variable = call.meta?.['baseUrlVariable'];
+  const own = index.claimantsOf(env);
+  const claiming = own.length === 0 && typeof variable === 'string' ? index.claimantsOf(variable) : own;
   // A setting no service claims may hold a function's own URL, which answers
   // every verb and path: the request reaches the function whatever it asks.
   const [url, ...urls] = claiming.length === 0 ? (index.functionUrlsOf?.(call.id) ?? []) : [];
@@ -413,10 +491,20 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       notes,
     };
   }
-  const targetService = claiming.length === 1 ? claiming[0] : undefined;
+  // Nobody claims it: what the setting is given may still say (P77).
+  const valued = claiming.length === 0 ? index.baseUrlOf?.(call) : undefined;
+  if (valued?.kind === 'external') {
+    return { outcome: { kind: 'external', host: valued.host }, notes, baseUrl: valued.found };
+  }
+  if (valued?.kind === 'unsettled') {
+    return { outcome: { kind: 'unknownEnv', env, claiming, values: valued }, notes };
+  }
+  const targetService = claiming.length === 1 ? claiming[0] : valued?.service;
   if (targetService === undefined) {
     return { outcome: { kind: 'unknownEnv', env, claiming }, notes };
   }
+  const via = valued === undefined ? 'baseUrlEnv' : 'baseUrlValue';
+  const taken = valued === undefined ? {} : { baseUrl: valued.found };
 
   // Knowing which service is asked is not knowing what is asked of it. A route
   // guessed here would be a route this service does not serve, reported as
@@ -426,7 +514,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   // have matched `/orders/:param/items` and produced an edge marked `static`
   // towards a route this call may never reach.
   if (typeof path !== 'string' || !wasRead(path)) {
-    return { outcome: { kind: 'dynamic', targetService }, notes };
+    return { outcome: { kind: 'dynamic', targetService }, notes, ...taken };
   }
 
   const routes = index.routesOf(targetService) ?? [];
@@ -439,13 +527,13 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   }
 
   if (isMatch(found)) {
-    return { outcome: { kind: 'linked', via: 'baseUrlEnv', ...joined(method, requested, found) }, notes };
+    return { outcome: { kind: 'linked', via, ...joined(method, requested, found) }, notes, ...taken };
   }
   if (found.reason === 'ambiguous') {
     const choice = chooseAmong(routes, found.candidates, env);
     if (choice.kind === 'one') {
       notes.push(apiGuessedFinding(method, requested, env, choice.api, choice.apis));
-      return { outcome: { kind: 'linked', via: 'apiName', entry: choice.entry, runnersUp: [] }, notes };
+      return { outcome: { kind: 'linked', via: 'apiName', entry: choice.entry, runnersUp: [] }, notes, ...taken };
     }
     return {
       outcome: {
@@ -458,6 +546,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
         ...(choice.kind === 'tie' ? { apis: choice.apis } : {}),
       },
       notes,
+      ...taken,
     };
   }
   return {
@@ -470,5 +559,6 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       unread: behindUnread(method, requested, routes),
     },
     notes,
+    ...taken,
   };
 };

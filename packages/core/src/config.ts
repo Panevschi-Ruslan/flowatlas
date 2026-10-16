@@ -95,6 +95,12 @@ const serviceEntrySchema = z.strictObject({
   /** Settings keys a frontend reads its API base URL from. */
   apiBaseEnv: z.array(z.string().min(1)).optional(),
   /**
+   * Hosts this service is reached at, as `host` or `host:port`: what a base
+   * address read from a repository's files is matched against (P77), beside
+   * the service's own name and what its files say it is reached at.
+   */
+  hosts: z.array(z.string().min(1)).optional(),
+  /**
    * Which service answers each of those keys, by name.
    *
    * A frontend's settings key names one backend, and only the project knows
@@ -980,6 +986,21 @@ export const flowatlasConfigSchema = z
         db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
       }),
+    /**
+     * Whether the values a repository's own files give its settings are read
+     * (P77): example environment files, the environment a container is started
+     * with, the variables a deployment declares. Only addresses are kept, and
+     * only their scheme, host and path. `environment` chooses which of several
+     * environments a file is for is read, where files name more than one
+     * (`.env.development` and `.env.staging`): the files for it are read, and
+     * the files for no environment in particular, and no other.
+     */
+    settingFiles: z
+      .strictObject({
+        read: z.boolean().default(true),
+        environment: z.string().min(1).optional(),
+      })
+      .default({ read: true }),
     /** Directory for generated artefacts, relative to the configuration file. */
     output: z.string().min(1).default(DEFAULT_OUTPUT),
     /**
