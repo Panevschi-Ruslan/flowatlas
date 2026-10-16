@@ -8,6 +8,16 @@ only one of them moved.
 
 ### Added
 
+- **Built-in declaration shapes for uninstalled Nest repositories (P70).**
+  Where `rxjs`, `@nestjs/common`, `@nestjs/core` or `@nestjs/microservices`
+  does not resolve, the Nest reader reads a few hand-written declarations of
+  their public surface in its place (held in memory, never written to disk;
+  the installed package always wins). A `ClientsModule.register([{ name }])`
+  token now resolves for `@Inject(name) ClientProxy` and `Observable<T>`
+  returns unwrap on a clone with nothing installed: on `fixtures/multi-repo`
+  copied out of the workspace, `module-import-dynamic` 1 → 0,
+  `di-token-unknown` 1 → 0, `type-unresolved` 12 → 0. Turn off with
+  `builtInShapes: false`, project-wide or per service.
 - **`flowatlas observe <file...>`: run-time traces confirm static joins
   (P65).** Reads OTLP/JSON and @nestjs/observe trace files, keeps only the
   names that place a span in code (method, route template, `Class.method`,

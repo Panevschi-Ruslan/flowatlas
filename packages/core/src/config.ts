@@ -110,6 +110,12 @@ const serviceEntrySchema = z.strictObject({
    * is left out, and reported as `test-directory-skipped`.
    */
   readTestDirectories: z.array(z.string().min(1)).optional(),
+  /**
+   * Whether a reader's built-in declaration shapes stand in for packages this
+   * service does not have installed. Overrides the project-wide setting of the
+   * same name; on unless one of the two says `false`.
+   */
+  builtInShapes: z.boolean().optional(),
   /** Entry file where global wrapping is installed, when there is one. */
   bootstrap: z.string().min(1).optional(),
   /**
@@ -865,6 +871,13 @@ export const flowatlasConfigSchema = z
     services: z.array(serviceConfigSchema).default([]),
     /** Packages shared between repositories, followed when resolving constants. */
     sharedPackages: z.array(z.string().min(1)).default([]),
+    /**
+     * Whether a reader's built-in declaration shapes stand in for packages a
+     * repository does not have installed: a few hand-written declarations of a
+     * framework's public surface, read only where the package itself does not
+     * resolve. On unless `false`; a service may say otherwise for itself.
+     */
+    builtInShapes: z.boolean().optional(),
     adapters: z
       .strictObject({
         auto: z.boolean().default(true),
@@ -1275,3 +1288,9 @@ export const localBaseTableProperty = (
   }
   return undefined;
 };
+
+/** Whether built-in declaration shapes are read for a service (see `builtInShapes`). */
+export const builtInShapesFor = (
+  config: Pick<FlowatlasConfig, 'builtInShapes'> | undefined,
+  service: Pick<ServiceConfig, 'builtInShapes'> | undefined,
+): boolean => service?.builtInShapes ?? config?.builtInShapes ?? true;

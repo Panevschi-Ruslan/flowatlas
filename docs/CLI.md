@@ -1319,6 +1319,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
 | `infra.vars` | string[] | none | for a service read from Terraform: the variable files a deployment is read with, in order, relative to the service's directory (`["infra/env/dev.tfvars"]`). Without it, a name two files set differently is reported, never picked |
 | `readTestDirectories` | string[] | `[]` | directories named like tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`, `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) that hold code the application runs, relative to the service's directory: `["src/fixtures"]` |
+| `builtInShapes` | boolean | project setting | whether the reader's built-in declaration shapes stand in for packages this service has not installed; `false` turns them off for this service alone |
 
 **A directory named like tests is not read, and says so.** Test code is left out
 of every graph: a file whose name marks it (`a.test.ts`, `a.spec.ts`,
@@ -1430,6 +1431,7 @@ worked example of a document that declares routes.
 | Key | Type | Default | Means |
 |---|---|---|---|
 | `sharedPackages` | string[] | `[]` | packages whose types are one declaration rather than two copies |
+| `builtInShapes` | boolean | `true` | where a repository has not installed `rxjs`, `@nestjs/common`, `@nestjs/core` or `@nestjs/microservices`, read a few hand-written declarations of their public surface in their place, so `ClientsModule.register` tokens, `ClientProxy` calls and `Observable<T>` returns resolve; an installed package always wins. `false` turns them off |
 | `output` | string | `.flowatlas` | where everything a build writes goes, relative to this file: the three outputs, the cache and each service's own graph under `services/`. Nothing is written into the repositories |
 | `types.maxDepth` | number | `3` | how deep an anonymous shape is written out before it becomes a reference |
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |

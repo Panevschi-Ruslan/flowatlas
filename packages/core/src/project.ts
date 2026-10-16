@@ -10,6 +10,11 @@ import {
   type SourceFile,
 } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
+import {
+  installDeclarationShapes,
+  isDeclarationShape,
+  type DeclarationShape,
+} from './declaration-shapes.js';
 import { normalizeFilePath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readPackageJson } from './package-json.js';
@@ -67,6 +72,12 @@ export interface CreateProjectOptions extends SourceRootOptions {
    * skipped and reported (see {@link reportSkippedTestDirectories}).
    */
   readTestDirectories?: readonly string[];
+  /**
+   * Declarations read in place of a package that does not resolve from the
+   * root (see {@link installDeclarationShapes}). None unless a reader hands
+   * some over.
+   */
+  shapes?: readonly DeclarationShape[];
 }
 
 /** Directories that never hold sources worth reading. */
@@ -845,6 +856,10 @@ export const createProject = (options: CreateProjectOptions): Project => {
   for (const dir of membersBeyond(rootDir, roots)) {
     for (const file of sourceFilesUnder(dir, tests)) project.addSourceFileAtPath(join(dir, file));
   }
+  // After the sources are opened, before anything builds the program: a shape
+  // is decided by whether the package resolves, and stands in from the first
+  // import the checker resolves.
+  installDeclarationShapes(project, rootDir, options.shapes ?? []);
   SKIPPED_TEST_DIRECTORIES.set(
     project,
     new Map([...skipped].map(([dir, files]) => [dir, [...new Set(files)].sort()])),
@@ -934,7 +949,10 @@ export interface RepoStats extends SourceCounts {
  */
 export const countSources = (project: Project): SourceCounts => {
   const program = project.getProgram();
-  const files = project.getSourceFiles();
+  // A shape held in memory stands for a package, and is no file of this one.
+  const files = project
+    .getSourceFiles()
+    .filter((file) => !isDeclarationShape(project, file.getFilePath()));
   const unreadable = files.filter((file) => firstSyntaxError(program, file) !== undefined);
   return {
     files: files.length,

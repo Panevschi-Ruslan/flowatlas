@@ -1,8 +1,10 @@
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  builtInShapesFor,
   countSources,
   createProject,
+  declarationShapesOf,
   GraphBuilder,
   normalizeFilePath,
   parseConfig,
@@ -30,6 +32,7 @@ import { modulesPass } from './passes/modules.js';
 import { providersPass } from './passes/providers.js';
 import { typesPass } from './passes/types-pass.js';
 import type { NestExtractorPass } from './passes/types.js';
+import { NEST_SHAPES } from './shapes/index.js';
 import { wrappingCollectPass, wrappingEdgesPass } from './passes/wrapping.js';
 
 export interface ExtractRepoOptions {
@@ -102,6 +105,9 @@ export const createRepoProject = (options: ExtractRepoOptions): Project => {
   const readTestDirectories = options.service?.readTestDirectories;
   return createProject({
     rootDir: options.rootDir,
+    // Read only where the package itself does not resolve, and not at all where
+    // the configuration says so (`builtInShapes: false`).
+    ...(builtInShapesFor(options.config, options.service) ? { shapes: NEST_SHAPES } : {}),
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(readTestDirectories === undefined ? {} : { readTestDirectories }),
     ...(options.deployed === undefined ? {} : { deployed: options.deployed }),
@@ -146,6 +152,8 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const service = options.service ?? defaultService(repo, rootDir);
 
   const project = options.project ?? createRepoProject(options);
+  const shaped = declarationShapesOf(project);
+  if (shaped.length > 0) logger.debug(`built-in shapes stand in for ${shaped.join(', ')}`);
   // The manifest that answers what this repository can import, which on a
   // package inside a workspace is not the leaf manifest alone. Everything below
   // gates on it, so widening it here is what lets an adapter stay a statement

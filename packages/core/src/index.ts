@@ -144,6 +144,7 @@ export {
   flowatlasConfigSchema,
   infraModuleSchema,
   loadConfig,
+  builtInShapesFor,
   parseConfig,
   serviceConfigSchema,
   starterSchema,
@@ -370,6 +371,13 @@ export type {
   SourceRootOptions,
   UnreadableSourceContext,
 } from './project.js';
+
+export {
+  declarationShapesOf,
+  installDeclarationShapes,
+  isDeclarationShape,
+} from './declaration-shapes.js';
+export type { DeclarationShape } from './declaration-shapes.js';
 
 export { isTestDirectory, isTestFile } from './test-files.js';
 
