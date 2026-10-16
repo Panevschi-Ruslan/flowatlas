@@ -1,7 +1,7 @@
 can't follow: 4 places over 3 rows, by cause (package @shopkit/ledger)
 
   module-not-installed:@shopkit/ledger: 4 places  payments
-    Install the repository's dependencies so @shopkit/ledger resolves; until then nothing typed by it can be followed.
+    Install the repository's dependencies so @shopkit/ledger resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.
     rows: call-dynamic-receiver, type-unresolved
       payments/src/charges/charges.controller.ts:10  LedgerEntry
 

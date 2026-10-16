@@ -23,9 +23,93 @@ export interface DeclarationShape {
   readonly package: string;
   /** The declarations, as the text of the package's `index.d.ts`. */
   readonly declarations: string;
+  /**
+   * The shape file of the project's own this was read from (P78), as an
+   * absolute path; absent for a shape a reader ships.
+   */
+  readonly origin?: string;
 }
 
+/**
+ * Where a package's types come from when an import names it, strongest first
+ * (P78, D3): what is installed is what runs; the source of a repository read
+ * here is the real surface; a shape file the project wrote knows the project's
+ * own use; a reader's built-in shape knows the framework's.
+ */
+export const RESOLUTION_ORDER = ['installed', 'package-from-repo', 'shape-file', 'built-in'] as const;
+
+export type ResolutionSource = (typeof RESOLUTION_ORDER)[number];
+
+/** The first source that has the package, in {@link RESOLUTION_ORDER}; undefined when none does. */
+export const resolutionOrder = (
+  has: Readonly<Partial<Record<ResolutionSource, boolean>>>,
+): ResolutionSource | undefined => RESOLUTION_ORDER.find((source) => has[source] === true);
+
+/** A shape file read, or why it could not be. */
+export interface ShapeFileReading {
+  readonly path: string;
+  readonly shapes: readonly DeclarationShape[];
+  /** Why nothing of it is used: it is not there, does not parse, or declares no module. */
+  readonly problem?: string;
+}
+
+const isImporting = (statement: ts.Statement): boolean =>
+  ts.isImportDeclaration(statement) || ts.isImportEqualsDeclaration(statement);
+
+const isExporting = (statement: ts.Statement): boolean =>
+  ts.isExportDeclaration(statement) ||
+  ts.isExportAssignment(statement) ||
+  (ts.canHaveModifiers(statement) &&
+    (ts.getModifiers(statement) ?? []).some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword));
+
+/**
+ * The `declare module '<package>' { ... }` blocks of a shape file, each as the
+ * declarations of that package (P78).
+ *
+ * Only parsed, never run. The block's body is the text a package's
+ * `index.d.ts` would hold, so a block is installed exactly as a built-in shape
+ * is, at the path an installed copy would have; the first block for a package
+ * wins, the way the first shape always has.
+ */
+export const readShapeFile = (path: string, text: string | undefined): ShapeFileReading => {
+  if (text === undefined) return { path, shapes: [], problem: 'the file is not there' };
+  const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const diagnostics = (file as unknown as { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics ?? [];
+  const first = diagnostics[0];
+  if (first !== undefined) {
+    const line = first.start === undefined ? 1 : file.getLineAndCharacterOfPosition(first.start).line + 1;
+    return {
+      path,
+      shapes: [],
+      problem: `it does not parse: line ${line}, ${ts.flattenDiagnosticMessageText(first.messageText, ' ')}`,
+    };
+  }
+  const shapes: DeclarationShape[] = [];
+  for (const statement of file.statements) {
+    if (!ts.isModuleDeclaration(statement) || !ts.isStringLiteral(statement.name)) continue;
+    const body = statement.body;
+    if (body === undefined || !ts.isModuleBlock(body)) continue;
+    const name = statement.name.text;
+    if (name === '' || shapes.some((shape) => shape.package === name)) continue;
+    // A block with no export of its own exports everything it declares; the
+    // same text as a file would export nothing and be no module at all, so
+    // each declaration is exported in so many words.
+    const exportsSome = body.statements.some(isExporting);
+    const declarations = body.statements
+      .map((each) => (exportsSome || isImporting(each) ? each.getFullText(file) : `\nexport ${each.getText(file)}`))
+      .join('')
+      .trim();
+    shapes.push({ package: name, declarations: `${declarations}\n`, origin: path });
+  }
+  return shapes.length === 0
+    ? { path, shapes, problem: "it declares no module: write `declare module '<package>' { ... }`" }
+    : { path, shapes };
+};
+
 const SHAPES_OF = new WeakMap<Project, ReadonlyMap<string, string>>();
+
+/** The shape files of the project's own a project installed, by package, to the file each came from. */
+const ORIGINS_OF = new WeakMap<Project, ReadonlyMap<string, { readonly path: string; readonly origin: string }>>();
 
 /** The probe a package is resolved from: a file at the root, which need not exist. */
 const PROBE = '__flowatlas_shape_probe__.ts';
@@ -58,14 +142,17 @@ export const installDeclarationShapes = (
   shapes: readonly DeclarationShape[],
 ): string[] => {
   const installed = new Map<string, string>();
+  const origins = new Map<string, { path: string; origin: string }>();
   for (const shape of shapes) {
     if (installed.has(shape.package) || resolves(project, rootDir, shape.package)) continue;
     const path = join(rootDir, 'node_modules', shape.package, 'index.d.ts');
     if (project.getSourceFile(path) !== undefined) continue;
     project.createSourceFile(path, shape.declarations, { overwrite: false });
     installed.set(shape.package, path);
+    if (shape.origin !== undefined) origins.set(shape.package, { path, origin: shape.origin });
   }
   SHAPES_OF.set(project, installed);
+  ORIGINS_OF.set(project, origins);
   return [...installed.keys()].sort();
 };
 
@@ -80,3 +167,22 @@ export const isDeclarationShape = (project: Project, filePath: string): boolean 
   for (const path of installed.values()) if (path === filePath) return true;
   return false;
 };
+
+/**
+ * The shape file of the project's own that a file held in memory was read
+ * from, with the package it stands in for; undefined for any other file, a
+ * reader's built-in shape included.
+ */
+export const shapeFileOf = (
+  project: Project,
+  filePath: string,
+): { readonly package: string; readonly origin: string } | undefined => {
+  for (const [pkg, { path, origin }] of ORIGINS_OF.get(project) ?? []) {
+    if (path === filePath) return { package: pkg, origin };
+  }
+  return undefined;
+};
+
+/** The packages a shape file of the project's own stands in for in this project, to the file. */
+export const shapeFilesOf = (project: Project): ReadonlyMap<string, string> =>
+  new Map([...(ORIGINS_OF.get(project) ?? [])].map(([pkg, { origin }]) => [pkg, origin]));

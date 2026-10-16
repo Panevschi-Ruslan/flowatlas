@@ -241,7 +241,7 @@ export interface CantFollowOptions {
  * name is a reason, and the row's own hint says it.
  */
 const CAUSE_HINTS: ReadonlyMap<string, (pkg: string | undefined) => string> = new Map<string, (pkg: string | undefined) => string>([
-  ['module-not-installed', (pkg) => `Install the repository's dependencies so ${pkg ?? 'the package'} resolves; until then nothing typed by it can be followed.`],
+  ['module-not-installed', (pkg) => `Install the repository's dependencies so ${pkg ?? 'the package'} resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.`],
   ['import-unresolved', (pkg) => `${pkg === undefined ? 'The import' : `\`${pkg}\``} resolves to no file: check the path, or the tsconfig paths and baseUrl it relies on.`],
   ['re-export-missing', (pkg) => `The module${pkg === undefined ? '' : ` ${pkg}`} resolves but exports no such name; the index that should re-export it is missing the line.`],
   ['any-typed', (pkg) => `Declared as any${pkg === undefined ? '' : ` by ${pkg}`}; give it a class type to make the call visible.`],

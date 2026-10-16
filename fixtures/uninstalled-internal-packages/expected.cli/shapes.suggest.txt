@@ -1,0 +1,11 @@
+packages not installed: 1 package over 1 place, most places first
+
+  @acme/feature-flags: 1 place  loans-api
+    FlagClient  class     variant()
+    isOn        function
+    at loans-api/src/loans/loans.service.ts:27
+
+shape files:
+  flowatlas-shapes/acme-queue-client.d.ts  declares @acme/queue-client
+
+next: flowatlas shapes --suggest --out <dir> writes a starter .d.ts per package, every type any; refine it and list it under "shapes"

@@ -1647,6 +1647,7 @@
   .s-mark.is-certain { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, var(--rule)); }
   .s-mark.is-failure { color: var(--bad); border-color: var(--bad); }
   .s-mark.is-together { color: var(--accent); border-color: var(--accent); }
+  .s-mark.is-standin { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, var(--rule)); }
   .s-mark.is-seen { color: var(--raise); background: var(--good); border-color: var(--good); }
   .s-where { margin-left: auto; font-family: var(--f-mono); font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
   .s-where .to-graph { margin-left: 4px; }
@@ -5923,6 +5924,11 @@ __STEPS_LOGIC__
     const stepsDepth = document.getElementById('s-depth');
     const stepsNote = document.getElementById('s-note');
     const stepsHead = document.getElementById('s-head');
+    /* An edge a stand-in typed (P78): how, and whose types; null for any other. */
+    const standInOf = (k) => {
+      const marked = data.standIns && data.standIns.edges[String(k)];
+      return marked ? [data.standIns.via[marked[0]], data.standIns.packages[marked[1]]] : null;
+    };
     const STEP_MARKS = [
       [(row) => row.kind !== 'answer' && row.edge >= 0 && row.certain, (row) => ['is-certain', 'certain', `joined ${row.confidence}: the code says so`]],
       [(row) => row.edge >= 0 && !row.certain && row.confidence !== 'runtime', (row) => ['is-guess', 'best guess', `joined ${row.confidence}: inferred, may be wrong`]],
@@ -5933,6 +5939,11 @@ __STEPS_LOGIC__
       [(row) => row.nPlusOne, () => ['is-n1', 'likely N+1', 'A query reached once per item of a loop: a list of n items costs n round trips']],
       [(row) => row.throws.length > 0, (row) => ['is-throws', 'throws ' + row.throws.map(failSay).join(' · '),
         row.throws.map((f) => failSay(f) + ' (' + f.src + (f.f ? ', ' + f.f + (f.l ? ':' + f.l : '') : '') + ')').join('; ')]],
+      [(row) => row.edge >= 0 && standInOf(row.edge) !== null, (row) => {
+        const [via, pkg] = standInOf(row.edge);
+        return via === 'shape-file'
+          ? ['is-standin', 'shape · ' + pkg, 'Typed by a shape file of the project\'s own, since ' + pkg + ' is not installed: it says what the project wrote, which may not be what runs']
+          : ['is-standin', 'source · ' + pkg, 'Typed by the source of ' + pkg + ' in a repository read here, since it is not installed: the source may not be the version that runs']; }],
       [(row) => row.seen > 0, (row) => ['is-seen', 'seen ×' + row.seen.toLocaleString(), 'Seen this many times at run time']],
       [(row) => row.crosses, (row) => ['', 'into ' + repoName(row.node), 'Leaves one service for another']],
       [(row) => row.again, () => ['', 'listed above', 'Reached again; its steps are listed where it first appears']],

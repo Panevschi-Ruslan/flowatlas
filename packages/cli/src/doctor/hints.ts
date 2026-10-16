@@ -404,6 +404,18 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'file-not-parsed': () =>
     'The parser could not read this file, so nothing in it is in the graph — no node, no edge, and no row but this one. Fix the syntax, or keep the file out of the globs the reader is given.',
 
+  // What stands in for a package that is not installed (core/stand-ins.ts, P78)
+  'package-from-repo': () =>
+    'The package is not installed, and its types were read from its source in a repository this project reads. Nothing to do; the source may not be the version that runs, and installing the dependencies reads the installed copy instead (packageSources: false reads nothing in its place).',
+  'package-source-ambiguous': () =>
+    'Two directories of the project carry this package name, so neither is read in place of the missing install. Rename one in its package.json, leave one out of the configuration, or install the dependencies.',
+  'package-version-differs': () =>
+    'The source read in place of the package is not a version this service asks for, so its types may not be the ones it runs. Install the dependencies to read the version asked for.',
+  'shape-file-unread': () =>
+    "A file listed under shapes was not read: it is not there, does not parse, or declares no module. Fix the path or the glob, or the file: it holds `declare module '<package>' { ... }` blocks.",
+  'shape-file-unmatched': () =>
+    'A shape file declares a package that is not read from it here: nothing imports it, it is installed, or its source is read instead. Nothing to do while that holds; remove the block when it is no longer needed.',
+
   // The build itself (cli/commands/build.ts)
   'service-read-nothing': () =>
     'A reader ran over this service and produced no node, so nothing about it is in the graph and every question asked about it answers nothing. Check its type in flowatlas.config.json against what its manifest declares, or write an adapter for the framework it is built on.',

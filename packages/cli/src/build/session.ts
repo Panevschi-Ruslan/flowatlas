@@ -18,6 +18,8 @@ export interface OpenOptions {
   service: ServiceConfig;
   repoDir: string;
   config: FlowatlasConfig;
+  /** The configuration's directory, which the stand-ins of P78 resolve against. */
+  configDir?: string;
 }
 
 /**
@@ -36,12 +38,13 @@ interface WarmExtractor<Ctx> extends IncrementalExtractor<Ctx> {
 }
 
 const nestjs: WarmExtractor<WarmRepo> = {
-  open: ({ service, repoDir, config }) =>
+  open: ({ service, repoDir, config, configDir }) =>
     openRepo({
       rootDir: repoDir,
       repo: service.name,
       service,
       config,
+      ...(configDir === undefined ? {} : { configDir }),
       registry: createRegistry(),
       extraPasses: EXTRA_PASSES,
       logger: silentLogger,

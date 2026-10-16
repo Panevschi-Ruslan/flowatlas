@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, type Dirent } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { z } from 'zod';
 import { isUniversalMethod } from './adapters/db.js';
@@ -21,6 +21,14 @@ export const DEFAULT_TYPE_MAX_DEPTH = 3;
  * is the fact rather than a word chosen to stand for it.
  */
 const DECLARED_SERVICE_TYPE = 'declared';
+
+/**
+ * Where the source of an uninstalled package may be read from (P78): `true`
+ * for the configured repositories and the directories directly under the
+ * configuration, `"services"` for the configured repositories alone, `false`
+ * for nowhere.
+ */
+const packageSourcesSchema = z.union([z.boolean(), z.literal('services')]);
 
 /**
  * One end of the project: a repository, or a document standing in for one.
@@ -122,6 +130,19 @@ const serviceEntrySchema = z.strictObject({
    * same name; on unless one of the two says `false`.
    */
   builtInShapes: z.boolean().optional(),
+  /**
+   * Shape files this service reads beside the project's (P78): paths or globs
+   * of `.d.ts` files, relative to the configuration, each holding
+   * `declare module '<package>' { ... }` blocks. Added to the project-wide list,
+   * never in place of it.
+   */
+  shapes: z.array(z.string().min(1)).optional(),
+  /**
+   * Whether an import of a package that is not installed is read from that
+   * package's source when a repository of the project is that package (P78).
+   * Overrides the project-wide setting of the same name.
+   */
+  packageSources: packageSourcesSchema.optional(),
   /** Entry file where global wrapping is installed, when there is one. */
   bootstrap: z.string().min(1).optional(),
   /**
@@ -884,6 +905,24 @@ export const flowatlasConfigSchema = z
      * resolve. On unless `false`; a service may say otherwise for itself.
      */
     builtInShapes: z.boolean().optional(),
+    /**
+     * Shape files of the project's own (P78): paths or globs of `.d.ts` files,
+     * relative to this configuration, each holding one or more
+     * `declare module '<package>' { ... }` blocks. Read in memory exactly as a
+     * built-in shape is, only where the package is neither installed nor the
+     * source of a repository read here; never executed, never written.
+     */
+    shapes: z.array(z.string().min(1)).optional(),
+    /**
+     * Whether an import of a package that is not installed is read from that
+     * package's source when one is on disk (P78): a configured repository, or
+     * a workspace member of one, whose `package.json` `name` is the package -
+     * and, unless this says `"services"`, a directory directly under this
+     * configuration whose manifest names it. Types only: nothing of the
+     * package becomes a node of the service that imports it. `false` turns it
+     * off. An installed package always wins.
+     */
+    packageSources: packageSourcesSchema.optional(),
     adapters: z
       .strictObject({
         auto: z.boolean().default(true),
@@ -1315,3 +1354,90 @@ export const builtInShapesFor = (
   config: Pick<FlowatlasConfig, 'builtInShapes'> | undefined,
   service: Pick<ServiceConfig, 'builtInShapes'> | undefined,
 ): boolean => service?.builtInShapes ?? config?.builtInShapes ?? true;
+
+/** Where a service's uninstalled packages may be read from (see `packageSources`). */
+export type PackageSourcesSetting = z.infer<typeof packageSourcesSchema>;
+
+/** Whether, and from where, a service reads the source of a package it has not installed. */
+export const packageSourcesFor = (
+  config: Pick<FlowatlasConfig, 'packageSources'> | undefined,
+  service: Pick<ServiceConfig, 'packageSources'> | undefined,
+): PackageSourcesSetting => service?.packageSources ?? config?.packageSources ?? true;
+
+/**
+ * The shape files a service reads, as absolute paths in a settled order (P78).
+ *
+ * The project's list and then the service's own, each path or glob relative to
+ * the configuration's directory; a glob is expanded against the disk and a
+ * plain path is kept whether or not it is there, so a file named and missing is
+ * a row (`shape-file-unread`) rather than nothing.
+ */
+export const shapesFor = (
+  config: Pick<FlowatlasConfig, 'shapes'> | undefined,
+  service: Pick<ServiceConfig, 'shapes'> | undefined,
+  configDir: string,
+): string[] => {
+  const patterns = [...(config?.shapes ?? []), ...(service?.shapes ?? [])];
+  const out: string[] = [];
+  for (const pattern of patterns) {
+    for (const path of expandPattern(configDir, pattern)) if (!out.includes(path)) out.push(path);
+  }
+  return out;
+};
+
+/** Directories a glob over shape files never walks into. */
+const NEVER_WALKED = new Set(['node_modules', '.git']);
+
+/** One path segment of a glob as a test on a name. */
+const segmentTest = (segment: string): RegExp =>
+  new RegExp(
+    `^${segment
+      .split('')
+      .map((char) => (char === '*' ? '[^/]*' : char === '?' ? '[^/]' : char.replace(/[.+^${}()|[\]\\]/g, '\\$&')))
+      .join('')}$`,
+  );
+
+/**
+ * The files a path or glob names, absolute and sorted. `*` and `?` match within
+ * one segment, `**` any number of them; anything else is a literal path.
+ */
+const expandPattern = (base: string, pattern: string): string[] => {
+  const written = pattern.replace(/\\/g, '/');
+  if (!/[*?]/.test(written)) return [isAbsolute(written) ? written : resolve(base, written)];
+  const absolute = isAbsolute(written) ? written : resolve(base, written).split('\\').join('/');
+  const segments = absolute.split('/');
+  const fixed = segments.findIndex((segment) => /[*?]/.test(segment));
+  const start = segments.slice(0, fixed).join('/') || '/';
+  const rest = segments.slice(fixed);
+  const found: string[] = [];
+  const walk = (dir: string, at: number): void => {
+    const segment = rest[at];
+    if (segment === undefined) return;
+    let entries: Dirent[];
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    const last = at === rest.length - 1;
+    if (segment === '**') {
+      walk(dir, at + 1);
+      for (const entry of entries) {
+        if (entry.isDirectory() && !NEVER_WALKED.has(entry.name)) walk(join(dir, entry.name), at);
+      }
+      return;
+    }
+    const test = segmentTest(segment);
+    for (const entry of entries) {
+      if (!test.test(entry.name)) continue;
+      const path = join(dir, entry.name);
+      if (last) {
+        if (entry.isFile()) found.push(path);
+      } else if (entry.isDirectory() && !NEVER_WALKED.has(entry.name)) {
+        walk(path, at + 1);
+      }
+    }
+  };
+  walk(start, 0);
+  return [...new Set(found)].sort();
+};

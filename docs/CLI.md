@@ -1188,6 +1188,32 @@ report's `sites`. Most places first, each cause with what to do and a few
 question about a package. Accepted gaps are left out and counted apart, as in
 the report. `--json` prints the same as data (`cantFollowFormatVersion: 1`).
 
+**What stands in for a package nobody installed.** A clone with nothing
+installed still has, one directory over, the source of the internal packages it
+imports. Where a service imports a package that does not resolve, and a
+configured repository - or a workspace member of one, or a directory directly
+under the configuration - has a `package.json` whose `name` is that package, the
+import is read from that source: its `exports`, `types`, `typings` or `main`, the
+same paths under `src/` where they name a build nobody ran, then `src/index.ts`
+and `index.ts`, with the package's own tsconfig `paths`. It is read for its types
+alone, at the path an install would have, so nothing of the package becomes a
+node of the service that imports it, and what the checker cannot resolve inside
+the package is said where the package is read as a repository of its own, not
+again in every service that imports it. Failing that, a shape file the project
+lists under `shapes` declares the package (`declare module '<package>' { ... }`),
+and failing that a reader's built-in shape. The order is fixed: installed, then
+source, then shape file, then built-in shape. A call drawn through types one of
+these supplied is `heuristic`, with `because: ["package-from-repo"]` or
+`["shape-file"]` and `typedBy: <package>`, since what is read may not be the
+version that runs. Rows say what happened: `package-from-repo` (which directory
+answered, at `nothing`: nothing was missed), `package-version-differs` (info: the
+importing manifest asks for another version), `package-source-ambiguous` (two
+directories carry the name, so neither is read), `shape-file-unread` (a listed
+file not there, not parsed, or declaring no module) and `shape-file-unmatched`
+(at `nothing`: a shape something stronger answered, or one a service's own list
+names and it never imports). `flowatlas shapes --suggest` says which packages
+are still worth a shape file.
+
 **Accepted gaps.** A gap accepted with `flowatlas accept` is left out of every
 count, the text says how many accepted gaps were left out, and `doctor.json`
 says the same under `unresolved.accepted`.
@@ -1311,6 +1337,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | About | Reasons |
 |---|---|
 | A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id`, `test-directory-skipped` (info) |
+| A package that is not installed, read in its place | `package-from-repo` (nothing), `package-version-differs` (info), `package-source-ambiguous`, `shape-file-unread`, `shape-file-unmatched` (nothing) |
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
@@ -1356,6 +1383,44 @@ tool declining to guess:
   is enough to refuse it, and so is a service that commits no environment file at
   all (`fixtures/nest-mount-empty`, `fixtures/nest-mount-set`,
   `fixtures/nest-context-path`).
+
+### `flowatlas shapes --suggest`
+
+Which missing packages to describe in a shape file, and what of each the project
+uses (P78). The packages are the `module-not-installed` part of what the reader
+could not follow (`doctor --unresolved`), most places first; for each, the names
+the services import from it, whether each is constructed, called or written as a
+type, and the members read off it, off what it constructs and off whatever is
+declared with it as its type. Those come from the repositories' files read as
+syntax and kept as names: no other text of anybody's code is in the answer.
+
+| Flag | Default | Means |
+|---|---|---|
+| `--suggest` | off | list the packages; without it, only the shape files the configuration lists and what each declares |
+| `--top <n>` | 10 | most packages to list |
+| `--service <name>` | every one | only the places of one service |
+| `--package <name>` | every one | only this package |
+| `--members <n>` | 12 | most names listed per package |
+| `--out <dir>` | none | write a starter `.d.ts` per package listed into this directory |
+| `--force` | off | with `--out`: write over a file that is there already |
+| `--json` | off | the same as data (`shapesSuggestFormatVersion: 1`) |
+| `--config`, `--db` | found | as for every reading command |
+
+A package the configuration would already read in its place once rebuilt - its
+source in a repository read here, or a listed shape file - is marked as covered.
+The runtime's own declarations (`@types/node`) are not listed: install them.
+
+`--out` writes one file per uncovered package, named after it
+(`@acme/feature-flags` is `acme-feature-flags.d.ts`): a `declare module` block
+per module specifier used, each export declared as the project uses it - a class
+with the members read off it, a function, a value, a type, each with as many
+type parameters as the project writes it with - and every type `any`,
+with an index signature so a member it does not list is still there. Refine the
+`any`s and list the directory under `shapes`; a call through a member still
+typed `any` is then counted as `any-typed:<package>` rather than
+`module-not-installed`. A file that is already there is kept (`--force` writes
+over it), and a directory inside a repository the configuration reads is
+refused: shape files are the project's, kept beside the configuration.
 
 ### `flowatlas accept [reason-or-id]`
 
@@ -1448,6 +1513,8 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `infra.vars` | string[] | none | for a service read from Terraform: the variable files a deployment is read with, in order, relative to the service's directory (`["infra/env/dev.tfvars"]`). Without it, a name two files set differently is reported, never picked |
 | `readTestDirectories` | string[] | `[]` | directories named like tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`, `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) that hold code the application runs, relative to the service's directory: `["src/fixtures"]` |
 | `builtInShapes` | boolean | project setting | whether the reader's built-in declaration shapes stand in for packages this service has not installed; `false` turns them off for this service alone |
+| `shapes` | string[] | none | shape files this service reads beside the project's, as paths or globs relative to the configuration; added to the project's list |
+| `packageSources` | boolean or `"services"` | project setting | where this service reads the source of a package it has not installed; overrides the project setting |
 
 **A directory named like tests is not read, and says so.** Test code is left out
 of every graph: a file whose name marks it (`a.test.ts`, `a.spec.ts`,
@@ -1596,6 +1663,8 @@ worked example of a document that declares routes.
 |---|---|---|---|
 | `sharedPackages` | string[] | `[]` | packages whose types are one declaration rather than two copies |
 | `builtInShapes` | boolean | `true` | where a repository has not installed `rxjs`, `@nestjs/common`, `@nestjs/core`, `@nestjs/microservices` or `@nestjs/passport` (read by the server reader), or `rxjs`, `@angular/core` or `@angular/common/http` (read by the Angular reader), read a few hand-written declarations of their public surface in their place, so `ClientsModule.register` tokens, `ClientProxy` calls, passport's `AuthGuard`, Angular's decorators and `HttpClient`, and `Observable<T>` returns resolve; an installed package always wins. `false` turns them off |
+| `shapes` | string[] | none | shape files of the project's own: paths or globs of `.d.ts` files, relative to this configuration, each holding `declare module '<package>' { ... }` blocks. Read in memory, never run and never written, for a package that is neither installed nor the source of a repository read here; a block wins over a reader's built-in shape of the same package. `flowatlas shapes --suggest --out <dir>` writes starters |
+| `packageSources` | boolean or `"services"` | `true` | where an import of a package that is not installed is read from: `true` for the source of a configured repository, a workspace member of one, or a directory directly under the configuration whose `package.json` `name` is the package; `"services"` for configured repositories and their members alone; `false` for nowhere. Types only; an installed package always wins |
 | `settingFiles.read` | boolean | `true` | whether a base address and an address waiting on the environment are completed from what the repositories' own files and the code's own fallbacks say a setting is; only addresses are kept, never a secret |
 | `settingFiles.environment` | string | none | the environment read where files name several (`.env.development` and `.env.staging`, `docker-compose.prod.yml`, a worker's `env.<name>.vars`): that environment's files, and the files for none in particular |
 | `output` | string | `.flowatlas` | where everything a build writes goes, relative to this file: the three outputs, the cache and each service's own graph under `services/`. Nothing is written into the repositories |

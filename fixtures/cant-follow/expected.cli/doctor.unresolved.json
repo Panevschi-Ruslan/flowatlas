@@ -18,7 +18,7 @@
         "di-type-unresolved",
         "type-unresolved"
       ],
-      "hint": "Install the repository's dependencies so the package resolves; until then nothing typed by it can be followed.",
+      "hint": "Install the repository's dependencies so the package resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.",
       "services": [
         "payments",
         "storefront"

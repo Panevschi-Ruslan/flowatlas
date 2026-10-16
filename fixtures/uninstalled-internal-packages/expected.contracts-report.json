@@ -1,0 +1,33 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-16T16:51:28.220Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:loans-api#src/loans/loans.service.ts:21:13",
+        "to": "channel:loan.approved",
+        "type": "emits"
+      },
+      "edgeKey": "channel:loan.approved|emits|producer:loans-api#src/loans/loans.service.ts:21:13",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:loan.approved is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 1,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

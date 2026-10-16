@@ -143,7 +143,7 @@ const missed = (graph: RepoGraph): number => graph.unresolved.filter(wasMissed).
 const resolveService = (
   rootDir: string,
   configPath: string | undefined,
-): { repo: string; service?: ServiceConfig; config?: FlowatlasConfig } => {
+): { repo: string; service?: ServiceConfig; config?: FlowatlasConfig; configDir?: string } => {
   if (configPath !== undefined) {
     try {
       const loaded = loadConfig(configPath, { checkRepos: false });
@@ -152,11 +152,11 @@ const resolveService = (
           ? service.repo
           : resolve(loaded.rootDir, service.repo);
         if (candidate === rootDir) {
-          return { repo: service.name, service, config: loaded.config };
+          return { repo: service.name, service, config: loaded.config, configDir: loaded.rootDir };
         }
       }
       const pkgName = readPackageJson(rootDir)?.name;
-      return { repo: nameFrom(pkgName, rootDir), config: loaded.config };
+      return { repo: nameFrom(pkgName, rootDir), config: loaded.config, configDir: loaded.rootDir };
     } catch {
       // A configuration that cannot be read is not a reason to refuse to
       // extract a single repository; fall through to naming it ourselves.
@@ -240,7 +240,7 @@ export const runExtract = async (
   const ownConfig = join(rootDir, CONFIG_FILENAME);
   const configPath =
     options.config ?? (existsSync(ownConfig) ? ownConfig : findConfig(process.cwd()));
-  const { repo, service, config } = resolveService(rootDir, configPath);
+  const { repo, service, config, configDir } = resolveService(rootDir, configPath);
 
   const registry = createRegistry();
   const extractOptions: ExtractRepoOptions = {
@@ -248,6 +248,7 @@ export const runExtract = async (
     repo,
     ...(service === undefined ? {} : { service }),
     ...(config === undefined ? {} : { config }),
+    ...(configDir === undefined ? {} : { configDir }),
     registry,
     extraPasses: EXTRA_PASSES,
     ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }),

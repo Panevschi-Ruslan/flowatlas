@@ -18,6 +18,7 @@ import {
 import { normalizeFilePath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readPackageJson } from './package-json.js';
+import { mountedFileSystem, recordStandIns, type Mount, type StandInRequest } from './stand-ins.js';
 import { isTestDirectory, isTestName } from './test-files.js';
 import {
   serviceExtent,
@@ -78,6 +79,12 @@ export interface CreateProjectOptions extends SourceRootOptions {
    * some over.
    */
   shapes?: readonly DeclarationShape[];
+  /**
+   * What stands in for a package that is not installed besides those shapes
+   * (P78): the source of a repository that is that package, then a shape file
+   * of the project's own. See `standInsFor`.
+   */
+  standIns?: StandInRequest;
 }
 
 /** Directories that never hold sources worth reading. */
@@ -639,6 +646,102 @@ const candidateFiles = (path: string): string[] => {
   ];
 };
 
+/** Directories a package's build is written to, beside the `src` it is built from. */
+const BUILT = /^(?:\.\/)?(?:dist|lib|build|out|esm|cjs)\//;
+
+/**
+ * The files a package's source may be entered through, for a package nobody
+ * built (P78): what its manifest names, then each of those under `src/` where
+ * the manifest names a build output, then `src/index` and `index` for the
+ * package itself, or the subpath under `src/` and under its root.
+ */
+const sourceTargets = (targets: readonly string[], subpath: string): string[] => {
+  const rebuilt = targets.flatMap((target) => (BUILT.test(target) ? [target.replace(BUILT, './src/')] : []));
+  const fallbacks = subpath === '.' ? ['./src/index', './index'] : [`./src/${subpath.slice(2)}`, subpath];
+  return [...new Set([...targets, ...rebuilt, ...fallbacks])];
+};
+
+/** The compiler options a root is read with, for asking what resolves before anything is mounted. */
+const compilerOptionsAt = (configPath: string | undefined): ts.CompilerOptions => {
+  if (configPath === undefined) return { ...FALLBACK_COMPILER_OPTIONS };
+  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (read.error !== undefined) return {};
+  return ts.parseJsonConfigFileContent(
+    read.config,
+    {
+      useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
+      fileExists: ts.sys.fileExists,
+      readFile: ts.sys.readFile,
+      readDirectory: () => [],
+    },
+    dirname(configPath),
+    undefined,
+    configPath,
+  ).options;
+};
+
+/** A file at the root, which need not exist, that a package is resolved from. */
+const INSTALL_PROBE = '__flowatlas_install_probe__.ts';
+
+/** Whether a package resolves from the root as the disk stands: installed, or aliased by the service's own paths. */
+const installedFrom = (rootDir: string, configPath: string | undefined): ((name: string) => boolean) => {
+  const options = compilerOptionsAt(configPath);
+  const answers = new Map<string, boolean>();
+  return (name) => {
+    let known = answers.get(name);
+    if (known === undefined) {
+      known =
+        existsSync(join(rootDir, 'node_modules', name)) ||
+        ts.resolveModuleName(name, join(rootDir, INSTALL_PROBE), options, ts.sys).resolvedModule !== undefined;
+      answers.set(name, known);
+    }
+    return known;
+  };
+};
+
+/**
+ * Which package sources a service reads in place of an install (P78): each
+ * one it has not installed, is not a package of its own extent, and is not
+ * the directory the service itself is in.
+ */
+const mountsFor = (
+  rootDir: string,
+  request: StandInRequest | undefined,
+  members: ReadonlyMap<string, NamedMember>,
+  installed: (name: string) => boolean,
+): Mount[] => {
+  if (request === undefined || request.packages.length === 0) return [];
+  const extent = serviceSourceDirs(rootDir).map((dir) => resolve(dir));
+  const root = resolve(rootDir);
+  const inside = (path: string, dir: string): boolean => path === dir || path.startsWith(`${dir}/`);
+  return request.packages
+    .filter(
+      (pkg) =>
+        !members.has(pkg.name) &&
+        !extent.some((dir) => inside(pkg.dir, dir)) &&
+        !inside(root, pkg.dir) &&
+        !installed(pkg.name),
+    )
+    .map((pkg) => ({ source: pkg, virtual: join(root, 'node_modules', pkg.name) }))
+    .sort((a, b) => (a.source.name < b.source.name ? -1 : a.source.name > b.source.name ? 1 : 0));
+};
+
+/** A mounted package's own aliases (R141), spelled at the path it is mounted at. */
+const mountedAliases = (mount: Mount): PackageAliases | undefined => {
+  const own = aliasesOf(mount.source.dir);
+  if (own === undefined) return undefined;
+  const moved = (path: string): string =>
+    path === mount.source.dir || path.startsWith(`${mount.source.dir}/`)
+      ? mount.virtual + path.slice(mount.source.dir.length)
+      : path;
+  return {
+    dir: mount.virtual,
+    paths: own.paths,
+    base: moved(own.base),
+    baseUrl: own.baseUrl === undefined ? undefined : moved(own.baseUrl),
+  };
+};
+
 /**
  * A workspace package's file, reached by the name the package is imported by,
  * when nothing is installed (R152).
@@ -667,23 +770,27 @@ const candidateFiles = (path: string): string[] => {
 const workspaceMemberResolution = (
   members: ReadonlyMap<string, NamedMember>,
   fileExists: (path: string) => boolean,
+  { source = false }: { source?: boolean } = {},
 ): ((specifier: string) => ts.ResolvedModuleFull | undefined) => {
   const answers = new Map<string, ts.ResolvedModuleFull | undefined>();
   const answer = (specifier: string): ts.ResolvedModuleFull | undefined => {
     const split = splitSpecifier(specifier);
     const member = split === undefined ? undefined : members.get(split.name);
     if (split === undefined || member === undefined) return undefined;
-    for (const target of manifestTargets(member.manifest, split.subpath)) {
+    const targets = manifestTargets(member.manifest, split.subpath);
+    for (const target of source ? sourceTargets(targets, split.subpath) : targets) {
       const path = resolve(member.dir, target);
       const inside = relative(member.dir, path);
       const segments = inside.split(sep);
       if (segments[0] === '..' || segments.includes('node_modules')) continue;
       const file = candidateFiles(path).find(fileExists);
       if (file === undefined) continue;
+      // A package source is read as an install would be: from outside the
+      // repository, at the path an install would have.
       return {
         resolvedFileName: file,
         extension: extensionOf(file),
-        isExternalLibraryImport: false,
+        isExternalLibraryImport: source,
       };
     }
     return undefined;
@@ -728,6 +835,7 @@ const workspaceMemberResolution = (
 const workspaceResolution = (
   packages: readonly PackageAliases[],
   members: ReadonlyMap<string, NamedMember>,
+  sources: ReadonlyMap<string, NamedMember> = new Map(),
 ): ResolutionHostFactory => (host) => {
   const canonical = ts.sys.useCaseSensitiveFileNames
     ? (path: string) => path
@@ -762,6 +870,7 @@ const workspaceResolution = (
   const ownerOf = (file: string): PackageAliases | undefined =>
     byDepth.find((pkg) => file.startsWith(`${pkg.dir}/`));
   const byName = workspaceMemberResolution(members, (path) => host.fileExists(path));
+  const bySource = workspaceMemberResolution(sources, (path) => host.fileExists(path), { source: true });
 
   return {
     resolveModuleNames: (names, containingFile, _reused, redirected, options, containingSourceFile) => {
@@ -784,7 +893,7 @@ const workspaceResolution = (
           owner !== undefined &&
           Object.keys(owner.paths).some((pattern) => aliasMatches(pattern, name));
         return (
-          (claimed ? resolve(name, own) : undefined) ?? resolve(name, service) ?? byName(name)
+          (claimed ? resolve(name, own) : undefined) ?? resolve(name, service) ?? byName(name) ?? bySource(name)
         );
       });
     },
@@ -813,19 +922,32 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // Every package of the extent, one nested in the service's directory too: a
   // package whose files may be opened is one whose aliases are honoured (R115).
   const packages = extentMembers(rootDir);
-  const aliases = packages.flatMap((dir) => aliasesOf(dir) ?? []);
   const members = namedMembersOf(rootDir);
+  // The packages whose source stands in for an install (P78), decided before
+  // the project exists: whether a package is installed is asked of the disk
+  // as it is, before anything is mounted over it.
+  const installed = installedFrom(rootDir, tsConfigFilePath);
+  const mounts = mountsFor(rootDir, options.standIns, members, installed);
+  const aliases = [
+    ...packages.flatMap((dir) => aliasesOf(dir) ?? []),
+    ...mounts.flatMap((mount) => mountedAliases(mount) ?? []),
+  ];
+  const sources = new Map<string, NamedMember>(
+    mounts.map((mount) => [mount.source.name, { dir: mount.virtual, manifest: mount.source.manifest }]),
+  );
 
   const project = new Project({
     ...(tsConfigFilePath === undefined ? {} : { tsConfigFilePath }),
     skipAddingFilesFromTsConfig: true,
     ...(tsConfigFilePath === undefined ? { compilerOptions: FALLBACK_COMPILER_OPTIONS } : {}),
-    // Only inside a workspace. A service with no package of its own to alias and
-    // none to import by name, which is every service outside a workspace, keeps
-    // the compiler's own resolution untouched rather than an imitation of it.
-    ...(aliases.length === 0 && members.size === 0
+    ...(mounts.length === 0 ? {} : { fileSystem: mountedFileSystem(mounts) }),
+    // Only inside a workspace, or where a package's source stands in. A service
+    // with no package of its own to alias, none to import by name and no source
+    // read in place of an install, which is every service outside a workspace,
+    // keeps the compiler's own resolution untouched rather than an imitation of it.
+    ...(aliases.length === 0 && members.size === 0 && sources.size === 0
       ? {}
-      : { resolutionHost: workspaceResolution(aliases, members) }),
+      : { resolutionHost: workspaceResolution(aliases, members, sources) }),
   });
 
   // The service's own roots first, then every other directory its code is in. A
@@ -859,7 +981,27 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // After the sources are opened, before anything builds the program: a shape
   // is decided by whether the package resolves, and stands in from the first
   // import the checker resolves.
-  installDeclarationShapes(project, rootDir, options.shapes ?? []);
+  //
+  // A shape file of the project's own goes before a reader's built-in shape of
+  // the same package, and neither is read for a package whose source is (D3).
+  const mounted = new Set(sources.keys());
+  const userShapes = (options.standIns?.shapeFiles ?? []).flatMap((reading) => reading.shapes);
+  installDeclarationShapes(
+    project,
+    rootDir,
+    [...userShapes, ...(options.shapes ?? [])].filter((shape) => !mounted.has(shape.package)),
+  );
+  if (options.standIns !== undefined) {
+    recordStandIns(project, {
+      rootDir,
+      mounts,
+      ambiguous: new Map([...options.standIns.ambiguous].filter(([name]) => !installed(name) && !members.has(name))),
+      shapeFiles: options.standIns.shapeFiles,
+      ownShapeFiles: options.standIns.ownShapeFiles,
+      speaksForProject: options.standIns.speaksForProject,
+      installed: new Set(userShapes.map((shape) => shape.package).filter((name) => installed(name) || members.has(name))),
+    });
+  }
   SKIPPED_TEST_DIRECTORIES.set(
     project,
     new Map([...skipped].map(([dir, files]) => [dir, [...new Set(files)].sort()])),

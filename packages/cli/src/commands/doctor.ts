@@ -562,15 +562,9 @@ export const runCantFollowCommand = (options: DoctorOptions, io: QueryIo = proce
   // None is a fair answer here: the counts alone, without places to open.
   const samples = options.samples === '0' ? 0 : whole(options.samples, 3, '--samples');
   const settings = fromConfig(options);
-  const { db, close } = openProjectDb(options);
-  try {
-    const { rows: raw, note } = rowsFor(db, settings.outputDir);
-    const split = splitAccepted(loadAccepted(dbPathFor(options)), withAnsweredDemoted(raw, db));
-    const accepted = {
-      rows: split.accepted.length,
-      sites: split.accepted.reduce((sum, row) => sum + (row.sites ?? 1), 0),
-    };
-    const report = cantFollowReport(split.fresh, {
+  const { fresh, accepted, note } = cantFollowRowsOf(options);
+  {
+    const report = cantFollowReport(fresh, {
       top,
       samples,
       ...(options.service === undefined ? {} : { service: options.service }),
@@ -583,6 +577,30 @@ export const runCantFollowCommand = (options: DoctorOptions, io: QueryIo = proce
       format === 'json' ? renderCantFollowJson(report) : renderCantFollowText(report, { repoDirs: settings.repoDirs, top });
     io.out(text);
     return { report, text, exitCode: EXIT.ok };
+  }
+};
+
+/**
+ * The rows `doctor --unresolved` groups: the report's own, demoted where an
+ * annotation answered them, less what `accepted.json` names. Shared with
+ * `flowatlas shapes --suggest` (P78), so the two count the same places.
+ */
+export const cantFollowRowsOf = (
+  options: Pick<DoctorOptions, 'config' | 'db'>,
+): { fresh: Unresolved[]; accepted: { rows: number; sites: number }; note?: string } => {
+  const settings = fromConfig(options);
+  const { db, close } = openProjectDb(options);
+  try {
+    const { rows: raw, note } = rowsFor(db, settings.outputDir);
+    const split = splitAccepted(loadAccepted(dbPathFor(options)), withAnsweredDemoted(raw, db));
+    return {
+      fresh: split.fresh,
+      accepted: {
+        rows: split.accepted.length,
+        sites: split.accepted.reduce((sum, row) => sum + (row.sites ?? 1), 0),
+      },
+      ...(note === undefined ? {} : { note }),
+    };
   } finally {
     close();
   }

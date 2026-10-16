@@ -145,7 +145,9 @@ export {
   infraModuleSchema,
   loadConfig,
   builtInShapesFor,
+  packageSourcesFor,
   parseConfig,
+  shapesFor,
   serviceConfigSchema,
   starterSchema,
 } from './config.js';
@@ -167,6 +169,7 @@ export type {
   LoadConfigOptions,
   StarterConfig,
   LoadedConfig,
+  PackageSourcesSetting,
   ServiceConfig,
 } from './config.js';
 export type {
@@ -388,8 +391,34 @@ export {
   declarationShapesOf,
   installDeclarationShapes,
   isDeclarationShape,
+  readShapeFile,
+  RESOLUTION_ORDER,
+  resolutionOrder,
+  shapeFileOf,
+  shapeFilesOf,
 } from './declaration-shapes.js';
-export type { DeclarationShape } from './declaration-shapes.js';
+export type { DeclarationShape, ResolutionSource, ShapeFileReading } from './declaration-shapes.js';
+export { packageIndexOf, rangeIncludes, serviceDirOf } from './package-index.js';
+export type { PackageIndex, PackageIndexInput, PackageSource, PackageSourceOrigin } from './package-index.js';
+export {
+  closeStandIns,
+  markStandInEdges,
+  mountsOf,
+  packageCoverage,
+  reportStandIns,
+  standInFiles,
+  standInOfFile,
+  standInsFor,
+  withdrawPackageSourceRows,
+} from './stand-ins.js';
+export {
+  collectPackageUses,
+  exportKindOf,
+  packageOfImport,
+  starterShape,
+} from './package-uses.js';
+export type { MemberUse, ModuleUses, UsedExport } from './package-uses.js';
+export type { Mount, PackageCover, StandInContext, StandInOfFile, StandInRequest, StandInsForOptions } from './stand-ins.js';
 export { RXJS_DECLARATION_SHAPE, RXJS_SHAPE } from './rxjs-shape.js';
 
 export { isTestDirectory, isTestFile } from './test-files.js';

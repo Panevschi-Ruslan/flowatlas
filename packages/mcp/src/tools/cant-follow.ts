@@ -2,10 +2,12 @@ import {
   causeLabel,
   groupCantFollow,
   loadAccepted,
+  packageCoverage,
   placeIdOf,
   splitAccepted,
   type CantFollow,
   type CantFollowSample,
+  type PackageCover,
 } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -18,11 +20,28 @@ export interface CantFollowPlace extends CantFollowSample {
   loc: string;
   /** Id of the node the place is in, for get_source. Absent when the graph draws none. */
   id?: string;
+  /**
+   * Under `module-not-installed`: what the configuration as it stands now
+   * reads in place of the package - its source in a repository, or a shape
+   * file - so a rebuild is all the place needs (P78).
+   */
+  coveredBy?: PackageCover['by'];
 }
+
+/** The cause a shape file or a package's source answers. */
+const MISSING = 'module-not-installed';
 
 export interface CantFollowAnswer extends Omit<CantFollow, 'causes'> {
   causes: Array<Omit<CantFollow['causes'][number], 'packages'> & {
-    packages: Array<{ package: string | null; label: string; sites: number; samples: CantFollowPlace[] }>;
+    packages: Array<{
+      package: string | null;
+      label: string;
+      sites: number;
+      samples: CantFollowPlace[];
+      /** Under `module-not-installed`: what would read in its place once rebuilt, and where that is. */
+      coveredBy?: PackageCover['by'];
+      coveredFrom?: string;
+    }>;
   }>;
   /** Gaps accepted with `flowatlas accept`, out of every count above. */
   accepted?: { rows: number; sites: number };
@@ -34,6 +53,7 @@ export const cantFollowFor = (
   db: GraphDb,
   rows: readonly AnchoredUnresolvedRow[],
   options: { service?: string; cause?: string; package?: string; top: number; samples: number },
+  coverage: ReadonlyMap<string, PackageCover> = new Map(),
 ): CantFollowAnswer => {
   const grouped = groupCantFollow(
     rows.map((row) => ({ ...row, symbol: row.node })),
@@ -43,19 +63,24 @@ export const cantFollowFor = (
     ...grouped,
     causes: grouped.causes.map((cause) => ({
       ...cause,
-      packages: cause.packages.map((pkg) => ({
-        package: pkg.package,
-        label: causeLabel(cause.cause, pkg.package),
-        sites: pkg.sites,
-        samples: pkg.samples.map((sample) => {
-          const id = placeIdOf(sample, (candidate) => db.node(candidate) !== undefined);
-          return {
-            ...sample,
-            loc: `${sample.file}:${sample.line}`,
-            ...(id === undefined ? {} : { id }),
-          };
-        }),
-      })),
+      packages: cause.packages.map((pkg) => {
+        const cover = cause.cause === MISSING && pkg.package !== null ? coverage.get(pkg.package) : undefined;
+        return {
+          package: pkg.package,
+          label: causeLabel(cause.cause, pkg.package),
+          sites: pkg.sites,
+          samples: pkg.samples.map((sample) => {
+            const id = placeIdOf(sample, (candidate) => db.node(candidate) !== undefined);
+            return {
+              ...sample,
+              loc: `${sample.file}:${sample.line}`,
+              ...(id === undefined ? {} : { id }),
+              ...(cover === undefined ? {} : { coveredBy: cover.by }),
+            };
+          }),
+          ...(cover === undefined ? {} : { coveredBy: cover.by, coveredFrom: cover.from }),
+        };
+      }),
     })),
   };
 };
@@ -69,12 +94,33 @@ const nextOf = (answer: CantFollowAnswer, asked: { cause?: string; package?: str
   const first = answer.causes[0];
   const place = first?.packages.flatMap((pkg) => pkg.samples).find((sample) => sample.id !== undefined);
   if (place?.id !== undefined) hints.push(`get_source({symbol: ${JSON.stringify(place.id)}})`);
+  // A package nobody installed is answered by a shape file, or by a rebuild
+  // where the configuration already reads something in its place (P78).
+  const missing = answer.causes.find((cause) => cause.cause === MISSING)?.packages.find((pkg) => pkg.package !== null);
+  if (missing?.package !== undefined && missing.package !== null && (asked.cause === MISSING || first?.cause === MISSING)) {
+    hints.push(
+      missing.coveredBy === undefined
+        ? `run: flowatlas shapes --suggest --package ${JSON.stringify(missing.package)}`
+        : `run: flowatlas build (${missing.package} is covered by ${missing.coveredBy === 'repo' ? 'its source in' : 'the shape file'} ${missing.coveredFrom ?? ''})`,
+    );
+  }
   if (asked.cause === undefined && first !== undefined) hints.push(`cant_follow({cause: ${JSON.stringify(first.cause)}})`);
   const pkg = answer.packages[0]?.package;
   if (asked.package === undefined && pkg !== undefined) {
     hints.push(`cant_follow({package: ${JSON.stringify(pkg)}})`, `search({query: ${JSON.stringify(pkg)}})`);
   }
   return hints.slice(0, MAX_NEXT);
+};
+
+/** What the configuration reads in place of a missing package, when the server was given one. */
+const coverageOf = (ctx: ToolContext): ReadonlyMap<string, PackageCover> => {
+  const { config, configDir } = ctx.handle;
+  if (config === undefined || configDir === undefined) return new Map();
+  try {
+    return packageCoverage(config, configDir);
+  } catch {
+    return new Map();
+  }
 };
 
 export const registerCantFollow = (server: McpServer, ctx: ToolContext): void => {
@@ -101,7 +147,7 @@ export const registerCantFollow = (server: McpServer, ctx: ToolContext): void =>
           ...(input.service === undefined ? {} : { service: input.service }),
           ...(input.cause === undefined ? {} : { cause: input.cause }),
           ...(input.package === undefined ? {} : { package: input.package }),
-        });
+        }, coverageOf(ctx));
         const accepted = split.accepted.length === 0
           ? {}
           : { accepted: { rows: split.accepted.length, sites: split.accepted.reduce((sum, row) => sum + row.sites, 0) } };
