@@ -1,0 +1,19 @@
+# The whole shop, as a developer starts it. The containers are built from the
+# repositories beside this file, which is how they are told apart from the
+# database the shop also starts.
+services:
+  shop:
+    build: ./storefront
+    environment:
+      - PAYMENTS_BASE=http://payments-api:4000
+      - LOG_LEVEL=debug
+    env_file: ./storefront/.env.example
+  payments-api:
+    build:
+      context: ./payments
+    ports:
+      - "4000:4000"
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: hunter2

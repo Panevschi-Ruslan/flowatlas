@@ -213,6 +213,18 @@ export type {
   EnvironmentValue,
   PatternMatch,
 } from './channel-pattern.js';
+export {
+  addressOnly,
+  hostOf,
+  innerServiceName,
+  isInnerHost,
+  keptValue,
+  localHostsOf,
+  looksSecret,
+  NO_SETTINGS,
+  portOf,
+} from './setting-files.js';
+export type { HostAlias, RepoSettings, SettingValue } from './setting-files.js';
 export { GUESSED_META, isTaken, RECORDED_META, strongestTaken, TAKEN_BY_META, TAKES_META } from './takes.js';
 export type { Takes, Taken, TakenInstead } from './takes.js';
 export { OPERATION_VERBS, operationsOf } from './declared-operations.js';

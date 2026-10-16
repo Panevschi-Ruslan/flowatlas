@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   CONFIDENCE_RANK,
+  ENVIRONMENT_META,
   namesGivenTo,
   SCHEMA_VERSION,
   wasRead,
@@ -9,14 +10,18 @@ import {
   type FlowatlasConfig,
   type GraphEdge,
   type GraphNode,
+  makeExternalApiId,
   type ProjectGraph,
   type RecordedMarker,
+  type RepoSettings,
   type RepoGraph,
   type ServiceSummary,
   type TypeEntry,
   type Unresolved,
 } from '@flowatlas/core';
+import { baseUrlOf, hostIndexOf, takenMeta, whereFound, type FoundValue } from './base-url-value.js';
 import {
+  baseUrlTakenFinding,
   findingFor,
   mountAssumedFinding,
   resolveCall,
@@ -27,7 +32,7 @@ import {
 } from './http-link.js';
 import { joinDeployments } from './deployment-link.js';
 import { keepWhereDeclared } from './declared-link.js';
-import { completeFromEnvironment } from './environment-link.js';
+import { completeFromEnvironment, reachedBy } from './environment-link.js';
 import { functionUrlsOf } from './function-url-link.js';
 import { mergeGraphs } from './merge.js';
 import {
@@ -66,6 +71,12 @@ export interface LinkOptions {
   builtAt?: string;
   /** What happened while reading each repository, including any that were not. */
   services?: readonly ServiceReport[];
+  /**
+   * What each service's own files say its settings are, by service (P77):
+   * read by whoever can see the files, used here to complete a base address
+   * and an address waiting on the environment.
+   */
+  settings?: Readonly<Record<string, RepoSettings>>;
 }
 
 const configHashOf = (config: FlowatlasConfig): string =>
@@ -303,6 +314,9 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
   baseUrlEnv: () => 'static',
   // One API of several at one address, chosen by the setting's name (P59).
   apiName: () => 'heuristic',
+  // The service the value a setting is given names (P77): a guess unless the
+  // value is the one a function that runs the request is deployed with.
+  baseUrlValue: () => 'heuristic',
   functionUrl: (call) => {
     const path = call.meta?.['path'];
     return typeof path === 'string' && wasRead(path) ? 'static' : 'heuristic';
@@ -310,14 +324,15 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
 };
 
 /** The edge a resolved call becomes. */
-const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>): GraphEdge => {
+const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>, baseUrl?: FoundValue): GraphEdge => {
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];
+  const joinedAs = baseUrl?.deployed === true ? 'static' : JOINED_AS[outcome.via](call);
   return {
     from: call.id,
     to: outcome.entry.id,
     type: 'http_calls',
-    confidence: boundedByMount(boundedByRoute(JOINED_AS[outcome.via](call), outcome.entry), outcome.mountAssumed),
+    confidence: boundedByMount(boundedByRoute(joinedAs, outcome.entry), outcome.mountAssumed),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -326,6 +341,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
       via: outcome.via,
       targetService: outcome.entry.repo,
       ...(outcome.via === 'functionUrl' ? { variable: call.meta?.['baseUrlEnv'] } : {}),
+      ...(baseUrl === undefined ? {} : takenMeta(baseUrl)),
       ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
         ? {}
@@ -350,7 +366,10 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];
   const asserted = call.meta?.['via'] === 'marker';
-  const guessed = call.meta?.['guessed'] === true || outcome.via === 'unique-route';
+  const guessed =
+    call.meta?.['guessed'] === true ||
+    outcome.via === 'unique-route' ||
+    (outcome.via === 'base-url-value' && outcome.baseUrl?.deployed !== true);
   return {
     from: call.id,
     to: outcome.entry.id,
@@ -425,6 +444,38 @@ const emptyHttpOut = (): LinkReport['httpOut'] => ({
 const emptyUi = (): LinkReport['ui'] => ({ total: 0, resolved: 0, unresolved: 0, byReason: {} });
 
 /**
+ * The lookup a request rooted at a setting nobody claims asks of the values
+ * the setting is given (P77), or nothing where the configuration turns it off.
+ */
+const baseUrlLookup = (
+  nodes: ReadonlyMap<string, GraphNode>,
+  edges: ReadonlyMap<string, GraphEdge>,
+  config: FlowatlasConfig,
+  settings: Readonly<Record<string, RepoSettings>>,
+  byName: boolean,
+): RouteIndex['baseUrlOf'] => {
+  if (config.settingFiles.read === false) return undefined;
+  const hosts = hostIndexOf(config, settings);
+  const names = config.services.map((service) => service.name).sort(cmp);
+  const functions = [...nodes.values()].filter((node) => node.type === 'entry' && node.meta?.[ENVIRONMENT_META] !== undefined);
+  const runnersOf = functions.length === 0 ? new Map<string, GraphNode[]>() : reachedBy(nodes, edges, functions);
+  return (call) => {
+    const env = call.meta?.['baseUrlEnv'];
+    if (typeof env !== 'string') return undefined;
+    const variable = call.meta?.['baseUrlVariable'];
+    const own = settings[call.repo];
+    return baseUrlOf({
+      call,
+      variables: typeof variable === 'string' && variable !== env ? [env, variable] : [env],
+      runners: runnersOf.get(call.id) ?? [],
+      ...(own === undefined ? {} : { settings: own }),
+      hosts,
+      services: byName ? names : [],
+    });
+  };
+};
+
+/**
  * Joins the repositories into one graph.
  *
  * Two things cross a service boundary: a call to another service's route, and a
@@ -446,7 +497,9 @@ export const linkGraphs = (
   // An address read from the environment, completed from the values each
   // function that runs it is deployed with; then every rule that takes its
   // channels by a pattern, matched against every channel, those included (P23).
-  found.push(...completeFromEnvironment(nodes, edges, merged.unresolved));
+  // The repository's own files fill in what a deployment leaves out (P77).
+  const settings = config.settingFiles.read === false ? {} : (options.settings ?? {});
+  found.push(...completeFromEnvironment(nodes, edges, merged.unresolved, settings));
   // A write onto a table's stream is a publish only where the stream is
   // declared, which only the whole project knows (P51).
   found.push(...keepWhereDeclared(nodes, edges, [merged.unresolved, found]));
@@ -459,8 +512,17 @@ export const linkGraphs = (
   const routesByService = routesByServiceOf(nodes);
   const servicesByEnv = servicesByEnvOf(config);
   const urls = functionUrlsOf(nodes, edges);
-  const index: RouteIndex = { ...buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv), functionUrlsOf: (callId) => urls.get(callId) ?? [] };
-  const uiIndex = buildUiIndex(config, routesByService, servicesByEnv);
+  const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, true);
+  const valuedUiBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, false);
+  const index: RouteIndex = {
+    ...buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv),
+    functionUrlsOf: (callId) => urls.get(callId) ?? [],
+    ...(valuedBaseUrlOf === undefined ? {} : { baseUrlOf: valuedBaseUrlOf }),
+  };
+  const uiIndex: UiIndex = {
+    ...buildUiIndex(config, routesByService, servicesByEnv),
+    ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
+  };
   const procedureIndex = buildProcedureIndex(nodes, config);
 
   /** Where a finding happened; the finding itself says what and what to do. */
@@ -474,6 +536,26 @@ export const linkGraphs = (
     });
   };
 
+  /** One row per value taken, standing for every request it was taken for (P77). */
+  const taken = new Map<string, Unresolved>();
+  const tookValue = (call: GraphNode, found: FoundValue, target: string): void => {
+    const key = [call.repo, found.variable, found.value, whereFound(found), target].join('\0');
+    const seen = taken.get(key);
+    if (seen !== undefined) {
+      seen.sites = (seen.sites ?? 1) + 1;
+      return;
+    }
+    const row: Unresolved = {
+      service: call.repo,
+      file: call.file ?? '',
+      line: call.line ?? 0,
+      ...baseUrlTakenFinding(found, target),
+      symbol: call.id,
+      meta: { variable: found.variable, ...(found.byName === true ? {} : { value: found.value }), from: whereFound(found) },
+    };
+    taken.set(key, row);
+  };
+
   /**
    * The edge a request from a browser becomes, and the row a join across a
    * mount taken as empty carries beside it (R144).
@@ -481,21 +563,50 @@ export const linkGraphs = (
   const joinUi = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>, path: string): void => {
     const edge = uiEdge(call, outcome);
     edges.set(edgeKey(edge), edge);
+    if (outcome.baseUrl !== undefined) {
+      edge.meta = { ...edge.meta, ...takenMeta(outcome.baseUrl) };
+      call.meta = { ...call.meta, ...takenMeta(outcome.baseUrl) };
+      tookValue(call, outcome.baseUrl, outcome.targetService);
+    }
     if (outcome.mountAssumed !== undefined) {
       const method = String(call.meta?.['method'] ?? '?');
       record(call, mountAssumedFinding(method, path, outcome.entry, outcome.mountAssumed));
     }
   };
 
-  for (const call of nodes.values()) {
+  for (const call of [...nodes.values()]) {
     if (call.type !== 'http_out') continue;
     httpOut.total += 1;
 
-    const { outcome, notes, alsoLinked } = resolveCall(call, index);
+    const { outcome, notes, alsoLinked, baseUrl } = resolveCall(call, index);
     for (const note of notes) record(call, note);
+    if (baseUrl !== undefined) {
+      call.meta = { ...call.meta, ...takenMeta(baseUrl) };
+      const target = outcome.kind === 'external' ? (outcome.host ?? 'a third party') : (aimOf(outcome) ?? '?');
+      tookValue(call, baseUrl, target);
+    }
+    if (outcome.kind === 'external' && outcome.host !== undefined && baseUrl !== undefined) {
+      // A third party found from the value the setting is given is drawn the
+      // way one written in the call is, and is as sure as the value (P77).
+      const apiId = makeExternalApiId(outcome.host);
+      if (!nodes.has(apiId)) {
+        nodes.set(apiId, { id: apiId, type: 'external_api', label: outcome.host, repo: call.repo, meta: { host: outcome.host } });
+      }
+      call.meta = { ...call.meta, host: outcome.host };
+      const edge: GraphEdge = {
+        from: call.id,
+        to: apiId,
+        type: 'calls',
+        confidence: baseUrl.deployed ? 'static' : 'heuristic',
+        ...(call.file === undefined ? {} : { file: call.file }),
+        ...(call.line === undefined ? {} : { line: call.line }),
+        meta: takenMeta(baseUrl),
+      };
+      edges.set(edgeKey(edge), edge);
+    }
 
     if (outcome.kind === 'linked') {
-      const edge = callEdge(call, outcome);
+      const edge = callEdge(call, outcome, baseUrl);
       edges.set(edgeKey(edge), edge);
       for (const also of alsoLinked ?? []) {
         const more = callEdge(call, {
@@ -637,6 +748,8 @@ export const linkGraphs = (
     const finding = uiFindingFor(outcome);
     if (finding !== undefined) record(call, finding);
   }
+
+  found.push(...taken.values());
 
   // Whatever names an entry by its deployed name alone, joined to the entry in
   // whichever service declares it.

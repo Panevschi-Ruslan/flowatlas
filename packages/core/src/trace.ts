@@ -207,6 +207,11 @@ export interface RootSettingOptions {
    * core follows values around; it does not know what a setting looks like.
    */
   readSetting: (node: TsNode) => string | null;
+  /**
+   * What a settings read written with a fallback falls back to, where the read
+   * itself carries one: `config.get('ORDERS_URL', 'http://orders:3000')` (P77).
+   */
+  settingDefault?: (node: TsNode) => string | undefined;
   budget?: number;
 }
 
@@ -231,6 +236,13 @@ export interface SettingAddress {
    * `heuristic` edge, never a `static` one.
    */
   guessed?: boolean;
+  /**
+   * What the code falls back to where the setting is not set, when it writes
+   * one for the whole value: `process.env.ORDERS_URL ?? 'http://orders:3000'`
+   * (P77). Only ever a literal; the setting is still what the address is
+   * rooted at.
+   */
+  otherwise?: string;
 }
 
 /**
@@ -246,6 +258,8 @@ export interface SettingAddress {
 interface Scope {
   /** Recognises a settings read and names the key. Supplied by the caller. */
   readSetting: (node: TsNode) => string | null;
+  /** What such a read falls back to, where it carries a fallback of its own. */
+  settingDefault?: (node: TsNode) => string | undefined;
   self: ClassNode | undefined;
   bound: ReadonlyMap<ParameterDeclaration, Bound>;
   /**
@@ -813,7 +827,10 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   const node = unwrap(value);
 
   const direct = scope.readSetting(node);
-  if (direct !== null) return { key: direct, prefix: '' };
+  if (direct !== null) {
+    const otherwise = scope.settingDefault?.(node);
+    return { key: direct, prefix: '', ...(otherwise === undefined ? {} : { otherwise }) };
+  }
 
   if (Node.isTemplateExpression(node)) {
     const [first] = node.getTemplateSpans();
@@ -895,7 +912,15 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   if (Node.isBinaryExpression(node)) {
     const operator = node.getOperatorToken().getKind();
     if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) {
-      return addressOf(node.getLeft(), scope, budget - 1) ?? addressOf(node.getRight(), scope, budget - 1);
+      const left = addressOf(node.getLeft(), scope, budget - 1);
+      if (left === null) return addressOf(node.getRight(), scope, budget - 1);
+      // `process.env.X ?? 'http://orders:3000'`: what the code falls back to
+      // for the whole value is worth keeping beside the setting (P77).
+      if (left.prefix !== '' || left.otherwise !== undefined) return left;
+      const fallback = evaluateExpression(node.getRight());
+      return fallback.resolved && typeof fallback.value === 'string' && fallback.value !== ''
+        ? { ...left, otherwise: fallback.value }
+        : left;
     }
     if (operator === SyntaxKind.PlusToken) {
       const left = addressOf(node.getLeft(), scope, budget - 1);
@@ -977,7 +1002,11 @@ export const rootSettingAddress = (
   value: TsNode,
   options: RootSettingOptions & { frames?: readonly CallFrame[] },
 ): SettingAddress | null =>
-  addressOf(value, scopeOf(value, options.readSetting, options.frames), options.budget ?? BUDGET);
+  addressOf(
+    value,
+    scopeOf(value, options.readSetting, options.frames, undefined, options.settingDefault),
+    options.budget ?? BUDGET,
+  );
 
 /**
  * One step outward from where an address is written: a call, and the method it
@@ -1023,8 +1052,12 @@ const scopeOf = (
   readSetting: Scope['readSetting'],
   frames: readonly CallFrame[] | undefined,
   choices?: ReadonlyMap<TsNode, string>,
+  settingDefault?: Scope['settingDefault'],
 ): Scope => {
-  const picked = choices === undefined ? {} : { choices };
+  const picked = {
+    ...(choices === undefined ? {} : { choices }),
+    ...(settingDefault === undefined ? {} : { settingDefault }),
+  };
   if (frames === undefined || frames.length === 0) {
     return { readSetting, self: enclosingClass(value), bound: NOTHING, ...picked };
   }
@@ -1581,6 +1614,8 @@ export interface SplitAddress {
   parameter: ParameterDeclaration;
   /** Settings key the fixed half is rooted at, when it is rooted at one. */
   baseUrlEnv: string | null;
+  /** What the code falls back to where that setting is not set, when it writes one (P77). */
+  otherwise?: string;
   /** Literal text before and after the part the caller supplies. */
   before: string;
   after: string;
@@ -1608,6 +1643,7 @@ export const splitAtParameter = (
 
   const spans = node.getTemplateSpans();
   let baseUrlEnv: string | null = null;
+  let otherwise: string | undefined;
   let text = node.getHead().getLiteralText();
   let start = 0;
 
@@ -1622,7 +1658,9 @@ export const splitAtParameter = (
   ) {
     const literal = evaluateExpression(first.getExpression());
     if (!(literal.resolved && typeof literal.value === 'string')) {
-      baseUrlEnv = rootSettingKey(first.getExpression(), options);
+      const rooted = rootSettingAddress(first.getExpression(), options);
+      baseUrlEnv = rooted?.key ?? null;
+      otherwise = rooted?.otherwise;
       text = first.getLiteral().getLiteralText();
       start = 1;
     }
@@ -1637,7 +1675,7 @@ export const splitAtParameter = (
 
     if (parameter !== undefined) {
       if (split !== undefined) return undefined;
-      split = { parameter, baseUrlEnv, before: text, after: literal };
+      split = { parameter, baseUrlEnv, ...(otherwise === undefined ? {} : { otherwise }), before: text, after: literal };
       text = '';
       continue;
     }

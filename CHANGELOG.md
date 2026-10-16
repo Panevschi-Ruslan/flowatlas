@@ -39,6 +39,27 @@ only one of them moved.
   the page shows a "Can't follow" sheet under Not joined, and the MCP tool
   `cant_follow` answers the same with `next` hints (`fixtures/cant-follow`).
   The graph database keeps each row's meta in a new `unresolved.meta` column.
+- **Base URLs from the repositories' own files (P77).** A request rooted at a
+  setting no service claims under `baseUrlEnv` is completed from what the
+  setting is given: the environment a function running it is deployed with,
+  else `.env.example` / `.env.sample` / `.env.template` / `.env.development`,
+  the compose container built from the repository (`environment:`,
+  `env_file:`), `serverless.yml` and `wrangler.json` / `wrangler.toml`
+  variables, and the code's own fallback (`?? '…'`, `|| '…'`,
+  `config.get(key, '…')`, a `registerAs` factory). `.env`, `.env.local` and
+  other environments' files are read for names only. Only an address is kept,
+  scheme, host and path; secrets by name, credentials, queries and token-like
+  paths are dropped. The host is matched to a service by its name, its new
+  `services[].hosts`, its compose container names and published ports, and the
+  port its example file runs it on; a host outside the project is a third
+  party. Joins are `heuristic`, with `baseUrl` and `baseUrlFrom` on the edge,
+  the request, the page and `get_flow`, and a `base-url-from-files` info row.
+  A setting nothing gives a value and named after exactly one service is taken
+  as it (`base-url-from-name`). The same files complete an address waiting on
+  the environment where no deployed function sets it
+  (`environment-from-files`). `settingFiles.read: false` turns it off and
+  `settingFiles.environment` chooses one environment
+  (`fixtures/multi-repo-base-urls`).
 - **Built-in declaration shapes for uninstalled Nest repositories (P70).**
   Where `rxjs`, `@nestjs/common`, `@nestjs/core` or `@nestjs/microservices`
   does not resolve, the Nest reader reads a few hand-written declarations of

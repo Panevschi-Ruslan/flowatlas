@@ -1,4 +1,6 @@
+import { relative, sep } from 'node:path';
 import {
+  addressOnly,
   applicationOfFile,
   localBaseClassNames,
   localBaseTableProperty,
@@ -58,6 +60,7 @@ import {
 } from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
+import { loadedSettings, type LoadedSetting } from './leaves/config-load.js';
 import { configuredAccessOf, repositoryExports } from './leaves/configured.js';
 import { hostCallOf } from './leaves/fragment.js';
 import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
@@ -1273,6 +1276,14 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     };
   };
 
+  /** The dotted keys this repository's settings factories build, read the first time one is asked for. */
+  let loadedMap: Map<string, LoadedSetting> | undefined;
+  const loadedSettingOf = (key: string): LoadedSetting | undefined => {
+    if (!key.includes('.')) return undefined;
+    loadedMap ??= loadedSettings(repoFiles());
+    return loadedMap.get(key);
+  };
+
   /**
    * Records one outgoing request.
    *
@@ -1344,6 +1355,17 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     const place = siteOf(ctx, site, owner.file);
     const id = makeLeafId('http_out', ctx.repo, owner.file, place.line, place.column);
+    // Where the base comes from beyond its key (P77): the variable of the
+    // environment a settings factory reads it from, and what the code falls
+    // back to without it, kept as an address and nothing more.
+    const loaded = info.baseUrlEnv === null ? undefined : loadedSettingOf(info.baseUrlEnv);
+    const fallback = info.baseUrlDefault ?? loaded?.otherwise;
+    const baseUrlDefault = fallback === undefined ? undefined : addressOnly(fallback);
+    // Where the fallback is written, when it is not where the request is.
+    const defaultFrom =
+      baseUrlDefault === undefined || info.baseUrlDefault !== undefined || loaded?.file === undefined
+        ? undefined
+        : relative(ctx.repoDir, loaded.file).split(sep).join('/');
     // Which application this request is written in, asked of the file through
     // the one function every browser reader asks too, so the two halves' readings
     // of one call cannot disagree about it (R136). A map keyed by declaration
@@ -1361,6 +1383,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         url: info.url,
         path: info.path,
         baseUrlEnv: info.baseUrlEnv,
+        ...(loaded?.variable === undefined || loaded.variable === info.baseUrlEnv ? {} : { baseUrlVariable: loaded.variable }),
+        ...(baseUrlDefault === undefined ? {} : { baseUrlDefault }),
+        ...(defaultFrom === undefined ? {} : { baseUrlDefaultFrom: defaultFrom }),
         responseType,
         bodyType,
         ...(bodyType === null ? {} : { bodyFrom }),

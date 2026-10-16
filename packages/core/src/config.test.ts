@@ -48,6 +48,7 @@ describe('parseConfig', () => {
         db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
       },
+      settingFiles: { read: true },
       output: DEFAULT_OUTPUT,
       types: { maxDepth: DEFAULT_TYPE_MAX_DEPTH },
       contracts: {

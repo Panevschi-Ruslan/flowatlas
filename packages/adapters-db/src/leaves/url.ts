@@ -3,7 +3,7 @@ import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
 import { readConfig } from './config.js';
-import { deref, rootConfigKey, type SplitAddress } from './trace.js';
+import { deref, rootConfigAddress, type SplitAddress } from './trace.js';
 
 export interface UrlInfo {
   /** The address as written, with interpolations shown as `${…}`. */
@@ -12,6 +12,11 @@ export interface UrlInfo {
   path: string | null;
   /** Environment key the address is rooted at, when it is. */
   baseUrlEnv: string | null;
+  /**
+   * What the code falls back to where that key is not set, when it writes one:
+   * `process.env.ORDERS_URL ?? 'http://orders:3000'` (P77).
+   */
+  baseUrlDefault?: string;
   /** Host, when the address names one outright. */
   host: string | null;
 }
@@ -68,6 +73,7 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
   const spans = argument.getTemplateSpans();
 
   let baseUrlEnv: string | null = null;
+  let baseUrlDefault: string | undefined;
   let rest = head;
   let written = head;
   let start = 0;
@@ -78,12 +84,11 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
   // followed rather than only looked for in place.
   const [firstSpan] = spans;
   if (head === '' && firstSpan !== undefined) {
-    const direct = readConfig(firstSpan.getExpression());
-    const key = direct !== null && direct.dynamic !== true
-      ? direct.key
-      : rootConfigKey(firstSpan.getExpression());
-    if (key !== null) {
-      baseUrlEnv = key;
+    const root = rootOf(firstSpan.getExpression());
+    if (root !== null) {
+      baseUrlEnv = root.key;
+      baseUrlDefault = root.otherwise;
+      const key = root.key;
       rest = firstSpan.getLiteral().getLiteralText();
       written = `\${${key}}${rest}`;
       start = 1;
@@ -112,9 +117,26 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
     written += (read ?? HOLE) + text;
   }
 
+  const fallback = baseUrlDefault === undefined ? {} : { baseUrlDefault };
   const absolute = fromAbsolute(rest);
-  if (absolute !== null) return { ...absolute, url: written, baseUrlEnv };
-  return { url: written, path: routePathOf(rest), baseUrlEnv, host: null };
+  if (absolute !== null) return { ...absolute, url: written, baseUrlEnv, ...fallback };
+  return { url: written, path: routePathOf(rest), baseUrlEnv, host: null, ...fallback };
+};
+
+/**
+ * The settings key a value is rooted at, read where it stands first and then
+ * followed back, with what the code falls back to where it writes one.
+ */
+const rootOf = (expression: TsNode): { key: string; otherwise?: string } | null => {
+  const direct = readConfig(expression);
+  if (direct !== null && direct.dynamic !== true) {
+    return {
+      key: direct.key,
+      ...(typeof direct.defaultValue === 'string' && direct.defaultValue !== '' ? { otherwise: direct.defaultValue } : {}),
+    };
+  }
+  const followed = rootConfigAddress(expression);
+  return followed === null ? null : { key: followed.key, ...(followed.otherwise === undefined ? {} : { otherwise: followed.otherwise }) };
 };
 
 /**
@@ -124,11 +146,16 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
  */
 const fromConcatenation = (argument: TsNode): UrlInfo => {
   if (!Node.isBinaryExpression(argument) || argument.getOperatorToken().getText() !== '+') return EMPTY;
-  const root = readConfig(argument.getLeft());
-  const key = root !== null && root.dynamic !== true ? root.key : rootConfigKey(argument.getLeft());
+  const root = rootOf(argument.getLeft());
   const rest = evaluateExpression(argument.getRight());
-  if (key === null || !rest.resolved || typeof rest.value !== 'string') return EMPTY;
-  return { url: `\${${key}}${rest.value}`, path: routePathOf(rest.value), baseUrlEnv: key, host: null };
+  if (root === null || !rest.resolved || typeof rest.value !== 'string') return EMPTY;
+  return {
+    url: `\${${root.key}}${rest.value}`,
+    path: routePathOf(rest.value),
+    baseUrlEnv: root.key,
+    host: null,
+    ...(root.otherwise === undefined ? {} : { baseUrlDefault: root.otherwise }),
+  };
 };
 
 /** `scheme://host` at the start of an address, and the host inside it. */
@@ -179,11 +206,13 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => 
     };
   }
   const env = split.baseUrlEnv ?? info.baseUrlEnv;
+  const otherwise = split.baseUrlEnv === null ? info.baseUrlDefault : split.otherwise;
   return {
     url: path === null ? info.url : `${env === null ? '' : `\${${env}}`}${path}`,
     path,
     baseUrlEnv: env,
     host: null,
+    ...(otherwise === undefined ? {} : { baseUrlDefault: otherwise }),
   };
 };
 

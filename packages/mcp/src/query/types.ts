@@ -36,6 +36,14 @@ export interface FlowEdge {
   because?: string[];
   /** Filters the join recorded and did not match on, from L1. */
   notMatchedOn?: string[];
+  /**
+   * Where the base address a request was joined by came from, from L1: the
+   * file that gives its setting the value, `its name`, or the deployment
+   * (P77). Absent where the configuration named the service.
+   */
+  baseUrlFrom?: string;
+  /** The value itself, cut to scheme, host and path, from L1. */
+  baseUrl?: string;
 }
 
 /** Something that runs before an entry, in the order it runs. */

@@ -1,4 +1,5 @@
 import { wasRead, type GraphNode } from '@flowatlas/core';
+import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
 import { unreadRouteFinding, type Finding } from './http-link.js';
 import { cmp } from './order.js';
 import {
@@ -26,6 +27,8 @@ export interface UiIndex {
   claimantsOf(env: string): readonly string[];
   /** Every service that serves routes, for the last-resort search. */
   services(): readonly string[];
+  /** What the value the request's settings key is given says its base address is (P77). */
+  baseUrlOf?(call: GraphNode): BaseUrlAnswer | undefined;
 }
 
 /**
@@ -37,7 +40,7 @@ export interface UiIndex {
  * matches a route in the very repository the call was written in is evidence
  * from one reading of one directory, and nothing about it is a guess (R93).
  */
-export type UiVia = 'api-target' | 'base-url-env' | 'same-service' | 'unique-route';
+export type UiVia = 'api-target' | 'base-url-env' | 'base-url-value' | 'same-service' | 'unique-route';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -48,6 +51,8 @@ interface Details {
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
     mountAssumed?: readonly string[];
+    /** The value the base address was taken from, where a setting's value decided it (P77). */
+    baseUrl?: FoundValue;
   };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
@@ -213,6 +218,20 @@ const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
 };
 
 /**
+ * The one service the value the settings key is given names, where nobody
+ * claims the key (P77). A guess, the way a route found by its address alone
+ * is: the value is the one the repository writes down for running it.
+ */
+const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
+  const { env, index } = ask;
+  if (env === undefined || index.claimantsOf(env).length > 0) return undefined;
+  const answer = index.baseUrlOf?.(ask.call);
+  if (answer?.kind !== 'service') return undefined;
+  const found = within(ask, answer.service, 'base-url-value');
+  return found.kind === 'linked' ? { ...found, baseUrl: answer.found } : found;
+};
+
+/**
  * The service the call was written in, answering its own browser.
  *
  * This is what a relative `fetch('/api/thing')` means, and until R93 it was the
@@ -282,6 +301,7 @@ const byUniqueRoute = (ask: Ask): UiOutcome | undefined => {
 const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byApiTarget,
   byBaseUrlEnv,
+  byBaseUrlValue,
   bySameService,
   byUniqueRoute,
 ];
