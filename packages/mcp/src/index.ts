@@ -54,3 +54,5 @@ export { summariseChanges, readDiff } from './tools/changes.js';
 export type { ChangedEntry, WhatChanged } from './tools/changes.js';
 export { loadObservedCounts, markObserved, nodeSeen, joinIdOf } from './query/observed.js';
 export type { ObservedCounts, TreeDirection } from './query/observed.js';
+export { cantFollowFor } from './tools/cant-follow.js';
+export type { CantFollowAnswer, CantFollowPlace } from './tools/cant-follow.js';

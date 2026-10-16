@@ -66,7 +66,9 @@ CREATE TABLE unresolved (
   sites   INTEGER NOT NULL DEFAULT 1,
   message TEXT NOT NULL,
   hint    TEXT,
-  node_id TEXT
+  node_id TEXT,
+  -- Why the step could not be followed, and the package it points into (P75).
+  meta    TEXT NOT NULL DEFAULT '{}'
 );
 
 CREATE INDEX idx_edges_from      ON edges(from_id);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:37.522Z",
+  "builtAt": "2026-10-16T15:12:12.376Z",
   "services": [
     {
       "name": "api",
@@ -241,6 +241,9 @@
       "reason": "db-receiver-name-only",
       "hint": "db is typed as Database, which the workspace package @acme/db declares: a wrapper of this project's own, not a library anything describes. If @acme/db is the data layer, name Database — or the class it extends — under adapters.db.localBaseClasses, so calls through it are read as data access.",
       "symbol": "db.findOrders",
+      "meta": {
+        "cause": "data-layer-unnamed"
+      },
       "service": "api"
     }
   ]

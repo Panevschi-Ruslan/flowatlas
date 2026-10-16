@@ -54,7 +54,7 @@ const at = (file: string, line: number): string => `${file}:${line === 0 ? '?' :
  * where the configuration says each repository is, the two join into a path
  * that is. Without that, the service name and the path stay as they were.
  */
-const where = (
+export const where = (
   service: string,
   file: string,
   line: number,
@@ -74,7 +74,7 @@ const NO_REPOS: ReadonlyMap<string, string> = new Map();
  * written over four lines would otherwise put four lines into a list whose
  * shape is what makes it scannable.
  */
-const oneLine = (text: string, width = 100): string => {
+export const oneLine = (text: string, width = 100): string => {
   const flat = text.replace(/\s+/g, ' ').trim();
   return flat.length > width ? `${flat.slice(0, width - 1)}…` : flat;
 };

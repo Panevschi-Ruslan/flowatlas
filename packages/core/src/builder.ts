@@ -1,3 +1,4 @@
+import { CAUSE_META, CAUSES_META, CauseTally, PACKAGE_META } from './cant-follow.js';
 import { DanglingEdgeError, DuplicateTypeError } from './errors.js';
 import type { GraphEdge } from './model/edges.js';
 import { strongerConfidence } from './model/edges.js';
@@ -51,6 +52,9 @@ const unresolvedKey = (row: Unresolved): string =>
 const foldBelowAction = (rows: readonly Unresolved[]): Unresolved[] => {
   const out: Unresolved[] = [];
   const folded = new Map<string, Unresolved>();
+  // Why each folded place could not be followed, so the one row left still
+  // says it cause by cause (P75).
+  const tallies = new Map<Unresolved, CauseTally>();
   for (const row of rows) {
     // A row that counts its own sites is already one row per thing it
     // describes - one per skipped test directory, one per service's anonymous
@@ -70,9 +74,18 @@ const foldBelowAction = (rows: readonly Unresolved[]): Unresolved[] => {
       const stored: Unresolved = { ...row };
       folded.set(key, stored);
       out.push(stored);
+      const tally = new CauseTally();
+      tally.add(row);
+      tallies.set(stored, tally);
       continue;
     }
     first.sites = (first.sites ?? 1) + 1;
+    tallies.get(first)?.add(row);
+  }
+  for (const [stored, tally] of tallies) {
+    if (stored.sites === undefined || !tally.recorded) continue;
+    const { [CAUSE_META]: _cause, [PACKAGE_META]: _package, ...rest } = stored.meta ?? {};
+    stored.meta = { ...rest, [CAUSES_META]: tally.parts() };
   }
   return out;
 };

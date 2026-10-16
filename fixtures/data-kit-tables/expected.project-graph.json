@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-09T08:01:47.194Z",
+  "builtAt": "2026-10-16T15:10:39.568Z",
   "services": [
     {
       "name": "loans",
@@ -1652,6 +1652,80 @@
       "sites": 26,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "recordFine -> ledger.record",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 18,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 12,
+                "symbol": "POST /loans@11 -> res.status(201).json"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 12,
+                "symbol": "POST /loans@11 -> res.status"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 17,
+                "symbol": "DELETE /loans/:loanId@15 -> res.status(204).end"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "@acme/data-kit",
+            "sites": 5,
+            "samples": [
+              {
+                "file": "src/loans.ts",
+                "line": 24,
+                "symbol": "returnBook -> kit.remove"
+              },
+              {
+                "file": "src/members.ts",
+                "line": 9,
+                "symbol": "joinLibrary -> db.insert"
+              },
+              {
+                "file": "src/members.ts",
+                "line": 13,
+                "symbol": "leaveLibrary -> db.remove"
+              }
+            ]
+          },
+          {
+            "cause": "interface-type",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/ledger.ts",
+                "line": 13,
+                "symbol": "recordFine -> ledger.record"
+              },
+              {
+                "file": "src/reservations.ts",
+                "line": 26,
+                "symbol": "notifyHold -> mailer.insert"
+              }
+            ]
+          },
+          {
+            "cause": "language-any",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/reservations.ts",
+                "line": 16,
+                "symbol": "releaseHold -> db.remove"
+              }
+            ]
+          }
+        ]
+      },
       "service": "loans"
     },
     {
@@ -1676,6 +1750,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "kit.DataClient",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@acme/data-kit"
+      },
       "service": "loans"
     }
   ]

@@ -17,6 +17,8 @@ import {
   operationOf,
   packageNameOf,
   resolveTypeOrigin,
+  causeMeta,
+  whyUntyped,
   type DbDescriptor,
   type NamedFunction,
   type TypeOrigin,
@@ -875,6 +877,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         reason: unresolved.reason,
         hint: unresolved.hint,
         symbol: `${receiver.getText().slice(0, 60)}.${method}`,
+        // A receiver read by its name alone was either typed by nothing - and
+        // the code says why - or typed by a class nobody named as data (P75).
+        ...(unresolved.reason === 'db-receiver-name-only'
+          ? causeMeta(whyUntyped(receiver) ?? { cause: 'data-layer-unnamed' })
+          : {}),
       });
     };
 

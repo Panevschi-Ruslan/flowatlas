@@ -35,6 +35,12 @@ import {
   type BaselineRead,
 } from '../doctor/baseline.js';
 import { renderDoctorGithub, renderDoctorJson, renderDoctorText, summaryLine } from '../doctor/render.js';
+import {
+  cantFollowReport,
+  renderCantFollowJson,
+  renderCantFollowText,
+  type CantFollowReport,
+} from '../doctor/cant-follow.js';
 import { runDoctor, withAnsweredDemoted } from '../doctor/run.js';
 import {
   BASELINE_FORMAT_VERSION,
@@ -67,6 +73,17 @@ export interface DoctorOptions {
   maxNodes?: string;
   /** Where to write `doctor.json`. Defaults to the configured output. */
   out?: string;
+  /** `--unresolved`: what could not be followed, by cause and package, instead of the report (P75). */
+  unresolved?: boolean;
+  /** Most causes and packages `--unresolved` lists. */
+  top?: string;
+  /** Places listed per package under a cause. */
+  samples?: string;
+  /** Narrow `--unresolved` to one cause, or one package. */
+  cause?: string;
+  package?: string;
+  /** Shorthand for `--format json`. */
+  json?: boolean;
 }
 
 export interface DoctorRun {
@@ -275,6 +292,7 @@ const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Unresolved
       message: row.message,
       ...(row.hint === null ? {} : { hint: row.hint }),
       ...(row.service === null ? {} : { service: row.service }),
+      ...(row.meta === undefined ? {} : { meta: row.meta }),
     })),
   });
 
@@ -524,6 +542,52 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
 
 export { runDoctorCommand as runDoctorCli };
 
+export interface CantFollowRun {
+  report: CantFollowReport;
+  text: string;
+  exitCode: number;
+}
+
+/**
+ * `doctor --unresolved`: the rows the report would count, grouped by why they
+ * could not be followed (P75).
+ *
+ * The same rows as the report - demoted where an annotation answered them,
+ * less what `accepted.json` names - so the total here is the report's `sites`
+ * and a reader can move between the two without a number changing.
+ */
+export const runCantFollowCommand = (options: DoctorOptions, io: QueryIo = processIo): CantFollowRun => {
+  const format = options.json === true ? 'json' : oneOf(options.format, ['text', 'json'] as const, 'text', '--format');
+  const top = whole(options.top, 10, '--top');
+  // None is a fair answer here: the counts alone, without places to open.
+  const samples = options.samples === '0' ? 0 : whole(options.samples, 3, '--samples');
+  const settings = fromConfig(options);
+  const { db, close } = openProjectDb(options);
+  try {
+    const { rows: raw, note } = rowsFor(db, settings.outputDir);
+    const split = splitAccepted(loadAccepted(dbPathFor(options)), withAnsweredDemoted(raw, db));
+    const accepted = {
+      rows: split.accepted.length,
+      sites: split.accepted.reduce((sum, row) => sum + (row.sites ?? 1), 0),
+    };
+    const report = cantFollowReport(split.fresh, {
+      top,
+      samples,
+      ...(options.service === undefined ? {} : { service: options.service }),
+      ...(options.cause === undefined ? {} : { cause: options.cause }),
+      ...(options.package === undefined ? {} : { package: options.package }),
+      accepted,
+      ...(note === undefined ? {} : { note }),
+    });
+    const text =
+      format === 'json' ? renderCantFollowJson(report) : renderCantFollowText(report, { repoDirs: settings.repoDirs, top });
+    io.out(text);
+    return { report, text, exitCode: EXIT.ok };
+  } finally {
+    close();
+  }
+};
+
 export const registerDoctor = (program: Command): void => {
   program
     .command('doctor')
@@ -544,8 +608,20 @@ export const registerDoctor = (program: Command): void => {
     .option('--no-contracts', 'do not run the contract check')
     .option('--max-nodes <n>', 'most places to print per reason; the file is always complete')
     .option('--out <dir>', 'where to write doctor.json (default: the configured output)')
+    .option('--unresolved', "what the reader could not follow, grouped by cause and by package, instead of the report")
+    .option('--top <n>', 'with --unresolved: most causes and packages to list (default 10)')
+    .option('--samples <n>', 'with --unresolved: places to list per package under a cause (default 3)')
+    .option('--cause <code>', 'with --unresolved: only this cause, e.g. module-not-installed')
+    .option('--package <name>', 'with --unresolved: only what points into this package')
+    .option('--json', 'shorthand for --format json')
     .action((options: DoctorOptions) => {
-      const { exitCode, report } = runDoctorCommand(options);
+      if (options.unresolved === true) {
+        runCantFollowCommand(options);
+        return;
+      }
+      const { exitCode, report } = runDoctorCommand(
+        options.json === true ? { ...options, format: 'json' } : options,
+      );
       if (exitCode !== EXIT.ok) {
         throw new CliError(summaryLine(report), exitCode as 1 | 2, report.verdict.reasons);
       }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:11:20.428Z",
+  "builtAt": "2026-10-16T15:31:05.075Z",
   "services": [
     {
       "name": "api",
@@ -356,6 +356,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "Pool",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "pg"
+      },
       "service": "api"
     },
     {
@@ -383,6 +387,10 @@
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "OrdersService.findAll -> this.pool.query",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "pg"
+      },
       "service": "api"
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:28.308Z",
+  "builtAt": "2026-10-16T15:29:25.998Z",
   "services": [
     {
       "name": "gateway",
@@ -2912,6 +2912,9 @@
       "reason": "db-receiver-name-only",
       "hint": "this.repository is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
       "symbol": "this.repository.save",
+      "meta": {
+        "cause": "data-layer-unnamed"
+      },
       "service": "orders"
     },
     {
@@ -2920,6 +2923,9 @@
       "reason": "db-receiver-name-only",
       "hint": "this.repository is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
       "symbol": "this.repository.recent",
+      "meta": {
+        "cause": "data-layer-unnamed"
+      },
       "service": "orders"
     }
   ]

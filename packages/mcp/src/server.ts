@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { DbHandle, type DbHandleOptions } from './query/db.js';
+import { registerCantFollow } from './tools/cant-follow.js';
 import { registerChanges } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
 import type { ContractChecker, ToolContext } from './tools/common.js';
@@ -32,6 +33,7 @@ export const INSTRUCTIONS = [
   '- symbol: find_symbol -> who_calls / impact({symbol: id}) -> get_flow on an entry it names.',
   '- shape: get_type({type: id}); check_contract for whether two services still agree.',
   '- search({query}) finds a route, channel, table, type, class or gap by name; what_changed reads the last flowatlas diff.',
+  "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names.",
   'Rows real traffic went through carry `observed: n`; gaps someone accepted with flowatlas accept carry `accepted: true`.',
   'describe_for_prompt({id}) writes any of these as Markdown to hand on. Every list tool takes the same optional `service` filter.',
   'Every answer is bounded; get_source is the only one that returns code.',
@@ -75,6 +77,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   registerPrompt(server, context);
   registerSearch(server, context);
   registerChanges(server, context);
+  registerCantFollow(server, context);
 
   return server;
 };

@@ -307,6 +307,7 @@ reason, and each row carries the file, the line and what to do about it:
 flowatlas doctor --section desync      # calls that no longer match a route
 flowatlas doctor --service gateway     # narrow every section to one repository
 flowatlas doctor --strict              # exit 1 on a broken annotation or a contract error
+flowatlas doctor --unresolved          # what it could not follow, by cause and package
 flowatlas doctor --accept              # write today's numbers as the baseline
 ```
 
@@ -404,7 +405,7 @@ flowatlas mcp                 # serve over stdio, which the editor does for you
 
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`
-shows `flowatlas`, and a session has twelve tools:
+shows `flowatlas`, and a session has these tools, among others:
 
 | Tool | Answers |
 |---|---|
@@ -419,6 +420,7 @@ shows `flowatlas`, and a session has twelve tools:
 | `find_symbol` | fuzzy search, by substring or camel-case initials |
 | `get_source` | the code of one symbol, and the only tool returning code |
 | `describe_for_prompt` | an entry, channel or symbol as bounded Markdown to paste into a prompt |
+| `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |
 
 Every row carries an `id` the next tool takes as it is, and every answer ends
 with `next`: the calls that take the ids it returned.

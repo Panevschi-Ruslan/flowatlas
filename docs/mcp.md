@@ -67,7 +67,7 @@ and let it talk on stdin and stdout.
 
 ---
 
-## The twelve tools
+## The tools
 
 Every tool takes `detail` (0 to 3, how much of each node comes back) and
 `maxNodes` (the ceiling on the answer), except `get_source`, which takes
@@ -163,6 +163,21 @@ without an entry point of their own.
 
 `check_contract` identifies a crossing either by its two ends or by one string:
 `"from -http_calls-> to"`.
+
+### Why a flow stops
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `cant_follow` | every step the reading could not follow, grouped by cause and then by the package it points into, with a few places each and the id of the method each is written in | `service`, `cause`, `package`, `top`, `samples` |
+
+The same breakdown `flowatlas doctor --unresolved` prints. A cause is what the
+code says about why: `module-not-installed` (with the package), `import-unresolved`
+(a path or alias that resolves to no file), `re-export-missing`, `any-typed`,
+`language-any`, `callback-param`, `untyped-parameter`, `dynamic-member`,
+`interface-type`, `function-field`, and so on; a row with no finer answer counts
+under its own reason. Gaps accepted with `flowatlas accept` are left out and
+counted apart. `next` offers `get_source` on the first place and the calls that
+narrow to its cause and its package.
 
 ### Source
 
