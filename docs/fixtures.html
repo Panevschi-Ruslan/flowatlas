@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>147 fixtures</span>
-    <span>339 snapshot files</span>
+    <span>149 fixtures</span>
+    <span>341 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -726,7 +726,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>NestJS <span class="count" data-total="27">27</span></h2>
+    <h2>NestJS <span class="count" data-total="29">29</span></h2>
     <ul>
       <li class="fixture" data-search="nest-addressing nestjs where a nestjs service's addresses are decided, and what it costs to read the wrong file (r89).">
         <div class="head">
@@ -848,6 +848,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>Two classes implement one interface, and each builds its request URL from a parameter and calls itself through <code>this</code> (R158).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
+      <li class="fixture" data-search="nest-jobs-logs nestjs a scheduled job with the zone it fires in, and the lines each step writes to its log.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-jobs-logs">nest-jobs-logs</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A scheduled job with the zone it fires in, and the lines each step writes to its log.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
       <li class="fixture" data-search="nest-member-angular nestjs a nestjs api one of whose members installs angular (r159, the angular half of r145).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-member-angular">nest-member-angular</a>
@@ -894,6 +902,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A service that genuinely stores nothing: two providers, a controller, and a map that lives as long as the process does.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-query-loop nestjs exercises p69: a call in a loop, and calls side by side.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-query-loop">nest-query-loop</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Exercises P69: a call in a loop, and calls side by side.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-rendered-mail nestjs a nestjs api that really does run react, in one package of it and nowhere else (r145).">
