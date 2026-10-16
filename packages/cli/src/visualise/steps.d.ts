@@ -5,7 +5,7 @@
 import type { GraphModel } from './graph.js';
 import type { PackedGraph } from './pack.js';
 
-export type StepKind = 'handler' | 'service' | 'db' | 'http' | 'channel' | 'lambda' | 'workflow' | 'answer' | 'other';
+export type StepKind = 'handler' | 'service' | 'db' | 'http' | 'channel' | 'lambda' | 'workflow' | 'answer' | 'break' | 'other';
 
 export declare const STEP_KINDS: Readonly<Record<StepKind, Readonly<{ glyph: string; say: string }>>>;
 export declare const STEP_BOUNDS: Readonly<{ depth: number; rows: number }>;
@@ -27,6 +27,9 @@ export interface StepRow {
   crosses: boolean;
   seen: number;
   answer: { kind: string; status: string; ref: number } | null;
+  /** On a `break` row: the check row's reason and message, '' when the break is structural. */
+  reason?: string;
+  message?: string;
 }
 
 export interface Seen {
@@ -66,6 +69,10 @@ export declare const createSeen: (
   keys: KeysLike,
 ) => Seen;
 export declare const stepsOf: (model: GraphModel, entry: number, options?: StepOptions) => { rows: StepRow[]; more: number };
+export declare const stepBreakOf: (
+  model: GraphModel,
+  i: number,
+) => { say: string; reason: string; message: string } | null;
 export declare const placeOfStep: (model: GraphModel, i: number) => string;
 export declare const promptFor: (
   model: GraphModel,

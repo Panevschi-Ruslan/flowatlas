@@ -21,6 +21,7 @@ export const STEP_KINDS = Object.freeze({
   lambda: Object.freeze({ glyph: 'λ', say: 'function' }),
   workflow: Object.freeze({ glyph: 'wf', say: 'workflow' }),
   answer: Object.freeze({ glyph: '!', say: 'answer' }),
+  break: Object.freeze({ glyph: '✕', say: 'chain breaks' }),
   other: Object.freeze({ glyph: '·', say: 'step' }),
 });
 
@@ -214,6 +215,8 @@ export const stepsOf = (model, entry, options = {}) => {
       seen: 0, answer,
     });
   }
+  const opening = stepBreakOf(model, entry);
+  if (opening) rows.push(breakRow(rows[0], 0, opening));
   let more = 0;
   const walked = new Set([entry]);
   const stack = stepChildren(model, entry).reverse().map((k) => ({ k, parent: 0, path: [entry] }));
@@ -239,6 +242,8 @@ export const stepsOf = (model, entry, options = {}) => {
     rows.push(row);
     if (loop || again) continue;
     walked.add(to);
+    const broken = stepBreakOf(model, to);
+    if (broken) rows.push(breakRow(row, rows.length - 1, broken));
     if (row.depth >= depth) {
       more += stepChildren(model, to).length;
       continue;
@@ -249,6 +254,48 @@ export const stepsOf = (model, entry, options = {}) => {
   }
   return { rows, more };
 };
+
+/* ── Where a chain breaks (P73) ── */
+
+/** A check row's reason, as the few words a broken chain is marked with; first match wins. */
+const BREAK_SAYS = Object.freeze([
+  [/route.*not-found|target-route-not-found|marker-route-not-found/, 'no route'],
+  [/not-found/, 'nothing found'],
+  [/ambiguous/, 'more than one target'],
+  [/dynamic|partly|environment|unknown|unread/, 'unresolved'],
+]);
+
+/** Kinds of step that should lead somewhere, and what it means when one does not. */
+const BREAK_WHEN_LEAF = Object.freeze({
+  http: (model, i) => stepTypeOf(model, i) !== 'external_api' && 'unresolved',
+  handler: (model, i) => stepTypeOf(model, i) === 'entry' && 'no handler',
+  channel: (model, i) => stepTypeOf(model, i) === 'channel' && 'no handler',
+});
+
+/**
+ * Why a chain stops at this step, or null when it goes on or ends where it
+ * should. Only a step with nothing after it can break; a row of the checks
+ * on it says why best, and failing that a call or a way in that leads
+ * nowhere is a break in itself.
+ */
+export const stepBreakOf = (model, i) => {
+  if (stepChildren(model, i).length > 0) return null;
+  const { reasons } = model.data.dicts;
+  for (const r of model.rowsOn.get(i) || []) {
+    const reason = reasons[model.data.rows[r][4]];
+    const found = BREAK_SAYS.find(([test]) => test.test(reason));
+    if (found) return { say: found[1], reason, message: String(model.data.rows[r][7]) };
+  }
+  const leaf = BREAK_WHEN_LEAF[stepKindOf(model, i)];
+  const say = leaf ? leaf(model, i) : false;
+  return say ? { say, reason: '', message: '' } : null;
+};
+
+const breakRow = (row, at, broken) => ({
+  node: row.node, depth: row.depth + 1, edge: -1, parent: at, kind: 'break', inline: broken.say,
+  confidence: '', certain: true, failure: true, together: false, again: false, loop: false, crosses: false,
+  seen: 0, answer: null, reason: broken.reason, message: broken.message,
+});
 
 /* ── Copy as prompt (P67) ── */
 
@@ -276,6 +323,9 @@ export const placeOfStep = (model, i) => {
 const tick = (text) => '`' + String(text).replace(/`/g, "'") + '`';
 
 const stepLine = (model, row) => {
+  if (row.kind === 'break') {
+    return '  '.repeat(row.depth) + `- chain breaks here: ${row.inline}` + (row.message ? ` (${row.message})` : '');
+  }
   const label = row.kind === 'answer' ? 'answers ' + row.inline : model.nodes[row.node][1];
   const inline = row.inline && row.kind !== 'answer' && row.inline !== label ? ' → ' + tick(row.inline) : '';
   const marks = PROMPT_MARKS.filter(([when]) => when(row)).map(([, say]) => say(row));

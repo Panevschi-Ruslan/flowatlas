@@ -377,3 +377,18 @@ export declare const impactView: (
   options?: { cap?: number; expanded?: number[]; fold?: QuestionFold },
 ) => Neighbourhood;
 export declare const editorUrl: (editor: string, root: string | null, file: string, line: number) => string | null;
+
+export interface FindHit {
+  label: string;
+  sub: string;
+  node: number;
+}
+export type FindGroupKey = 'routes' | 'channels' | 'tables' | 'types' | 'gaps' | 'classes';
+export declare const FIND_GROUPS: Readonly<
+  Record<FindGroupKey, Readonly<{ say: string; items: (model: GraphModel) => FindHit[] }>>
+>;
+export declare const findEverything: (
+  model: GraphModel,
+  query: string,
+  limit?: number,
+) => Array<{ key: FindGroupKey; say: string; total: number; hits: FindHit[] }>;

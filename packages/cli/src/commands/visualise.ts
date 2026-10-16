@@ -8,6 +8,8 @@ import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '..
 import { loadObserved } from '../observe/store.js';
 import { EDITOR_NAMES } from '../visualise/graph.js';
 import { packGraph, type PackInput } from '../visualise/pack.js';
+import { packChanges, type PackedChanges } from '../visualise/changes.js';
+import { runDiff } from './diff.js';
 import { shipped } from '../own-path.js';
 
 /** A file the page is made of, beside the code whether that is source or build output. */
@@ -84,6 +86,8 @@ export interface VisualiseOptions extends DbOptions {
   title?: string;
   /** `vscode`, `cursor`, `idea` or `file`: make every `file:line` a link that opens it. */
   editorLinks?: string;
+  /** What `flowatlas diff <ref>` found, already packed; fills the Changes tab. */
+  changes?: PackedChanges;
   print?: (message: string) => void;
 }
 
@@ -147,6 +151,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       ...(observed === undefined ? {} : { observed }),
       ...(accepted.length === 0 ? {} : { accepted }),
       ...(editor === undefined ? {} : { editor }),
+      ...(options.changes === undefined ? {} : { changes: options.changes }),
     });
   } finally {
     db.close();
@@ -171,6 +176,17 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
   return result;
 };
 
+/**
+ * The Changes tab's content: `flowatlas diff` run as it is, its printed
+ * document kept quiet, and its report packed. `diff.json` is still written,
+ * so the page and the file never disagree.
+ */
+export const changesAgainst = async (ref: string, options: DbOptions): Promise<PackedChanges> => {
+  const quiet = { out: () => undefined, err: () => undefined };
+  const { report } = await runDiff(ref, undefined, options.config === undefined ? {} : { config: options.config }, quiet);
+  return packChanges(report);
+};
+
 export const registerVisualise = (program: Command): void => {
   program
     .command('visualise')
@@ -184,7 +200,10 @@ export const registerVisualise = (program: Command): void => {
       '--editor-links <editor>',
       `make each file:line a link that opens it: ${EDITOR_NAMES.join(', ')}. Writes absolute local paths into the page`,
     )
-    .action((options: VisualiseOptions) => {
-      runVisualise(options);
+    .option('--diff <ref>', 'add a Changes tab: what the working tree changes against this ref, as flowatlas diff reads it')
+    .action(async (options: VisualiseOptions & { diff?: string }) => {
+      const { diff, ...rest } = options;
+      const changes = diff === undefined ? undefined : await changesAgainst(diff, rest);
+      runVisualise({ ...rest, ...(changes === undefined ? {} : { changes }) });
     });
 };
