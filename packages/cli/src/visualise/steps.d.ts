@@ -5,6 +5,7 @@
 import type { GraphModel } from './graph.js';
 import type { PackedGraph } from './pack.js';
 import type { PackedFail } from './fails.js';
+import type { PackedAccessOf } from './access.js';
 
 export interface StepLog {
   level: string;
@@ -95,6 +96,13 @@ export declare const promptFor: (
   kit: PromptKit,
 ) => string;
 export declare const failsOf: (model: GraphModel, entry: number) => readonly PackedFail[];
+export declare const ACCESS_WHERE_SAY: Readonly<Record<'global' | 'module' | 'controller' | 'route', string>>;
+export declare const accessOf: (model: GraphModel, entry: number) => PackedAccessOf | null;
+export declare const accessSay: (check: PackedAccessOf['g'][number]) => string;
+export declare const optOutSay: (item: NonNullable<PackedAccessOf['o']>[number]) => string;
+export declare const routeOfMessage: (message: string | undefined) => { method: string; path: string } | null;
+export declare const likeRoute: (route: { method: string; path: string }) => string;
+export declare const acceptCommandFor: (row: { reason: string; service?: string; message?: string }) => string;
 export declare const failChips: (fails: readonly PackedFail[]) => string[];
 export declare const failSay: (fail: PackedFail) => string;
 export declare const logsOf: (model: GraphModel, i: number) => readonly StepLog[];

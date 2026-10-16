@@ -75,6 +75,25 @@ describe('walking outward from an entry', () => {
     db.close();
   });
 
+  it('says where each check was put and what the handler opted out of, where the reader said (P76)', () => {
+    const graph = straightLine('http', 'GET /orders');
+    const [first, ...rest] = graph.nodes;
+    const access = {
+      guards: [
+        { id: 'orders#guard.ts:AuthGuard', name: 'AuthGuard', layer: 'guard', where: 'global', via: 'APP_GUARD in AuthModule', skippedBy: 'Public' },
+      ],
+      optOuts: [{ decorator: 'Public', key: 'isPublic', public: true, skips: ['AuthGuard'], where: 'route', file: 'src/c.ts', line: 9 }],
+    };
+    const db = buildTestDb({ ...graph, nodes: [{ ...first!, meta: { ...first!.meta, access } }, ...rest] });
+    const { root } = buildFlowTree(db, 'entry:orders:http:GET /orders', {});
+    expect(root.guards?.[0]).toMatchObject({ label: 'AuthGuard', where: 'global', via: 'APP_GUARD in AuthModule', skippedBy: 'Public' });
+    expect(root.guards?.[1]).not.toHaveProperty('where');
+    expect(root.optOuts).toEqual([
+      { decorator: 'Public', key: 'isPublic', public: true, skips: ['AuthGuard'], where: 'route', loc: 'src/c.ts:9' },
+    ]);
+    db.close();
+  });
+
   it('walks a bot callback exactly as it walks a route', () => {
     const asRoute = buildTestDb(straightLine('http', 'GET /orders'));
     const asCallback = buildTestDb(straightLine('bot_callback', 'order_confirm'));

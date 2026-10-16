@@ -1,4 +1,4 @@
-import { acceptedFor, gapIdOf, STEP_OF_META, type AcceptedGap, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
+import { acceptedFor, describeAccepted, gapIdOf, isRule, STEP_OF_META, type AcceptedGap, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type PackedMap } from './map-pack.js';
@@ -13,6 +13,9 @@ import type { PackedChanges } from './changes.js';
 
 export type { PackedBusiest, PackedChanges };
 import { packFails, type PackedFails } from './fails.js';
+import { packAccess, type PackedAccess } from './access.js';
+
+export type { PackedAccess };
 
 export type { PackedFails };
 
@@ -121,8 +124,22 @@ export interface PackedGraph {
    * muted: `rows` holds positions in `rows` above, `ids` the gap id each
    * accepted row answers to (`gap:<service>|<file>|<reason>`), by position,
    * and `notes` why, keyed by the same id. Absent when nothing is accepted.
+   *
+   * A row a rule took (P76) — a reason over a whole service, a file glob, a
+   * route pattern — names it: `rules` lists each rule once, as a line
+   * (`route-unguarded · service catalog · path GET /public/*`), and `byRule`
+   * the rule each such row was taken by, by position. Both absent when no row
+   * was taken by a rule.
    */
-  accepted?: { rows: number[]; ids: Record<string, string>; notes: Record<string, string> };
+  accepted?: {
+    rows: number[];
+    ids: Record<string, string>;
+    notes: Record<string, string>;
+    rules?: string[];
+    byRule?: Record<string, number>;
+  };
+  /** What stands in front of each way in, and from where (P76). See `access.ts`. */
+  access?: PackedAccess;
   /** The methods most things lean on, as `hotspots` ranks them (P73). See `busiest.ts`. */
   busiest: PackedBusiest;
   /** What a branch changed, when the page was made with `--diff <ref>` (P73). See `changes.ts`. */
@@ -302,6 +319,8 @@ const packAccepted = (
   rows: readonly AnchoredUnresolvedRow[],
 ): NonNullable<PackedGraph['accepted']> => {
   const out: NonNullable<PackedGraph['accepted']> = { rows: [], ids: {}, notes: {} };
+  const rules: string[] = [];
+  const byRule: Record<string, number> = {};
   rows.forEach((row, index) => {
     const entry = acceptedFor(accepted, row);
     if (entry === undefined) return;
@@ -309,10 +328,16 @@ const packAccepted = (
     out.rows.push(index);
     out.ids[String(index)] = id;
     if (entry.note !== '') out.notes[id] = entry.note;
+    if (!isRule(entry)) return;
+    const said = describeAccepted(entry);
+    let at = rules.indexOf(said);
+    if (at === -1) at = rules.push(said) - 1;
+    byRule[String(index)] = at;
   });
-  return out;
+  return rules.length === 0 ? out : { ...out, rules, byRule };
 };
 const withFails = (fails: PackedFails | undefined): { fails?: PackedFails } => (fails === undefined ? {} : { fails });
+const withAccess = (access: PackedAccess | undefined): { access?: PackedAccess } => (access === undefined ? {} : { access });
 
 export const packGraph = (input: PackInput): PackedGraph => {
   const rowsIn = input.unresolved;
@@ -419,6 +444,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     busiest: packBusiest(input.nodes, packedEdges, position),
     ...(input.changes === undefined ? {} : { changes: input.changes }),
     ...withFails(packFails(input.nodes, position)),
+    ...withAccess(packAccess(input.nodes)),
     ...packLogs(input.nodes),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
     ...(input.accepted === undefined || input.accepted.length === 0

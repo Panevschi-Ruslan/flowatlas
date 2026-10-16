@@ -1,0 +1,2119 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T15:11:16.078Z",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#node_modules/@nestjs/core:Reflector",
+      "type": "provider",
+      "label": "Reflector",
+      "repo": "catalog",
+      "file": "node_modules/@nestjs/core",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/core",
+        "external": true
+      }
+    },
+    {
+      "id": "catalog#node_modules/typeorm:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "catalog",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "catalog#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "catalog",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog#src/auth/auth.module.ts:AuthModule",
+      "type": "module",
+      "label": "AuthModule",
+      "repo": "catalog",
+      "file": "src/auth/auth.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+      "type": "guard",
+      "label": "JwtAuthGuard",
+      "repo": "catalog",
+      "file": "src/auth/jwt-auth.guard.ts",
+      "line": 7
+    },
+    {
+      "id": "catalog#src/products/products.controller.ts:ProductsController",
+      "type": "provider",
+      "label": "ProductsController",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 9,
+      "kind": "controller",
+      "meta": {
+        "module": "ProductsModule"
+      }
+    },
+    {
+      "id": "catalog#src/products/products.controller.ts:ProductsController.all",
+      "type": "method",
+      "label": "ProductsController.all",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Product[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products/products.controller.ts:ProductsController.featured",
+      "type": "method",
+      "label": "ProductsController.featured",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Product[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products/products.controller.ts:ProductsController.import",
+      "type": "method",
+      "label": "ProductsController.import",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Product[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products/products.controller.ts:ProductsController.related",
+      "type": "method",
+      "label": "ProductsController.related",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalog#Product[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products/products.module.ts:ProductsModule",
+      "type": "module",
+      "label": "ProductsModule",
+      "repo": "catalog",
+      "file": "src/products/products.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ProductsController",
+          "StatusController"
+        ],
+        "providers": [
+          "ProductsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog#src/products/products.service.ts:ProductsService",
+      "type": "provider",
+      "label": "ProductsService",
+      "repo": "catalog",
+      "file": "src/products/products.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "ProductsModule"
+      }
+    },
+    {
+      "id": "catalog#src/products/products.service.ts:ProductsService.all",
+      "type": "method",
+      "label": "ProductsService.all",
+      "repo": "catalog",
+      "file": "src/products/products.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Product[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products/products.service.ts:ProductsService.count",
+      "type": "method",
+      "label": "ProductsService.count",
+      "repo": "catalog",
+      "file": "src/products/products.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products/products.service.ts:ProductsService.featured",
+      "type": "method",
+      "label": "ProductsService.featured",
+      "repo": "catalog",
+      "file": "src/products/products.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Product[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products/status.controller.ts:StatusController",
+      "type": "provider",
+      "label": "StatusController",
+      "repo": "catalog",
+      "file": "src/products/status.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "ProductsModule"
+      }
+    },
+    {
+      "id": "catalog#src/products/status.controller.ts:StatusController.size",
+      "type": "method",
+      "label": "StatusController.size",
+      "repo": "catalog",
+      "file": "src/products/status.controller.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "db_query:catalog#src/products/products.service.ts:14:12",
+      "type": "db_query",
+      "label": "read Product",
+      "repo": "catalog",
+      "file": "src/products/products.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "Product",
+        "tables": [
+          "Product"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.products",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:catalog#src/products/products.service.ts:18:12",
+      "type": "db_query",
+      "label": "read Product",
+      "repo": "catalog",
+      "file": "src/products/products.service.ts",
+      "line": 18,
+      "meta": {
+        "op": "read",
+        "table": "Product",
+        "tables": [
+          "Product"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.products",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:catalog#src/products/products.service.ts:22:12",
+      "type": "db_query",
+      "label": "read Product",
+      "repo": "catalog",
+      "file": "src/products/products.service.ts",
+      "line": 22,
+      "meta": {
+        "op": "read",
+        "table": "Product",
+        "tables": [
+          "Product"
+        ],
+        "package": "typeorm",
+        "method": "count",
+        "receiver": "this.products",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:inventory#src/stock/stock.service.ts:14:12",
+      "type": "db_query",
+      "label": "read StockItem",
+      "repo": "inventory",
+      "file": "src/stock/stock.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "StockItem",
+        "tables": [
+          "StockItem"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.items",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:inventory#src/stock/stock.service.ts:18:12",
+      "type": "db_query",
+      "label": "write StockItem",
+      "repo": "inventory",
+      "file": "src/stock/stock.service.ts",
+      "line": 18,
+      "meta": {
+        "op": "write",
+        "table": "StockItem",
+        "tables": [
+          "StockItem"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.items",
+        "source": "type-arg",
+        "entityTypeId": "type:inventory#StockItem"
+      }
+    },
+    {
+      "id": "db_query:ledger#src/entries/entries.service.ts:14:12",
+      "type": "db_query",
+      "label": "read LedgerEntry",
+      "repo": "ledger",
+      "file": "src/entries/entries.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "LedgerEntry",
+        "tables": [
+          "LedgerEntry"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.entries",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:ledger#src/entries/entries.service.ts:18:12",
+      "type": "db_query",
+      "label": "write LedgerEntry",
+      "repo": "ledger",
+      "file": "src/entries/entries.service.ts",
+      "line": 18,
+      "meta": {
+        "op": "write",
+        "table": "LedgerEntry",
+        "tables": [
+          "LedgerEntry"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.entries",
+        "source": "type-arg",
+        "entityTypeId": "type:ledger#LedgerEntry"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+              "name": "JwtAuthGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AuthModule.forRoot",
+              "file": "src/auth/guards.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+            "file": "src/auth/guards.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products/:param/related",
+      "type": "entry",
+      "label": "GET /products/:param/related",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products/:param/related",
+        "rawPath": "/products/:id/related",
+        "controller": "ProductsController",
+        "decorators": [
+          {
+            "name": "OpenRoute",
+            "args": []
+          }
+        ],
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+              "name": "JwtAuthGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AuthModule.forRoot",
+              "file": "src/auth/guards.ts",
+              "line": 6,
+              "skippedBy": "OpenRoute"
+            }
+          ],
+          "optOuts": [
+            {
+              "decorator": "OpenRoute",
+              "key": "isPublic",
+              "public": true,
+              "skips": [
+                "JwtAuthGuard"
+              ],
+              "where": "route",
+              "file": "src/products/products.controller.ts",
+              "line": 28
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+            "file": "src/auth/guards.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products/featured",
+      "type": "entry",
+      "label": "GET /products/featured",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products/featured",
+        "rawPath": "/products/featured",
+        "controller": "ProductsController",
+        "decorators": [
+          {
+            "name": "Public",
+            "args": []
+          }
+        ],
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+              "name": "JwtAuthGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AuthModule.forRoot",
+              "file": "src/auth/guards.ts",
+              "line": 6,
+              "skippedBy": "Public"
+            }
+          ],
+          "optOuts": [
+            {
+              "decorator": "Public",
+              "key": "isPublic",
+              "public": true,
+              "skips": [
+                "JwtAuthGuard"
+              ],
+              "where": "route",
+              "file": "src/products/products.controller.ts",
+              "line": 21
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+            "file": "src/auth/guards.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/status/size",
+      "type": "entry",
+      "label": "GET /status/size",
+      "repo": "catalog",
+      "file": "src/products/status.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status/size",
+        "rawPath": "/status/size",
+        "controller": "StatusController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+              "name": "JwtAuthGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AuthModule.forRoot",
+              "file": "src/auth/guards.ts",
+              "line": 6,
+              "skippedBy": "Public"
+            }
+          ],
+          "optOuts": [
+            {
+              "decorator": "Public",
+              "key": "isPublic",
+              "public": true,
+              "skips": [
+                "JwtAuthGuard"
+              ],
+              "where": "controller",
+              "file": "src/products/status.controller.ts",
+              "line": 7
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+            "file": "src/auth/guards.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/products/import",
+      "type": "entry",
+      "label": "POST /products/import",
+      "repo": "catalog",
+      "file": "src/products/products.controller.ts",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/products/import",
+        "rawPath": "/products/import",
+        "controller": "ProductsController",
+        "decorators": [
+          {
+            "name": "Strict",
+            "args": []
+          }
+        ],
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+              "name": "JwtAuthGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AuthModule.forRoot",
+              "file": "src/auth/guards.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+            "file": "src/auth/guards.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:inventory:http:GET:/levels/low",
+      "type": "entry",
+      "label": "GET /levels/low",
+      "repo": "inventory",
+      "file": "src/stock/levels.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels/low",
+        "rawPath": "/levels/low",
+        "controller": "LevelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:inventory:http:GET:/levels/summary",
+      "type": "entry",
+      "label": "GET /levels/summary",
+      "repo": "inventory",
+      "file": "src/stock/levels.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels/summary",
+        "rawPath": "/levels/summary",
+        "controller": "LevelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:inventory:http:GET:/stock",
+      "type": "entry",
+      "label": "GET /stock",
+      "repo": "inventory",
+      "file": "src/stock/stock.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock",
+        "rawPath": "/stock",
+        "controller": "StockController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "inventory#src/stock/session.guard.ts:SessionGuard",
+              "name": "SessionGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on StockController",
+              "file": "src/stock/stock.controller.ts",
+              "line": 8
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "inventory#src/stock/session.guard.ts:SessionGuard",
+            "file": "src/stock/stock.controller.ts",
+            "line": 8,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:inventory:http:POST:/receipts",
+      "type": "entry",
+      "label": "POST /receipts",
+      "repo": "inventory",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/receipts",
+        "rawPath": "/receipts",
+        "controller": "ReceiptsController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "inventory#src/stock/receipts.controller.ts:ReceiptsController.requireSignature",
+            "file": "src/stock/receipts.controller.ts",
+            "line": 21,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:inventory:http:POST:/stock",
+      "type": "entry",
+      "label": "POST /stock",
+      "repo": "inventory",
+      "file": "src/stock/stock.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/stock",
+        "rawPath": "/stock",
+        "controller": "StockController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "inventory#src/stock/session.guard.ts:SessionGuard",
+              "name": "SessionGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on StockController",
+              "file": "src/stock/stock.controller.ts",
+              "line": 8
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "inventory#src/stock/session.guard.ts:SessionGuard",
+            "file": "src/stock/stock.controller.ts",
+            "line": 8,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:ledger:http:GET:/entries",
+      "type": "entry",
+      "label": "GET /entries",
+      "repo": "ledger",
+      "file": "src/entries/entries.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/entries",
+        "rawPath": "/entries",
+        "controller": "EntriesController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "ledger#src/auth/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 9
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "ledger#src/auth/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:ledger:http:POST:/entries/webhook",
+      "type": "entry",
+      "label": "POST /entries/webhook",
+      "repo": "ledger",
+      "file": "src/entries/entries.controller.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/entries/webhook",
+        "rawPath": "/entries/webhook",
+        "controller": "EntriesController",
+        "decorators": [
+          {
+            "name": "SkipApiKey",
+            "args": []
+          }
+        ],
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "ledger#src/auth/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 9,
+              "skippedBy": "SkipApiKey"
+            }
+          ],
+          "optOuts": [
+            {
+              "decorator": "SkipApiKey",
+              "key": "skipApiKey",
+              "public": false,
+              "skips": [
+                "ApiKeyGuard"
+              ],
+              "where": "route",
+              "file": "src/entries/entries.controller.ts",
+              "line": 22
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "ledger#src/auth/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "inventory#node_modules/typeorm:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "inventory",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "inventory#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "inventory",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "StockController",
+          "ReceiptsController",
+          "LevelsController"
+        ],
+        "providers": [
+          "StockService",
+          "SessionGuard"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "inventory#src/stock/levels.controller.ts:LevelsController",
+      "type": "provider",
+      "label": "LevelsController",
+      "repo": "inventory",
+      "file": "src/stock/levels.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "inventory#src/stock/levels.controller.ts:LevelsController.low",
+      "type": "method",
+      "label": "LevelsController.low",
+      "repo": "inventory",
+      "file": "src/stock/levels.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:inventory#StockItem[]"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/stock/levels.controller.ts:LevelsController.summary",
+      "type": "method",
+      "label": "LevelsController.summary",
+      "repo": "inventory",
+      "file": "src/stock/levels.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:inventory#StockItem[]"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/stock/receipts.controller.ts:ReceiptsController",
+      "type": "provider",
+      "label": "ReceiptsController",
+      "repo": "inventory",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "inventory#src/stock/receipts.controller.ts:ReceiptsController.receive",
+      "type": "method",
+      "label": "ReceiptsController.receive",
+      "repo": "inventory",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "signature",
+              "type": "string"
+            },
+            {
+              "name": "item",
+              "type": "type:inventory#StockItem"
+            }
+          ],
+          "returns": "type:inventory#StockItem"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/stock/receipts.controller.ts:ReceiptsController.requireSignature",
+      "type": "method",
+      "label": "ReceiptsController.requireSignature",
+      "repo": "inventory",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "signature",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/stock/session.guard.ts:SessionGuard",
+      "type": "guard",
+      "label": "SessionGuard",
+      "repo": "inventory",
+      "file": "src/stock/session.guard.ts",
+      "line": 3,
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "inventory#src/stock/session.guard.ts:SessionGuard.canActivate",
+      "type": "method",
+      "label": "SessionGuard.canActivate",
+      "repo": "inventory",
+      "file": "src/stock/session.guard.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/stock/stock.controller.ts:StockController",
+      "type": "provider",
+      "label": "StockController",
+      "repo": "inventory",
+      "file": "src/stock/stock.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "inventory#src/stock/stock.controller.ts:StockController.add",
+      "type": "method",
+      "label": "StockController.add",
+      "repo": "inventory",
+      "file": "src/stock/stock.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:inventory#StockItem"
+            }
+          ],
+          "returns": "type:inventory#StockItem"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/stock/stock.controller.ts:StockController.all",
+      "type": "method",
+      "label": "StockController.all",
+      "repo": "inventory",
+      "file": "src/stock/stock.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:inventory#StockItem[]"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/stock/stock.service.ts:StockService",
+      "type": "provider",
+      "label": "StockService",
+      "repo": "inventory",
+      "file": "src/stock/stock.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "inventory#src/stock/stock.service.ts:StockService.all",
+      "type": "method",
+      "label": "StockService.all",
+      "repo": "inventory",
+      "file": "src/stock/stock.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:inventory#StockItem[]"
+        }
+      }
+    },
+    {
+      "id": "inventory#src/stock/stock.service.ts:StockService.save",
+      "type": "method",
+      "label": "StockService.save",
+      "repo": "inventory",
+      "file": "src/stock/stock.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:inventory#StockItem"
+            }
+          ],
+          "returns": "type:inventory#StockItem"
+        }
+      }
+    },
+    {
+      "id": "ledger#node_modules/@nestjs/core:Reflector",
+      "type": "provider",
+      "label": "Reflector",
+      "repo": "ledger",
+      "file": "node_modules/@nestjs/core",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/core",
+        "external": true
+      }
+    },
+    {
+      "id": "ledger#node_modules/typeorm:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "ledger",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "ledger#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "ledger",
+      "file": "src/app.module.ts",
+      "line": 11,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "EntriesController"
+        ],
+        "providers": [
+          "EntriesService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "ledger#src/auth/api-key.guard.ts:ApiKeyGuard",
+      "type": "guard",
+      "label": "ApiKeyGuard",
+      "repo": "ledger",
+      "file": "src/auth/api-key.guard.ts",
+      "line": 6
+    },
+    {
+      "id": "ledger#src/entries/entries.controller.ts:EntriesController",
+      "type": "provider",
+      "label": "EntriesController",
+      "repo": "ledger",
+      "file": "src/entries/entries.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "ledger#src/entries/entries.controller.ts:EntriesController.all",
+      "type": "method",
+      "label": "EntriesController.all",
+      "repo": "ledger",
+      "file": "src/entries/entries.controller.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:ledger#LedgerEntry[]"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/entries/entries.controller.ts:EntriesController.webhook",
+      "type": "method",
+      "label": "EntriesController.webhook",
+      "repo": "ledger",
+      "file": "src/entries/entries.controller.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "entry",
+              "type": "type:ledger#LedgerEntry"
+            }
+          ],
+          "returns": "type:ledger#LedgerEntry"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/entries/entries.service.ts:EntriesService",
+      "type": "provider",
+      "label": "EntriesService",
+      "repo": "ledger",
+      "file": "src/entries/entries.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "ledger#src/entries/entries.service.ts:EntriesService.all",
+      "type": "method",
+      "label": "EntriesService.all",
+      "repo": "ledger",
+      "file": "src/entries/entries.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:ledger#LedgerEntry[]"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/entries/entries.service.ts:EntriesService.record",
+      "type": "method",
+      "label": "EntriesService.record",
+      "repo": "ledger",
+      "file": "src/entries/entries.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "entry",
+              "type": "type:ledger#LedgerEntry"
+            }
+          ],
+          "returns": "type:ledger#LedgerEntry"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 8,
+          "skippedExternalCalls": {
+            "@nestjs/core": 2,
+            "@nestjs/common": 5,
+            "typeorm": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:inventory",
+      "type": "repo",
+      "label": "inventory",
+      "repo": "inventory",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 7,
+          "skippedExternalCalls": {
+            "@nestjs/common": 2,
+            "typeorm": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "@nestjs/core": 1,
+            "@nestjs/common": 3,
+            "typeorm": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:catalog#Product",
+      "type": "table",
+      "label": "Product",
+      "repo": "catalog"
+    },
+    {
+      "id": "table:inventory#StockItem",
+      "type": "table",
+      "label": "StockItem",
+      "repo": "inventory"
+    },
+    {
+      "id": "table:ledger#LedgerEntry",
+      "type": "table",
+      "label": "LedgerEntry",
+      "repo": "ledger"
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog#src/app.module.ts:AppModule",
+      "to": "catalog#src/auth/auth.module.ts:AuthModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "moduleKind": "dynamic"
+      }
+    },
+    {
+      "from": "catalog#src/app.module.ts:AppModule",
+      "to": "catalog#src/products/products.module.ts:ProductsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12
+    },
+    {
+      "from": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+      "to": "catalog#node_modules/@nestjs/core:Reflector",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/auth/jwt-auth.guard.ts",
+      "line": 9
+    },
+    {
+      "from": "catalog#src/products/products.controller.ts:ProductsController",
+      "to": "catalog#src/products/products.service.ts:ProductsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/products/products.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "catalog#src/products/products.controller.ts:ProductsController.all",
+      "to": "catalog#src/products/products.service.ts:ProductsService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Product[]",
+      "file": "src/products/products.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "catalog#src/products/products.controller.ts:ProductsController.featured",
+      "to": "catalog#src/products/products.service.ts:ProductsService.featured",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Product[]",
+      "file": "src/products/products.controller.ts",
+      "line": 23
+    },
+    {
+      "from": "catalog#src/products/products.controller.ts:ProductsController.import",
+      "to": "catalog#src/products/products.service.ts:ProductsService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Product[]",
+      "file": "src/products/products.controller.ts",
+      "line": 37
+    },
+    {
+      "from": "catalog#src/products/products.controller.ts:ProductsController.related",
+      "to": "catalog#src/products/products.service.ts:ProductsService.featured",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Product[]",
+      "file": "src/products/products.controller.ts",
+      "line": 30
+    },
+    {
+      "from": "catalog#src/products/products.service.ts:ProductsService",
+      "to": "catalog#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/products/products.service.ts",
+      "line": 9
+    },
+    {
+      "from": "catalog#src/products/products.service.ts:ProductsService.all",
+      "to": "db_query:catalog#src/products/products.service.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/products/products.service.ts",
+      "line": 14
+    },
+    {
+      "from": "catalog#src/products/products.service.ts:ProductsService.count",
+      "to": "db_query:catalog#src/products/products.service.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/products/products.service.ts",
+      "line": 22
+    },
+    {
+      "from": "catalog#src/products/products.service.ts:ProductsService.featured",
+      "to": "db_query:catalog#src/products/products.service.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/products/products.service.ts",
+      "line": 18
+    },
+    {
+      "from": "catalog#src/products/status.controller.ts:StatusController",
+      "to": "catalog#src/products/products.service.ts:ProductsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/products/status.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "catalog#src/products/status.controller.ts:StatusController.size",
+      "to": "catalog#src/products/products.service.ts:ProductsService.count",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/products/status.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:catalog#src/products/products.service.ts:14:12",
+      "to": "table:catalog#Product",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/products/products.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:catalog#src/products/products.service.ts:18:12",
+      "to": "table:catalog#Product",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/products/products.service.ts",
+      "line": 18
+    },
+    {
+      "from": "db_query:catalog#src/products/products.service.ts:22:12",
+      "to": "table:catalog#Product",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/products/products.service.ts",
+      "line": 22
+    },
+    {
+      "from": "db_query:inventory#src/stock/stock.service.ts:14:12",
+      "to": "table:inventory#StockItem",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/stock/stock.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:inventory#src/stock/stock.service.ts:18:12",
+      "to": "table:inventory#StockItem",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/stock/stock.service.ts",
+      "line": 18
+    },
+    {
+      "from": "db_query:ledger#src/entries/entries.service.ts:14:12",
+      "to": "table:ledger#LedgerEntry",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/entries/entries.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:ledger#src/entries/entries.service.ts:18:12",
+      "to": "table:ledger#LedgerEntry",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/entries/entries.service.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/auth/guards.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/products/products.controller.ts:ProductsController.all",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Product[]",
+      "file": "src/products/products.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:catalog:http:GET:/products/:param/related",
+      "to": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/auth/guards.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products/:param/related",
+      "to": "catalog#src/products/products.controller.ts:ProductsController.related",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalog#Product[]",
+      "file": "src/products/products.controller.ts",
+      "line": 27,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products/featured",
+      "to": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/auth/guards.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products/featured",
+      "to": "catalog#src/products/products.controller.ts:ProductsController.featured",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Product[]",
+      "file": "src/products/products.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:catalog:http:GET:/status/size",
+      "to": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/auth/guards.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/status/size",
+      "to": "catalog#src/products/status.controller.ts:StatusController.size",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/products/status.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:catalog:http:POST:/products/import",
+      "to": "catalog#src/auth/jwt-auth.guard.ts:JwtAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/auth/guards.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/products/import",
+      "to": "catalog#src/products/products.controller.ts:ProductsController.import",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Product[]",
+      "file": "src/products/products.controller.ts",
+      "line": 34
+    },
+    {
+      "from": "entry:inventory:http:GET:/levels/low",
+      "to": "inventory#src/stock/levels.controller.ts:LevelsController.low",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:inventory#StockItem[]",
+      "file": "src/stock/levels.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:inventory:http:GET:/levels/summary",
+      "to": "inventory#src/stock/levels.controller.ts:LevelsController.summary",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:inventory#StockItem[]",
+      "file": "src/stock/levels.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:inventory:http:GET:/stock",
+      "to": "inventory#src/stock/session.guard.ts:SessionGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/stock/stock.controller.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:inventory:http:GET:/stock",
+      "to": "inventory#src/stock/stock.controller.ts:StockController.all",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:inventory#StockItem[]",
+      "file": "src/stock/stock.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:inventory:http:POST:/receipts",
+      "to": "inventory#src/stock/receipts.controller.ts:ReceiptsController.receive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:inventory#StockItem"
+      ],
+      "returns": "type:inventory#StockItem",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 14,
+      "meta": {
+        "headers": "{x-signature:string}",
+        "body": "type:inventory#StockItem"
+      }
+    },
+    {
+      "from": "entry:inventory:http:POST:/stock",
+      "to": "inventory#src/stock/session.guard.ts:SessionGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/stock/stock.controller.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:inventory:http:POST:/stock",
+      "to": "inventory#src/stock/stock.controller.ts:StockController.add",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:inventory#StockItem"
+      ],
+      "returns": "type:inventory#StockItem",
+      "file": "src/stock/stock.controller.ts",
+      "line": 18,
+      "meta": {
+        "body": "type:inventory#StockItem"
+      }
+    },
+    {
+      "from": "entry:ledger:http:GET:/entries",
+      "to": "ledger#src/auth/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:ledger:http:GET:/entries",
+      "to": "ledger#src/entries/entries.controller.ts:EntriesController.all",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:ledger#LedgerEntry[]",
+      "file": "src/entries/entries.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:ledger:http:POST:/entries/webhook",
+      "to": "ledger#src/auth/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:ledger:http:POST:/entries/webhook",
+      "to": "ledger#src/entries/entries.controller.ts:EntriesController.webhook",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:ledger#LedgerEntry"
+      ],
+      "returns": "type:ledger#LedgerEntry",
+      "file": "src/entries/entries.controller.ts",
+      "line": 21,
+      "meta": {
+        "body": "type:ledger#LedgerEntry"
+      }
+    },
+    {
+      "from": "inventory#src/stock/levels.controller.ts:LevelsController",
+      "to": "inventory#src/stock/stock.service.ts:StockService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stock/levels.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "inventory#src/stock/levels.controller.ts:LevelsController.low",
+      "to": "inventory#src/stock/stock.service.ts:StockService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:inventory#StockItem[]",
+      "file": "src/stock/levels.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "inventory#src/stock/levels.controller.ts:LevelsController.summary",
+      "to": "inventory#src/stock/stock.service.ts:StockService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:inventory#StockItem[]",
+      "file": "src/stock/levels.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "inventory#src/stock/receipts.controller.ts:ReceiptsController",
+      "to": "inventory#src/stock/stock.service.ts:StockService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "inventory#src/stock/receipts.controller.ts:ReceiptsController.receive",
+      "to": "inventory#src/stock/receipts.controller.ts:ReceiptsController.requireSignature",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "inventory#src/stock/receipts.controller.ts:ReceiptsController.receive",
+      "to": "inventory#src/stock/stock.service.ts:StockService.save",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:inventory#StockItem"
+      ],
+      "returns": "type:inventory#StockItem",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "inventory#src/stock/stock.controller.ts:StockController",
+      "to": "inventory#src/stock/stock.service.ts:StockService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stock/stock.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "inventory#src/stock/stock.controller.ts:StockController.add",
+      "to": "inventory#src/stock/stock.service.ts:StockService.save",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:inventory#StockItem"
+      ],
+      "returns": "type:inventory#StockItem",
+      "file": "src/stock/stock.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "inventory#src/stock/stock.controller.ts:StockController.all",
+      "to": "inventory#src/stock/stock.service.ts:StockService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:inventory#StockItem[]",
+      "file": "src/stock/stock.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "inventory#src/stock/stock.service.ts:StockService",
+      "to": "inventory#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stock/stock.service.ts",
+      "line": 9
+    },
+    {
+      "from": "inventory#src/stock/stock.service.ts:StockService.all",
+      "to": "db_query:inventory#src/stock/stock.service.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/stock/stock.service.ts",
+      "line": 14
+    },
+    {
+      "from": "inventory#src/stock/stock.service.ts:StockService.save",
+      "to": "db_query:inventory#src/stock/stock.service.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/stock/stock.service.ts",
+      "line": 18
+    },
+    {
+      "from": "ledger#src/auth/api-key.guard.ts:ApiKeyGuard",
+      "to": "ledger#node_modules/@nestjs/core:Reflector",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/auth/api-key.guard.ts",
+      "line": 8
+    },
+    {
+      "from": "ledger#src/entries/entries.controller.ts:EntriesController",
+      "to": "ledger#src/entries/entries.service.ts:EntriesService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/entries/entries.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "ledger#src/entries/entries.controller.ts:EntriesController.all",
+      "to": "ledger#src/entries/entries.service.ts:EntriesService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:ledger#LedgerEntry[]",
+      "file": "src/entries/entries.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "ledger#src/entries/entries.controller.ts:EntriesController.webhook",
+      "to": "ledger#src/entries/entries.service.ts:EntriesService.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:ledger#LedgerEntry"
+      ],
+      "returns": "type:ledger#LedgerEntry",
+      "file": "src/entries/entries.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "ledger#src/entries/entries.service.ts:EntriesService",
+      "to": "ledger#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/entries/entries.service.ts",
+      "line": 9
+    },
+    {
+      "from": "ledger#src/entries/entries.service.ts:EntriesService.all",
+      "to": "db_query:ledger#src/entries/entries.service.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/entries/entries.service.ts",
+      "line": 14
+    },
+    {
+      "from": "ledger#src/entries/entries.service.ts:EntriesService.record",
+      "to": "db_query:ledger#src/entries/entries.service.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/entries/entries.service.ts",
+      "line": 18
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:catalog#Product": {
+      "name": "Product",
+      "kind": "object",
+      "declaredIn": "catalog#src/products/product.entity.ts",
+      "structuralHash": "cc003c029bb2d8c3",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "featured",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:inventory#StockItem": {
+      "name": "StockItem",
+      "kind": "object",
+      "declaredIn": "inventory#src/stock/stock-item.entity.ts",
+      "structuralHash": "cc7b51ef35e8cc21",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:ledger#LedgerEntry": {
+      "name": "LedgerEntry",
+      "kind": "object",
+      "declaredIn": "ledger#src/entries/entry.entity.ts",
+      "structuralHash": "631e4b5ca16b211c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "inventory",
+      "file": "src/stock/levels.controller.ts",
+      "line": 15,
+      "reason": "route-unguarded",
+      "message": "GET /levels/summary has no guard in front of it and reaches StockItem.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /levels/summary"
+    },
+    {
+      "service": "inventory",
+      "file": "src/stock/levels.controller.ts",
+      "line": 20,
+      "reason": "route-unguarded",
+      "message": "GET /levels/low has no guard in front of it and reaches StockItem.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /levels/low"
+    },
+    {
+      "service": "inventory",
+      "file": "src/stock/receipts.controller.ts",
+      "line": 14,
+      "reason": "route-checked-in-body",
+      "level": "info",
+      "message": "POST /receipts reaches StockItem with no guard in front of it, and refuses a request in its own code: UnauthorizedException (401) in ReceiptsController.requireSignature, src/stock/receipts.controller.ts:21.",
+      "hint": "Nothing is missing if that check runs before the data is read, and this cannot tell the order. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
+      "symbol": "POST /receipts"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 13,
+      "reason": "module-providers-unread",
+      "hint": "List the providers, or a name that leads to an array of them in this repository. A guard registered as APP_GUARD among providers that cannot be read is in front of every route, and nothing here can see it.",
+      "symbol": "AppModule providers extraProviders()",
+      "service": "ledger"
+    },
+    {
+      "service": "ledger",
+      "file": "src/entries/entries.controller.ts",
+      "line": 21,
+      "reason": "route-guard-skipped",
+      "level": "info",
+      "message": "POST /entries/webhook reaches LedgerEntry with no guard in front of it, because ApiKeyGuard (skipped by @SkipApiKey).",
+      "hint": "Decided on purpose, so nothing is missing. Check that the decision still holds; a handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.",
+      "symbol": "POST /entries/webhook"
+    }
+  ]
+}

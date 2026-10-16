@@ -17,6 +17,12 @@ export interface WrapperApplication {
   method?: MethodDeclaration;
   /** Route filter, for middleware. */
   routes?: MiddlewareRoutes;
+  /**
+   * The module, or the module's configuring call, a registration was written
+   * in: `AuthModule` for an `APP_GUARD` provider, `AuthModule.forRoot` for one
+   * a configuring method returns, `AppModule.configure` for middleware.
+   */
+  registeredIn?: string;
   file: string;
 }
 

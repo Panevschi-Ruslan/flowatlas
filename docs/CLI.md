@@ -1216,12 +1216,12 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id`, `test-directory-skipped` (info) |
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
-| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
+| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
-| The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-shadowed` |
+| The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key` |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |
@@ -1465,11 +1465,47 @@ listed at `info` instead, since a guard that may be there is not a hole),
 `route-guard-skipped` (the same route, except that a decorator named under
 `doctor.skipGuardDecorators` switches the guard off for it — somebody decided
 this in writing on the handler, so it is listed at `info` and does not ask to be
-written down a second time under `doctor.publicRoutes`), `route-shadowed` (a
+written down a second time under `doctor.publicRoutes`), `route-checked-in-body`
+(the same route again, except that its own code throws a 401 or a 403 — it
+checks who is asking in the body rather than in a guard; listed at `info` with
+the throw it rests on, since nothing here can tell whether the check runs before
+the data is read), `route-shadowed` (a
 route a worker answers before the
 application, whose guards then never run) and `route-wildcard-only` (a request
 only a catch-all route answers). Accept them into the baseline once reviewed;
 `--strict` then fails only on new ones.
+
+**Public on purpose, read rather than configured.** A NestJS decorator that
+sets a flag to `true` — `@Public()` as `SetMetadata(IS_PUBLIC_KEY, true)`,
+written out, behind a function of the project's own, or inside
+`applyDecorators(...)` with other decorators, on the handler or on its class —
+switches off each guard in front of the route that reads the same key, the way
+the framework does. Its name or its key says which decision it is: `Public`,
+`AllowAnonymous`, `isPublic` and their like mean open on purpose, so the route
+has no row at all; any other opt-out word (`SkipTenantCheck`) switches one guard
+off and the route is `route-guard-skipped`. A flag whose words say neither
+(`@StrictAuth()`) is not an opt-out, whatever reads it. `doctor.publicDecorators`
+and `doctor.skipGuardDecorators` still say the same for decorators this cannot
+follow (`fixtures/nest-route-access`).
+
+**Accepting routes public by decision together.** `flowatlas accept` takes a
+rule as well as a single gap: `--path` with a route pattern accepts a route
+finding on every route it names, and `--file` takes a glob.
+
+```sh
+flowatlas accept route-unguarded --service catalog --path 'GET /api/public/*' --dry-run
+flowatlas accept route-unguarded --service catalog --path 'GET /api/public/*' \
+  --note 'the public catalogue is open by design'
+```
+
+A rule goes on accepting rows nobody has looked at, so one with `--path` or a
+file glob needs `--note`, and `--dry-run` lists what it would take before
+anything is written. `doctor` leaves the rows out of its counts; the page's
+*Not joined* tab lists them as accepted by that rule, and every row there has
+an *Accept all like this* button that copies the command for its reason, its
+service and the routes beside it. `accepted.json` is written as version 2,
+which an older `flowatlas` refuses rather than reading the rule as wider than
+it is.
 
 **`/** @flowatlas-auth <how> */`.** Some handlers refuse a request in their own
 body — a signed header resolved inside the method, a service token checked by
@@ -2409,6 +2445,21 @@ front of it. Medusa's is `false`, because the framework's own authentication of
 route rather than calling it unguarded. Middleware installed in a different file
 from the routes it covers is left out rather than guessed at, because the order
 it runs in is the order modules are evaluated in, and nothing here reads that.
+
+A NestJS entry also says, in `meta.access`, what covers it and from where:
+`guards: [{id, name, layer, where, via, file, line, skippedBy?}]` in the order
+they run, where `where` is `global` (`useGlobalGuards`, or an `APP_GUARD`
+provider in any module, including one spread in from an array declared
+elsewhere or returned by the module's own `forRoot()`), `module` (middleware a
+module's `configure()` installs), `controller` or `route`, and `via` says how
+in words (`APP_GUARD in AuthModule.forRoot`, `@UseGuards on OrdersController`);
+and `optOuts: [{decorator, key, public, skips, where}]` for the decorators on
+the handler or its class that let a request past a check. The page's details
+panel, `get_flow` (on each guard, and `optOuts` on the entry) and
+`describe_for_prompt` all show it. A `providers:` list that cannot be followed
+— a spread of a call — is a `module-providers-unread` row, since an
+`APP_GUARD` among such providers is in front of every route and nothing could
+see it.
 
 ### More than one application in one service
 

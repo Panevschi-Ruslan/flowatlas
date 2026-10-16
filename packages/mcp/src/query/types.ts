@@ -44,6 +44,27 @@ export interface GuardRef {
   label: string;
   kind: string;
   order: number;
+  /**
+   * Where it was attached (P76): `global`, `module`, `controller` or `route`,
+   * and how, in words (`APP_GUARD in AuthModule`). Present where the reader
+   * of the framework said.
+   */
+  where?: string;
+  via?: string;
+  /** The decorator on the handler or its class that switches this check off for it. */
+  skippedBy?: string;
+}
+
+/** A decorator on a handler or its class that lets a request past a check (P76). */
+export interface OptOutRef {
+  decorator: string;
+  key?: string;
+  /** The decorator says the route is open on purpose. */
+  public: boolean;
+  /** The checks in front of the route that read its flag. */
+  skips: string[];
+  where: 'controller' | 'route';
+  loc?: string;
 }
 
 export interface FlowNode {
@@ -54,6 +75,8 @@ export interface FlowNode {
   observed?: number;
   /** What a way in can fail with, on an entry that says (P68). */
   fails?: FailRef[];
+  /** Decorators on the handler or its class that let a request past a check (P76). */
+  optOuts?: OptOutRef[];
   children: FlowNode[];
 }
 

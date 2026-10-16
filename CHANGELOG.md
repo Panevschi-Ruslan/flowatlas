@@ -8,6 +8,25 @@ only one of them moved.
 
 ### Added
 
+- **Which guard covers a route, and from where; routes settled before they are
+  called unguarded (P76).** A NestJS entry carries `meta.access`: every guard
+  and middleware in front of it with `where` (`global`, `module`, `controller`,
+  `route`) and `via` (`APP_GUARD in AuthModule.forRoot`, `useGlobalGuards in
+  src/main.ts`, `@UseGuards on OrdersController`). `APP_GUARD` is read through
+  spreads, named arrays and a module's own `forRoot()`, and an installed class
+  (`useClass: ThrottlerGuard`) counts too. `@Public()`-style decorators —
+  `SetMetadata(KEY, true)`, through a function of the project's own or
+  `applyDecorators`, on the handler or the class — switch off each guard that
+  reads the key, so the route is open on purpose rather than unguarded. A route
+  with no guard whose own code throws a 401 or 403 is `route-checked-in-body`
+  (info), not `route-unguarded`. `get_flow`, `describe_for_prompt` and the
+  page's details panel show it all (`fixtures/nest-route-access`).
+- **`flowatlas accept` by rule (P76).** `--path 'GET /api/public/*'` accepts a
+  route finding on every route a pattern names, `--file` takes a glob, and
+  `--dry-run` lists what a rule would take; a rule needs `--note`. The page's
+  *Not joined* tab says which rule took a row and offers *Accept all like this*,
+  which copies the command. `accepted.json` is now version 2.
+
 - **Built-in declaration shapes for uninstalled Nest repositories (P70).**
   Where `rxjs`, `@nestjs/common`, `@nestjs/core` or `@nestjs/microservices`
   does not resolve, the Nest reader reads a few hand-written declarations of

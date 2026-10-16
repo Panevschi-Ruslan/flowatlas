@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:21:55.465Z",
+  "builtAt": "2026-10-16T15:10:02.722Z",
   "services": [
     {
       "name": "api",
@@ -544,6 +544,19 @@
         "globalPrefix": "api",
         "controller": "OrdersController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "api#src/auth/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 16
+            }
+          ]
+        },
         "fails": [
           {
             "status": 403,
@@ -643,6 +656,19 @@
         "globalPrefix": "api",
         "controller": "OrdersController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "api#src/auth/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 16
+            }
+          ]
+        },
         "fails": [
           {
             "status": 403,

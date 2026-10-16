@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:22:23.452Z",
+  "builtAt": "2026-10-16T15:10:28.308Z",
   "services": [
     {
       "name": "gateway",
@@ -670,6 +670,19 @@
         "rawPath": "/orders",
         "controller": "OrdersController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "gateway#src/auth/auth.guard.ts:AuthGuard",
+              "name": "AuthGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 8
+            }
+          ]
+        },
         "fails": [
           {
             "status": 403,

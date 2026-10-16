@@ -243,6 +243,16 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
   }
 };
 
+const anchorKey = (row: { service?: string | null; file?: string | null; line?: number | null; reason: string; message?: string | null }): string =>
+  [row.service ?? '', row.file ?? '', row.line ?? 0, row.reason, row.message ?? ''].join('\u0000');
+
+/** What each row in the database is about, by where it is and what it says. */
+const anchorsOf = (db: GraphDb): Map<string, string> => {
+  const out = new Map<string, string>();
+  for (const row of db.allUnresolved()) if (row.node !== null) out.set(anchorKey(row), row.node);
+  return out;
+};
+
 /**
  * The rows as the graph wrote them, which is not what the database holds.
  *
@@ -399,7 +409,14 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
     // accept writes and the count the report prints are the same rows (R36).
     const demoted = withAnsweredDemoted([...raw, ...age], db);
     // Gaps somebody accepted by name (P72) leave every count, and are said once.
-    const split = splitAccepted(loadAccepted(dbPathFor(options)), demoted);
+    // A route rule (P76) is matched on what a row is about, which a row read
+    // back from the database carries as its node and not as its symbol; it is
+    // looked up for the match alone, so the rows themselves - and the baseline
+    // keys made of them - stay as they were read.
+    const anchors = anchorsOf(db);
+    const split = splitAccepted(loadAccepted(dbPathFor(options)), demoted, (row) =>
+      row.symbol === undefined ? { ...row, symbol: anchors.get(anchorKey(row)) ?? null } : row,
+    );
     const rows = split.fresh;
     const path = baselinePathFor(options, settings);
 

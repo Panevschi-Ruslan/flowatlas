@@ -224,3 +224,61 @@ describe('a worker route in front of an application route', () => {
     expect(rows[0]?.message).toContain('the worker route has middleware requestLogger, withNest.');
   });
 });
+
+describe('what the reader of the framework read in front of a route (P76)', () => {
+  const access = (extra: Record<string, unknown>) => ({ access: { guards: [], ...extra } });
+  const jwt = { id: 'api#JwtGuard', name: 'JwtGuard', layer: 'guard', where: 'global', via: 'APP_GUARD in AuthModule' };
+
+  it('treats a guard the handler switches off by a flag the guard reads as not there', () => {
+    const { nodes, edges } = graph({ guard: true, meta: access({ guards: [{ ...jwt, skippedBy: 'SkipTenant' }] }) });
+    const [row] = auditRoutes(nodes, edges, OPTIONS);
+    expect(row).toMatchObject({ reason: 'route-guard-skipped', level: 'info' });
+    expect(row?.message).toContain('JwtGuard (skipped by @SkipTenant)');
+  });
+
+  it('reads an opt-out that says it is open on purpose as public, on the handler or its class', () => {
+    for (const where of ['route', 'controller']) {
+      const optOuts = [{ decorator: 'AllowGuest', key: 'isPublic', public: true, skips: ['JwtGuard'], where }];
+      const { nodes, edges } = graph({ guard: true, meta: access({ guards: [{ ...jwt, skippedBy: 'AllowGuest' }], optOuts }) });
+      expect(auditRoutes(nodes, edges, OPTIONS)).toEqual([]);
+    }
+    // A decorator configured as public counts the same, whatever its flag is called.
+    const optOuts = [{ decorator: 'Public', key: 'k', public: false, skips: [], where: 'controller' }];
+    const { nodes, edges } = graph({ meta: access({ optOuts }) });
+    expect(auditRoutes(nodes, edges, OPTIONS)).toEqual([]);
+  });
+
+  it('keeps a route guarded when its opt-out is read by no check in front of it', () => {
+    const optOuts = [{ decorator: 'Public', key: 'isPublic', public: true, skips: [], where: 'route' }];
+    const { nodes, edges } = graph({ guard: true, meta: access({ guards: [jwt], optOuts }) });
+    expect(auditRoutes(nodes, edges, OPTIONS)).toEqual([]);
+  });
+
+  it('lists a route that refuses a request in its own code at info, naming the throw', () => {
+    const fails = [
+      { status: 404, exception: 'NotFoundException', at: 'api#OrdersService.list', source: 'throw' },
+      { status: 401, exception: 'UnauthorizedException', at: 'api#OrdersController.list', file: 'src/orders.controller.ts', line: 14, source: 'throw' },
+    ];
+    const { nodes, edges } = graph({ meta: { fails } });
+    const [row] = auditRoutes(nodes, edges, OPTIONS);
+    expect(row).toMatchObject({ reason: 'route-checked-in-body', level: 'info', symbol: 'GET /orders' });
+    expect(row?.message).toBe(
+      'GET /orders reaches Order with no guard in front of it, and refuses a request in its own code: ' +
+        'UnauthorizedException (401) in OrdersController.list, src/orders.controller.ts:14.',
+    );
+  });
+
+  it('does not take a refusal by a check, or a failure that is not one, for a check in the body', () => {
+    const byGuard = graph({ meta: { fails: [{ status: 403, exception: 'ForbiddenException', at: 'api#X', source: 'guard' }] } });
+    const notFound = graph({ meta: { fails: [{ status: 404, exception: 'NotFoundException', at: 'api#X', source: 'throw' }] } });
+    for (const { nodes, edges } of [byGuard, notFound]) {
+      expect(auditRoutes(nodes, edges, OPTIONS).map((row) => row.reason)).toEqual(['route-unguarded']);
+    }
+  });
+
+  it('says how to accept the routes public by decision together', () => {
+    const { nodes, edges } = graph({});
+    expect(auditRoutes(nodes, edges, OPTIONS)[0]?.hint).toContain('flowatlas accept route-unguarded --service');
+  });
+});
+

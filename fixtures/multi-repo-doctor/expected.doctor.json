@@ -192,7 +192,7 @@
         "sites": 3,
         "known": true,
         "excluded": false,
-        "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+        "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
         "rows": [
           {
             "service": "orders",
@@ -202,7 +202,7 @@
             "level": "action",
             "sites": 1,
             "message": "POST /orders has no guard in front of it and reaches stored data.",
-            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
           },
           {
             "service": "orders",
@@ -212,7 +212,7 @@
             "level": "action",
             "sites": 1,
             "message": "POST /orders/legacy has no guard in front of it and reaches stored data.",
-            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
           },
           {
             "service": "orders",
@@ -222,7 +222,7 @@
             "level": "action",
             "sites": 1,
             "message": "GET /orders/:param has no guard in front of it and reaches stored data.",
-            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
           }
         ]
       },

@@ -558,17 +558,26 @@ export {
   ACCEPTED_FILE,
   ACCEPTED_FORMAT_VERSION,
   acceptedFor,
+  acceptedKeyOf,
   acceptedPathFor,
   covers,
+  describeAccepted,
   gapIdOf,
+  isFileGlob,
   isGapId,
+  isRule,
   loadAccepted,
+  matchesRoutePattern,
   parseGapId,
+  routeOfSymbol,
+  routePatternOf,
   saveAccepted,
   splitAccepted,
   withAccepted,
   withoutAccepted,
 } from './accepted.js';
+export { ACCESS_META, ACCESS_WHERE, accessOf, OPT_OUT_WORDS, PUBLIC_WORDS, soundsLikeOptOut, soundsPublic } from './access.js';
+export type { AccessGuard, AccessOptOut, AccessWhere, RouteAccess } from './access.js';
 export type { AcceptedFile, AcceptedGap, GapLike } from './accepted.js';
 export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, settleFailures } from './failures.js';
 export type { Failure, FailureSource } from './failures.js';

@@ -239,13 +239,18 @@ export const collectWrapping = (ctx: NestExtractContext): WrappingCollection => 
 
   // Registered while the modules load, so before anything the entry file does.
   for (const info of ctx.modules.all()) {
-    for (const provider of info.providers) {
+    for (const provider of [...info.providers, ...(info.dynamicProviders ?? [])]) {
       const layer = TOKEN_LAYERS.get(provider.token);
       if (layer === undefined) continue;
+      // A class of an installed package is still a class: an application-wide
+      // rate limiter or a library's guard is in front of every route, and the
+      // audit decides what it counts as, not this reader (P76).
       const ref: ClassRef | undefined =
-        provider.declaration === undefined
-          ? undefined
-          : { kind: 'local', declaration: provider.declaration };
+        provider.declaration !== undefined
+          ? { kind: 'local', declaration: provider.declaration }
+          : provider.installed !== undefined
+            ? { kind: 'external', typeName: provider.installed.typeName, package: provider.installed.package }
+            : undefined;
       if (ref === undefined) {
         ctx.report({
           file: provider.file,
@@ -262,6 +267,7 @@ export const collectWrapping = (ctx: NestExtractContext): WrappingCollection => 
         scope: 'global',
         wrapper: { ref, line: provider.line, text: provider.token },
         source: provider.token,
+        registeredIn: provider.through ?? info.name,
         file: provider.file,
       });
     }
@@ -389,6 +395,7 @@ export const collectWrapping = (ctx: NestExtractContext): WrappingCollection => 
             wrapper: { ref: { kind: 'unknown', text: name }, line: lineOf(applied), text: name },
             source: 'configure',
             routes: chain.routes,
+            registeredIn: `${indexed.name}.configure`,
             file: indexed.file,
           });
           continue;
@@ -405,6 +412,7 @@ export const collectWrapping = (ctx: NestExtractContext): WrappingCollection => 
           },
           source: 'configure',
           routes: chain.routes,
+          registeredIn: `${indexed.name}.configure`,
           file: indexed.file,
         });
       }

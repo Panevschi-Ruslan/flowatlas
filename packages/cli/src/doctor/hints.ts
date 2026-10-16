@@ -438,6 +438,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Import a module class, or X.forRoot(...); a computed import cannot be followed.',
   'module-controllers-unread': () =>
     'List the controller classes in the module, or a name that leads to an array of them in this repository. A spread of an array built elsewhere reads as no controllers at all, and which application serves an address is read from the module that declares its controller.',
+  'module-providers-unread': () =>
+    'List the providers in the module, or a name that leads to an array of them in this repository. A guard registered as APP_GUARD among providers that cannot be read is in front of every route, and the route audit cannot see it.',
   'global-wrapper-dynamic': (row) =>
     `${named(row)} is not registered with a class from this repository, so what it wraps cannot be read.`,
   'middleware-route-dynamic': () => 'Use a literal path or a controller class in forRoutes.',
@@ -670,7 +672,9 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'route-api-guessed': () =>
     'Several APIs or load balancers serve this address; the one whose name shares the most words with the setting the base URL is read from was taken, and the join is marked heuristic. Annotate the call with @CallsService where that is wrong.',
   'route-unguarded': () =>
-    'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes.',
+    'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".',
+  'route-checked-in-body': () =>
+    'No guard is in front of this route, and its own code throws a 401 or a 403, so it checks who is asking in the body. Nothing is missing if that check runs before the data is read, which this cannot tell. A guard makes the check visible to every reader; /** @flowatlas-auth <how> */ says it in words.',
   'route-guard-skipped': () =>
     'A decorator named under doctor.skipGuardDecorators switches the guard off for this route, so nothing is missing — the decision is written in the source. Check that it still holds. A handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.',
   'route-shadowed': () =>

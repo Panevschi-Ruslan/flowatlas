@@ -6,7 +6,7 @@ import { answersOf, createModel, type GraphModel } from './graph.js';
 import { createMap, mapCallOrder, mapSeenCount, mapTopTargets, mapView } from './map.js';
 import { packGraph, type PackedGraph } from './pack.js';
 import { packSites } from './sites.js';
-import { createSeen, failChips, failsOf, promptFor, scheduleOf, stepsOf } from './steps.js';
+import { acceptCommandFor, accessOf, createSeen, failChips, failsOf, likeRoute, promptFor, scheduleOf, stepsOf } from './steps.js';
 
 /**
  * A synthetic shop: a route calls a service that reads a table, publishes to
@@ -221,3 +221,47 @@ describe('failures, loops, logs and schedules on the steps (P74)', () => {
     expect(promptFor(model, { entry: 3 }, { keyOf: (i) => 'k' + i })).toContain('- schedule: `0 3 * * *` in Europe/Paris');
   });
 });
+
+describe('who covers a way in, and accepting every gap like one (P76)', () => {
+  const guarded = nodes.map((node, index) =>
+    index === 0
+      ? {
+          ...node,
+          meta: {
+            access: {
+              guards: [{ id: 'g', name: 'JwtAuthGuard', layer: 'guard', where: 'global', via: 'APP_GUARD in AuthModule', skippedBy: 'Public' }],
+              optOuts: [{ decorator: 'Public', key: 'isPublic', public: true, skips: ['JwtAuthGuard'], where: 'route' }],
+            },
+          },
+        }
+      : node,
+  );
+  const data = packGraph({ builtAt: '2026-01-01T00:00:00Z', nodes: guarded, edges, unresolved: [], report });
+
+  it('packs what stands in front of a way in, and the prompt says it', () => {
+    const model = modelOf(data);
+    expect(accessOf(model, 0)).toEqual({
+      g: [['JwtAuthGuard', 'global', 'APP_GUARD in AuthModule', 'Public']],
+      o: [['Public', 1, 'route', 'JwtAuthGuard']],
+    });
+    expect(accessOf(model, 1)).toBeNull();
+    const keys = createKeys(data.keys, data.nodes.length);
+    const text = promptFor(model, { entry: 0 }, { keyOf: keys.keyOf, idOf: () => null });
+    expect(text).toContain('## In front of it');
+    expect(text).toContain('- JwtAuthGuard · the whole application (APP_GUARD in AuthModule), switched off by @Public');
+    expect(text).toContain('- @Public on this route, open on purpose; JwtAuthGuard reads it');
+  });
+
+  it('writes the accept command for the routes beside one, quoted for a shell', () => {
+    expect(likeRoute({ method: 'GET', path: '/levels/summary' })).toBe('GET /levels/*');
+    expect(likeRoute({ method: 'GET', path: '/health' })).toBe('GET /health');
+    expect(
+      acceptCommandFor({ reason: 'route-unguarded', service: 'inventory', message: 'GET /levels/:param/low has no guard in front of it.' }),
+    ).toBe("flowatlas accept route-unguarded --service inventory --path 'GET /levels/:param/*' --note '<why these are fine>'");
+    expect(acceptCommandFor({ reason: 'dynamic-channel-name', service: 'billing' })).toBe(
+      "flowatlas accept dynamic-channel-name --service billing --note '<why these are fine>'",
+    );
+    expect(acceptCommandFor({ reason: 'r', service: "it's" })).toContain("--service 'it'\\''s'");
+  });
+});
+

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:22:26.870Z",
+  "builtAt": "2026-10-16T15:10:32.201Z",
   "services": [
     {
       "name": "gateway",
@@ -4501,7 +4501,7 @@
       "line": 83,
       "reason": "route-unguarded",
       "message": "POST /orders/drafts/store has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/store"
     },
     {
@@ -4510,7 +4510,7 @@
       "line": 89,
       "reason": "route-unguarded",
       "message": "POST /orders/drafts/tag has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/tag"
     },
     {
@@ -4519,7 +4519,7 @@
       "line": 109,
       "reason": "route-unguarded",
       "message": "POST /orders/drafts/batch has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/batch"
     },
     {

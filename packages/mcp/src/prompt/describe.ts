@@ -47,6 +47,8 @@ export interface PromptSubject {
   loc?: string;
   /** What a way in can fail with, for an entry that says (P68). */
   fails?: FailRef[];
+  /** What stands in front of a way in and from where, one line each (P76). */
+  access?: string[];
   steps: PromptStep[];
   /** Steps the walk reached and the text left out. */
   stepsCut: number;
@@ -150,6 +152,7 @@ export const describeForPrompt = (subject: PromptSubject, limits: PromptLimits =
 
   const body = [
     ...head,
+    ...section('In front of it', (subject.access ?? []).map((line) => `- ${line}`)),
     ...section('Can fail with', (subject.fails ?? []).map(failLine)),
     ...section('Published by', (subject.producers ?? []).map(stepLine)),
     ...section('Reached from', (subject.reachedFrom ?? []).map(stepLine)),

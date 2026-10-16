@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-guards",
-  "generatedAt": "2026-10-16T11:25:08.274Z",
+  "generatedAt": "2026-10-16T15:10:51.224Z",
   "nodes": [
     {
       "id": "entry:nest-guards:http:GET:/admin/audit",
@@ -25,6 +25,37 @@
           }
         ],
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-guards#src/app.module.ts:requestIdMiddleware",
+              "name": "requestIdMiddleware",
+              "layer": "middleware",
+              "where": "module",
+              "via": "consumer.apply in AppModule.configure",
+              "file": "src/app.module.ts",
+              "line": 27
+            },
+            {
+              "id": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 9
+            },
+            {
+              "id": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+              "name": "RolesGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@StaffOnly on AdminController.audit",
+              "file": "src/admin/admin.controller.ts",
+              "line": 30
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,
@@ -68,6 +99,28 @@
         "controller": "AdminController",
         "authNote": "a signed header is resolved in the body and overrides the caller's claim",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-guards#src/app.module.ts:requestIdMiddleware",
+              "name": "requestIdMiddleware",
+              "layer": "middleware",
+              "where": "module",
+              "via": "consumer.apply in AppModule.configure",
+              "file": "src/app.module.ts",
+              "line": 27
+            },
+            {
+              "id": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 9
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,
@@ -102,6 +155,28 @@
         "rawPath": "/admin/stats",
         "controller": "AdminController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-guards#src/app.module.ts:requestIdMiddleware",
+              "name": "requestIdMiddleware",
+              "layer": "middleware",
+              "where": "module",
+              "via": "consumer.apply in AppModule.configure",
+              "file": "src/app.module.ts",
+              "line": 27
+            },
+            {
+              "id": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 9
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,
@@ -144,6 +219,55 @@
           }
         ],
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-guards#src/middleware/logger.middleware.ts:LoggerMiddleware",
+              "name": "LoggerMiddleware",
+              "layer": "middleware",
+              "where": "module",
+              "via": "consumer.apply in AppModule.configure",
+              "file": "src/app.module.ts",
+              "line": 25
+            },
+            {
+              "id": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 9
+            },
+            {
+              "id": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+              "name": "AuthGuard(\"jwt\")",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            },
+            {
+              "id": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+              "name": "RolesGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            },
+            {
+              "id": "nest-guards#src/guards/throttle.guard.ts:ThrottleGuard",
+              "name": "ThrottleGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@UseGuards on OrdersController.findAll",
+              "file": "src/orders/orders.controller.ts",
+              "line": 25
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,
@@ -202,6 +326,46 @@
         "rawPath": "/orders/health",
         "controller": "OrdersController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-guards#src/middleware/logger.middleware.ts:LoggerMiddleware",
+              "name": "LoggerMiddleware",
+              "layer": "middleware",
+              "where": "module",
+              "via": "consumer.apply in AppModule.configure",
+              "file": "src/app.module.ts",
+              "line": 25
+            },
+            {
+              "id": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 9
+            },
+            {
+              "id": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+              "name": "AuthGuard(\"jwt\")",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            },
+            {
+              "id": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+              "name": "RolesGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,
@@ -252,6 +416,46 @@
         "rawPath": "/orders",
         "controller": "OrdersController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-guards#src/middleware/logger.middleware.ts:LoggerMiddleware",
+              "name": "LoggerMiddleware",
+              "layer": "middleware",
+              "where": "module",
+              "via": "consumer.apply in AppModule.configure",
+              "file": "src/app.module.ts",
+              "line": 25
+            },
+            {
+              "id": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "useGlobalGuards in src/main.ts",
+              "file": "src/main.ts",
+              "line": 9
+            },
+            {
+              "id": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+              "name": "AuthGuard(\"jwt\")",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            },
+            {
+              "id": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+              "name": "RolesGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,

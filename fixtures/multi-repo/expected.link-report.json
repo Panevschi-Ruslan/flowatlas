@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:46.406Z",
+  "builtAt": "2026-10-16T15:10:26.295Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 917,
+      "durationMs": 851,
       "packages": {
         "name": "billing",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 38,
       "types": 7,
       "unresolved": 1,
-      "durationMs": 983,
+      "durationMs": 904,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -58,7 +58,7 @@
       "edges": 26,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 930,
+      "durationMs": 882,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -81,7 +81,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 723,
+      "durationMs": 718,
       "packages": {
         "name": "web",
         "runtime": [
@@ -170,7 +170,7 @@
       "line": 19,
       "reason": "route-unguarded",
       "message": "GET /orders/latest has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /orders/latest"
     },
     {
@@ -179,7 +179,7 @@
       "line": 25,
       "reason": "route-unguarded",
       "message": "GET /orders/:param has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /orders/:param"
     },
     {
@@ -188,7 +188,7 @@
       "line": 31,
       "reason": "route-unguarded",
       "message": "POST /orders has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders"
     },
     {
@@ -197,7 +197,7 @@
       "line": 42,
       "reason": "route-unguarded",
       "message": "POST /orders/:param/archive has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/:param/archive"
     },
     {

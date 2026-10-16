@@ -1,4 +1,12 @@
-import { DATA_REACH, type GraphEdge, type GraphNode, type Unresolved } from '@flowatlas/core';
+import {
+  accessOf,
+  DATA_REACH,
+  failuresOf,
+  matchesRoutePattern,
+  type GraphEdge,
+  type GraphNode,
+  type Unresolved,
+} from '@flowatlas/core';
 import { cmp } from './order.js';
 
 /** What decides that a route is meant to be open. */
@@ -45,20 +53,10 @@ const decoratorNames = (entry: GraphNode): string[] => {
 /**
  * Whether `METHOD /path` with `*` for any run of characters covers this route.
  *
- * Exported because two commands ask the same question of the same configured
- * patterns: the guard checks here, and `dead`, which must not report a route
- * the configuration has already called public.
+ * Kept in the core since P76, because an accepted rule asks the same question
+ * of a route pattern; exported from here still for the readers that import it.
  */
-export const matchesRoutePattern = (pattern: string, method: string, path: string): boolean => {
-  const [wantedMethod, ...rest] = pattern.trim().split(/\s+/);
-  const wantedPath = rest.join(' ');
-  if (wantedMethod === undefined || wantedPath === '') return false;
-  if (wantedMethod !== '*' && wantedMethod.toUpperCase() !== method.toUpperCase()) return false;
-  const expression = new RegExp(
-    `^${wantedPath.split('*').map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*')}$`,
-  );
-  return expression.test(path);
-};
+export { matchesRoutePattern };
 
 /**
  * Two questions about the routes of a joined graph that no single file answers.
@@ -136,13 +134,20 @@ export const auditRoutes = (
         const guards = skips[name] ?? [];
         return guards.length === 0 || guards.some((guard) => namedAs(label, guard));
       });
+    // What the reader of the framework read off the source (P76): which check
+    // a decorator on this handler or its class switches off, because the check
+    // reads the flag the decorator sets, and which decorators say the route is
+    // open on purpose. Configuration says the same for a project whose
+    // decorators this cannot follow; either is enough.
+    const access = accessOf(entry);
+    const readSkip = new Map((access?.guards ?? []).flatMap((guard) => (guard.skippedBy === undefined ? [] : [[guard.id, guard.skippedBy] as const])));
     const skipped: string[] = [];
     const gates = wrapping.filter((edge) => {
       const layer = text(edge.meta?.['layer']);
       if (!GATES.has(layer)) return false;
       const label = nodes.get(edge.to)?.label ?? '';
       if ((options.nonGateWrappers ?? []).some((name) => namedAs(label, name))) return false;
-      const by = layer === 'guard' ? skippedBy(label) : undefined;
+      const by = layer === 'guard' ? (readSkip.get(edge.to) ?? skippedBy(label)) : undefined;
       if (by !== undefined) {
         skipped.push(`${label} (skipped by @${by})`);
         return false;
@@ -198,6 +203,10 @@ export const auditRoutes = (
     // `layer: middleware` whoever read it, which is the point of R109.
     if (gates.length > 0) continue;
     if (decorators.some((name) => options.publicDecorators.includes(name))) continue;
+    // Written on the handler or on its class, and read as open on purpose by
+    // its name or the flag it sets: the same decision `publicDecorators` names,
+    // without having to name it (P76).
+    if ((access?.optOuts ?? []).some((item) => item.public || options.publicDecorators.includes(item.decorator))) continue;
     if (options.publicRoutes.some((pattern) => matchesRoutePattern(pattern, method, path))) continue;
     const found = dataReached(entry.id);
     if (found === undefined) continue;
@@ -243,6 +252,40 @@ export const auditRoutes = (
     // of that shape was one that did not read installs. It stopped being fair
     // the moment three more did, and a route with a real hole in front of it
     // was being reported as a caution about a limitation that had gone.
+    /**
+     * A route with nothing in front of it that refuses a request in its own code.
+     *
+     * A handler that reads a signed header and throws `UnauthorizedException`
+     * when it does not verify is checking who is asking — in the body rather
+     * than in a guard, but checking. The failures read off the way in (P68)
+     * say so: a 401 or a 403 thrown on the route's own path. Not a hole, and
+     * not proof either, since nothing here can tell whether the check comes
+     * before the data is read; so it is listed, at `info`, with the throw it
+     * rests on, and not as an unguarded route (P76).
+     */
+    const refusals = failuresOf(entry).filter(
+      (item) => item.source === 'throw' && (item.status === 401 || item.status === 403),
+    );
+    const [refusal] = refusals;
+    if (refusal !== undefined) {
+      const where = nodes.get(refusal.at)?.label ?? refusal.at.split(/[#:]/).pop() ?? refusal.at;
+      const place = refusal.file === undefined ? '' : `, ${refusal.file}${refusal.line === undefined ? '' : `:${refusal.line}`}`;
+      const more = refusals.length > 1 ? ` and ${refusals.length - 1} more` : '';
+      rows.push({
+        service: entry.repo,
+        file: entry.file ?? '',
+        line: entry.line ?? 0,
+        reason: 'route-checked-in-body',
+        level: 'info' as const,
+        message:
+          `${method} ${path} reaches ${data} with no guard in front of it, and refuses a request in its own code: ` +
+          `${refusal.exception} (${refusal.status ?? '?'}) in ${where}${place}${more}.`,
+        hint: 'Nothing is missing if that check runs before the data is read, and this cannot tell the order. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.',
+        symbol: `${method} ${path}`,
+      });
+      continue;
+    }
+
     const prefixUnread = entry.meta?.['middlewareRead'] === false;
     /**
      * A route nobody guarded and a route somebody unguarded are not one finding.
@@ -267,7 +310,7 @@ export const auditRoutes = (
           : `${method} ${path} has no guard in front of it and reaches ${data}.`,
       hint: decided
         ? 'Decided on purpose, so nothing is missing. Check that the decision still holds; a handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.'
-        : 'Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.',
+        : 'Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".',
       symbol: `${method} ${path}`,
     });
   }

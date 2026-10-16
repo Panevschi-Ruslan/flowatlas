@@ -1,4 +1,4 @@
-import type { GraphNode } from '@flowatlas/core';
+import { accessOf, type GraphNode } from '@flowatlas/core';
 import type { GraphDb, UnresolvedRow } from '@flowatlas/linker';
 import { projectDetail } from '../query/detail.js';
 import { failsOf } from '../query/fails.js';
@@ -6,6 +6,22 @@ import { buildFlowTree, REVERSE_EDGES } from '../query/flow.js';
 import { nextFor } from '../query/next.js';
 import type { CompactNode, FlowEdge, FlowNode } from '../query/types.js';
 import type { PromptGap, PromptStep, PromptSubject } from './describe.js';
+
+/** What stands in front of a way in, a line per check and per opt-out (P76). */
+const accessLines = (node: GraphNode): string[] => {
+  const access = node.type === 'entry' ? accessOf(node) : undefined;
+  if (access === undefined) return [];
+  return [
+    ...access.guards.map(
+      (guard) => `\`${guard.name}\` — ${guard.where}, ${guard.via}${guard.skippedBy === undefined ? '' : `; switched off here by @${guard.skippedBy}`}`,
+    ),
+    ...(access.optOuts ?? []).map(
+      (item) =>
+        `@${item.decorator} on the ${item.where === 'controller' ? 'controller' : 'handler'}` +
+        `${item.public ? ', open on purpose' : ''}${item.skips.length === 0 ? '; no check in front reads it' : `; read by ${item.skips.join(', ')}`}`,
+    ),
+  ];
+};
 
 /** How many nodes the walk under a prompt may visit; the renderer cuts further. */
 const WALK_NODES = 120;
@@ -101,6 +117,7 @@ export const gatherPromptSubject = (db: GraphDb, node: GraphNode): PromptSubject
 
   const compact = projectDetail(node, 1);
   const fails = failsOf(node);
+  const access = accessLines(node);
   const firstReal = steps.find((item) => item.type !== 'missing' && item.repeat !== true);
   return {
     id: node.id,
@@ -110,6 +127,7 @@ export const gatherPromptSubject = (db: GraphDb, node: GraphNode): PromptSubject
     ...(compact.service === undefined ? {} : { service: compact.service }),
     ...(compact.loc === undefined ? {} : { loc: compact.loc }),
     ...(fails.length === 0 ? {} : { fails }),
+    ...(access.length === 0 ? {} : { access }),
     steps,
     stepsCut: flow.truncated === undefined ? 0 : Number.parseInt(flow.truncated.replace(/^\D+/, ''), 10) || 0,
     ...(producers === undefined ? {} : { producers }),

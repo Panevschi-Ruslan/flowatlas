@@ -1,8 +1,8 @@
-import { STEP_OF_META, STEPS_META, TAKEN_BY_META, type DetailLevel, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { accessOf, STEP_OF_META, STEPS_META, TAKEN_BY_META, type DetailLevel, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import { projectDetail, projectEdge } from './detail.js';
 import { failsOf } from './fails.js';
-import { truncationMessage, type CompactNode, type FlowNode, type GuardRef } from './types.js';
+import { truncationMessage, type CompactNode, type FlowNode, type GuardRef, type OptOutRef } from './types.js';
 
 /**
  * Edges a walk follows outward.
@@ -140,20 +140,38 @@ const inCallOrder = (a: GraphEdge, b: GraphEdge): number =>
   (a.line ?? Number.MAX_SAFE_INTEGER) - (b.line ?? Number.MAX_SAFE_INTEGER) ||
   (a.to < b.to ? -1 : a.to > b.to ? 1 : 0);
 
-const guardsOf = (db: GraphDb, id: string, detail: DetailLevel): GuardRef[] =>
-  db
+const guardsOf = (db: GraphDb, id: string, detail: DetailLevel): GuardRef[] => {
+  // Where each check was put, as the reader of the framework wrote it on the
+  // entry (P76); matched on the node the edge points at.
+  const said = new Map((accessOf(db.node(id))?.guards ?? []).map((guard) => [guard.id, guard]));
+  return db
     .edgesFrom(id, [GUARD_EDGE])
     .sort((a, b) => orderOf(a) - orderOf(b))
     .map((edge, index) => {
       const node = db.node(edge.to);
+      const access = said.get(edge.to);
       return {
         id: edge.to,
         label: node?.label ?? edge.to,
         kind: String(edge.meta?.['kind'] ?? node?.kind ?? 'guard'),
         order: orderOf(edge) === Number.MAX_SAFE_INTEGER ? index : orderOf(edge),
         ...(detail >= 2 && node?.file !== undefined ? { loc: `${node.file}:${node.line ?? 0}` } : {}),
+        ...(access === undefined ? {} : { where: access.where, via: access.via }),
+        ...(access?.skippedBy === undefined ? {} : { skippedBy: access.skippedBy }),
       };
     });
+};
+
+/** The opt-outs written on an entry's handler or its class (P76). */
+export const optOutsOf = (node: GraphNode | undefined): OptOutRef[] =>
+  (accessOf(node)?.optOuts ?? []).map((item) => ({
+    decorator: item.decorator,
+    ...(item.key === undefined ? {} : { key: item.key }),
+    public: item.public,
+    skips: item.skips,
+    where: item.where,
+    ...(item.file === undefined ? {} : { loc: item.line === undefined ? item.file : `${item.file}:${item.line}` }),
+  }));
 
 /** A node the graph promised but does not hold, which is a gap worth showing. */
 const missingNode = (id: string): CompactNode => ({ id, type: 'missing', label: id });
@@ -201,6 +219,8 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
   if (rootGuards.length > 0) root.guards = rootGuards;
   const rootFails = failsOf(start);
   if (rootFails.length > 0) root.fails = rootFails;
+  const rootOptOuts = optOutsOf(start);
+  if (rootOptOuts.length > 0) root.optOuts = rootOptOuts;
 
   const unresolvedIds = new Set<string>();
   if (db.unresolvedFor(entryId).length > 0) unresolvedIds.add(entryId);

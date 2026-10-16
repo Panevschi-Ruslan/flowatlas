@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-failures",
-  "generatedAt": "2026-10-16T11:22:48.287Z",
+  "generatedAt": "2026-10-16T15:10:49.879Z",
   "nodes": [
     {
       "id": "entry:nest-failures:http:DELETE:/orders/:param",
@@ -17,6 +17,28 @@
         "rawPath": "/orders/:id",
         "controller": "OrdersController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+              "name": "AuthGuard(\"jwt\")",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            },
+            {
+              "id": "nest-failures#src/guards/owner.guard.ts:OwnerGuard",
+              "name": "OwnerGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@UseGuards on OrdersController.remove",
+              "file": "src/orders/orders.controller.ts",
+              "line": 35
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,
@@ -75,6 +97,19 @@
         "rawPath": "/orders/:id",
         "controller": "OrdersController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+              "name": "AuthGuard(\"jwt\")",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,
@@ -117,6 +152,19 @@
         "rawPath": "/orders",
         "controller": "OrdersController",
         "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-failures#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+              "name": "AuthGuard(\"jwt\")",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 19
+            }
+          ]
+        },
         "fails": [
           {
             "status": 400,

@@ -44,7 +44,7 @@ unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, f
       gateway src/app.module.ts:8  AppModule imports ConfigModule
       orders src/app.module.ts:10  AppModule imports ConfigModule
   route-unguarded: 3 rows
-    Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.
+    Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".
       orders src/orders/orders.controller.ts:11  POST /orders
       orders src/orders/orders.controller.ts:16  POST /orders/legacy
       orders src/orders/orders.controller.ts:21  GET /orders/:param

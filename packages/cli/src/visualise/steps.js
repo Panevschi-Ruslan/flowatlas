@@ -12,6 +12,8 @@
  *   failsOf       what a way in can fail with, and failChips the statuses
  *   logsOf        the lines a step logs
  *   scheduleOf    when a scheduled way in fires, and in which zone
+ *   accessOf      what stands in front of a way in, and from where
+ *   acceptCommandFor  the `flowatlas accept` line that takes every gap like one
  */
 
 /** What each kind of step is drawn as, and called. */
@@ -427,6 +429,74 @@ const failLines = (model, entry) => failsOf(model, entry).map((fail) => {
     (node ? ' in ' + tick(node) : '') + (where ? ' at ' + tick(where) : '');
 });
 
+/* ── What stands in front of a way in (P76) ── */
+
+/** Where a check was put, in the words the page says it in. */
+export const ACCESS_WHERE_SAY = Object.freeze({
+  global: 'the whole application',
+  module: 'a module',
+  controller: 'its controller',
+  route: 'this route',
+});
+
+/**
+ * What stands in front of a way in, as the pack's `access` has it:
+ * `{ g: [[name, where, via, skippedBy?]], o?: [[decorator, public, where, skips]] }`,
+ * or null when the reader said nothing.
+ */
+export const accessOf = (model, entry) => (model.data.access && model.data.access[entry]) || null;
+
+/** One check as a line: `JwtAuthGuard · the whole application (APP_GUARD in AuthModule)`. */
+export const accessSay = (check) =>
+  check[0] + ' · ' + (ACCESS_WHERE_SAY[check[1]] || check[1]) + ' (' + check[2] + ')' + (check[3] ? ', switched off by @' + check[3] : '');
+
+/** One opt-out as a line: `@Public on this route, open on purpose; JwtAuthGuard reads it`. */
+export const optOutSay = (item) =>
+  '@' + item[0] + ' on ' + (item[2] === 'controller' ? 'its controller' : 'this route') +
+  (item[1] ? ', open on purpose' : ', switches a check off') + (item[3] ? '; ' + item[3] + ' reads it' : '; no check in front reads it');
+
+const accessLines = (model, entry) => {
+  const access = accessOf(model, entry);
+  if (access === null) return [];
+  return [...access.g.map((check) => `- ${accessSay(check)}`), ...(access.o || []).map((item) => `- ${optOutSay(item)}`)];
+};
+
+/* ── Accepting every gap like one (P76) ── */
+
+/** A word the shell reads as it is written. */
+const shellWord = (text) => (/^[\w./:@=-]+$/.test(text) ? text : "'" + String(text).replace(/'/g, "'\\''") + "'");
+
+/** The route a route finding is about, read off the front of its message: `GET /a/:param ...`. */
+export const routeOfMessage = (message) => {
+  const found = /^([A-Z]+) (\/\S*)/.exec(message || '');
+  return found ? { method: found[1], path: found[2] } : null;
+};
+
+/**
+ * The routes "like" one: its siblings under the same prefix, by the same
+ * method. `/api/catalog/:param` is like `/api/catalog/*`; a route one segment
+ * deep is like nothing but itself, since `/*` would be the whole service.
+ */
+export const likeRoute = (route) => {
+  const parts = route.path.split('/');
+  return parts.length <= 2 ? route.method + ' ' + route.path : route.method + ' ' + parts.slice(0, -1).join('/') + '/*';
+};
+
+/**
+ * The `flowatlas accept` line that accepts every gap like this one: the same
+ * reason in the same service and, for a route finding, on the routes beside
+ * it. The page cannot write `accepted.json`, so it hands over the command; a
+ * rule needs a reason in words, which is left for the person to write.
+ */
+export const acceptCommandFor = ({ reason, service, message }) => {
+  const words = ['flowatlas', 'accept', shellWord(reason)];
+  if (service) words.push('--service', shellWord(service));
+  const route = reason.startsWith('route-') && message !== undefined ? routeOfMessage(message) : null;
+  if (route !== null) words.push('--path', shellWord(likeRoute(route)));
+  words.push('--note', shellWord('<why these are fine>'));
+  return words.join(' ');
+};
+
 /** The check rows on these nodes, as one line each: reason, place, message, hint. */
 const gapLines = (model, nodes, limit) => {
   const { reasons, hints, files, repos } = model.data.dicts;
@@ -489,12 +559,14 @@ const PROMPT_TARGETS = Object.freeze({
     const steps = stepsOf(model, i, { answersOf: kit.answersOf, seen: kit.seen });
     const hits = kit.seen ? kit.seen.entry(i) : 0;
     const fails = failLines(model, i);
+    const access = accessLines(model, i);
     const schedule = scheduleOf(model, i);
     return [
       [`# Way in: ${model.nodes[i][1]}`, '', PROMPT_HEAD, ''],
       [...idLines(kit, i), `- source: ${tick(placeOfStep(model, i))}`, ...shapeLines(model, kit, i),
         ...(schedule ? [`- schedule: ${tick(schedule.expression)}` + (schedule.zone ? ` in ${schedule.zone}` : '')] : []),
         ...(hits ? [`- seen at run time: ${hits} hits`] : []), ''],
+      ...(access.length ? [['## In front of it', ...access, '']] : []),
       ...(fails.length ? [[`## Can fail with ${failChips(failsOf(model, i)).join(' · ')}`, ...fails, '']] : []),
       ['## Steps', ...stepsBlock(model, kit, steps), ''],
       ...stepGaps(model, steps),

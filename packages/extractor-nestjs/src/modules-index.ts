@@ -12,10 +12,20 @@ export interface ProviderRegistration {
   /** For `useExisting`, the token it points at. */
   alias?: string;
   /**
+   * For `useClass`, the installed class it names when it is not one of this
+   * repository's: `{ provide: APP_GUARD, useClass: ThrottlerGuard }` (P76).
+   */
+  installed?: { typeName: string; package: string };
+  /**
    * The installed class the token is an instance of, when a framework module
    * provides it and says so: `ClientsModule`'s clients are `ClientProxy`s.
    */
   holds?: { typeName: string; package: string };
+  /**
+   * The configuring call a registration was returned from, when it was not
+   * written in `@Module` itself: `AuthModule.forRoot`.
+   */
+  through?: string;
   file: string;
   line: number;
 }
@@ -35,6 +45,14 @@ export interface ModuleInfo {
    * `providers:`, which is what its node's `meta.providers` lists.
    */
   providedByImports: ProviderRegistration[];
+  /**
+   * What a configuring method of this module (`static forRoot()`) returns under
+   * `providers:`, wherever the module is imported that way. Read for the
+   * application-wide registrations (`APP_GUARD`) and nothing else (P76): which
+   * token such a module provides to whom is a question of exports this reader
+   * does not ask of a configured module.
+   */
+  dynamicProviders?: ProviderRegistration[];
   exports: string[];
   /** Modules imported, resolved where possible. */
   imports: Array<{ id: string; declaration?: ClassDeclaration; kind: ModuleKind; name: string }>;

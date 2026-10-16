@@ -73,3 +73,90 @@ describe('flowatlas accept', () => {
     }
   });
 });
+
+describe('flowatlas accept, by rule (P76)', () => {
+  const ACCESS = join(ROOT, 'fixtures', 'nest-route-access', '.flowatlas');
+  let accessDb: string;
+  beforeAll(() => {
+    const directory = mkdtempSync(join(tmpdir(), 'flowatlas-accept-rule-'));
+    cpSync(ACCESS, directory, { recursive: true });
+    accessDb = join(directory, 'graph.db');
+  });
+  const unguarded = () =>
+    runDoctorCommand({ db: accessDb, baseline: false, out: join(accessDb, '..', 'out') }, quiet).report.unresolved.byReason.find(
+      (group) => group.reason === 'route-unguarded',
+    );
+
+  it('lists what a route pattern would take, and writes nothing', () => {
+    const lines: string[] = [];
+    const run = runAccept('route-unguarded', {
+      db: accessDb,
+      service: 'inventory',
+      path: 'GET /levels/*',
+      dryRun: true,
+      print: (line) => lines.push(line),
+    });
+    expect(run.covered).toBe(2);
+    expect(run.matched?.map((line) => line.split('  ')[1])).toEqual([
+      'src/stock/levels.controller.ts:15',
+      'src/stock/levels.controller.ts:20',
+    ]);
+    expect(lines[0]).toBe('would accept: route-unguarded · service inventory · path GET /levels/* (2 gaps)');
+    expect(loadAccepted(accessDb)).toEqual([]);
+  });
+
+  it('refuses a rule with no reason, and one that matches nothing', () => {
+    expect(() => runAccept('route-unguarded', { db: accessDb, service: 'inventory', path: 'GET /levels/*', print: silent })).toThrow(
+      /needs a reason/,
+    );
+    expect(() =>
+      runAccept('route-unguarded', { db: accessDb, path: 'GET /nowhere/*', note: 'x', print: silent }),
+    ).toThrow(/no gap in this graph matches route-unguarded · path GET \/nowhere\/\*/);
+  });
+
+  it('takes every route the pattern names out of doctor, and the page says which rule took them', () => {
+    expect(unguarded()?.count).toBe(2);
+    runAccept('route-unguarded', {
+      db: accessDb,
+      service: 'inventory',
+      path: 'GET /levels/*',
+      note: 'stock levels are published on purpose',
+      acceptedAt: '2026-01-01T00:00:00.000Z',
+      print: silent,
+    });
+    expect(loadAccepted(accessDb)).toEqual([
+      {
+        reason: 'route-unguarded',
+        service: 'inventory',
+        path: 'GET /levels/*',
+        note: 'stock levels are published on purpose',
+        acceptedAt: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+    expect(unguarded()).toBeUndefined();
+
+    const graph = openGraphDb(accessDb, { readonly: true });
+    try {
+      const rows = graph.allUnresolved();
+      const report = graph.report()!;
+      const packed = packGraph({
+        builtAt: report.builtAt,
+        nodes: graph.allNodes(),
+        edges: graph.allEdges(),
+        unresolved: rows,
+        report,
+        accepted: loadAccepted(accessDb),
+      });
+      expect(packed.accepted?.rules).toEqual(['route-unguarded · service inventory · path GET /levels/*']);
+      expect(Object.keys(packed.accepted?.byRule ?? {})).toHaveLength(2);
+      // The checked-in-body route and the others are not taken by it.
+      expect(packed.accepted?.rows).toHaveLength(2);
+      expect(Object.keys(packed.access ?? {}).length).toBeGreaterThan(0);
+    } finally {
+      graph.close();
+    }
+    runAccept('route-unguarded', { db: accessDb, service: 'inventory', path: 'GET /levels/*', remove: true, print: silent });
+    expect(unguarded()?.count).toBe(2);
+  });
+});
+

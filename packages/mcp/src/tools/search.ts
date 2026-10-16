@@ -1,4 +1,4 @@
-import { acceptedFor, failuresOf, gapIdOf, loadAccepted, type AcceptedGap, type GraphNode } from '@flowatlas/core';
+import { acceptedFor, acceptedKeyOf, describeAccepted, failuresOf, gapIdOf, isRule, loadAccepted, type AcceptedGap, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -31,6 +31,8 @@ export interface GapHit {
   message: string;
   accepted?: true;
   note?: string;
+  /** The rule that accepted it, when a rule did rather than an entry for this one place (P76). */
+  acceptedBy?: string;
 }
 
 export interface TypeHit {
@@ -105,10 +107,12 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
     if (service !== undefined && row.service !== service) continue;
     if (!gapText(row).includes(wanted)) continue;
     const id = gapIdOf(row);
-    // One row per gap id: the same reason in one file is one thing to accept.
-    if (seen.has(id)) continue;
-    seen.add(id);
     const entry = acceptedFor(accepted, row);
+    // One row per gap id: the same reason in one file is one thing to accept —
+    // unless a route rule took some of that file's rows and not the others.
+    const key = `${id}\u0000${entry === undefined ? '' : acceptedKeyOf(entry)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     rows.push({
       id,
       type: 'gap',
@@ -116,7 +120,13 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
       ...(row.service === null ? {} : { service: row.service }),
       ...(row.file === null ? {} : { loc: row.line === null ? row.file : `${row.file}:${row.line}` }),
       message: row.message,
-      ...(entry === undefined ? {} : { accepted: true as const, ...(entry.note === '' ? {} : { note: entry.note }) }),
+      ...(entry === undefined
+        ? {}
+        : {
+            accepted: true as const,
+            ...(entry.note === '' ? {} : { note: entry.note }),
+            ...(isRule(entry) ? { acceptedBy: describeAccepted(entry) } : {}),
+          }),
     });
   }
   // New gaps first: an accepted one is the least likely to be the question.
