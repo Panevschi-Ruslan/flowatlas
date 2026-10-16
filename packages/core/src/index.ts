@@ -543,3 +543,5 @@ export {
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
+export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, settleFailures } from './failures.js';
+export type { Failure, FailureSource } from './failures.js';

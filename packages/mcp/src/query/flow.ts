@@ -1,6 +1,7 @@
 import { STEP_OF_META, STEPS_META, TAKEN_BY_META, type DetailLevel, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import { projectDetail, projectEdge } from './detail.js';
+import { failsOf } from './fails.js';
 import { truncationMessage, type CompactNode, type FlowNode, type GuardRef } from './types.js';
 
 /**
@@ -198,6 +199,8 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
   };
   const rootGuards = guardsOf(db, entryId, detail);
   if (rootGuards.length > 0) root.guards = rootGuards;
+  const rootFails = failsOf(start);
+  if (rootFails.length > 0) root.fails = rootFails;
 
   const unresolvedIds = new Set<string>();
   if (db.unresolvedFor(entryId).length > 0) unresolvedIds.add(entryId);
@@ -253,6 +256,8 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
         };
         const guards = guardsOf(db, edge.to, detail);
         if (guards.length > 0) child.guards = guards;
+        const fails = failsOf(target);
+        if (fails.length > 0) child.fails = fails;
 
         used += 1;
         item.flow?.children.push(child);

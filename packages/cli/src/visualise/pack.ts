@@ -8,6 +8,9 @@ import { packObserved, type PackedObserved } from './observed.js';
 export type { PackedObserved };
 import { packShapes, type PackedShapes } from './shapes.js';
 import { packSites, type PackedSites } from './sites.js';
+import { packFails, type PackedFails } from './fails.js';
+
+export type { PackedFails };
 
 /**
  * The graph, small enough to ship inside one file.
@@ -89,6 +92,8 @@ export interface PackedGraph {
    * names it) or its stable key.
    */
   observed?: PackedObserved;
+  /** What each way in can fail with, by entry position (P68). Absent when none says. See `fails.ts`. */
+  fails?: PackedFails;
   report: unknown;
 }
 
@@ -245,6 +250,8 @@ export interface PackInput {
   observed?: Observed;
 }
 
+const withFails = (fails: PackedFails | undefined): { fails?: PackedFails } => (fails === undefined ? {} : { fails });
+
 export const packGraph = (input: PackInput): PackedGraph => {
   const rowsIn = input.unresolved;
   const [types, typeIx] = dictionary(input.nodes.map((node) => node.type));
@@ -347,6 +354,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     }),
     shapes,
     sites: packSites(packedEdges),
+    ...withFails(packFails(input.nodes, position)),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
     ...(input.editor === undefined
       ? {}

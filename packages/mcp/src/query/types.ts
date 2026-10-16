@@ -1,3 +1,4 @@
+import type { FailRef } from './fails.js';
 import type { DetailLevel } from '@flowatlas/core';
 
 /**
@@ -49,6 +50,8 @@ export interface FlowNode {
   node: CompactNode;
   edge?: FlowEdge;
   guards?: GuardRef[];
+  /** What a way in can fail with, on an entry that says (P68). */
+  fails?: FailRef[];
   children: FlowNode[];
 }
 

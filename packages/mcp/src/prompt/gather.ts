@@ -1,6 +1,7 @@
 import type { GraphNode } from '@flowatlas/core';
 import type { GraphDb, UnresolvedRow } from '@flowatlas/linker';
 import { projectDetail } from '../query/detail.js';
+import { failsOf } from '../query/fails.js';
 import { buildFlowTree, REVERSE_EDGES } from '../query/flow.js';
 import { nextFor } from '../query/next.js';
 import type { CompactNode, FlowEdge, FlowNode } from '../query/types.js';
@@ -99,6 +100,7 @@ export const gatherPromptSubject = (db: GraphDb, node: GraphNode): PromptSubject
           .map((found) => step(projectDetail(found, 1), 1));
 
   const compact = projectDetail(node, 1);
+  const fails = failsOf(node);
   const firstReal = steps.find((item) => item.type !== 'missing' && item.repeat !== true);
   return {
     id: node.id,
@@ -107,6 +109,7 @@ export const gatherPromptSubject = (db: GraphDb, node: GraphNode): PromptSubject
     ...(compact.kind === undefined ? {} : { kind: compact.kind }),
     ...(compact.service === undefined ? {} : { service: compact.service }),
     ...(compact.loc === undefined ? {} : { loc: compact.loc }),
+    ...(fails.length === 0 ? {} : { fails }),
     steps,
     stepsCut: flow.truncated === undefined ? 0 : Number.parseInt(flow.truncated.replace(/^\D+/, ''), 10) || 0,
     ...(producers === undefined ? {} : { producers }),

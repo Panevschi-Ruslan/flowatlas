@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:05:01.333Z",
+  "builtAt": "2026-10-16T11:21:55.465Z",
   "services": [
     {
       "name": "api",
@@ -543,7 +543,17 @@
         "rawPath": "/api/depots/:depotId/orders",
         "globalPrefix": "api",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "api#src/auth/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 16,
+            "source": "guard"
+          }
+        ]
       }
     },
     {
@@ -632,7 +642,17 @@
         "rawPath": "/api/depots/:depotId/orders/:orderId/cancel",
         "globalPrefix": "api",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "api#src/auth/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/main.ts",
+            "line": 16,
+            "source": "guard"
+          }
+        ]
       }
     },
     {

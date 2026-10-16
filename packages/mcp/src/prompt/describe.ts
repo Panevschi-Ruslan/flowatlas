@@ -6,6 +6,7 @@
  * data. Nothing here reads a database or a file, and no source code is ever
  * written into the text: it names where to look and which ids to ask for.
  */
+import type { FailRef } from '../query/fails.js';
 
 /** One step of the chain, in the order a walk reaches it. */
 export interface PromptStep {
@@ -44,6 +45,8 @@ export interface PromptSubject {
   kind?: string;
   service?: string;
   loc?: string;
+  /** What a way in can fail with, for an entry that says (P68). */
+  fails?: FailRef[];
   steps: PromptStep[];
   /** Steps the walk reached and the text left out. */
   stepsCut: number;
@@ -99,6 +102,13 @@ const gapLine = (gap: PromptGap): string => {
   return `- ${code(gap.reason)}${place.length === 0 ? '' : ` at ${place}`}: ${gap.message}.${hint}`.replace(/\.\./g, '.');
 };
 
+/** One way the subject fails: the status first, since that is what a caller sees. */
+const failLine = (fail: FailRef): string => {
+  const status = fail.status === undefined ? 'no status' : String(fail.status);
+  const place = fail.loc === undefined ? code(fail.at) : `${code(fail.loc)} (${code(fail.at)})`;
+  return `- **${status}** ${code(fail.exception)} — ${fail.source} at ${place}`;
+};
+
 /** First edge on the chain that says what it carries, read as the subject's shapes. */
 const shapesOf = (steps: readonly PromptStep[]): { in: string[]; out?: string } => {
   const first = steps.find((step) => (step.params?.length ?? 0) > 0 || step.returns !== undefined);
@@ -140,6 +150,7 @@ export const describeForPrompt = (subject: PromptSubject, limits: PromptLimits =
 
   const body = [
     ...head,
+    ...section('Can fail with', (subject.fails ?? []).map(failLine)),
     ...section('Published by', (subject.producers ?? []).map(stepLine)),
     ...section('Reached from', (subject.reachedFrom ?? []).map(stepLine)),
     ...section('Chain', chain.length === 0 ? ['- nothing further is recorded from here'] : chain),
