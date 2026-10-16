@@ -1,4 +1,4 @@
-import { acceptedFor, gapIdOf, loadAccepted, type AcceptedGap, type GraphNode } from '@flowatlas/core';
+import { acceptedFor, failuresOf, gapIdOf, loadAccepted, type AcceptedGap, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -16,7 +16,7 @@ import { bound, commonInput, inService, serviceInput, withDb, type Bounded, type
  * get_flow, who_emits, get_type or impact. A gap's id is
  * `gap:<service>|<file>|<reason>`, the one `flowatlas accept` takes.
  */
-export const SEARCH_KINDS = ['routes', 'channels', 'tables', 'types', 'gaps', 'classes'] as const;
+export const SEARCH_KINDS = ['routes', 'channels', 'tables', 'types', 'gaps', 'fails', 'classes'] as const;
 export type SearchKind = (typeof SEARCH_KINDS)[number];
 
 /** Node types that are a class in the code: what DI wires and what a page renders. */
@@ -40,7 +40,17 @@ export interface TypeHit {
   service?: string;
 }
 
-type Hit = CompactNode | GapHit | TypeHit;
+/** A way in that can fail with an exception: the id is the way in's, for get_flow. */
+export interface FailHit {
+  id: string;
+  type: 'entry';
+  label: string;
+  exception: string;
+  status?: number;
+  service?: string;
+}
+
+type Hit = CompactNode | GapHit | TypeHit | FailHit;
 
 interface SearchQuery {
   db: GraphDb;
@@ -114,12 +124,37 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
   return cut(rows, limit);
 };
 
+/** Ways in by what they can fail with: the exception's name or its status (P68). */
+const fails: Finder = ({ db, text, service, limit }) => {
+  const wanted = text.toLowerCase();
+  const rows: FailHit[] = [];
+  for (const node of db.nodesByType('entry').filter(inService(service))) {
+    const seen = new Set<string>();
+    for (const item of failuresOf(node)) {
+      const said = item.status === undefined ? item.exception : `${item.status} ${item.exception}`;
+      if (seen.has(said) || !said.toLowerCase().includes(wanted)) continue;
+      seen.add(said);
+      rows.push({
+        id: node.id,
+        type: 'entry',
+        label: node.label,
+        exception: item.exception,
+        ...(item.status === undefined ? {} : { status: item.status }),
+        service: node.repo,
+      });
+    }
+  }
+  rows.sort((a, b) => (a.exception < b.exception ? -1 : a.exception > b.exception ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return cut(rows, limit);
+};
+
 const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
   ['routes', nodesOf(['entry'])],
   ['channels', nodesOf(['channel'])],
   ['tables', nodesOf(['table'])],
   ['types', types],
   ['gaps', gaps],
+  ['fails', fails],
   ['classes', nodesOf(CLASS_TYPES)],
 ]);
 
@@ -153,7 +188,7 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Search everything',
       description:
-        'One query across routes and other entry points, channels, tables, types, gaps and classes. Rows are grouped by kind and carry the id the next tool takes; a gap id is what `flowatlas accept` takes, and accepted gaps say so.',
+        'One query across routes and other entry points, channels, tables, types, gaps, what ways in can fail with (an exception name or status) and classes. Rows are grouped by kind and carry the id the next tool takes; a gap id is what `flowatlas accept` takes, and accepted gaps say so.',
       inputSchema: {
         query: z.string().min(1).describe('a word, a path fragment, a reason, or a name'),
         kinds: z.array(z.enum(SEARCH_KINDS)).optional().describe('only these kinds; all by default'),

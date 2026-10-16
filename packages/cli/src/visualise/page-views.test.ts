@@ -30,7 +30,10 @@ const nodes: GraphNode[] = [
   }),
   n('entry:shop-gateway:http:GET:/health', 'entry', 'shop-gateway', { kind: 'http', label: 'GET /health' }),
   n('channel:cart.voided', 'channel', 'shop-orders', { label: 'cart.voided' }),
-  n('entry:shop-gateway:http:GET:/carts', 'entry', 'shop-gateway', { kind: 'http', label: 'GET /carts' }),
+  n('entry:shop-gateway:http:GET:/carts', 'entry', 'shop-gateway', {
+    kind: 'http', label: 'GET /carts',
+    meta: { fails: [{ status: 422, exception: 'CouponRejectedError', at: 'shop-gateway#CartsController.list', source: 'throw' }] },
+  }),
   n('shop-gateway#CartsController.list', 'method', 'shop-gateway', { label: 'CartsController.list' }),
   n('table:shop-orders#carts', 'table', 'shop-orders', { label: 'carts' }),
 ];
@@ -95,6 +98,15 @@ describe('one search over everything', () => {
       .toEqual(['CartsClient', 'CartsController']);
     expect(findEverything(model, 'cart voided').map((group) => group.key)).toEqual(['channels']);
     expect(findEverything(model, '   ')).toEqual([]);
+  });
+
+  it('finds the ways in that fail with an exception, by its name or status, and opens the way in', () => {
+    const model = modelOf(pack());
+    const fails = findEverything(model, 'coupon').find((group) => group.key === 'fails')!;
+    expect(fails.hits).toEqual([{ label: '422 CouponRejectedError', sub: 'GET /carts · shop-gateway', node: 6 }]);
+    expect(findEverything(model, '422').map((group) => group.key)).toEqual(['fails']);
+    // A way in's path finds the route, not every failure it has.
+    expect(findEverything(model, 'carts').map((group) => group.key)).not.toContain('fails');
   });
 });
 

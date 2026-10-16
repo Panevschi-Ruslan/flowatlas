@@ -378,6 +378,7 @@ export {
   isDeclarationShape,
 } from './declaration-shapes.js';
 export type { DeclarationShape } from './declaration-shapes.js';
+export { RXJS_DECLARATION_SHAPE, RXJS_SHAPE } from './rxjs-shape.js';
 
 export { isTestDirectory, isTestFile } from './test-files.js';
 

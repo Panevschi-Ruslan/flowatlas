@@ -13,8 +13,10 @@ import { ts, type Project } from 'ts-morph';
  * by hand in the package's own spelling, so the checker resolves the import as
  * it would against the real thing.
  *
- * The core holds the mechanism and no shape: which packages are worth one, and
- * what they declare, is the business of the reader that understands them.
+ * The core holds the mechanism and, of shapes, only the stream library's, which
+ * belongs to no framework and more than one reader needs (`rxjs-shape.ts`):
+ * which other packages are worth one, and what they declare, is the business
+ * of the reader that understands them.
  */
 export interface DeclarationShape {
   /** The package name an import is written with, e.g. `@scope/name`. */

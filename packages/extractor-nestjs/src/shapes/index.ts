@@ -1,9 +1,8 @@
-import type { DeclarationShape } from '@flowatlas/core';
+import { RXJS_DECLARATION_SHAPE, type DeclarationShape } from '@flowatlas/core';
 import { NEST_COMMON_SHAPE } from './nest-common.js';
 import { NEST_CORE_SHAPE } from './nest-core.js';
 import { NEST_MICROSERVICES_SHAPE } from './nest-microservices.js';
 import { NEST_PASSPORT_SHAPE } from './nest-passport.js';
-import { RXJS_SHAPE } from './rxjs.js';
 
 /**
  * The packages this reader carries a shape of, read only where the repository
@@ -16,7 +15,7 @@ import { RXJS_SHAPE } from './rxjs.js';
  * never a copy of the library, and the real package always wins.
  */
 export const NEST_SHAPES: readonly DeclarationShape[] = Object.freeze([
-  { package: 'rxjs', declarations: RXJS_SHAPE },
+  RXJS_DECLARATION_SHAPE,
   { package: '@nestjs/common', declarations: NEST_COMMON_SHAPE },
   { package: '@nestjs/core', declarations: NEST_CORE_SHAPE },
   { package: '@nestjs/microservices', declarations: NEST_MICROSERVICES_SHAPE },

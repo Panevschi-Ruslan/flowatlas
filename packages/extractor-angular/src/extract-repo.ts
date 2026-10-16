@@ -2,6 +2,7 @@ import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  builtInShapesFor,
   countSources,
   createProject,
   GraphBuilder,
@@ -34,6 +35,7 @@ import { socketsPass } from './passes/sockets.js';
 import { ssePass } from './passes/sse.js';
 import { templatesPass } from './passes/templates.js';
 import type { AngularExtractorPass } from './passes/types.js';
+import { ANGULAR_SHAPES } from './shapes/index.js';
 
 export interface ExtractRepoOptions {
   /** Absolute path to the repository root. */
@@ -74,6 +76,9 @@ export const openProject = (options: ExtractRepoOptions): Project => {
   const tsconfig = options.tsconfig ?? service.tsconfig;
   return createProject({
     rootDir: options.rootDir,
+    // Read only where the package itself does not resolve, and not at all where
+    // the configuration says so (`builtInShapes: false`).
+    ...(builtInShapesFor(options.config, service) ? { shapes: ANGULAR_SHAPES } : {}),
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(service.readTestDirectories === undefined
       ? {}

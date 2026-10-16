@@ -36,7 +36,10 @@ const graph: ProjectGraph = {
   builtAt: FIXED,
   services: [{ name: 'orders', repo: './orders', type: 'nestjs', extractor: null }],
   nodes: [
-    entry(ROUTE, { label: 'POST /orders' }),
+    entry(ROUTE, {
+      label: 'POST /orders',
+      meta: { fails: [{ status: 422, exception: 'CouponRejectedError', at: SERVICE, source: 'throw' }] },
+    }),
     node(HANDLER, { label: 'OrdersController.create' }),
     node(SERVICE, { label: 'OrdersService.place' }),
     node('orders:OrdersService', { type: 'provider', label: 'OrdersService' }),
@@ -154,6 +157,16 @@ describe('search', () => {
     ]);
     expect(found.results.gaps[0].accepted).toBeUndefined();
     expect(found.results.gaps[1]).toMatchObject({ accepted: true, note: 'known; read by name' });
+  });
+
+  it('finds the ways in that can fail with an exception, by its name or status', async () => {
+    const found = await call('search', { query: 'coupon' });
+    expect(Object.keys(found.results)).toEqual(['fails']);
+    expect(found.results.fails).toEqual([
+      { id: ROUTE, type: 'entry', label: 'POST /orders', exception: 'CouponRejectedError', status: 422, service: 'orders' },
+    ]);
+    expect(found.next[0]).toBe(`get_flow({entry: ${JSON.stringify(ROUTE)}})`);
+    expect((await call('search', { query: '422', kinds: ['fails'] })).counts).toEqual({ fails: 1 });
   });
 
   it('says when nothing matches', async () => {
