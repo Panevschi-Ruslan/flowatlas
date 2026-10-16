@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T21:41:15.322Z",
+  "builtAt": "2026-10-16T11:02:03.825Z",
   "services": [
     {
       "name": "members",
@@ -464,7 +464,14 @@
             }
           ],
           "returns": "type:@types/aws-lambda#PostConfirmationTriggerEvent"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "welcome {userName}",
+            "at": 5
+          }
+        ]
       }
     },
     {
@@ -521,7 +528,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 5
+          }
+        ]
       }
     },
     {
@@ -540,7 +553,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "restocking from chute {chute}",
+            "at": 8
+          }
+        ]
       }
     },
     {
@@ -559,7 +579,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "return {eventName}",
+            "at": 8
+          }
+        ]
       }
     },
     {
@@ -578,7 +605,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "shelf {shelf} is nearly empty",
+            "at": 9
+          }
+        ]
       }
     },
     {

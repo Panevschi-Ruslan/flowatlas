@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:35.839Z",
+  "builtAt": "2026-10-16T11:03:14.401Z",
   "services": [
     {
       "name": "nest-types",
@@ -694,7 +694,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 64
+          }
+        ]
       }
     },
     {

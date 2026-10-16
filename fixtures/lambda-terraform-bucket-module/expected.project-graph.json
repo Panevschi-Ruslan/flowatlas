@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T21:20:56.203Z",
+  "builtAt": "2026-10-16T11:01:54.038Z",
   "services": [
     {
       "name": "scans",
@@ -681,7 +681,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "cataloguing {messageId}",
+            "at": 5
+          }
+        ]
       }
     },
     {
@@ -700,7 +707,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "forgetting {key}",
+            "at": 5
+          }
+        ]
       }
     },
     {
@@ -738,7 +752,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "indexing {key}",
+            "at": 5
+          }
+        ]
       }
     },
     {
@@ -757,7 +778,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "withdrawn: {Message}",
+            "at": 5
+          }
+        ]
       }
     },
     {

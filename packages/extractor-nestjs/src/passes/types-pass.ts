@@ -60,7 +60,7 @@ const requestShape = (
 };
 
 /** Every method of every class this reader indexed, however written, by its node's id. */
-function* methodsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode]> {
+export function* methodsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode]> {
   for (const indexed of ctx.classes.all()) {
     for (const method of methodsOfClass(indexed.declaration)) {
       const id = ctx.methodIdOf(method);
@@ -70,7 +70,7 @@ function* methodsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode
 }
 
 /** Every function this reader made a node of, by that node's id. */
-function* functionsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode]> {
+export function* functionsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode]> {
   for (const [id, fn] of ctx.drawnFunctions) yield [id, fn.declaration];
 }
 
