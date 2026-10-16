@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:06:50.758Z",
+  "builtAt": "2026-10-16T11:23:18.831Z",
   "services": [
     {
       "name": "media",
@@ -443,7 +443,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "indexed",
+            "at": 5
+          }
+        ]
       }
     },
     {
@@ -481,7 +488,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "archived",
+            "at": 5
+          }
+        ]
       }
     },
     {
