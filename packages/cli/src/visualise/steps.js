@@ -9,6 +9,9 @@
  *   stepsOf       a way in, depth first in call order: a waterfall of rows
  *   createSeen    what was seen at run time, when the pack carries it
  *   promptFor     a way in, a channel or a check row as bounded Markdown
+ *   failsOf       what a way in can fail with, and failChips the statuses
+ *   logsOf        the lines a step logs
+ *   scheduleOf    when a scheduled way in fires, and in which zone
  */
 
 /** What each kind of step is drawn as, and called. */
@@ -90,14 +93,85 @@ export const stepInline = (model, i) => {
   return say ? say(model, i) : '';
 };
 
-const NO_SITES = Object.freeze({ order: [], failure: [], concurrent: [] });
+const NO_SITES = Object.freeze({ order: [], failure: [], concurrent: [], loop: [] });
 
 const sitesOf = (model) => {
   if (!model.stepSites) {
     const sites = model.data.sites || NO_SITES;
-    model.stepSites = { order: sites.order, failure: new Set(sites.failure), concurrent: new Set(sites.concurrent) };
+    model.stepSites = {
+      order: sites.order, failure: new Set(sites.failure), concurrent: new Set(sites.concurrent),
+      loop: new Map((sites.loop || []).map(([k, kind, line]) => [k, { kind, line }])),
+    };
   }
   return model.stepSites;
+};
+
+/* ── What a way in can fail with, what a step logs, when a job fires (P68, P71) ── */
+
+const NO_FAILS = Object.freeze([]);
+
+/** What a way in can fail with, as the pack's `fails` has it: `{ s?, x, at, id?, f?, l?, src }`. */
+export const failsOf = (model, entry) => (model.data.fails && model.data.fails[entry]) || NO_FAILS;
+
+/**
+ * The statuses a way in can fail with, lowest first and each once, then the
+ * exceptions that name no status: what a chip line says.
+ */
+export const failChips = (fails) => {
+  const statuses = [...new Set(fails.filter((f) => f.s !== undefined).map((f) => f.s))].sort((a, b) => a - b);
+  const bare = [...new Set(fails.filter((f) => f.s === undefined).map((f) => f.x))].sort();
+  return [...statuses.map(String), ...bare];
+};
+
+/** The failures of a way in written in one node, by that node's position. */
+const failsByNode = (fails) => {
+  const out = new Map();
+  for (const fail of fails) if (fail.at >= 0) out.set(fail.at, [...(out.get(fail.at) || []), fail]);
+  return out;
+};
+
+/** A failure as a few words: `409 ConflictException`, or the exception alone. */
+export const failSay = (fail) => (fail.s === undefined ? fail.x : fail.s + ' ' + fail.x);
+
+const NO_LOGS = Object.freeze([]);
+
+/** The lines a node logs, `{ level, line, text }`, in the order the code writes them. */
+export const logsOf = (model, i) => {
+  const list = model.data.logs && model.data.logs[i];
+  return list ? list.map(([level, line, text]) => ({ level, line, text: text ?? '' })) : NO_LOGS;
+};
+
+/** When a scheduled way in fires and in which zone, `{ expression, zone }`, or null. */
+export const scheduleOf = (model, i) => {
+  const expression = stepField(model, i, 'ex');
+  if (expression === undefined) return null;
+  const zone = stepField(model, i, 'tz');
+  return { expression: String(expression), zone: zone === undefined ? '' : String(zone) };
+};
+
+const QUERY_IN_LOOP = 'query-in-loop';
+
+/** The lines a query-in-loop row sits at, on the node whose loop it names. */
+const nPlusOneLines = (model, i) => {
+  const { reasons } = model.data.dicts;
+  const lines = [];
+  for (const r of model.rowsOn.get(i) || []) {
+    const row = model.data.rows[r];
+    if (reasons[row[4]] === QUERY_IN_LOOP) lines.push(row[3]);
+  }
+  return lines;
+};
+
+/**
+ * Whether an edge run per item is the one a query-in-loop row flags: the row
+ * sits on the caller, at the line of the call or the loop's own.
+ */
+const isNPlusOne = (model, k, loop) => {
+  if (!loop) return false;
+  const lines = nPlusOneLines(model, model.edges[k][0]);
+  if (lines.length === 0) return false;
+  const { order } = sitesOf(model);
+  return lines.some((line) => line === order[k] || line === loop.line || line === 0);
 };
 
 /**
@@ -201,18 +275,20 @@ export const stepsOf = (model, entry, options = {}) => {
   const answersOf = options.answersOf || (() => []);
   const seen = options.seen || NO_SEEN;
   const { confidences } = model.data.dicts;
-  const { failure, concurrent } = sitesOf(model);
+  const { failure, concurrent, loop: loops } = sitesOf(model);
+  const throwsAt = failsByNode(failsOf(model, entry));
   const rows = [{
     node: entry, depth: 0, edge: -1, parent: -1, kind: stepKindOf(model, entry), inline: stepInline(model, entry),
     confidence: '', certain: true, failure: false, together: false, again: false, loop: false, crosses: false,
-    seen: seen.entry(entry), answer: null,
+    seen: seen.entry(entry), answer: null, perItem: '', nPlusOne: false,
+    throws: throwsAt.get(entry) || NO_FAILS, logs: logsOf(model, entry),
   }];
   for (const answer of answersOf(model, entry)) {
     if (answer.kind !== 'failure') continue;
     rows.push({
       node: entry, depth: 1, edge: -1, parent: 0, kind: 'answer', inline: String(answer.status),
       confidence: '', certain: true, failure: true, together: false, again: false, loop: false, crosses: false,
-      seen: 0, answer,
+      seen: 0, answer, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS,
     });
   }
   const opening = stepBreakOf(model, entry);
@@ -238,6 +314,8 @@ export const stepsOf = (model, entry, options = {}) => {
       confidence, certain: STEP_CERTAIN.has(confidence), failure: up.failure || failure.has(k),
       together: concurrent.has(k), again, loop, crosses: model.nodes[to][2] !== model.nodes[up.node][2],
       seen: join ? join.count : 0, answer: null,
+      perItem: loops.has(k) ? loops.get(k).kind : '', nPlusOne: isNPlusOne(model, k, loops.get(k)),
+      throws: again || loop ? NO_FAILS : throwsAt.get(to) || NO_FAILS, logs: again || loop ? NO_LOGS : logsOf(model, to),
     };
     rows.push(row);
     if (loop || again) continue;
@@ -294,7 +372,8 @@ export const stepBreakOf = (model, i) => {
 const breakRow = (row, at, broken) => ({
   node: row.node, depth: row.depth + 1, edge: -1, parent: at, kind: 'break', inline: broken.say,
   confidence: '', certain: true, failure: true, together: false, again: false, loop: false, crosses: false,
-  seen: 0, answer: null, reason: broken.reason, message: broken.message,
+  seen: 0, answer: null, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS,
+  reason: broken.reason, message: broken.message,
 });
 
 /* ── Copy as prompt (P67) ── */
@@ -306,6 +385,9 @@ const PROMPT_MARKS = Object.freeze([
   [(row) => !row.certain && row.confidence !== '', (row) => 'best guess: ' + row.confidence],
   [(row) => row.failure, () => 'on failure'],
   [(row) => row.together, () => 'side by side'],
+  [(row) => row.perItem !== '', (row) => 'per item (' + row.perItem + ')'],
+  [(row) => row.nPlusOne, () => 'likely N+1'],
+  [(row) => row.throws.length > 0, (row) => 'throws ' + row.throws.map(failSay).join(', ')],
   [(row) => row.seen > 0, (row) => 'seen ×' + row.seen],
   [(row) => row.again, () => 'listed above'],
   [(row) => row.loop, () => 'loops back'],
@@ -329,10 +411,21 @@ const stepLine = (model, row) => {
   const label = row.kind === 'answer' ? 'answers ' + row.inline : model.nodes[row.node][1];
   const inline = row.inline && row.kind !== 'answer' && row.inline !== label ? ' → ' + tick(row.inline) : '';
   const marks = PROMPT_MARKS.filter(([when]) => when(row)).map(([, say]) => say(row));
-  return '  '.repeat(row.depth) + `- ${STEP_KINDS[row.kind].say} ${tick(label)}${inline}` +
+  const pad = '  '.repeat(row.depth);
+  const logs = row.logs.map((log) => `${pad}  - logs ${log.level}` + (log.text ? ' ' + tick(log.text) : '') +
+    (log.line ? ' at line ' + log.line : ''));
+  return [pad + `- ${STEP_KINDS[row.kind].say} ${tick(label)}${inline}` +
     (row.kind === 'answer' ? '' : ' at ' + tick(placeOfStep(model, row.node))) +
-    (marks.length ? ' [' + marks.join(', ') + ']' : '');
+    (marks.length ? ' [' + marks.join(', ') + ']' : ''), ...logs];
 };
+
+/** What a way in can fail with, a line each: status, exception, how, where. */
+const failLines = (model, entry) => failsOf(model, entry).map((fail) => {
+  const where = fail.f ? fail.f + (fail.l ? ':' + fail.l : '') : '';
+  const node = fail.at >= 0 ? model.nodes[fail.at][1] : fail.id || '';
+  return `- ${fail.s === undefined ? 'no status' : fail.s} ${tick(fail.x)} (${fail.src})` +
+    (node ? ' in ' + tick(node) : '') + (where ? ' at ' + tick(where) : '');
+});
 
 /** The check rows on these nodes, as one line each: reason, place, message, hint. */
 const gapLines = (model, nodes, limit) => {
@@ -383,7 +476,7 @@ const shapeLines = (model, kit, i) => {
 };
 
 const stepsBlock = (model, kit, steps) => {
-  const listed = steps.rows.slice(0, PROMPT_BOUNDS.steps).map((row) => stepLine(model, row));
+  const listed = steps.rows.slice(0, PROMPT_BOUNDS.steps).flatMap((row) => stepLine(model, row));
   const left = steps.rows.length - listed.length + steps.more;
   return left > 0 ? [...listed, `- … ${left} more steps not listed`] : listed;
 };
@@ -395,10 +488,14 @@ const PROMPT_TARGETS = Object.freeze({
   entry: (model, kit, i) => {
     const steps = stepsOf(model, i, { answersOf: kit.answersOf, seen: kit.seen });
     const hits = kit.seen ? kit.seen.entry(i) : 0;
+    const fails = failLines(model, i);
+    const schedule = scheduleOf(model, i);
     return [
       [`# Way in: ${model.nodes[i][1]}`, '', PROMPT_HEAD, ''],
       [...idLines(kit, i), `- source: ${tick(placeOfStep(model, i))}`, ...shapeLines(model, kit, i),
+        ...(schedule ? [`- schedule: ${tick(schedule.expression)}` + (schedule.zone ? ` in ${schedule.zone}` : '')] : []),
         ...(hits ? [`- seen at run time: ${hits} hits`] : []), ''],
+      ...(fails.length ? [[`## Can fail with ${failChips(failsOf(model, i)).join(' · ')}`, ...fails, '']] : []),
       ['## Steps', ...stepsBlock(model, kit, steps), ''],
       ...stepGaps(model, steps),
       ['## Ask for more', '- `get_flow` with the id above for the whole flow; `get_source` with a file:line for the code.'],

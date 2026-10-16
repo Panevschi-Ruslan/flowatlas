@@ -6,7 +6,7 @@ import { answersOf, createModel, type GraphModel } from './graph.js';
 import { createMap, mapCallOrder, mapSeenCount, mapTopTargets, mapView } from './map.js';
 import { packGraph, type PackedGraph } from './pack.js';
 import { packSites } from './sites.js';
-import { createSeen, promptFor, stepsOf } from './steps.js';
+import { createSeen, failChips, failsOf, promptFor, scheduleOf, stepsOf } from './steps.js';
 
 /**
  * A synthetic shop: a route calls a service that reads a table, publishes to
@@ -57,7 +57,7 @@ describe('sites', () => {
     expect(sites.concurrent).toEqual([6]);
     const branch = packSites([e(1, 2, 'calls', { meta: { order: 0, transitions: [{ kind: 'branch' }] } }),
       e(1, 3, 'calls', { meta: { order: 1, transitions: [{ kind: 'catch' }] } })]);
-    expect(branch).toEqual({ order: [0, 1], failure: [1], concurrent: [0] });
+    expect(branch).toEqual({ order: [0, 1], failure: [1], concurrent: [0], loop: [] });
   });
 });
 
@@ -153,5 +153,71 @@ describe('map in call order', () => {
     const data_ = [...laid.placed.entries()].find(([id]) => id.startsWith('data:'));
     if (data_) expect(data_[1]).toMatchObject({ under: 'service:shop-api' });
     expect(mapTopTargets(data, 'shop-api').channels.map((t) => t.node)).toEqual([5]);
+  });
+});
+
+describe('failures, loops, logs and schedules on the steps (P74)', () => {
+  const at = (id: string, type: GraphNode['type'], extra: Partial<GraphNode> = {}): GraphNode =>
+    n(id, type, 'shop-api', extra);
+  const list: GraphNode[] = [
+    at('entry:shop-api:http:POST:/carts', 'entry', {
+      kind: 'http', label: 'POST /carts',
+      meta: { fails: [
+        { status: 409, exception: 'ConflictException', at: 'shop-api#Carts.add', file: 'src/carts.ts', line: 21, source: 'throw' },
+        { status: 401, exception: 'AuthGuard', at: 'entry:shop-api:http:POST:/carts', source: 'guard' },
+        { exception: 'Error', at: 'shop-api#helper', source: 'throw' },
+      ] },
+    }),
+    at('shop-api#Carts.add', 'method', { label: 'Carts.add', line: 15,
+      meta: { logs: [{ level: 'log', text: 'adding {count} items', at: 16 }, { level: 'error', at: 22 }] } }),
+    at('db:shop-api#2', 'db_query', { label: 'find', line: 18, meta: { table: 'items', op: 'read' } }),
+    at('entry:shop-api:cron:nightly', 'entry', { kind: 'cron', label: 'cron nightly',
+      meta: { expression: '0 3 * * *', timeZone: 'Europe/Paris' } }),
+  ];
+  const linked: GraphEdge[] = [
+    { from: list[0]!.id, to: list[1]!.id, type: 'handles', confidence: 'static' },
+    { from: list[1]!.id, to: list[2]!.id, type: 'calls', confidence: 'static', line: 18, meta: { inLoop: { kind: 'for-of', line: 17 } } },
+  ];
+  const data = packGraph({
+    builtAt: '2026-01-01T00:00:00Z', nodes: list, edges: linked, report,
+    unresolved: [
+      { service: 'shop-api', file: 'src/a.ts', line: 18, reason: 'query-in-loop', level: 'nothing', sites: 1,
+        message: 'A database query runs once per item of a `for-of` loop: likely N+1.', hint: null, node: list[1]!.id },
+    ] as never,
+  });
+  const model = modelOf(data);
+
+  it('packs the loop, the logs and the schedule compactly', () => {
+    expect(data.sites.loop).toEqual([[1, 'for-of', 17]]);
+    expect(data.logs).toEqual({ 1: [['log', 16, 'adding {count} items'], ['error', 22]] });
+    expect(scheduleOf(model, 3)).toEqual({ expression: '0 3 * * *', zone: 'Europe/Paris' });
+    expect(scheduleOf(model, 0)).toBeNull();
+  });
+
+  it('says the statuses once each, lowest first, then the exceptions with none', () => {
+    expect(failChips(failsOf(model, 0))).toEqual(['401', '409', 'Error']);
+    expect(failsOf(model, 3)).toEqual([]);
+  });
+
+  it('marks the step that throws, the call per item and the likely N+1, and carries the logs', () => {
+    const { rows } = stepsOf(model, 0);
+    const add = rows.find((row) => row.node === 1)!;
+    expect(add.throws.map((f) => f.s)).toEqual([409]);
+    expect(add.logs).toEqual([{ level: 'log', line: 16, text: 'adding {count} items' }, { level: 'error', line: 22, text: '' }]);
+    expect(rows[0]!.throws.map((f) => f.s)).toEqual([401]);
+    const find = rows.find((row) => row.node === 2)!;
+    expect(find.perItem).toBe('for-of');
+    expect(find.nPlusOne).toBe(true);
+    expect(add.perItem).toBe('');
+  });
+
+  it('copies the failures and the logs into the prompt', () => {
+    const text = promptFor(model, { entry: 0 }, { keyOf: (i) => 'k' + i });
+    expect(text).toContain('## Can fail with 401 · 409 · Error');
+    expect(text).toContain('- 409 `ConflictException` (throw) in `Carts.add` at `src/carts.ts:21`');
+    expect(text).toContain('per item (for-of), likely N+1');
+    expect(text).toContain('throws 409 ConflictException');
+    expect(text).toContain('- logs log `adding {count} items` at line 16');
+    expect(promptFor(model, { entry: 3 }, { keyOf: (i) => 'k' + i })).toContain('- schedule: `0 3 * * *` in Europe/Paris');
   });
 });

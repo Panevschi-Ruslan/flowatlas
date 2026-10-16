@@ -13,6 +13,11 @@ export interface PackedSites {
   order: number[];
   failure: number[];
   concurrent: number[];
+  /**
+   * Edges run once per item of a loop (P69), as `[edge, kind, line]`: the
+   * loop's kind as the code writes it (`for-of`, `map`) and the line it opens on.
+   */
+  loop: Array<[number, string, number]>;
 }
 
 type Transition = { kind?: unknown };
@@ -36,6 +41,12 @@ const isDeclaredConcurrent = (edge: GraphEdge): boolean =>
   edge.meta?.['parallel'] === true ||
   transitionsOf(edge).some((t) => SIDE_BY_SIDE.has(t.kind));
 
+const loopOf = (edge: GraphEdge): [string, number] | undefined => {
+  const loop = edge.meta?.['inLoop'] as { kind?: unknown; line?: unknown } | undefined;
+  if (loop === undefined || typeof loop.kind !== 'string') return undefined;
+  return [loop.kind, typeof loop.line === 'number' ? loop.line : 0];
+};
+
 const orderOf = (edge: GraphEdge): number => {
   const order = edge.meta?.['order'];
   if (typeof order === 'number' && Number.isFinite(order)) return order;
@@ -53,9 +64,12 @@ export const packSites = (edges: readonly GraphEdge[]): PackedSites => {
   const order = edges.map(orderOf);
   const failure: number[] = [];
   const concurrent: number[] = [];
+  const loop: PackedSites['loop'] = [];
   edges.forEach((edge, k) => {
     if (isFailure(edge)) failure.push(k);
     if (isDeclaredConcurrent(edge)) concurrent.push(k);
+    const inLoop = loopOf(edge);
+    if (inLoop !== undefined) loop.push([k, ...inLoop]);
   });
-  return { order, failure, concurrent };
+  return { order, failure, concurrent, loop };
 };

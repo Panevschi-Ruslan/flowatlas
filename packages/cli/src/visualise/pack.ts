@@ -16,6 +16,26 @@ import { packFails, type PackedFails } from './fails.js';
 
 export type { PackedFails };
 
+export type PackedLogs = Record<number, Array<[level: string, line: number, text?: string]>>;
+
+type LogLine = { level?: unknown; text?: unknown; at?: unknown };
+
+/** What each node logs, kept to a level, a line and a template. */
+const packLogs = (nodes: readonly GraphNode[]): { logs?: PackedLogs } => {
+  const out: PackedLogs = {};
+  nodes.forEach((node, index) => {
+    const list = node.meta?.['logs'];
+    if (!Array.isArray(list)) return;
+    const lines = (list as LogLine[]).flatMap((item): PackedLogs[number] => {
+      if (typeof item?.level !== 'string') return [];
+      const at = typeof item.at === 'number' ? item.at : 0;
+      return [typeof item.text === 'string' && item.text !== '' ? [item.level, at, item.text] : [item.level, at]];
+    });
+    if (lines.length > 0) out[index] = lines;
+  });
+  return Object.keys(out).length === 0 ? {} : { logs: out };
+};
+
 /**
  * The graph, small enough to ship inside one file.
  *
@@ -109,6 +129,11 @@ export interface PackedGraph {
   changes?: PackedChanges;
   /** What each way in can fail with, by entry position (P68). Absent when none says. See `fails.ts`. */
   fails?: PackedFails;
+  /**
+   * The lines each method or function logs (P71), by node position, as
+   * `[level, line, template?]`. Absent when nothing logs.
+   */
+  logs?: PackedLogs;
   report: unknown;
 }
 
@@ -179,6 +204,9 @@ const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerate
   ['declaredBy', 'dy', false],
   ['unreferenced', 'un', false],
   ['bodyKeys', 'bk', false],
+  // When a schedule fires, and in which zone (P71).
+  ['expression', 'ex', false],
+  ['timeZone', 'tz', true],
 ];
 
 /** How many of `META_FIELDS` the walk and the lists read, and so always ship. */
@@ -391,6 +419,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     busiest: packBusiest(input.nodes, packedEdges, position),
     ...(input.changes === undefined ? {} : { changes: input.changes }),
     ...withFails(packFails(input.nodes, position)),
+    ...packLogs(input.nodes),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
     ...(input.accepted === undefined || input.accepted.length === 0
       ? {}

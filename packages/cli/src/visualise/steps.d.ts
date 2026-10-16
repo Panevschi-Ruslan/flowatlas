@@ -4,6 +4,13 @@
  */
 import type { GraphModel } from './graph.js';
 import type { PackedGraph } from './pack.js';
+import type { PackedFail } from './fails.js';
+
+export interface StepLog {
+  level: string;
+  line: number;
+  text: string;
+}
 
 export type StepKind = 'handler' | 'service' | 'db' | 'http' | 'channel' | 'lambda' | 'workflow' | 'answer' | 'break' | 'other';
 
@@ -27,6 +34,14 @@ export interface StepRow {
   crosses: boolean;
   seen: number;
   answer: { kind: string; status: string; ref: number } | null;
+  /** The loop this step runs once per item of (`for-of`, `map`), '' when none. */
+  perItem: string;
+  /** A query-in-loop row flags this call: likely N+1. */
+  nPlusOne: boolean;
+  /** What the way in fails with that this step throws or checks. */
+  throws: readonly PackedFail[];
+  /** The lines this step logs. */
+  logs: readonly StepLog[];
   /** On a `break` row: the check row's reason and message, '' when the break is structural. */
   reason?: string;
   message?: string;
@@ -79,3 +94,8 @@ export declare const promptFor: (
   target: { entry: number } | { channel: number } | { row: number },
   kit: PromptKit,
 ) => string;
+export declare const failsOf: (model: GraphModel, entry: number) => readonly PackedFail[];
+export declare const failChips: (fails: readonly PackedFail[]) => string[];
+export declare const failSay: (fail: PackedFail) => string;
+export declare const logsOf: (model: GraphModel, i: number) => readonly StepLog[];
+export declare const scheduleOf: (model: GraphModel, i: number) => { expression: string; zone: string } | null;
