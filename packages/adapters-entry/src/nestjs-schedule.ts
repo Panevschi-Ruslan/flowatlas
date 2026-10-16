@@ -52,8 +52,11 @@ export const nestjsScheduleAdapter: EntryAdapter = {
             }
             meta['expression'] = expression.value;
             if (options?.resolved === true && typeof options.value === 'object' && options.value !== null) {
-              const jobName = (options.value as { name?: unknown }).name;
+              const { name: jobName, timeZone, utcOffset } = options.value as Record<string, unknown>;
               if (typeof jobName === 'string') meta['name'] = jobName;
+              // When the schedule fires is the expression read in this zone.
+              if (typeof timeZone === 'string') meta['timeZone'] = timeZone;
+              if (typeof utcOffset === 'string' || typeof utcOffset === 'number') meta['utcOffset'] = utcOffset;
             }
           } else {
             // Both accept an optional leading name: (ms) or (name, ms).

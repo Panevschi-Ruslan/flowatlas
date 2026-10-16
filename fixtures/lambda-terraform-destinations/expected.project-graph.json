@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T21:18:11.947Z",
+  "builtAt": "2026-10-16T11:01:58.057Z",
   "services": [
     {
       "name": "lending",
@@ -571,7 +571,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "loan",
+            "at": 3
+          }
+        ]
       }
     },
     {
@@ -609,7 +616,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 5
+          }
+        ]
       }
     },
     {
@@ -647,7 +660,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 5
+          }
+        ]
       }
     },
     {
@@ -666,7 +685,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "failed",
+            "at": 3
+          }
+        ]
       }
     },
     {

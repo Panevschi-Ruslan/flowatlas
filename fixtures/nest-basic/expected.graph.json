@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-basic",
-  "generatedAt": "2026-10-07T14:34:03.470Z",
+  "generatedAt": "2026-10-16T11:02:26.589Z",
   "nodes": [
     {
       "id": "entry:nest-basic:http:DELETE:/api/orders/:param",
@@ -272,7 +272,14 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "listing orders",
+            "at": 21
+          }
+        ]
       }
     },
     {
@@ -343,7 +350,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "empty order id",
+            "at": 43
+          }
+        ]
       }
     },
     {

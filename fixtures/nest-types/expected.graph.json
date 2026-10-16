@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-types",
-  "generatedAt": "2026-10-07T14:34:35.821Z",
+  "generatedAt": "2026-10-16T11:03:14.349Z",
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",
@@ -687,7 +687,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 64
+          }
+        ]
       }
     },
     {
