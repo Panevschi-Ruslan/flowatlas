@@ -8,236 +8,298 @@ only one of them moved.
 
 ### Added
 
-- **Which guard covers a route, and from where; routes settled before they are
-  called unguarded (P76).** A NestJS entry carries `meta.access`: every guard
-  and middleware in front of it with `where` (`global`, `module`, `controller`,
-  `route`) and `via` (`APP_GUARD in AuthModule.forRoot`, `useGlobalGuards in
-  src/main.ts`, `@UseGuards on OrdersController`). `APP_GUARD` is read through
-  spreads, named arrays and a module's own `forRoot()`, and an installed class
-  (`useClass: ThrottlerGuard`) counts too. `@Public()`-style decorators —
-  `SetMetadata(KEY, true)`, through a function of the project's own or
-  `applyDecorators`, on the handler or the class — switch off each guard that
-  reads the key, so the route is open on purpose rather than unguarded. A route
-  with no guard whose own code throws a 401 or 403 is `route-checked-in-body`
-  (info), not `route-unguarded`. `get_flow`, `describe_for_prompt` and the
-  page's details panel show it all (`fixtures/nest-route-access`).
-- **`flowatlas accept` by rule (P76).** `--path 'GET /api/public/*'` accepts a
-  route finding on every route a pattern names, `--file` takes a glob, and
-  `--dry-run` lists what a rule would take; a rule needs `--note`. The page's
-  *Not joined* tab says which rule took a row and offers *Accept all like this*,
-  which copies the command. `accepted.json` is now version 2.
+- **What each route can fail with (P68).** A NestJS entry gained
+  `meta.fails: [{status, exception, at, file, line, source}]`: the built-in
+  exceptions and `new HttpException(..., status)` thrown by its handler, by the
+  services and helpers it calls and by the exception classes they extend, a
+  guard's refusal (403; 401 for passport's `AuthGuard`, 429 for the throttler),
+  and the framework's pipes (400) on the route or on a parameter. Throws caught
+  in the same body and rethrows were left out; a non-HTTP entry kept the
+  exception and no status. `get_flow` showed `fails` on each entry, and
+  `describe_for_prompt` gained a "Can fail with" section
+  (`fixtures/nest-failures`).
+- **Calls run once per item, or side by side (P69).** A call inside a `for`,
+  `for…of`, `for…in`, `while` or `do` body, or inside a function handed to
+  `map`, `forEach`, `reduce` and the like, gained `meta.inLoop: {kind, line}`;
+  one inside the arguments of `Promise.all`, `allSettled`, `race` or `any`
+  gained `meta.concurrent` and `meta.together: {by, line}`. A query, cache
+  call, request or publish reached once per item, directly or through a
+  function the loop calls, became a `query-in-loop` row: a likely N+1
+  (`fixtures/nest-query-loop`).
+- **Log lines on steps, and the zone a schedule fires in (P71).** Methods and
+  functions gained `meta.logs: [{level, text, at}]`, one per line written
+  through a logger or the console, with the message kept as a template whose
+  values are named by what holds them, never by what they hold. A `@Cron` way
+  in gained `meta.timeZone` or `meta.utcOffset` from its options
+  (`fixtures/nest-jobs-logs`).
+- **Built-in declaration shapes for uninstalled repositories (P70).** Where
+  `rxjs`, `@nestjs/common`, `@nestjs/core`, `@nestjs/microservices` or
+  `@nestjs/passport` did not resolve, the server reader read a few hand-written
+  declarations of their public surface in their place, and the Angular reader
+  did the same for `rxjs`, `@angular/core` and `@angular/common/http`. They
+  were held in memory, never written to disk, and an installed package always
+  won. On a clone with nothing installed, a `ClientsModule.register([{ name }])`
+  token resolved for `@Inject(name) ClientProxy`, passport's `AuthGuard` kept
+  its 401, and `Observable<T>` returns unwrapped: on `fixtures/multi-repo`
+  copied out of the workspace, `module-import-dynamic` went from 1 to 0,
+  `di-token-unknown` from 1 to 0 and `type-unresolved` from 12 to 0.
+  `builtInShapes: false` turned them off, project-wide or per service.
+- **Which guard covers a route, and from where (P76).** A NestJS entry gained
+  `meta.access`: every guard and middleware in front of it with `where`
+  (`global`, `module`, `controller`, `route`) and `via` (`APP_GUARD in
+  AuthModule.forRoot`, `useGlobalGuards in src/main.ts`, `@UseGuards on
+  OrdersController`). `APP_GUARD` was read through spreads, named arrays, a
+  provider held in a const and a module's own `forRoot()`, and an installed
+  class (`useClass: ThrottlerGuard`) counted too; a `providers:` list that
+  could not be followed became a `module-providers-unread` row. A
+  `@Public()`-style decorator - `SetMetadata(KEY, true)`, through a function of
+  the project's own or `applyDecorators`, on the handler or the class -
+  switched off each guard that reads the key. `get_flow`, `describe_for_prompt`
+  (an "In front of it" section) and the page's details panel showed it all
+  (`fixtures/nest-route-access`).
+- **Base URLs from the repositories' own files (P77).** A request rooted at a
+  setting no service claims under `baseUrlEnv` was completed from what the
+  setting is given: the environment a function running it is deployed with,
+  else `.env.example`, `.env.sample`, `.env.template` or `.env.development`, the
+  compose container built from the repository (`environment:`, `env_file:`),
+  `serverless.yml` and `wrangler.json` / `wrangler.toml` variables, and the
+  code's own fallback (`?? '…'`, `|| '…'`, `config.get(key, '…')`, a
+  `registerAs` factory). `.env`, `.env.local` and other environments' files
+  were read for names only. Only an address was kept, scheme, host and path;
+  secrets by name, credentials, queries and token-like paths were dropped. The
+  host was matched to a service by its name, the new `services[].hosts`, its
+  compose container names and published ports, and the port its example file
+  runs it on; a host outside the project was a third party. Such a join was
+  `heuristic`, with `baseUrl` and `baseUrlFrom` on the edge, the request, the
+  page and `get_flow`, and a `base-url-from-files` row at `info`. A setting
+  nothing gives a value and named after exactly one service was taken as it
+  (`base-url-from-name`). The same files completed an address waiting on the
+  environment where no deployed function sets it (`environment-from-files`).
+  `settingFiles.read: false` turned it off and `settingFiles.environment`
+  chose one environment (`fixtures/multi-repo-base-urls`).
 - **What the reader could not follow, grouped by cause (P75).** A row about a
-  step that could not be followed now records why, as the code states it, under
-  `meta.cause` and the package it points into under `meta.package`; a folded
-  row lists the same per cause under `meta.causes`, with a few places each, so
-  folding never loses why. Causes include `module-not-installed:<package>`,
+  step that could not be followed recorded why, as the code states it, under
+  `meta.cause`, and the package it points into under `meta.package`; a folded
+  row listed the same per cause under `meta.causes`, with a few places each, so
+  folding no longer lost why. Causes include `module-not-installed:<package>`,
   `import-unresolved`, `re-export-missing`, `any-typed`, `language-any`,
   `untyped-parameter`, `callback-param`, `dynamic-member`, `interface-type`,
-  `function-field` and `data-layer-unnamed`; a row with no finer answer counts
-  under its own reason. `flowatlas doctor --unresolved` prints them by cause
-  and by package (`--top`, `--samples`, `--cause`, `--package`, `--json`),
-  the page shows a "Can't follow" sheet under Not joined, and the MCP tool
-  `cant_follow` answers the same with `next` hints (`fixtures/cant-follow`).
-  The graph database keeps each row's meta in a new `unresolved.meta` column.
-- **Base URLs from the repositories' own files (P77).** A request rooted at a
-  setting no service claims under `baseUrlEnv` is completed from what the
-  setting is given: the environment a function running it is deployed with,
-  else `.env.example` / `.env.sample` / `.env.template` / `.env.development`,
-  the compose container built from the repository (`environment:`,
-  `env_file:`), `serverless.yml` and `wrangler.json` / `wrangler.toml`
-  variables, and the code's own fallback (`?? '…'`, `|| '…'`,
-  `config.get(key, '…')`, a `registerAs` factory). `.env`, `.env.local` and
-  other environments' files are read for names only. Only an address is kept,
-  scheme, host and path; secrets by name, credentials, queries and token-like
-  paths are dropped. The host is matched to a service by its name, its new
-  `services[].hosts`, its compose container names and published ports, and the
-  port its example file runs it on; a host outside the project is a third
-  party. Joins are `heuristic`, with `baseUrl` and `baseUrlFrom` on the edge,
-  the request, the page and `get_flow`, and a `base-url-from-files` info row.
-  A setting nothing gives a value and named after exactly one service is taken
-  as it (`base-url-from-name`). The same files complete an address waiting on
-  the environment where no deployed function sets it
-  (`environment-from-files`). `settingFiles.read: false` turns it off and
-  `settingFiles.environment` chooses one environment
-  (`fixtures/multi-repo-base-urls`).
-- **Built-in declaration shapes for uninstalled Nest repositories (P70).**
-  Where `rxjs`, `@nestjs/common`, `@nestjs/core` or `@nestjs/microservices`
-  does not resolve, the Nest reader reads a few hand-written declarations of
-  their public surface in its place (held in memory, never written to disk;
-  the installed package always wins). A `ClientsModule.register([{ name }])`
-  token now resolves for `@Inject(name) ClientProxy` and `Observable<T>`
-  returns unwrap on a clone with nothing installed: on `fixtures/multi-repo`
-  copied out of the workspace, `module-import-dynamic` 1 → 0,
-  `di-token-unknown` 1 → 0, `type-unresolved` 12 → 0. Turn off with
-  `builtInShapes: false`, project-wide or per service.
-- **What each route can fail with (P68).** A NestJS entry carries
-  `meta.fails: [{status, exception, at, file, line, source}]`: the built-in
-  exceptions and `new HttpException(..., status)` thrown by its handler, the
-  services and helpers it calls and the exception classes they extend, a
-  guard's refusal (403, 401 for passport's `AuthGuard`), and the framework's
-  pipes (400) on the route or on a parameter. Throws caught in the same body
-  and rethrows are left out; a non-HTTP entry keeps the exception and no
-  status. `get_flow` shows `fails` on each entry, and `describe_for_prompt`
-  leads with a "Can fail with" section (`fixtures/nest-failures`).
-- **`flowatlas observe <file...>`: run-time traces confirm static joins
-  (P65).** Reads OTLP/JSON and @nestjs/observe trace files, keeps only the
-  names that place a span in code (method, route template, `Class.method`,
-  queue or topic, collection), drops every value, and matches spans to entries,
-  handlers, channels, outbound calls and cross-service joins. Writes
-  `.flowatlas/observed.json` (per join a count and last seen, per entry its
-  hits, and the spans no code accounts for); `visualise` adds it to the page
-  data as `observed` (`fixtures/multi-repo/traces`).
-- **MCP answers carry the id the next question needs (P63).** Every answer
-  ends with `next`, the calls that take the ids it returned; the server
-  instructions spell out the chains (entry → flow → source, channel →
-  publishers and handlers → flow, symbol → impact). A new `start_here` tool
-  gives counts per service, the commonest gaps and the entry ids to begin
-  from. `who_calls`, `impact`, `who_emits` and `who_consumes` take the same
-  optional `service` filter `list_entries` and `find_symbol` already did.
-  Existing fields are unchanged.
-- **`describe_for_prompt` (P67, MCP half).** One entry, channel or symbol as
-  bounded Markdown: the chain with repo-relative `file:line`, shapes in and
-  out, gaps with their reasons, and the ids to ask next. Rendered by the pure
-  `describeForPrompt`, exported from `@flowatlas/mcp` for reuse.
-
-- **Failure paths for workflows and remote destinations, and module
-  versioning (P60).** A workflow or a function named elsewhere that an IoT
-  rule's `error_action` starts is joined with `meta.when: "failure"` on its
-  edge. A Lambda destination function another service deploys is joined by a
-  `triggers` edge carrying `meta.when`, as a local one is; an invoke
-  configuration of a function another service creates is joined from that
-  function's entry into its destinations instead of being a
-  `subscription-source-unread` row. `terraform-aws-modules/s3-bucket/aws`'s
-  `versioning` input marks its bucket as keeping versions, so a delete naming
-  no version is matched as the marker it leaves
-  (`fixtures/lambda-terraform-destinations`, `fixtures/lambda-terraform-other-ways-in`,
-  `fixtures/lambda-terraform-bucket-module`).
-- **A workflow's write reaches the function a stream runs (P55).** A Step
-  Functions task that writes to a table - `dynamodb:putItem`, `updateItem`,
-  `deleteItem`, and through `aws-sdk:` the batch and transaction writes - is a
-  producer onto `dynamodb/<table>` from that state, kept only where the
-  table's stream is declared, as a function's write is; `aws-sdk:kinesis:putRecord`
-  and `putRecords` land on `kinesis/<stream>`. A table chosen at run time
-  (`TableName.$`, JSONata) is the existing `workflow-target-dynamic` row. A
-  batch keyed by a bare word, `RequestItems: { orders: [...] }`, or by a
-  shorthand property, is read as the table that word names. A transaction's
-  `ConditionCheck` names no written table and no longer reads as an address
-  nobody could read, in code or in a definition; a batch or a transaction
-  writes no single message, so it is no `payload-type-unknown` row
-  (`fixtures/lambda-terraform-table-stream`).
-- **Function URL callers and Lambda destinations** (P54). A request rooted at
-  a setting no service claims joins the `ALL /*` entry of the function URL the
-  running function's environment names (`aws_lambda_function_url.x.function_url`,
-  directly or through a module output), `via: "functionUrl"`, `static` where the
-  path is read and `heuristic` where it is not; `process.env.X + '/path'` is
-  read as an address rooted at `X`. `aws_lambda_function_event_invoke_config`
-  `destination_config` and an event-source mapping's `on_failure` are
-  `triggers` edges from the run to the destination function or a publisher onto
-  its queue, topic or bus, with `meta.when: "success" | "failure"`; a result
-  put on a bus is the platform's `lambda` / `Lambda Function Invocation Result -
-  Success|Failure` event (`fixtures/lambda-terraform-destinations`) Each function URL's entry is keyed by the function
-  it stands in front of, `http:ALL:/*@<function>`, so two URLs in one
-  repository no longer merge into one entry.
-- S3 bucket notifications, and the writes that fire them (P52).
-  `aws_s3_bucket_notification` is read from Terraform: each `lambda_function`,
-  `queue` and `topic` block is a consumer of `s3/<bucket>` taking its `events`
-  and keys by `filter_prefix`/`filter_suffix`, and `eventbridge = true` puts the
-  bucket's events on the default bus as `aws.s3`, where existing rules take
-  them. `PutObject`, `CopyObject`, `CompleteMultipartUpload`,
-  `DeleteObject(s)`, version 2's `upload` and `@aws-sdk/lib-storage`'s `Upload`
-  are publishers onto the bucket by `Bucket` - written out, from `process.env`
-  completed from the deployment, or a constant - recorded as the event they
-  fire with the key they write. Each write's edge says which notifications take
-  it (`takenBy`), `static` where the key as written says so and `heuristic` with
-  the reason otherwise; a URL signed for a `PutObjectCommand` is a `heuristic`
-  write, `because: ["presigned"]`. New rows `bucket-notification-unread` and
-  `s3-write-matches-nothing` (info). A locator `receiver-constructed-path`
-  reads what a receiver was constructed with
-  (`fixtures/lambda-terraform-bucket-notification`).
-- **A table write reaches the function its stream runs.** DynamoDB writes -
-  `PutItem`, `UpdateItem`, `DeleteItem`, `BatchWriteItem`,
+  `function-field` and `data-layer-unnamed`; a row with no finer answer counted
+  under its own reason. `flowatlas doctor --unresolved` printed them by cause
+  and by package (`--top`, `--samples`, `--cause`, `--package`, `--json`), the
+  page's Not joined tab gained a Can't follow sheet, and the graph server
+  gained `cant_follow` (`fixtures/cant-follow`).
+- **`flowatlas accept` (P72, P76).** Accepted a known gap by reason or by gap
+  id (`gap:<service>|<file>|<reason>`), narrowed with `--service` and `--file`,
+  with a `--note`, and undone with `--remove`; `--list` printed what is
+  accepted. It wrote `accepted.json` beside `graph.db` and refused a target no
+  current gap matches. `doctor` left accepted gaps out of every count and said
+  how many (`unresolved.accepted` in `doctor.json`). A rule accepted a route
+  finding on every route a `--path` pattern names (`'GET /api/public/*'`), or
+  in every file a `--file` glob names; a rule needed `--note`, and `--dry-run`
+  listed what it would take. The page's Not joined tab muted accepted rows
+  behind *show accepted*, said which rule took a row, and offered *Accept all
+  like this*, which copied the command.
+- **`flowatlas observe <file...>`: run-time traces confirmed static joins
+  (P65).** Read OTLP/JSON and @nestjs/observe trace files, kept only the names
+  that place a span in code (method, route template, `Class.method`, queue or
+  topic, collection), dropped every value, and matched spans to entries,
+  handlers, channels, outbound calls and cross-service joins. It wrote
+  `.flowatlas/observed.json`: per join a count and when it was last seen, per
+  entry its hits, and the spans no code accounts for. The page showed seen
+  counts on ways in and steps, thicker Map links and a "seen at run time, not
+  found in code" list, and `get_flow` and `who_calls` rows carried
+  `observed: n`. No edge was drawn from a trace (`fixtures/multi-repo/traces`).
+- **A Steps tab (P64, P74).** One way in as a list in call order, indented by
+  depth: each step with a kind mark and its table, address template or channel
+  inline, calls side by side and calls per item marked, a likely N+1 flagged,
+  failure paths in red, a red row where a chain breaks (no route, no handler,
+  an address not read), and best guesses marked. Its heading listed what the
+  way in can fail with, as the ways-in list and the details panel did too, and
+  the step that throws was marked; a scheduled way in showed its expression and
+  zone, and each step's log lines were folded under it. Hovering a row lit its
+  node in the Graph tab.
+- **Copy as prompt (P67).** On the Steps tab, a channel and a check row, and
+  from the graph server as `describe_for_prompt({id})`: bounded Markdown with
+  what is in front of the way in, what it can fail with, its schedule, the
+  steps with repo-relative `file:line`, shapes in and out, log lines, open gaps
+  with their reasons and the ids to ask next. No source code. Rendered by the
+  pure `describeForPrompt`, exported from `@flowatlas/mcp` for reuse.
+- **One search box, a Busiest tab and a Changes tab (P73).** The search box
+  above the tabs found a route or other way in, a channel, a table, a type, a
+  gap or a class, and under *Fails with* the ways in that can fail with an
+  exception or a status; a hit opened in the Graph tab, and a way in it opened
+  became the one every tab shows. Busiest ranked methods as
+  `flowatlas hotspots` does, with how many ways in reach each, how far the
+  nearest is, and its own service's edges against all of them.
+  `visualise --diff <ref>` ran `flowatlas diff` and added a Changes tab: routes
+  added and removed, removed routes something still calls and who calls them,
+  shapes that moved, new contract findings, and the unresolved count on each
+  side.
+- **The graph server hands on the next question (P63, P72, P75).** Every answer
+  ended with `next`, the calls that take the ids it returned, and the server
+  instructions spelled out the chains (entry → flow → source, channel →
+  publishers and handlers → flow, symbol → impact). New tools: `start_here`
+  (counts per service, the commonest gaps and the entry ids to begin from),
+  `describe_for_prompt`, `search` (routes, channels, tables, types, gaps,
+  `fails` and classes in one query), `what_changed` (the last
+  `flowatlas diff`, read back from `diff.json`) and `cant_follow`: fifteen
+  tools in all. `who_calls`, `impact`, `who_emits` and `who_consumes` took the
+  same optional `service` filter `list_entries` and `find_symbol` already did.
+  Existing fields were unchanged.
+- **A table write reaches the function its stream runs (P51).** DynamoDB
+  writes - `PutItem`, `UpdateItem`, `DeleteItem`, `BatchWriteItem`,
   `TransactWriteItems`, the document client's `put`, `update`, `delete`,
   `batchWrite` and `transactWrite`, from `@aws-sdk/client-dynamodb`,
-  `@aws-sdk/lib-dynamodb` and version 2 - are publishers onto
+  `@aws-sdk/lib-dynamodb` and version 2 - became publishers onto
   `dynamodb/<table>` wherever some service's Terraform declares that table's
   stream (`stream_enabled`, `stream_view_type`, or a mapping from its
-  `stream_arn`), and the mapping from the stream is a consumer of that channel
-  triggering its `event` entry. `flow` and `impact` now follow Lambda A ->
-  table -> stream -> Lambda B, across repositories too. Kinesis `PutRecord` and
-  `PutRecords` land on `kinesis/<stream>` the same way. A table named by
-  `process.env` is completed from the function's deployed environment, as a
-  queue is. A write to a table with no stream, and any read, joins nothing and
-  says nothing. A mapping's `filter_criteria` is on the edge with a
+  `stream_arn`), and the mapping from the stream became a consumer of that
+  channel triggering its `event` entry. `flow` and `impact` followed Lambda A
+  → table → stream → Lambda B, across repositories too. Kinesis `PutRecord`
+  and `PutRecords` landed on `kinesis/<stream>` the same way. A table named by
+  `process.env` was completed from the function's deployed environment, as a
+  queue is. A write to a table with no stream, and any read, joined nothing
+  and said nothing. A mapping's `filter_criteria` was put on the edge with a
   `stream-filter-not-matched` row, and a stream something reads and nothing
-  writes is a `stream-no-writer` row, both at `info`
+  writes became a `stream-no-writer` row, both at `info`
   (`fixtures/lambda-terraform-table-stream`).
-- **Other ways a Lambda function is run, read from Terraform.** A function URL
-  and an Application Load Balancer target group of functions are `http`
-  entries on the function - `ALL /*` for a URL, each listener rule's path and
-  verb for a load balancer, its hosts kept on the entry. A user pool's
-  `lambda_config` is an `event` entry `cognito/<pool>/<trigger>` per step, and
-  an IoT topic rule is an `event` entry `iot/<topic filter>` running its
-  function and publishing onto the queue or topic its other actions name. An
-  `aws_lambda_permission` for a principal none of these reads is an
-  `invoker-not-read` row at `info`. `fixtures/lambda-terraform-other-ways-in`.
-- **More of what an IoT rule does.** A `kinesis` action publishes onto
-  `kinesis/<stream>`, a `dynamodb` or `dynamodbv2` action onto
-  `dynamodb/<table>` - so a rule reaches the function that table's stream
-  runs - and a `step_functions` action starts its state machine, as
-  `StartExecution` does. An `error_action`'s action is drawn the same way and
-  marked `when: "failure"`. Any other action (`firehose`, `s3`, `republish`,
-  ...) is an `iot-action-not-read` row at `info` naming it
+- **A workflow's write reaches the function a stream runs (P55).** A Step
+  Functions task that writes to a table - `dynamodb:putItem`, `updateItem`,
+  `deleteItem`, and through `aws-sdk:` the batch and transaction writes -
+  became a producer onto `dynamodb/<table>` from that state, kept only where
+  the table's stream is declared, as a function's write is;
+  `aws-sdk:kinesis:putRecord` and `putRecords` landed on `kinesis/<stream>`. A
+  table chosen at run time (`TableName.$`, JSONata) stayed the existing
+  `workflow-target-dynamic` row. A batch keyed by a bare word,
+  `RequestItems: { orders: [...] }`, or by a shorthand property, was read as the
+  table that word names (`fixtures/lambda-terraform-table-stream`).
+- **S3 bucket notifications, and the writes that fire them (P52, P56, P60).**
+  `aws_s3_bucket_notification` was read from Terraform, in HCL and in JSON, and
+  so was `terraform-aws-modules/s3-bucket/aws//modules/notification`: each
+  `lambda_function`, `queue` and `topic` block (`lambda_notifications`,
+  `sqs_notifications`, `sns_notifications` in the module) became a consumer of
+  `s3/<bucket>` taking its `events` and keys by `filter_prefix` and
+  `filter_suffix`, and `eventbridge = true` put the bucket's events on the
+  default bus as `aws.s3`, where existing rules take them. `PutObject`,
+  `CopyObject`, `CompleteMultipartUpload`, `DeleteObject(s)`, version 2's
+  `upload` and `@aws-sdk/lib-storage`'s `Upload` became publishers onto the
+  bucket by `Bucket` - written out, from `process.env` completed from the
+  deployment, or a constant - recorded as the event they fire with the key they
+  write. Each write's edge said which notifications take it (`takenBy`),
+  `static` where the key as written says so and `heuristic` with the reason
+  otherwise; a URL signed for a `PutObjectCommand` was a `heuristic` write,
+  `because: ["presigned"]`. On a bucket that keeps versions
+  (`aws_s3_bucket_versioning` Enabled or Suspended, or the bucket module's
+  `versioning` input), a `DeleteObject` or `DeleteObjects` naming no
+  `VersionId` was taken as `s3:ObjectRemoved:DeleteMarkerCreated` rather than
+  `s3:ObjectRemoved:Delete`. New rows `bucket-notification-unread` and
+  `s3-write-matches-nothing` (info), and a locator `receiver-constructed-path`
+  that reads what a receiver was constructed with
+  (`fixtures/lambda-terraform-bucket-notification`,
+  `fixtures/lambda-terraform-bucket-module`).
+- **Other ways a Lambda function is run, read from Terraform (P53, P56, P60).**
+  A function URL and an Application Load Balancer target group of functions
+  became `http` entries on the function - `ALL /*` for a URL, each listener
+  rule's path and verb for a load balancer, its hosts kept on the entry. A user
+  pool's `lambda_config` became an `event` entry `cognito/<pool>/<trigger>` per
+  step, and an IoT topic rule an `event` entry `iot/<topic filter>` running its
+  function. An IoT rule's other actions were drawn as well: `sqs` and `sns`
+  onto their queue or topic, `kinesis` onto `kinesis/<stream>`, `dynamodb` and
+  `dynamodbv2` onto `dynamodb/<table>` - so a rule reaches the function that
+  table's stream runs - and `step_functions` starting its state machine, as
+  `StartExecution` does. An `error_action`'s action was drawn the same way and
+  marked `when: "failure"`, a workflow or a function named elsewhere included.
+  Any other action (`firehose`, `s3`, `republish`, ...) became an
+  `iot-action-not-read` row, and an `aws_lambda_permission` for a principal
+  none of these reads an `invoker-not-read` row, both at `info`
   (`fixtures/lambda-terraform-other-ways-in`).
-- **Bucket notifications in more forms, and versioned deletes.** The JSON form
-  of `aws_s3_bucket_notification` is read, and so is
-  `terraform-aws-modules/s3-bucket/aws//modules/notification`, whose
-  `lambda_notifications`, `sqs_notifications`, `sns_notifications` and
-  `eventbridge` become the same consumers. On a bucket that keeps versions
-  (`aws_s3_bucket_versioning` Enabled or Suspended), a `DeleteObject` or
-  `DeleteObjects` naming no `VersionId` is taken as
-  `s3:ObjectRemoved:DeleteMarkerCreated`, and not as `s3:ObjectRemoved:Delete`. A write's recorded value that is
-  written and not read is now kept as an empty list rather than left out, so
-  a version named by a variable still counts as named
-  (`fixtures/lambda-terraform-bucket-module`).
+- **Function URL callers and Lambda destinations (P54, P60).** A request rooted
+  at a setting no service claims joined the `ALL /*` entry of the function URL
+  the running function's environment names
+  (`aws_lambda_function_url.x.function_url`, directly or through a module
+  output), `via: "functionUrl"`, `static` where the path is read and
+  `heuristic` where it is not; `process.env.X + '/path'` was read as an address
+  rooted at `X`. `aws_lambda_function_event_invoke_config`
+  `destination_config` and an event-source mapping's `on_failure` became
+  `triggers` edges from the run to the destination function, or to a publisher
+  onto its queue, topic or bus, with `meta.when: "success" | "failure"`; a
+  result put on a bus is the platform's `lambda` / `Lambda Function Invocation
+  Result - Success|Failure` event. A destination function another service
+  deploys was joined the same way, and an invoke configuration of a function
+  another service creates was joined from that function's entry instead of
+  being a `subscription-source-unread` row
+  (`fixtures/lambda-terraform-destinations`).
+
+### Changed
+
+- **Fewer `route-unguarded` rows (P76).** A route covered by an app-wide guard,
+  or opened by a public-sounding opt-out decorator on the handler or its class,
+  no longer had a row; an opt-out that switches one check off made it
+  `route-guard-skipped`; and a route with no guard whose own code throws a 401
+  or 403 became `route-checked-in-body` at `info`, naming the throw. The
+  `route-unguarded` hint named accepting by rule.
+- **`accepted.json` is version 2 (P76)**, for rules by `path` and file glob. A
+  version 1 file was still read; an older `flowatlas` refuses version 2 rather
+  than reading a rule as wider than it is.
+- **The Map laid out in call order by default (P66).** Services went in columns
+  by call depth from the front ends, with queues and topics between the
+  columns, stores and outside hosts under the app that uses them (one box per
+  outside host, capped with `+n more`), and hovering a box dimmed what it does
+  not touch. The layout by role stayed, under *layout*.
+- **The graph database kept each unresolved row's meta (P75)**, in a new
+  `unresolved.meta` column. An older database without it was still read,
+  without causes.
+- **`unknown-base-url-env` said more (P77):** which values were found where,
+  and which files set the setting without being read.
+- **Each function URL's entry was keyed by its function (P54)**,
+  `http:ALL:/*@<function>`, so two URLs in one repository no longer merged into
+  one entry.
+- **A write's recorded value that is written and not read was kept as an empty
+  list (P56)** rather than left out, so a version named by a variable still
+  counted as named.
 
 ### Fixed
 
-- **Error actions and run-time batch lists (P62).** A function an IoT
-  rule's `error_action` names was taken as the code the rule's entry runs
-  (`meta.invokes`) when no other action had named one first; it is now
-  always a reference carrying `when: "failure"`. The edge to a queue, topic,
-  bus or stream an `error_action` publishes onto now carries
-  `meta.when: "failure"` as its producer already did. A Step Functions batch
-  or transaction whose whole list is a path (`RequestItems.$`,
-  `TransactItems.$`) or a JSONata expression is one `workflow-target-dynamic`
-  row per state naming that field, instead of a state whose `TableName` is
-  missing (`fixtures/lambda-terraform-table-stream`).
-- **Routes of two APIs at one address stay apart (P59).** Two API Gateway
-  APIs (REST, HTTP or WebSocket) or two load balancers of one deployment
-  serving the same method and path, each in front of its own function, were
-  one entry node. Such a route is now keyed `GET:/status@api:<api>`; a route
-  no other API of the deployment serves keeps its plain key, so existing ids
-  do not move. A request reaching them through a `baseUrlEnv` setting joins
-  the API whose name shares the most words with the setting's
-  (`LOANS_API_URL` → `library-loans-api`), `via: "apiName"`, `heuristic`, with
-  a `route-api-guessed` row at `info`; where the name settles nothing, an
-  `ambiguous-route-api` row names the APIs and nothing is joined
-  (`fixtures/lambda-terraform-shared-paths`).
-- **Routes kept apart by listener, by address, and across the repository
-  (P61).** Two listeners of one load balancer sending the same method and path
-  to different functions were one entry; they are now keyed with the listener,
-  `GET:/health@api:staff-lb@listener:HTTPS:443`, while listeners sending it to
-  one target stay one route. An API or load balancer whose name is not read is
-  keyed by its Terraform address, `GET:/hours@api:aws_apigatewayv2_api.desk_hours`,
-  instead of merging with the other. Routes are compared across every
-  deployment a repository is read from, and a route rooted at another
-  repository's point that lands on a route of another API keeps both apart
-  rather than reporting it declared twice. A `@CallsService` annotation whose
-  route several APIs serve now gets the same choice by name as a base URL
-  setting (`route-api-guessed`, `ambiguous-route-api`) instead of
-  `marker-route-not-found`, and annotations on methods of plain classes, as
-  a function's code writes them, are read. A route not shared keeps its id
-  (`fixtures/lambda-terraform-shared-paths`).
+- **Error actions and run-time batch lists (P62).** A function an IoT rule's
+  `error_action` names was taken as the code the rule's entry runs
+  (`meta.invokes`) when no other action had named one first; it became always
+  a reference carrying `when: "failure"`. The edge to a queue, topic, bus or
+  stream an `error_action` publishes onto gained `meta.when: "failure"`, as its
+  producer already had. A Step Functions batch or transaction whose whole list
+  is a path (`RequestItems.$`, `TransactItems.$`) or a JSONata expression
+  became one `workflow-target-dynamic` row per state naming that field, instead
+  of a state whose `TableName` is missing
+  (`fixtures/lambda-terraform-table-stream`).
+- **A transaction's `ConditionCheck` (P55)** names no written table and stopped
+  reading as an address nobody could read, in code and in a definition; a batch
+  or a transaction writes no single message, so it stopped being a
+  `payload-type-unknown` row.
+- **Routes of two APIs, two listeners or two addresses stayed apart (P59,
+  P61).** Two API Gateway APIs (REST, HTTP or WebSocket) or two load balancers
+  of one deployment serving the same method and path, each in front of its own
+  function, were one entry node. Such a route became keyed with its API,
+  `GET:/status@api:<api>`, and with the listener where two listeners of one
+  load balancer send it to different functions,
+  `GET:/health@api:staff-lb@listener:HTTPS:443`; listeners sending it to one
+  target stayed one route. An API or load balancer whose name is not read was
+  keyed by its Terraform address,
+  `GET:/hours@api:aws_apigatewayv2_api.desk_hours`. A route no other API serves
+  kept its plain key, so existing ids did not move. Routes were compared across
+  every deployment a repository is read from, and a route rooted at another
+  repository's point that lands on a route of another API kept both apart
+  rather than being reported as declared twice. A request reaching them through
+  a `baseUrlEnv` setting, and a `@CallsService` annotation whose route several
+  APIs serve, joined the API whose name shares the most words with the
+  setting's (`LOANS_API_URL` → `library-loans-api`), `via: "apiName"`,
+  `heuristic`, with a `route-api-guessed` row at `info`; where the name settled
+  nothing, an `ambiguous-route-api` row named the APIs and nothing was joined.
+  Annotations on methods of plain classes, as a function's code writes them,
+  were read (`fixtures/lambda-terraform-shared-paths`).
+- **The page's ways-in filter matched service names (P73 follow-up)**, not only
+  a way in's own label.
+- **The Map fit a short drawing at the top of its frame on first load (P73)**,
+  and *Copy link* and *Full screen* kept their icons at phone width.
 
 ## [0.5.1][] - 2026-10-12
 

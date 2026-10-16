@@ -3,9 +3,10 @@
 Every command, every flag, and what each one does. For what the tool is and why,
 see the [README](../README.md).
 
-Commands fall into three groups. **Setting up** writes the configuration and
+Commands fall into four groups. **Setting up** writes the configuration and
 registers the graph server. **Building** reads the repositories. **Asking** reads
-the built graph and never touches a repository.
+the built graph and never touches a repository. **Checking** says what could not
+be read, what is accepted, and what a branch changes.
 
 Two flags appear almost everywhere and mean the same thing every time:
 
@@ -761,15 +762,29 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 | `--out <file>` | `graph.html` next to the configuration | where to write it; the working directory when only `--db` is given |
 | `--title <name>` | the folder holding the configuration | what to call the project on the page |
 | `--editor-links <editor>` | off | make every `file:line` on the page a link that opens it: `vscode`, `cursor`, `idea` or `file`. **Writes each repository's absolute local path into the page**; needs the configuration |
+| `--diff <ref>` | off | add a Changes tab: what the working tree changes against this ref, read the way `flowatlas diff` reads it |
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
 reconciliation and the Map, lists every way in, follows any one of them across service
 boundaries, and has a tab each for every crossing and for everything that did not
-join.
+join. The tabs are Map, Walk, Steps, Crossings, Not joined, Busiest, Changes (only
+with `--diff`) and Graph.
+
+**One search box** above the tabs finds a route or other way in, a channel, a
+table, a type, a gap or a class by name, and under *Fails with* the ways in that
+can fail with an exception or a status (`NotFoundException`, `404`). A hit
+opens in the Graph tab, and a way in it opens becomes the one the list, Walk and
+Steps show. The list's own filter matches a path, a name or a service.
 
 The **Map** tab is the whole project at the size of its services:
 
+- **Layout.** *call order*, the default, puts services in columns by how far
+  they sit from the front ends along the calls, with queues and topics as their
+  own boxes between the columns and each service's stores and outside hosts
+  under it, one box per outside host however many call it, capped with
+  `+n more`. Hovering a box dims everything it does not touch. *by role* is the
+  layout described next.
 - **Boxes.** One per service, in a column by what it is for, left to right as a
   request travels: front ends (screens, no routes), APIs and ways in (routes,
   bot commands, procedures), channels, workers and workflows (reached only by
@@ -1026,6 +1041,56 @@ graph, which on a real project is ten thousand boxes and says nothing:
   show, for instance, only what was guessed. The line under the drawing says
   which filters are on.
 
+The **Steps** tab is one way in as a list, in the order the code calls things
+(source order, not time), indented by depth: the handler, the services it calls,
+the tables, addresses and channels they reach, and the next service's way in.
+
+- **Rows.** Each step has a kind mark (handler, service, database, request,
+  queue or topic, function, workflow) and its table, address template or channel
+  written inline. Calls inside `Promise.all` and its kin are marked *side by
+  side*; a call run once per item of a loop is marked *per item*, and a query,
+  request or publish there *likely N+1*. A failure path (`when: failure`, an
+  error answer, a destination on failure) is red, and so is the row where a
+  chain breaks: a request that finds no route, a way in with no handler read,
+  an address that was not read. A join that was a best guess says so.
+- **What it can fail with.** The heading lists what the way in can fail with,
+  by status and exception, and so do the ways-in list and the details panel;
+  the step that throws is marked. A scheduled way in shows its expression and the zone it fires in.
+  A step's log lines are folded under it, as templates.
+- **Moving around.** Hovering a row lights its node in the Graph tab's
+  drawing, where a way in's steps also open above the drawing; a row opens its
+  `file:line` and *show in graph*. The depth goes to
+  4, 8, 12 or 24 steps.
+- **Copy as prompt** copies the way in as Markdown for an assistant: what is in
+  front of it, what it can fail with, its schedule, the steps with repo-relative
+  `file:line`, shapes in and out, log lines, open gaps with their reasons, and
+  the graph server's ids to ask next. No source code. The same button is on a
+  channel and on a check row, and the graph server's `describe_for_prompt`
+  writes the same text.
+
+The **Not joined** tab lists every row by reason. Rows accepted with
+`flowatlas accept` are left out unless *show accepted* is on, then muted with
+their note and, for a rule, the rule that took them; each reason and each row
+has *Accept all like this*, which copies the command (the page is a file and
+writes nothing). Below the reasons, *Can't follow* groups what the reader could
+not follow by cause and then by package, as `doctor --unresolved` does: one
+part per cause with its hint and a few places, each with *show in graph*, and a
+table by package. Once `flowatlas observe` has run, *seen at run time, not
+found in code* lists the spans no code accounts for, first in the *Problems*
+answer.
+
+The **Busiest** tab ranks the methods most things lean on, the way
+`flowatlas hotspots` ranks them, with how many ways in reach each, how far the
+nearest one is, and its edges from its own service against all of them.
+
+The **Changes** tab, with `--diff <ref>`, is what `flowatlas diff` found: routes
+added and removed, the removed routes something on the head side still calls
+and who calls them, declarations whose shape moved and the fields that moved,
+new contract findings, and the unresolved count on each side.
+
+What `flowatlas observe` saw is on the page too, when it has run: a seen count
+on each way in and each step, and thicker Map links where traffic went.
+
 A link carries the page's own address, which for a file on disk is that file's
 path: it opens on the machine that has the file, at that path.
 
@@ -1062,7 +1127,10 @@ destination to a channel, and to the emits or consumes edge of the span's
 service; a client span to the outbound call with that method and path; and a
 server span whose parent is in another service to the join from that service
 into the entry. What matches nothing is listed as seen at run time, not found
-in code. `visualise` ships the file into the page when it is there.
+in code. `visualise` ships the file into the page when it is there, and the
+graph server's `get_flow` and `who_calls` show `observed: n` on the rows it
+counted. Nothing is drawn from a trace: an edge it did not confirm keeps the
+confidence it was read with.
 
 | Flag | Meaning |
 |---|---|
@@ -1119,6 +1187,10 @@ report's `sites`. Most places first, each cause with what to do and a few
 `file:line` to open, then the packages on their own: "install this one" is a
 question about a package. Accepted gaps are left out and counted apart, as in
 the report. `--json` prints the same as data (`cantFollowFormatVersion: 1`).
+
+**Accepted gaps.** A gap accepted with `flowatlas accept` is left out of every
+count, the text says how many accepted gaps were left out, and `doctor.json`
+says the same under `unresolved.accepted`.
 
 `--strict` on a project with no baseline yet exits 2, not 1: there is nothing to
 compare against, which is a different answer from "something got worse". Write
@@ -1248,7 +1320,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
-| The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key` |
+| The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |
 | Starting a workflow or a function by its deployed name | `start-from-environment`, `start-name-unread`, `starter-undescribed` |
 | Settings | `dynamic-config-key` |
@@ -1284,6 +1356,36 @@ tool declining to guess:
   is enough to refuse it, and so is a service that commits no environment file at
   all (`fixtures/nest-mount-empty`, `fixtures/nest-mount-set`,
   `fixtures/nest-context-path`).
+
+### `flowatlas accept [reason-or-id]`
+
+Accepts a gap somebody has looked at and decided to live with, so `doctor`, the
+page and the graph server show only new ones. It writes `accepted.json` beside
+`graph.db`.
+
+```sh
+flowatlas accept channel-dynamic --service billing --note 'one channel per tenant'
+flowatlas accept 'gap:billing|src/events.ts|channel-dynamic'
+flowatlas accept --list
+flowatlas accept channel-dynamic --service billing --remove
+```
+
+| Flag | Default | Does |
+|---|---|---|
+| `--config <path>` / `--db <path>` | found from the working directory | which graph to accept against |
+| `--service <name>` | every one | accept the reason only in this service |
+| `--file <path>` | every file | only in this repository-relative file, or every file a glob names (`src/public/**`) |
+| `--path <pattern>` | none | a route finding on every route a pattern names: `GET /api/public/*`, or `/api/public/*` for every method |
+| `--note <text>` | none | why; required for a rule (`--path` or a file glob) |
+| `--dry-run` | off | list what would be accepted and write nothing |
+| `--remove` | off | stop accepting it |
+| `--list` | off | print what is accepted |
+
+The argument is a reason or a gap id, `gap:<service>|<file>|<reason>`, as the
+graph server's `search` returns it. A reason on its own accepts it everywhere;
+`--service`, `--file` and `--path` narrow it. A target no current gap matches is
+refused, so a typo does not accept nothing silently. Accepting routes by rule
+is described under `doctor` above.
 
 ### `flowatlas diff <base-ref> [head-ref]`
 
@@ -1493,7 +1595,7 @@ worked example of a document that declares routes.
 | Key | Type | Default | Means |
 |---|---|---|---|
 | `sharedPackages` | string[] | `[]` | packages whose types are one declaration rather than two copies |
-| `builtInShapes` | boolean | `true` | where a repository has not installed `rxjs`, `@nestjs/common`, `@nestjs/core` or `@nestjs/microservices`, read a few hand-written declarations of their public surface in their place, so `ClientsModule.register` tokens, `ClientProxy` calls and `Observable<T>` returns resolve; an installed package always wins. `false` turns them off |
+| `builtInShapes` | boolean | `true` | where a repository has not installed `rxjs`, `@nestjs/common`, `@nestjs/core`, `@nestjs/microservices` or `@nestjs/passport` (read by the server reader), or `rxjs`, `@angular/core` or `@angular/common/http` (read by the Angular reader), read a few hand-written declarations of their public surface in their place, so `ClientsModule.register` tokens, `ClientProxy` calls, passport's `AuthGuard`, Angular's decorators and `HttpClient`, and `Observable<T>` returns resolve; an installed package always wins. `false` turns them off |
 | `settingFiles.read` | boolean | `true` | whether a base address and an address waiting on the environment are completed from what the repositories' own files and the code's own fallbacks say a setting is; only addresses are kept, never a secret |
 | `settingFiles.environment` | string | none | the environment read where files name several (`.env.development` and `.env.staging`, `docker-compose.prod.yml`, a worker's `env.<name>.vars`): that environment's files, and the files for none in particular |
 | `output` | string | `.flowatlas` | where everything a build writes goes, relative to this file: the three outputs, the cache and each service's own graph under `services/`. Nothing is written into the repositories |
@@ -2524,6 +2626,37 @@ panel, `get_flow` (on each guard, and `optOuts` on the entry) and
 — a spread of a call — is a `module-providers-unread` row, since an
 `APP_GUARD` among such providers is in front of every route and nothing could
 see it.
+
+### What a way in can fail with, and how its calls run
+
+A NestJS entry carries `meta.fails`: what a request to it can end in, as
+`[{status, exception, at, file, line, source}]`, sorted by status. `source` is
+`throw` for an exception its handler throws, or a service or helper it calls
+throws - the built-in HTTP exceptions, `new HttpException(..., status)`, and
+classes that extend them; `guard` for a guard's refusal (403, 401 for passport's
+`AuthGuard`, 429 for the throttler); and `pipe` for the framework's pipes on the
+route or on a parameter (400). A throw caught in the same body is left out, and
+so is a rethrow; a plain `Error` is 500; an entry that is not a request keeps
+the exception and no status (`fixtures/nest-failures`). `get_flow`,
+`describe_for_prompt`, the page and the search box all read it.
+
+A `calls` edge says how the call runs. Inside a `for`, `for…of`, `for…in`,
+`while` or `do` body, or a function handed to `map`, `forEach`, `reduce` and the
+like, it carries `meta.inLoop: {kind, line}`; inside the arguments of
+`Promise.all`, `allSettled`, `race` or `any`, `meta.concurrent: true` and
+`meta.together: {by, line}`. A query, cache call, request or publish reached
+once per item - directly, or through a function the loop calls - is a
+`query-in-loop` row: a likely N+1, one row per place, at level `nothing`. A
+call in the list a loop walks runs once and is not one, and neither is an arrow
+pushed from a loop to run later (`fixtures/nest-query-loop`).
+
+A method or function carries `meta.logs: [{level, text, at}]` for each line it
+writes through a logger or the console: the level, and the message as a
+template with each value replaced by the name of what holds it
+(`'removed {count} drafts'`), never the value. A line with no words, such as
+`logger.error(err)`, has a level and no `text`. A `@Cron` way in carries
+`meta.timeZone` or `meta.utcOffset` beside its expression when the options name
+one (`fixtures/nest-jobs-logs`).
 
 ### More than one application in one service
 

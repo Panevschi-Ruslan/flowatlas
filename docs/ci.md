@@ -71,6 +71,13 @@ never by which line it sits on, so a reformat does not fail a build. It leaves
 out the rows that describe what static reading cannot see: no edit removes one,
 so growing on them would fail a build nobody can fix.
 
+A gap that will never be fixed can be accepted on its own rather than counted,
+with a note saying why: `flowatlas accept <reason> --service <name> --note '…'`,
+or by rule with `--path` or a file glob. `doctor` then leaves it out of every
+count, including the growth check. It writes `accepted.json` beside `graph.db`,
+in the configured output; for the job to see it, commit that file too, even if
+the rest of the output directory is ignored.
+
 **Contracts.** These are the ones a project usually has a backlog of. If
 `contracts: errors=N` with N large, leave them out until they have been read:
 

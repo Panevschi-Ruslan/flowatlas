@@ -291,12 +291,14 @@ nothing changed, about two seconds for a one-file edit under `--watch`.
 | `flowatlas config <selector>` | the settings one flow depends on |
 | `flowatlas hotspots` | what the most things point at |
 | `flowatlas visualise` | the whole graph as one page you can open |
+| `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have |
 
 ### Checking
 
 | Command | Answers |
 |---|---|
 | `flowatlas doctor` | what could not be read, what the annotations get wrong, what has drifted |
+| `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks |
 | `flowatlas cache <action>` | list, prune or clear the graphs `diff` keeps per commit |
 
@@ -312,7 +314,14 @@ flowatlas doctor --accept              # write today's numbers as the baseline
 ```
 
 With a baseline, `--strict` fails only on growth, which is what makes it usable
-on a project that starts with findings.
+on a project that starts with findings. A gap you have looked at and decided to
+live with can be accepted on its own instead, with a note, and `doctor`, the
+page and the graph server leave it out of what to act on:
+
+```sh
+flowatlas accept channel-dynamic --service billing --note 'one channel per tenant'
+flowatlas accept route-unguarded --path 'GET /api/public/*' --note 'public catalogue' --dry-run
+```
 
 Some graphs are not worth a verdict, and `doctor` refuses them with exit 2
 whatever flags it was given: a graph a failed build wrote, a graph with nothing
@@ -326,10 +335,13 @@ the route itself: `route-unguarded`, a route with no guard or middleware in
 front of it that reaches stored data; `route-shadowed`, a route a worker
 answers before the application whose guards would have run; `route-wildcard-only`,
 a request nothing but a catch-all serves; and `whitelist-strip`, a field sent to
-a receiver whose whitelisting `ValidationPipe` removes it on arrival. Routes
-that are public by decision go in `doctor.publicRoutes`, and a decorator that
-switches a guard off through the reflector goes in `doctor.skipGuardDecorators`;
-both are in [the command reference](docs/CLI.md). `diff` answers the other question a build
+a receiver whose whitelisting `ValidationPipe` removes it on arrival. App-wide
+guards (`APP_GUARD`, `useGlobalGuards`) count, a `@Public()`-style decorator the
+project wrote is read as the opt-out it is, and a route that checks the caller
+in its own body is `route-checked-in-body` rather than unguarded. Routes that
+are public by decision go in `doctor.publicRoutes` or are accepted by rule, and
+a decorator that cannot be followed goes in `doctor.skipGuardDecorators`; all of
+it is in [the command reference](docs/CLI.md). `diff` answers the other question a build
 asks: given this branch, which entry points in which repositories would notice.
 Its output is markdown because it is meant for a pull request comment, and
 `--fail-on-contract-break` turns a new disagreement into a failure.
@@ -372,23 +384,36 @@ at a pull request.
 ```sh
 flowatlas visualise                     # writes graph.html next to the configuration
 flowatlas visualise --out map.html --title "Ledger"
+flowatlas visualise --diff main         # add a Changes tab against a ref
 ```
 
 One file with the graph inside it: no server and nothing to install. It asks
 Google Fonts for two typefaces and falls back to your own if it cannot reach
 them, so it reads offline and is not free of a third party until that is
 inlined. It opens on a Map of the whole project - one box per service, in
-columns by what it is for, joined by what passes between them and counted, with
-families of services that open and close and a layer for the packages they are
-built from - then lists every way in, follows
+columns by call order from the front ends (or by what each is for), with queues
+between the columns and each service's stores under it, joined by what passes
+between them and counted, with families of services that open and close and a
+layer for the packages they are built from - then lists every way in, follows
 any one of them across service boundaries, and has a tab each for every crossing
-and for everything that did not join. A fourth tab, Graph, draws the
+and for everything that did not join. The Graph tab draws the
 neighbourhood of any node you search for, with its details one click away, and
 walks on from there in either direction. It folds the plumbing round a route,
 groups a busy table's callers, finds a path between two nodes and what reaches
 one, marks the nodes with problems, and keeps a view as a link. Hovering a node
 shows what it takes and gives back - a method's parameters by name and type, a
-route's body, query and response - and any type opens to its fields; see
+route's body, query and response - and any type opens to its fields.
+
+**Steps** shows one way in as a list in call order, indented by depth: each
+step with its table, address or channel, calls run side by side or once per
+item of a loop, failure paths in red, where the chain breaks, what the way in
+can fail with and the lines each step logs. *Copy as prompt* copies it as Markdown for an
+assistant. **Not joined** lists everything that did not join, with a *Can't
+follow* sheet that groups it by cause and package, accepted gaps muted.
+**Busiest** ranks the methods most things lean on, with the ways in that reach
+each. **Changes**, with `--diff`, lists what a branch adds and removes, the
+removed routes something still calls, and shapes that moved. One search box
+above the tabs finds a route, channel, table, type, gap, class or exception; see
 [`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
 
 It is a report you can click, not a viewer you keep running. A page generated
@@ -418,6 +443,8 @@ shows `flowatlas`, and a session has these tools, among others:
 | `get_type` | the shape of a type, with what it refers to |
 | `check_contract` | whether two services still agree about what crosses |
 | `find_symbol` | fuzzy search, by substring or camel-case initials |
+| `search` | one query over routes, channels, tables, types, gaps, failures and classes |
+| `what_changed` | the last `flowatlas diff`, read back |
 | `get_source` | the code of one symbol, and the only tool returning code |
 | `describe_for_prompt` | an entry, channel or symbol as bounded Markdown to paste into a prompt |
 | `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |
@@ -494,8 +521,12 @@ The two keys that matter most:
 
 **`baseUrlEnv`** is what turns a request into an edge. A service declares the
 settings keys other services use to address it; when a request is rooted at one
-of them, it resolves to that service's route. Without it, a request is recorded
-but joined to nothing.
+of them, it resolves to that service's route. Without it, the setting's value is
+looked for in what the repositories write down - example environment files, a
+compose file, `serverless.yml`, `wrangler` variables, the code's own fallback -
+and its host matched to a service by name or by `services[].hosts`; only the
+address is kept, never a secret, and such a join is `heuristic`. A request whose
+setting is given nowhere is recorded but joined to nothing.
 
 **`sharedPackages`** is what stops one declaration looking like two. A type both
 repositories import from a shared package is merged into one registry entry, so
@@ -504,6 +535,14 @@ comparing a contract compares the same thing rather than a copy against itself.
 **`readTestDirectories`**, on a service, names directories called like tests
 (`fixtures`, `e2e`, `test`, …) that hold code the application runs. Every other
 such directory is left out and reported with a row, so you see what to name.
+
+**`builtInShapes`** (default `true`) lets a repository with nothing installed
+still read the packages it is written against: where `rxjs`, the NestJS
+packages, `@nestjs/passport`, `@angular/core` or `@angular/common/http` do not
+resolve, a few hand-written declarations stand in, and an installed package
+always wins. **`settingFiles`** turns reading base addresses from the
+repositories' own files off (`read: false`) or picks one environment
+(`environment`). Every key is in [the command reference](docs/CLI.md#configuration).
 
 ---
 
@@ -615,7 +654,9 @@ the code, `marker` was asserted by an annotation in the code, `declared` was
 asserted by a document about code that is not here, `heuristic` was inferred —
 from a name, from what the source states where the types were not installed, or
 from an assumption the edge names. A fifth word, `runtime`, is reserved for an
-edge observed while the code runs, and nothing here produces it yet.
+edge observed while the code runs, and nothing here produces it yet:
+`flowatlas observe` reads trace files you already have and marks which of the
+static joins real traffic went through, without drawing any edge of its own.
 
 A join is no stronger than the weaker of its two ends. A request read in full
 that reaches a route a document declared is `declared`; one that reaches a route
@@ -757,7 +798,23 @@ prove, and the path is given so you can run it.
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —
   and four checks report a route whose gate is missing, bypassed, a catch-all,
-  or silently stripping a field (`fixtures/nest-guards`).
+  or silently stripping a field (`fixtures/nest-guards`). A NestJS route says
+  which guard covers it and from where - app-wide, a module, its controller or
+  itself - and which opt-out decorator switches one off
+  (`fixtures/nest-route-access`).
+- **What a way in can fail with.** A NestJS route lists the exceptions its
+  handler and the code it calls throw, a guard's refusal and the framework's
+  pipes, each with the status it is answered with (`fixtures/nest-failures`).
+  A query, request or publish run once per item of a loop is a
+  `query-in-loop` row, calls side by side are marked, and every step carries
+  the lines it logs as templates, never values (`fixtures/nest-query-loop`,
+  `fixtures/nest-jobs-logs`).
+- **Reading with nothing installed.** Built-in declaration shapes stand in for
+  the NestJS, passport, Angular and rxjs packages a fresh clone lacks, and a
+  base address no `baseUrlEnv` claims is read from the repository's own files
+  (`fixtures/multi-repo-base-urls`). What still cannot be followed is grouped
+  by cause and package, so the one package to install is named
+  (`fixtures/cant-follow`).
 - **Comparing** what each side of a boundary declares, field by field, with the
   rules of the JSON wire applied so a date meeting a string is not a finding
   (`fixtures/multi-repo-contracts`).
@@ -771,8 +828,10 @@ prove, and the path is given so you can run it.
 - **Serving** the graph to an agent, to a terminal in three formats, and to a
   browser as one generated page; **rebuilding** only what changed, with a watch
   mode, and noticing when dependencies were installed since; **reporting** every
-  finding as one list with a baseline; and **comparing revisions**, so a branch
-  reports which entry points in which other repositories would notice it.
+  finding as one list with a baseline and gaps accepted one by one or by rule;
+  **comparing revisions**, so a branch reports which entry points in which
+  other repositories would notice it; and **laying traces over the graph**, so
+  a join real traffic went through says so (`fixtures/multi-repo/traces`).
 
 Known gaps in what it can read:
 

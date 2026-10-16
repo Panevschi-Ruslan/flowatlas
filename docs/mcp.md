@@ -5,7 +5,7 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Ten tools. Only one of them returns code.
+Fifteen tools. Only one of them returns code.
 
 ---
 
@@ -87,16 +87,19 @@ name:
 start_here → get_flow({entry: id}) → get_source({symbol: id})
 who_emits / who_consumes({channel: id}) → get_flow on a handler
 find_symbol → who_calls / impact({symbol: id}) → get_flow on an entry
+search({query}) → whichever of the above its row's id goes to
+cant_follow → get_source on a place it names
 ```
 
 The server's instructions describe the same chains. `list_entries`,
-`find_symbol`, `who_calls`, `impact`, `who_emits`, `who_consumes` and
-`start_here` all take the same optional `service` filter.
+`find_symbol`, `search`, `who_calls`, `impact`, `who_emits`, `who_consumes`,
+`start_here`, `what_changed` and `cant_follow` all take the same optional
+`service` filter.
 
 | Tool | Answers | Takes |
 |---|---|---|
 | `start_here` | nodes, entries by kind and open gaps per service, the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
-| `describe_for_prompt` | one entry, channel or symbol as Markdown to hand on: the chain in call order with repo-relative `file:line`, shapes in and out, gaps with their reasons, and the ids to ask next. No source code; bounded by `maxSteps` and `maxChars` | `id` (required), `maxSteps`, `maxChars` |
+| `describe_for_prompt` | one entry, channel or symbol as Markdown to hand on: what is in front of it, what it can fail with, the chain in call order with repo-relative `file:line`, shapes in and out, gaps with their reasons, and the ids to ask next. No source code; bounded by `maxSteps` and `maxChars` | `id` (required), `maxSteps`, `maxChars` |
 
 `describe_for_prompt` is rendered by `describeForPrompt`, a pure function
 exported from `@flowatlas/mcp`, so a page can copy the same text.
@@ -107,6 +110,7 @@ exported from `@flowatlas/mcp`, so a page can copy the same text.
 |---|---|---|
 | `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix` |
 | `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service` |
+| `search` | one query over routes and other ways in, channels, tables, types, gaps, what ways in can fail with, and classes, grouped by kind | `query` (required), `kinds`, `limit`, `service` |
 
 `kind` is one of `http`, `rpc`, `event`, `cron`, `workflow`, `bot_command`,
 `bot_callback`, `bot_event` and `scene_step`. A `workflow` is a state machine,
@@ -118,6 +122,13 @@ procedures out; narrow them with `service` and `kind` instead.
 
 `find_symbol` accepts initials: `osc` finds `OrdersService.create`. Start here
 when you know roughly what something is called.
+
+`search` is the wider net. `kinds` is any of `routes`, `channels`, `tables`,
+`types`, `gaps`, `fails` and `classes`. A gap's id, `gap:<service>|<file>|<reason>`,
+is what `flowatlas accept` takes, new gaps come first, and an accepted one says
+`accepted: true` with its note, and `acceptedBy` when a rule took it. Under
+`fails`, an exception name or a status (`NotFoundException`, `404`) lists the
+ways in that can fail with it, each with the id `get_flow` takes.
 
 ### Following a chain
 
@@ -152,6 +163,24 @@ another repository that asks for it.
 have to be retested", including the services whose chains run into this one
 without an entry point of their own.
 
+What `get_flow` says beside the chain:
+
+- **`fails`** on each entry: the exceptions it can end in, with the status the
+  framework answers each with and where it is thrown (`source` is `throw`,
+  `guard` or `pipe`). Read for NestJS.
+- **Guards** in front of a NestJS route carry `where` (`global`, `module`,
+  `controller`, `route`), `via` (`APP_GUARD in AuthModule.forRoot`), and
+  `skippedBy` when an opt-out decorator switches one off; the entry carries
+  `optOuts`.
+- **`observed: n`** on a row real traffic went through, after
+  `flowatlas observe` has read a trace file: the count on the join into it, or
+  the entry's hits. Absent when nothing saw it.
+- **`baseUrlFrom`** and **`baseUrl`** on a request joined by a value read from a
+  repository's own files, the code's own fallback or the setting's name, saying
+  where the value came from.
+
+`who_calls` rows carry `observed: n` the same way.
+
 ### Messages and types
 
 | Tool | Answers | Takes |
@@ -178,6 +207,15 @@ code says about why: `module-not-installed` (with the package), `import-unresolv
 under its own reason. Gaps accepted with `flowatlas accept` are left out and
 counted apart. `next` offers `get_source` on the first place and the calls that
 narrow to its cause and its package.
+
+### What a branch changed
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke | `service` |
+
+It reads the `diff.json` that `flowatlas diff <base-ref>` writes rather than
+building two revisions inside a tool call; run the command to refresh it.
 
 ### Source
 
@@ -208,6 +246,8 @@ Some prompts that work as they are:
 - *"Use flowatlas impact on OrdersService.cancel before you edit it."*
 - *"Which service publishes order.created, and does anything handle it?"*
 - *"Follow POST /orders and tell me every settings key it needs."*
+- *"What can POST /orders fail with, and which guard is in front of it?"*
+- *"Why does the flow from GET /reports stop? Use cant_follow."*
 
 ---
 

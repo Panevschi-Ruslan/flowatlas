@@ -44,7 +44,9 @@ steps with a recording of each.
 
 **Ways in**
 
-- NestJS controllers, message handlers and schedules, with their guards and pipes
+- NestJS controllers, message handlers and schedules, with their guards and pipes,
+  app-wide guards and opt-out decorators included, and what each route can fail
+  with
 - Express, Fastify, Koa and Hono, where a route is registered by a call
 - Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path
   of a file - a SvelteKit page's `load` and form actions included
@@ -76,6 +78,7 @@ steps with a recording of each.
   node-postgres
 - read with nothing installed, even a Prisma client that was never generated
 - a repository base of your own, with the table each class states
+- a query run once per item of a loop, flagged as a likely N+1
 - Redis and cache-manager, and every settings key a request depends on
 
 **Messages**
@@ -87,17 +90,20 @@ steps with a recording of each.
 **Across repositories**
 
 - a monorepo's services with the workspace packages they use, on a fresh clone
+- a base address no setting claims, read from the repository's own example
+  env, compose and deployment files, keeping only the address
 - a service you have no source for, from its OpenAPI or AsyncAPI document
 - every contract compared where one repository meets another
 
 **What it cannot read**
 
 - a row saying why, and the one change that would read it
+- what could not be followed, grouped by cause and by the package it points into
 - an address or a table decided at run time is reported, never guessed
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 140 of them, and
+compared on every push. There are 152 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 
@@ -111,12 +117,14 @@ lists them all, generated from their READMEs.
 | `flowatlas impact <symbol>` | every entry point that reaches a symbol, and whose |
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
 | `flowatlas contracts` | what each service sends against what the other declares |
-| `flowatlas doctor` | what could not be read, and what has drifted |
+| `flowatlas doctor` | what could not be read, and what has drifted; `--unresolved` groups it by cause and package |
+| `flowatlas accept` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base>` | what a branch changes and who would notice |
-| `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a graph to walk, every type on hover |
+| `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a way in step by step, a graph to walk, every type on hover |
+| `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
-`flowatlas --help` lists all twenty.
+`flowatlas --help` lists all twenty-two.
 
 ---
 

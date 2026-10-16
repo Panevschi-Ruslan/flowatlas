@@ -625,6 +625,16 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
       <strong>Graph</strong> tab, where every node carries what it takes and
       gives back: the body a route reads, what it answers, what it answers when
       it fails, each type opened field by field.</p>
+    <p><strong>Steps</strong> shows one way in as a list in call order: each
+      table, address and channel inline, calls side by side or once per item of
+      a loop, what it can fail with, and the lines each step logs.
+      <em>Copy as prompt</em> hands it to an assistant as Markdown.
+      <strong>Not joined</strong> lists what did not join, with a
+      <em>Can&rsquo;t follow</em> sheet that groups it by cause and package.
+      <strong>Busiest</strong> ranks the methods most things lean on, and
+      <code>--diff &lt;ref&gt;</code> adds <strong>Changes</strong>: what a
+      branch adds, removes and still calls. One search box above the tabs finds
+      a route, channel, table, type, gap or class.</p>
   </div>
   <figure class="rec">
     <div class="rec-bar"><span>Map</span><span>a link</span><span>a service</span><span>Graph &middot; Types &middot; Expand all</span><span>hover</span><span>Back</span></div>
@@ -667,10 +677,10 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
   
   <figure class="rec">
     <div class="rec-bar"><span>cat orders/.mcp.json</span><span>tools/list</span><span>find_symbol</span><span>impact</span></div>
-    <img src="media/09-mcp.gif" alt="the registered server, its ten tools, and two of them answering" loading="lazy">
+    <img src="media/09-mcp.gif" alt="the registered server, its tools listed, and two of them answering" loading="lazy">
   </figure>
   <div class="col">
-    <p>Ten tools, and only one of them returns source code. A trace never drags
+    <p>Fifteen tools, and only one of them returns source code. A trace never drags
       in the body of every method along it; the agent asks the graph which name
       to look at, then asks for that one name.</p>
     <pre><code>flowatlas mcp --install   <span class="c"># register everywhere, merging</span>

@@ -413,7 +413,11 @@ install. It asks Google Fonts for two typefaces and falls back to yours if it
 cannot reach them, so it reads offline but is not yet free of a third party. It
 opens on the reconciliation, lists every way in, and follows any one of them
 across service boundaries, marking each crossing with what it was joined by and
-how much to trust it.
+how much to trust it. *Steps* shows one way in as a list in call order, with
+what it can fail with and a *Copy as prompt* button; *Not joined* groups what
+could not be followed by cause; *Busiest* ranks the methods most things lean
+on; and `flowatlas visualise --diff main` adds a *Changes* tab for a branch. One
+search box finds a route, channel, table, type, gap or class.
 
 ![the generated page](media/10-visualise.png)
 
@@ -436,7 +440,7 @@ them gets the whole project.
 
 ![flowatlas mcp](media/09-mcp.gif)
 
-Ten tools, and only one of them returns source code. A trace never drags in the
+Fifteen tools, and only one of them returns source code. A trace never drags in the
 body of every method along it; the agent asks the graph which name to look at,
 then asks for that one name.
 
@@ -452,7 +456,7 @@ After that, `claude mcp list` shows `flowatlas`.
 ## Where to go next
 
 - [The graph server](mcp.md) — setup for Claude Code, Cursor, VS Code and Claude
-  Desktop, what each of the ten tools takes, and the order to call them in.
+  Desktop, what each of the fifteen tools takes, and the order to call them in.
 - [The command reference](CLI.md) — every command, every flag, every
   configuration key, and every reason a row can carry.
 - [Running it in CI](ci.md) — the staged adoption that does not fail the build on

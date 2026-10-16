@@ -603,9 +603,9 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
   </div>
   ${rec('09-mcp.gif',
         ['cat orders/.mcp.json', 'tools/list', 'find_symbol', 'impact'],
-        'the registered server, its ten tools, and two of them answering')}
+        'the registered server, its tools listed, and two of them answering')}
   <div class="col">
-    <p>Ten tools, and only one of them returns source code. A trace never drags
+    <p>Fifteen tools, and only one of them returns source code. A trace never drags
       in the body of every method along it; the agent asks the graph which name
       to look at, then asks for that one name.</p>
     <pre><code>flowatlas mcp --install   <span class="c"># register everywhere, merging</span>
