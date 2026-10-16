@@ -2,7 +2,8 @@ import { normalizePath, type GraphNode } from '@flowatlas/core';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
-import { bound, commonInput, respond, withDb, type ToolContext } from './common.js';
+import { nextFor, withNext } from '../query/next.js';
+import { bound, commonInput, inService, serviceInput, withDb, type ToolContext } from './common.js';
 
 /** Kinds of entry the model knows about, for filtering. */
 const ENTRY_KINDS = [
@@ -61,7 +62,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
       description:
         'Every way into the project: routes, bot commands, scheduled jobs, message handlers. Filter by service, kind or path prefix.',
       inputSchema: {
-        service: z.string().optional().describe('only this service'),
+        service: serviceInput,
         kind: z.enum(ENTRY_KINDS).optional().describe('only this kind of entry'),
         pathPrefix: z.string().optional().describe('only routes whose path starts with this'),
         ...commonInput,
@@ -73,7 +74,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
         const prefix = input.pathPrefix === undefined ? undefined : normalizePath(input.pathPrefix);
         const all = db
           .nodesByType('entry', input.kind)
-          .filter((entry) => input.service === undefined || entry.repo === input.service)
+          .filter(inService(input.service))
           .filter((entry) => {
             if (prefix === undefined) return true;
             const path = normalizePath(String(entry.meta?.['path'] ?? ''));
@@ -82,12 +83,15 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
           .sort(inReadingOrder);
 
         const { items, truncated } = truncate(all, maxNodes);
-        return {
-          entries: items.map((entry) => projectDetail(entry, detail)),
-          total: all.length,
-          ...(truncated === undefined ? {} : { truncated }),
-          ...(note === undefined ? {} : { note }),
-        };
+        return withNext(
+          {
+            entries: items.map((entry) => projectDetail(entry, detail)),
+            total: all.length,
+            ...(truncated === undefined ? {} : { truncated }),
+            ...(note === undefined ? {} : { note }),
+          },
+          nextFor(items[0]),
+        );
       }),
   );
 
@@ -100,7 +104,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
       inputSchema: {
         query: z.string().describe('what to look for'),
         types: z.array(z.string()).optional().describe('only these node types'),
-        service: z.string().optional().describe('only this service'),
+        service: serviceInput,
         maxNodes: commonInput.maxNodes,
         detail: commonInput.detail,
       },
@@ -116,16 +120,19 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
         });
         const wider = pool.length > 0 ? pool : db.nodesByType('method');
         const ranked = rankMatches(
-          wider.filter((node) => input.service === undefined || node.repo === input.service),
+          wider.filter(inService(input.service)),
           input.query,
         );
 
         const { items, truncated } = truncate(ranked, maxNodes);
-        return {
-          matches: items.map((match) => projectDetail(match.node, detail)),
-          ...(truncated === undefined ? {} : { truncated }),
-          ...(note === undefined ? {} : { note }),
-        };
+        return withNext(
+          {
+            matches: items.map((match) => projectDetail(match.node, detail)),
+            ...(truncated === undefined ? {} : { truncated }),
+            ...(note === undefined ? {} : { note }),
+          },
+          nextFor(items[0]?.node),
+        );
       }),
   );
 };

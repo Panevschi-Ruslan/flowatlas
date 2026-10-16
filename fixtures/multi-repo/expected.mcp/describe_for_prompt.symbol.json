@@ -1,0 +1,10 @@
+{
+  "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+  "markdown": "# OrdersService.findOne\n\n`orders#src/orders/orders.service.ts:OrdersService.findOne` — method in orders at `src/orders/orders.service.ts:25`\n\n## Reached from\n\n- **GET /orders/:param** `entry:gateway:http:GET:/orders/:param` — gateway `src/orders/orders.controller.ts:30`\n- **GET /orders/:param** `entry:orders:http:GET:/orders/:param` — orders `src/orders/orders.controller.ts:25`\n\n## Chain\n\n- **read Order** `db_query:orders#src/orders/orders.service.ts:26:23` — orders `src/orders/orders.service.ts:26` — calls (static)\n  - **Order** `table:orders#Order` — orders — queries (static)\n\n## Gaps\n\n- none recorded on this chain\n\n## Ask next\n\n- `who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})`\n- `impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})`\n- `get_source({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})`\n- `get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})`\n",
+  "next": [
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})",
+    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})",
+    "get_source({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})",
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})"
+  ]
+}

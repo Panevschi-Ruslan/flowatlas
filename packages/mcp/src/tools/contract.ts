@@ -2,6 +2,7 @@ import type { GraphEdge } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { withNext } from '../query/next.js';
 import { bound, commonInput, withDb, type ToolContext } from './common.js';
 
 /**
@@ -146,7 +147,10 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           }) ?? [];
 
         const shown = findings.slice(0, input.maxNodes);
-        return {
+        const shapes = [request.left, request.right, response.left, response.right].filter(
+          (id): id is string => typeof id === 'string' && id.startsWith('type:'),
+        );
+        return withNext({
           edge: { from: edge.from, to: edge.to, type: edge.type, confidence: edge.confidence },
           status,
           request,
@@ -155,7 +159,7 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           ...(findings.length === shown.length
             ? {}
             : { cut: `${findings.length - shown.length} more finding(s); raise maxNodes` }),
-        };
+        }, [...new Set(shapes)].slice(0, 2).map((id) => `get_type({type: ${JSON.stringify(id)}})`));
       }),
   );
 };

@@ -17,5 +17,9 @@
     "left": "type:gateway#InvoiceDto",
     "right": "type:billing#InvoiceDto"
   },
-  "findings": []
+  "findings": [],
+  "next": [
+    "get_type({type: \"type:billing#CreateInvoiceDto\"})",
+    "get_type({type: \"type:gateway#InvoiceDto\"})"
+  ]
 }

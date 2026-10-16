@@ -5,7 +5,7 @@
  * session in one repository answers a question about another one without
  * opening it.
  */
-export { createFlowatlasServer, startStdioServer, SERVER_NAME } from './server.js';
+export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS } from './server.js';
 export type { ServerOptions } from './server.js';
 export { DbHandle } from './query/db.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';
@@ -39,3 +39,12 @@ export type { ContractStatus } from './tools/contract.js';
 // what a type refers to (L2) and where a declaration ends (L3).
 export { expandType } from './tools/types.js';
 export { endOfDeclaration } from './tools/source.js';
+// The chain an answer hands on (P63) and the same chain as Markdown (P67): pure,
+// so a page can render the words the describe_for_prompt tool answers with.
+export { hintsFor, nextFor, withNext, MAX_NEXT } from './query/next.js';
+export type { Identified } from './query/next.js';
+export { summariseProject, START_LIMITS } from './query/start.js';
+export type { GapReason, ServiceCount, StartInput, StartLimits, StartSummary } from './query/start.js';
+export { describeForPrompt, PROMPT_LIMITS } from './prompt/describe.js';
+export type { PromptGap, PromptLimits, PromptStep, PromptSubject } from './prompt/describe.js';
+export { gatherPromptSubject } from './prompt/gather.js';

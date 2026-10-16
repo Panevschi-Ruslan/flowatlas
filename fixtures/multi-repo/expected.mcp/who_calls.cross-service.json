@@ -115,5 +115,11 @@
         }
       ]
     }
+  ],
+  "next": [
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:orders:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:orders:http:GET:/orders/:param\"})",
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})"
   ]
 }

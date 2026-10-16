@@ -16,6 +16,18 @@ export const commonInput = {
   maxNodes: z.number().int().positive().max(2000).default(150).describe('most nodes to return'),
 };
 
+/**
+ * The one service filter every list tool takes, described the same way
+ * everywhere so an agent learns it once.
+ */
+export const serviceInput = z.string().optional().describe('only rows from this service');
+
+/** Whether a node passes the service filter; no filter passes everything. */
+export const inService =
+  (service: string | undefined) =>
+  (node: { repo: string } | undefined): boolean =>
+    service === undefined || node?.repo === service;
+
 export interface ToolContext {
   handle: DbHandle;
   /** Filled by the contracts package when one is installed. */

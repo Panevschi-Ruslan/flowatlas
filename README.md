@@ -404,10 +404,11 @@ flowatlas mcp                 # serve over stdio, which the editor does for you
 
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`
-shows `flowatlas`, and a session has ten tools:
+shows `flowatlas`, and a session has twelve tools:
 
 | Tool | Answers |
 |---|---|
+| `start_here` | counts per service, the commonest gaps, and the entry ids to begin from |
 | `list_entries` | every way in — routes, procedures, bot triggers, jobs, message handlers — filtered by service, kind or path |
 | `get_flow` | one entry followed through every service it reaches |
 | `who_calls` | what reaches a symbol, across repositories |
@@ -417,6 +418,10 @@ shows `flowatlas`, and a session has ten tools:
 | `check_contract` | whether two services still agree about what crosses |
 | `find_symbol` | fuzzy search, by substring or camel-case initials |
 | `get_source` | the code of one symbol, and the only tool returning code |
+| `describe_for_prompt` | an entry, channel or symbol as bounded Markdown to paste into a prompt |
+
+Every row carries an `id` the next tool takes as it is, and every answer ends
+with `next`: the calls that take the ids it returned.
 
 Every tool takes `detail` and `maxNodes` except `get_source`, which takes
 `context` and a line limit instead. Source leaves through `get_source` and

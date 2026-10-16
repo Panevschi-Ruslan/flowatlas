@@ -16,6 +16,19 @@ only one of them moved.
   `.flowatlas/observed.json` (per join a count and last seen, per entry its
   hits, and the spans no code accounts for); `visualise` adds it to the page
   data as `observed` (`fixtures/multi-repo/traces`).
+- **MCP answers carry the id the next question needs (P63).** Every answer
+  ends with `next`, the calls that take the ids it returned; the server
+  instructions spell out the chains (entry → flow → source, channel →
+  publishers and handlers → flow, symbol → impact). A new `start_here` tool
+  gives counts per service, the commonest gaps and the entry ids to begin
+  from. `who_calls`, `impact`, `who_emits` and `who_consumes` take the same
+  optional `service` filter `list_entries` and `find_symbol` already did.
+  Existing fields are unchanged.
+- **`describe_for_prompt` (P67, MCP half).** One entry, channel or symbol as
+  bounded Markdown: the chain with repo-relative `file:line`, shapes in and
+  out, gaps with their reasons, and the ids to ask next. Rendered by the pure
+  `describeForPrompt`, exported from `@flowatlas/mcp` for reuse.
+
 - **Failure paths for workflows and remote destinations, and module
   versioning (P60).** A workflow or a function named elsewhere that an IoT
   rule's `error_action` starts is joined with `meta.when: "failure"` on its

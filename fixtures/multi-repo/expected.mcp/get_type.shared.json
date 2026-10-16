@@ -76,5 +76,8 @@
         "sharedPackage": "@fx/contracts"
       }
     }
-  }
+  },
+  "next": [
+    "find_symbol({query: \"OrderDto\"})"
+  ]
 }

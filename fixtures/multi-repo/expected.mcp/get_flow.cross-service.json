@@ -161,5 +161,10 @@
       }
     ]
   },
-  "unresolvedOnPath": 0
+  "unresolvedOnPath": 0,
+  "next": [
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})"
+  ]
 }

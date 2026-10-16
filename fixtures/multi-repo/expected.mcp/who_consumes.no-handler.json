@@ -6,5 +6,8 @@
     "loc": "src/orders/orders.service.ts:61",
     "service": "orders"
   },
-  "consumers": []
+  "consumers": [],
+  "next": [
+    "who_emits({channel: \"channel:order.archived\"})"
+  ]
 }
