@@ -7,6 +7,7 @@ import { REVERSE_EDGES, walkBack } from '../query/flow.js';
 import { truncationMessage, type FlowNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
 import { nextFor, withNext } from '../query/next.js';
+import { loadObservedCounts, markObserved, nodeSeen } from '../query/observed.js';
 import { bound, commonInput, inService, serviceInput, withDb, type ToolContext } from './common.js';
 
 /** Accepts an id, or a name close enough to identify one thing. */
@@ -131,9 +132,12 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         const walked = callersOf(db, found.id, input.depth, maxNodes, detail);
         const callers = keepService(db, walked.callers, input.service);
         const firstEntry = findFirst(callers, (item) => item.node.type === 'entry');
+        const counts = loadObservedCounts(ctx.handle.path);
+        if (counts !== undefined) markObserved(counts, found.id, callers, 'backward');
+        const seen = counts === undefined ? undefined : nodeSeen(counts, found.id);
         return withNext(
           {
-            target: projectDetail(found, detail),
+            target: { ...projectDetail(found, detail), ...(seen === undefined ? {} : { observed: seen }) },
             callers,
             ...(walked.truncated === undefined ? {} : { truncated: walked.truncated }),
             ...(note === undefined ? {} : { note }),

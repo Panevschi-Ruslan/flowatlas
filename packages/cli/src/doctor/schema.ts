@@ -148,6 +148,8 @@ export interface DoctorReport {
     /** Places where nothing joins. Reported, never added to anything. */
     nothing: { rows: number; sites: number };
     excluded: { reasons: string[]; sites: number };
+    /** Gaps `accepted.json` names (P72): out of every count above, present only when there are some. */
+    accepted?: { rows: number; sites: number };
     byReason: ReasonGroup[];
     /** Reasons the catalogue has never heard of, each named once. */
     unknownReasons: string[];
@@ -262,6 +264,12 @@ export const doctorReportSchema = z.object({
       reasons: z.array(z.string()),
       sites: z.number().int().nonnegative(),
     }),
+    accepted: z
+      .object({
+        rows: z.number().int().nonnegative(),
+        sites: z.number().int().nonnegative(),
+      })
+      .optional(),
     byReason: z.array(
       z.object({
         reason: z.string(),

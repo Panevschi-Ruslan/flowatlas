@@ -14,11 +14,12 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { loadConfig, type Unresolved } from '@flowatlas/core';
+import { loadAccepted, loadConfig, splitAccepted, type Unresolved } from '@flowatlas/core';
 import type { CheckOptions } from '@flowatlas/contracts';
 import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { openProjectDb } from '../analysis/open.js';
+import { dbPathFor } from '../db.js';
 import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
 import { expandReasons } from '../doctor/hints.js';
@@ -396,7 +397,10 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
           );
     // Demoted here rather than inside the report, so that the baseline the
     // accept writes and the count the report prints are the same rows (R36).
-    const rows = withAnsweredDemoted([...raw, ...age], db);
+    const demoted = withAnsweredDemoted([...raw, ...age], db);
+    // Gaps somebody accepted by name (P72) leave every count, and are said once.
+    const split = splitAccepted(loadAccepted(dbPathFor(options)), demoted);
+    const rows = split.fresh;
     const path = baselinePathFor(options, settings);
 
     // Reading the baseline is separate from comparing it, so that "there is no
@@ -429,6 +433,13 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         declared: settings.declared.map((document) => document.service),
       },
     );
+
+    if (split.accepted.length > 0) {
+      report.unresolved.accepted = {
+        rows: split.accepted.length,
+        sites: split.accepted.reduce((sum, row) => sum + (row.sites ?? 1), 0),
+      };
+    }
 
     const out = options.out ?? settings.outputDir;
     let file: string | undefined;

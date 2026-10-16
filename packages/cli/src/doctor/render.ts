@@ -150,7 +150,13 @@ const unresolvedSection = (
     read === found
       ? []
       : [`  ways in: ${found} found, ${read} with a handler that was read, ${found - read} without`];
-  if (unresolved.byReason.length === 0) return ['unresolved: none', ...ways];
+  const acceptedLine =
+    unresolved.accepted === undefined
+      ? []
+      : [
+          `  ${unresolved.accepted.rows} accepted gap${unresolved.accepted.rows === 1 ? '' : 's'} left out (accepted.json; flowatlas accept --list)`,
+        ];
+  if (unresolved.byReason.length === 0) return ['unresolved: none', ...ways, ...acceptedLine];
 
   const lines: string[] = [
     `unresolved: ${unresolved.total} to act on over ${unresolved.rows} row${unresolved.rows === 1 ? '' : 's'}` +
@@ -158,6 +164,7 @@ const unresolvedSection = (
         ? ''
         : `, and ${unresolved.info.sites} place${unresolved.info.sites === 1 ? '' : 's'} static reading cannot see, folded into ${unresolved.info.rows}`),
     ...ways,
+    ...acceptedLine,
   ];
   // Said on a line of its own, in the words the build summary uses: these are
   // sites where nothing joins, not sites where something was missed.

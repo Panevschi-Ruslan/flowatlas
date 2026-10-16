@@ -553,3 +553,19 @@ export type { OptionsRequestShape } from './platform-fetch.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
 export { callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
 export type { CallShape, ConcurrentShape, LoopShape } from './call-shape.js';
+export {
+  ACCEPTED_FILE,
+  ACCEPTED_FORMAT_VERSION,
+  acceptedFor,
+  acceptedPathFor,
+  covers,
+  gapIdOf,
+  isGapId,
+  loadAccepted,
+  parseGapId,
+  saveAccepted,
+  splitAccepted,
+  withAccepted,
+  withoutAccepted,
+} from './accepted.js';
+export type { AcceptedFile, AcceptedGap, GapLike } from './accepted.js';

@@ -1,5 +1,6 @@
 import { FlowatlasError } from '@flowatlas/core';
 import { Command } from 'commander';
+import { registerAccept } from './commands/accept.js';
 import { registerBuild } from './commands/build.js';
 import { registerChannel } from './commands/channel.js';
 import { registerConfig } from './commands/config.js';
@@ -48,6 +49,7 @@ export const createProgram = (): Command => {
   registerVisualise(program);
   registerDiff(program);
   registerObserve(program);
+  registerAccept(program);
   return program;
 };
 

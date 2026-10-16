@@ -1,0 +1,186 @@
+import { acceptedFor, gapIdOf, loadAccepted, type AcceptedGap, type GraphNode } from '@flowatlas/core';
+import type { AnchoredUnresolvedRow, GraphDb } from '@flowatlas/linker';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
+import { projectDetail } from '../query/detail.js';
+import { nextFor, withNext, type Identified } from '../query/next.js';
+import type { CompactNode } from '../query/types.js';
+import { rankMatches } from './entries.js';
+import { bound, commonInput, inService, serviceInput, withDb, type Bounded, type ToolContext } from './common.js';
+
+/**
+ * One search box over everything a question starts from (P72).
+ *
+ * A Strategy per kind: each says how to find its rows for a query, and every
+ * row carries the `id` the next tool takes, so a search hands straight on to
+ * get_flow, who_emits, get_type or impact. A gap's id is
+ * `gap:<service>|<file>|<reason>`, the one `flowatlas accept` takes.
+ */
+export const SEARCH_KINDS = ['routes', 'channels', 'tables', 'types', 'gaps', 'classes'] as const;
+export type SearchKind = (typeof SEARCH_KINDS)[number];
+
+/** Node types that are a class in the code: what DI wires and what a page renders. */
+const CLASS_TYPES = ['provider', 'module', 'guard', 'interceptor', 'pipe', 'middleware', 'ui_component'] as const;
+
+export interface GapHit {
+  id: string;
+  type: 'gap';
+  reason: string;
+  service?: string;
+  loc?: string;
+  message: string;
+  accepted?: true;
+  note?: string;
+}
+
+export interface TypeHit {
+  id: string;
+  type: 'type';
+  label: string;
+  service?: string;
+}
+
+type Hit = CompactNode | GapHit | TypeHit;
+
+interface SearchQuery {
+  db: GraphDb;
+  text: string;
+  service: string | undefined;
+  limit: number;
+  bounded: Bounded;
+  accepted: readonly AcceptedGap[];
+}
+
+type Finder = (query: SearchQuery) => { rows: Hit[]; total: number };
+
+const cut = <T>(rows: readonly T[], limit: number): { rows: T[]; total: number } => ({
+  rows: rows.slice(0, limit),
+  total: rows.length,
+});
+
+const nodesOf =
+  (types: readonly string[]): Finder =>
+  ({ db, text, service, limit, bounded }) => {
+    const pool: GraphNode[] = types.flatMap((type) => db.nodesByType(type)).filter(inService(service));
+    const ranked = rankMatches(pool, text);
+    return cut(
+      ranked.map((match) => projectDetail(match.node, bounded.detail)),
+      limit,
+    );
+  };
+
+const types: Finder = ({ db, text, service, limit }) => {
+  const wanted = text.toLowerCase();
+  const rows = db
+    .allTypes(service === undefined ? {} : { repo: service })
+    .filter((entry) => entry.name.toLowerCase().includes(wanted) || entry.id.toLowerCase().includes(wanted))
+    .sort((a, b) => a.name.length - b.name.length || (a.id < b.id ? -1 : 1))
+    .map((entry): TypeHit => ({
+      id: entry.id,
+      type: 'type',
+      label: entry.name,
+      service: entry.declaredIn.split('#')[0] ?? '',
+    }));
+  return cut(rows, limit);
+};
+
+const gapText = (row: AnchoredUnresolvedRow): string =>
+  `${row.reason} ${row.file ?? ''} ${row.message}`.toLowerCase();
+
+const gaps: Finder = ({ db, text, service, limit, accepted }) => {
+  const wanted = text.toLowerCase();
+  const seen = new Set<string>();
+  const rows: GapHit[] = [];
+  for (const row of db.allUnresolved()) {
+    if (service !== undefined && row.service !== service) continue;
+    if (!gapText(row).includes(wanted)) continue;
+    const id = gapIdOf(row);
+    // One row per gap id: the same reason in one file is one thing to accept.
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const entry = acceptedFor(accepted, row);
+    rows.push({
+      id,
+      type: 'gap',
+      reason: row.reason,
+      ...(row.service === null ? {} : { service: row.service }),
+      ...(row.file === null ? {} : { loc: row.line === null ? row.file : `${row.file}:${row.line}` }),
+      message: row.message,
+      ...(entry === undefined ? {} : { accepted: true as const, ...(entry.note === '' ? {} : { note: entry.note }) }),
+    });
+  }
+  // New gaps first: an accepted one is the least likely to be the question.
+  rows.sort((a, b) => Number(a.accepted === true) - Number(b.accepted === true));
+  return cut(rows, limit);
+};
+
+const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
+  ['routes', nodesOf(['entry'])],
+  ['channels', nodesOf(['channel'])],
+  ['tables', nodesOf(['table'])],
+  ['types', types],
+  ['gaps', gaps],
+  ['classes', nodesOf(CLASS_TYPES)],
+]);
+
+/** The hint for a gap row: what reaches the place, read off the node it names. */
+const anchorOf = (hit: Hit): Identified | undefined => (hit.type === 'gap' ? undefined : hit);
+
+export const runSearch = (
+  db: GraphDb,
+  input: { query: string; kinds?: readonly SearchKind[]; service?: string; limit: number },
+  bounded: Bounded,
+  accepted: readonly AcceptedGap[],
+): { results: Partial<Record<SearchKind, Hit[]>>; counts: Partial<Record<SearchKind, number>>; next: string[] } => {
+  const text = input.query.trim();
+  const kinds = input.kinds === undefined || input.kinds.length === 0 ? SEARCH_KINDS : input.kinds;
+  const results: Partial<Record<SearchKind, Hit[]>> = {};
+  const counts: Partial<Record<SearchKind, number>> = {};
+  const firsts: Array<Identified | undefined> = [];
+  for (const kind of kinds) {
+    const found = FINDERS.get(kind)!({ db, text, service: input.service, limit: input.limit, bounded, accepted });
+    if (found.total === 0) continue;
+    results[kind] = found.rows;
+    counts[kind] = found.total;
+    firsts.push(anchorOf(found.rows[0]!));
+  }
+  return { results, counts, next: nextFor(...firsts) };
+};
+
+export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
+  server.registerTool(
+    'search',
+    {
+      title: 'Search everything',
+      description:
+        'One query across routes and other entry points, channels, tables, types, gaps and classes. Rows are grouped by kind and carry the id the next tool takes; a gap id is what `flowatlas accept` takes, and accepted gaps say so.',
+      inputSchema: {
+        query: z.string().min(1).describe('a word, a path fragment, a reason, or a name'),
+        kinds: z.array(z.enum(SEARCH_KINDS)).optional().describe('only these kinds; all by default'),
+        limit: z.number().int().positive().max(100).default(10).describe('most rows per kind'),
+        service: serviceInput,
+        ...commonInput,
+      },
+    },
+    (input) =>
+      withDb(ctx.handle, (db) => {
+        const bounded = bound(input);
+        const { results, counts, next } = runSearch(
+          db,
+          {
+            query: input.query,
+            ...(input.kinds === undefined ? {} : { kinds: input.kinds }),
+            ...(input.service === undefined ? {} : { service: input.service }),
+            limit: Math.min(input.limit, bounded.maxNodes),
+          },
+          bounded,
+          loadAccepted(ctx.handle.path),
+        );
+        if (Object.keys(counts).length === 0) return { error: `nothing matches ${JSON.stringify(input.query)}` };
+        return withNext(
+          { query: input.query, counts, results, ...(bounded.note === undefined ? {} : { note: bounded.note }) },
+          next,
+        );
+      }),
+  );
+};

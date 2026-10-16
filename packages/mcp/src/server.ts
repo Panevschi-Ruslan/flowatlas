@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { DbHandle, type DbHandleOptions } from './query/db.js';
+import { registerChanges } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
 import type { ContractChecker, ToolContext } from './tools/common.js';
 import { registerContract } from './tools/contract.js';
@@ -8,6 +9,7 @@ import { registerEntries } from './tools/entries.js';
 import { registerFlow } from './tools/flow.js';
 import { registerPrompt } from './tools/prompt.js';
 import { registerReach } from './tools/reach.js';
+import { registerSearch } from './tools/search.js';
 import { registerSource } from './tools/source.js';
 import { registerStart } from './tools/start.js';
 import { registerTypes } from './tools/types.js';
@@ -29,6 +31,8 @@ export const INSTRUCTIONS = [
   '- channel: who_emits / who_consumes({channel: id}) -> get_flow({entry: id}) on a handler.',
   '- symbol: find_symbol -> who_calls / impact({symbol: id}) -> get_flow on an entry it names.',
   '- shape: get_type({type: id}); check_contract for whether two services still agree.',
+  '- search({query}) finds a route, channel, table, type, class or gap by name; what_changed reads the last flowatlas diff.',
+  'Rows real traffic went through carry `observed: n`; gaps someone accepted with flowatlas accept carry `accepted: true`.',
   'describe_for_prompt({id}) writes any of these as Markdown to hand on. Every list tool takes the same optional `service` filter.',
   'Every answer is bounded; get_source is the only one that returns code.',
 ].join('\n');
@@ -69,6 +73,8 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   registerContract(server, context);
   registerSource(server, context);
   registerPrompt(server, context);
+  registerSearch(server, context);
+  registerChanges(server, context);
 
   return server;
 };

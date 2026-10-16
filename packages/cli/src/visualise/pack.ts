@@ -1,4 +1,4 @@
-import { STEP_OF_META, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
+import { acceptedFor, gapIdOf, STEP_OF_META, type AcceptedGap, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type PackedMap } from './map-pack.js';
@@ -89,6 +89,13 @@ export interface PackedGraph {
    * names it) or its stable key.
    */
   observed?: PackedObserved;
+  /**
+   * Gaps somebody accepted with `flowatlas accept` (P72), for the page to show
+   * muted: `rows` holds positions in `rows` above, `ids` the gap id each
+   * accepted row answers to (`gap:<service>|<file>|<reason>`), by position,
+   * and `notes` why, keyed by the same id. Absent when nothing is accepted.
+   */
+  accepted?: { rows: number[]; ids: Record<string, string>; notes: Record<string, string> };
   report: unknown;
 }
 
@@ -243,7 +250,25 @@ export interface PackInput {
   typeOf?: (id: string) => TypeEntry | undefined;
   /** What `flowatlas observe` wrote, when it did. */
   observed?: Observed;
+  /** What `flowatlas accept` wrote, when it did. */
+  accepted?: readonly AcceptedGap[];
 }
+
+const packAccepted = (
+  accepted: readonly AcceptedGap[],
+  rows: readonly AnchoredUnresolvedRow[],
+): NonNullable<PackedGraph['accepted']> => {
+  const out: NonNullable<PackedGraph['accepted']> = { rows: [], ids: {}, notes: {} };
+  rows.forEach((row, index) => {
+    const entry = acceptedFor(accepted, row);
+    if (entry === undefined) return;
+    const id = gapIdOf(row);
+    out.rows.push(index);
+    out.ids[String(index)] = id;
+    if (entry.note !== '') out.notes[id] = entry.note;
+  });
+  return out;
+};
 
 export const packGraph = (input: PackInput): PackedGraph => {
   const rowsIn = input.unresolved;
@@ -348,6 +373,9 @@ export const packGraph = (input: PackInput): PackedGraph => {
     shapes,
     sites: packSites(packedEdges),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
+    ...(input.accepted === undefined || input.accepted.length === 0
+      ? {}
+      : { accepted: packAccepted(input.accepted, rowsIn) }),
     ...(input.editor === undefined
       ? {}
       : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),
