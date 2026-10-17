@@ -23,7 +23,11 @@ const accessLines = (node: GraphNode): string[] => {
   ];
 };
 
-/** How many nodes the walk under a prompt may visit; the renderer cuts further. */
+/**
+ * How many nodes the walk under a prompt may visit; the renderer cuts further.
+ * The walk is `get_flow`'s, budget order included (P92), so the steps that
+ * cross into another service are the ones that survive the cut.
+ */
 const WALK_NODES = 120;
 
 /** How many ways in are named for a subject that is not one. */
@@ -44,7 +48,7 @@ const step = (node: CompactNode, depth: number, edge?: FlowEdge): PromptStep => 
         ...(edge.params === undefined ? {} : { params: edge.params }),
         ...(edge.returns === undefined ? {} : { returns: edge.returns }),
       }),
-  ...(node.ref === true ? { repeat: true } : {}),
+  ...(node.ref === true ? { repeat: true, ...(node.seenAt === undefined ? {} : { seenAt: node.seenAt }) } : {}),
 });
 
 /** The tree as lines in reading order, depth first, as a person reads a call chain. */
@@ -132,7 +136,8 @@ export const gatherPromptSubject = (db: GraphDb, node: GraphNode): PromptSubject
     ...(fails.length === 0 ? {} : { fails }),
     ...(access.length === 0 ? {} : { access }),
     steps,
-    stepsCut: flow.truncated === undefined ? 0 : Number.parseInt(flow.truncated.replace(/^\D+/, ''), 10) || 0,
+    stepsCut: flow.left ?? 0,
+    ...(flow.stoppedBy === undefined ? {} : { stepsCutBy: flow.stoppedBy[0] }),
     ...(producers === undefined ? {} : { producers }),
     ...(reachedFrom === undefined ? {} : { reachedFrom }),
     gaps,

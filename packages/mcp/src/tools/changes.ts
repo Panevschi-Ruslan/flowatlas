@@ -169,7 +169,7 @@ export const summariseChanges = (
     warnings: report.warnings.map((warning) => warning.message),
   };
   if (cut > 0) {
-    result.truncated = truncationMessage(cut, true, offset + maxNodes);
+    result.truncated = truncationMessage(cut, true, { nextOffset: offset + maxNodes });
     result.nextOffset = offset + maxNodes;
   }
   return result;

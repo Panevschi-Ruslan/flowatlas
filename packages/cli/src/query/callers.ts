@@ -109,7 +109,7 @@ export const callersOf = (db: GraphDb, target: GraphNode, options: CallerOptions
     withoutEntry: [...services].filter((name) => !entryServices.has(name)).sort(cmp),
     // The walk stopped at the limit rather than at the end, and only says that
     // much, so the count is reported as a floor rather than invented.
-    ...(walk.truncated ? { truncated: truncationMessage(1, false) } : {}),
+    ...(walk.truncated ? { truncated: truncationMessage(1, false, { limit: 'maxNodes', at: options.maxNodes, tool: 'impact' }) } : {}),
   };
 };
 

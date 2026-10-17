@@ -568,6 +568,14 @@ flowatlas flow "workflow:loan-approval"   # a state machine, by its name
 A name matching two services comes back as a choice rather than a guess. A name
 matching nothing comes back with the nearest few.
 
+Each node is written out once. Met again - a helper every method calls, a
+logger - it is a `↺` line (`(again)` with `--ascii`) under the new caller, and
+its subtree is under the first; a cycle reads the same way. When the walk is
+cut, the last line says how much it left out and which flag shows more:
+`… truncated: 12 more nodes (raise --max-nodes)`, or `(raise --depth)` when the
+depth stopped it. Which rows get room is decided by what they lead to: the steps
+that leave the service first, plumbing last; the tree is still in call order.
+
 Two kinds of way in are named by their full id. A procedure has no verb and no
 path, only the dotted path its callers write, so it is
 `entry:<service>:rpc:orders.list`; `flow "orders.list"` answers with that id as

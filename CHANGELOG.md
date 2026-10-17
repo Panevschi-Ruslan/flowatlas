@@ -559,6 +559,29 @@ only one of them moved.
   descriptions, and `detail`, `maxNodes`, `offset` and `service` described once
   in the server's instructions. The MCP snapshots of `fixtures/multi-repo` came to 38% fewer
   characters, and to half on the trees.
+- **A `get_flow` that reaches the other end (P92).** The walk expanded a node
+  again under every path that reached it, so a repository helper and a logger
+  every method calls were written out once per caller, and on a large graph the
+  150 rows were gone before the request reached the service it ends in. Each
+  node is now expanded once: met again it is `{ id, ref: true, seenAt }`, with
+  `seenAt` the row its subtree is under (a cycle stays a bare reference). The
+  budget goes to the steps that leave the service first, then stores,
+  handlers, calls into a method that leaves the service, other calls, and
+  plumbing (a method more than five methods call) last; children are still
+  written in call order. `get_flow` defaults to 60 rows and takes `maxChars`
+  (about 12,000 characters of answer), whichever comes first. A cut names the
+  limit that caused it and the advice that helps (`n more nodes past maxNodes
+  60; raise maxNodes or ask get_flow on a child id`, `past depth 8; raise
+  depth`, `past about 12000 characters; raise maxChars…`), with
+  `stoppedBy`, and `crossingsLeft` lists up to eight crossings it did not
+  follow; `next` gained `check_contract` for the first HTTP crossing and
+  `get_flow` on the first crossing left. A depth that cut the walk used to say
+  nothing. `who_calls` says `past maxNodes` the same way. `describe_for_prompt`
+  uses the same walk, writes a repeat as `again — followed under …`, and asks
+  for more depth when depth is what cut it. In the terminal, `flow` and
+  `channel` write a repeat as `↺` (`(again)` with `--ascii`, which said
+  `(cycle)`) with the node's label, and the cut line names the one flag that
+  shows more (`fixtures/multi-repo-plumbing`).
 
 ### Fixed
 

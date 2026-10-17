@@ -7,4 +7,5 @@
             ~  sqs/library-scan-imports                                   infra/main.tf:80
               ~  mapping aws_lambda_event_source_mapping.catalogue_import  scans/infra/main.tf:80
                 @  library-scans-catalogue-import                         scans/infra/main.tf:48
+... truncated: 1 more nodes (raise --depth)
 unresolved on this path: 0

@@ -86,7 +86,7 @@ export const truncate = <T>(items: readonly T[], maxNodes: number, offset = 0): 
   return {
     items: page,
     total: items.length,
-    truncated: truncationMessage(items.length - nextOffset, true, nextOffset),
+    truncated: truncationMessage(items.length - nextOffset, true, { nextOffset }),
     nextOffset,
   };
 };

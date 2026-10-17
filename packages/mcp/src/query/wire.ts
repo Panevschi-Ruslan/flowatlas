@@ -8,14 +8,18 @@ import type { CompactNode, FlowNode } from './types.js';
  * the edge (D4) and the shapes the CLI renders from stay as they are.
  */
 
-/** A node already on the path, named again: its id, and that it is a repeat. */
+/**
+ * A node named again: its id, that it is a repeat, and, unless it is a cycle,
+ * the row its subtree is under (P92).
+ */
 export interface RefNode {
   id: string;
   ref: true;
+  seenAt?: string;
 }
 
 /** A row of a slimmed tree: `label` absent where it is the id, `service` where the parent said it. */
-export type WireNode = RefNode | (Omit<CompactNode, 'label' | 'ref'> & { label?: string });
+export type WireNode = RefNode | (Omit<CompactNode, 'label' | 'ref' | 'seenAt'> & { label?: string });
 
 export interface WireFlowNode extends Omit<FlowNode, 'node' | 'children'> {
   node: WireNode;
@@ -23,7 +27,7 @@ export interface WireFlowNode extends Omit<FlowNode, 'node' | 'children'> {
 }
 
 const slimNode = (node: CompactNode, parentService: string | undefined): WireNode => {
-  if (node.ref === true) return { id: node.id, ref: true };
+  if (node.ref === true) return { id: node.id, ref: true, ...(node.seenAt === undefined ? {} : { seenAt: node.seenAt }) };
   // Key by key, so a slimmed row reads in the order a full one does.
   const slim: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(node)) {

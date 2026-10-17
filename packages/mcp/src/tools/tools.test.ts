@@ -122,7 +122,7 @@ describe('the tools a session is offered', () => {
     const validator = new AjvJsonSchemaValidator();
     const schemas = new Map(tools.flatMap((tool) => (tool.outputSchema === undefined ? [] : [[tool.name, validator.getValidator(tool.outputSchema)] as const])));
     let checked = 0;
-    for (const suite of ['multi-repo', 'nest-check-through-helper', 'loops-worth-fixing']) {
+    for (const suite of ['multi-repo', 'nest-check-through-helper', 'loops-worth-fixing', 'multi-repo-plumbing']) {
       const dir = join(ROOT, 'fixtures', suite, 'expected.mcp');
       for (const file of readdirSync(dir)) {
         const validate = schemas.get(file.split('.')[0]!);
@@ -287,7 +287,34 @@ describe('following an entry across services', () => {
       maxNodes: 5,
     });
     expect(flatten(flow.root).length).toBeLessThanOrEqual(5);
-    expect(flow.truncated).toMatch(/more nodes, increase depth or narrow scope$/);
+    // The node cap stopped it, so raising depth would change nothing (P92).
+    expect(flow.truncated).toMatch(/^\d+ more nodes past maxNodes 5; raise maxNodes or ask get_flow on a child id$/);
+    expect(flow.stoppedBy).toEqual(['maxNodes']);
+  });
+
+  it('shows sixty rows unless told otherwise, and stops at about twelve thousand characters (P92)', async () => {
+    const { tools } = await client.listTools();
+    const schema = tools.find((tool) => tool.name === 'get_flow')?.inputSchema.properties as Record<string, { default?: unknown }>;
+    expect(schema['maxNodes']?.default).toBe(60);
+    expect(schema['maxChars']?.default).toBe(12000);
+    const flow = await call('get_flow', { entry: 'entry:gateway:http:GET:/orders/:param', maxChars: 1500 });
+    expect(flow.stoppedBy).toEqual(['maxChars']);
+    expect(flow.truncated).toContain('past about 1500 characters; raise maxChars');
+  });
+
+  it('points next at the contract of the first HTTP crossing it reached (P92)', async () => {
+    const flow = await call('get_flow', { entry: 'entry:gateway:http:GET:/orders/:param' });
+    const request = requestIn('gateway#src/clients/orders.client.ts:OrdersClient.fetchOne');
+    expect(flow.next).toContain(`check_contract({from: ${JSON.stringify(request)}, to: "entry:orders:http:GET:/orders/:param"})`);
+    expect(flow.next.indexOf(flow.next.find((hint: string) => hint.startsWith('check_contract')))).toBeLessThan(
+      flow.next.findIndex((hint: string) => hint.startsWith('impact')),
+    );
+  });
+
+  it('names the crossing it did not follow, and offers to follow it (P92)', async () => {
+    const flow = await call('get_flow', { entry: 'entry:gateway:http:GET:/orders/:param', maxNodes: 4 });
+    expect(flow.crossingsLeft.length).toBeGreaterThan(0);
+    expect(flow.next).toContain(`get_flow({entry: ${JSON.stringify(flow.crossingsLeft[0].to)}})`);
   });
 
   it('answers a request for source at level two, and says why', async () => {

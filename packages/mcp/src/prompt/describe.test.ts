@@ -50,7 +50,12 @@ describe('a chain written for a prompt', () => {
 
   it('says how many steps it left out', () => {
     const text = describeForPrompt(subject({ stepsCut: 3 }), { maxSteps: 1, maxGaps: 10, maxFails: 12, maxChars: 8000 });
-    expect(text).toContain('4 more step(s) not shown');
+    expect(text).toContain('4 more step(s) not shown; ask get_flow with a higher maxNodes');
+  });
+
+  it('asks for more depth when depth is all that cut the chain (P92)', () => {
+    const text = describeForPrompt(subject({ stepsCut: 3, stepsCutBy: 'depth' }));
+    expect(text).toContain('3 more step(s) not shown; ask get_flow with a higher depth');
   });
 
   it('says so when nothing is open on the chain', () => {
@@ -81,6 +86,31 @@ describe('a chain written for a prompt', () => {
     expect(text).toContain('- **500?** `Error` — throw at `shop#S.a` — assumed: no code on the path writes this status');
     expect(text).toContain('- **no status** `RpcException`');
     expect(text.indexOf('## Can fail with')).toBeLessThan(text.indexOf('## Chain'));
+  });
+
+  it('writes one exception thrown at four places as one line naming the four (P87, P92)', () => {
+    const text = describeForPrompt(
+      subject({
+        fails: [{ status: 409, exception: 'CartTaken', sources: ['throw'], sites: 4, at: 'shop#S.a', loc: 'src/s.ts:3' }],
+      }),
+    );
+    const lines = text.split('\n').filter((line) => line.includes('CartTaken'));
+    expect(lines).toEqual(['- **409** `CartTaken` — throw ×4, first at `src/s.ts:3`']);
+  });
+
+  it('says where a step written out once already is, and a cycle for what it is (P92)', () => {
+    const again = { depth: 3, id: 'shop#log.ts:Logger.log', label: 'Logger.log', type: 'ref', repeat: true };
+    const text = describeForPrompt(
+      subject({
+        steps: [
+          ...subject().steps,
+          { ...again, seenAt: 'shop#src/carts.controller.ts:CartsController.create' },
+          { ...again, id: 'shop#src/carts.service.ts:CartsService.create', label: 'CartsService.create' },
+        ],
+      }),
+    );
+    expect(text).toContain('    - **Logger.log** again — followed under `shop#src/carts.controller.ts:CartsController.create`');
+    expect(text).toContain('    - `shop#src/carts.service.ts:CartsService.create` again (a cycle; not followed)');
   });
 
   it('caps the failure section and says how many were left out', () => {

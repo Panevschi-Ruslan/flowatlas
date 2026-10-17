@@ -74,7 +74,7 @@ const callersOf = (
 
   return {
     callers: roots,
-    ...(overflow > 0 ? { truncated: truncationMessage(overflow, true) } : {}),
+    ...(overflow > 0 ? { truncated: truncationMessage(overflow, true, { limit: 'maxNodes', at: maxNodes, tool: 'who_calls' }) } : {}),
   };
 };
 

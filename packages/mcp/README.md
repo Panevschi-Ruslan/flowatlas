@@ -68,7 +68,7 @@ Confirm it is there with `claude mcp list`.
 
 The tools that thin their rows take `detail` (0 identity, 1 adds location, 2
 adds metadata; 3 is answered at 2 and says so) and `maxNodes`, which defaults
-to 150; [docs/mcp.md](../../docs/mcp.md#the-tools) lists which. Every answer is
+to 150 (60 for `get_flow`, which also stops at about 12,000 characters); [docs/mcp.md](../../docs/mcp.md#the-tools) lists which. Every answer is
 compact JSON, in the text and as `structuredContent`, and every tool is
 annotated read-only. A list that was cut says how much was left and where its
 next page starts, and `next` starts with that call:
@@ -77,10 +77,11 @@ next page starts, and `next` starts with that call:
 "total": 17, "truncated": "14 more; next page offset 3", "nextOffset": 3
 ```
 
-A walk (`get_flow`, `who_calls`) does not page; it says how much it left out:
+A walk (`get_flow`, `who_calls`) does not page; it says how much it left out,
+which limit did it, and the advice that helps:
 
 ```
-"truncated": "12 more nodes, increase depth or narrow scope"
+"truncated": "12 more nodes past maxNodes 60; raise maxNodes or ask get_flow on a child id"
 ```
 
 ## What the answers look like

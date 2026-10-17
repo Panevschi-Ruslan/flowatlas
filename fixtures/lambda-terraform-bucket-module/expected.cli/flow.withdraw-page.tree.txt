@@ -6,7 +6,7 @@
           ~  message sns/library-scan-withdrawn                           scans/infra/notifications.tf:4
             ~  sns/library-scan-withdrawn                                 infra/main.tf:89
               ~  subscription aws_sns_topic_subscription.note_withdrawal  scans/infra/main.tf:89
-                @  library-scans-note-withdrawal                          scans/infra/main.tf:48
+                (again) library-scans-note-withdrawal
     ~  s3:ObjectRemoved:Delete s3/library-page-archive                    scans/src/pages/withdraw-page.ts:17
       ~  s3/library-page-archive                                          infra/main.tf:109
         ~  notification note-withdrawal                                   scans/infra/main.tf:109

@@ -1,0 +1,594 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/orders.controller.ts:22",
+      "service": "orders",
+      "kind": "http"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
+          "type": "method",
+          "label": "OrdersController.create",
+          "loc": "src/orders/orders.controller.ts:22"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "type:orders#CreateOrderDto"
+          ],
+          "returns": "type:orders#OrderDto"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "orders#src/common/app-logger.ts:AppLogger.log",
+              "type": "method",
+              "label": "AppLogger.log",
+              "loc": "src/common/app-logger.ts:12"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string",
+                "string"
+              ],
+              "returns": "void"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "orders#src/common/app-logger.ts:AppLogger.format",
+                  "type": "method",
+                  "label": "AppLogger.format",
+                  "loc": "src/common/app-logger.ts:16"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string",
+                    "string"
+                  ],
+                  "returns": "string"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "orders#src/common/app-logger.ts:AppLogger.redact",
+                      "type": "method",
+                      "label": "AppLogger.redact",
+                      "loc": "src/common/app-logger.ts:24"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "string"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "orders#src/common/app-logger.ts:AppLogger.mask",
+                          "type": "method",
+                          "label": "AppLogger.mask",
+                          "loc": "src/common/app-logger.ts:28"
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static",
+                          "params": [
+                            "string",
+                            "RegExp"
+                          ],
+                          "returns": "string"
+                        },
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "node": {
+                      "id": "orders#src/common/app-logger.ts:AppLogger.stamp",
+                      "type": "method",
+                      "label": "AppLogger.stamp",
+                      "loc": "src/common/app-logger.ts:20"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "returns": "string"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "node": {
+                  "id": "orders#src/common/app-logger.ts:AppLogger.write",
+                  "type": "method",
+                  "label": "AppLogger.write",
+                  "loc": "src/common/app-logger.ts:32"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string"
+                  ],
+                  "returns": "void"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "orders#src/common/app-logger.ts:AppLogger.serialize",
+                      "type": "method",
+                      "label": "AppLogger.serialize",
+                      "loc": "src/common/app-logger.ts:36"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "string"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": {
+              "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+              "type": "method",
+              "label": "OrdersService.create",
+              "loc": "src/orders/orders.service.ts:28"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "type:orders#CreateOrderDto"
+              ],
+              "returns": "type:orders#OrderDto"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "orders#src/common/app-logger.ts:AppLogger.log",
+                  "ref": true,
+                  "seenAt": "orders#src/orders/orders.controller.ts:OrdersController.create"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string",
+                    "string"
+                  ],
+                  "returns": "void"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "orders#src/common/metrics.ts:Metrics.count",
+                  "type": "method",
+                  "label": "Metrics.count",
+                  "loc": "src/common/metrics.ts:12"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string"
+                  ],
+                  "returns": "void"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "orders#src/common/metrics.ts:Metrics.record",
+                      "type": "method",
+                      "label": "Metrics.record",
+                      "loc": "src/common/metrics.ts:16"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string",
+                        "number"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "orders#src/common/metrics.ts:Metrics.keyOf",
+                          "type": "method",
+                          "label": "Metrics.keyOf",
+                          "loc": "src/common/metrics.ts:22"
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static",
+                          "params": [
+                            "string"
+                          ],
+                          "returns": "string"
+                        },
+                        "children": []
+                      },
+                      {
+                        "node": {
+                          "id": "orders#src/common/app-logger.ts:AppLogger.log",
+                          "ref": true,
+                          "seenAt": "orders#src/orders/orders.controller.ts:OrdersController.create"
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static",
+                          "params": [
+                            "string",
+                            "string"
+                          ],
+                          "returns": "void"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "node": {
+                  "id": "orders#src/orders/order.repository.ts:OrderRepository.save",
+                  "type": "method",
+                  "label": "OrderRepository.save",
+                  "loc": "src/orders/order.repository.ts:28"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "type:orders#Order"
+                  ],
+                  "returns": "type:orders#Order"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "orders#src/common/metrics.ts:Metrics.count",
+                      "ref": true,
+                      "seenAt": "orders#src/orders/orders.service.ts:OrdersService.create"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": []
+                  },
+                  {
+                    "node": {
+                      "id": "orders#src/common/app-logger.ts:AppLogger.log",
+                      "ref": true,
+                      "seenAt": "orders#src/orders/orders.controller.ts:OrdersController.create"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string",
+                        "string"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": []
+                  },
+                  {
+                    "node": {
+                      "id": "db_query:orders#src/orders/order.repository.ts:31:12",
+                      "type": "db_query",
+                      "label": "write orders",
+                      "loc": "src/orders/order.repository.ts:31"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "table:orders#orders",
+                          "type": "table",
+                          "label": "orders"
+                        },
+                        "edge": {
+                          "type": "queries",
+                          "confidence": "static"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "node": {
+                  "id": "orders#src/orders/order.mapper.ts:OrderMapper.toDto",
+                  "type": "method",
+                  "label": "OrderMapper.toDto",
+                  "loc": "src/orders/order.mapper.ts:9"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "type:orders#Order"
+                  ],
+                  "returns": "type:orders#OrderDto"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "orders#src/orders/order.mapper.ts:OrderMapper.statusOf",
+                      "type": "method",
+                      "label": "OrderMapper.statusOf",
+                      "loc": "src/orders/order.mapper.ts:13"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "type:orders#Order"
+                      ],
+                      "returns": "string"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "node": {
+                  "id": "orders#src/orders/order.repository.ts:OrderRepository.findOne",
+                  "type": "method",
+                  "label": "OrderRepository.findOne",
+                  "loc": "src/orders/order.repository.ts:22"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string"
+                  ],
+                  "returns": "type:orders#Order"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "orders#src/common/metrics.ts:Metrics.count",
+                      "ref": true,
+                      "seenAt": "orders#src/orders/orders.service.ts:OrdersService.create"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": []
+                  },
+                  {
+                    "node": {
+                      "id": "orders#src/common/app-logger.ts:AppLogger.log",
+                      "ref": true,
+                      "seenAt": "orders#src/orders/orders.controller.ts:OrdersController.create"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string",
+                        "string"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": []
+                  },
+                  {
+                    "node": {
+                      "id": "db_query:orders#src/orders/order.repository.ts:25:12",
+                      "type": "db_query",
+                      "label": "read orders",
+                      "loc": "src/orders/order.repository.ts:25"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "table:orders#orders",
+                          "ref": true,
+                          "seenAt": "db_query:orders#src/orders/order.repository.ts:31:12"
+                        },
+                        "edge": {
+                          "type": "queries",
+                          "confidence": "static"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "node": {
+                  "id": "orders#src/orders/order.events.ts:OrderEvents.created",
+                  "type": "method",
+                  "label": "OrderEvents.created",
+                  "loc": "src/orders/order.events.ts:22"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "type:orders#OrderDto"
+                  ],
+                  "returns": "void"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "orders#src/common/app-logger.ts:AppLogger.log",
+                      "ref": true,
+                      "seenAt": "orders#src/orders/orders.controller.ts:OrdersController.create"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string",
+                        "string"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": []
+                  },
+                  {
+                    "node": {
+                      "id": "orders#src/common/metrics.ts:Metrics.count",
+                      "ref": true,
+                      "seenAt": "orders#src/orders/orders.service.ts:OrdersService.create"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": []
+                  },
+                  {
+                    "node": {
+                      "id": "producer:orders#src/orders/order.events.ts:25:5",
+                      "type": "producer",
+                      "label": "event order.created",
+                      "loc": "src/orders/order.events.ts:25",
+                      "kind": "event"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "channel:order.created",
+                          "type": "channel",
+                          "label": "order.created",
+                          "loc": "src/orders/order.events.ts:25"
+                        },
+                        "edge": {
+                          "type": "emits",
+                          "confidence": "static",
+                          "params": [
+                            "type:orders#OrderDto"
+                          ]
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                              "type": "consumer",
+                              "label": "InvoicesConsumer.onOrderCreated",
+                              "loc": "src/invoices/invoices.consumer.ts:12",
+                              "service": "billing",
+                              "kind": "event"
+                            },
+                            "edge": {
+                              "type": "consumes",
+                              "confidence": "static"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                                  "type": "method",
+                                  "label": "InvoicesConsumer.onOrderCreated",
+                                  "loc": "src/invoices/invoices.consumer.ts:12"
+                                },
+                                "edge": {
+                                  "type": "handles",
+                                  "confidence": "static",
+                                  "params": [
+                                    "type:billing#OrderCreatedEvent"
+                                  ],
+                                  "returns": "void"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                                      "type": "method",
+                                      "label": "InvoicesService.create",
+                                      "loc": "src/invoices/invoices.service.ts:16"
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static",
+                                      "params": [
+                                        "type:billing#CreateInvoiceDto"
+                                      ],
+                                      "returns": "type:billing#InvoiceDto"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "truncated": "≥4 more nodes past depth 8; raise depth",
+  "stoppedBy": [
+    "depth"
+  ],
+  "next": [
+    "describe_for_prompt({id: \"entry:orders:http:POST:/orders\"})",
+    "impact({symbol: \"entry:orders:http:POST:/orders\"})",
+    "get_source({symbol: \"orders#src/orders/orders.controller.ts:OrdersController.create\"})"
+  ]
+}

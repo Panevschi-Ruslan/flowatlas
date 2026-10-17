@@ -37,6 +37,9 @@ const CASES = [
   ['get_flow.truncated', 'get_flow', { entry: 'entry:gateway:http:GET:/orders/:param', maxNodes: 5 }],
   ['get_flow.ambiguous', 'get_flow', { entry: 'GET /orders/1' }],
   ['get_flow.dead-end', 'get_flow', { entry: 'entry:gateway:http:POST:/orders/:param/cancel', detail: 2 }],
+  // The two flows P92 measures by, asked with the defaults: each reaches billing.
+  ['get_flow.post-orders', 'get_flow', { entry: 'POST /orders' }],
+  ['get_flow.invoice', 'get_flow', { entry: 'POST /orders/:param/invoice' }],
   ['who_calls.cross-service', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 6 }],
   ['impact.service-method', 'impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne' }],
   ['who_emits.order-created', 'who_emits', { channel: 'order.created' }],
@@ -84,6 +87,20 @@ const LOOPS_CASES = [
   ['describe_for_prompt.labels', 'describe_for_prompt', { id: 'GET /parcels/labels' }],
 ];
 
+/**
+ * Plumbing every method shares (P92): a logger, a counter and a repository
+ * helper under every caller. Each node is written once, the budget goes to the
+ * crossings first, and both flows reach billing with the defaults; cut tight,
+ * the answer says which limit stopped it and which crossings it left.
+ */
+const PLUMBING_CASES = [
+  ['get_flow.post-orders', 'get_flow', { entry: 'POST /orders' }],
+  ['get_flow.invoice', 'get_flow', { entry: 'POST /orders/:param/invoice' }],
+  ['get_flow.node-cap', 'get_flow', { entry: 'POST /orders', maxNodes: 12 }],
+  ['get_flow.char-cap', 'get_flow', { entry: 'POST /orders/:param/invoice', maxChars: 3000 }],
+  ['describe_for_prompt.post-orders', 'describe_for_prompt', { id: 'POST /orders' }],
+];
+
 const SUITES = [
   { fixture, outDir, cases: CASES },
   {
@@ -95,6 +112,11 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),
     outDir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.mcp'),
     cases: LOOPS_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'multi-repo-plumbing'),
+    outDir: join(root, 'fixtures', 'multi-repo-plumbing', 'expected.mcp'),
+    cases: PLUMBING_CASES,
   },
 ];
 

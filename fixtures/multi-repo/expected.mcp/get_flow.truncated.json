@@ -74,9 +74,21 @@
     ]
   },
   "unresolvedOnPath": 0,
-  "truncated": "5 more nodes, increase depth or narrow scope",
+  "truncated": "5 more nodes past maxNodes 5; raise maxNodes or ask get_flow on a child id",
+  "stoppedBy": [
+    "maxNodes"
+  ],
+  "crossingsLeft": [
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "service": "orders"
+    }
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
     "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})",
     "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})"
   ]

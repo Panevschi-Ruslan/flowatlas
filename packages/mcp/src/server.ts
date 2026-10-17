@@ -38,6 +38,7 @@ export const INSTRUCTIONS = [
   'describe_for_prompt({id}) writes any of these as Markdown to hand on. Every list tool takes the same optional `service` filter, a service name, to keep only its rows.',
   'Every answer is bounded; get_source is the only one that returns code, and says `truncated` with the `fromLine` to read on from when a declaration is longer than one answer.',
   '`maxNodes` is the most rows an answer holds. A list that was cut says `total` and `nextOffset`: ask the same call again with `offset: nextOffset` for the next page, and `next` writes that call first.',
+  'get_flow writes each node once: met again it is `{id, ref: true, seenAt}`, seenAt the row its subtree is under. It stops at `maxNodes` (60) or about `maxChars` (12000) characters, says which in `stoppedBy`, and lists the crossings it did not follow in `crossingsLeft`: ask get_flow on one.',
   '`detail` is 0 for ids only, 1 (the default) adds file:line, service and kind, 2 adds what the reader knows about each row; 3 is answered at 2.',
 ].join('\n');
 

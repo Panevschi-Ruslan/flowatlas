@@ -2,12 +2,49 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
-import { buildFlowTree } from '../query/flow.js';
+import { buildFlowTree, type FlowResult } from '../query/flow.js';
 import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
+import type { FlowNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
-import { withNext } from '../query/next.js';
+import { MAX_NEXT, withNext } from '../query/next.js';
 import { slimTree } from '../query/wire.js';
-import { bound, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
+import { bound, callOf, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
+
+/**
+ * What `get_flow` shows when nobody says (P92 D4): a tree, not a list, so fewer
+ * rows than a list tool's 150, and about as many characters as an assistant
+ * reads in one go. Whichever comes first stops the walk.
+ */
+export const FLOW_DEFAULTS = { maxNodes: 60, maxChars: 12000 } as const;
+
+/** The first row reached across an HTTP call, breadth first, with the row it hangs under. */
+const firstHttpCrossing = (root: FlowNode): { from: string; to: string } | undefined => {
+  const queue: Array<{ row: FlowNode; parent: string }> = root.children.map((row) => ({ row, parent: root.node.id }));
+  while (queue.length > 0) {
+    const { row, parent } = queue.shift()!;
+    if (row.edge?.type === 'http_calls' && row.node.ref !== true) return { from: parent, to: row.node.id };
+    queue.push(...row.children.map((child) => ({ row: child, parent: row.node.id })));
+  }
+  return undefined;
+};
+
+/**
+ * The calls worth making next (P92): the prompt, whether the first HTTP
+ * crossing still agrees on its shapes, the first crossing the walk did not
+ * follow, the blast radius, and the source of the first step.
+ */
+const flowNext = (id: string, flow: FlowResult): string[] => {
+  const http = firstHttpCrossing(flow.root);
+  const left = flow.crossingsLeft?.[0];
+  const first = flow.root.children[0];
+  return [
+    `describe_for_prompt({id: ${JSON.stringify(id)}})`,
+    ...(http === undefined ? [] : [callOf('check_contract', http)]),
+    ...(left === undefined ? [] : [callOf('get_flow', { entry: left.to })]),
+    `impact({symbol: ${JSON.stringify(id)}})`,
+    ...(first === undefined ? [] : [`get_source({symbol: ${JSON.stringify(first.node.id)}})`]),
+  ].slice(0, MAX_NEXT);
+};
 
 export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
@@ -18,7 +55,9 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
       inputSchema: {
         entry: z.string().describe('"POST /orders" or an entry id'),
         depth: z.number().int().min(1).max(32).optional().describe('hops; default 8, +1 per workflow step'),
-        ...commonInput,
+        detail: commonInput.detail,
+        maxNodes: z.number().int().min(1).max(2000).default(FLOW_DEFAULTS.maxNodes),
+        maxChars: z.number().int().min(1000).max(200000).default(FLOW_DEFAULTS.maxChars),
       },
       annotations: READ_ONLY,
     },
@@ -43,6 +82,7 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
         const flow = buildFlowTree(db, ref.id, {
           ...(input.depth === undefined ? {} : { depth: input.depth }),
           maxNodes,
+          maxChars: input.maxChars,
           detail,
         });
         const counts = loadObservedCounts(ctx.handle.path);
@@ -53,19 +93,15 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           if (unsure !== undefined) flow.root.seenAmbiguous = unsure;
           markObserved(counts, ref.id, flow.root.children, 'forward');
         }
-        const id = JSON.stringify(ref.id);
         return withNext(
           {
             root: slimTree(flow.root),
             unresolvedOnPath: flow.unresolvedOnPath,
-            ...(flow.truncated === undefined ? {} : { truncated: flow.truncated }),
+            ...(flow.truncated === undefined ? {} : { truncated: flow.truncated, stoppedBy: flow.stoppedBy }),
+            ...(flow.crossingsLeft === undefined ? {} : { crossingsLeft: flow.crossingsLeft }),
             ...(note === undefined ? {} : { note }),
           },
-          [
-            `describe_for_prompt({id: ${id}})`,
-            `impact({symbol: ${id}})`,
-            ...(flow.root.children[0] === undefined ? [] : [`get_source({symbol: ${JSON.stringify(flow.root.children[0].node.id)}})`]),
-          ],
+          flowNext(ref.id, flow),
         );
       }),
   );

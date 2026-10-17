@@ -14,7 +14,7 @@
         ~  dynamodb/audit                                                 infra/main.tf:33
           ~  mapping aws_lambda_event_source_mapping.audit                shop/infra/main.tf:127
             ~  event dynamodb/audit                                       shop/infra/main.tf:127
-              -> handler                                                  shop/src/orders/order-changed.ts:6
+              (again) handler
       -> ForgetCart [Task dynamodb:deleteItem]                            shop/infra/main.tf:227
         [] delete shop-carts                                              shop/infra/main.tf:227
           #  shop-carts

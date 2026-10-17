@@ -7,6 +7,7 @@
  * written into the text: it names where to look and which ids to ask for.
  */
 import type { FailRef } from '../query/fails.js';
+import type { WalkLimit } from '../query/types.js';
 
 /** One step of the chain, in the order a walk reaches it. */
 export interface PromptStep {
@@ -23,8 +24,10 @@ export interface PromptStep {
   via?: { type: string; confidence: string; because?: string[] };
   params?: string[];
   returns?: string;
-  /** Already on the path: a cycle, shown once and not followed. */
+  /** Already in the chain: a cycle, or a step written out under another one (P92). */
   repeat?: boolean;
+  /** For a repeat that is not a cycle: the step its own line is under. */
+  seenAt?: string;
 }
 
 /** Something on the chain the reading could not follow, and why. */
@@ -54,6 +57,8 @@ export interface PromptSubject {
   steps: PromptStep[];
   /** Steps the walk reached and the text left out. */
   stepsCut: number;
+  /** The limit that left out more of them, when the walk was cut (P92). */
+  stepsCutBy?: WalkLimit;
   /** What publishes onto it, for a channel. */
   producers?: PromptStep[];
   /** The ways in that reach it, for something that is not one itself. */
@@ -97,7 +102,11 @@ const viaOf = (step: PromptStep): string => {
 /** One line of the chain: what it is, where it lives, how it was reached. */
 const stepLine = (step: PromptStep): string => {
   const indent = '  '.repeat(Math.max(step.depth - 1, 0));
-  if (step.repeat === true) return `${indent}- ${code(step.id)} again (a cycle; not followed)`;
+  if (step.repeat === true) {
+    return step.seenAt === undefined
+      ? `${indent}- ${code(step.id)} again (a cycle; not followed)`
+      : `${indent}- **${step.label}** again — followed under ${code(step.seenAt)}`;
+  }
   const facts = [where(step), viaOf(step), shapeOf(step)].filter((part) => part.length > 0);
   return `${indent}- **${step.label}** ${code(step.id)}${facts.length === 0 ? '' : ` — ${facts.join(' — ')}`}`;
 };
@@ -181,7 +190,9 @@ export const describeForPrompt = (subject: PromptSubject, limits: PromptLimits =
   const steps = subject.steps.slice(0, limits.maxSteps);
   const cut = subject.stepsCut + subject.steps.length - steps.length;
   const chain = steps.map(stepLine);
-  if (cut > 0) chain.push(`- … ${cut} more step(s) not shown; ask get_flow with a higher maxNodes`);
+  // The advice is for the limit that cut: more rows do nothing past the depth (P92).
+  const deeper = subject.stepsCutBy === 'depth' && cut === subject.stepsCut;
+  if (cut > 0) chain.push(`- … ${cut} more step(s) not shown; ask get_flow with a higher ${deeper ? 'depth' : 'maxNodes'}`);
 
   const shapes = shapesOf(subject.steps);
   const shapeLines = [

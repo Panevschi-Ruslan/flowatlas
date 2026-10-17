@@ -74,7 +74,8 @@ and let it talk on stdin and stdout.
 `who_consumes`, `get_type` and `what_changed`: 0 is ids only, 1 (the default)
 adds `file:line`, service and kind, 2 adds what the reader knows about each
 row, and 3 is answered at 2 and says so. Those tools and `check_contract` take
-`maxNodes`, the most rows an answer holds. `start_here`, `cant_follow`,
+`maxNodes`, the most rows an answer holds: 150 by default, 60 for `get_flow`,
+which also stops at about `maxChars` characters (12,000). `start_here`, `cant_follow`,
 `describe_for_prompt` and `get_source` take neither: they are bounded by their
 own limits (`perService`; `top` and `samples`; `maxSteps` and `maxChars`;
 `maxLines`). Answers are bounded and say when they were cut, rather than
@@ -208,7 +209,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth` |
+| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth`, `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` |
 | `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `offset` |
 
@@ -236,6 +237,34 @@ another repository that asks for it.
 `impact` is the one to ask before changing something: it answers "what would
 have to be retested", including the services whose chains run into this one
 without an entry point of their own.
+
+`get_flow` writes each node once. Met again on another path - a repository
+helper every method calls, a logger, a mapper - it is `{ "id": …, "ref": true,
+"seenAt": … }`, `seenAt` the id of the row its subtree is written under; met on
+its own path, a cycle, it is `{ "id": …, "ref": true }`. Its budget goes where
+the answer usually is: the steps that leave the service (a request, a publish,
+a hand-off to another way in) first, then a data store, the handler, a call
+into a method that itself leaves the service, any other call, and plumbing (a
+method more than five methods call) last. That decides which rows get room,
+never where they are written: children stay in call order. So a request
+through shared plumbing reaches the service it ends in within the defaults.
+
+A cut answer names the limit that cut it and the advice that helps:
+
+```
+"truncated": "23 more nodes past maxNodes 60; raise maxNodes or ask get_flow on a child id",
+"stoppedBy": ["maxNodes"],
+"crossingsLeft": [{ "from": "producer:…", "to": "channel:order.created", "type": "emits", "service": "orders" }]
+```
+
+`stoppedBy` is one or more of `depth` (`≥n more nodes past depth 8; raise
+depth`), `maxNodes` and `maxChars` (`n more nodes past about 12000 characters;
+raise maxChars or …`), the one that left out more first; the sentence is about
+that one. `crossingsLeft` (at most eight, out of the service before a store)
+are the crossings the walk reached and did not follow, ready to ask `get_flow`
+or `check_contract` about. `next` holds `check_contract` for the first HTTP
+crossing the tree reached and `get_flow` on the first crossing left, before
+`impact`.
 
 What `get_flow` says beside the chain:
 
@@ -408,8 +437,9 @@ that graph, and the graph is not the project.
 
 **An answer looks cut off.** It was, and it says so. A list says `nextOffset`:
 ask again with `offset` for the next page (`next` writes the call). A tree
-(`get_flow`, `who_calls`) does not page: narrow with `service` and `depth`, or
-raise `maxNodes`.
+(`get_flow`, `who_calls`) does not page: it says which limit stopped it
+(`stoppedBy` on `get_flow`), so raise that one, or ask `get_flow` on a row it
+showed or on one of its `crossingsLeft`.
 
 ---
 

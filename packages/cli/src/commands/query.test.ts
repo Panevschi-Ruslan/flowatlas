@@ -109,7 +109,7 @@ describe('following an entry point', () => {
     const io = flow({ format: 'tree', maxNodes: '3' });
     const drawn = io.stdout.split('\n').filter((line) => line.trim().length > 0);
     expect(drawn.filter((line) => line.startsWith('…'))).toHaveLength(1);
-    expect(io.stdout).toMatch(/… truncated: \d+ more nodes \(raise --max-nodes or lower --depth\)/);
+    expect(io.stdout).toMatch(/… truncated: \d+ more nodes \(raise --max-nodes\)/);
   });
 
   it('reports how much of the path could not be resolved', () => {

@@ -143,6 +143,8 @@ describe('walking outward from an entry', () => {
     expect(repeated).toHaveLength(2);
     expect(repeated[1]?.node.ref).toBe(true);
     expect(repeated[1]?.children).toEqual([]);
+    // A cycle is read off its own path, so it says nowhere else to look.
+    expect(repeated[1]?.node).not.toHaveProperty('seenAt');
     db.close();
   });
 
@@ -158,7 +160,9 @@ describe('walking outward from an entry', () => {
     const flow = buildFlowTree(db, 'entry:orders:http:GET /orders', { depth: 8, maxNodes: 3 });
 
     expect(flatten(flow.root)).toHaveLength(3);
-    expect(flow.truncated).toBe('2 more nodes, increase depth or narrow scope');
+    expect(flow.truncated).toBe('2 more nodes past maxNodes 3; raise maxNodes or ask get_flow on a child id');
+    expect(flow.stoppedBy).toEqual(['maxNodes']);
+    expect(flow.left).toBe(2);
     db.close();
   });
 
@@ -247,6 +251,166 @@ describe('walking outward from an entry', () => {
     const flow = buildFlowTree(db, 'entry:desk:http:POST:/loans', { maxNodes: 2 });
     expect(flatten(flow.root).map((item) => item.node.id)).not.toContain('entry:desk:invoke:archive-loan');
     expect(flow.unresolvedOnPath).toBe(1);
+    db.close();
+  });
+});
+
+describe('spending the budget where the answer is (P92)', () => {
+  const route = 'entry:shop:http:POST:/orders';
+  const helper = 'shop#repo.ts:OrderRepository.findOne';
+  const logger = 'shop#log.ts:Logger.log';
+
+  /**
+   * A route whose service has three methods that each read through one
+   * repository helper and log through one logger, and an outgoing request four
+   * hops down, behind all of it. The logger has a body of its own.
+   */
+  const plumbing = (): TestGraph => {
+    const methods = ['a', 'b', 'c'].map((name) => `shop#s.ts:Service.${name}`);
+    return {
+      nodes: [
+        entry(route, { repo: 'shop' }),
+        node('shop#c.ts:Controller.create', { repo: 'shop' }),
+        ...methods.map((id) => node(id, { repo: 'shop' })),
+        node('shop#s.ts:Service.notify', { repo: 'shop' }),
+        node(helper, { repo: 'shop' }),
+        node(logger, { repo: 'shop' }),
+        ...['format', 'stamp', 'redact', 'write'].map((name) => node(`shop#log.ts:Logger.${name}`, { repo: 'shop' })),
+        node('db_query:shop#repo.ts:3:1', { type: 'db_query', repo: 'shop' }),
+        node('table:shop#orders', { type: 'table', repo: 'shop' }),
+        node('http_out:shop#s.ts:40:1', { type: 'http_out', repo: 'shop' }),
+        entry('entry:mail:http:POST:/send', { repo: 'mail' }),
+        node('mail#m.ts:Mailer.send', { repo: 'mail' }),
+      ],
+      edges: [
+        edge(route, 'shop#c.ts:Controller.create', { type: 'handles' }),
+        edge('shop#c.ts:Controller.create', logger, { line: 1 }),
+        ...methods.map((id, index) => edge('shop#c.ts:Controller.create', id, { line: 2 + index })),
+        edge('shop#c.ts:Controller.create', 'shop#s.ts:Service.notify', { line: 9 }),
+        ...methods.flatMap((id) => [edge(id, logger, { line: 1 }), edge(id, helper, { line: 2 })]),
+        edge('shop#s.ts:Service.notify', logger, { line: 1 }),
+        edge('shop#s.ts:Service.notify', 'http_out:shop#s.ts:40:1', { line: 40 }),
+        edge(helper, logger, { line: 1 }),
+        edge(helper, 'db_query:shop#repo.ts:3:1', { line: 3 }),
+        edge('db_query:shop#repo.ts:3:1', 'table:shop#orders', { type: 'queries' }),
+        edge(logger, 'shop#log.ts:Logger.format', { line: 1 }),
+        edge(logger, 'shop#log.ts:Logger.write', { line: 2 }),
+        edge('shop#log.ts:Logger.format', 'shop#log.ts:Logger.stamp', { line: 1 }),
+        edge('shop#log.ts:Logger.format', 'shop#log.ts:Logger.redact', { line: 2 }),
+        edge('http_out:shop#s.ts:40:1', 'entry:mail:http:POST:/send', { type: 'http_calls' }),
+        edge('entry:mail:http:POST:/send', 'mail#m.ts:Mailer.send', { type: 'handles' }),
+      ],
+    };
+  };
+
+  it('expands a helper called by three methods once, and names where under the other two', () => {
+    const db = buildTestDb(plumbing());
+    const rows = flatten(buildFlowTree(db, route, {}).root).filter((item) => item.node.id === helper);
+    expect(rows).toHaveLength(3);
+    expect(rows.filter((item) => item.node.ref !== true)).toHaveLength(1);
+    const own = rows.find((item) => item.node.ref !== true)!;
+    expect(own.children.map((child) => child.node.id)).toEqual([logger, 'db_query:shop#repo.ts:3:1']);
+    expect(rows.filter((item) => item.node.ref === true).map((item) => [item.node.seenAt, item.children])).toEqual([
+      ['shop#s.ts:Service.a', []],
+      ['shop#s.ts:Service.a', []],
+    ]);
+    db.close();
+  });
+
+  it('expands no node twice in one walk', () => {
+    const db = buildTestDb(plumbing());
+    const own = flatten(buildFlowTree(db, route, {}).root).filter((item) => item.node.ref !== true).map((item) => item.node.id);
+    expect(new Set(own).size).toBe(own.length);
+    db.close();
+  });
+
+  it('reaches the crossing four hops down within ten rows, the logger shared by every method notwithstanding', () => {
+    const db = buildTestDb(plumbing());
+    const flow = buildFlowTree(db, route, { maxNodes: 10 });
+    const ids = flatten(flow.root).map((item) => item.node.id);
+    expect(ids).toHaveLength(10);
+    expect(ids).toContain('entry:mail:http:POST:/send');
+    expect(flow.stoppedBy).toEqual(['maxNodes']);
+    db.close();
+  });
+
+  it('writes a node\'s children in call order whichever of them got room', () => {
+    const db = buildTestDb(plumbing());
+    const { root } = buildFlowTree(db, route, { maxNodes: 10 });
+    const controller = root.children[0]!;
+    // The logger is first in call order and last in the budget: it is written
+    // first, and the request behind `notify` was given room before the logger's
+    // own body was.
+    expect(controller.children.map((child) => child.node.id)).toEqual([
+      logger,
+      'shop#s.ts:Service.a',
+      'shop#s.ts:Service.b',
+      'shop#s.ts:Service.c',
+      'shop#s.ts:Service.notify',
+    ]);
+    expect(controller.children[0]?.children).toEqual([]);
+    db.close();
+  });
+
+  it('counts exactly what the node budget left out, and names the crossing it did not follow', () => {
+    const db = buildTestDb(plumbing());
+    const full = flatten(buildFlowTree(db, route, {}).root).length;
+    const flow = buildFlowTree(db, route, { maxNodes: 7 });
+    expect(flatten(flow.root)).toHaveLength(7);
+    expect(flow.left).toBe(full - 7);
+    expect(flow.truncated).toBe(`${full - 7} more nodes past maxNodes 7; raise maxNodes or ask get_flow on a child id`);
+    expect(flow.crossingsLeft?.[0]).toEqual({
+      from: 'shop#s.ts:Service.notify',
+      to: 'http_out:shop#s.ts:40:1',
+      type: 'calls',
+      service: 'shop',
+    });
+    db.close();
+  });
+
+  it('names depth, not the budget, when depth stopped it', () => {
+    const db = buildTestDb(plumbing());
+    const flow = buildFlowTree(db, route, { depth: 2 });
+    expect(flow.stoppedBy).toEqual(['depth']);
+    expect(flow.truncated).toMatch(/^≥\d+ more nodes past depth 2; raise depth$/);
+    db.close();
+  });
+
+  it('names both limits when both cut, the one that cut more in the sentence', () => {
+    const db = buildTestDb(plumbing());
+    // Room for `notify` and `a` under the controller, at the depth line: the
+    // budget leaves out three of its children, the depth the four below those two.
+    const flow = buildFlowTree(db, route, { depth: 2, maxNodes: 4 });
+    expect(flow.stoppedBy).toEqual(['depth', 'maxNodes']);
+    expect(flow.truncated).toBe('≥4 more nodes past depth 2; raise depth');
+    expect(flow.left).toBe(7);
+    db.close();
+  });
+
+  it('stops at the character ceiling and says so', () => {
+    const db = buildTestDb(plumbing());
+    const flow = buildFlowTree(db, route, { maxChars: 1500 });
+    expect(flow.stoppedBy).toEqual(['maxChars']);
+    expect(flow.truncated).toMatch(/^\d+ more nodes past about 1500 characters; raise maxChars or ask get_flow on a child id$/);
+    expect(JSON.stringify(flow.root).length).toBeLessThan(3000);
+    db.close();
+  });
+
+  it('writes a first row larger than the ceiling without its children', () => {
+    const db = buildTestDb(plumbing());
+    const flow = buildFlowTree(db, route, { maxChars: 10 });
+    expect(flow.root.children.map((child) => child.node.id)).toEqual(['shop#c.ts:Controller.create']);
+    expect(flow.root.children[0]?.children).toEqual([]);
+    expect(flow.stoppedBy).toEqual(['maxChars']);
+    db.close();
+  });
+
+  it('says nothing about a cut when nothing was cut', () => {
+    const db = buildTestDb(plumbing());
+    const flow = buildFlowTree(db, route, {});
+    expect(flow.truncated).toBeUndefined();
+    expect(flow.stoppedBy).toBeUndefined();
+    expect(flow.crossingsLeft).toBeUndefined();
     db.close();
   });
 });

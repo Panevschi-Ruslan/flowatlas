@@ -2,7 +2,9 @@ import { accessOf, STEP_OF_META, STEPS_META, TAKEN_BY_META, type DetailLevel, ty
 import type { GraphDb } from '@flowatlas/linker';
 import { projectDetail, projectEdge } from './detail.js';
 import { failsOf } from './fails.js';
-import { truncationMessage, type CompactNode, type FlowNode, type GuardRef, type OptOutRef } from './types.js';
+import { MinHeap } from './heap.js';
+import { truncationMessage, type CompactNode, type FlowNode, type GuardRef, type OptOutRef, type WalkLimit } from './types.js';
+import { slimTree } from './wire.js';
 
 /**
  * Edges a walk follows outward.
@@ -104,17 +106,133 @@ export interface FlowOptions {
   /** Hops to follow; `defaultFlowDepth` of the entry when absent. */
   depth?: number;
   maxNodes?: number;
+  /**
+   * About the most characters the answer may take, each row measured as it is
+   * added, in the form it goes over the wire (P92). No ceiling when absent: the
+   * terminal pages its own output.
+   */
+  maxChars?: number;
   detail?: DetailLevel;
+}
+
+/** A crossing the walk reached and did not follow, so it can be asked about directly (P92). */
+export interface CrossingLeft {
+  from: string;
+  to: string;
+  type: string;
+  service?: string;
 }
 
 export interface FlowResult {
   root: FlowNode;
   unresolvedOnPath: number;
   truncated?: string;
+  /** The limits that left rows out, the one that left out more first (P92). */
+  stoppedBy?: WalkLimit[];
+  /** How many rows they left out between them. */
+  left?: number;
+  /** The crossings left unfollowed, nearest first, at most `MAX_CROSSINGS_LEFT`. */
+  crossingsLeft?: CrossingLeft[];
 }
+
+/** How many nodes a walk shows when nobody says; `get_flow` sets its own (P92 D4). */
+export const DEFAULT_WALK_NODES = 150;
 
 /** How many edges may be looked at before the exact overflow count is given up. */
 const SCAN_FACTOR = 4;
+
+/**
+ * Edges that leave the method they start in for somewhere else: another
+ * service, a data store, a channel, the next step of a chain (P92). A walk
+ * spends its budget on them first, because the step that crosses is the one
+ * the question is usually about.
+ */
+export const CROSSING_EDGES = ['http_calls', 'hits', 'emits', 'consumes', 'queries', 'caches', 'triggers'] as const;
+
+/** A method called from more than this many methods is plumbing, for the budget (P92 D3). */
+export const PLUMBING_FAN_IN = 5;
+
+/** How many unfollowed crossings an answer names. */
+export const MAX_CROSSINGS_LEFT = 8;
+
+/** What an answer holds beside its tree - the counts, the cut, `next` - so `maxChars` is of the whole answer. */
+const ANSWER_OVERHEAD = 600;
+
+/** The crossings that leave the service: a request, a publish, a hand-off to another way in. */
+const LEAVING_EDGES = new Set(['http_calls', 'hits', 'emits', 'consumes', 'triggers']);
+
+/**
+ * Nodes a call reaches on its way out of a method: the request, the publish,
+ * another way in. A call into one ranks as the crossing it leads to, or the
+ * budget would be spent before the `http_calls` beneath it.
+ */
+const LEAVING_NODES = new Set(['http_out', 'producer', 'consumer', 'ui_api_call', 'channel', 'external_api', 'entry']);
+
+/** The crossings that reach a store, and the nodes on the way to one. */
+const STORE_EDGES = new Set(['queries', 'caches']);
+const STORE_NODES = new Set(['db_query', 'cache_op', 'table']);
+
+/**
+ * What a step is worth the budget, the least first (P92 D2): a crossing out of
+ * the service, a store, the handler a way in hands to, a call into a method
+ * that itself leaves the service (one hop of lookahead), any other call, and
+ * plumbing - a method more than `PLUMBING_FAN_IN` other methods call, and
+ * whatever it calls in turn. Under plumbing only a crossing ranks higher again,
+ * so a shared HTTP client's request still gets room before a logger's
+ * internals do.
+ */
+const RANK = { out: 0, store: 1, handles: 2, toward: 3, calls: 4, plumbing: 5 } as const;
+type Rank = (typeof RANK)[keyof typeof RANK];
+
+const crossingRank = (edge: GraphEdge, target: GraphNode | undefined): Rank | undefined =>
+  LEAVING_EDGES.has(edge.type) || (target !== undefined && LEAVING_NODES.has(target.type))
+    ? RANK.out
+    : STORE_EDGES.has(edge.type) || (target !== undefined && STORE_NODES.has(target.type))
+      ? RANK.store
+      : undefined;
+
+/** Whether a rank is one of the crossings, the steps `crossingsLeft` names. */
+const isCrossing = (rank: Rank): boolean => rank === RANK.out || rank === RANK.store;
+
+/** What the walk reads off the graph to rank a step, each once per walk (D3). */
+interface Ranking {
+  fanIn: (id: string) => number;
+  leavesFrom: (id: string) => boolean;
+}
+
+const rankOf = (edge: GraphEdge, target: GraphNode | undefined, under: Rank, ranking: Ranking): Rank => {
+  const crossing = crossingRank(edge, target);
+  if (crossing !== undefined) return crossing;
+  if (under === RANK.plumbing) return RANK.plumbing;
+  if (edge.type === 'handles') return RANK.handles;
+  if (edge.type !== 'calls') return RANK.calls;
+  if (ranking.leavesFrom(edge.to)) return RANK.toward;
+  return ranking.fanIn(edge.to) > PLUMBING_FAN_IN ? RANK.plumbing : RANK.calls;
+};
+
+/** Read from the graph once per walk and never stored: who calls a node, and whether it leaves the service itself. */
+const rankingFor = (db: GraphDb): Ranking => {
+  const fanIns = new Map<string, number>();
+  const leaves = new Map<string, boolean>();
+  return {
+    fanIn: (id) => {
+      let count = fanIns.get(id);
+      if (count === undefined) {
+        count = new Set(db.edgesTo(id, ['calls']).map((edge) => edge.from)).size;
+        fanIns.set(id, count);
+      }
+      return count;
+    },
+    leavesFrom: (id) => {
+      let found = leaves.get(id);
+      if (found === undefined) {
+        found = db.edgesFrom(id, FORWARD_EDGES).some((edge) => crossingRank(edge, db.node(edge.to)) === RANK.out);
+        leaves.set(id, found);
+      }
+      return found;
+    },
+  };
+};
 
 const orderOf = (edge: GraphEdge): number => {
   const order = edge.meta?.['order'];
@@ -182,6 +300,11 @@ interface Pending {
   id: string;
   path: ReadonlySet<string>;
   level: number;
+  rank: Rank;
+  /** When it was queued, so equal ranks keep the order they were reached in. */
+  seq: number;
+  /** The edge that reached it, to name a crossing the walk did not follow. */
+  via?: GraphEdge;
   /**
    * The consumers of the channel this is that take what the publisher the walk
    * came from publishes, where the publisher's edge says (P52): a write to a
@@ -190,25 +313,41 @@ interface Pending {
   takenBy?: ReadonlySet<string>;
 }
 
+/** Rows first, then what is only counted; within each, by rank, then nearest, then first reached. */
+const expandsFirst = (a: Pending, b: Pending): boolean =>
+  (Number(a.flow === undefined) - Number(b.flow === undefined) || a.rank - b.rank || a.level - b.level || a.seq - b.seq) < 0;
+
 const takenByOf = (edge: GraphEdge): ReadonlySet<string> | undefined => {
   const ids = edge.meta?.[TAKEN_BY_META];
   return Array.isArray(ids) ? new Set(ids.map(String)) : undefined;
 };
 
+/** The limit that left out more says the sentence; a tie goes to the budget, whose advice is the one to take. */
+const BY_WEIGHT: readonly WalkLimit[] = ['maxNodes', 'maxChars', 'depth'];
+
 /**
  * Walks outward from an entry and builds the tree of what it reaches.
  *
- * Breadth first on purpose: a shallow complete picture is worth more to a
- * reader than one deep branch and nothing else, and the cut, when there is one,
- * says exactly how much was left.
+ * Each node is expanded once in the whole walk (P92 D1): met again, on another
+ * path, it is a reference saying under which row its subtree is (`seenAt`); met
+ * on its own path, a cycle, it is a bare reference. A repository helper every
+ * method calls is written out once, not once per caller.
  *
- * A node already on the path is emitted once as a bare reference rather than
- * followed, so a cycle ends the branch instead of the walk.
+ * The budget is spent in priority order (D2): the walk expands next the pending
+ * row that crosses into another service, store or channel, then handlers, then
+ * calls, and plumbing last, nearest first within a rank; and when a node has
+ * more children than room, the crossings get it. The children are still
+ * written in call order (P66): priority picks who gets room, not where they go.
+ *
+ * Two ceilings, rows (`maxNodes`) and characters (`maxChars`), and the depth;
+ * whatever any of them leaves out is counted, and the answer names the limit
+ * that did it (I9).
  */
 export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions = {}): FlowResult => {
   const start = db.node(entryId);
   const depth = options.depth ?? defaultFlowDepth(start);
-  const maxNodes = options.maxNodes ?? 150;
+  const maxNodes = options.maxNodes ?? DEFAULT_WALK_NODES;
+  const maxChars = options.maxChars;
   const detail = options.detail ?? 1;
 
   const root: FlowNode = {
@@ -225,77 +364,202 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
   const unresolvedIds = new Set<string>();
   if (db.unresolvedFor(entryId).length > 0) unresolvedIds.add(entryId);
 
+  const ranking = rankingFor(db);
+
+  /** The characters a row adds to the answer, in its wire form, with the comma before it. */
+  const sizeOf = (row: FlowNode, parentService: string | undefined): number => JSON.stringify(slimTree(row, parentService)).length + 1;
+
+  const rowOf = (edge: GraphEdge, target: GraphNode | undefined, repeat: 'cycle' | 'again' | undefined, seenAt?: string): FlowNode => {
+    if (repeat !== undefined) {
+      return {
+        node: {
+          id: edge.to,
+          type: 'ref',
+          label: target?.label ?? edge.to,
+          ref: true,
+          ...(repeat === 'again' && seenAt !== undefined ? { seenAt } : {}),
+        },
+        edge: projectEdge(edge, detail),
+        children: [],
+      };
+    }
+    const row: FlowNode = {
+      node: target === undefined ? missingNode(edge.to) : projectDetail(target, detail),
+      edge: projectEdge(edge, detail),
+      children: [],
+    };
+    const guards = guardsOf(db, edge.to, detail);
+    if (guards.length > 0) row.guards = guards;
+    const fails = failsOf(target, detail);
+    if (fails.length > 0) row.fails = fails;
+    return row;
+  };
+
+  /** Where each node's own row is: the id of the row it hangs under. */
+  const placed = new Map<string, string>();
+  /** Every node given a row or counted, so each is followed once. */
+  const reached = new Set<string>([entryId]);
+  const cut: Record<WalkLimit, number> = { depth: 0, maxNodes: 0, maxChars: 0 };
+  let stopped: 'maxNodes' | 'maxChars' | undefined;
+  let depthExact = true;
   let used = 1;
   let scanned = 0;
-  let overflow = 0;
+  let chars = maxChars === undefined ? 0 : JSON.stringify(slimTree(root)).length + ANSWER_OVERHEAD;
   const scanLimit = maxNodes * SCAN_FACTOR;
 
-  const queue: Pending[] = [{ flow: root, id: entryId, path: new Set([entryId]), level: 0 }];
+  // Collected in the order the walk met them, and named out of the service
+  // first: a store left unread matters less than a service never reached.
+  const crossingsLeft: Array<CrossingLeft & { rank: Rank }> = [];
+  const leftKeys = new Set<string>();
+  const leave = (edge: GraphEdge, target: GraphNode | undefined, rank: Rank): void => {
+    const key = `${edge.from}\n${edge.to}`;
+    if (crossingsLeft.length >= MAX_CROSSINGS_LEFT * SCAN_FACTOR || leftKeys.has(key)) return;
+    leftKeys.add(key);
+    crossingsLeft.push({ from: edge.from, to: edge.to, type: edge.type, ...(target?.repo === undefined ? {} : { service: target.repo }), rank });
+  };
 
-  while (queue.length > 0) {
-    const item = queue.shift() as Pending;
-    if (item.level >= depth) continue;
+  let seq = 0;
+  const queue = new MinHeap<Pending>(expandsFirst);
+  queue.push({ flow: root, id: entryId, path: new Set([entryId]), level: 0, rank: RANK.out, seq: seq++ });
 
-    for (const edge of db.edgesFrom(item.id, FORWARD_EDGES).sort(inCallOrder)) {
-      if (edge.type === 'consumes' && item.takenBy !== undefined && !item.takenBy.has(edge.to)) continue;
+  while (queue.size > 0) {
+    const item = queue.pop() as Pending;
+    const edges = db
+      .edgesFrom(item.id, FORWARD_EDGES)
+      .filter((edge) => !(edge.type === 'consumes' && item.takenBy !== undefined && !item.takenBy.has(edge.to)))
+      .sort(inCallOrder);
+    if (edges.length === 0) continue;
+
+    // A row on the line the walk was told to stop at: what lies past it is
+    // counted for the sentence and not walked, so nothing past the line is on
+    // the path (or in `unresolvedOnPath`), as before. A count of rows only
+    // counts what is not already somewhere else to be read.
+    if (item.level >= depth) {
+      if (item.flow === undefined) continue;
+      let crossed = false;
+      for (const edge of edges) {
+        cut.depth += 1;
+        if (depthExact && !reached.has(edge.to) && db.edgesFrom(edge.to, FORWARD_EDGES).length > 0) depthExact = false;
+        const target = db.node(edge.to);
+        const rank = rankOf(edge, target, item.rank, ranking);
+        if (!placed.has(edge.to) && isCrossing(rank)) {
+          leave(edge, target, rank);
+          crossed = true;
+        }
+      }
+      if (!crossed && item.via !== undefined && isCrossing(item.rank)) leave(item.via, db.node(item.id), item.rank);
+      continue;
+    }
+
+    // The order the room goes in, which is not the order rows are written in.
+    const candidates = edges
+      .map((edge, order) => {
+        const target = db.node(edge.to);
+        return { edge, target, order, rank: rankOf(edge, target, item.rank, ranking) };
+      })
+      .sort((a, b) => a.rank - b.rank || a.order - b.order);
+
+    const rows: Array<{ order: number; row: FlowNode }> = [];
+    let cutHere = 0;
+    let crossed = false;
+    for (const { edge, target, order, rank } of candidates) {
       scanned += 1;
       if (scanned > scanLimit) {
-        overflow += 1;
+        stopped ??= 'maxNodes';
+        cut[stopped] += 1;
+        cutHere += 1;
         continue;
       }
 
-      // Past the budget the walk keeps going without building anything, so the
-      // number it reports at the end is the number actually left out.
-      const room = item.flow !== undefined && used < maxNodes;
-      if (!room) overflow += 1;
+      const repeat = item.path.has(edge.to) ? 'cycle' : reached.has(edge.to) ? 'again' : undefined;
+      if (repeat === undefined) {
+        reached.add(edge.to);
+        // Every node the walk reaches is on the path, the ones past the budget
+        // and the entry a path ends at included: a function deployed with no body
+        // to read is where its path stops, and the row saying so is why (R168).
+        if (target === undefined || db.unresolvedFor(edge.to).length > 0) unresolvedIds.add(edge.to);
+      }
 
-      if (item.path.has(edge.to)) {
-        if (room) {
-          used += 1;
-          item.flow?.children.push({
-            node: { id: edge.to, type: 'ref', label: edge.to, ref: true },
-            edge: projectEdge(edge, detail),
-            children: [],
+      let row = item.flow === undefined || stopped !== undefined ? undefined : rowOf(edge, target, repeat, placed.get(edge.to));
+      if (row !== undefined && used >= maxNodes) {
+        stopped = 'maxNodes';
+        row = undefined;
+      }
+      if (row !== undefined && maxChars !== undefined) {
+        const size = sizeOf(row, item.flow?.node.service);
+        // The first row is written whatever its size, so an answer is never
+        // only its root; the walk stops after it.
+        if (chars + size > maxChars && used > 1) {
+          stopped = 'maxChars';
+          row = undefined;
+        } else chars += size;
+      }
+
+      if (row === undefined) {
+        // Past the budget the walk keeps going without building anything, so the
+        // number it reports at the end is the number actually left out.
+        cut[stopped ?? 'maxNodes'] += 1;
+        cutHere += 1;
+        if (item.flow !== undefined && repeat === undefined && isCrossing(rank)) {
+          leave(edge, target, rank);
+          crossed = true;
+        }
+        if (repeat === undefined) {
+          const takenBy = takenByOf(edge);
+          queue.push({
+            flow: undefined,
+            id: edge.to,
+            path: new Set([...item.path, edge.to]),
+            level: item.level + 1,
+            rank,
+            seq: seq++,
+            ...(takenBy === undefined ? {} : { takenBy }),
           });
         }
         continue;
       }
 
-      // Every node the walk reaches is on the path, the ones past the budget
-      // and the entry a path ends at included: a function deployed with no body
-      // to read is where its path stops, and the row saying so is why (R168).
-      const target = db.node(edge.to);
-      if (target === undefined || db.unresolvedFor(edge.to).length > 0) unresolvedIds.add(edge.to);
-
-      let child: FlowNode | undefined;
-      if (room) {
-        child = {
-          node: target === undefined ? missingNode(edge.to) : projectDetail(target, detail),
-          edge: projectEdge(edge, detail),
-          children: [],
-        };
-        const guards = guardsOf(db, edge.to, detail);
-        if (guards.length > 0) child.guards = guards;
-        const fails = failsOf(target, detail);
-        if (fails.length > 0) child.fails = fails;
-
-        used += 1;
-        item.flow?.children.push(child);
+      used += 1;
+      rows.push({ order, row });
+      if (repeat === undefined) {
+        placed.set(edge.to, item.id);
+        const takenBy = takenByOf(edge);
+        queue.push({
+          flow: row,
+          id: edge.to,
+          path: new Set([...item.path, edge.to]),
+          level: item.level + 1,
+          rank,
+          seq: seq++,
+          via: edge,
+          ...(takenBy === undefined ? {} : { takenBy }),
+        });
       }
-
-      const takenBy = takenByOf(edge);
-      queue.push({
-        flow: child,
-        id: edge.to,
-        path: new Set([...item.path, edge.to]),
-        level: item.level + 1,
-        ...(takenBy === undefined ? {} : { takenBy }),
-      });
+    }
+    item.flow?.children.push(...rows.sort((a, b) => a.order - b.order).map((entry) => entry.row));
+    // A crossing whose own row was written and whose way on was not: the
+    // crossing itself is what to ask about next.
+    if (item.flow !== undefined && cutHere > 0 && !crossed && item.via !== undefined && isCrossing(item.rank)) {
+      leave(item.via, db.node(item.id), item.rank);
     }
   }
 
   const result: FlowResult = { root, unresolvedOnPath: unresolvedIds.size };
-  if (overflow > 0) result.truncated = truncationMessage(overflow, scanned <= scanLimit);
+  const stoppedBy = BY_WEIGHT.filter((limit) => cut[limit] > 0).sort((a, b) => cut[b] - cut[a]);
+  if (stoppedBy.length === 0) return result;
+
+  const first = stoppedBy[0] as WalkLimit;
+  const within = scanned <= scanLimit;
+  const at = { depth, maxNodes, maxChars: maxChars ?? 0 }[first];
+  result.truncated = truncationMessage(cut[first], within && (first !== 'depth' || depthExact), { limit: first, at });
+  result.stoppedBy = stoppedBy;
+  result.left = stoppedBy.reduce((total, limit) => total + cut[limit], 0);
+  if (crossingsLeft.length > 0) {
+    result.crossingsLeft = crossingsLeft
+      .sort((a, b) => a.rank - b.rank)
+      .slice(0, MAX_CROSSINGS_LEFT)
+      .map(({ rank: _rank, ...left }) => left);
+  }
   return result;
 };
 

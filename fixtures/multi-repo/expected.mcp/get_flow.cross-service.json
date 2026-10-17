@@ -156,6 +156,7 @@
   "unresolvedOnPath": 0,
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:33:12\", to: \"entry:orders:http:GET:/orders/:param\"})",
     "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})",
     "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})"
   ]

@@ -17,8 +17,13 @@ export interface CompactNode {
   kind?: string;
   /** From L2. */
   meta?: Record<string, unknown>;
-  /** Set instead of everything else when a node is repeated on the same path. */
+  /** Set instead of everything else when a node is repeated: on its own path (a cycle), or anywhere in the walk (P92). */
   ref?: true;
+  /**
+   * On a repeat that is not a cycle: the id of the row the node's own row is
+   * under, where its subtree is written (P92). A walk expands each node once.
+   */
+  seenAt?: string;
 }
 
 /** How one node was reached. */
@@ -112,11 +117,31 @@ export interface CommonInput {
   maxNodes: number;
 }
 
+/** The limits a walk stops at (P92). */
+export type WalkLimit = 'depth' | 'maxNodes' | 'maxChars';
+
 /**
- * What a cut says. A list that pages names the offset of its next page (P93);
- * a walk, which does not page, says how to see more of it.
+ * Why rows were left out: a walk names the limit and its value, and the tool
+ * to ask on a row it did show (`get_flow` unless said); a list names the
+ * offset its next page starts at (P93).
  */
-export const truncationMessage = (count: number, exact: boolean, nextOffset?: number): Truncation =>
-  nextOffset === undefined
-    ? `${exact ? '' : '≥'}${count} more nodes, increase depth or narrow scope`
-    : `${exact ? '' : '≥'}${count} more; next page offset ${nextOffset}`;
+export type Cut = { limit: WalkLimit; at: number; tool?: string } | { nextOffset: number };
+
+/**
+ * What a cut says, with the advice that helps for the limit that caused it
+ * (P92): raising `depth` does nothing when `maxNodes` stopped the walk. A walk's
+ * sentence always starts `n more nodes`, which is what the terminal reads back.
+ */
+export const truncationMessage = (count: number, exact: boolean, cut: Cut): Truncation => {
+  const more = `${exact ? '' : '≥'}${count} more`;
+  if ('nextOffset' in cut) return `${more}; next page offset ${cut.nextOffset}`;
+  const ask = `ask ${cut.tool ?? 'get_flow'} on a child id`;
+  switch (cut.limit) {
+    case 'depth':
+      return `${more} nodes past depth ${cut.at}; raise depth`;
+    case 'maxNodes':
+      return `${more} nodes past maxNodes ${cut.at}; raise maxNodes or ${ask}`;
+    case 'maxChars':
+      return `${more} nodes past about ${cut.at} characters; raise maxChars or ${ask}`;
+  }
+};

@@ -19,8 +19,12 @@ export {
   flatten,
   FORWARD_EDGES,
   REVERSE_EDGES,
+  CROSSING_EDGES,
+  PLUMBING_FAN_IN,
+  MAX_CROSSINGS_LEFT,
+  DEFAULT_WALK_NODES,
 } from './query/flow.js';
-export type { FlowOptions, FlowResult } from './query/flow.js';
+export type { CrossingLeft, FlowOptions, FlowResult } from './query/flow.js';
 export { projectDetail, projectEdge, truncate, clampDetail, CLAMP_NOTE, MAX_DETAIL } from './query/detail.js';
 export type { Truncated } from './query/detail.js';
 export { truncationMessage } from './query/types.js';
@@ -32,6 +36,8 @@ export type {
   GuardRef,
   ToolResult,
   Truncation,
+  Cut,
+  WalkLimit,
 } from './query/types.js';
 export type { ContractChecker, ContractFinding, ToolContext } from './tools/common.js';
 export type { ContractStatus } from './tools/contract.js';

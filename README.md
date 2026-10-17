@@ -346,10 +346,10 @@ comes back with the ids to choose from.
 `--format tree|json|mermaid`, so the same
 walk is read in a terminal, parsed by a script, or pasted into a document as a
 diagram. Every flag of every command is in the [command reference](docs/CLI.md).
-Output is bounded and says what it cut:
+Output is bounded and says what it cut, and which flag shows more:
 
 ```
-12 more nodes, increase depth or narrow scope
+… truncated: 12 more nodes (raise --max-nodes)
 ```
 
 The three are not interchangeable if something has to reason about the answer.
