@@ -1,4 +1,10 @@
-import { silentLogger, type FlowatlasConfig, type RepoGraph, type ServiceConfig } from '@flowatlas/core';
+import {
+  silentLogger,
+  type FlowatlasConfig,
+  type RepoGraph,
+  type ServiceConfig,
+  type StandInsOfBuild,
+} from '@flowatlas/core';
 import {
   dependentsOf,
   extractRepoFull,
@@ -20,6 +26,8 @@ export interface OpenOptions {
   config: FlowatlasConfig;
   /** The configuration's directory, which the stand-ins of P78 resolve against. */
   configDir?: string;
+  /** The stand-ins worked out once for every repository the watch opens (P82). */
+  standInsOfBuild?: StandInsOfBuild;
 }
 
 /**
@@ -38,13 +46,14 @@ interface WarmExtractor<Ctx> extends IncrementalExtractor<Ctx> {
 }
 
 const nestjs: WarmExtractor<WarmRepo> = {
-  open: ({ service, repoDir, config, configDir }) =>
+  open: ({ service, repoDir, config, configDir, standInsOfBuild }) =>
     openRepo({
       rootDir: repoDir,
       repo: service.name,
       service,
       config,
       ...(configDir === undefined ? {} : { configDir }),
+      ...(standInsOfBuild === undefined ? {} : { standInsOfBuild }),
       registry: createRegistry(),
       extraPasses: EXTRA_PASSES,
       logger: silentLogger,

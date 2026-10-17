@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { loadConfig, SERVICES_DIRECTORY } from '@flowatlas/core';
+import { loadConfig, SERVICES_DIRECTORY, standInsOfBuild } from '@flowatlas/core';
 import { missedOf } from '@flowatlas/linker';
 import { watch, type FSWatcher } from 'chokidar';
 import {
@@ -100,12 +100,16 @@ export const watchProject = async (options: WatchOptions = {}): Promise<WatchHan
   const debounceMs = options.debounceMs ?? DEBOUNCE_MS;
 
   const sessions = new Map<string, ServiceSession>();
+  // Worked out once for every repository held open (P82), as a build works
+  // them out once for the readers it starts.
+  const standIns = standInsOfBuild(loaded.config, loaded.rootDir);
   for (const service of loaded.config.services) {
     const session = openSession({
       service,
       repoDir: loaded.repoDir(service),
       config: loaded.config,
       configDir: loaded.rootDir,
+      standInsOfBuild: standIns,
     });
     if (session !== undefined) sessions.set(service.name, session);
   }

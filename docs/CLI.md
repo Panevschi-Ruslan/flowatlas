@@ -308,6 +308,7 @@ the repositories it reads:
   link-report.json     what joined and what did not
   graph.db             the same graph as SQLite
   cache.json           the file hashes the next build compares against
+  stand-ins.json       the package sources and shape files worked out once for every reader
   services/<name>/
     graph.json         one service's own graph, reused when it has not changed
     cache.json         that service's file hashes, whichever reader read it
@@ -320,6 +321,14 @@ is `services/%40shop%2F%4Frders/`. Two services never share a directory, even on
 a disk that ignores case. A service renamed or removed from the configuration
 has its directory removed by the next build, when nothing but the build's own
 files are in it.
+
+`stand-ins.json` is internal and versioned on its own: the index of the
+package sources a service may read in place of an install (`packageSources`)
+and every listed shape file, worked out once by the build and handed to each
+repository it reads in a process of its own, so none of them indexes or parses
+them again. Nothing else reads it. A reader handed one of another version, or
+one it cannot read, works them out itself; `flowatlas extract` run by hand
+always does, and comes to the same graph.
 
 An earlier version wrote each service's graph and file hashes into
 `<repo>/.flowatlas/`. Where it finds those, `build` names them once, as safe to

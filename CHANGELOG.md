@@ -362,6 +362,21 @@ only one of them moved.
   breaks, kept once per parsed file, rather than by counting newlines from the
   top of the file for each node (P123). The graph was unchanged.
   `scripts/bench-call-shape.mjs` measured the pass over a generated service.
+- **Package sources cost a build less (P82).** The index of the package
+  sources a service may read in place of an install, and every listed shape
+  file, were worked out once by `flowatlas build` and written to
+  `<output>/stand-ins.json`, which each repository read in a process of its own
+  was handed instead of indexing and parsing them again (a watch worked them
+  out once for every repository it held open). A path's mount was found by the
+  `node_modules/<name>` segment it is under rather than by trying every mount,
+  on every file-system call the compiler made; the files a program read from
+  its mounts were listed once per program; the package a file belongs to, a
+  package's own aliases and the shapes a project installed were looked up
+  rather than scanned for. A reader handed a `stand-ins.json` of another version
+  worked them out itself; `flowatlas extract` run by hand always did, and came
+  to the same graph. Every graph was unchanged.
+  `scripts/bench-package-sources.mjs` measured a cold build with
+  `packageSources` on against off over a generated project.
 - **Error actions and run-time batch lists (P62).** A function an IoT rule's
   `error_action` names was taken as the code the rule's entry runs
   (`meta.invokes`) when no other action had named one first; it became always

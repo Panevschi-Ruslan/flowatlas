@@ -15,7 +15,8 @@
  * wins over a shape file, which wins over a built-in shape.
  */
 import { join, relative, sep } from 'node:path';
-import { Node, Project, type FileSystemHost, type RuntimeDirEntry, type SourceFile } from 'ts-morph';
+import { Node, Project, type FileSystemHost, type RuntimeDirEntry, type SourceFile, type ts } from 'ts-morph';
+import { z } from 'zod';
 import type { GraphBuilder } from './builder.js';
 import { callIndexOf } from './call-shape.js';
 import { causeMeta } from './cant-follow.js';
@@ -29,10 +30,23 @@ import {
 import { normalizeFilePath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readResolvedPackageJson } from './adapters/manifest.js';
-import { packageIndexOf, rangeIncludes, serviceDirOf, type PackageSource } from './package-index.js';
-import { packageSourcesFor, shapesFor, type FlowatlasConfig, type ServiceConfig } from './config.js';
+import {
+  packageIndexOf,
+  rangeIncludes,
+  serviceDirOf,
+  type PackageIndex,
+  type PackageSource,
+} from './package-index.js';
+import {
+  packageSourcesFor,
+  shapesFor,
+  type FlowatlasConfig,
+  type PackageSourcesSetting,
+  type ServiceConfig,
+} from './config.js';
 import { readFileSync } from 'node:fs';
 import { startLineOf } from './line-numbers.js';
+import { WORK_COUNTS } from './work-counts.js';
 
 /** What a reading is asked to stand in for its missing packages, besides a reader's built-in shapes. */
 export interface StandInRequest {
@@ -57,6 +71,13 @@ export interface StandInsForOptions {
   readonly service: ServiceConfig | undefined;
   /** The configuration's directory, which every listed path is relative to. */
   readonly configDir: string | undefined;
+  /**
+   * What the build worked out once for every service (P82), read instead of
+   * indexing and parsing again. Ignored when it was made for another
+   * configuration directory or does not name this service: the reading then
+   * works it out itself, as a lone `flowatlas extract` always does.
+   */
+  readonly given?: StandInsOfBuild;
 }
 
 const readText = (path: string): string | undefined => {
@@ -67,33 +88,227 @@ const readText = (path: string): string | undefined => {
   }
 };
 
+/** Which search of the package index a setting asks for; none when package sources are off. */
+type IndexSearch = 'services' | 'folders';
+
+const searchOf = (setting: PackageSourcesSetting): IndexSearch | undefined =>
+  setting === false ? undefined : setting === true ? 'folders' : 'services';
+
+/** The package index one search makes, for this configuration. */
+const indexFor = (config: FlowatlasConfig | undefined, configDir: string, search: IndexSearch): PackageIndex =>
+  packageIndexOf({
+    services: (config?.services ?? [])
+      .filter((each) => each.document === undefined)
+      .map((each) => ({ name: each.name, dir: serviceDirOf(configDir, each.repo) })),
+    ...(search === 'folders' ? { folders: configDir } : {}),
+  });
+
+/** Whether a service speaks for the project's own shape list: the first repository the configuration names. */
+const speaksForProject = (config: FlowatlasConfig | undefined, service: ServiceConfig | undefined): boolean => {
+  const first = (config?.services ?? []).find((each) => each.document === undefined);
+  return service === undefined || first === undefined || first.name === service.name;
+};
+
 /**
  * What one service's reading stands in for its missing packages, from the
  * configuration (P78). Nothing without a configuration's directory to resolve
  * against: a repository read on its own has no project around it.
+ *
+ * With the build's own answer (`given`, P82) nothing is indexed or parsed: the
+ * index and the shape readings are the build's, the service's lists are the
+ * build's, and the request is the one working it out here would have made.
  */
 export const standInsFor = (options: StandInsForOptions): StandInRequest | undefined => {
   const { config, service, configDir } = options;
   if (configDir === undefined) return undefined;
   const setting = packageSourcesFor(config, service);
-  const index =
-    setting === false
-      ? undefined
-      : packageIndexOf({
-          services: (config?.services ?? [])
-            .filter((each) => each.document === undefined)
-            .map((each) => ({ name: each.name, dir: serviceDirOf(configDir, each.repo) })),
-          ...(setting === true ? { folders: configDir } : {}),
-        });
+  const search = searchOf(setting);
+  const given = options.given === undefined ? undefined : requestFromBuild(options.given, configDir, service, search);
+  if (given !== undefined) return { ...given, speaksForProject: speaksForProject(config, service) };
+  const index = search === undefined ? undefined : indexFor(config, configDir, search);
   const files = shapesFor(config, service, configDir);
   const own = shapesFor(undefined, service, configDir);
-  const first = (config?.services ?? []).find((each) => each.document === undefined);
   return {
     packages: index === undefined ? [] : [...index.sources.values()],
     ambiguous: index?.ambiguous ?? new Map(),
     shapeFiles: files.map((path) => readShapeFile(path, readText(path))),
     ownShapeFiles: own,
-    speaksForProject: service === undefined || first === undefined || first.name === service.name,
+    speaksForProject: speaksForProject(config, service),
+  };
+};
+
+/* ── Worked out once a build, handed to every reader (P82) ── */
+
+/**
+ * The version of {@link StandInsOfBuild}'s file. A reader handed a file of any
+ * other version works everything out itself rather than trust a shape it may
+ * be reading wrongly.
+ */
+export const STAND_INS_FORMAT_VERSION = 1;
+
+/** Where a build keeps its stand-ins, in its output directory. */
+export const STAND_INS_FILENAME = 'stand-ins.json';
+
+/** A package index as JSON holds it: the order of both lists is the index's own. */
+export interface PackageIndexRecord {
+  readonly sources: readonly PackageSource[];
+  readonly ambiguous: ReadonlyArray<readonly [string, readonly PackageSource[]]>;
+}
+
+/**
+ * What a build works out once about stand-ins and hands to every reader
+ * (P82): the package index for each search a service of the build asks, every
+ * listed shape file read once, and which of those files each service lists.
+ * Build-internal (I11): no other command reads it, and it is versioned on its
+ * own (`standInsFormatVersion`).
+ */
+export interface StandInsOfBuild {
+  readonly standInsFormatVersion: typeof STAND_INS_FORMAT_VERSION;
+  /** The configuration's directory everything here was resolved against. */
+  readonly configDir: string;
+  /** One index per search asked: the configured repositories alone, or the folders under the configuration too. */
+  readonly indexes: Readonly<Partial<Record<IndexSearch, PackageIndexRecord>>>;
+  /** Every shape file some service lists, each read once, sorted by path. */
+  readonly shapeFiles: readonly ShapeFileReading[];
+  /** Per service, the shape files it reads (`files`) and those its own entry lists (`own`), as absolute paths. */
+  readonly perService: Readonly<Record<string, { readonly files: readonly string[]; readonly own: readonly string[] }>>;
+}
+
+const recordOf = (index: PackageIndex): PackageIndexRecord => ({
+  sources: [...index.sources.values()],
+  ambiguous: [...index.ambiguous],
+});
+
+/**
+ * The stand-ins of every repository a build reads, worked out once (P82).
+ *
+ * An index is made only for a search some service asks (none when package
+ * sources are off everywhere), and a shape file two services list is read once.
+ */
+export const standInsOfBuild = (config: FlowatlasConfig, configDir: string): StandInsOfBuild => {
+  const read = config.services.filter((service) => service.document === undefined);
+  const searches = new Set(read.flatMap((service) => searchOf(packageSourcesFor(config, service)) ?? []));
+  const indexes: Partial<Record<IndexSearch, PackageIndexRecord>> = {};
+  for (const search of (['services', 'folders'] as const).filter((each) => searches.has(each))) {
+    indexes[search] = recordOf(indexFor(config, configDir, search));
+  }
+  const perService: Record<string, { files: string[]; own: string[] }> = {};
+  const paths = new Set<string>();
+  for (const service of read) {
+    const files = shapesFor(config, service, configDir);
+    perService[service.name] = { files, own: shapesFor(undefined, service, configDir) };
+    for (const path of files) paths.add(path);
+  }
+  return {
+    standInsFormatVersion: STAND_INS_FORMAT_VERSION,
+    configDir,
+    indexes,
+    shapeFiles: [...paths].sort().map((path) => readShapeFile(path, readText(path))),
+    perService,
+  };
+};
+
+const sourceSchema = z
+  .object({
+    name: z.string(),
+    dir: z.string(),
+    version: z.string().optional(),
+    manifest: z.record(z.string(), z.unknown()),
+    service: z.string().optional(),
+    origin: z.enum(['service', 'member', 'folder']),
+  })
+  .strict();
+
+const indexSchema = z
+  .object({
+    sources: z.array(sourceSchema),
+    ambiguous: z.array(z.tuple([z.string(), z.array(sourceSchema)])),
+  })
+  .strict();
+
+const shapeSchema = z
+  .object({ package: z.string(), declarations: z.string(), origin: z.string().optional() })
+  .strict();
+
+const standInsSchema = z
+  .object({
+    standInsFormatVersion: z.literal(STAND_INS_FORMAT_VERSION),
+    configDir: z.string(),
+    indexes: z.object({ services: indexSchema.optional(), folders: indexSchema.optional() }).strict(),
+    shapeFiles: z.array(
+      z.object({ path: z.string(), shapes: z.array(shapeSchema), problem: z.string().optional() }).strict(),
+    ),
+    perService: z.record(z.string(), z.object({ files: z.array(z.string()), own: z.array(z.string()) }).strict()),
+  })
+  .strict();
+
+/** The build's stand-ins read back, or why they cannot be. */
+export type StandInsRead = { readonly given: StandInsOfBuild } | { readonly problem: string };
+
+/**
+ * The file a build wrote its stand-ins to, read back by a reader it started
+ * (P82). Anything but a file of this version, whole, is a problem the reader
+ * says once and works around by working everything out itself.
+ */
+export const readStandInsOfBuild = (path: string): StandInsRead => {
+  const text = readText(path);
+  if (text === undefined) return { problem: `${path} cannot be read` };
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return { problem: `${path} is not JSON` };
+  }
+  const version = (json as { standInsFormatVersion?: unknown } | null)?.standInsFormatVersion;
+  if (version !== STAND_INS_FORMAT_VERSION) {
+    return { problem: `${path} is of stand-ins format ${String(version)}, and this reader reads ${STAND_INS_FORMAT_VERSION}` };
+  }
+  const parsed = standInsSchema.safeParse(json);
+  if (!parsed.success) return { problem: `${path} is not a stand-ins file this reader can read` };
+  return { given: parsed.data as StandInsOfBuild };
+};
+
+const INDEX_OF_RECORD = new WeakMap<PackageIndexRecord, PackageIndex>();
+
+/** A recorded index as the maps the reading asks, made once per record. */
+const indexOfRecord = (record: PackageIndexRecord): PackageIndex => {
+  let index = INDEX_OF_RECORD.get(record);
+  if (index === undefined) {
+    index = {
+      sources: new Map(record.sources.map((source) => [source.name, source])),
+      ambiguous: new Map(record.ambiguous),
+    };
+    INDEX_OF_RECORD.set(record, index);
+  }
+  return index;
+};
+
+/**
+ * One service's request out of the build's stand-ins, when they answer for it:
+ * made against the same configuration directory, naming the service, holding
+ * the index its setting asks and every shape file it lists. Undefined
+ * otherwise, and the caller works it out.
+ */
+const requestFromBuild = (
+  given: StandInsOfBuild,
+  configDir: string,
+  service: ServiceConfig | undefined,
+  search: IndexSearch | undefined,
+): Omit<StandInRequest, 'speaksForProject'> | undefined => {
+  if (given.standInsFormatVersion !== STAND_INS_FORMAT_VERSION || given.configDir !== configDir) return undefined;
+  if (service === undefined || !Object.hasOwn(given.perService, service.name)) return undefined;
+  const listed = given.perService[service.name];
+  const record = search === undefined ? undefined : given.indexes[search];
+  if (listed === undefined || (search !== undefined && record === undefined)) return undefined;
+  const readings = new Map(given.shapeFiles.map((reading) => [reading.path, reading]));
+  const shapeFiles = listed.files.map((path) => readings.get(path));
+  if (shapeFiles.some((reading) => reading === undefined)) return undefined;
+  const index = record === undefined ? undefined : indexOfRecord(record);
+  return {
+    packages: index === undefined ? [] : [...index.sources.values()],
+    ambiguous: index?.ambiguous ?? new Map(),
+    shapeFiles: shapeFiles as ShapeFileReading[],
+    ownShapeFiles: [...listed.own],
   };
 };
 
@@ -106,7 +321,58 @@ export interface Mount {
   readonly virtual: string;
 }
 
-const within = (path: string, dir: string): boolean => path === dir || path.startsWith(`${dir}/`);
+/**
+ * Every mount of a reading, by the path it is held at (P82).
+ *
+ * A mount's virtual root is `<root>/node_modules/<name>` by construction, so
+ * which mount a path is under is a function of the path: the `node_modules/`
+ * segment it sits under and the one name after it (two segments for a scoped
+ * name). The file system the compiler reads through asks this of every path it
+ * touches, which is why it is a lookup and not a scan of the mounts.
+ */
+export interface MountTable {
+  readonly mounts: readonly Mount[];
+  /** The mount of a package, by the name it is imported by. */
+  readonly byName: ReadonlyMap<string, Mount>;
+  /** The mount at each virtual root. */
+  readonly byVirtual: ReadonlyMap<string, Mount>;
+}
+
+const NODE_MODULES = '/node_modules/';
+
+/** Builds the table; a mount whose virtual root is not `<dir>/node_modules/<name>` is a caller's mistake. */
+export const mountTableOf = (mounts: readonly Mount[]): MountTable => {
+  for (const mount of mounts) {
+    if (!mount.virtual.endsWith(`${NODE_MODULES}${mount.source.name}`)) {
+      throw new Error(`a mount is held at <root>/node_modules/<name>, not at ${mount.virtual}`);
+    }
+  }
+  return {
+    mounts,
+    byName: new Map(mounts.map((mount) => [mount.source.name, mount])),
+    byVirtual: new Map(mounts.map((mount) => [mount.virtual, mount])),
+  };
+};
+
+/**
+ * The mount a path is at or under, if any.
+ *
+ * Each `node_modules/` segment of the path is tried, the last first: a
+ * package installed inside a mounted package's own directory is its own
+ * package, and only when no mount is held there does the segment before it
+ * decide. A path under no mount falls through to the real file system.
+ */
+export const mountOfPath = (table: MountTable, path: string): Mount | undefined => {
+  if (table.byVirtual.size === 0) return undefined;
+  for (let at = path.lastIndexOf(NODE_MODULES); at >= 0; at = at === 0 ? -1 : path.lastIndexOf(NODE_MODULES, at - 1)) {
+    const start = at + NODE_MODULES.length;
+    let end = path.indexOf('/', start);
+    if (path.startsWith('@', start) && end >= 0) end = path.indexOf('/', end + 1);
+    const mount = table.byVirtual.get(end < 0 ? path : path.slice(0, end));
+    if (mount !== undefined) return mount;
+  }
+  return undefined;
+};
 
 let realHost: FileSystemHost | undefined;
 
@@ -125,16 +391,15 @@ const realFileSystem = (): FileSystemHost => {
  */
 export const mountedFileSystem = (mounts: readonly Mount[]): FileSystemHost => {
   const base = realFileSystem();
+  const table = mountTableOf(mounts);
   const real = (path: string): string => {
-    for (const mount of mounts) {
-      if (within(path, mount.virtual)) return mount.source.dir + path.slice(mount.virtual.length);
-    }
-    return path;
+    const mount = mountOfPath(table, path);
+    return mount === undefined ? path : mount.source.dir + path.slice(mount.virtual.length);
   };
-  const mounted = (path: string): boolean => mounts.some((mount) => within(path, mount.virtual));
+  const mounted = (path: string): boolean => mountOfPath(table, path) !== undefined;
   // Every directory above a mount, to the names of what is mounted below it.
   const above = new Map<string, Set<string>>();
-  for (const mount of mounts) {
+  for (const mount of table.mounts) {
     const parts = mount.virtual.split('/');
     for (let at = parts.length - 1; at > 0; at -= 1) {
       const dir = parts.slice(0, at).join('/');
@@ -199,6 +464,8 @@ export const mountedFileSystem = (mounts: readonly Mount[]): FileSystemHost => {
 interface StandInState {
   readonly rootDir: string;
   readonly mounts: readonly Mount[];
+  /** The same mounts, for asking of a path or a name (P82). */
+  readonly table: MountTable;
   /** Ambiguous names this service has not installed. */
   readonly ambiguous: ReadonlyMap<string, readonly PackageSource[]>;
   readonly shapeFiles: readonly ShapeFileReading[];
@@ -211,16 +478,18 @@ interface StandInState {
 const STATE = new WeakMap<Project, StandInState>();
 
 /** Recorded by `createProject` once it has decided what stands in for what. */
-export const recordStandIns = (project: Project, state: StandInState): void => {
-  STATE.set(project, state);
+export const recordStandIns = (project: Project, state: Omit<StandInState, 'table'>): void => {
+  STATE.set(project, { ...state, table: mountTableOf(state.mounts) });
 };
 
 /** The mounts a project was opened with. */
 export const mountsOf = (project: Project): readonly Mount[] => STATE.get(project)?.mounts ?? [];
 
 /** The mount a file is held under, when it is one of a package source's. */
-const mountOf = (project: Project, filePath: string): Mount | undefined =>
-  mountsOf(project).find((mount) => within(filePath, mount.virtual));
+const mountOf = (project: Project, filePath: string): Mount | undefined => {
+  const table = STATE.get(project)?.table;
+  return table === undefined ? undefined : mountOfPath(table, filePath);
+};
 
 /** How a declaration in a file came to be readable, when a stand-in of P78 is why. */
 export interface StandInOfFile {
@@ -236,16 +505,29 @@ export const standInOfFile = (project: Project, filePath: string): StandInOfFile
   return shape === undefined ? undefined : { via: 'shape-file', package: shape.package };
 };
 
-/** The mounted files the program read, by their virtual path. */
-const mountedFilesRead = (project: Project): Map<Mount, string[]> => {
+const FILES_READ = new WeakMap<ts.Program, ReadonlyMap<Mount, readonly string[]>>();
+
+/**
+ * The mounted files the program read, by their virtual path: walked once per
+ * program (P82), because the cache's list and the rows both ask it, and a
+ * program is what decides which files were read.
+ */
+const mountedFilesRead = (project: Project): ReadonlyMap<Mount, readonly string[]> => {
+  const table = STATE.get(project)?.table;
+  if (table === undefined || table.mounts.length === 0) return new Map();
+  const program = project.getProgram().compilerObject;
+  const known = FILES_READ.get(program);
+  if (known !== undefined) return known;
+  WORK_COUNTS.mountedFileWalks += 1;
   const out = new Map<Mount, string[]>();
-  const mounts = mountsOf(project);
-  if (mounts.length === 0) return out;
-  for (const file of project.getProgram().compilerObject.getSourceFiles()) {
-    const mount = mounts.find((each) => within(file.fileName, each.virtual));
+  for (const file of program.getSourceFiles()) {
+    const mount = mountOfPath(table, file.fileName);
     if (mount === undefined) continue;
-    out.set(mount, [...(out.get(mount) ?? []), file.fileName]);
+    const files = out.get(mount);
+    if (files === undefined) out.set(mount, [file.fileName]);
+    else files.push(file.fileName);
   }
+  FILES_READ.set(program, out);
   return out;
 };
 
@@ -432,7 +714,8 @@ export const reportStandIns = (context: StandInContext): readonly Unresolved[] =
     for (const shape of reading.shapes) {
       if (used.get(shape.package) === reading.path) continue;
       const site = sites.get(shape.package);
-      const mounted = state.mounts.some((mount) => mount.source.name === shape.package && read.has(mount));
+      const source = state.table.byName.get(shape.package);
+      const mounted = source !== undefined && read.has(source);
       const installed = state.installed.has(shape.package);
       // A project-wide shape this service never imports is somebody else's;
       // only one listed for this service is expected to be read here.
@@ -519,6 +802,20 @@ export const markStandInEdges = (context: StandInContext): void => {
     const index = callIndexOf(source);
     return [...index.calls(line), ...index.news(line)];
   };
+  // What a call's declarations say, asked once per call (P82): edges drawn at
+  // one line share its calls, and the checker's answer for a node is the same
+  // each time it is asked.
+  const standInOfCall = new Map<Node, StandInOfFile | undefined>();
+  const askCall = (call: Node): StandInOfFile | undefined => {
+    if (standInOfCall.has(call)) return standInOfCall.get(call);
+    let found: StandInOfFile | undefined;
+    for (const path of declarationFiles(call)) {
+      found = standInOfFile(project, path);
+      if (found !== undefined) break;
+    }
+    standInOfCall.set(call, found);
+    return found;
+  };
   for (const edge of builder.edges) {
     if (edge.file === undefined || edge.line === undefined) continue;
     // An edge into the repository's own code was drawn through its own
@@ -527,10 +824,7 @@ export const markStandInEdges = (context: StandInContext): void => {
     if (!REACHED_THROUGH_TYPES.has(builder.getNode(edge.to)?.type ?? '')) continue;
     let found: StandInOfFile | undefined;
     for (const call of callsAt(edge.file, edge.line)) {
-      for (const path of declarationFiles(call)) {
-        found = standInOfFile(project, path);
-        if (found !== undefined) break;
-      }
+      found = askCall(call);
       if (found !== undefined) break;
     }
     if (found === undefined) continue;
@@ -557,11 +851,16 @@ export const markStandInEdges = (context: StandInContext): void => {
  */
 export const withdrawPackageSourceRows = (context: StandInContext): void => {
   const { project, repoDir, builder } = context;
-  const prefixes = mountsOf(project)
-    .filter((mount) => mount.source.service !== undefined)
-    .map((mount) => `${normalizeFilePath(mount.virtual, repoDir)}/`);
-  if (prefixes.length === 0) return;
-  builder.withdrawUnresolved((row) => prefixes.some((prefix) => row.file.startsWith(prefix)));
+  const table = STATE.get(project)?.table;
+  if (table === undefined || table.mounts.length === 0) return;
+  // A row's file is relative to the repository; its mount is asked of the
+  // path it stands for, the way every other question of a mount is (P82).
+  builder.withdrawUnresolved((row) => {
+    if (!row.file.includes('node_modules/')) return false;
+    const path = join(repoDir, row.file);
+    const mount = mountOfPath(table, path);
+    return mount !== undefined && mount.source.service !== undefined && path !== mount.virtual;
+  });
 };
 
 /** Everything a reading does once its passes are done about what stood in (P78). */

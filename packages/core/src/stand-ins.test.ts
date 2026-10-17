@@ -8,15 +8,20 @@ import { kindOfRow } from './model/row-kind.js';
 import { packageSourcesFor, parseConfig, shapesFor } from './config.js';
 import { readShapeFile, resolutionOrder, shapeFilesOf } from './declaration-shapes.js';
 import { countSources, createProject } from './project.js';
+import type { PackageSource } from './package-index.js';
 import {
   markStandInEdges,
+  mountOfPath,
+  mountTableOf,
   packageCoverage,
   reportStandIns,
   standInFiles,
   standInOfFile,
   standInsFor,
   withdrawPackageSourceRows,
+  type Mount,
 } from './stand-ins.js';
+import { WORK_COUNTS } from './work-counts.js';
 
 const dirs: string[] = [];
 
@@ -192,6 +197,53 @@ describe('the rows that say what stood in', () => {
       '../money/src/money.ts',
       '../shapes/queue.d.ts',
     ]);
+  });
+});
+
+describe('the mount a path is under (P82)', () => {
+  const source = (name: string, dir: string): PackageSource => ({ name, dir, manifest: { name }, origin: 'service' });
+  const mounts: Mount[] = [
+    { source: source('money', '/work/money'), virtual: '/work/loans/node_modules/money' },
+    { source: source('@acme/queue', '/work/queue'), virtual: '/work/loans/node_modules/@acme/queue' },
+    { source: source('@acme/q', '/work/q'), virtual: '/work/loans/node_modules/@acme/q' },
+  ];
+  /** What every lookup was before the table: the first mount the path is at or under. */
+  const scanned = (path: string): Mount | undefined =>
+    mounts.find((mount) => path === mount.virtual || path.startsWith(`${mount.virtual}/`));
+  const table = mountTableOf(mounts);
+
+  it.each([
+    ['a plain name', '/work/loans/node_modules/money/src/index.ts'],
+    ['the root of a plain name', '/work/loans/node_modules/money'],
+    ['a scoped name', '/work/loans/node_modules/@acme/queue/src/queue.ts'],
+    ['the root of a scoped name', '/work/loans/node_modules/@acme/queue'],
+    ['a scoped name that begins another', '/work/loans/node_modules/@acme/q/index.ts'],
+    ['a name that only begins like a mounted one', '/work/loans/node_modules/money-extra/index.ts'],
+    ['the scope alone', '/work/loans/node_modules/@acme'],
+    ['a package installed inside a mounted one', '/work/loans/node_modules/money/node_modules/left-pad/index.js'],
+    ['a scoped package inside a mounted one', '/work/loans/node_modules/@acme/queue/node_modules/@other/x/index.d.ts'],
+    ['a mounted name under another service', '/work/orders/node_modules/money/index.ts'],
+    ['the service itself', '/work/loans/src/main.ts'],
+    ['node_modules with nothing after it', '/work/loans/node_modules/'],
+  ])('answers as the scan did for %s', (_, path) => {
+    expect(mountOfPath(table, path)).toBe(scanned(path));
+  });
+
+  it('refuses a mount that is not held at node_modules/<name>', () => {
+    expect(() => mountTableOf([{ source: source('money', '/work/money'), virtual: '/work/loans/vendor/money' }])).toThrow(
+      /node_modules/,
+    );
+  });
+
+  it('walks the files a program read from its mounts once per program', () => {
+    const root = treeOf(PROJECT);
+    const project = open(root);
+    project.getProgram();
+    const before = WORK_COUNTS.mountedFileWalks;
+    standInFiles(project, join(root, 'loans'));
+    reportStandIns({ project, repoDir: join(root, 'loans'), builder: new GraphBuilder({ repo: 'loans' }) });
+    standInFiles(project, join(root, 'loans'));
+    expect(WORK_COUNTS.mountedFileWalks - before).toBe(1);
   });
 });
 

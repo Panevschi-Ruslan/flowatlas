@@ -12,12 +12,15 @@ import {
   parseConfig,
   readPackageJson,
   readResolvedPackageJson,
+  readStandInsOfBuild,
   SCHEMA_VERSION,
   countsOf,
   type FlowatlasConfig,
   type PackageJson,
+  type Logger,
   type RepoGraph,
   type ServiceConfig,
+  type StandInsOfBuild,
 } from '@flowatlas/core';
 import { deployedSourceDirectories } from '@flowatlas/adapters-entry';
 import { extractRepo as extractAngularRepo, openProject as openAngularProject } from '@flowatlas/extractor-angular';
@@ -32,7 +35,7 @@ import {
   repoFiles,
   type ExtractRepoOptions,
 } from '@flowatlas/extractor-nestjs';
-import type { Command } from 'commander';
+import { Option, type Command } from 'commander';
 import type { Project } from 'ts-morph';
 import { partialReadNotice } from '../partial-read.js';
 import {
@@ -134,7 +137,26 @@ export interface ExtractOptions {
   verbose?: boolean;
   /** Commander sets this to false for `--no-cache`. */
   cache?: boolean;
+  /**
+   * The stand-ins file the build that started this reading wrote (P82). An
+   * internal flag, hidden from `--help`: a reading started by hand works them
+   * out itself.
+   */
+  standIns?: string;
 }
+
+/**
+ * The build's stand-ins, when it handed a file over and the file is one this
+ * reader reads. Anything else is said once, at debug level, and the reading
+ * works them out itself: a stale or foreign file is never trusted.
+ */
+const standInsGiven = (path: string | undefined, logger: Logger): StandInsOfBuild | undefined => {
+  if (path === undefined) return undefined;
+  const read = readStandInsOfBuild(path);
+  if ('given' in read) return read.given;
+  logger.debug(`stand-ins: ${read.problem}; working them out in this reading instead`);
+  return undefined;
+};
 
 /** Name a repository is known by: the configured service if there is one. */
 /** Rows of a repository's graph that say something was not read: gaps, by the one counter (P81). */
@@ -243,18 +265,21 @@ export const runExtract = async (
   const { repo, service, config, configDir } = resolveService(rootDir, configPath);
 
   const registry = createRegistry();
+  const logger = createLogger(options.verbose === true ? 'debug' : 'warn');
+  const standInsOfBuild = standInsGiven(options.standIns, logger);
   const extractOptions: ExtractRepoOptions = {
     rootDir,
     repo,
     ...(service === undefined ? {} : { service }),
     ...(config === undefined ? {} : { config }),
     ...(configDir === undefined ? {} : { configDir }),
+    ...(standInsOfBuild === undefined ? {} : { standInsOfBuild }),
     registry,
     extraPasses: EXTRA_PASSES,
     ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }),
     ...(options.types === false ? { noTypes: true } : {}),
     ...(options.typesDepth === undefined ? {} : { typesDepth: Number(options.typesDepth) }),
-    logger: createLogger(options.verbose === true ? 'debug' : 'warn'),
+    logger,
   };
 
   // The configured type says which extractor reads a repository. Without a
@@ -400,6 +425,8 @@ export const registerExtract = (program: Command): void => {
     .option('--types-depth <n>', 'how deep anonymous shapes are written out')
     .option('--json', 'print the summary as JSON')
     .option('-v, --verbose', 'log each pass')
+    // What `build` hands each reading it starts (P82); not for typing by hand.
+    .addOption(new Option('--stand-ins <file>', 'stand-ins worked out by the build').hideHelp())
     .action(async (repoPath: string, options: ExtractOptions) => {
       const { graph, outPath } = await runExtract(repoPath, options);
       if (options.json === true) {

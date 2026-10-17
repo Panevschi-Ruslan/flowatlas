@@ -15,6 +15,7 @@ import {
   reportUnreadableSources,
   silentLogger,
   standInsFor,
+  type StandInsOfBuild,
   type ExtractContext,
   type FlowatlasConfig,
   type Logger,
@@ -55,6 +56,13 @@ export interface ExtractRepoOptions {
    * is read.
    */
   configDir?: string;
+  /**
+   * The stand-ins the build worked out once for every repository (P82), read
+   * instead of indexing the package sources and parsing the shape files again.
+   * Without it, or when it does not answer for this service, they are worked
+   * out here.
+   */
+  standInsOfBuild?: StandInsOfBuild;
   /** Adapters to use. Without one, no entry points are found. */
   registry?: AdapterRegistry;
   tsconfig?: string;
@@ -116,7 +124,12 @@ export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, call
 export const createRepoProject = (options: ExtractRepoOptions): Project => {
   const tsconfig = options.tsconfig ?? options.service?.tsconfig;
   const readTestDirectories = options.service?.readTestDirectories;
-  const standIns = standInsFor({ config: options.config, service: options.service, configDir: options.configDir });
+  const standIns = standInsFor({
+    config: options.config,
+    service: options.service,
+    configDir: options.configDir,
+    ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
+  });
   return createProject({
     rootDir: options.rootDir,
     // Read only where the package itself does not resolve, and not at all where

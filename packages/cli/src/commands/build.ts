@@ -19,6 +19,8 @@ import {
   serviceSourceDirs,
   countsOf,
   SCHEMA_VERSION,
+  STAND_INS_FILENAME,
+  standInsOfBuild,
   type FlowatlasConfig,
   type PackageJson,
   type RepoGraph,
@@ -562,6 +564,7 @@ const extractApart = async (
   out: string,
   configPath: string,
   heapMb: number | undefined,
+  standIns: string | undefined,
   signal?: AbortSignal,
 ): Promise<RepoGraph> => {
   // `out` is this service's own directory under the build's output, so the
@@ -575,7 +578,20 @@ const extractApart = async (
   // The heap limit goes on the runtime's own command line rather than into its
   // environment, so that it is visible in the process list beside the read it
   // belongs to and nothing a child of this one starts inherits it by accident.
-  const argv = [...heapArgs(heapMb), binPath(), 'extract', repoDir, '--config', configPath, '--out', out];
+  // The stand-ins the build worked out once (P82) go by file: the index and
+  // the shape files' text are too long for a command line, and an environment
+  // variable would reach everything the child starts.
+  const argv = [
+    ...heapArgs(heapMb),
+    binPath(),
+    'extract',
+    repoDir,
+    '--config',
+    configPath,
+    '--out',
+    out,
+    ...(standIns === undefined ? [] : ['--stand-ins', standIns]),
+  ];
   await run(process.execPath, argv, {
     maxBuffer: 64 * 1024 * 1024,
     ...(signal === undefined ? {} : { signal }),
@@ -617,6 +633,8 @@ interface ExtractOneOptions {
   builtAt?: string;
   /** Heap limit for the process this read happens in, when one is being asked for. */
   heapMb?: number | undefined;
+  /** The build's stand-ins file (P82), handed to a read in a process of its own. */
+  standIns?: string;
   /** Aborted when the build this read belongs to has already failed. */
   signal?: AbortSignal;
 }
@@ -730,7 +748,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   try {
     const graph =
       session === undefined
-        ? await extractApart(repoDir, serviceDir, options.configPath, options.heapMb, options.signal)
+        ? await extractApart(repoDir, serviceDir, options.configPath, options.heapMb, options.standIns, options.signal)
         : normalise(await extractWarm(session, plan, graphPath));
     // An open repository is read in this process and cannot be interrupted
     // part-way, so a warm read finishes even when the build around it has
@@ -1051,6 +1069,19 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     options.heap === undefined ? undefined : Math.max(Number(options.heap), 1),
   );
 
+  // Worked out once for every reader this build starts (P82): the package
+  // index and every listed shape file, beside the graphs in the output. Only
+  // when a repository is read in a process of its own; an open repository was
+  // handed them when it was opened.
+  const readApart = readable.some(
+    (service) =>
+      plan[service.name]?.mode !== 'skip' &&
+      options.sessions?.get(service.name) === undefined &&
+      EXTRACTORS.get(service.type) !== undefined,
+  );
+  const standInsPath = readApart ? join(outputDir, STAND_INS_FILENAME) : undefined;
+  if (standInsPath !== undefined) await writeJson(standInsPath, standInsOfBuild(loaded.config, loaded.rootDir));
+
   const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
@@ -1063,6 +1094,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       rootDir: loaded.rootDir,
       ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
       heapMb,
+      ...(standInsPath === undefined ? {} : { standIns: standInsPath }),
       plan: plan[service.name] ?? { mode: 'full', reason: 'not planned' },
       ...(options.skipFrontend === undefined ? {} : { skipFrontend: options.skipFrontend }),
       ...(session === undefined ? {} : { session }),

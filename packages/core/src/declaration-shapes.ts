@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { ts, type Project } from 'ts-morph';
+import { WORK_COUNTS } from './work-counts.js';
 
 /**
  * A small declaration of a package's public surface, read in its place when the
@@ -73,6 +74,7 @@ const isExporting = (statement: ts.Statement): boolean =>
  */
 export const readShapeFile = (path: string, text: string | undefined): ShapeFileReading => {
   if (text === undefined) return { path, shapes: [], problem: 'the file is not there' };
+  WORK_COUNTS.shapeFilesRead += 1;
   const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const diagnostics = (file as unknown as { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics ?? [];
   const first = diagnostics[0];
@@ -111,18 +113,31 @@ const SHAPES_OF = new WeakMap<Project, ReadonlyMap<string, string>>();
 /** The shape files of the project's own a project installed, by package, to the file each came from. */
 const ORIGINS_OF = new WeakMap<Project, ReadonlyMap<string, { readonly path: string; readonly origin: string }>>();
 
+/** The paths the shapes of a project are held at, for asking of a file without a scan (P82). */
+const PATHS_OF = new WeakMap<Project, ReadonlySet<string>>();
+
+/** The shape files of the project's own a project installed, by the path each is held at. */
+const BY_PATH_OF = new WeakMap<Project, ReadonlyMap<string, { readonly package: string; readonly origin: string }>>();
+
 /** The probe a package is resolved from: a file at the root, which need not exist. */
 const PROBE = '__flowatlas_shape_probe__.ts';
 
-/** Whether the compiler resolves the package from the root, as the project is set up. */
-const resolves = (project: Project, rootDir: string, name: string): boolean => {
-  const { resolvedModule } = ts.resolveModuleName(
-    name,
-    join(rootDir, PROBE),
-    project.getCompilerOptions(),
-    project.getModuleResolutionHost(),
+/**
+ * Whether the compiler resolves a package from the root, as the project is set
+ * up: one question per shape, asked through one resolution cache for all of
+ * them (P82), because a project that keeps many shape files asks many names of
+ * the same directories.
+ */
+const resolverAt = (project: Project, rootDir: string): ((name: string) => boolean) => {
+  const options = project.getCompilerOptions();
+  const host = project.getModuleResolutionHost();
+  const probe = join(rootDir, PROBE);
+  const cache = ts.createModuleResolutionCache(
+    host.getCurrentDirectory?.() ?? rootDir,
+    (path) => (ts.sys.useCaseSensitiveFileNames ? path : path.toLowerCase()),
+    options,
   );
-  return resolvedModule !== undefined;
+  return (name) => ts.resolveModuleName(name, probe, options, host, cache).resolvedModule !== undefined;
 };
 
 /**
@@ -143,8 +158,9 @@ export const installDeclarationShapes = (
 ): string[] => {
   const installed = new Map<string, string>();
   const origins = new Map<string, { path: string; origin: string }>();
+  const resolves = resolverAt(project, rootDir);
   for (const shape of shapes) {
-    if (installed.has(shape.package) || resolves(project, rootDir, shape.package)) continue;
+    if (installed.has(shape.package) || resolves(shape.package)) continue;
     const path = join(rootDir, 'node_modules', shape.package, 'index.d.ts');
     if (project.getSourceFile(path) !== undefined) continue;
     project.createSourceFile(path, shape.declarations, { overwrite: false });
@@ -152,7 +168,9 @@ export const installDeclarationShapes = (
     if (shape.origin !== undefined) origins.set(shape.package, { path, origin: shape.origin });
   }
   SHAPES_OF.set(project, installed);
+  PATHS_OF.set(project, new Set(installed.values()));
   ORIGINS_OF.set(project, origins);
+  BY_PATH_OF.set(project, new Map([...origins].map(([pkg, { path, origin }]) => [path, { package: pkg, origin }])));
   return [...installed.keys()].sort();
 };
 
@@ -161,12 +179,8 @@ export const declarationShapesOf = (project: Project): string[] =>
   [...(SHAPES_OF.get(project)?.keys() ?? [])].sort();
 
 /** Whether a file is a shape held in memory rather than a file of the repository. */
-export const isDeclarationShape = (project: Project, filePath: string): boolean => {
-  const installed = SHAPES_OF.get(project);
-  if (installed === undefined) return false;
-  for (const path of installed.values()) if (path === filePath) return true;
-  return false;
-};
+export const isDeclarationShape = (project: Project, filePath: string): boolean =>
+  PATHS_OF.get(project)?.has(filePath) === true;
 
 /**
  * The shape file of the project's own that a file held in memory was read
@@ -176,12 +190,7 @@ export const isDeclarationShape = (project: Project, filePath: string): boolean 
 export const shapeFileOf = (
   project: Project,
   filePath: string,
-): { readonly package: string; readonly origin: string } | undefined => {
-  for (const [pkg, { path, origin }] of ORIGINS_OF.get(project) ?? []) {
-    if (path === filePath) return { package: pkg, origin };
-  }
-  return undefined;
-};
+): { readonly package: string; readonly origin: string } | undefined => BY_PATH_OF.get(project)?.get(filePath);
 
 /** The packages a shape file of the project's own stands in for in this project, to the file. */
 export const shapeFilesOf = (project: Project): ReadonlyMap<string, string> =>

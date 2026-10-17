@@ -427,7 +427,26 @@ interface PackageAliases {
  * real tsconfig, the compiler would otherwise walk the whole package to answer
  * something nobody asked.
  */
+const ALIASES = new Map<string, PackageAliases | undefined>();
+
+/**
+ * A package's own aliases, remembered for the process (P82): every service
+ * that mounts a package, and every one whose extent holds it, asks the same
+ * tsconfig the same question. Forgotten with {@link forgetPackageAliases}.
+ */
 const aliasesOf = (dir: string): PackageAliases | undefined => {
+  if (ALIASES.has(dir)) return ALIASES.get(dir);
+  const aliases = readAliases(dir);
+  ALIASES.set(dir, aliases);
+  return aliases;
+};
+
+/** Forgets the aliases {@link aliasesOf} remembered, for a process that reads the disk again (P83). */
+export const forgetPackageAliases = (): void => {
+  ALIASES.clear();
+};
+
+const readAliases = (dir: string): PackageAliases | undefined => {
   const configPath = findTsconfig(dir);
   if (configPath === undefined) return undefined;
   const read = ts.readConfigFile(configPath, ts.sys.readFile);
@@ -867,8 +886,18 @@ const workspaceResolution = (
   };
   // Longest first, so a package nested inside another answers for its own files.
   const byDepth = [...packages].sort((a, b) => b.dir.length - a.dir.length);
-  const ownerOf = (file: string): PackageAliases | undefined =>
-    byDepth.find((pkg) => file.startsWith(`${pkg.dir}/`));
+  // Asked of every import of every file, and the answer is the directory's
+  // (P82): a file is under a package exactly when its directory is the
+  // package's or under it.
+  const owners = new Map<string, PackageAliases | undefined>();
+  const ownerOf = (file: string): PackageAliases | undefined => {
+    if (byDepth.length === 0) return undefined;
+    const dir = dirname(file);
+    if (owners.has(dir)) return owners.get(dir);
+    const owner = byDepth.find((pkg) => dir === pkg.dir || dir.startsWith(`${pkg.dir}/`));
+    owners.set(dir, owner);
+    return owner;
+  };
   const byName = workspaceMemberResolution(members, (path) => host.fileExists(path));
   const bySource = workspaceMemberResolution(sources, (path) => host.fileExists(path), { source: true });
 

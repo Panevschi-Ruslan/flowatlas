@@ -379,6 +379,7 @@ export {
   countSources,
   createProject,
   findTsconfig,
+  forgetPackageAliases,
   installedFiles,
   listRepoSources,
   reportSkippedTestDirectories,
@@ -408,19 +409,27 @@ export {
   shapeFilesOf,
 } from './declaration-shapes.js';
 export type { DeclarationShape, ResolutionSource, ShapeFileReading } from './declaration-shapes.js';
-export { packageIndexOf, rangeIncludes, serviceDirOf } from './package-index.js';
+export { forgetPackageIndexes, packageIndexOf, rangeIncludes, serviceDirOf } from './package-index.js';
 export type { PackageIndex, PackageIndexInput, PackageSource, PackageSourceOrigin } from './package-index.js';
 export {
   closeStandIns,
   markStandInEdges,
+  mountedFileSystem,
+  mountOfPath,
   mountsOf,
+  mountTableOf,
   packageCoverage,
+  readStandInsOfBuild,
   reportStandIns,
+  STAND_INS_FILENAME,
+  STAND_INS_FORMAT_VERSION,
   standInFiles,
   standInOfFile,
   standInsFor,
+  standInsOfBuild,
   withdrawPackageSourceRows,
 } from './stand-ins.js';
+export { WORK_COUNTS } from './work-counts.js';
 export {
   collectPackageUses,
   exportKindOf,
@@ -428,7 +437,18 @@ export {
   starterShape,
 } from './package-uses.js';
 export type { MemberUse, ModuleUses, UsedExport } from './package-uses.js';
-export type { Mount, PackageCover, StandInContext, StandInOfFile, StandInRequest, StandInsForOptions } from './stand-ins.js';
+export type {
+  Mount,
+  MountTable,
+  PackageCover,
+  PackageIndexRecord,
+  StandInContext,
+  StandInOfFile,
+  StandInRequest,
+  StandInsForOptions,
+  StandInsOfBuild,
+  StandInsRead,
+} from './stand-ins.js';
 export { RXJS_DECLARATION_SHAPE, RXJS_SHAPE } from './rxjs-shape.js';
 
 export { isTestDirectory, isTestFile } from './test-files.js';

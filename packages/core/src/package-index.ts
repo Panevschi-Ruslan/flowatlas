@@ -19,6 +19,7 @@ import { readdirSync } from 'node:fs';
 import { isAbsolute, join, resolve } from 'node:path';
 import { readPackageJson } from './package-json.js';
 import { workspaceGlobs, workspacePackages } from './workspace.js';
+import { WORK_COUNTS } from './work-counts.js';
 
 /** Where a package's directory was found: a configured repository, a member of one, or a directory under the configuration. */
 export type PackageSourceOrigin = 'service' | 'member' | 'folder';
@@ -135,6 +136,7 @@ export const packageIndexOf = (input: PackageIndexInput): PackageIndex => {
   const key = JSON.stringify([input.services.map((service) => [service.name, service.dir]), input.folders ?? null]);
   const known = INDEXES.get(key);
   if (known !== undefined) return known;
+  WORK_COUNTS.packageIndexes += 1;
 
   const strong = input.services.flatMap((service) => packagesIn(service.dir, 'service', service.name));
   const taken = new Set(strong.map((pkg) => pkg.dir));
@@ -162,6 +164,15 @@ export const packageIndexOf = (input: PackageIndexInput): PackageIndex => {
   const index: PackageIndex = { sources, ambiguous };
   INDEXES.set(key, index);
   return index;
+};
+
+/**
+ * Forgets every index this process remembered (P82): the one memo of disk
+ * facts a later reading in the same process must not be served from once the
+ * disk may have moved. A build hands its readers the index it made instead.
+ */
+export const forgetPackageIndexes = (): void => {
+  INDEXES.clear();
 };
 
 /** A configured repository's absolute directory, the way the configuration resolves it. */

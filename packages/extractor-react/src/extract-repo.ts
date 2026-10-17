@@ -13,6 +13,7 @@ import {
   reportUnreadableSources,
   silentLogger,
   standInsFor,
+  type StandInsOfBuild,
   suppliedWith,
   type ExtractContext,
   type FlowatlasConfig,
@@ -50,6 +51,13 @@ export interface ExtractRepoOptions {
    * is read.
    */
   configDir?: string;
+  /**
+   * The stand-ins the build worked out once for every repository (P82), read
+   * instead of indexing the package sources and parsing the shape files again.
+   * Without it, or when it does not answer for this service, they are worked
+   * out here.
+   */
+  standInsOfBuild?: StandInsOfBuild;
   /** Adapters to use. Without a frontend adapter nothing is read. */
   registry?: AdapterRegistry;
   tsconfig?: string;
@@ -71,7 +79,12 @@ export interface ExtractRepoOptions {
 export const openProject = (options: ExtractRepoOptions): Project => {
   const service = options.service ?? defaultService(options.repo, options.rootDir);
   const tsconfig = options.tsconfig ?? service.tsconfig;
-  const standIns = standInsFor({ config: options.config, service, configDir: options.configDir });
+  const standIns = standInsFor({
+    config: options.config,
+    service,
+    configDir: options.configDir,
+    ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
+  });
   return createReactProject({
     rootDir: options.rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
