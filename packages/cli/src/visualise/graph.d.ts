@@ -2,6 +2,7 @@
  * Types for `graph.js`, which stays plain JavaScript because the page runs its
  * text as it is. Only the test reads these.
  */
+import type { PackedFail } from './fails.js';
 import type { PackedGraph } from './pack.js';
 
 export declare const FIELD: Readonly<{
@@ -27,13 +28,15 @@ export declare const ROW: Readonly<{
 }>;
 
 export interface GraphModel {
-  data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'> & Partial<Pick<PackedGraph, 'rows' | 'steps' | 'shapes'>>;
+  data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'> & Partial<Pick<PackedGraph, 'rows' | 'steps' | 'shapes' | 'fails'>>;
   nodes: unknown[][];
   edges: number[][];
   outgoing: number[][];
   incoming: number[][];
   rowsOn: Map<number, number[]>;
   rowsInFile: Map<string, number[]>;
+  /** What each way in can fail with, by entry position, expanded from the pack (P84). */
+  fails: ReadonlyMap<number, readonly PackedFail[]>;
   haystack: string[] | null;
   owners: Map<number, string> | null;
   faces: Map<number, unknown[]> | null;
@@ -138,6 +141,8 @@ export interface History {
 
 export declare const ALL: GraphFilter;
 export declare const createModel: (data: GraphModel['data']) => GraphModel;
+export declare const wordIn: (list: readonly string[] | undefined, word: number | string) => string;
+export declare const failsByEntry: (data: GraphModel['data']) => ReadonlyMap<number, readonly PackedFail[]>;
 export declare const createFilter: (model: GraphModel, hidden?: Hidden) => GraphFilter;
 export declare const neighbours: (
   model: GraphModel,

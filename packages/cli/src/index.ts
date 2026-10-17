@@ -226,7 +226,8 @@ export {
   summaryLine as doctorSummaryLine,
 } from './doctor/render.js';
 export { runConfig, SelectorError } from './commands/config.js';
-export { runHotspots, HOTSPOT_EDGES } from './commands/hotspots.js';
+export { runHotspots } from './commands/hotspots.js';
+export { HOTSPOT_EDGES } from './analysis/hotspots.js';
 export { runDiff, registerDiff, DIFF_FILE } from './commands/diff.js';
 export type { DiffFormat, DiffOptions, DiffRun } from './commands/diff.js';
 export { runCache, registerCache, CACHE_ACTIONS } from './commands/cache.js';

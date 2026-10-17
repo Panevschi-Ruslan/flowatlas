@@ -94,7 +94,7 @@ describe('observed', () => {
       [`${keys.keyOf(4)}>${keys.keyOf(5)}:emits`]: { count: 3, lastSeen: '2026-01-03' },
     },
     entries: { [nodes[0]!.id]: { hits: 7 } },
-    unmatched: [{ service: 'shop-api', kind: 'http', name: 'GET /health' }],
+    unmatched: [['shop-api', 'http', 'GET /health']] as Array<[string, string, string]>,
     _size: data.edges.length,
   });
 

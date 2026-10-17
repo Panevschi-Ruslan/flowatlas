@@ -1,7 +1,7 @@
 import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import { inDegree } from '../analysis/degree.js';
 import { buildGraph } from '../analysis/graph.js';
-import { HOTSPOT_EDGES } from '../commands/hotspots.js';
+import { HOTSPOT_EDGES } from '../analysis/hotspots.js';
 
 /**
  * The methods most things lean on, for the Busiest view (P73).
@@ -33,41 +33,53 @@ const BUSIEST_TYPES = ['method', 'function'] as const;
 
 export const BUSIEST_LIMIT = 60;
 
-/** From every way in, breadth first: how many reach each node, and from how near. */
-const reachFromEntries = (
+/**
+ * For each of `ids`, how many ways in reach it and from how near, by one
+ * breadth-first search backwards from it (P84).
+ *
+ * Asked of the rows the view shows rather than worked out from every way in to
+ * every node: the cost is the rows times what lies upstream of each, where the
+ * forward walk it replaced was every way in times everything downstream. The
+ * numbers are the same. A way in is counted once however many paths it has,
+ * the search goes on through a way in as the forward walk went on from one,
+ * and a node is not its own way in (the search starts there). `depth` is the
+ * fewest steps from the nearest, -1 when none reaches it.
+ */
+export const reachOfRows = (
+  ids: readonly string[],
   nodes: readonly GraphNode[],
   edges: readonly GraphEdge[],
-): { ways: Map<string, number>; depth: Map<string, number> } => {
-  const out = new Map<string, string[]>();
+): Map<string, { ways: number; depth: number }> => {
+  const into = new Map<string, string[]>();
   for (const edge of edges) {
     if (!REACHES.has(edge.type)) continue;
-    const list = out.get(edge.from);
-    if (list === undefined) out.set(edge.from, [edge.to]);
-    else list.push(edge.to);
+    const list = into.get(edge.to);
+    if (list === undefined) into.set(edge.to, [edge.from]);
+    else list.push(edge.from);
   }
-  const ways = new Map<string, number>();
-  const depth = new Map<string, number>();
-  for (const entry of nodes) {
-    if (!DOORS.has(entry.type)) continue;
-    const at = new Map([[entry.id, 0]]);
-    const queue = [entry.id];
+  const doors = new Set(nodes.filter((node) => DOORS.has(node.type)).map((node) => node.id));
+  const out = new Map<string, { ways: number; depth: number }>();
+  for (const id of ids) {
+    const at = new Map([[id, 0]]);
+    const queue = [id];
+    let ways = 0;
+    let depth = -1;
     for (let head = 0; head < queue.length; head += 1) {
-      const id = queue[head] as string;
-      const hops = at.get(id) as number;
-      for (const next of out.get(id) ?? []) {
+      const from = queue[head] as string;
+      const hops = at.get(from) as number;
+      for (const next of into.get(from) ?? []) {
         if (at.has(next)) continue;
         at.set(next, hops + 1);
         queue.push(next);
+        if (!doors.has(next)) continue;
+        ways += 1;
+        // Breadth first, so the first way in met is the nearest.
+        if (depth === -1) depth = hops + 1;
       }
     }
-    for (const [id, hops] of at) {
-      if (id === entry.id) continue;
-      ways.set(id, (ways.get(id) ?? 0) + 1);
-      const was = depth.get(id);
-      if (was === undefined || hops < was) depth.set(id, hops);
-    }
+    out.set(id, { ways, depth });
   }
-  return { ways, depth };
+  return out;
 };
 
 export const packBusiest = (
@@ -84,16 +96,18 @@ export const packBusiest = (
       .map((edge) => ({ from: edge.from, to: edge.to, type: edge.type, confidence: edge.confidence })),
   );
   const ranked = inDegree(graph, { types: BUSIEST_TYPES });
-  const { ways, depth } = reachFromEntries(nodes, edges);
-  const rows = ranked.slice(0, limit).map((row): BusiestRow => {
+  const shown = ranked.slice(0, limit);
+  const reach = reachOfRows(shown.map((row) => row.id), nodes, edges);
+  const rows = shown.map((row): BusiestRow => {
+    const { ways, depth } = reach.get(row.id) as { ways: number; depth: number };
     const own = (graph.in.get(row.id) ?? []).filter((edge) => graph.nodes.get(edge.from)?.service === row.service).length;
     return [
       position.get(row.id) as number,
       row.inDegree,
       own,
       row.callerServices.length,
-      ways.get(row.id) ?? 0,
-      depth.get(row.id) ?? -1,
+      ways,
+      depth,
     ];
   });
   return { rows, ranked: ranked.length };

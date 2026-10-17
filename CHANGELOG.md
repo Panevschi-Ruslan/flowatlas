@@ -331,6 +331,22 @@ only one of them moved.
 - **A write's recorded value that is written and not read was kept as an empty
   list (P56)** rather than left out, so a version named by a variable still
   counted as named.
+- **A lighter page (P84).** The page shipped each failure once: a guard's
+  refusal, a pipe's 400 or a shared service's throw that stood in front of
+  many routes became one record in `dicts.fails`, and each route a list of
+  record positions, where it had been one object per failure per route. Log
+  lines' levels and templates (`dicts.logLevels`, `dicts.logTexts`) and an
+  unmatched span's service and kind (`observed.services`, `observed.kinds`)
+  went through dictionaries too, each listing only the words that repeat
+  enough to pay for it. Every view showed the same text. On the synthetic
+  `fixtures/nest-shared-failures` (18 routes behind one guard, one pipe and
+  one service) the failure data went from 7.6 KB to 0.5 KB and the page's
+  data from 18.2 KB to 11.1 KB; scaled to 258 routes, the whole page shrank by
+  about 16%. The Busiest view worked out how many ways in reach each row, and
+  from how near, by one backward search per row shown instead of a forward
+  walk from every way in over the whole graph; the numbers were the same.
+  `HOTSPOT_EDGES` moved to `analysis/hotspots.ts` (still exported from
+  `@flowatlas/cli`), so no page module imported a command.
 
 ### Fixed
 

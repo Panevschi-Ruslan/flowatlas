@@ -112,8 +112,8 @@ const sitesOf = (model) => {
 
 const NO_FAILS = Object.freeze([]);
 
-/** What a way in can fail with, as the pack's `fails` has it: `{ s?, x, at, id?, f?, l?, src }`. */
-export const failsOf = (model, entry) => (model.data.fails && model.data.fails[entry]) || NO_FAILS;
+/** What a way in can fail with, `{ s?, x, at, id?, f?, l?, src }`, as `createModel` expanded it. */
+export const failsOf = (model, entry) => (model.fails && model.fails.get(entry)) || NO_FAILS;
 
 /**
  * The statuses a way in can fail with, lowest first and each once, then the
@@ -137,10 +137,16 @@ export const failSay = (fail) => (fail.s === undefined ? fail.x : fail.s + ' ' +
 
 const NO_LOGS = Object.freeze([]);
 
+/** A packed word, as graph.js's `wordIn`: a position in `list`, or the word itself. */
+const stepWord = (list, word) => (typeof word === 'number' ? list[word] : word);
+
 /** The lines a node logs, `{ level, line, text }`, in the order the code writes them. */
 export const logsOf = (model, i) => {
   const list = model.data.logs && model.data.logs[i];
-  return list ? list.map(([level, line, text]) => ({ level, line, text: text ?? '' })) : NO_LOGS;
+  const { logLevels: lv, logTexts: tx } = model.data.dicts;
+  return list
+    ? list.map(([level, line, text]) => ({ level: stepWord(lv, level), line, text: text === undefined ? '' : stepWord(tx, text) }))
+    : NO_LOGS;
 };
 
 /** When a scheduled way in fires and in which zone, `{ expression, zone }`, or null. */
@@ -205,6 +211,11 @@ const NO_SEEN = Object.freeze({
   join: () => null, entry: () => 0,
 });
 
+/** What ran but is not in code, `{ service?, kind, name }`; a service of -1 is none. */
+export const unmatchedOf = ({ unmatched = [], services, kinds }) =>
+  unmatched.map(([s, kind, name]) =>
+    ({ ...(s === -1 ? {} : { service: stepWord(services, s) }), kind: stepWord(kinds, kind), name }));
+
 /**
  * What was seen at run time, from the pack's `observed` (P65), or nothing.
  * A join is named by its edge's position, or by `fromKey>toKey` with an
@@ -252,7 +263,7 @@ export const createSeen = (data, keys) => {
   return {
     any: true,
     most,
-    unmatched: Object.freeze([...(observed.unmatched || [])]),
+    unmatched: Object.freeze(unmatchedOf(observed)),
     join: (k) => joins.get(k) || null,
     entry: (i) => hits.get(i) || 0,
   };

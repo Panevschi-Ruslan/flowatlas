@@ -43,6 +43,23 @@ const pushTo = (map, key, value) => {
 
 const fileKey = (repo, file) => repo + ':' + file;
 
+/** A packed word: a position in `list`, or the word itself where listing it would not pay (P84). */
+export const wordIn = (list, word) => (typeof word === 'number' ? list[word] : word);
+
+/**
+ * Each way in's failures by position, each record of the pack expanded once and
+ * shared (P84). A word is a position in its list, or the word itself.
+ */
+export const failsByEntry = (data) => {
+  const out = new Map();
+  if (!data.fails) return out;
+  const { fails: all = [], exceptions: xs, failSources: ss, files } = data.dicts;
+  const one = all.map(([s, x, at, f, l, src, id]) => Object.freeze({ ...(s < 0 ? {} : { s }), x: wordIn(xs, x), at,
+    ...(id === undefined ? {} : { id }), ...(f < 0 ? {} : { f: files[f] }), ...(l < 0 ? {} : { l }), src: wordIn(ss, src) }));
+  for (const [entry, list] of Object.entries(data.fails)) out.set(Number(entry), list.map((r) => one[r]));
+  return out;
+};
+
 /**
  * Adjacency, built once.
  *
@@ -65,7 +82,7 @@ export const createModel = (data) => {
     if (row[ROW.node] >= 0) pushTo(rowsOn, row[ROW.node], r);
     if (row[ROW.file] >= 0) pushTo(rowsInFile, fileKey(row[ROW.repo], row[ROW.file]), r);
   });
-  return { data, nodes, edges, outgoing, incoming, rowsOn, rowsInFile, haystack: null, owners: null, faces: null };
+  return { data, nodes, edges, outgoing, incoming, rowsOn, rowsInFile, fails: failsByEntry(data), haystack: null, owners: null, faces: null };
 };
 
 /** Nothing hidden. */
@@ -853,8 +870,7 @@ export const FIND_GROUPS = Object.freeze({
     items: (model) => {
       const { repos } = model.data.dicts;
       const out = [];
-      for (const [at, fails] of Object.entries(model.data.fails || {})) {
-        const entry = Number(at);
+      for (const [entry, fails] of model.fails) {
         const node = model.nodes[entry];
         if (!node) continue;
         const seen = new Set();

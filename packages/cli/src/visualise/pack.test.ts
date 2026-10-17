@@ -2,7 +2,11 @@ import type { GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { stableKeys } from './keys.js';
-import { packGraph } from './pack.js';
+import { wordsOf } from './dictionary.js';
+import { createModel, type GraphModel } from './graph.js';
+import { packObserved } from './observed.js';
+import { packGraph, type PackedGraph } from './pack.js';
+import { logsOf, unmatchedOf } from './steps.js';
 
 const report = {
   httpOut: {},
@@ -258,5 +262,83 @@ describe('edges a stand-in typed (P78)', () => {
       packages: ['@acme/queue-client'],
       edges: { '1': [1, 0] },
     });
+  });
+});
+
+describe('logs and unmatched spans through dictionaries (P84)', () => {
+  const levels = ['log', 'warn', 'error'];
+  const logging: GraphNode[] = Array.from({ length: 12 }, (_, i) => ({
+    id: `api#src/jobs.ts:Jobs.run${i}`,
+    type: 'method',
+    label: `Jobs.run${i}`,
+    repo: 'api',
+    file: 'src/jobs.ts',
+    line: 10 * i,
+    meta: {
+      logs: [
+        { level: levels[i % 3], text: 'job started', at: 10 * i + 1 },
+        { level: 'log', text: `job ${i} wrote {count} rows`, at: 10 * i + 2 },
+        { level: 'error', at: 10 * i + 3 },
+      ],
+    },
+  }));
+  const packLogs = (list: GraphNode[]) => packGraph({ builtAt: '2026-10-07T00:00:00.000Z', nodes: list, edges: [], unresolved: [], report });
+
+  it('lists the repeated levels and templates once, ships a one-off template as it is, and reads back the same lines', () => {
+    const data = packLogs(logging);
+    expect(data.dicts.logLevels).toEqual(['error', 'log', 'warn']);
+    expect(data.dicts.logTexts).toEqual(['job started']);
+    expect(data.logs?.[0]).toEqual([[1, 1, 0], [1, 2, 'job 0 wrote {count} rows'], [0, 3]]);
+    const model = createModel(data) as GraphModel;
+    logging.forEach((node, i) => {
+      const lines = (node.meta!['logs'] as Array<{ level: string; text?: string; at: number }>).map(({ level, text, at }) => ({
+        level,
+        line: at,
+        text: text ?? '',
+      }));
+      expect(logsOf(model, i)).toEqual(lines);
+    });
+  });
+
+  it('ships a block with nothing worth listing exactly as its words, with no list at all', () => {
+    const data = packLogs(logging.slice(0, 1));
+    expect(data.dicts.logLevels).toBeUndefined();
+    expect(data.dicts.logTexts).toBeUndefined();
+    expect(data.logs?.[0]).toEqual([['log', 1, 'job started'], ['log', 2, 'job 0 wrote {count} rows'], ['error', 3]]);
+    expect(logsOf(createModel(data) as GraphModel, 0)[2]).toEqual({ level: 'error', line: 3, text: '' });
+  });
+
+  it('reads back every unmatched span, with and without a service', () => {
+    const unmatched = [
+      ...Array.from({ length: 6 }, (_, i) => ({ service: 'billing', kind: 'code', name: `LedgerClient.post${i}`, count: 1 })),
+      { kind: 'http', name: 'GET /metrics', count: 2 },
+      { service: 'gateway', kind: 'http', name: 'GET /health', count: 1 },
+    ];
+    const packed = packObserved({ joins: {}, entries: {}, symbols: {}, channels: {}, unmatched } as never, [], {});
+    expect(packed.services).toEqual(['billing']);
+    expect(packed.kinds).toEqual(['code', 'http']);
+    expect(packed.unmatched[6]).toEqual([-1, 1, 'GET /metrics']);
+    expect(packed.unmatched[7]).toEqual(['gateway', 1, 'GET /health']);
+    expect(unmatchedOf(packed)).toEqual(unmatched.map(({ count: _, ...span }) => span));
+  });
+
+  it('packs one build to the same bytes twice, with every dictionary sorted', () => {
+    const one = JSON.stringify(packLogs(logging));
+    expect(JSON.stringify(packLogs(logging))).toBe(one);
+    const data = JSON.parse(one) as PackedGraph;
+    const { types, repos, kinds, files, edgeTypes, confidences, values, logLevels, logTexts } = data.dicts;
+    for (const list of [types, repos, kinds, files, edgeTypes, confidences, values, logLevels!, logTexts!]) {
+      expect(list).toEqual([...list].sort());
+    }
+  });
+});
+
+describe('wordsOf (P84)', () => {
+  it('lists only what pays for its place, and nothing unless the list pays for its name', () => {
+    expect(wordsOf(['a', 'b', 'a'], 'k').list).toEqual([]);
+    const many = wordsOf([...Array(10).fill('NotFoundException'), 'Once'], 'exceptions');
+    expect(many.list).toEqual(['NotFoundException']);
+    expect(many.word('NotFoundException')).toBe(0);
+    expect(many.word('Once')).toBe('Once');
   });
 });

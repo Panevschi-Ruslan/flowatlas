@@ -5,6 +5,7 @@ import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { readTraceFiles } from '../commands/observe.js';
 import { packObserved } from '../visualise/observed.js';
+import { unmatchedOf } from '../visualise/steps.js';
 import { edgeIdOf, indexGraph, matchSpans, routeScore, templateOf } from './match.js';
 import { nestjsObserveReader, otlpReader, readerFor } from './readers.js';
 import { pathOf } from './span.js';
@@ -90,6 +91,7 @@ describe('matchSpans over the multi-repo fixture', () => {
     );
     expect(packed.joins[String(position)]?.count).toBe(1);
     expect(packed.entries['entry:orders:http:POST:/orders']).toEqual({ hits: 1 });
-    expect(packed.unmatched[0]).toEqual({ service: 'billing', kind: 'code', name: 'LedgerClient.post' });
+    expect(packed.unmatched[0]).toEqual(['billing', 'code', 'LedgerClient.post']);
+    expect(unmatchedOf(packed)).toEqual(observed.unmatched.map(({ count: _, ...span }) => span));
   });
 });

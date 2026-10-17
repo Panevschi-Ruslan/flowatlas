@@ -26,32 +26,53 @@ import { packBusiest, type PackedBusiest } from './busiest.js';
 import type { PackedChanges } from './changes.js';
 
 export type { PackedBusiest, PackedChanges };
-import { packFails, type PackedFails } from './fails.js';
+import { failuresByEntry, packFails, type PackedFailRecord, type PackedFails } from './fails.js';
+import { dictionary, wordsOf, type Word } from './dictionary.js';
 import { packAccess, type PackedAccess } from './access.js';
 import { packCantFollow, type PackedCantFollow } from './cant-follow.js';
 
 export type { PackedAccess };
 
-export type { PackedFails, PackedCantFollow };
+export type { PackedFails, PackedFailRecord, PackedCantFollow };
 
-export type PackedLogs = Record<number, Array<[level: string, line: number, text?: string]>>;
+/**
+ * What each node logs (P71), by node position, as `[level, line, template?]`;
+ * `level` is a position in `dicts.logLevels` and `template` one in
+ * `dicts.logTexts`, or the word itself where listing it would not pay (P84,
+ * `wordsOf`): a handful of levels repeat on every line, a template seldom.
+ */
+export type PackedLogs = Record<number, Array<[level: Word, line: number, text?: Word]>>;
 
 type LogLine = { level?: unknown; text?: unknown; at?: unknown };
 
-/** What each node logs, kept to a level, a line and a template. */
-const packLogs = (nodes: readonly GraphNode[]): { logs?: PackedLogs } => {
-  const out: PackedLogs = {};
+/** What each node logs, kept to a level, a line and a template, with the dictionaries both index. */
+const packLogs = (nodes: readonly GraphNode[]): { logs?: PackedLogs; logLevels?: string[]; logTexts?: string[] } => {
+  const found: Array<[number, Array<[string, number, string?]>]> = [];
   nodes.forEach((node, index) => {
     const list = node.meta?.['logs'];
     if (!Array.isArray(list)) return;
-    const lines = (list as LogLine[]).flatMap((item): PackedLogs[number] => {
+    const lines = (list as LogLine[]).flatMap((item): Array<[string, number, string?]> => {
       if (typeof item?.level !== 'string') return [];
       const at = typeof item.at === 'number' ? item.at : 0;
       return [typeof item.text === 'string' && item.text !== '' ? [item.level, at, item.text] : [item.level, at]];
     });
-    if (lines.length > 0) out[index] = lines;
+    if (lines.length > 0) found.push([index, lines]);
   });
-  return Object.keys(out).length === 0 ? {} : { logs: out };
+  if (found.length === 0) return {};
+  const all = found.flatMap(([, lines]) => lines);
+  const levels = wordsOf(all.map(([level]) => level), 'logLevels');
+  const texts = wordsOf(all.flatMap(([, , text]) => (text === undefined ? [] : [text])), 'logTexts');
+  const logs: PackedLogs = {};
+  for (const [index, lines] of found) {
+    logs[index] = lines.map(([level, line, text]) =>
+      text === undefined ? [levels.word(level), line] : [levels.word(level), line, texts.word(text)],
+    );
+  }
+  return {
+    logs,
+    ...(levels.list.length === 0 ? {} : { logLevels: levels.list }),
+    ...(texts.list.length === 0 ? {} : { logTexts: texts.list }),
+  };
 };
 
 /**
@@ -63,6 +84,12 @@ const packLogs = (nodes: readonly GraphNode[]): { logs?: PackedLogs } => {
  * over, which is the difference between a page that opens and one that does
  * not. What a link carries from one build's page to the
  * next is a six-character key hashed from the id, not the id.
+ *
+ * The rule holds for every block, not only nodes and rows (P84): a failure
+ * that stands in front of many ways in is one record they all point at, and a
+ * log line's level and template, and an unmatched span's service and kind, are
+ * indices too. Each block has one expander on the page, so every reader sees
+ * the objects it always saw.
  */
 export interface PackedGraph {
   builtAt: string;
@@ -84,6 +111,19 @@ export interface PackedGraph {
     reasons: string[];
     levels: string[];
     hints: string[];
+    /**
+     * Each distinct failure once (P84), `[status, exception, at, file, line,
+     * source, id?]`; `fails` below lists positions in it. See `fails.ts`.
+     * Present only when some way in says what it fails with.
+     */
+    fails?: PackedFailRecord[];
+    /** The exceptions a failure record names, the ones worth listing. */
+    exceptions?: string[];
+    /** Where a failure comes from: `throw`, `guard`, `pipe`, the ones worth listing. */
+    failSources?: string[];
+    /** The levels and templates a log line indexes (P84); each present only when it pays. */
+    logLevels?: string[];
+    logTexts?: string[];
   };
   /** `[type, label, repo, kind, file, line, meta]`, by position. */
   nodes: unknown[][];
@@ -167,11 +207,15 @@ export interface PackedGraph {
   busiest: PackedBusiest;
   /** What a branch changed, when the page was made with `--diff <ref>` (P73). See `changes.ts`. */
   changes?: PackedChanges;
-  /** What each way in can fail with, by entry position (P68). Absent when none says. See `fails.ts`. */
+  /**
+   * What each way in can fail with (P68), by entry position, as positions in
+   * `dicts.fails`. Absent when none says. See `fails.ts`.
+   */
   fails?: PackedFails;
   /**
    * The lines each method or function logs (P71), by node position, as
-   * `[level, line, template?]`. Absent when nothing logs.
+   * `[level, line, template?]` through `dicts.logLevels` and `dicts.logTexts`.
+   * Absent when nothing logs.
    */
   logs?: PackedLogs;
   /**
@@ -189,11 +233,6 @@ export interface PackedGraph {
   report: unknown;
 }
 
-
-const dictionary = (values: Iterable<string>): [string[], Map<string, number>] => {
-  const list = [...new Set(values)].sort();
-  return [list, new Map(list.map((value, index) => [value, index]))];
-};
 
 /**
  * Node metadata the page shows, as `[field, key, enumerated]`.
@@ -403,7 +442,6 @@ const packAccepted = (
   if (out.rows.length === 0 && accepted.problem === undefined) return { fresh };
   return { packed: { ...out, ...(rules.length === 0 ? {} : { rules, byRule }), ...problem }, fresh };
 };
-const withFails = (fails: PackedFails | undefined): { fails?: PackedFails } => (fails === undefined ? {} : { fails });
 const withAccess = (access: PackedAccess | undefined): { access?: PackedAccess } => (access === undefined ? {} : { access });
 
 /** The ways a stand-in supplies an edge's types (P78), as `meta.because` names them. */
@@ -445,9 +483,11 @@ export const packGraph = (input: PackInput): PackedGraph => {
   const [types, typeIx] = dictionary(input.nodes.map((node) => node.type));
   const [repos, repoIx] = dictionary(input.nodes.map((node) => node.repo));
   const [kinds, kindIx] = dictionary(input.nodes.map((node) => node.kind ?? ''));
+  const failed = failuresByEntry(input.nodes);
   const [files, fileIx] = dictionary([
     ...input.nodes.map((node) => node.file ?? ''),
     ...rowsIn.map((row) => row.file ?? ''),
+    ...failed.flatMap(([, fails]) => fails.flatMap((item) => (item.file === undefined ? [] : [item.file]))),
   ]);
   const [edgeTypes, edgeTypeIx] = dictionary(input.edges.map((edge) => edge.type));
   const [confidences, confIx] = dictionary(input.edges.map((edge) => edge.confidence));
@@ -506,6 +546,8 @@ export const packGraph = (input: PackInput): PackedGraph => {
     position,
     typeOf: input.typeOf ?? (() => undefined),
   });
+  const fails = packFails(failed, position, fileIx);
+  const { logs, logLevels, logTexts } = packLogs(input.nodes);
   const report = input.report;
   return {
     builtAt: input.builtAt,
@@ -523,6 +565,9 @@ export const packGraph = (input: PackInput): PackedGraph => {
       reasons,
       levels,
       hints,
+      ...(fails === undefined ? {} : fails.tables),
+      ...(logLevels === undefined ? {} : { logLevels }),
+      ...(logTexts === undefined ? {} : { logTexts }),
     },
     nodes,
     edges,
@@ -544,9 +589,9 @@ export const packGraph = (input: PackInput): PackedGraph => {
     sites: packSites(packedEdges),
     busiest: packBusiest(input.nodes, packedEdges, position),
     ...(input.changes === undefined ? {} : { changes: input.changes }),
-    ...withFails(packFails(input.nodes, position)),
+    ...(fails === undefined ? {} : { fails: fails.fails }),
     ...withAccess(packAccess(input.nodes)),
-    ...packLogs(input.nodes),
+    ...(logs === undefined ? {} : { logs }),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
     ...(accepted.packed === undefined ? {} : { accepted: accepted.packed }),
     ...packCantFollow(accepted.fresh, position),

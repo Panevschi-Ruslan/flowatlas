@@ -105,5 +105,8 @@ export declare const likeRoute: (route: { method: string; path: string }) => str
 export declare const acceptCommandFor: (row: { reason: string; service?: string; message?: string }) => string;
 export declare const failChips: (fails: readonly PackedFail[]) => string[];
 export declare const failSay: (fail: PackedFail) => string;
+export declare const unmatchedOf: (
+  observed: Pick<NonNullable<PackedGraph['observed']>, 'unmatched' | 'services' | 'kinds'>,
+) => Array<{ service?: string; kind: string; name: string }>;
 export declare const logsOf: (model: GraphModel, i: number) => readonly StepLog[];
 export declare const scheduleOf: (model: GraphModel, i: number) => { expression: string; zone: string } | null;

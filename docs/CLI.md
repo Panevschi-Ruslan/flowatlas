@@ -827,6 +827,13 @@ boundaries, and has a tab each for every crossing and for everything that did no
 join. The tabs are Map, Walk, Steps, Crossings, Not joined, Busiest, Changes (only
 with `--diff`) and Graph.
 
+The graph is packed into the page with every repeated string shipped once:
+node types, files and services, and also a failure that stands in front of many
+routes (a guard's 401, a pipe's 400, a shared service's 404), which is one
+record every route it guards points at, and a log line's level and template.
+The page is still one readable file; its data is plain JSON in a `<script>`
+block.
+
 **One search box** above the tabs finds a route or other way in, a channel, a
 table, a type, a gap or a class by name, and under *Fails with* the ways in that
 can fail with an exception or a status (`NotFoundException`, `404`). A hit
