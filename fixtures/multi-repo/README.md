@@ -305,3 +305,19 @@ whether the annotation can be about anything else.
 
 An annotation that reached no route counts for nothing here: the reader still
 has something to fix, and the marker checks say what.
+
+## Traffic over the map (P65, P85, P105)
+
+`traces/` holds what `flowatlas observe` reads, written by hand with values
+planted that no reader may keep (`packages/cli/src/observe/__fixtures__/planted.ts`):
+
+| file | format | what it is there for |
+|---|---|---|
+| `checkout.otlp.json` | OTLP/JSON | a slow `GET /orders/:id` hop from `gateway` to `orders` (500 ms on the caller's span), a `POST /orders` that answers 500 with `status.code: 2`, a publish and its consumer, a call that fits two call sites, and a span with no times |
+| `billing.observe.json` | @nestjs/observe batch | one batch with jobs, a WebSocket snapshot and a node the contract refuses |
+| `billing.batches.observe.json` | @nestjs/observe `{ batches }` | two posts an hour later: two reads (200 and 404) and a write that fails with `e` on its nodes |
+
+The protobuf copy of `checkout.otlp.json` is written by the test's encoder at
+test time, not checked in. `expected.cli/observe.json` is the observed file
+over all three, and the MCP snapshots in `expected.mcp.observed/` answer from
+it; regenerate the CLI snapshots before the MCP ones.

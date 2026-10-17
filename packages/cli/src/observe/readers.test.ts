@@ -178,3 +178,25 @@ describe('the OTLP reader', () => {
     expect(skipped).toEqual([{ noun: 'span', why: 'without a trace id and a span id', count: 1 }]);
   });
 });
+
+describe('a saved series of @nestjs/observe batch posts', () => {
+  const series = JSON.parse(readFileSync(join(fixture, 'traces/billing.batches.observe.json'), 'utf8')) as Record<string, unknown>;
+
+  it('reads as the batches one after another, durations and errors on every node', () => {
+    expect(readerFor(series)).toBe(nestjsObserveReader);
+    const { spans, droppedAttributes } = nestjsObserveReader.read(series);
+    const servers = spans.filter((span) => span.kind === 'server');
+    expect(servers.map((span) => [span.method, span.route, span.status, span.durationMs, span.error ?? false])).toEqual([
+      ['GET', '/invoices/:id', 200, 3.2, false],
+      ['GET', '/invoices/:id', 404, 2.8, false],
+      ['POST', '/invoices', 500, 41.5, true],
+    ]);
+    expect(spans.find((span) => span.symbol === 'InvoicesService.create')).toMatchObject({ durationMs: 40.2, error: true });
+    // Span ids stay unique across the batches.
+    expect(new Set(spans.map((span) => span.spanId)).size).toBe(spans.length);
+    // A user, a request, a version, a statement: counted as not read, never kept.
+    expect(droppedAttributes).toBeGreaterThan(3);
+    const text = JSON.stringify(spans);
+    for (const secret of PLANTED) expect(text).not.toContain(secret);
+  });
+});

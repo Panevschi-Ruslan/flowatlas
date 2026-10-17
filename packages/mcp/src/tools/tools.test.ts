@@ -54,7 +54,7 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the eighteen the project promises', async () => {
+  it('are exactly the twenty-one the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
@@ -66,10 +66,13 @@ describe('the tools a session is offered', () => {
       'get_flow',
       'get_source',
       'get_type',
+      'hot_paths',
       'impact',
       'list_entries',
       'search',
+      'slow_steps',
       'start_here',
+      'trace_for',
       'type_usage',
       'what_changed',
       'who_calls',
@@ -102,12 +105,21 @@ describe('the tools a session is offered', () => {
    * after, with the text of the new tools cut first. The part a model reads
    * grew by what the three tools say and the inputs they take; the rest is
    * their output schemas, which the client checks every answer against.
+   *
+   * Raised by P105, which added three tools (`slow_steps`, `hot_paths`,
+   * `trace_for`): 9,595 and 27,382 before, 10,802 and 29,040 after. Each
+   * says one short sentence and takes only the bounds it needs, with no
+   * output schema; how the three chain is said once in the instructions,
+   * which are not part of this count. Three tools' names, inputs and the
+   * schema header the SDK writes for each cannot fit in the hundred
+   * characters left, so both ceilings move by what the three cost and the
+   * same margin as before.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(9700);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(27500);
+    expect(read.length).toBeLessThan(10900);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(29150);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

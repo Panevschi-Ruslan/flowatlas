@@ -267,7 +267,7 @@ read again and the others come from the cache.
 | `flowatlas config <selector>` | the settings one flow depends on |
 | `flowatlas hotspots` | what the most things point at |
 | `flowatlas visualise` | the whole graph as one page you can open |
-| `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have |
+| `flowatlas observe <file...>` | which joins real traffic went through, how long each step took and how it answered, from trace files you already have (OTLP JSON or protobuf, @nestjs/observe); runs add up over a window |
 
 ### Checking
 
@@ -432,6 +432,7 @@ shows `flowatlas`, and a session has these tools, among others:
 | `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |
 | `dead` | whether a node is dead, with what could make that wrong, or a service's dead rows, verdict first |
 | `findings` | likely N+1 loops, unguarded routes, contract breaks and one-ended channels, ranked by reach |
+| `hot_paths` / `slow_steps` / `trace_for` | after `flowatlas observe`: the ways in traffic used most, the steps it was slowest on, and one slow and one failing request step by step |
 
 Every row carries an `id` the next tool takes as it is, and every answer ends
 with `next`: the calls that take the ids it returned.

@@ -3,7 +3,8 @@
  * a span, the observed file, the page or an MCP answer (P85): a bearer token,
  * a user id, ids and query strings in URLs, hosts, a database statement, tags,
  * an error message, a log line and a batch's version, objectives, runtime and
- * custom data.
+ * custom data; and (P105) a cookie, a statement, a span name holding an id, a
+ * status message and an exception's text.
  */
 export const PLANTED = [
   'not-a-real-token',
@@ -31,5 +32,8 @@ export const PLANTED = [
   'stack',
   'post to ledger',
   'failed for customer',
+  'cookie-val-55',
+  'secret-stmt-8',
+  'duplicate key',
 ];
 

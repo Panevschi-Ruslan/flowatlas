@@ -79,7 +79,8 @@ and `findings` take
 which also stops at about `maxChars` characters (12,000). `start_here`, `cant_follow`,
 `describe_for_prompt` and `get_source` take neither: they are bounded by their
 own limits (`perService`; `top` and `samples`; `maxSteps` and `maxChars`;
-`maxLines`). Answers are bounded and say when they were cut, rather than
+`maxLines`), as are `hot_paths` and `slow_steps` (`limit`) and `trace_for`
+(`maxNodes` per tree). Answers are bounded and say when they were cut, rather than
 filling a context window.
 
 ### Answers
@@ -435,7 +436,9 @@ What `get_flow` says beside the chain:
   `optOuts`.
 - **`observed: n`** on a row real traffic went through, after
   `flowatlas observe` has read a trace file: the count on the join into it, or
-  the entry's hits. Absent when nothing saw it.
+  the entry's hits. Absent when nothing saw it. Beside it, **`p95`** (in
+  milliseconds) and **`errorRate`** (the error flag or a 5xx, over the
+  requests whose outcome is known) where the file measured them.
 - **`seenAmbiguous: n`** on a row that requests could have been, or whose
   join into it they could have run, but fit other places as well: those are
   counted on none of them, so `observed` never spreads one request over
@@ -444,7 +447,28 @@ What `get_flow` says beside the chain:
   repository's own files, the code's own fallback or the setting's name, saying
   where the value came from.
 
-`who_calls` rows carry `observed: n` and `seenAmbiguous: n` the same way.
+`who_calls` rows carry `observed: n`, `p95`, `errorRate` and `seenAmbiguous: n`
+the same way. When the observed file holds a sample request of an entry, the
+entry's hints in `get_flow` and `list_entries` name `trace_for` second.
+
+### What ran
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `hot_paths` | the ways in real traffic used most, busiest first, each with its p50, p95, max and error rate and the joins it reached most | `service`, `limit` (10), `joins` (5) |
+| `slow_steps` | the joins and methods real traffic was slowest on, each with its count, p50, p95, max, error rate and, for a join, `measuredAt` (`caller` or `callee`) | `entry` (only what it reaches), `service`, `by` (`p95`, `max`, `p50`), `minCount` (5), `limit` (10) |
+| `trace_for` | one slow and one failing request of an entry, as trees of `{ id?, label, service?, kind, ms?, status?, error?, children }`, `id` the node each span was credited to | `entry` (required: an id or a route said aloud), `maxNodes` (60, per tree) |
+
+They answer from the observed file `flowatlas observe` writes beside the
+graph (see the [CLI guide](CLI.md#flowatlas-observe-file)); with none they
+say so. A row names only places the graph still has, so a file older than
+the last build answers for what is still there. `slow_steps` leaves out a call
+site whose join is listed, since both are timed on the same span. A
+`trace_for` tree carries no trace or span id; the failing request is shown
+once when it is also the slowest, and an entry with no sample says what would
+give it one. Each answer is cut at its `limit` or `maxNodes` and says so, and
+`next` chains them: `hot_paths` → `slow_steps({entry})` → `trace_for({entry})`
+→ `get_source` on a slow step.
 
 ### Messages and types
 

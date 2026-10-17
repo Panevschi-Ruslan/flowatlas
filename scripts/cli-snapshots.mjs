@@ -26,6 +26,7 @@ import {
   runDoctorCommand,
   runFlow,
   runImpact,
+  runObserve,
   runShapesSuggest,
   runStats,
   runTypes,
@@ -70,8 +71,36 @@ const acceptUnreadable = (io) => {
   }
 };
 
+/**
+ * `observe` over the fixture's three trace files (P105), on a copy of the
+ * fixture's output so no other snapshot reads the file it writes: the summary,
+ * the file itself (`--format json`), and a second run over a file already read.
+ * The clock is fixed, so the window and `readAt` are the same every run.
+ * `observe.json` is also the observed file the MCP snapshots and tests answer from.
+ */
+const OBSERVE_NOW = new Date('2025-10-16T09:00:00.000Z');
+const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json'].map((file) =>
+  join(fixture, 'traces', file),
+);
+const observeOnCopy = (io, runs) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-observe-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    for (const [files, options] of runs) {
+      runObserve(files, { db, now: OBSERVE_NOW, print: (line) => io.out(said(`${line}\n`)), ...options });
+    }
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
+  ['observe.txt', (io) => observeOnCopy(io, [[TRACES, {}]])],
+  ['observe.json', (io) => observeOnCopy(io, [[TRACES, { format: 'json' }]])],
+  ['observe.again.txt', (io) => observeOnCopy(io, [[TRACES.slice(0, 1), { print: () => {} }], [TRACES, {}]])],
   ['accept.unreadable.txt', acceptUnreadable],
   ['flow.get-orders.tree.l0.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '0' }, io)],
   ['flow.get-orders.tree.l1.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree' }, io)],

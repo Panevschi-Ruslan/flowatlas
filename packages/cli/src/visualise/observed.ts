@@ -1,12 +1,13 @@
-import { joinIdOf, type GraphEdge, type Observed } from '@flowatlas/core';
+import { joinIdOf, type GraphEdge, type MeasuredAt, type Observed, type ObservedFigures, type ObservedWindow } from '@flowatlas/core';
 import { wordsOf, type Word } from './dictionary.js';
 
 /**
  * What `flowatlas observe` saw, keyed the way the page addresses things.
  *
  *   observed: {
- *     joins:   { [edgeId]: { count, lastSeen } },   // edgeId: position in `edges`, as a string
- *     entries: { [entryId]: { hits } },             // entryId: entry node id, a key of `entryIds`
+ *     joins:   { [edgeId]: { count, lastSeen, ...stats, measuredAt? } },   // edgeId: position in `edges`, as a string
+ *     entries: { [entryId]: { hits, ...stats } },   // entryId: entry node id, a key of `entryIds`
+ *     window?: { since?, from, to },                // the hours the counts cover (P105)
  *     unmatched: [[service, kind, name]],           // seen at run time, not found in code
  *     ambiguous?: [[service, kind, name, count, places, unnamed?]],  // fit several places (P85)
  *     services?: [name], kinds?: [kind]             // what `service` and `kind` index (P84)
@@ -20,17 +21,42 @@ import { wordsOf, type Word } from './dictionary.js';
  * `join` and node positions otherwise; `unnamed` counts candidates it does not
  * list. `unmatchedOf` and `ambiguousOf` (steps.js) expand the rows. Present
  * only when the observed file sits beside the database.
+ *
+ * `stats` (P105) are what the file measured, each only when it did: `p50`,
+ * `p95`, `max` in milliseconds, `errors`, and `statuses` (status → count).
+ * Nothing on the page renders them yet (P111); `createSeen` reads `count`
+ * and `hits` as it always has.
  */
 export type PackedAmbiguous = [service: Word, kind: Word, name: string, count: number, places: number[], unnamed?: number];
 
+export interface PackedStats {
+  p50?: number;
+  p95?: number;
+  max?: number;
+  errors?: number;
+  statuses?: Record<string, number>;
+}
+
 export interface PackedObserved {
-  joins: Record<string, { count: number; lastSeen: string | null }>;
-  entries: Record<string, { hits: number }>;
+  joins: Record<string, { count: number; lastSeen: string | null; measuredAt?: MeasuredAt } & PackedStats>;
+  entries: Record<string, { hits: number } & PackedStats>;
+  window?: ObservedWindow;
   unmatched: Array<[service: Word, kind: Word, name: string]>;
   ambiguous?: PackedAmbiguous[];
   services?: string[];
   kinds?: string[];
 }
+
+/** The figures a row measured, each only when it did. */
+const statsOf = (seen: ObservedFigures): PackedStats => {
+  const stats: PackedStats = {};
+  if (seen.p50 !== undefined) stats.p50 = seen.p50;
+  if (seen.p95 !== undefined) stats.p95 = seen.p95;
+  if (seen.max !== undefined) stats.max = seen.max;
+  if (seen.errors !== undefined && seen.errors > 0) stats.errors = seen.errors;
+  if (seen.statuses !== undefined) stats.statuses = seen.statuses;
+  return stats;
+};
 
 export const packObserved = (
   observed: Observed,
@@ -43,11 +69,18 @@ export const packObserved = (
   const joins: PackedObserved['joins'] = {};
   for (const [id, seen] of Object.entries(observed.joins)) {
     const index = at.get(id);
-    if (index !== undefined) joins[String(index)] = { count: seen.count, lastSeen: seen.lastSeen };
+    if (index !== undefined) {
+      joins[String(index)] = {
+        count: seen.count,
+        lastSeen: seen.lastSeen,
+        ...statsOf(seen),
+        ...(seen.measuredAt === undefined ? {} : { measuredAt: seen.measuredAt }),
+      };
+    }
   }
   const entries: PackedObserved['entries'] = {};
   for (const [id, seen] of Object.entries(observed.entries)) {
-    if (entryIds[id] !== undefined) entries[id] = { hits: seen.hits };
+    if (entryIds[id] !== undefined) entries[id] = { hits: seen.hits, ...statsOf(seen) };
   }
   const ambiguousIn = observed.ambiguous ?? [];
   const rows = [...observed.unmatched, ...ambiguousIn];
@@ -75,6 +108,7 @@ export const packObserved = (
   return {
     joins,
     entries,
+    ...(observed.window === undefined || observed.window.from === null ? {} : { window: observed.window }),
     unmatched,
     ...(ambiguous.length === 0 ? {} : { ambiguous }),
     ...(services.list.length === 0 ? {} : { services: services.list }),

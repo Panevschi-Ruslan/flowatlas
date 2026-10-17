@@ -1,0 +1,181 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:30",
+      "service": "gateway",
+      "kind": "http"
+    },
+    "observed": 2,
+    "p95": 520,
+    "errorRate": 0,
+    "children": [
+      {
+        "node": {
+          "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+          "type": "method",
+          "label": "OrdersController.findOne",
+          "loc": "src/orders/orders.controller.ts:30"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "string"
+          ],
+          "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+        },
+        "observed": 1,
+        "p95": 520,
+        "errorRate": 0,
+        "children": [
+          {
+            "node": {
+              "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+              "type": "method",
+              "label": "OrdersClient.fetchOne",
+              "loc": "src/clients/orders.client.ts:32"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string"
+              ],
+              "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "config_key:gateway#ORDERS_URL",
+                  "type": "config_key",
+                  "label": "ORDERS_URL",
+                  "loc": "src/clients/orders.client.ts:33"
+                },
+                "edge": {
+                  "type": "reads_config",
+                  "confidence": "static"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+                  "type": "http_out",
+                  "label": "GET /orders/:param",
+                  "loc": "src/clients/orders.client.ts:33"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "observed": 1,
+                "p95": 500,
+                "errorRate": 0,
+                "seenAmbiguous": 1,
+                "children": [
+                  {
+                    "node": {
+                      "id": "entry:orders:http:GET:/orders/:param",
+                      "type": "entry",
+                      "label": "GET /orders/:param",
+                      "loc": "src/orders/orders.controller.ts:25",
+                      "service": "orders",
+                      "kind": "http"
+                    },
+                    "edge": {
+                      "type": "http_calls",
+                      "confidence": "static",
+                      "returns": "type:@fx/contracts#OrderDto"
+                    },
+                    "observed": 1,
+                    "p95": 500,
+                    "errorRate": 0,
+                    "children": [
+                      {
+                        "node": {
+                          "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+                          "type": "method",
+                          "label": "OrdersController.findOne",
+                          "loc": "src/orders/orders.controller.ts:25"
+                        },
+                        "edge": {
+                          "type": "handles",
+                          "confidence": "static",
+                          "params": [
+                            "string"
+                          ],
+                          "returns": "type:@fx/contracts#OrderDto"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+                              "type": "method",
+                              "label": "OrdersService.findOne",
+                              "loc": "src/orders/orders.service.ts:25"
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static",
+                              "params": [
+                                "string"
+                              ],
+                              "returns": "type:@fx/contracts#OrderDto"
+                            },
+                            "observed": 1,
+                            "p95": 492,
+                            "errorRate": 0,
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "db_query:orders#src/orders/orders.service.ts:26:23",
+                                  "type": "db_query",
+                                  "label": "read orders",
+                                  "loc": "src/orders/orders.service.ts:26"
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "table:orders#orders",
+                                      "type": "table",
+                                      "label": "orders"
+                                    },
+                                    "edge": {
+                                      "type": "queries",
+                                      "confidence": "static"
+                                    },
+                                    "observed": 1,
+                                    "errorRate": 0,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "next": [
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "trace_for({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:33:12\", to: \"entry:orders:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})"
+  ]
+}

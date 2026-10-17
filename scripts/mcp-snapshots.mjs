@@ -13,7 +13,8 @@
  * must write exactly those files too, and the CLI's parity test checks it.
  */
 import { isDeepStrictEqual } from 'node:util';
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -164,8 +165,46 @@ const PROMPTS = {
   files: { 'describe_for_prompt.invoice': 'entry.md', 'describe_for_prompt.channel': 'channel.md', 'describe_for_prompt.gap': 'row.md' },
 };
 
+/**
+ * What real traffic did (P105), asked of the multi-repo graph with the
+ * observed file `flowatlas observe` wrote over the fixture's traces: the
+ * CLI's `observe.json` snapshot, put beside a copy of the fixture's database
+ * so no other suite sees it. The busiest ways in, the slowest steps, a slow
+ * and a failing request step by step, an entry with no sample, and the rows
+ * of get_flow, who_calls and list_entries with timings beside `observed`.
+ */
+const OBSERVED_CASES = [
+  ['hot_paths.all', 'hot_paths', {}],
+  ['hot_paths.by-service', 'hot_paths', { service: 'billing', limit: 1, joins: 1 }],
+  ['slow_steps.all', 'slow_steps', { minCount: 1 }],
+  ['slow_steps.by-max', 'slow_steps', { by: 'max', minCount: 1, limit: 3 }],
+  ['slow_steps.entry', 'slow_steps', { entry: 'entry:gateway:http:GET:/orders/:param', minCount: 1 }],
+  ['slow_steps.too-few', 'slow_steps', {}],
+  ['trace_for.route', 'trace_for', { entry: 'POST /orders' }],
+  ['trace_for.cross-service', 'trace_for', { entry: 'entry:gateway:http:GET:/orders/:param' }],
+  ['trace_for.cut', 'trace_for', { entry: 'POST /invoices', maxNodes: 2 }],
+  ['trace_for.no-sample', 'trace_for', { entry: 'entry:orders:http:POST:/orders/:param/archive' }],
+  ['get_flow.observed', 'get_flow', { entry: 'entry:gateway:http:GET:/orders/:param' }],
+  ['who_calls.observed', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 6 }],
+  ['list_entries.observed', 'list_entries', { service: 'billing' }],
+];
+
+/** A copy of the fixture's output with the observed file beside it, removed when the run ends. */
+const observedCopy = () => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-mcp-observed-'));
+  cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+  copyFileSync(join(fixture, 'expected.cli', 'observe.json'), join(copy, 'observed.json'));
+  return copy;
+};
+
 const SUITES = [
   { fixture, outDir, cases: CASES, prompts: PROMPTS },
+  {
+    fixture,
+    outDir: join(fixture, 'expected.mcp.observed'),
+    cases: OBSERVED_CASES,
+    copy: observedCopy,
+  },
   {
     fixture: join(root, 'fixtures', 'nest-check-through-helper'),
     outDir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.mcp'),
@@ -194,7 +233,11 @@ let written = 0;
 
 for (const suite of SUITES) {
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-  const server = createFlowatlasServer({ configPath: join(suite.fixture, 'flowatlas.config.json') });
+  const copy = suite.copy?.();
+  const server = createFlowatlasServer({
+    configPath: join(suite.fixture, 'flowatlas.config.json'),
+    ...(copy === undefined ? {} : { dbPath: join(copy, 'graph.db') }),
+  });
   await server.connect(serverSide);
   const client = new Client({ name: 'snapshots', version: '0' });
   await client.connect(clientSide);
@@ -263,6 +306,7 @@ for (const suite of SUITES) {
   }
 
   await client.close();
+  if (copy !== undefined) rmSync(copy, { recursive: true, force: true });
 }
 
 if (problems.length > 0) {

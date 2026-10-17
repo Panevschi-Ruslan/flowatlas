@@ -1,0 +1,50 @@
+{
+  "entry": "entry:gateway:http:GET:/orders/:param",
+  "slow": {
+    "id": "entry:gateway:http:GET:/orders/:param",
+    "label": "GET /orders/:id",
+    "service": "gateway",
+    "kind": "server",
+    "ms": 520,
+    "status": 200,
+    "children": [
+      {
+        "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+        "label": "GET /orders/:value",
+        "kind": "client",
+        "ms": 500,
+        "status": 200,
+        "children": [
+          {
+            "id": "entry:orders:http:GET:/orders/:param",
+            "label": "GET /orders/:id",
+            "service": "orders",
+            "kind": "server",
+            "ms": 496,
+            "status": 200,
+            "children": [
+              {
+                "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+                "label": "OrdersService.findOne",
+                "kind": "internal",
+                "ms": 492,
+                "children": [
+                  {
+                    "id": "table:orders#orders",
+                    "label": "orders",
+                    "kind": "client"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_source({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\"})",
+    "slow_steps({entry: \"entry:gateway:http:GET:/orders/:param\", minCount: 1})"
+  ]
+}

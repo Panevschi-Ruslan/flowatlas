@@ -1,0 +1,23 @@
+18 spans read from 2 file(s)
+not read: 1 snapshot of protocol ws, 1 node without o, c and m, 1 job without a span tree
+3 joins seen, 6 entries hit, 6 seen at run time but not found in code, 1 that could be more than one place
+  db        billing  invoices  (2)
+  client    billing  GET /orders/:value  (1)
+  code      billing  LedgerClient.post  (1)
+  http      billing  GET /healthz  (1)
+  http      gateway  GET /metrics  (1)
+  messaging orders  order.audited  (1)
+could be more than one place, so counted on none:
+  client    gateway  GET /orders/:value  (1)
+    any of http_out:gateway#src/clients/orders.client.ts:33:12, http_out:gateway#src/clients/orders.client.ts:59:12
+slowest entries (p95):
+  gateway GET /orders/:param  count 2  p50 47.26ms  p95 520ms  max 520ms  errors 0%
+  orders GET /orders/:param  count 1  p50 496ms  p95 496ms  max 496ms  errors 0%
+  billing POST /invoices  count 2  p50 6.44ms  p95 41.5ms  max 41.5ms  errors 50%
+  orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
+  billing event order.created  count 1  p50 12ms  p95 12ms  max 12ms  errors 0%
+failing most:
+  orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
+  billing POST /invoices  count 2  p50 6.44ms  p95 41.5ms  max 41.5ms  errors 50%
+window 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z; 1 file skipped as already read
+<copy>/observed.json

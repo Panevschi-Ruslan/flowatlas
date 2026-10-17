@@ -1,5 +1,5 @@
 import { NESTJS_OBSERVE_READS, only, OTLP_READS } from './allow-list.js';
-import { pathOf, type ObservedSpan, type SpanKind } from './span.js';
+import { keepAllowed, pathOf, type ObservedSpan, type SpanKind } from './span.js';
 
 /**
  * One way a trace file can be written, as a Strategy: `sniff` says whether a
@@ -24,6 +24,12 @@ export interface SkippedPart {
 export interface TraceRead {
   spans: ObservedSpan[];
   skipped: SkippedPart[];
+  /**
+   * Attribute keys seen and not read (OTLP attributes, @nestjs/observe fields
+   * and tags), counted each time one is seen: the file's privacy block says
+   * how many, never which.
+   */
+  droppedAttributes: number;
 }
 
 type Json = Record<string, unknown>;
@@ -52,23 +58,51 @@ class Skips {
   }
 }
 
-/** Sets the fields that have a value, so a span never carries `undefined`. */
+/** Sets the fields that have a value, then keeps only the allowed ones (`keepAllowed`). */
 const withFields = (span: ObservedSpan, fields: Partial<ObservedSpan>): ObservedSpan => {
   for (const [key, value] of Object.entries(fields)) {
     if (value !== undefined) (span as unknown as Json)[key] = value;
   }
-  return span;
+  return keepAllowed(span);
+};
+
+/** Counts keys a reader saw and did not read; the count is all that is kept of them. */
+class Dropped {
+  count = 0;
+
+  /** The keys of `value` outside `fields`. */
+  outside(value: unknown, fields: readonly string[]): void {
+    if (!isObject(value)) return;
+    for (const key of Object.keys(value)) if (!fields.includes(key)) this.count += 1;
+  }
+}
+
+/** Milliseconds to two decimals. */
+const ms2 = (ms: number): number => Math.round(ms * 100) / 100;
+
+/** A duration a batch states in milliseconds, to two decimals; nothing when it is not a number (I3). */
+const msOf = (value: unknown): number | undefined => {
+  const ms = amount(value);
+  return ms === undefined ? undefined : ms2(ms);
 };
 
 // --- OTLP/JSON -------------------------------------------------------------
 
 const OTLP_ATTRIBUTES: ReadonlySet<string> = new Set(OTLP_READS.attributes);
 
-/** OTLP attribute values are wrapped by type; only the listed keys, and only strings and numbers. */
-const otlpAttributes = (attributes: unknown, allowed: ReadonlySet<string>): Map<string, string> => {
+/**
+ * OTLP attribute values are wrapped by type; only the listed keys, and only
+ * strings and numbers. A key off the list is counted and its value never
+ * looked at, so a header or a statement is not held past this loop.
+ */
+const otlpAttributes = (attributes: unknown, allowed: ReadonlySet<string>, dropped: Dropped): Map<string, string> => {
   const found = new Map<string, string>();
   for (const attribute of list(attributes)) {
-    if (!isObject(attribute) || typeof attribute['key'] !== 'string' || !allowed.has(attribute['key'])) continue;
+    if (!isObject(attribute) || typeof attribute['key'] !== 'string') continue;
+    if (!allowed.has(attribute['key'])) {
+      dropped.count += 1;
+      continue;
+    }
     const value = attribute['value'];
     const scalar = isObject(value) ? (value['stringValue'] ?? value['intValue']) : value;
     if (typeof scalar === 'string' || typeof scalar === 'number') found.set(attribute['key'], String(scalar));
@@ -106,12 +140,18 @@ const rpcOf = (attrs: ReadonlyMap<string, string>): string | undefined => {
   return [service, method].filter(Boolean).join('/');
 };
 
-const nanosOf = (value: unknown): number => (typeof value === 'string' || typeof value === 'number' ? Number(value) : NaN);
-
-const nanosToIso = (value: unknown): string | undefined => {
-  const nanos = nanosOf(value);
-  return Number.isFinite(nanos) && nanos > 0 ? new Date(Math.floor(nanos / 1e6)).toISOString() : undefined;
+/** A 64-bit time as the JSON writes it, a string or a number, read without losing a nanosecond. */
+const nanosOf = (value: unknown): bigint | undefined => {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : undefined;
+  return typeof value === 'string' && /^\d+$/.test(value) ? BigInt(value) : undefined;
 };
+
+const nanosToIso = (nanos: bigint | undefined): string | undefined =>
+  nanos === undefined || nanos === 0n ? undefined : new Date(Number(nanos / 1_000_000n)).toISOString();
+
+/** End minus start in milliseconds, two decimals; nothing when either is missing or the end is first (I3). */
+const durationOf = (start: bigint | undefined, end: bigint | undefined): number | undefined =>
+  start === undefined || end === undefined || start === 0n || end < start ? undefined : ms2(Number(end - start) / 1e6);
 
 const statusOf = (value: string | undefined): number | undefined => {
   const status = value === undefined ? NaN : Number(value);
@@ -124,12 +164,12 @@ const otlpError = (status: unknown): true | undefined => {
   return code === 2 || code === 'STATUS_CODE_ERROR' ? true : undefined;
 };
 
-const otlpSpan = (raw: unknown, service: string | undefined): ObservedSpan | undefined => {
+const otlpSpan = (raw: unknown, service: string | undefined, dropped: Dropped): ObservedSpan | undefined => {
   const span = only(raw, OTLP_READS.span);
   const traceId = text(span['traceId']);
   const spanId = text(span['spanId']);
   if (traceId === undefined || spanId === undefined) return undefined;
-  const attrs = otlpAttributes(span['attributes'], OTLP_ATTRIBUTES);
+  const attrs = otlpAttributes(span['attributes'], OTLP_ATTRIBUTES, dropped);
   const url = attrs.get('url.full') ?? attrs.get('http.url') ?? attrs.get('url.path') ?? attrs.get('http.target');
   const method = attrs.get('http.request.method') ?? attrs.get('http.method');
   const start = nanosOf(span['startTimeUnixNano']);
@@ -146,9 +186,9 @@ const otlpSpan = (raw: unknown, service: string | undefined): ObservedSpan | und
       symbol: symbolOf(attrs),
       collection: attrs.get('db.collection.name') ?? attrs.get('db.mongodb.collection') ?? attrs.get('db.sql.table'),
       rpc: rpcOf(attrs),
-      at: nanosToIso(span['startTimeUnixNano']),
+      at: nanosToIso(start),
       status: statusOf(attrs.get('http.response.status_code') ?? attrs.get('http.status_code')),
-      durationMs: Number.isFinite(start) && Number.isFinite(end) && end >= start ? (end - start) / 1e6 : undefined,
+      durationMs: durationOf(start, end),
       error: otlpError(span['status']),
     },
   );
@@ -156,26 +196,37 @@ const otlpSpan = (raw: unknown, service: string | undefined): ObservedSpan | und
 
 const RESOURCE_ATTRIBUTES: ReadonlySet<string> = new Set(OTLP_READS.resourceAttributes);
 
+/**
+ * Every attribute key an OTLP reader reads, of a span or of its resource: the
+ * protobuf decoder (`otlp-protobuf.ts`) drops the rest while it walks the
+ * bytes, before an attribute object exists.
+ */
+export const OTLP_KEEP: ReadonlySet<string> = new Set([...OTLP_READS.attributes, ...OTLP_READS.resourceAttributes]);
+
 export const otlpReader: TraceReader = {
   name: 'otlp',
   sniff: (document) => isObject(document) && Array.isArray(document['resourceSpans']),
   read: (document, fallbackService) => {
     const spans: ObservedSpan[] = [];
     const skips = new Skips();
+    const dropped = new Dropped();
+    // A request decoded from protobuf counted what it dropped on the way in.
+    const decoded = (document as Json)['droppedAttributes'];
+    if (typeof decoded === 'number' && Number.isInteger(decoded) && decoded > 0) dropped.count += decoded;
     for (const raw of list((document as Json)['resourceSpans'])) {
       const resource = only(raw, ['resource', ...OTLP_READS.scopes]);
-      const resAttrs = otlpAttributes(only(resource['resource'], OTLP_READS.resource)['attributes'], RESOURCE_ATTRIBUTES);
+      const resAttrs = otlpAttributes(only(resource['resource'], OTLP_READS.resource)['attributes'], RESOURCE_ATTRIBUTES, dropped);
       const service = resAttrs.get('service.name') ?? fallbackService;
       const scopes = OTLP_READS.scopes.flatMap((key) => list(resource[key]));
       for (const scope of scopes) {
         for (const span of list(only(scope, OTLP_READS.scope)['spans'])) {
-          const read = otlpSpan(span, service);
+          const read = otlpSpan(span, service, dropped);
           if (read === undefined) skips.add('span', 'without a trace id and a span id');
           else spans.push(read);
         }
       }
     }
-    return { spans, skipped: skips.list() };
+    return { spans, skipped: skips.list(), droppedAttributes: dropped.count };
   },
 };
 
@@ -228,13 +279,15 @@ interface TreeContext {
   at: string | undefined;
   spans: ObservedSpan[];
   skips: Skips;
+  dropped: Dropped;
 }
 
 /** One node of a tree as a span: an outgoing request, a database call, or a method. */
-const nodeSpan = (node: Json, base: ObservedSpan, skips: Skips): ObservedSpan | undefined => {
+const nodeSpan = (node: Json, base: ObservedSpan, skips: Skips, dropped: Dropped): ObservedSpan | undefined => {
   const className = node['c'] as string;
   const methodKey = node['m'] as string;
-  const fields = { durationMs: amount(node['d']), error: errorOf(node['e']) };
+  const fields = { durationMs: msOf(node['d']), error: errorOf(node['e']) };
+  dropped.outside(node['t'], className === 'http' ? NESTJS_OBSERVE_READS.tags : []);
   if (className === 'http') {
     const tags = only(node['t'], NESTJS_OBSERVE_READS.tags);
     const url = text(tags['http.url']);
@@ -262,6 +315,7 @@ const nodeSpan = (node: Json, base: ObservedSpan, skips: Skips): ObservedSpan | 
 const walkTree = (roots: unknown, context: TreeContext): void => {
   let counter = 0;
   const walk = (raw: unknown, parentId: string): void => {
+    context.dropped.outside(raw, NESTJS_OBSERVE_READS.node);
     const node = only(raw, NESTJS_OBSERVE_READS.node);
     let under = parentId;
     if (isNode(node)) {
@@ -270,7 +324,7 @@ const walkTree = (roots: unknown, context: TreeContext): void => {
       const base: ObservedSpan = { traceId: context.traceId, spanId, parentId, kind: 'internal' };
       if (context.service !== undefined) base.service = context.service;
       if (context.at !== undefined) base.at = context.at;
-      const span = nodeSpan(node, base, context.skips);
+      const span = nodeSpan(node, base, context.skips, context.dropped);
       if (span !== undefined) {
         context.spans.push(span);
         under = spanId;
@@ -284,13 +338,21 @@ const walkTree = (roots: unknown, context: TreeContext): void => {
   for (const root of Array.isArray(roots) ? roots : isObject(roots) ? [roots] : []) walk(root, context.rootId);
 };
 
-const snapshotSpans = (raw: unknown, index: number, service: string | undefined, skips: Skips): ObservedSpan[] => {
+interface BatchContext {
+  service: string | undefined;
+  skips: Skips;
+  dropped: Dropped;
+}
+
+const snapshotSpans = (raw: unknown, index: string, { service, skips, dropped }: BatchContext): ObservedSpan[] => {
+  dropped.outside(raw, NESTJS_OBSERVE_READS.snapshot);
   const snapshot = only(raw, NESTJS_OBSERVE_READS.snapshot);
   const traceId = text(snapshot['ti']);
   if (traceId === undefined) {
     skips.add('snapshot', 'without a trace id');
     return [];
   }
+  dropped.outside(snapshot['a'], NESTJS_OBSERVE_READS.answer);
   const answer = only(snapshot['a'], NESTJS_OBSERVE_READS.answer);
   const protocol = text(snapshot['p'])?.toLowerCase();
   // A hand export may leave the protocol out; a method in the answer still says HTTP.
@@ -316,17 +378,18 @@ const snapshotSpans = (raw: unknown, index: number, service: string | undefined,
       path,
       at,
       status: Number.isInteger(answer['sc']) ? (answer['sc'] as number) : undefined,
-      durationMs: amount(snapshot['d']),
+      durationMs: msOf(snapshot['d']),
       error: errorOf(snapshot['e']),
     },
   );
   const spans: ObservedSpan[] = [root];
-  walkTree(snapshot['t'], { traceId, rootId, service, at, spans, skips });
+  walkTree(snapshot['t'], { traceId, rootId, service, at, spans, skips, dropped });
   return spans;
 };
 
 /** A job is read for its span tree only: its own entry kind is not mapped yet. */
-const jobSpans = (raw: unknown, index: number, service: string | undefined, skips: Skips): ObservedSpan[] => {
+const jobSpans = (raw: unknown, index: string, { service, skips, dropped }: BatchContext): ObservedSpan[] => {
+  dropped.outside(raw, NESTJS_OBSERVE_READS.job);
   const job = only(raw, NESTJS_OBSERVE_READS.job);
   if (!Array.isArray(job['t']) && !isObject(job['t'])) {
     skips.add('job', 'without a span tree');
@@ -334,22 +397,49 @@ const jobSpans = (raw: unknown, index: number, service: string | undefined, skip
   }
   const traceId = text(job['ti']) ?? `job:${index}`;
   const spans: ObservedSpan[] = [];
-  walkTree(job['t'], { traceId, rootId: `${traceId}:job:${index}`, service, at: isoOf(job['ct']), spans, skips });
+  walkTree(job['t'], { traceId, rootId: `${traceId}:job:${index}`, service, at: isoOf(job['ct']), spans, skips, dropped });
   return spans;
+};
+
+/**
+ * A saved series of batch posts, `{ batches: [batch, ...] }` (P105): read as
+ * the batches one after another.
+ */
+const isBatchSeries = (document: unknown): document is Json =>
+  isObject(document) && Array.isArray(document['batches']) && document['batches'].length > 0 && document['batches'].every(isBatch);
+
+/** The batches a document holds: a series, one batch, or a bare array of snapshots as one. */
+const batchesOf = (document: unknown, dropped: Dropped): Json[] => {
+  if (isBatchSeries(document)) {
+    dropped.outside(document, ['batches']);
+    return (document['batches'] as Json[]).map((batch) => {
+      dropped.outside(batch, NESTJS_OBSERVE_READS.batch);
+      return only(batch, NESTJS_OBSERVE_READS.batch);
+    });
+  }
+  if (isBatch(document)) {
+    dropped.outside(document, NESTJS_OBSERVE_READS.batch);
+    return [only(document, NESTJS_OBSERVE_READS.batch)];
+  }
+  return [{ snapshots: document }];
 };
 
 export const nestjsObserveReader: TraceReader = {
   name: 'nestjs-observe',
-  sniff: (document) => isBatch(document) || isSnapshotArray(document),
+  sniff: (document) => isBatchSeries(document) || isBatch(document) || isSnapshotArray(document),
   read: (document, fallbackService) => {
-    const batch = isBatch(document) ? only(document, NESTJS_OBSERVE_READS.batch) : { snapshots: document };
-    const service = text(batch['serviceId']) ?? fallbackService;
     const skips = new Skips();
-    const spans = [
-      ...list(batch['snapshots']).flatMap((snapshot, index) => snapshotSpans(snapshot, index, service, skips)),
-      ...list(batch['jobs']).flatMap((job, index) => jobSpans(job, index, service, skips)),
-    ];
-    return { spans, skipped: skips.list() };
+    const dropped = new Dropped();
+    const spans = batchesOf(document, dropped).flatMap((batch, at) => {
+      const context = { service: text(batch['serviceId']) ?? fallbackService, skips, dropped };
+      // The first batch's spans keep the ids they always had; a later batch's say which batch.
+      const key = (index: number): string => (at === 0 ? String(index) : `${at}.${index}`);
+      return [
+        ...list(batch['snapshots']).flatMap((snapshot, index) => snapshotSpans(snapshot, key(index), context)),
+        ...list(batch['jobs']).flatMap((job, index) => jobSpans(job, key(index), context)),
+      ];
+    });
+    return { spans, skipped: skips.list(), droppedAttributes: dropped.count };
   },
 };
 

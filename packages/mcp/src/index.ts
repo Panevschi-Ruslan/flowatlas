@@ -76,7 +76,7 @@ export { runSearch, SEARCH_KINDS } from './tools/search.js';
 export type { GapHit, SearchKind, TypeHit } from './tools/search.js';
 export { summariseChanges, readDiff } from './tools/changes.js';
 export type { ChangedEntry, WhatChanged } from './tools/changes.js';
-export { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen, joinIdOf } from './query/observed.js';
+export { figuresOf, loadObserved, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow, nodeSeen, joinIdOf } from './query/observed.js';
 export type { ObservedCounts, TreeDirection } from './query/observed.js';
 export { cantFollowFor } from './tools/cant-follow.js';
 export type { CantFollowAnswer, CantFollowPlace } from './tools/cant-follow.js';

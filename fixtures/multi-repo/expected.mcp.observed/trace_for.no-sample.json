@@ -1,0 +1,7 @@
+{
+  "entry": "entry:orders:http:POST:/orders/:param/archive",
+  "note": "no request of this entry was sampled: run flowatlas observe over traces that reach it",
+  "next": [
+    "get_flow({entry: \"entry:orders:http:POST:/orders/:param/archive\"})"
+  ]
+}

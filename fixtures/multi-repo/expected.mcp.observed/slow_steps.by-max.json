@@ -1,0 +1,43 @@
+{
+  "steps": [
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+      "label": "OrdersController.findOne",
+      "service": "gateway",
+      "count": 1,
+      "p50": 520,
+      "p95": 520,
+      "max": 520,
+      "errorRate": 0
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param",
+      "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "label": "gateway GET /orders/:param -> orders GET /orders/:param",
+      "service": "gateway",
+      "count": 1,
+      "p50": 500,
+      "p95": 500,
+      "max": 500,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "label": "OrdersService.findOne",
+      "service": "orders",
+      "count": 1,
+      "p50": 492,
+      "p95": 492,
+      "max": 492,
+      "errorRate": 0
+    }
+  ],
+  "total": 9,
+  "truncated": "6 more steps; ask with a larger limit",
+  "next": [
+    "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})"
+  ]
+}

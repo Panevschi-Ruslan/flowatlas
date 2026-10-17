@@ -1,0 +1,42 @@
+{
+  "entries": [
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "type": "entry",
+      "label": "event invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "type": "entry",
+      "label": "GET /invoices/:param",
+      "loc": "src/invoices/invoices.controller.ts:26",
+      "service": "billing",
+      "kind": "http"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "loc": "src/invoices/invoices.controller.ts:15",
+      "service": "billing",
+      "kind": "http"
+    }
+  ],
+  "total": 4,
+  "next": [
+    "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
+    "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",
+    "impact({symbol: \"entry:billing:event:invoice.requested\"})"
+  ]
+}

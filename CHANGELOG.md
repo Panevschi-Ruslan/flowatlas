@@ -8,6 +8,33 @@ only one of them moved.
 
 ### Added
 
+- **How long it took, how it answered, and runs that add up (P105).**
+  `flowatlas observe` kept each span's duration, HTTP status and error flag:
+  every entry, join, method, table and channel it credits gained a count, a
+  p50, p95 and max (from log buckets about 9% wide, the max exact), the
+  statuses seen and an error rate (the error flag or a 5xx; a 4xx is in the
+  status mix only). A join is timed on the caller's span when one was read,
+  and says `measuredAt`. Runs add to `observed.json` hour by hour instead of
+  overwriting it: `--since <dur>` keeps a window of whole hours (kept for later
+  runs; `--since all` stops cutting), `--reset` starts again, and a file
+  already read, known by the hash of its contents, is skipped and said. The
+  file went to `observedFormatVersion: 3`, with a `privacy` block (the fields
+  kept, the categories dropped, how many attribute keys went unread), the
+  `window`, the `sources` read, the hour `buckets`, and per entry the three
+  slowest and three latest failing requests as trees of what each span was
+  credited to, the only place a trace id is written (`--no-samples` keeps
+  none). Format 1 and 2 files are read and carried forward as one hour without
+  timings. Every reader ends with one allow-list (`KEPT_FIELDS`,
+  `keepAllowed`), and OTLP attributes off it are skipped while they are
+  walked. `observe` also reads OTLP protobuf (`.pb`, or any file that is not
+  JSON), gzipped or not, with no dependency, and a saved series of
+  @nestjs/observe posts (`{ batches: [...] }`); the summary names the five
+  slowest and five most failing entries and the window. The MCP server gained
+  `hot_paths`, `slow_steps` and `trace_for`, and `get_flow` and `who_calls`
+  rows gained `p95` and `errorRate` beside `observed`; the page data carries
+  the figures and the window for the page to draw later
+  (`fixtures/multi-repo/traces`).
+
 - **What each route can fail with (P68).** A NestJS entry gained
   `meta.fails: [{status, exception, at, file, line, source}]`: the built-in
   exceptions and `new HttpException(..., status)` thrown by its handler, by the
@@ -383,6 +410,11 @@ only one of them moved.
 
 ### Changed
 
+- **The MCP tool list grew to twenty-one (P105).** The test's ceilings were
+  raised from 9,700 to 10,900 characters for the part a model reads and from
+  27,500 to 29,150 for the whole list (10,802 and 29,040 with `hot_paths`,
+  `slow_steps` and `trace_for`, each one short sentence with no output
+  schema). The server's instructions name the three as a chain.
 - **`flowatlas dead` printed a verdict (P95).** The entries table's
   `confidence` column became `verdict` (`dead`, `likely-dead`, `unknown`), the
   channel and provider tables gained one, and a route a request one segment

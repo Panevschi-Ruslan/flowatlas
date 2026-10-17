@@ -7,6 +7,8 @@
  * `allow-list.ts`). A path keeps its shape and loses its query; a template
  * keeps its parameters by name only.
  */
+import { OBSERVED_KEPT } from '@flowatlas/core';
+
 export type SpanKind = 'server' | 'client' | 'producer' | 'consumer' | 'internal';
 
 export interface ObservedSpan {
@@ -32,13 +34,38 @@ export interface ObservedSpan {
   rpc?: string;
   /** ISO time the span started, when the file says. */
   at?: string;
-  /** HTTP status answered, when the file says (P85). Kept, not matched on. */
+  /** HTTP status answered, when the file says (P85, P105). Kept, not matched on. */
   status?: number;
-  /** How long the span took, in milliseconds (P85). Kept, not matched on. */
+  /** How long the span took, in milliseconds to two decimals (P85, P105). Kept, not matched on. */
   durationMs?: number;
   /** The span ended in an error. Never the error itself: no message, no stack. */
   error?: true;
 }
+
+/**
+ * Every field a span may carry out of a reader (P105 §4), the list the
+ * observed file's `privacy.kept` names. Typed against `ObservedSpan`, so a
+ * field added to one and not the other does not compile.
+ */
+export const KEPT_FIELDS: readonly (keyof ObservedSpan)[] = OBSERVED_KEPT;
+
+/** And the other way round: a field of `ObservedSpan` missing from the list does not compile either. */
+type Unlisted = Exclude<keyof ObservedSpan, (typeof OBSERVED_KEPT)[number]>;
+const everyFieldListed: [Unlisted] extends [never] ? true : Unlisted = true;
+void everyFieldListed;
+
+const KEPT: ReadonlySet<string> = new Set(KEPT_FIELDS);
+
+/**
+ * The span with only `KEPT_FIELDS`, none of them undefined: the last call
+ * every reader makes, so whatever a reader is changed to build, nothing else
+ * leaves it.
+ */
+export const keepAllowed = (span: ObservedSpan): ObservedSpan => {
+  const kept: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(span)) if (KEPT.has(key) && value !== undefined) kept[key] = value;
+  return kept as unknown as ObservedSpan;
+};
 
 /** What a path segment that holds a value is replaced with; it matches only a route parameter. */
 export const VALUE = ':value';

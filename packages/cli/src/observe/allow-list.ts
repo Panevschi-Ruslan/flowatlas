@@ -7,10 +7,16 @@
  * reduced on the way in, and the comment beside each says how: a URL keeps the
  * shape of its path and loses its host and query, an error is at most `true`.
  *
- * Never read, whatever the format: header values, request and response
- * bodies, user ids, query strings, hosts, statements, error messages, log
- * lines, and a batch's objectives, runtime and custom data. P105 extends this
- * list for every reader.
+ * Never read, whatever the format: header values, cookies, request and
+ * response bodies, user ids, query strings, hosts, statements, span names,
+ * events, error and status messages, log lines, and a batch's objectives,
+ * runtime and custom data.
+ *
+ * These lists say which fields of each record a reader looks at; what a span
+ * may carry out of any reader is one list, `KEPT_FIELDS` in `span.ts`
+ * (P105), which every reader's last call (`keepAllowed`) applies. OTLP
+ * attributes off `OTLP_READS.attributes` are counted and skipped while they
+ * are walked, in JSON (`otlpAttributes`) and in protobuf (`otlp-protobuf.ts`).
  */
 export interface AllowList {
   readonly [record: string]: readonly string[];

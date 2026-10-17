@@ -1,0 +1,98 @@
+{
+  "entries": [
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "label": "GET /invoices/:param",
+      "service": "billing",
+      "count": 3,
+      "p50": 2.95,
+      "p95": 3.2,
+      "max": 3.2,
+      "errorRate": 0
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "label": "POST /invoices",
+      "service": "billing",
+      "count": 2,
+      "p50": 6.44,
+      "p95": 41.5,
+      "max": 41.5,
+      "errorRate": 0.5
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "label": "GET /orders/:param",
+      "service": "gateway",
+      "count": 2,
+      "p50": 47.26,
+      "p95": 520,
+      "max": 520,
+      "errorRate": 0,
+      "joins": [
+        {
+          "id": "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param",
+          "count": 1,
+          "p50": 500,
+          "p95": 500,
+          "max": 500,
+          "errorRate": 0
+        }
+      ]
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "label": "event order.created",
+      "service": "billing",
+      "count": 1,
+      "p50": 12,
+      "p95": 12,
+      "max": 12,
+      "errorRate": 0
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "label": "GET /orders/:param",
+      "service": "orders",
+      "count": 1,
+      "p50": 496,
+      "p95": 496,
+      "max": 496,
+      "errorRate": 0
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "label": "POST /orders",
+      "service": "orders",
+      "count": 1,
+      "p50": 35,
+      "p95": 35,
+      "max": 35,
+      "errorRate": 1,
+      "joins": [
+        {
+          "id": "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+          "count": 1,
+          "p50": 12,
+          "p95": 12,
+          "max": 12,
+          "errorRate": 0
+        },
+        {
+          "id": "producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created",
+          "count": 1,
+          "p50": 3,
+          "p95": 3,
+          "max": 3,
+          "errorRate": 0
+        }
+      ]
+    }
+  ],
+  "total": 6,
+  "next": [
+    "get_flow({entry: \"entry:billing:http:GET:/invoices/:param\"})",
+    "trace_for({entry: \"entry:billing:http:GET:/invoices/:param\"})",
+    "slow_steps({entry: \"entry:billing:http:GET:/invoices/:param\", minCount: 1})"
+  ]
+}

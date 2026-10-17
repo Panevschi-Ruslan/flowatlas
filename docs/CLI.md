@@ -1231,57 +1231,82 @@ path: it opens on the machine that has the file, at that path.
 
 ### `flowatlas observe <file...>`
 
-Lays trace files you already have over the built graph and writes
+Lays trace files you already have over the built graph and adds them to
 `.flowatlas/observed.json` beside `graph.db`: which joins real traffic went
-through, how often each way in was hit, and what ran that the code does not
-show. Local only: it reads the files named and sends nothing anywhere.
+through, how often each way in was hit, how long each took and how it
+answered, and what ran that the code does not show. Local only: it reads the
+files named and sends nothing anywhere.
 
 ```
-$ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json
-22 spans read from 2 file(s)
+$ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json traces/billing.batches.observe.json
+30 spans read from 3 file(s)
 not read: 1 snapshot of protocol ws, 1 node without o, c and m, 1 job without a span tree
 3 joins seen, 6 entries hit, 6 seen at run time but not found in code, 1 that could be more than one place
+  db        billing  invoices  (2)
   client    billing  GET /orders/:value  (1)
   code      billing  LedgerClient.post  (1)
-  db        billing  invoices  (1)
   http      billing  GET /healthz  (1)
   http      gateway  GET /metrics  (1)
   messaging orders  order.audited  (1)
 could be more than one place, so counted on none:
   client    gateway  GET /orders/:value  (1)
     any of http_out:gateway#src/clients/orders.client.ts:33:12, http_out:gateway#src/clients/orders.client.ts:59:12
+slowest entries (p95):
+  gateway GET /orders/:param  count 2  p50 47.26ms  p95 520ms  max 520ms  errors 0%
+  orders GET /orders/:param  count 1  p50 496ms  p95 496ms  max 496ms  errors 0%
+  billing POST /invoices  count 2  p50 6.44ms  p95 41.5ms  max 41.5ms  errors 50%
+  orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
+  billing event order.created  count 1  p50 12ms  p95 12ms  max 12ms  errors 0%
+failing most:
+  orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
+  billing POST /invoices  count 2  p50 6.44ms  p95 41.5ms  max 41.5ms  errors 50%
+window 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
 .flowatlas/observed.json
 ```
 
-Two formats, picked by looking at each file. Either may be gzipped: a file
-that starts with gzip's magic bytes is unpacked first, so a body captured from
-the SDK's POST is read as it is.
+Three ways a file can be written, picked by looking at it, and any of them may
+be gzipped (a file that starts with gzip's magic bytes is unpacked first, so a
+body captured from a POST is read as it is):
 
 - **OTLP/JSON** (`resourceSpans` / `scopeSpans` / `spans`, one document or one
   per line). Read: `service.name`, span kind, `http.request.method` /
   `http.method`, `http.route`, the path of `url.full` / `http.url`,
-  `http.response.status_code`, `messaging.destination.name`, `code.namespace`
-  + `code.function` (or `code.function.name`), `db.collection.name`,
-  `rpc.service` / `rpc.method`, the start and end time, and whether the status
-  is an error.
+  `http.response.status_code` / `http.status_code`, `messaging.destination.name`,
+  `code.namespace` + `code.function` (or `code.function.name`),
+  `db.collection.name`, `rpc.service` / `rpc.method`, the start and end time
+  (to the nanosecond), and whether `status.code` is an error.
+- **OTLP protobuf**, an `ExportTraceServiceRequest` as the collector's file
+  exporter or an OTLP/HTTP body writes it. A `.pb`, `.binpb` or `.protobuf`
+  file is read as protobuf first; any other file is, when it is not JSON. The
+  same keys are read; every other attribute is skipped as bytes while the
+  request is walked, never decoded, and so are span names, events and the
+  status message. A request that is cut short says where:
+  `traces/x.pb is not an OTLP trace request (byte 1832)`.
 - **@nestjs/observe** telemetry batches, the JSON the SDK (0.3.x) posts to its
-  endpoint: `{ serviceId, snapshots, jobs, ... }`, or a bare array of request
+  endpoint: `{ serviceId, snapshots, jobs, ... }`, a saved series of posts
+  `{ batches: [ ... ] }` (read one after another), or a bare array of request
   snapshots exported by hand. Read: `serviceId` (else `--service`); per
-  snapshot `ti` trace id, `ct` time, `d` duration, `p` protocol, `op` the
-  route the router matched, `a.m` method, `a.sc` status and the path of
-  `a.ou`; and the span tree in `t`, whose nodes need `o`, `c` and `m`. A node
-  of class `http` is an outgoing request (`http.method` and the path of
-  `http.url`); one of class `mongodb`, `pg` or `mysql2` names its collection
-  as the second word of `m`; any other is the method `c.m`. Only `http` and
-  `https` snapshots are read as requests; a job is read for its span tree.
+  snapshot `ti` trace id, `ct` time, `d` duration, `e` (an error, read as
+  *it failed*), `p` protocol, `op` the route the router matched, `a.m` method,
+  `a.sc` status and the path of `a.ou`; and the span tree in `t`, whose nodes
+  need `o`, `c` and `m` and give `d` and `e` too. A node of class `http` is an
+  outgoing request (`http.method` and the path of `http.url`); one of class
+  `mongodb`, `pg` or `mysql2` names its collection as the second word of `m`;
+  any other is the method `c.m`. Only `http` and `https` snapshots are read as
+  requests; a job is read for its span tree.
 
-Each reader works from an allow-list of fields (`allow-list.ts`); everything
-else is dropped on read: headers, bodies, user ids, query strings, hosts,
-statements, tags, error messages (an error is at most *it failed*), log lines,
-and a batch's version, objectives, runtime and custom data. A path segment
-holding a value (any digit, or a long token) becomes `:value`, which only a
-route parameter matches. What a reader saw and did not read is counted in the
-summary, never dropped unsaid:
+**What is kept, and nothing else.** Every reader copies only what is on one
+allow-list, while it walks a span's attributes, before a span exists: service
+name, span kind, HTTP method, route template, the path with every value-like
+segment (any digit, or a long token) masked as `:value`, messaging
+destination, `Class.method`, table or collection, rpc service and method,
+HTTP status, duration, the error flag, start time, and trace, span and parent
+ids. Never read: headers, cookies, query strings, bodies, statements and
+queries, `enduser.*`, span names, events and exception text, status messages,
+hosts, and @nestjs/observe's `u`, `rq`, `tg` and `logs`. The file says so in a
+`privacy` block: the kept list, the dropped categories as fixed text, and how
+many attribute keys were seen and not read — a count, never a name. What a
+reader saw and did not read as a whole is counted in the summary too:
 `not read: 1 snapshot of protocol ws, 1 node without o, c and m`.
 
 A server span is matched to an entry by method and route template (the most
@@ -1301,23 +1326,73 @@ credited and the span is listed under `ambiguous` with the places it could be
 *could be more than one place, so counted on none*. When the far side of a
 call was read, the join it confirms settles which call it was.
 
+**Timings, statuses, errors.** Each place a span was credited to keeps a
+count, a histogram of durations (log buckets about 9% wide, so a p95 is within
+that of the true one), the exact max, every status seen and how many failed.
+A failure is the error flag or a 5xx; a 4xx is in the status mix only, since
+a 404 is often the right answer. An entry or a method is timed on the span
+that matched it; a join on the caller's span when one was read (it holds the
+network and the far side's queue, which is what *this step is slow* means),
+the callee's otherwise, and `measuredAt` says which. A span with no end time,
+or one before its start, is counted without a duration; a status that is not a
+number is left out. The summary names the five entries with the highest p95,
+the five failing most, and the window.
+
+**Runs add up.** Each run loads the file, adds what it read hour by hour of
+span start time, and writes it back, so two runs over two files give the same
+file as one run over both. A file is known by the hash of its contents, never
+by its path: reading the same export again (gzipped or not) is skipped and
+said. The file keeps, per entry, the three slowest and the three latest
+failing requests as trees of what each span was credited to — the only place
+a trace id is written, with no span or parent id — for the graph server's
+`trace_for`. A format-1 or format-2 file is carried forward: its counts become
+one hour at its latest time, with no timings, and the summary says it was
+upgraded.
+
 `visualise` ships the file into the page when it is there; the page shows
 *seen at run time, could be more than one place* with each candidate beside
-the unmatched list. The graph server's `get_flow` and `who_calls` show
-`observed: n` on the rows it counted and `seenAmbiguous: n` on a row that a
-request could have been. Nothing is drawn from a trace: an edge it did not
-confirm keeps the confidence it was read with.
+the unmatched list, and carries `p50`, `p95`, `max`, errors, statuses and the
+window for the page to draw (not drawn yet). The graph server's `get_flow` and
+`who_calls` show `observed: n` with `p95` and `errorRate` beside it on the rows
+it counted, and `seenAmbiguous: n` on a row that a request could have been;
+`hot_paths`, `slow_steps` and `trace_for` answer from it (see the
+[MCP guide](mcp.md)). Nothing is drawn from a trace: an edge it did not
+confirm keeps the confidence it was read with, and the graph and its hash
+never depend on traffic.
 
-The file is `observedFormatVersion: 2` (version 1 spread a span over every
-candidate and had no `ambiguous`; the page and the graph server still read
-it). A file that cannot be read makes `visualise` say so and show nothing seen
-at run time.
+The file is `observedFormatVersion: 3`:
+
+```
+{
+  observedFormatVersion: 3, spans,
+  privacy:   { kept, dropped, droppedAttributes, samples: { kept, perEntry: 3, spansPerSample: 200 } },
+  window:    { since?, from, to },
+  sources:   [{ sha256, format, spans, readAt }],
+  joins:     { [joinId]:    { count, lastSeen, firstSeen, p50?, p95?, max?, statuses?, errors, errorRate, measuredAt } },
+  entries:   { [entryId]:   { hits, lastSeen, firstSeen, ...the same figures } },
+  symbols, channels: { [nodeId]: { hits, ... } },
+  unmatched: [{ service?, kind, name, count, ... }],
+  ambiguous: [{ service?, kind, name, candidates, more?, count }],
+  samples:   { [entryId]: { slow: [sample], failing: [sample] } },
+  buckets:   [{ hour, spans, joins, entries, symbols, channels, unmatched, ambiguous }]
+}
+```
+
+The top level is the window rolled up, under the names version 1 used, so a
+reader of version 1 or 2 finds its fields meaning the same thing; `buckets`
+hold the hours it is made of. Times are milliseconds. The page and the graph
+server read versions 1, 2 and 3; a file that cannot be read makes `visualise`
+say so and show nothing seen at run time, and makes `observe` refuse to write
+over it unless told `--reset`.
 
 | Flag | Meaning |
 |---|---|
 | `--config <path>` / `--db <path>` | which graph to match against |
 | `--service <name>` | service of spans the file does not name one for |
-| `--format json` | print `observed.json` instead of the summary |
+| `--since <dur>` | keep only the hours inside this window of now (`2h`, `24h`, `7d`, `2w`; whole hours, `30m` is refused) and its samples; kept in the file, so later runs keep cutting the same way. `--since all` stops cutting |
+| `--reset` | start the file again instead of adding to it |
+| `--no-samples` | keep no sample requests and remove the ones the file holds: then it holds no trace id at all |
+| `--format json` | print `observed.json` (format 3) instead of the summary |
 
 ---
 

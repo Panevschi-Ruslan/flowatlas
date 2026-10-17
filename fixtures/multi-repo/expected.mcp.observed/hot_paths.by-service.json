@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "label": "GET /invoices/:param",
+      "service": "billing",
+      "count": 3,
+      "p50": 2.95,
+      "p95": 3.2,
+      "max": 3.2,
+      "errorRate": 0
+    }
+  ],
+  "total": 3,
+  "truncated": "2 more entries; ask with a larger limit",
+  "next": [
+    "get_flow({entry: \"entry:billing:http:GET:/invoices/:param\"})",
+    "trace_for({entry: \"entry:billing:http:GET:/invoices/:param\"})",
+    "slow_steps({entry: \"entry:billing:http:GET:/invoices/:param\", minCount: 1})"
+  ]
+}

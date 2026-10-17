@@ -2,8 +2,9 @@ import { normalizePath, type GraphNode } from '@flowatlas/core';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
+import { sampledIn } from '../query/observed.js';
 import { rankMatches } from '../query/names.js';
-import { nextFor, withNext } from '../query/next.js';
+import { nextFor, withNext, withTraceFor } from '../query/next.js';
 import {
   bound,
   commonInput,
@@ -102,7 +103,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
             ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
             ...(note === undefined ? {} : { note }),
           },
-          pagedNext({ tool: 'list_entries', args, nextOffset }, nextFor(items[0])),
+          pagedNext({ tool: 'list_entries', args, nextOffset }, withTraceFor(nextFor(items[0]), items[0], sampledIn(ctx.handle.path))),
         );
       }),
   );

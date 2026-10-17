@@ -1,26 +1,85 @@
 {
   "resourceSpans": [
     {
-      "resource": { "attributes": [{ "key": "service.name", "value": { "stringValue": "gateway" } }] },
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "gateway"
+            }
+          }
+        ]
+      },
       "scopeSpans": [
         {
-          "scope": { "name": "@opentelemetry/instrumentation-http" },
+          "scope": {
+            "name": "@opentelemetry/instrumentation-http"
+          },
           "spans": [
             {
               "traceId": "a1000000000000000000000000000001",
               "spanId": "b100000000000001",
-              "name": "GET /orders/:id",
+              "name": "GET /orders/ord-1042",
               "kind": 2,
               "startTimeUnixNano": "1760600000000000000",
               "attributes": [
-                { "key": "http.request.method", "value": { "stringValue": "GET" } },
-                { "key": "http.route", "value": { "stringValue": "/orders/:id" } },
-                { "key": "url.full", "value": { "stringValue": "http://gateway.local/orders/ord-1042?session=s3cr3t" } },
-                { "key": "http.request.header.authorization", "value": { "stringValue": "Bearer not-a-real-token" } },
-                { "key": "enduser.id", "value": { "stringValue": "user-7781" } },
-                { "key": "code.namespace", "value": { "stringValue": "OrdersController" } },
-                { "key": "code.function", "value": { "stringValue": "findOne" } }
-              ]
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "GET"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/orders/:id"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "http://gateway.local/orders/ord-1042?session=s3cr3t"
+                  }
+                },
+                {
+                  "key": "http.request.header.authorization",
+                  "value": {
+                    "stringValue": "Bearer not-a-real-token"
+                  }
+                },
+                {
+                  "key": "enduser.id",
+                  "value": {
+                    "stringValue": "user-7781"
+                  }
+                },
+                {
+                  "key": "code.namespace",
+                  "value": {
+                    "stringValue": "OrdersController"
+                  }
+                },
+                {
+                  "key": "code.function",
+                  "value": {
+                    "stringValue": "findOne"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 200
+                  }
+                },
+                {
+                  "key": "http.request.header.cookie",
+                  "value": {
+                    "stringValue": "sid=cookie-val-55"
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600000520000000"
             },
             {
               "traceId": "a1000000000000000000000000000001",
@@ -30,9 +89,26 @@
               "kind": "SPAN_KIND_CLIENT",
               "startTimeUnixNano": "1760600000001000000",
               "attributes": [
-                { "key": "http.method", "value": { "stringValue": "GET" } },
-                { "key": "http.url", "value": { "stringValue": "http://orders.local/orders/ord-1042?expand=lines" } }
-              ]
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "GET"
+                  }
+                },
+                {
+                  "key": "http.url",
+                  "value": {
+                    "stringValue": "http://orders.local/orders/ord-1042?expand=lines"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 200
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600000501000000"
             },
             {
               "traceId": "a1000000000000000000000000000004",
@@ -41,9 +117,26 @@
               "kind": 2,
               "startTimeUnixNano": "1760600006000000000",
               "attributes": [
-                { "key": "http.request.method", "value": { "stringValue": "GET" } },
-                { "key": "http.route", "value": { "stringValue": "/orders/:id" } }
-              ]
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "GET"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/orders/:id"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 200
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600006045000000"
             },
             {
               "traceId": "a1000000000000000000000000000004",
@@ -53,9 +146,26 @@
               "kind": "SPAN_KIND_CLIENT",
               "startTimeUnixNano": "1760600006001000000",
               "attributes": [
-                { "key": "http.method", "value": { "stringValue": "GET" } },
-                { "key": "http.url", "value": { "stringValue": "http://orders.local/orders/ord-2001" } }
-              ]
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "GET"
+                  }
+                },
+                {
+                  "key": "http.url",
+                  "value": {
+                    "stringValue": "http://orders.local/orders/ord-2001"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 200
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600006040000000"
             },
             {
               "traceId": "a1000000000000000000000000000003",
@@ -64,19 +174,47 @@
               "kind": 2,
               "startTimeUnixNano": "1760600005000000000",
               "attributes": [
-                { "key": "http.request.method", "value": { "stringValue": "GET" } },
-                { "key": "http.route", "value": { "stringValue": "/metrics" } }
-              ]
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "GET"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/metrics"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 200
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600005002000000"
             }
           ]
         }
       ]
     },
     {
-      "resource": { "attributes": [{ "key": "service.name", "value": { "stringValue": "orders" } }] },
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "orders"
+            }
+          }
+        ]
+      },
       "scopeSpans": [
         {
-          "scope": { "name": "@opentelemetry/instrumentation-nestjs-core" },
+          "scope": {
+            "name": "@opentelemetry/instrumentation-nestjs-core"
+          },
           "spans": [
             {
               "traceId": "a1000000000000000000000000000001",
@@ -86,9 +224,26 @@
               "kind": 2,
               "startTimeUnixNano": "1760600000002000000",
               "attributes": [
-                { "key": "http.request.method", "value": { "stringValue": "GET" } },
-                { "key": "http.route", "value": { "stringValue": "/orders/:id" } }
-              ]
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "GET"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/orders/:id"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 200
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600000498000000"
             },
             {
               "traceId": "a1000000000000000000000000000001",
@@ -97,8 +252,15 @@
               "name": "OrdersService.findOne",
               "kind": 1,
               "attributes": [
-                { "key": "code.function.name", "value": { "stringValue": "OrdersService.findOne" } }
-              ]
+                {
+                  "key": "code.function.name",
+                  "value": {
+                    "stringValue": "OrdersService.findOne"
+                  }
+                }
+              ],
+              "startTimeUnixNano": "1760600000003000000",
+              "endTimeUnixNano": "1760600000495000000"
             },
             {
               "traceId": "a1000000000000000000000000000001",
@@ -107,8 +269,24 @@
               "name": "mongodb.find",
               "kind": 3,
               "attributes": [
-                { "key": "db.collection.name", "value": { "stringValue": "orders" } },
-                { "key": "db.query.text", "value": { "stringValue": "{ \"_id\": \"ord-1042\" }" } }
+                {
+                  "key": "db.collection.name",
+                  "value": {
+                    "stringValue": "orders"
+                  }
+                },
+                {
+                  "key": "db.query.text",
+                  "value": {
+                    "stringValue": "{ \"_id\": \"ord-1042\" }"
+                  }
+                },
+                {
+                  "key": "db.statement",
+                  "value": {
+                    "stringValue": "db.orders.find(secret-stmt-8)"
+                  }
+                }
               ]
             },
             {
@@ -118,8 +296,42 @@
               "kind": 2,
               "startTimeUnixNano": "1760600003000000000",
               "attributes": [
-                { "key": "http.request.method", "value": { "stringValue": "POST" } },
-                { "key": "http.route", "value": { "stringValue": "/orders" } }
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/orders"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 500
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600003035000000",
+              "status": {
+                "code": 2,
+                "message": "insert failed for ord-1043 at stack frame"
+              },
+              "events": [
+                {
+                  "name": "exception",
+                  "attributes": [
+                    {
+                      "key": "exception.message",
+                      "value": {
+                        "stringValue": "duplicate key for cus-311"
+                      }
+                    }
+                  ]
+                }
               ]
             },
             {
@@ -130,9 +342,20 @@
               "kind": 4,
               "startTimeUnixNano": "1760600003001000000",
               "attributes": [
-                { "key": "messaging.system", "value": { "stringValue": "kafka" } },
-                { "key": "messaging.destination.name", "value": { "stringValue": "order.created" } }
-              ]
+                {
+                  "key": "messaging.system",
+                  "value": {
+                    "stringValue": "kafka"
+                  }
+                },
+                {
+                  "key": "messaging.destination.name",
+                  "value": {
+                    "stringValue": "order.created"
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600003004000000"
             },
             {
               "traceId": "a1000000000000000000000000000002",
@@ -142,19 +365,41 @@
               "kind": 4,
               "startTimeUnixNano": "1760600003002000000",
               "attributes": [
-                { "key": "messaging.system", "value": { "stringValue": "kafka" } },
-                { "key": "messaging.destination.name", "value": { "stringValue": "order.audited" } }
-              ]
+                {
+                  "key": "messaging.system",
+                  "value": {
+                    "stringValue": "kafka"
+                  }
+                },
+                {
+                  "key": "messaging.destination.name",
+                  "value": {
+                    "stringValue": "order.audited"
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600003002500000"
             }
           ]
         }
       ]
     },
     {
-      "resource": { "attributes": [{ "key": "service.name", "value": { "stringValue": "billing" } }] },
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "billing"
+            }
+          }
+        ]
+      },
       "scopeSpans": [
         {
-          "scope": { "name": "@opentelemetry/instrumentation-kafkajs" },
+          "scope": {
+            "name": "@opentelemetry/instrumentation-kafkajs"
+          },
           "spans": [
             {
               "traceId": "a1000000000000000000000000000002",
@@ -164,10 +409,26 @@
               "kind": 5,
               "startTimeUnixNano": "1760600003500000000",
               "attributes": [
-                { "key": "messaging.system", "value": { "stringValue": "kafka" } },
-                { "key": "messaging.destination.name", "value": { "stringValue": "order.created" } },
-                { "key": "messaging.kafka.message.key", "value": { "stringValue": "ord-1043" } }
-              ]
+                {
+                  "key": "messaging.system",
+                  "value": {
+                    "stringValue": "kafka"
+                  }
+                },
+                {
+                  "key": "messaging.destination.name",
+                  "value": {
+                    "stringValue": "order.created"
+                  }
+                },
+                {
+                  "key": "messaging.kafka.message.key",
+                  "value": {
+                    "stringValue": "ord-1043"
+                  }
+                }
+              ],
+              "endTimeUnixNano": "1760600003512000000"
             }
           ]
         }
