@@ -225,8 +225,13 @@ export interface PromptSubject {
   fails?: PromptFailure[];
   /** What a way in answered at run time against what it declares, where a trace was imported (P106). */
   failuresSeen?: PromptFailuresSeen;
-  /** For a check: its places. */
-  check?: { places: PromptCheckPlace[] };
+  /**
+   * For a check: its places, and the name of the repository that is probably
+   * missing when this gap is part of its evidence (P122).
+   */
+  check?: { places: PromptCheckPlace[]; missing?: string };
+  /** `close`: the text is a task for an agent, and says so first (P122's Copy for agent). */
+  task?: 'close';
   steps: PromptStep[];
   /** Steps the walk reached and left out. */
   stepsCut: number;
@@ -252,3 +257,22 @@ export declare const promptNextFor: (...nodes: Array<{ id: string; type: string;
 export declare const groupFails: <T extends PromptFailure>(fails: readonly T[]) => Array<PromptFailGroup<T>>;
 export declare const compareFailChoices: (a: PromptFailChoice, b: PromptFailChoice) => number;
 export declare const promptFit: (lines: readonly string[], maxChars: number) => string;
+
+/** The ways of closing a check, by remedy, each with the reasons it closes (P122). */
+export type PromptRemedy =
+  | 'link'
+  | 'setting'
+  | 'alias'
+  | 'apiTarget'
+  | 'pattern'
+  | 'shape'
+  | 'callsService'
+  | 'flowatlasCalls'
+  | 'channelMarker'
+  | 'flowEntry'
+  | 'advice';
+export declare const PROMPT_REMEDY_REASONS: Readonly<Record<Exclude<PromptRemedy, 'advice'>, readonly string[]>>;
+/** The ways of closing a reason, in the table's order; `advice` when the table lists none. */
+export declare const promptRemediesOf: (reason: string) => PromptRemedy[];
+/** A check's "How to close it" lines, accepting it last; none for a subject that is no gap id. */
+export declare const promptRemedyLines: (subject: Pick<PromptSubject, 'id' | 'check'>) => string[];

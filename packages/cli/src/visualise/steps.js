@@ -1126,11 +1126,14 @@ const promptCheckSubject = (model, r, walk) => {
   const first = same.find((row) => row[0] >= 0);
   const firstType = first ? stepTypeOf(model, first[0]) : '';
   const reachedFrom = first && firstType !== 'entry' && firstType !== 'channel' ? promptReachedFrom(model, first[0], walk) : undefined;
+  const id = `gap:${service}|${path}|${reasons[reason]}`;
+  // The repository this gap is evidence for, as the server names it (P122).
+  const missing = (model.data.missing || []).find(([, ids]) => ids.includes(id));
   return {
-    id: `gap:${service}|${path}|${reasons[reason]}`, label: reasons[reason], type: 'check',
+    id, label: reasons[reason], type: 'check',
     kind: [...new Set(same.map((row) => levels[row[5]]))].join(', '),
     ...(service === '' ? {} : { service }), ...(path === '' ? {} : { loc: path }),
-    check: { places }, steps: [], stepsCut: 0,
+    check: { places, ...(missing ? { missing: missing[0] } : {}) }, steps: [], stepsCut: 0,
     ...(reachedFrom === undefined ? {} : { reachedFrom }),
     gaps: [],
   };
@@ -1259,5 +1262,7 @@ export const subjectOf = (model, target, kit) => {
  */
 export const promptFor = (model, target, kit) => {
   const subject = subjectOf(model, target, kit);
-  return subject === null ? '' : kit.render(subject, kit.limits);
+  if (subject === null) return '';
+  // A check handed to an agent as a task (P122's Copy for agent): the same text, the task said first.
+  return kit.render(kit.task && subject.type === 'check' ? { ...subject, task: kit.task } : subject, kit.limits);
 };

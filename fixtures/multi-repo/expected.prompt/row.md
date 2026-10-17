@@ -10,6 +10,11 @@ Read from the source by flowatlas, without running it. Steps are in call order; 
 - `src/app/orders-api.service.ts:139`: this.http.post<unknown>(this.opaque(), {}) (The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.)
 - `src/app/orders-api.service.ts:140`: this.http.get<unknown>(this.opaque()) (The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.)
 
+## How to close it
+
+- Annotate the method with `/** @flowatlas-calls METHOD /path */` to say where it goes.
+- Or, if it is right as it is, accept it: `flowatlas accept api-path-dynamic --service web --file src/app/orders-api.service.ts --note '<why this one is fine>'`.
+
 ## Ask next
 
 - `search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})`

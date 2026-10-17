@@ -152,6 +152,7 @@
     "findings": 4
   },
   "next": [
+    "describe_for_prompt({id: \"gap:web|src/app/orders-api.service.ts|api-path-dynamic\"})",
     "cant_follow({cause: \"api-path-dynamic\"})"
   ]
 }

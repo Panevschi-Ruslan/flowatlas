@@ -323,6 +323,8 @@ export function createStepsUi(page) {
   const promptKit = { seen, walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
   const promptOf = (asked) => {
     const [kind, at] = asked.split(':');
+    // `agent:<row>` is the row's check as a task for an agent (P122).
+    if (kind === 'agent') return promptFor(model, { row: Number(at) }, { ...promptKit, task: 'close' });
     return promptFor(model, { [kind]: Number(at) }, promptKit);
   };
   const copyPrompt = async (button, asked) => {

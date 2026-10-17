@@ -60,6 +60,7 @@
     ]
   },
   "next": [
+    "describe_for_prompt({id: \"gap:parcels|src/parcels/parcels.service.ts|query-in-loop\"})",
     "get_source({symbol: \"parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor\"})",
     "who_calls({symbol: \"parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor\"})"
   ]

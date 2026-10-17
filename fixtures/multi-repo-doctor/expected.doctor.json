@@ -469,6 +469,33 @@
         "service": "gateway",
         "looksLike": "it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises"
       }
+    ],
+    "missingRepos": [
+      {
+        "token": "legacy",
+        "score": 1,
+        "places": 1,
+        "kinds": [
+          "setting"
+        ],
+        "weak": false,
+        "signals": [
+          {
+            "kind": "setting",
+            "name": "LEGACY_URL",
+            "says": "LEGACY_URL is used by gateway (1 request) and no service claims it",
+            "places": [
+              {
+                "service": "gateway",
+                "file": "src/clients/orders.client.ts",
+                "line": 66,
+                "gapId": "gap:gateway|src/clients/orders.client.ts|unknown-base-url-env"
+              }
+            ]
+          }
+        ],
+        "candidates": []
+      }
     ]
   },
   "markers": {

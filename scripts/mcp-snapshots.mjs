@@ -26,7 +26,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
-import { reasonCatalog, testPatternText } from '../packages/cli/dist/index.js';
+import { missingCandidatesFor, reasonCatalog, testPatternText } from '../packages/cli/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
 import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
 
@@ -150,6 +150,21 @@ const CANT_FOLLOW_CASES = [
   ['cant_follow.unknown-cause', 'cant_follow', { cause: 'dynamic-membr' }],
   // The same method asked whether it is dead (P95): nothing calls it, and its class is not reached either.
   ['dead.top-of-chain', 'dead', { id: 'storefront#src/jobs/reminder.job.ts:ReminderJob.start' }],
+];
+
+/**
+ * The repository nobody added (P122): `start_here` names it, with the
+ * directory the command line found for it, and a gap that is evidence for it
+ * is written with how to close it - by name, by its gap id and by its place -
+ * and cant_follow and search hand on to that prompt.
+ */
+const missingRepo = join(root, 'fixtures', 'missing-repo');
+const MISSING_REPO_CASES = [
+  ['start_here.all', 'start_here', {}],
+  ['describe_for_prompt.gap', 'describe_for_prompt', { id: 'gap:gateway|src/checkout.controller.ts|unknown-base-url-env' }],
+  ['describe_for_prompt.place', 'describe_for_prompt', { id: 'src/checkout.controller.ts:21' }],
+  ['cant_follow.all', 'cant_follow', {}],
+  ['search.payments', 'search', { query: 'PAYMENTS_URL', kinds: ['gaps'] }],
 ];
 
 /**
@@ -294,6 +309,12 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'cant-follow'),
     outDir: join(root, 'fixtures', 'cant-follow', 'expected.mcp'),
     cases: CANT_FOLLOW_CASES,
+  },
+  {
+    fixture: missingRepo,
+    outDir: join(missingRepo, 'expected.mcp'),
+    cases: MISSING_REPO_CASES,
+    options: missingCandidatesFor(join(missingRepo, 'flowatlas.config.json')),
   },
   {
     fixture: join(root, 'fixtures', 'multi-repo-plumbing'),

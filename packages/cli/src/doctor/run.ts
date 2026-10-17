@@ -10,7 +10,14 @@
 import { countsOf, kindOfRow, waysInOf, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
-import { withAnsweredDemoted, type GraphDb, type ServiceReport } from '@flowatlas/linker';
+import {
+  missingGroupsOf,
+  withAnsweredDemoted,
+  type GraphDb,
+  type MissingGroup,
+  type MissingService,
+  type ServiceReport,
+} from '@flowatlas/linker';
 import { halfOf } from '../readers.js';
 import {
   compareBaseline,
@@ -28,6 +35,7 @@ import {
   type HintContext,
 } from './hints.js';
 import { validateMarkers, type MarkerIssue } from './markers.js';
+import { missingEntryOf, type MissingCandidate, type MissingRepoEntry } from './missing.js';
 import { countsUnderStrictRuntime } from './runtime.js';
 import { mostlyUnread, noWayInSentence, waysInByService, waysInTotal, type WaysIn } from './ways-in.js';
 import {
@@ -108,6 +116,19 @@ export interface DoctorSettings {
    * have a way in is not a question about them (R173).
    */
   declared?: readonly string[];
+  /**
+   * What the configuration knows of each service beyond the graph - aliases,
+   * hosts - so a name that is one is not taken for a missing repository (P122).
+   */
+  missingServices?: readonly MissingService[];
+  /**
+   * The directories on disk that look like each group's repository, aligned
+   * with the groups (P122). Handed in, as `looksLike` is, because this module
+   * reads no directory; without it, no group has a candidate.
+   */
+  candidatesOf?: (groups: readonly MissingGroup[]) => MissingCandidate[][];
+  /** Where the configuration is, which a candidate's path is written relative to. */
+  configDir?: string;
 }
 
 /** The reasons that mean a call does not land where it was aimed. */
@@ -277,6 +298,28 @@ const withoutWaysInOf = (
     }));
   return found.length === 0 ? {} : { withoutWaysIn: found };
 };
+
+/**
+ * The repositories probably missing from the project (P122), from the rows
+ * this run counts and the graph's channels; each with the directories that
+ * look like it. Narrowed to a service, only the evidence in it is kept.
+ */
+export const missingReposOf = (
+  db: GraphDb,
+  rows: readonly Unresolved[],
+  settings: Pick<DoctorSettings, 'service' | 'missingServices' | 'candidatesOf' | 'configDir'>,
+): MissingRepoEntry[] => {
+  const all = missingGroupsOf(db, rows, settings.missingServices ?? []);
+  const groups =
+    settings.service === undefined
+      ? all
+      : all.filter((group) => group.signals.some((signal) => signal.places.some((place) => place.service === settings.service)));
+  const candidates = settings.candidatesOf?.(groups) ?? [];
+  return groups.map((group, index) => missingEntryOf(group, candidates[index] ?? [], settings.configDir ?? process.cwd()));
+};
+
+const missingOf = (entries: MissingRepoEntry[]): { missingRepos?: MissingRepoEntry[] } =>
+  entries.length === 0 ? {} : { missingRepos: entries };
 
 /** What the verdict is decided from, read once from the sections above. */
 interface VerdictFacts {
@@ -670,6 +713,7 @@ export const runDoctorComplete = (input: DoctorInput, settings: DoctorSettings =
     unknownReasons: grouped.unknown,
     waysIn: waysInTotal(ways),
     ...withoutWaysInOf(db, settings),
+    ...missingOf(wanted.has('unresolved') ? missingReposOf(db, levelled, settings) : []),
   };
 
   // ---- contracts --------------------------------------------------------

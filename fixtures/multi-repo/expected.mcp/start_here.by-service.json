@@ -89,6 +89,11 @@
     }
   ],
   "staleDocs": 0,
+  "missingRepos": [
+    {
+      "token": "payments"
+    }
+  ],
   "next": [
     "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",

@@ -280,13 +280,18 @@ read again and the others come from the cache.
 | `flowatlas docs [paths...]` | whether the Markdown blocks that describe a flow still say what the graph says; `--write` regenerates them |
 
 `doctor` is the one to run after a first build. It groups every finding by
-reason, and each row carries the file, the line and what to do about it:
+reason, and each row carries the file, the line and what to do about it. When
+requests, packages and channels point at one name no service answers to, it
+opens with the repository that is probably missing, and the `flowatlas link`
+command that adds the directory that looks like it:
 
 ```sh
 flowatlas doctor --section desync      # calls that no longer match a route
 flowatlas doctor --service gateway     # narrow every section to one repository
 flowatlas doctor --strict              # exit 1 on a broken annotation or a contract error
 flowatlas doctor --unresolved          # what it could not follow, by cause and package
+flowatlas doctor --missing             # the repository the project probably lacks, and the evidence
+flowatlas link --suggested --dry-run   # the directory beside the others that fits it
 flowatlas shapes --suggest             # which missing packages to describe, with the names used of each
 flowatlas patterns suggest             # starter rules for the in-house wrappers it could not follow
 flowatlas patterns test                # run your pattern files' tests before a build reads them

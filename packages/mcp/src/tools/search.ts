@@ -281,9 +281,11 @@ const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
 const hintsOfHit = (hit: Hit): string[] => {
   // A node's `type` is any string, so the narrowing is said rather than inferred.
   if (hit.type !== 'gap') return hintsFor(hit as Identified);
-  if (hit.id !== undefined) return [`get_source({symbol: ${JSON.stringify(hit.id)}})`, `who_calls({symbol: ${JSON.stringify(hit.id)}})`];
+  // The gap as a prompt with how to close it, first (P122): what an agent acts on.
+  const prompt = (hit as GapHit).gapId === undefined ? [] : [`describe_for_prompt({id: ${JSON.stringify((hit as GapHit).gapId)}})`];
+  if (hit.id !== undefined) return [...prompt, `get_source({symbol: ${JSON.stringify(hit.id)}})`, `who_calls({symbol: ${JSON.stringify(hit.id)}})`];
   const file = hit.loc?.replace(/:\d+$/, '');
-  return file === undefined ? [] : [callOf('search', { query: file, kinds: ['gaps'] })];
+  return [...prompt, ...(file === undefined ? [] : [callOf('search', { query: file, kinds: ['gaps'] })])];
 };
 
 /** What search answers: per kind, how many match in all and one page of them. */

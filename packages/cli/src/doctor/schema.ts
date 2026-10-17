@@ -11,6 +11,7 @@ import { contractFindingSchema } from '@flowatlas/contracts';
 import type { ContractFinding } from '@flowatlas/contracts';
 import { z } from 'zod';
 import { MARKER_CODES, type MarkerIssue } from './markers.js';
+import type { MissingRepoEntry } from './missing.js';
 
 /**
  * Version of `.flowatlas/doctor.json`.
@@ -195,6 +196,13 @@ export interface DoctorReport {
      * that.
      */
     withoutWaysIn?: Array<{ service: string; looksLike: string }>;
+    /**
+     * The repositories that are probably missing from the project (P122),
+     * likeliest first, each with the evidence for it and the directories on
+     * disk that look like it. A guess, said as one: it decides no exit code
+     * and changes no join. Absent when nothing points at one.
+     */
+    missingRepos?: MissingRepoEntry[];
   };
   markers: {
     status: SectionStatus;
@@ -325,6 +333,33 @@ export const doctorReportSchema = z.object({
       read: z.number().int().nonnegative(),
     }),
     withoutWaysIn: z.array(z.object({ service: z.string(), looksLike: z.string() })).optional(),
+    missingRepos: z
+      .array(
+        z.object({
+          token: z.string(),
+          score: z.number().int().positive(),
+          places: z.number().int().nonnegative(),
+          kinds: z.array(z.string()),
+          weak: z.boolean(),
+          signals: z.array(
+            z.object({
+              kind: z.string(),
+              name: z.string(),
+              says: z.string(),
+              places: z.array(
+                z.object({
+                  service: z.string().optional(),
+                  file: z.string().optional(),
+                  line: z.number().int().positive().optional(),
+                  gapId: z.string().optional(),
+                }),
+              ),
+            }),
+          ),
+          candidates: z.array(z.object({ path: z.string(), name: z.string().optional(), matchedBy: z.array(z.string()) })),
+        }),
+      )
+      .optional(),
   }),
   markers: z.object({
     status,

@@ -509,6 +509,97 @@ const promptPlaceLines = (check) =>
       (place.on === undefined ? '' : ` — on **${place.on.label}** ${promptCode(place.on.id)}`),
   );
 
+/* ── How to close a check (P122) ── */
+
+/**
+ * Which ways of closing a check apply to which reasons: one table that the
+ * page, the MCP server and `doctor` read (D3), so the advice for a reason is
+ * the same wherever it is copied from. A reason in no list is closed by the
+ * advice on its places; every one can be accepted. `pattern` is core's
+ * `PATTERN_CAUSES` (P121), which a test holds equal.
+ */
+export const PROMPT_REMEDY_REASONS = Object.freeze({
+  link: Object.freeze([
+    'unknown-base-url-env', 'service-binding-unknown', 'route-root-not-found', 'invoke-target-not-found',
+    'function-handler-not-found', 'function-source-unread', 'reference-not-found', 'marker-service-unknown',
+    'procedure-not-found', 'delivery-target-unread', 'channel-without-producer', 'channel-without-consumer',
+  ]),
+  setting: Object.freeze(['unknown-base-url-env']),
+  alias: Object.freeze(['service-binding-unknown', 'marker-service-unknown']),
+  apiTarget: Object.freeze(['api-base-unknown', 'ambiguous-route-target', 'procedure-not-found', 'procedure-ambiguous']),
+  pattern: Object.freeze(['call-dynamic-receiver', 'channel-dynamic', 'db-receiver-name-only', 'api-client-unread', 'global-wrapper-dynamic']),
+  shape: Object.freeze(['type-unresolved', 'call-dynamic-receiver', 'type-kind-unsupported']),
+  callsService: Object.freeze(['dynamic-http-url', 'target-route-not-found', 'ambiguous-route', 'route-wildcard-only']),
+  flowatlasCalls: Object.freeze(['api-path-dynamic', 'api-method-dynamic', 'api-base-override-unread']),
+  channelMarker: Object.freeze([
+    'channel-from-config', 'channel-from-environment', 'channel-dynamic', 'channel-const-unresolved',
+    'channel-without-producer', 'channel-without-consumer',
+  ]),
+  flowEntry: Object.freeze(['dynamic-bot-trigger']),
+});
+
+/** A gap id read back: `gap:<service>|<file>|<reason>`, empty parts naming nothing. */
+const promptGapParts = (id) => {
+  if (typeof id !== 'string' || !id.startsWith('gap:')) return undefined;
+  const parts = id.slice('gap:'.length).split('|');
+  return parts.length === 3 && parts[2] !== '' ? { service: parts[0], file: parts[1], reason: parts[2] } : undefined;
+};
+
+/** A word as a shell takes it: as it is where it is plain, quoted where it is not. */
+const promptShellWord = (text) => (/^[\w./:@=-]+$/.test(text) ? text : "'" + String(text).replace(/'/g, "'\\''") + "'");
+
+/** The ways of closing a reason, in the table's order; the advice on its places when none is listed. */
+export const promptRemediesOf = (reason) => {
+  const found = Object.keys(PROMPT_REMEDY_REASONS).filter((remedy) => PROMPT_REMEDY_REASONS[remedy].includes(reason));
+  return found.length === 0 ? ['advice'] : found;
+};
+
+/** One line per way of closing, a Strategy keyed by remedy: what to change, said with the gap's own names. */
+const PROMPT_REMEDY_SAY = Object.freeze({
+  link: (gap, check) =>
+    check.missing === undefined
+      ? 'If what answers it is in a repository the configuration does not list, add it: `flowatlas doctor --missing` names the likely one, and `flowatlas link <path>` adds it.'
+      : `Add the repository that answers it: one for "${check.missing}" looks missing here; \`flowatlas doctor --missing\` names where it may be, and \`flowatlas link <path>\` adds it.`,
+  setting: () => 'Or name the setting under `services[].baseUrlEnv` of the one service that answers it, or its host under `services[].hosts`.',
+  alias: () => 'Or name what it is called by under `services[].aliases` of the service it is.',
+  apiTarget: () => 'Name the settings key under `services[].apiBaseEnv` of the frontend, and the service it reaches under `services[].apiTarget`.',
+  pattern: (gap) =>
+    `Describe the call with a pattern of the project's own: \`flowatlas patterns suggest --cause ${promptShellWord(gap.reason)}\` writes a starter, and \`flowatlas patterns test\` checks it.`,
+  shape: () => "Describe the package's types in a shape file: `flowatlas shapes --suggest` writes a starter; installing the repository's dependencies reads the real ones.",
+  callsService: () => "Annotate the calling method with `@CallsService('<service>', '<METHOD> /<path>')` to say where it goes.",
+  flowatlasCalls: () => 'Annotate the method with `/** @flowatlas-calls METHOD /path */` to say where it goes.',
+  channelMarker: () => "Annotate the publishing method with `@Emits('<channel>')`, or the handler with `@Consumes('<channel>')`.",
+  flowEntry: () => "Annotate the handler with `@FlowEntry('<name>')`.",
+  advice: () => 'Change the code or the configuration as the advice on each place above says, so it can be read without running it.',
+});
+
+/** The `flowatlas accept` line for a gap id: its reason, in its service and file, with a note left to write. */
+const promptAcceptLine = (gap) =>
+  ['flowatlas', 'accept', promptShellWord(gap.reason), ...(gap.service ? ['--service', promptShellWord(gap.service)] : []),
+    ...(gap.file ? ['--file', promptShellWord(gap.file)] : []), '--note', promptShellWord('<why this one is fine>')].join(' ');
+
+/** "How to close it": one line per way that applies to the check's reason, then accepting it. */
+export const promptRemedyLines = (subject) => {
+  const gap = promptGapParts(subject.id);
+  if (gap === undefined) return [];
+  const check = subject.check ?? { places: [] };
+  return [
+    ...promptRemediesOf(gap.reason).map((remedy) => `- ${PROMPT_REMEDY_SAY[remedy](gap, check)}`),
+    `- Or, if it is right as it is, accept it: ${promptCode(promptAcceptLine(gap))}.`,
+  ];
+};
+
+/** What an agent handed a check is asked to do (P122): one of the ways below, nothing else, and to look again. */
+const promptTaskLines = (subject) => {
+  const gap = promptGapParts(subject.id);
+  return gap === undefined
+    ? []
+    : [
+        'Close this gap: make the first change under *How to close it* that fits, and change nothing else. ' +
+          `Then run ${promptCode('flowatlas build')} and ${promptCode(`flowatlas doctor --reason ${promptShellWord(gap.reason)}`)} to see it gone.`,
+      ];
+};
+
 /** The id line: what the subject is, where it lives, and the id the tools take. */
 const promptIdLine = (subject) => {
   const title = [subject.type, subject.kind].filter(Boolean).join(' / ');
@@ -672,6 +763,7 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
 
   const body = [
     ...head,
+    ...(isCheck && subject.task === 'close' ? promptSection('Task', promptTaskLines(subject)) : []),
     ...promptSection('In front of it', promptAccessLines(subject.access)),
     ...(fails.length === 0 ? [] : promptSection(`Can fail with ${promptFailChips(fails).join(' · ')}`, promptFailLines(fails, bounds))),
     ...(subject.failuresSeen === undefined
@@ -688,6 +780,7 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
       : []),
     ...(consumers === undefined ? [] : promptSection(`Consumed by · ${consumers.count}`, consumers.lines)),
     ...(isCheck ? promptSection(`Where · ${subject.check.places.length}`, promptPlaceLines(subject.check)) : []),
+    ...(isCheck ? promptSection('How to close it', promptRemedyLines(subject)) : []),
     ...promptSection('Reached from', stepLines(subject.reachedFrom ?? [])),
     ...(scoped === undefined ? [] : scoped(subject, bounds, throwsOf)),
     ...(isChannel || isCheck || scoped !== undefined ? [] : promptSection('Steps', chain.length === 0 ? ['- nothing further is recorded from here'] : chain)),

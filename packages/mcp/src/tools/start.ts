@@ -1,4 +1,4 @@
-import type { GraphDb } from '@flowatlas/linker';
+import { missingGroupsOf, worthSaying, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { nextFor, withNext } from '../query/next.js';
@@ -44,7 +44,28 @@ export const startOutput = {
   channels: z.object({ noConsumers: z.array(z.string()), noProducers: z.array(z.string()) }),
   startFrom: z.array(nodeOutput),
   staleDocs: z.number().optional(),
+  missingRepos: z.array(z.object({ token: z.string(), candidates: z.array(z.string()).optional() })).optional(),
   next: nextOutput,
+};
+
+/** How many repositories probably missing `start_here` names (P122); `flowatlas doctor --missing` lists them all. */
+const MISSING_NAMED = 3;
+
+/**
+ * The repositories probably missing (P122): the likeliest few worth saying,
+ * by name, with the directories that look like each where the command line
+ * can look. For one service, those whose evidence is in it.
+ */
+const missingReposOf = (db: GraphDb, ctx: ToolContext, service?: string): Array<{ token: string; candidates?: string[] }> => {
+  const groups = missingGroupsOf(db, db.allUnresolved()).filter(
+    (group) => service === undefined || group.signals.some((signal) => signal.places.some((place) => place.service === service)),
+  );
+  const candidates = ctx.missingCandidates?.(groups) ?? [];
+  return groups
+    .map((group, index) => ({ group, found: candidates[index] ?? [] }))
+    .filter(({ group, found }) => worthSaying(group, found.length))
+    .slice(0, MISSING_NAMED)
+    .map(({ group, found }) => ({ token: group.token, ...(found.length === 0 ? {} : { candidates: found }) }));
 };
 
 /** The services at each end of every channel, read once. */
@@ -96,8 +117,9 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
         const lonely = summary.channels.noConsumers[0] ?? summary.channels.noProducers[0];
         // Doc blocks that no longer say what the graph says (P120), when `flowatlas docs` has indexed any.
         const staleDocs = staleDocsCount(db, ctx.handle.path, input.service);
+        const missingRepos = missingReposOf(db, ctx, input.service);
         return withNext(
-          { ...summary, ...(staleDocs === undefined ? {} : { staleDocs }) },
+          { ...summary, ...(staleDocs === undefined ? {} : { staleDocs }), ...(missingRepos.length === 0 ? {} : { missingRepos }) },
           nextFor(
             summary.startFrom[0],
             lonely === undefined ? undefined : { id: lonely, type: 'channel' },

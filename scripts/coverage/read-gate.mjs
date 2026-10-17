@@ -283,6 +283,17 @@ export const EXEMPT = [
       'output; a table would be a guess wearing a node. One descriptor turns all of ' +
       'them into tables at once, and then this entry goes.',
   },
+  {
+    where: 'missing-repo',
+    path: 'payments-api/**',
+    family: 'routes',
+    why:
+      'The fixture is about the repository nobody added to the configuration (P122): ' +
+      '`payments-api` sits beside the two configured ones on purpose and is read only ' +
+      'by `variants/linked`, which configures it and whose graph the CLI snapshots ' +
+      'build on their own. Reading it here would be the very configuration the ' +
+      'fixture exists to be without.',
+  },
   // A measured target's exemptions are not here. They name files of a
   // repository this project does not own, so they live with the target itself,
   // under `exempt` in the local target list (`targets.local.json`), and reach

@@ -6,7 +6,7 @@ import { registerResources, type ReasonHint } from './resources.js';
 import { registerCantFollow } from './tools/cant-follow.js';
 import { registerChanges } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
-import type { ContractChecker, PatternTester, ToolContext } from './tools/common.js';
+import type { ContractChecker, MissingCandidates, PatternTester, ToolContext } from './tools/common.js';
 import { registerContract } from './tools/contract.js';
 import { registerDead } from './tools/dead.js';
 import { registerEntries } from './tools/entries.js';
@@ -67,6 +67,8 @@ export interface ServerOptions extends DbHandleOptions {
   reasonCatalog?: readonly ReasonHint[];
   /** The pattern tester, when the readers are there to run it (P121). */
   patternTester?: PatternTester;
+  /** The directories that look like each repository probably missing, when the command line can look (P122). */
+  missingCandidates?: MissingCandidates;
   version?: string;
 }
 
@@ -83,6 +85,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
     handle,
     ...(options.contractChecker === undefined ? {} : { contractChecker: options.contractChecker }),
     ...(options.patternTester === undefined ? {} : { patternTester: options.patternTester }),
+    ...(options.missingCandidates === undefined ? {} : { missingCandidates: options.missingCandidates }),
   };
 
   const server = new McpServer(

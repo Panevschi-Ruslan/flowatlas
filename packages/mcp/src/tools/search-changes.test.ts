@@ -179,13 +179,19 @@ describe('search', () => {
         places: ['src/refunds.ts:40', 'src/refunds.ts:52'],
       }),
     ]);
-    expect(found.next).toEqual([`get_source({symbol: ${JSON.stringify(SERVICE)}})`, `who_calls({symbol: ${JSON.stringify(SERVICE)}})`]);
+    // The gap as a prompt with how to close it first (P122), then the method it is in.
+    expect(found.next).toEqual([
+      'describe_for_prompt({id: "gap:orders|src/refunds.ts|call-dynamic-receiver"})',
+      `get_source({symbol: ${JSON.stringify(SERVICE)}})`,
+      `who_calls({symbol: ${JSON.stringify(SERVICE)}})`,
+    ]);
   });
 
   it('leads a gap the graph draws nothing around to the gaps of its file', async () => {
     const found = await call('search', { query: 'basket', kinds: ['gaps'] });
     expect(found.results.gaps.every((gap: { id?: string }) => gap.id === undefined)).toBe(true);
-    expect(found.next[0]).toBe('search({query: "src/basket-client.ts", kinds: ["gaps"]})');
+    expect(found.next[0]).toMatch(/^describe_for_prompt\(\{id: "gap:[^"]*\|src\/basket-client\.ts\|/);
+    expect(found.next[1]).toBe('search({query: "src/basket-client.ts", kinds: ["gaps"]})');
   });
 
   it('says what each gap hit is about: a gap, a note or a finding (P81)', async () => {

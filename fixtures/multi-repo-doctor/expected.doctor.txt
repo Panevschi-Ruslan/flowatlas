@@ -5,6 +5,9 @@ unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync
 unresolved: 26 to act on · missed: 28 · notes: 0 · findings: 3
   5 missed places static reading cannot see, folded into 5 rows
   3 findings: 3 routes with no guard
+  Probably missing: a repository for "legacy" — 1 kind of evidence, 1 place
+    LEGACY_URL is used by gateway (1 request) and no service claims it
+    nothing next to the configured repositories looks like it; if it exists elsewhere, `flowatlas link <path>`
   unknown-db-package: 9 rows
     Add a descriptor for fake-orm to record which of its methods read and which write.
       orders/src/orders/orders.service.ts:46  this.rows.persist

@@ -96,6 +96,8 @@ export interface PromptKit {
   seen?: Seen;
   render: (subject: PromptSubject, limits?: Partial<PromptLimits>) => string;
   limits?: Partial<PromptLimits>;
+  /** `close`: a check is written as a task for an agent (P122's Copy for agent). */
+  task?: 'close';
 }
 
 export type PromptTarget =
