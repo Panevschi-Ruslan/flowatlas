@@ -15,6 +15,7 @@ import {
   normalizePath,
   packageOfPath,
   resolveTypeOrigin,
+  startLineOf,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
@@ -215,7 +216,7 @@ interface Site {
 
 const siteOf = (node: TsNode, ctx: ExtractContext): Site => ({
   file: fileOfNode(node, ctx),
-  line: node.getStartLineNumber(),
+  line: startLineOf(node),
   pos: node.getStart(),
 });
 

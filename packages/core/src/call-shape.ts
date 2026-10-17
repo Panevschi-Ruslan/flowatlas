@@ -1,4 +1,5 @@
-import { Node, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
+import { Node, SyntaxKind, type CallExpression, type NewExpression, type SourceFile } from 'ts-morph';
+import { startLineOf } from './line-numbers.js';
 
 /**
  * Where a call sits in the code around it: inside a loop, inside the
@@ -102,18 +103,18 @@ export const callShapeOf = (call: Node): CallShape => {
     if (Node.isFunctionLikeDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node)) {
       const per = perItemMethod(node);
       if (per === undefined) break;
-      shape.loop ??= { kind: per.kind, line: per.call.getStartLineNumber() };
+      shape.loop ??= { kind: per.kind, line: startLineOf(per.call) };
       child = per.call;
       node = per.call.getParent();
       continue;
     }
     if (shape.loop === undefined) {
       const kind = statementLoop(node, child);
-      if (kind !== undefined) shape.loop = { kind, line: node.getStartLineNumber() };
+      if (kind !== undefined) shape.loop = { kind, line: startLineOf(node) };
     }
     if (shape.concurrent === undefined) {
       const by = combinatorOf(node, child);
-      if (by !== undefined) shape.concurrent = { by, line: node.getStartLineNumber() };
+      if (by !== undefined) shape.concurrent = { by, line: startLineOf(node) };
     }
     child = node;
     node = node.getParent();
@@ -135,11 +136,80 @@ export const siteNodeAt = (source: SourceFile, line: number, column: number): No
   return at;
 };
 
-/** Every call that starts on a line and is made by the name given. */
+/**
+ * The calls and `new` expressions of a file, by the line each starts on (P79).
+ *
+ * Asked once per edge by the passes that look up what an edge stands for, so
+ * a file is walked for each kind at most once, the first time it is asked
+ * for, and every later question is a lookup. Each line lists its nodes in
+ * source order, the order a walk of the file meets them in.
+ */
+export interface CallIndex {
+  calls(line: number): readonly CallExpression[];
+  news(line: number): readonly NewExpression[];
+}
+
+type ByLine<T> = ReadonlyMap<number, readonly T[]>;
+
+const byLine = <T extends Node>(nodes: readonly T[]): ByLine<T> => {
+  const out = new Map<number, T[]>();
+  for (const node of nodes) {
+    const line = startLineOf(node);
+    const list = out.get(line);
+    if (list === undefined) out.set(line, [node]);
+    else list.push(node);
+  }
+  return out;
+};
+
+const NONE: readonly never[] = [];
+
+/**
+ * One index per parsed file, keyed by the compiler's node for the file rather
+ * than by ts-morph's wrapper: a watch refreshes a changed file in place, which
+ * keeps the wrapper and replaces the compiler node, so a wrapper key would
+ * answer with the old text's calls. A file removed or refreshed leaves its old
+ * node unreachable, and the entry goes with it.
+ */
+const INDEXES = new WeakMap<object, CallIndex>();
+
+/**
+ * Each kind is walked the first time it is asked for: the call-shape pass
+ * asks only for calls. An index kept past a refresh of its file hands the
+ * question on to the index of the text the file holds now, so it never mixes
+ * one text's calls with another's `new` expressions.
+ */
+const indexFor = (source: SourceFile, key: object): CallIndex => {
+  let calls: ByLine<CallExpression> | undefined;
+  let news: ByLine<NewExpression> | undefined;
+  const current = (): CallIndex | undefined => (source.compilerNode === key ? undefined : callIndexOf(source));
+  return {
+    calls: (line) =>
+      current()?.calls(line) ??
+      (calls ??= byLine(source.getDescendantsOfKind(SyntaxKind.CallExpression))).get(line) ??
+      NONE,
+    news: (line) =>
+      current()?.news(line) ??
+      (news ??= byLine(source.getDescendantsOfKind(SyntaxKind.NewExpression))).get(line) ??
+      NONE,
+  };
+};
+
+export const callIndexOf = (source: SourceFile): CallIndex => {
+  const key = source.compilerNode;
+  let index = INDEXES.get(key);
+  if (index === undefined) {
+    index = indexFor(source, key);
+    INDEXES.set(key, index);
+  }
+  return index;
+};
+
+/** Every call that starts on a line and is made by the name given, in source order. */
 export const callsOnLine = (source: SourceFile, line: number, name: string): CallExpression[] =>
-  source
-    .getDescendantsOfKind(SyntaxKind.CallExpression)
-    .filter((call) => call.getStartLineNumber() === line && calledName(call) === name);
+  callIndexOf(source)
+    .calls(line)
+    .filter((call) => calledName(call) === name);
 
 const calledName = (call: CallExpression): string | undefined => {
   const callee = call.getExpression();

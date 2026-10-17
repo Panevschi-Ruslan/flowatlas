@@ -1,6 +1,6 @@
-import { Project, SyntaxKind } from 'ts-morph';
-import { describe, expect, it } from 'vitest';
-import { callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
+import { Project, SyntaxKind, type CallExpression, type Node, type SourceFile } from 'ts-morph';
+import { describe, expect, it, vi } from 'vitest';
+import { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
 
 const shapeOf = (body: string, name = 'q') => {
   const source = new Project({ useInMemoryFileSystem: true }).createSourceFile('a.ts', body);
@@ -65,5 +65,110 @@ describe('siteNodeAt and callsOnLine', () => {
   it('finds the calls on a line by the name they are made by', () => {
     expect(callsOnLine(source, 3, 'find').map((c) => c.getText())).toEqual(['this.repo.find(x)']);
     expect(callsOnLine(source, 3, 'save')).toEqual([]);
+  });
+});
+
+describe('the call index (P79)', () => {
+  /** What `callsOnLine` answered before the index: a walk of the whole file per question. */
+  const walked = (source: SourceFile, line: number, name: string): CallExpression[] =>
+    source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => {
+      const callee = call.getExpression();
+      const called = callee.isKind(SyntaxKind.Identifier)
+        ? callee.getText()
+        : callee.isKind(SyntaxKind.PropertyAccessExpression)
+          ? callee.getName()
+          : undefined;
+      return call.getStartLineNumber() === line && called === name;
+    });
+
+  const same = (a: readonly Node[], b: readonly Node[]): boolean => a.length === b.length && a.every((n, i) => n === b[i]);
+
+  const BODY = [
+    'function f(a, b) {',
+    '  return q(q(a), b.q(1).q(2), r(q(3)));',
+    '}',
+    'const x = q(',
+    '  1,',
+    '  q(2),',
+    ');',
+    'const y = [new Q(q(4)), q(5), new Q(6)];',
+    '(() => q(7))();',
+    '',
+  ].join('\n');
+
+  it('finds the calls a whole-file walk finds, in the same order', () => {
+    const source = new Project({ useInMemoryFileSystem: true }).createSourceFile('c.ts', BODY);
+    for (let line = 1; line <= 10; line += 1) {
+      for (const name of ['q', 'r', 'f', 'Q']) {
+        expect(same(callsOnLine(source, line, name), walked(source, line, name)), `line ${line}, ${name}`).toBe(true);
+      }
+    }
+    // Nested, chained and two of one name on a line: all four, outermost first.
+    expect(callsOnLine(source, 2, 'q').map((c) => c.getText())).toEqual([
+      'q(q(a), b.q(1).q(2), r(q(3)))',
+      'q(a)',
+      'b.q(1).q(2)',
+      'b.q(1)',
+      'q(3)',
+    ]);
+    // A call over several lines is on the line it starts on.
+    expect(callsOnLine(source, 4, 'q').map((c) => c.getText().replace(/\s+/g, ''))).toEqual(['q(1,q(2),)']);
+    expect(callsOnLine(source, 6, 'q').map((c) => c.getText())).toEqual(['q(2)']);
+  });
+
+  it('keeps the `new` expressions of a line apart from its calls', () => {
+    const source = new Project({ useInMemoryFileSystem: true }).createSourceFile('d.ts', BODY);
+    const index = callIndexOf(source);
+    expect(index.news(8).map((n) => n.getText())).toEqual(['new Q(q(4))', 'new Q(6)']);
+    expect(index.calls(8).map((n) => n.getText())).toEqual(['q(4)', 'q(5)']);
+    expect(index.news(2)).toEqual([]);
+    expect(callIndexOf(source)).toBe(index);
+  });
+
+  /** How often a file's calls, or its `new` expressions, have been walked since the spy went on. */
+  const walks = (spy: { mock: { calls: unknown[][] } }, kind: SyntaxKind): number =>
+    spy.mock.calls.filter(([asked]) => asked === kind).length;
+
+  it('walks a file once however many lines are asked about, and again only once its text changes', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const lines = 3000;
+    const text = (name: string) => Array.from({ length: lines }, (_, i) => `${name}(${i});`).join('\n');
+    const source = project.createSourceFile('/big.ts', text('q'));
+    const spy = vi.spyOn(source, 'getDescendantsOfKind');
+
+    // Checked after a few questions first, so a walk per question fails here and fast.
+    for (let line = 1; line <= 10; line += 1) expect(callsOnLine(source, line, 'q')).toHaveLength(1);
+    expect(walks(spy, SyntaxKind.CallExpression)).toBe(1);
+    for (let line = 1; line <= lines; line += 1) expect(callsOnLine(source, line, 'q')).toHaveLength(1);
+    for (let line = 1; line <= lines; line += 1) callIndexOf(source).calls(line);
+    expect(walks(spy, SyntaxKind.CallExpression)).toBe(1);
+    expect(walks(spy, SyntaxKind.NewExpression)).toBe(0);
+    for (let line = 1; line <= lines; line += 1) callIndexOf(source).news(line);
+    expect(walks(spy, SyntaxKind.NewExpression)).toBe(1);
+
+    // Edited in place: the same wrapper, a new compiler node.
+    source.replaceWithText(text('r'));
+    expect(callsOnLine(source, 7, 'q')).toEqual([]);
+    expect(callsOnLine(source, 7, 'r').map((c) => c.getText())).toEqual(['r(6)']);
+    for (let line = 1; line <= lines; line += 1) callsOnLine(source, line, 'r');
+    expect(walks(spy, SyntaxKind.CallExpression)).toBe(2);
+
+    // Refreshed from disk, as a watch does: the wrapper is kept, the calls are the new text's.
+    project.getFileSystem().writeFileSync('/big.ts', text('s'));
+    source.refreshFromFileSystemSync();
+    expect(project.getSourceFile('/big.ts')).toBe(source);
+    expect(callsOnLine(source, 7, 's').map((c) => c.getText())).toEqual(['s(6)']);
+    expect(callsOnLine(source, 7, 'r')).toEqual([]);
+    expect(walks(spy, SyntaxKind.CallExpression)).toBe(3);
+  });
+
+  it('answers for the text a file holds now when an index is kept past a refresh', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const source = project.createSourceFile('/kept.ts', 'q(new A());\n');
+    const kept = callIndexOf(source);
+    expect(kept.calls(1).map((c) => c.getText())).toEqual(['q(new A())']);
+    source.replaceWithText('r(new B());\n');
+    expect(kept.calls(1).map((c) => c.getText())).toEqual(['r(new B())']);
+    expect(kept.news(1).map((n) => n.getText())).toEqual(['new B()']);
   });
 });

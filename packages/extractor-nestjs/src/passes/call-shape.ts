@@ -111,11 +111,24 @@ const leafReached = (from: string, callsFrom: ReadonlyMap<string, readonly strin
   return undefined;
 };
 
-const report = (builder: GraphBuilder, edge: GraphEdge, callsFrom: ReadonlyMap<string, readonly string[]>): void => {
+/**
+ * `leafReached`, asked once per node: every edge in a loop into one method -
+ * a save or a lookup called from many loops - reaches the same leaf, and the
+ * search it costs grows with the graph (P79).
+ */
+const leavesReached = (callsFrom: ReadonlyMap<string, readonly string[]>): ((from: string) => string | undefined) => {
+  const known = new Map<string, string | undefined>();
+  return (from) => {
+    if (!known.has(from)) known.set(from, leafReached(from, callsFrom));
+    return known.get(from);
+  };
+};
+
+const report = (builder: GraphBuilder, edge: GraphEdge, reached: (from: string) => string | undefined): void => {
   const loop = edge.meta?.['inLoop'] as { kind: string; line: number } | undefined;
   if (loop === undefined || edge.file === undefined || edge.line === undefined) return;
   const direct = leafSite(edge.to);
-  const reaches = direct === undefined ? leafReached(edge.to, callsFrom) : edge.to;
+  const reaches = direct === undefined ? reached(edge.to) : edge.to;
   const leaf = reaches === undefined ? undefined : leafSite(reaches);
   const words = leaf === undefined ? undefined : LEAF_WORDS.get(leaf.type);
   if (reaches === undefined || words === undefined) return;
@@ -150,5 +163,6 @@ export const callShapePass = definePass('call-shape', (ctx: NestExtractContext) 
     else list.push(edge.to);
   }
   for (const edge of calls) mark(edge, shapeOfEdge(edge, open));
-  for (const edge of calls) report(ctx.builder, edge, callsFrom);
+  const reached = leavesReached(callsFrom);
+  for (const edge of calls) report(ctx.builder, edge, reached);
 });

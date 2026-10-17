@@ -11,6 +11,7 @@ import type { Signature, TypeEntry, TypeField, TypeKind, TypeRegistry } from '..
 import { mergeFieldMeta, type FieldDeclaration, type FieldMetaReader } from './field-meta.js';
 import { DEFAULT_HASH_DEPTH, structuralHash } from './structural-hash.js';
 import { formatFieldKey, formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
+import { startLineOf } from '../line-numbers.js';
 
 export interface TypeCollectorOptions {
   builder: GraphBuilder;
@@ -278,7 +279,7 @@ export class TypeCollector {
       const written = writtenAt(type, site);
       this.#report({
         file: this.#fileOf(site),
-        line: site.getStartLineNumber(),
+        line: startLineOf(site),
         reason: 'type-unresolved',
         hint: 'The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.',
         symbol: written,
@@ -302,7 +303,7 @@ export class TypeCollector {
     if (type.isTypeParameter()) {
       this.#report({
         file: this.#fileOf(site),
-        line: site.getStartLineNumber(),
+        line: startLineOf(site),
         reason: 'type-generic-uninstantiated',
         hint: 'The type argument is not known here, so the reference names the parameter.',
         symbol: writtenAt(type, site),
@@ -648,7 +649,7 @@ export class TypeCollector {
         declared === undefined ? [] : this.#readers.map((reader) => reader.read(declared)),
       );
       for (const { at, reason, hint, symbol } of fromReaders.unread) {
-        this.#report({ file: this.#fileOf(at), line: at.getStartLineNumber(), reason, hint, symbol });
+        this.#report({ file: this.#fileOf(at), line: startLineOf(at), reason, hint, symbol });
       }
 
       const optional = questionToken || mapped || undefinedUnion || fromReaders.optional === true;
@@ -681,7 +682,7 @@ export class TypeCollector {
     if (depth >= this.#maxDepth) {
       this.#report({
         file: this.#fileOf(site),
-        line: site.getStartLineNumber(),
+        line: startLineOf(site),
         reason: 'type-depth-exceeded',
         hint: `Nesting is written out to ${this.#maxDepth} levels. Raise types.maxDepth to see further.`,
         symbol: writtenAt(type, site),

@@ -5,6 +5,7 @@ import {
   findDecorators,
   hasAnyDependency,
   makeEntryId,
+  startLineOf,
 } from '@flowatlas/core';
 import { fileOfNode, handlerOf, repoClasses } from './shared.js';
 
@@ -42,7 +43,7 @@ export const nestjsScheduleAdapter: EntryAdapter = {
             if (expression === undefined || !expression.resolved) {
               ctx.builder.addUnresolved({
                 file,
-                line: method.getStartLineNumber(),
+                line: startLineOf(method),
                 reason: 'decorator-arg-dynamic',
                 hint: 'Use a literal cron expression or a member of the framework enum.',
                 symbol: `${owner}.${method.getName()}`,
@@ -65,7 +66,7 @@ export const nestjsScheduleAdapter: EntryAdapter = {
             if (numeric === undefined || !numeric.resolved) {
               ctx.builder.addUnresolved({
                 file,
-                line: method.getStartLineNumber(),
+                line: startLineOf(method),
                 reason: 'decorator-arg-dynamic',
                 hint: `Give @${name} a literal number of milliseconds.`,
                 symbol: `${owner}.${method.getName()}`,
@@ -85,7 +86,7 @@ export const nestjsScheduleAdapter: EntryAdapter = {
             key,
             handler: handlerOf(method, ctx),
             file,
-            line: method.getStartLineNumber(),
+            line: startLineOf(method),
             meta: { ...meta, trigger: name },
           });
         }

@@ -6,6 +6,7 @@ import {
   type EntryAdapter,
   type EntryNode,
   type ExtractContext,
+  startLineOf,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -134,7 +135,7 @@ const NESTING_DEPTH = 16;
 
 /** The routes a `flatRoutes()` call stands for, under the address it sits at. */
 const flatRoutesAt = (call: TsNode, root: string, parent: string, flat: FlatRoutes): ConfiguredRoute[] =>
-  flat(root).map((route) => ({ ...route, rawPath: under(parent, route.rawPath), line: call.getStartLineNumber() }));
+  flat(root).map((route) => ({ ...route, rawPath: under(parent, route.rawPath), line: startLineOf(call) }));
 
 /** The routes one list of the config declares, its nested lists included. */
 const routesIn = (list: TsNode | undefined, parent: string, depth: number, flat: FlatRoutes): ConfiguredRoute[] => {
@@ -157,7 +158,7 @@ const routesIn = (list: TsNode | undefined, parent: string, depth: number, flat:
     const own =
       declared.module === undefined
         ? []
-        : [{ module: declared.module, rawPath: declared.path, line: written.getStartLineNumber() }];
+        : [{ module: declared.module, rawPath: declared.path, line: startLineOf(written) }];
     return [...own, ...routesIn(declared.children, declared.path, depth + 1, flat)];
   });
 };

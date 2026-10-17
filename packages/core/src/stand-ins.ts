@@ -15,8 +15,9 @@
  * wins over a shape file, which wins over a built-in shape.
  */
 import { join, relative, sep } from 'node:path';
-import { Node, Project, SyntaxKind, type FileSystemHost, type RuntimeDirEntry, type SourceFile } from 'ts-morph';
+import { Node, Project, type FileSystemHost, type RuntimeDirEntry, type SourceFile } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
+import { callIndexOf } from './call-shape.js';
 import { causeMeta } from './cant-follow.js';
 import {
   isDeclarationShape,
@@ -31,6 +32,7 @@ import { readResolvedPackageJson } from './adapters/manifest.js';
 import { packageIndexOf, rangeIncludes, serviceDirOf, type PackageSource } from './package-index.js';
 import { packageSourcesFor, shapesFor, type FlowatlasConfig, type ServiceConfig } from './config.js';
 import { readFileSync } from 'node:fs';
+import { startLineOf } from './line-numbers.js';
 
 /** What a reading is asked to stand in for its missing packages, besides a reader's built-in shapes. */
 export interface StandInRequest {
@@ -305,7 +307,7 @@ const importSites = (project: Project, repoDir: string): Map<string, ImportSite>
       }
       out.set(name, {
         file: normalizeFilePath(file.getFilePath(), repoDir),
-        line: declaration.getStartLineNumber(),
+        line: startLineOf(declaration),
         count: 1,
         resolved: declaration.getModuleSpecifierSourceFile() !== undefined,
       });
@@ -459,19 +461,6 @@ export const reportStandIns = (context: StandInContext): readonly Unresolved[] =
 
 /* ── Edges whose receiver's type a stand-in supplied ── */
 
-/** The calls a file makes, by the line each starts on. */
-const callsByLine = (file: SourceFile): Map<number, Node[]> => {
-  const out = new Map<number, Node[]>();
-  for (const call of [
-    ...file.getDescendantsOfKind(SyntaxKind.CallExpression),
-    ...file.getDescendantsOfKind(SyntaxKind.NewExpression),
-  ]) {
-    const line = call.getStartLineNumber();
-    out.set(line, [...(out.get(line) ?? []), call]);
-  }
-  return out;
-};
-
 /** The declarations the callee of a call and its receiver come from. */
 const declarationFiles = (call: Node): string[] => {
   const callee = Node.isCallExpression(call) || Node.isNewExpression(call) ? call.getExpression() : call;
@@ -516,13 +505,16 @@ export const markStandInEdges = (context: StandInContext): void => {
   const state = STATE.get(project);
   if (state === undefined) return;
   if (mountsOf(project).length === 0 && shapeFilesOf(project).size === 0) return;
-  const lines = new Map<string, Map<number, Node[]> | undefined>();
+  // The calls on a line come from the index the call-shape pass reads too
+  // (P79): the file is walked once, not once per pass or per edge. Calls come
+  // before `new` expressions on a line, each kind in source order.
+  const sources = new Map<string, SourceFile | undefined>();
   const callsAt = (file: string, line: number): Node[] => {
-    if (!lines.has(file)) {
-      const source = project.getSourceFile(join(repoDir, file));
-      lines.set(file, source === undefined ? undefined : callsByLine(source));
-    }
-    return lines.get(file)?.get(line) ?? [];
+    if (!sources.has(file)) sources.set(file, project.getSourceFile(join(repoDir, file)));
+    const source = sources.get(file);
+    if (source === undefined) return [];
+    const index = callIndexOf(source);
+    return [...index.calls(line), ...index.news(line)];
   };
   for (const edge of builder.edges) {
     if (edge.file === undefined || edge.line === undefined) continue;

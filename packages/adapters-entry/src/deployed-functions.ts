@@ -20,6 +20,8 @@ import {
   type EntryWrapping,
   type ExtractContext,
   type Unresolved,
+  lineAndColumnAt,
+  startLineOf,
 } from '@flowatlas/core';
 import { ENVELOPES, GATEWAY_REQUEST } from '@flowatlas/aws';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
@@ -205,7 +207,7 @@ const unwrapChain = (start: TsNode, ctx: ExtractContext): Chain => {
     scope: 'route',
     source,
     file: fileOfNode(node, ctx),
-    line: node.getStartLineNumber(),
+    line: startLineOf(node),
     kind,
   });
   for (let depth = 0; depth < 16 && Node.isCallExpression(expression); depth += 1) {
@@ -394,20 +396,20 @@ const resolveHandler = (
   const declaration = boundDeclaration(exported);
   let unreadCall: CallExpression | undefined;
   if (Node.isFunctionDeclaration(declaration) && declaration.getName() !== undefined) {
-    return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName() as string, line: declaration.getStartLineNumber() }, 'function');
+    return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName() as string, line: startLineOf(declaration) }, 'function');
   }
   if (Node.isVariableDeclaration(declaration)) {
     const initializer = declaration.getInitializer();
     const value = initializer === undefined ? undefined : unwrapValue(initializer);
     if (value !== undefined && isWrittenFunction(value)) {
-      return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName(), line: declaration.getStartLineNumber() }, 'function');
+      return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName(), line: startLineOf(declaration) }, 'function');
     }
     const built = value !== undefined && Node.isCallExpression(value) ? value : undefined;
     if (built !== undefined) {
       const chain = unwrapChain(built, ctx);
       if (chain.inner !== undefined) {
         if (isWrittenFunction(chain.inner)) {
-          const where = chain.inner.getSourceFile().getLineAndColumnAtPos(chain.inner.getStart());
+          const where = lineAndColumnAt(chain.inner.getSourceFile(), chain.inner.getStart());
           return done(
             { file: fileOfNode(chain.inner, ctx), line: where.line, column: where.column, label: handler.export, inline: true },
             'inline',

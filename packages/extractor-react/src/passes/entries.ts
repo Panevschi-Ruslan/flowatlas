@@ -13,6 +13,7 @@ import {
   recordStatedSignatures,
   type EntryHandler,
   type EntryNode,
+  startLineOf,
 } from '@flowatlas/core';
 import type { CallExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -191,7 +192,7 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
           type: 'calls',
           confidence: 'static',
           file: caller.file,
-          line: call.getStartLineNumber(),
+          line: startLineOf(call),
         });
       }
     }

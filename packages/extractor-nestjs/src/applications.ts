@@ -1,6 +1,6 @@
 import type { CallExpression, ClassDeclaration, Project } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { normalizeFilePath, type ApplicationMap, type Unresolved } from '@flowatlas/core';
+import { normalizeFilePath, type ApplicationMap, type Unresolved, startLineOf } from '@flowatlas/core';
 import { repoSourcesOf } from './bootstrap.js';
 import type { ModuleIndex } from './modules-index.js';
 import type { NestClassIndex } from './index-classes.js';
@@ -138,7 +138,7 @@ export const readApplicationRoots = (options: {
     const file = normalizeFilePath(sourceFile.getFilePath(), rootDir);
     sourceFile.forEachDescendant((node) => {
       if (!Node.isCallExpression(node) || !isFactoryCall(node)) return;
-      const line = node.getStartLineNumber();
+      const line = startLineOf(node);
       const [first] = node.getArguments();
       const ref = first === undefined ? undefined : resolveClassExpression(first);
       if (ref === undefined || ref.kind !== 'local') {

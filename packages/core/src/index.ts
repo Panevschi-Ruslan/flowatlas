@@ -593,8 +593,9 @@ export {
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
-export { callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
-export type { CallShape, ConcurrentShape, LoopShape } from './call-shape.js';
+export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
+export { lineAndColumnAt, startLineOf } from './line-numbers.js';
+export type { CallIndex, CallShape, ConcurrentShape, LoopShape } from './call-shape.js';
 export {
   ACCEPTED_FILE,
   ACCEPTED_FORMAT_VERSION,

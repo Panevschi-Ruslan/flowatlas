@@ -25,6 +25,7 @@ import {
   type NamedFunction,
   type TypeOrigin,
   type BodyRead,
+  lineAndColumnAt,
 } from '@flowatlas/core';
 import {
   definePass,
@@ -213,7 +214,7 @@ interface Site {
 }
 
 const siteOf = (ctx: NestExtractContext, node: TsNode, file: string): Site => {
-  const { line, column } = node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+  const { line, column } = lineAndColumnAt(node.getSourceFile(), node.getStart());
   return { file, line, column };
 };
 
@@ -508,7 +509,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       const workspacePackage = workspacePackageOf(layer.base);
       dataLayers.set(name, {
         file: ctx.fileOf(layer.base),
-        line: source.getLineAndColumnAtPos(layer.base.getStart()).line,
+        line: lineAndColumnAt(source, layer.base.getStart()).line,
         chain: layer.chain,
         ...(workspacePackage === undefined ? {} : { workspacePackage }),
       });

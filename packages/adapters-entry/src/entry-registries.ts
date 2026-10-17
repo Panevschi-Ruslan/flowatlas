@@ -5,7 +5,7 @@ import type {
   EntryRegistryConfig,
   ExtractContext,
 } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId, originOfValue } from '@flowatlas/core';
+import { hasAnyDependency, makeEntryId, originOfValue, startLineOf } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { fileOfNode, handlerOfFunction, inlineHandlerOf, repoFunctionOf, repoSources } from './shared.js';
@@ -118,7 +118,7 @@ const matchOf = (
 const entryOf = (ctx: ExtractContext, { registry, site }: Match): EntryNode | undefined => {
   const keyArg = site.args[registry.keyArg];
   const file = fileOfNode(site.call, ctx);
-  const line = site.call.getStartLineNumber();
+  const line = startLineOf(site.call);
 
   if (keyArg === undefined || !Node.isStringLiteral(keyArg)) {
     ctx.builder.addUnresolved({
@@ -250,7 +250,7 @@ export const entryRegistriesAdapter: EntryAdapter = {
           unclaimed.set(name, {
             name,
             file: fileOfNode(site.call, ctx),
-            line: site.call.getStartLineNumber(),
+            line: startLineOf(site.call),
             count: 1,
           });
         } else {

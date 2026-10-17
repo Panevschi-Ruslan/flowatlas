@@ -285,6 +285,15 @@ only one of them moved.
 
 ### Fixed
 
+- **A large service file no longer slowed the cold build down (P79).** The
+  call-shape pass of P69 walked every call in a file once for each call edge
+  it looked up there, so its cost grew with calls times edges; it, and the
+  pass that marks edges typed by a stand-in (P78), read one index of the
+  file's calls by line instead, built once per parsed file. Every line and
+  column the readers write was found by a lookup in a list of the file's line
+  breaks, kept once per parsed file, rather than by counting newlines from the
+  top of the file for each node (P123). The graph was unchanged.
+  `scripts/bench-call-shape.mjs` measured the pass over a generated service.
 - **Error actions and run-time batch lists (P62).** A function an IoT rule's
   `error_action` names was taken as the code the rule's entry runs
   (`meta.invokes`) when no other action had named one first; it became always

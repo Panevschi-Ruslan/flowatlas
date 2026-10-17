@@ -5,6 +5,7 @@ import {
   hasAnyDependency,
   makeEntryId,
   stableKey,
+  startLineOf,
 } from '@flowatlas/core';
 import { fileOfNode, handlerOf, repoClasses } from './shared.js';
 
@@ -48,7 +49,7 @@ export const nestjsMicroserviceAdapter: EntryAdapter = {
           if (patternArg === undefined || !patternArg.resolved) {
             ctx.builder.addUnresolved({
               file,
-              line: method.getStartLineNumber(),
+              line: startLineOf(method),
               reason: 'decorator-arg-dynamic',
               hint: 'Use a literal or a const pattern; a computed one cannot be matched to a producer.',
               symbol: `${declaration.getName() ?? '<anonymous>'}.${method.getName()}`,
@@ -68,7 +69,7 @@ export const nestjsMicroserviceAdapter: EntryAdapter = {
             key,
             handler: handlerOf(method, ctx),
             file,
-            line: method.getStartLineNumber(),
+            line: startLineOf(method),
             meta: {
               pattern: patternArg.value,
               ...(transportArg?.resolved === true ? { transport: transportArg.value } : {}),

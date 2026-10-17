@@ -12,6 +12,7 @@ import {
   normalizePath,
   stringListArg,
   UNREAD_SPAN,
+  startLineOf,
 } from '@flowatlas/core';
 import { Node, type Decorator, type MethodDeclaration, type Node as TsNode } from 'ts-morph';
 import {
@@ -320,7 +321,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
         // this could not place is a reading that failed, and it gets a row.
         reportForeign(ctx, found.foreign, {
           file,
-          line: declaration.getStartLineNumber(),
+          line: startLineOf(declaration),
           symbol: controllerName,
         });
         continue;
@@ -339,7 +340,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
       if (prefix.dynamic) {
         ctx.builder.addUnresolved({
           file,
-          line: declaration.getStartLineNumber(),
+          line: startLineOf(declaration),
           reason: 'route-path-dynamic',
           hint: 'Give @Controller a literal path; a computed prefix would make every route below it a guess.',
           symbol: controllerName,
@@ -352,7 +353,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
         const routes = nestDecorators(method, [...ROUTE_DECORATORS.keys()]);
         reportForeign(ctx, routes.foreign, {
           file,
-          line: method.getStartLineNumber(),
+          line: startLineOf(method),
           symbol: `${controllerName}.${method.getName()}`,
         });
         for (const decorator of routes.matched) {
@@ -367,7 +368,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
           if (httpMethod === undefined) {
             ctx.builder.addUnresolved({
               file,
-              line: method.getStartLineNumber(),
+              line: startLineOf(method),
               reason: 'entry-http-types-unmatched',
               level: 'info',
               message: `@${decoratorName(decorator)} on ${controllerName}.${method.getName()} came from ${NEST_PACKAGES[0]} and stands for no HTTP method this knows, so no route was read from it.`,
@@ -387,7 +388,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
             if (list === undefined) {
               ctx.builder.addUnresolved({
                 file,
-                line: method.getStartLineNumber(),
+                line: startLineOf(method),
                 reason: 'route-path-dynamic',
                 hint: 'Use a string literal, a const string, or an array of them.',
                 symbol: `${controllerName}.${method.getName()}`,
@@ -399,7 +400,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
           } else {
             ctx.builder.addUnresolved({
               file,
-              line: method.getStartLineNumber(),
+              line: startLineOf(method),
               reason: 'route-path-dynamic',
               hint: 'Use a string literal or a const string; a computed path cannot be matched against callers.',
               symbol: `${controllerName}.${method.getName()}`,
@@ -444,7 +445,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
                     key,
                     handler,
                     file,
-                    line: method.getStartLineNumber(),
+                    line: startLineOf(method),
                     meta: {
                       method: httpMethod,
                       path,

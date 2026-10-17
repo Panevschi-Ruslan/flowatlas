@@ -2,6 +2,7 @@ import type { ClassDeclaration, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { normalizeFilePath } from './ids.js';
 import { packageOfPath } from './origin.js';
+import { lineAndColumnAt, startLineOf } from './line-numbers.js';
 
 /** Repo-relative POSIX path of the file holding a node. */
 export const fileOf = (node: TsNode | SourceFile, rootDir: string): string =>
@@ -11,11 +12,11 @@ export const fileOf = (node: TsNode | SourceFile, rootDir: string): string =>
   );
 
 /** 1-based line number. */
-export const lineOf = (node: TsNode): number => node.getStartLineNumber();
+export const lineOf = (node: TsNode): number => startLineOf(node);
 
 /** 1-based line and column, for the identity of a node named by its call site. */
 export const siteOf = (node: TsNode): { line: number; column: number } =>
-  node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+  lineAndColumnAt(node.getSourceFile(), node.getStart());
 
 /** True when the declaration comes from an installed package rather than the repository. */
 export const isExternalFile = (filePath: string): boolean => filePath.includes('/node_modules/');

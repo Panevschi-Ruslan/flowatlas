@@ -5,6 +5,7 @@ import {
   methodsOfClass,
   namesGivenTo,
   type RecordedMarker,
+  startLineOf,
 } from '@flowatlas/core';
 import type { PassContext } from '@flowatlas/extract-scopes';
 import type { BrokerSpec } from './adapters/index.js';
@@ -62,7 +63,7 @@ export const readBrokerMarkers = (
       const markers = node?.meta?.['markers'] as RecordedMarker[] | undefined;
       if (markers === undefined || markers.length === 0) continue;
 
-      const line = method.getStartLineNumber();
+      const line = startLineOf(method);
       const file = indexed.file;
 
       const { emits, consumes } = channelsOn(markers);

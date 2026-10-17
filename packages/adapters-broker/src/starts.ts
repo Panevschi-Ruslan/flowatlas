@@ -18,6 +18,7 @@ import {
   type StartedEntry,
   type TypeRef,
   packageOfSpecifier,
+  lineAndColumnAt,
 } from '@flowatlas/core';
 import type { Holder, PassContext } from '@flowatlas/extract-scopes';
 import { Node, type CallExpression, type Node as TsNode, type ParameterDeclaration, type SourceFile } from 'ts-morph';
@@ -52,7 +53,7 @@ export type StartPattern = CallPattern & { readonly starts: StartedEntry };
 export const isStartPattern = (pattern: CallPattern): pattern is StartPattern => pattern.starts !== undefined;
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
-  node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+  lineAndColumnAt(node.getSourceFile(), node.getStart());
 
 /** What one element of the address names, once a `names` table has had its say. */
 type Named =

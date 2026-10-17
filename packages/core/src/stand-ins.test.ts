@@ -7,6 +7,7 @@ import { packageSourcesFor, parseConfig, shapesFor } from './config.js';
 import { readShapeFile, resolutionOrder, shapeFilesOf } from './declaration-shapes.js';
 import { countSources, createProject } from './project.js';
 import {
+  markStandInEdges,
   packageCoverage,
   reportStandIns,
   standInFiles,
@@ -223,6 +224,46 @@ describe('shape files', () => {
     expect(packageSourcesFor(undefined, undefined)).toBe(true);
     expect(packageSourcesFor({ packageSources: false }, undefined)).toBe(false);
     expect(packageSourcesFor({ packageSources: false }, { packageSources: 'services' })).toBe('services');
+  });
+});
+
+describe('markStandInEdges', () => {
+  /** Lines 1-6 are the project's own; the two below are where the edges are drawn. */
+  const MAIN = [
+    PROJECT['loans/src/main.ts'].trimEnd(),
+    "export const both = [new Money(1), queue.publish('loan.paid')];",
+    'export const made = new Queue();',
+    'export const plain = 2;',
+    '',
+  ].join('\n');
+
+  const marked = (line: number) => {
+    const root = treeOf({ ...PROJECT, 'loans/src/main.ts': MAIN });
+    const project = open(root);
+    const builder = new GraphBuilder({ repo: 'loans' });
+    builder.addNode({ id: 'function:loans#src/main.ts:main', type: 'function', label: 'main', repo: 'loans' });
+    builder.addNode({ id: 'producer:loans#src/main.ts:1:1', type: 'producer', label: 'publish', repo: 'loans' });
+    const edge = builder.addEdge({
+      from: 'function:loans#src/main.ts:main',
+      to: 'producer:loans#src/main.ts:1:1',
+      type: 'calls',
+      confidence: 'static',
+      file: 'src/main.ts',
+      line,
+    });
+    markStandInEdges({ project, repoDir: join(root, 'loans'), builder });
+    return edge;
+  };
+
+  it('takes the calls on a line before its new expressions, each in source order', () => {
+    // `new Money` comes first in the text, but a call is asked first: the queue's shape types the edge.
+    expect(marked(7)).toMatchObject({ confidence: 'heuristic', meta: { because: ['shape-file'], typedBy: '@acme/queue' } });
+  });
+
+  it('reads a line with only a new expression, and leaves a line with neither alone', () => {
+    expect(marked(8)).toMatchObject({ confidence: 'heuristic', meta: { typedBy: '@acme/queue' } });
+    expect(marked(9)).toMatchObject({ confidence: 'static' });
+    expect(marked(9).meta).toBeUndefined();
   });
 });
 

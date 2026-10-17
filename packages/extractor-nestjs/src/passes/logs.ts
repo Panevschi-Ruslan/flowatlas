@@ -1,3 +1,4 @@
+import { startLineOf } from '@flowatlas/core';
 import { Node, type CallExpression, type Node as TsNode } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import { functionsOf, methodsOf } from './types-pass.js';
@@ -100,7 +101,7 @@ export const logLineOf = (call: CallExpression): LogLine | undefined => {
   const receiver = lastName(callee.getExpression());
   if (receiver === undefined || !isLoggerName(receiver)) return undefined;
   const text = messageOf(call.getArguments());
-  return { level, ...(text === undefined ? {} : { text }), at: call.getStartLineNumber() };
+  return { level, ...(text === undefined ? {} : { text }), at: startLineOf(call) };
 };
 
 /** Every line a body writes, in source order; a class written inside it is its own. */

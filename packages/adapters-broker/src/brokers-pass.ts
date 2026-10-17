@@ -27,6 +27,7 @@ import {
   type LocatorSite,
   type NameLocator,
   type TypeRef,
+  lineAndColumnAt,
 } from '@flowatlas/core';
 // The context and the body walk, from the package neither extractor owns. This
 // import is the whole of R46's answer at this end: a channel reader is not part
@@ -57,7 +58,7 @@ import { rowAbout, type RowSite } from './row-site.js';
 import { isStartPattern, startReader } from './starts.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
-  node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+  lineAndColumnAt(node.getSourceFile(), node.getStart());
 
 /**
  * A call as the calls reader names one whose receiver it could not follow:

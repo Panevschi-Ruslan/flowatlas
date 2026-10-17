@@ -13,6 +13,7 @@ import {
   workspaceRootOf,
   type StaticValue,
   type Unresolved,
+  startLineOf,
 } from '@flowatlas/core';
 import { resolveCallableRef, resolveClassExpression, type ClassRef } from './util/resolve-class.js';
 
@@ -146,7 +147,7 @@ export const findBootstrapFile = (rootDir: string, bootstrap?: string): string |
  * arguments travel with the reference.
  */
 const readWrapper = (argument: Node): WrapperRef | undefined => {
-  const line = argument.getStartLineNumber();
+  const line = startLineOf(argument);
   const text = argument.getText();
 
   if (Node.isNewExpression(argument)) {
@@ -196,7 +197,7 @@ const readWrapper = (argument: Node): WrapperRef | undefined => {
 /** Where one call sits, in the form a row and a record both want. */
 const siteOf = (call: CallExpression, file: string): Omit<UnreadAddressing, 'call'> => ({
   file,
-  line: call.getStartLineNumber(),
+  line: startLineOf(call),
   // One line, however it was laid out in the source: an options object spread
   // over six lines is six lines of noise in a report that has one row per line.
   text: call.getText().replace(/\s+/g, ' ').slice(0, 90),
@@ -234,7 +235,7 @@ const noteLeadingHole = (
   if (!Node.isTemplateExpression(node) || node.getHead().getLiteralText() !== '') return;
   const [first] = node.getTemplateSpans();
   if (first === undefined) return;
-  info.leadingHoles[call] = { node: first.getExpression(), at: `${file}:${node.getStartLineNumber()}` };
+  info.leadingHoles[call] = { node: first.getExpression(), at: `${file}:${startLineOf(node)}` };
 };
 
 const readGlobalPrefix = (call: CallExpression, info: BootstrapInfo, file: string): void => {
@@ -362,7 +363,7 @@ const readGlobals =
       if (wrapper === undefined) {
         info.dynamicGlobals.push({
           layer,
-          line: argument.getStartLineNumber(),
+          line: startLineOf(argument),
           text: argument.getText(),
         });
         continue;
