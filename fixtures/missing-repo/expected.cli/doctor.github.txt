@@ -1,7 +1,7 @@
 ::notice file=flowatlas.config.json,title=Probably missing%3A a repository for payments::PAYMENTS_URL is used by gateway (2 requests) and no service claims it; @acme/payments-client is imported by orders and is not installed; channel payment.requested is published by orders and nobody here consumes it. ./payments-api looks like it: flowatlas link ./payments-api
-::error file=src/checkout.controller.ts,line=12,title=gateway%3A unknown-base-url-env::no service declares PAYMENTS_URL. Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
-::error file=src/checkout.controller.ts,line=21,title=gateway%3A unknown-base-url-env::no service declares PAYMENTS_URL. Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
-unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=2 · contracts: errors=0 ignored=0 · exit=0
+::error file=gateway/src/checkout.controller.ts,line=12,title=gateway%3A unknown-base-url-env::no service declares PAYMENTS_URL. Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
+::error file=gateway/src/checkout.controller.ts,line=21,title=gateway%3A unknown-base-url-env::no service declares PAYMENTS_URL. Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
+unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=2 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
 unresolved: 3 to act on · missed: 4 · notes: 0 · findings: 0
   1 missed place static reading cannot see, folded into 1 row

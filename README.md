@@ -274,8 +274,11 @@ read again and the others come from the cache.
 | Command | Answers |
 |---|---|
 | `flowatlas doctor` | what could not be read, what the annotations get wrong, what has drifted |
+| `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
 | `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
-| `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks |
+| `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks; `--env prod` compares with what an environment runs |
+| `flowatlas spec` | an OpenAPI document of each service's routes and an AsyncAPI document of its channels, written from the graph; `spec diff <base>` sorts an API change into breaking kinds with the callers each breaks; `spec --against <service>=<file>` says where a committed document no longer describes the code |
+| `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue (`consumesApis` and `dependsOn` from the joins) or a Structurizr workspace (containers and one dynamic view per flow); `--check` fails when a committed copy is out of date |
 | `flowatlas cache <action>` | list, prune or clear the graphs `diff` keeps per commit |
 | `flowatlas docs [paths...]` | whether the Markdown blocks that describe a flow still say what the graph says; `--write` regenerates them |
 
@@ -308,6 +311,23 @@ flowatlas accept channel-dynamic --service billing --note 'one channel per tenan
 flowatlas accept route-unguarded --path 'GET /api/public/*' --note 'public catalogue' --dry-run
 ```
 
+Who may call, write, publish to or consume what can be written down as rules
+in the configuration - "the browser reaches only the gateway", "only orders
+writes the orders table", "only billing consumes `invoice.*`" - by service, tag,
+table and channel, and `flowatlas rules` says which joins break one, at the
+line where the fix goes. They are checked over the edges between repositories,
+which a single repository's import rules never see; `doctor --strict` and
+`diff --fail-on-rule-break` fail on a new violation, and a rule naming a service
+that does not exist is never a pass:
+
+```json
+"rules": [
+  { "name": "frontends-reach-only-edge", "tags": { "source": "frontend", "mayReach": ["edge"] } },
+  { "name": "only-orders-writes-orders",
+    "only": { "from": { "service": "orders" }, "to": { "table": "orders" }, "op": "write" } }
+]
+```
+
 Some graphs are not worth a verdict, and `doctor` refuses them with exit 2
 whatever flags it was given: a graph a failed build wrote, a graph with nothing
 in it, one a service was read into and contributed nothing to, and one where most
@@ -333,7 +353,10 @@ a decorator that cannot be followed goes in `doctor.skipGuardDecorators`; all of
 it is in [the command reference](docs/CLI.md). `diff` answers the other question a build
 asks: given this branch, which entry points in which repositories would notice.
 Its output is markdown because it is meant for a pull request comment, and
-`--fail-on-contract-break` turns a new disagreement into a failure.
+`--fail-on-contract-break` turns a new disagreement into a failure. `doctor`,
+`contracts`, `rules`, `dead`, `cycles` and `diff` also write `--format sarif`, a
+SARIF 2.1.0 log GitHub code scanning shows on the lines of a pull request and
+keeps open until the finding is fixed.
 [docs/ci.md](docs/ci.md) is the whole recipe.
 
 A page can name a flow in a block of two HTML comments, which no Markdown
@@ -451,6 +474,7 @@ shows `flowatlas`, and a session has these tools, among others:
 | `get_type` | the shape of a type, with what it refers to |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it |
 | `check_contract` | whether two services still agree about what crosses |
+| `get_spec` | a service's routes as OpenAPI or channels as AsyncAPI, or one operation with the schemas it uses |
 | `find_symbol` | fuzzy search, by substring or camel-case initials |
 | `search` | one query over routes, channels, tables, types, gaps, failures and classes |
 | `what_changed` | the last `flowatlas diff`, read back |

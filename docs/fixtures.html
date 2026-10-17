@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>164 fixtures</span>
-    <span>400 snapshot files</span>
+    <span>167 fixtures</span>
+    <span>414 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -628,7 +628,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Several repositories <span class="count" data-total="13">13</span></h2>
+    <h2>Several repositories <span class="count" data-total="15">15</span></h2>
     <ul>
       <li class="fixture" data-search="ground-truth several repositories two repositories holding the shapes the other fixtures never write down, and one thing none of them has: **a recording is not its authority**.">
         <div class="head">
@@ -684,7 +684,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">4 services</span>
         </div>
         <p>Four repositories that disagree with each other on purpose, so that <code>flowatlas contracts</code> has something true to say and something false it must not say.</p>
-        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.contracts.json</code> <code>expected.contracts.md</code> <code>expected.contracts.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.contracts.json</code> <code>expected.contracts.md</code> <code>expected.contracts.sarif.json</code> <code>expected.contracts.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="multi-repo-dead-routes several repositories routes nobody calls, told apart (p91).">
         <div class="head">
@@ -702,6 +702,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>Two services, and only one of them has any source here.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="multi-repo-deployed several repositories a bookshop of three services - `gateway`, `orders`, `billing` - for `flowatlas check --env` (p117): whether a version can be deployed against what an environment runs, rather than against `main`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-deployed">multi-repo-deployed</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A bookshop of three services - <code>gateway</code>, <code>orders</code>, <code>billing</code> - for <code>flowatlas check --env</code> (P117): whether a version can be deployed against what an environment runs, rather than against <code>main</code>.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.mcp</code></p>
+      </li>
       <li class="fixture" data-search="multi-repo-diff several repositories two revisions of one project, for `flowatlas diff`.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-diff">multi-repo-diff</a>
@@ -716,7 +724,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">3 services</span>
         </div>
         <p>Three services that are wrong in every way <code>flowatlas doctor</code> can name, so that one run over this fixture exercises all five of its sections at once.</p>
-        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.doctor.github.txt</code> <code>expected.doctor.json</code> <code>expected.doctor.reason.txt</code> <code>expected.doctor.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.doctor.github.txt</code> <code>expected.doctor.json</code> <code>expected.doctor.reason.txt</code> <code>expected.doctor.sarif.json</code> <code>expected.doctor.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="multi-repo-plumbing several repositories three services whose every method logs, counts and reads through a shared helper, so a walk that expands each helper once per caller spends its whole budget on plumbing before a request reaches the service it ends in (p92).">
         <div class="head">
@@ -725,6 +733,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>Three services whose every method logs, counts and reads through a shared helper, so a walk that expands each helper once per caller spends its whole budget on plumbing before a request reaches the service it ends in (P92).</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="multi-repo-rules several repositories the bookshop of `fixtures/multi-repo` (a browser, its gateway, `orders` and `billing`) with tags on its services and five architecture rules (p114), for `flowatlas rules`, the `rules` section of `doctor` and the mcp server's `check_rules`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-rules">multi-repo-rules</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>The bookshop of <code>fixtures/multi-repo</code> (a browser, its gateway, <code>orders</code> and <code>billing</code>) with tags on its services and five architecture rules (P114), for <code>flowatlas rules</code>, the <code>rules</code> section of <code>doctor</code> and the MCP server's <code>check_rules</code>.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="same-service several repositories one repository, and the whole of the fixture is one sentence: a screen in it asks for an address a route in it answers, and the tool says so.">
         <div class="head">
@@ -766,7 +782,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>NestJS <span class="count" data-total="33">33</span></h2>
+    <h2>NestJS <span class="count" data-total="34">34</span></h2>
     <ul>
       <li class="fixture" data-search="nest-addressing nestjs where a nestjs service's addresses are decided, and what it costs to read the wrong file (r89).">
         <div class="head">
@@ -799,6 +815,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A service whose outgoing requests all go through a client class it wrote itself.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-committed-openapi nestjs one nestjs service, `shop`, whose repository commits an openapi document it writes by hand (`shop/openapi.yaml`), for `flowatlas spec --against` and the &quot;committed api documents&quot; section of `flowatlas contracts` (p195).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-committed-openapi">nest-committed-openapi</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>One NestJS service, <code>shop</code>, whose repository commits an OpenAPI document it writes by hand (<code>shop/openapi.yaml</code>), for <code>flowatlas spec --against</code> and the &quot;Committed API documents&quot; section of <code>flowatlas contracts</code> (P195).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-context-path nestjs a nestjs service whose every address begins with a mount the deployment sets, and a browser that asks for those addresses under a base already carrying it.">
         <div class="head">

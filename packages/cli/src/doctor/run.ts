@@ -12,12 +12,15 @@ import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
 import {
   missingGroupsOf,
+  ruleFailures,
   withAnsweredDemoted,
   type GraphDb,
   type MissingGroup,
   type MissingService,
+  type RulesReport,
   type ServiceReport,
 } from '@flowatlas/linker';
+import { narrowRules } from '../commands/rules.js';
 import { halfOf } from '../readers.js';
 import {
   compareBaseline,
@@ -72,7 +75,7 @@ export interface DoctorSettings {
    * decide the exit code. Off, they are information only (D3).
    */
   strictRuntime?: boolean;
-  /** Which sections to run. Defaults to all five. */
+  /** Which sections to run. Defaults to all six. */
   sections?: readonly Section[];
   /** Narrow everything to one service. */
   service?: string;
@@ -101,6 +104,12 @@ export interface DoctorSettings {
   envOwners?: ReadonlyMap<string, readonly string[]>;
   /** Every alias a service is configured with, to the service's name (P91). */
   aliases?: ReadonlyMap<string, string>;
+  /**
+   * The architecture rules as the command checked them (P114), with whether a
+   * guessed violation may fail; undefined when there are none to check or
+   * `--no-rules` was passed.
+   */
+  rules?: { report: RulesReport; failOnHeuristic: boolean; configured: number };
   /** Fixed timestamp, for reproducible output. */
   generatedAt?: string;
   flowatlasVersion?: string;
@@ -329,6 +338,8 @@ interface VerdictFacts {
   runtimeFailures: number;
   markerErrors: number;
   contractErrors: number;
+  /** Rule violations and unchecked rules that fail a strict run: new, at error (P114). */
+  ruleFailures: number;
   baseline: DoctorReport['baseline'];
   withoutWaysIn: NonNullable<DoctorReport['unresolved']['withoutWaysIn']>;
   /** The sentences that say this graph is not one to report on. */
@@ -357,6 +368,12 @@ const VERDICT_REASONS: ReadonlyArray<{ says(facts: VerdictFacts): string[] }> = 
       facts.contractErrors > 0 ? [`${plural(facts.contractErrors, 'contract error')} nothing excused`] : [],
   },
   {
+    says: (facts) =>
+      facts.ruleFailures > 0
+        ? [`${plural(facts.ruleFailures, 'architecture rule violation')} at error the baseline does not hold`]
+        : [],
+  },
+  {
     says: ({ baseline }) =>
       baseline.status === 'grew'
         ? [`unresolved grew by ${baseline.total.delta} (${baseline.total.baseline} accepted, ${baseline.total.current} now)`]
@@ -383,7 +400,7 @@ const VERDICT_REASONS: ReadonlyArray<{ says(facts: VerdictFacts): string[] }> = 
 
 /** Whether a strict run found something: a check ran and its answer was no. */
 const foundSomething = (facts: VerdictFacts): boolean =>
-  facts.markerErrors > 0 || facts.contractErrors > 0 || facts.baseline.status === 'grew';
+  facts.markerErrors > 0 || facts.contractErrors > 0 || facts.ruleFailures > 0 || facts.baseline.status === 'grew';
 
 /**
  * The exit code, as an ordered list of rules: the first that applies decides it.
@@ -619,6 +636,7 @@ export const boundDoctorReport = (report: DoctorReport, maxNodes?: number): Doct
   const issues = cut(report.markers.issues, perSection);
   const desync = cut(report.desync.rows, perSection);
   const errors = cut(report.contracts.errors, perSection);
+  const violations = cut(report.rules.violations, perSection);
   return {
     ...report,
     unresolved: {
@@ -631,6 +649,7 @@ export const boundDoctorReport = (report: DoctorReport, maxNodes?: number): Doct
     markers: { ...report.markers, issues: issues.rows, ...truncatedOf(issues) },
     desync: { ...report.desync, rows: desync.rows, ...truncatedOf(desync) },
     contracts: { ...report.contracts, errors: errors.rows, ...truncatedOf(errors) },
+    rules: { ...report.rules, violations: violations.rows, ...truncatedOf(violations) },
   };
 };
 
@@ -795,6 +814,13 @@ export const runDoctorComplete = (input: DoctorInput, settings: DoctorSettings =
     ? { status: 'ok', ...desyncOf(rows, contextOf) }
     : { ...skipped(), rows: [] };
 
+  // ---- rules ------------------------------------------------------------
+  //
+  // Checked by the command (it reads the configuration and accepted.json);
+  // here they are narrowed and held against the baseline's keys; the cut is
+  // `boundDoctorReport`'s, like every other section's (P192).
+  const rules = rulesSectionOf(settings, wanted);
+
   // ---- baseline ---------------------------------------------------------
   const baseline = wanted.has('baseline')
     ? compareBaseline(snapshot, settings.baseline, { schemaVersion: db.schemaVersion() })
@@ -807,6 +833,7 @@ export const runDoctorComplete = (input: DoctorInput, settings: DoctorSettings =
     runtimeFailures: rows.filter(countsUnderStrictRuntime).length,
     markerErrors: markers.errors + (settings.warnAsError === true ? markers.warnings : 0),
     contractErrors: contracts.errorCount,
+    ruleFailures: rules.failing,
     baseline,
     withoutWaysIn: unresolved.withoutWaysIn ?? [],
     faults: graphFaults(db, ways, settings.service),
@@ -827,7 +854,49 @@ export const runDoctorComplete = (input: DoctorInput, settings: DoctorSettings =
     markers,
     desync,
     contracts,
+    rules,
     baseline,
     verdict: { exitCode, reasons },
+  };
+};
+
+/** The keys a baseline that was read accepted; none when no baseline was read. */
+const acceptedRuleKeys = (read: BaselineRead | undefined): ReadonlySet<string> =>
+  read === undefined || isProblem(read) ? new Set() : new Set(Object.keys(read.baseline.rules ?? {}));
+
+/**
+ * The rules section: every violation nothing excused, marked new against the
+ * baseline's keys, and how many of the new ones fail a strict run.
+ */
+const rulesSectionOf = (settings: DoctorSettings, wanted: ReadonlySet<Section>): DoctorReport['rules'] => {
+  const empty = { errors: 0, warnings: 0, infos: 0, new: 0, failing: 0, heuristic: 0, excused: 0, violations: [], unchecked: [], notes: [] };
+  if (!wanted.has('rules') || settings.rules === undefined) {
+    return {
+      status: 'skipped',
+      note: settings.rules === undefined && wanted.has('rules') ? 'no rules are configured' : null,
+      configured: settings.rules?.configured ?? 0,
+      ...empty,
+    };
+  }
+  const report = narrowRules(settings.rules.report, settings.service === undefined ? {} : { service: settings.service });
+  const known = acceptedRuleKeys(settings.baseline);
+  const violations = report.violations.map((item) => ({ ...item, new: !known.has(item.key) }));
+  const unchecked = report.unchecked.map((item) => ({ ...item, new: !known.has(item.key) }));
+  const fresh = { violations: violations.filter((item) => item.new), unchecked: unchecked.filter((item) => item.new) };
+  const failing = ruleFailures(fresh, 'error', settings.rules.failOnHeuristic);
+  return {
+    status: 'ok',
+    note: null,
+    configured: settings.rules.configured,
+    errors: report.summary.errors,
+    warnings: report.summary.warnings,
+    infos: report.summary.infos,
+    new: fresh.violations.length + fresh.unchecked.length,
+    failing: failing.violations.length + failing.unchecked.length,
+    heuristic: report.summary.heuristic,
+    excused: report.summary.excused,
+    violations,
+    unchecked,
+    notes: report.notes,
   };
 };

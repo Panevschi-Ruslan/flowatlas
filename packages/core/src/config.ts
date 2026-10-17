@@ -6,6 +6,7 @@ import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
 import { expandGlob } from './glob.js';
 import { ENTRY_KINDS } from './model/nodes.js';
 import { requestReadingSchema } from './request.js';
+import { ruleSchema, rulesSettingsSchema } from './rule-config.js';
 
 export const CONFIG_FILENAME = 'flowatlas.config.json';
 export const DEFAULT_OUTPUT = '.flowatlas';
@@ -98,6 +99,17 @@ const serviceEntrySchema = z.strictObject({
    * file actually used when a path turns out not to be a file.
    */
   openapi: z.string().min(1).optional(),
+  /**
+   * API documents the repository commits by hand (P195), each compared with
+   * the one written from its code by `flowatlas contracts` and `flowatlas
+   * spec --against`. Unlike `document`, nothing is taken from them: the code
+   * is read, and the document is checked against it. `path` is relative to
+   * the configuration file; `application` names the address space it
+   * describes when the service has more than one.
+   */
+  apiDocuments: z
+    .array(z.strictObject({ kind: z.string().min(1), path: z.string().min(1), application: z.string().min(1).optional() }))
+    .optional(),
   type: z.string().min(1).optional(),
   /** Environment variables that hold this service's own base URL. */
   baseUrlEnv: z.array(z.string().min(1)).optional(),
@@ -119,6 +131,28 @@ const serviceEntrySchema = z.strictObject({
    * second one starts with the same word.
    */
   aliases: z.array(z.string().min(1)).optional(),
+  /**
+   * Names a rule can select this service by (P114): `frontend`, `edge`,
+   * `domain:payments`. A tag is a name only; nothing is inferred from it.
+   */
+  tags: z.array(z.string().min(1)).optional(),
+  /**
+   * What a software catalogue says of this service and the code cannot (P119):
+   * who owns it, where in its life it is, which system it belongs to, a line
+   * about it, and the address of its repository. `flowatlas export` writes
+   * these as they are and writes `unknown` for an owner or lifecycle nobody
+   * gave; none of them is ever guessed from the code.
+   */
+  catalog: z
+    .strictObject({
+      owner: z.string().min(1).optional(),
+      lifecycle: z.string().min(1).optional(),
+      system: z.string().min(1).optional(),
+      description: z.string().min(1).optional(),
+      /** The repository's address (`https://…/tree/main/`), for `backstage.io/source-location`. */
+      sourceUrl: z.string().min(1).optional(),
+    })
+    .optional(),
   /**
    * Which service answers each of those keys, by name.
    *
@@ -213,6 +247,14 @@ export const serviceConfigSchema = serviceEntrySchema
         code: 'custom',
         path: ['document'],
         message: 'a service is declared by one document: write document, not openapi as well.',
+      });
+      return;
+    }
+    if (documentOf(service) !== undefined && service.apiDocuments !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['apiDocuments'],
+        message: 'a service declared by a document has no code to compare a document with: apiDocuments needs a repo.',
       });
       return;
     }
@@ -1221,6 +1263,13 @@ export const flowatlasConfigSchema = z
       })
       .default({ depth: DEFAULT_TYPE_MAX_DEPTH, rules: { disable: [] }, ignoreEdges: [] }),
     /**
+     * Where the file saying which ref of each service runs in each environment
+     * is (P117): `flowatlas check --env` reads it, `flowatlas deployed set`
+     * writes it. Relative to this configuration; `flowatlas.deployed.json`
+     * beside it when not given.
+     */
+    deployed: z.strictObject({ file: z.string().min(1).optional() }).optional(),
+    /**
      * What a health check treats as already agreed to.
      *
      * `ignoreReasons` is for noise a project has decided to live with — a data
@@ -1330,8 +1379,26 @@ export const flowatlasConfigSchema = z
         files: z.array(z.string().min(1)).optional(),
       })
       .optional(),
+    /**
+     * Who may call, write, publish to or consume what (P114): each rule a name,
+     * a severity, a note and one of four shapes (`forbid`, `only`, `tags`,
+     * `reachable`), checked by `flowatlas rules`, `doctor`, `diff` and the MCP
+     * server over the joined graph. See `rule-config.ts`.
+     */
+    rules: z.array(ruleSchema).default([]),
+    /** How the rules are read: whether a guessed edge can fail a run. */
+    rulesSettings: rulesSettingsSchema.default({ failOnHeuristic: false }),
   })
   .superRefine((config, ctx) => {
+    // A rule's name is the key a baseline and an accept hold it by, so two
+    // rules of one name would be one rule to both.
+    const ruleNames = new Set<string>();
+    config.rules.forEach((rule, index) => {
+      if (ruleNames.has(rule.name)) {
+        ctx.addIssue({ code: 'custom', path: ['rules', index, 'name'], message: `Duplicate rule name ${JSON.stringify(rule.name)}.` });
+      }
+      ruleNames.add(rule.name);
+    });
     const seen = new Set<string>();
     config.services.forEach((service, index) => {
       if (seen.has(service.name)) {
@@ -1425,6 +1492,8 @@ export type CustomConsumerConfig = z.infer<typeof customConsumerSchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;
 export type ServiceConfig = z.infer<typeof serviceConfigSchema>;
+/** What a software catalogue says of a service (P119): `services[].catalog`. */
+export type ServiceCatalog = NonNullable<ServiceConfig['catalog']>;
 export type FlowatlasConfig = z.infer<typeof flowatlasConfigSchema>;
 
 export interface LoadedConfig {
@@ -1444,16 +1513,30 @@ export interface LoadConfigOptions {
   checkRepos?: boolean;
 }
 
-const formatIssues = (error: z.ZodError): string[] =>
+/**
+ * The rule an issue is about, by name, when it is about one (P114): a rule
+ * that fails its schema is refused naming it (`rule-invalid`), since
+ * `rules.3.forbid.from` is a place a reader has to count to.
+ */
+const ruleNamed = (data: unknown, path: readonly PropertyKey[]): string | undefined => {
+  if (path[0] !== 'rules' || typeof path[1] !== 'number') return undefined;
+  const rules = (data as { rules?: unknown } | null)?.rules;
+  const name = Array.isArray(rules) ? (rules[path[1]] as { name?: unknown } | undefined)?.name : undefined;
+  return typeof name === 'string' ? name : undefined;
+};
+
+const formatIssues = (error: z.ZodError, data?: unknown): string[] =>
   error.issues.map((issue) => {
     const path = issue.path.length > 0 ? issue.path.join('.') : '(root)';
-    return `${path}: ${issue.message}`;
+    const rule = ruleNamed(data, issue.path);
+    const about = issue.path[0] === 'rules' && typeof issue.path[1] === 'number' ? ` (rule-invalid${rule === undefined ? '' : `: rule ${JSON.stringify(rule)}`})` : '';
+    return `${path}${about}: ${issue.message}`;
   });
 
 /** Validates an already-parsed object. `source` only labels error messages. */
 export const parseConfig = (data: unknown, source = CONFIG_FILENAME): FlowatlasConfig => {
   const result = flowatlasConfigSchema.safeParse(data);
-  if (!result.success) throw new ConfigInvalidError(source, formatIssues(result.error));
+  if (!result.success) throw new ConfigInvalidError(source, formatIssues(result.error, data));
   return result.data;
 };
 

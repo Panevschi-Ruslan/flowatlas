@@ -172,6 +172,34 @@ export {
   serviceNamesOf,
   starterSchema,
 } from './config.js';
+export {
+  DEFAULT_RULE_VIA,
+  forbidRuleSchema,
+  onlyRuleSchema,
+  reachableRuleSchema,
+  RULE_EDGE_KINDS,
+  RULE_NAME,
+  RULE_OPS,
+  RULE_SEVERITIES,
+  RULE_SHAPES,
+  ruleSchema,
+  ruleSetOf,
+  rulesSettingsSchema,
+  SELECTOR_KEYS,
+  selectorSchema,
+  shapeOfRule,
+  tagsRuleSchema,
+} from './rule-config.js';
+export type {
+  RuleConfig,
+  RuleEdgeKind,
+  RuleSelector,
+  RuleSet,
+  RuleSeverity,
+  RuleShape,
+  RulesSettings,
+  SelectorKey,
+} from './rule-config.js';
 export type {
   LocalBaseClass,
   CustomBrokerConfig,
@@ -192,6 +220,7 @@ export type {
   StarterConfig,
   LoadedConfig,
   PackageSourcesSetting,
+  ServiceCatalog,
   ServiceConfig,
 } from './config.js';
 export type {
@@ -861,6 +890,8 @@ export type {
   PromptFailure,
   PromptFailuresSeen,
   PromptGap,
+  PromptRuleBreak,
+  PromptSpec,
   PromptLimits,
   PromptLog,
   PromptMarks,
@@ -953,3 +984,21 @@ export type { ServiceNodes } from './patterns/unmatched.js';
 export { matchPatternAt } from './patterns/match.js';
 export type { MatchOptions, MatchStep, PatternFit } from './patterns/match.js';
 export { guessPatternKind } from './patterns/starter.js';
+export {
+  DEPLOYED_FILE,
+  DEPLOYED_FORMAT_VERSION,
+  DeployedInvalidError,
+  PIN_SOURCES,
+  deployedPathOf,
+  deployedSchema,
+  emptyDeployed,
+  loadDeployed,
+  parseDeployed,
+  parsePinFlags,
+  pinEnvName,
+  pinsFor,
+  pinsFromEnv,
+  withPin,
+  writeDeployed,
+} from './deployed.js';
+export type { Deployed, Pin, PinSource } from './deployed.js';

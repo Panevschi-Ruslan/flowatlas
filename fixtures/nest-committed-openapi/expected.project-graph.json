@@ -1,0 +1,348 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T21:31:23.194Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/products/:param",
+      "type": "entry",
+      "label": "GET /products/:param",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products/:param",
+        "rawPath": "/products/:id",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/products/:param/reviews",
+      "type": "entry",
+      "label": "GET /products/:param/reviews",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products/:param/reviews",
+        "rawPath": "/products/:id/reviews",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/products",
+      "type": "entry",
+      "label": "POST /products",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/products",
+        "rawPath": "/products",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ProductsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop#src/products/products.controller.ts:ProductsController",
+      "type": "provider",
+      "label": "ProductsController",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/products/products.controller.ts:ProductsController.create",
+      "type": "method",
+      "label": "ProductsController.create",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:shop#CreateProductDto"
+            }
+          ],
+          "returns": "type:shop#ProductDto"
+        }
+      }
+    },
+    {
+      "id": "shop#src/products/products.controller.ts:ProductsController.findOne",
+      "type": "method",
+      "label": "ProductsController.findOne",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop#ProductDto"
+        }
+      }
+    },
+    {
+      "id": "shop#src/products/products.controller.ts:ProductsController.list",
+      "type": "method",
+      "label": "ProductsController.list",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "page",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "type:shop#ProductDto[]"
+        }
+      }
+    },
+    {
+      "id": "shop#src/products/products.controller.ts:ProductsController.reviews",
+      "type": "method",
+      "label": "ProductsController.reviews",
+      "repo": "shop",
+      "file": "src/products/products.controller.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop#ReviewDto[]"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:GET:/products",
+      "to": "shop#src/products/products.controller.ts:ProductsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "type:shop#ProductDto[]",
+      "file": "src/products/products.controller.ts",
+      "line": 12,
+      "meta": {
+        "query": "{page?:number}"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/products/:param",
+      "to": "shop#src/products/products.controller.ts:ProductsController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop#ProductDto",
+      "file": "src/products/products.controller.ts",
+      "line": 17,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/products/:param/reviews",
+      "to": "shop#src/products/products.controller.ts:ProductsController.reviews",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop#ReviewDto[]",
+      "file": "src/products/products.controller.ts",
+      "line": 27,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/products",
+      "to": "shop#src/products/products.controller.ts:ProductsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:shop#CreateProductDto"
+      ],
+      "returns": "type:shop#ProductDto",
+      "file": "src/products/products.controller.ts",
+      "line": 22,
+      "meta": {
+        "body": "type:shop#CreateProductDto"
+      }
+    }
+  ],
+  "types": {
+    "type:shop#CreateProductDto": {
+      "name": "CreateProductDto",
+      "kind": "object",
+      "declaredIn": "shop#src/products/dto.ts",
+      "structuralHash": "9ea2f3958f179605",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop#ProductDto": {
+      "name": "ProductDto",
+      "kind": "object",
+      "declaredIn": "shop#src/products/dto.ts",
+      "structuralHash": "d2bf8b60e675a256",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": "string[]",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop#ReviewDto": {
+      "name": "ReviewDto",
+      "kind": "object",
+      "declaredIn": "shop#src/products/dto.ts",
+      "structuralHash": "a0a3d2298efe95b2",
+      "fields": [
+        {
+          "name": "rating",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

@@ -1,6 +1,17 @@
+import { CONFIDENCE_RANK, type Confidence } from '@flowatlas/core';
 import type { GraphDb } from '../db/reader.js';
 
 export const byId = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * The least trusted of some levels, so a path is as sure as its weakest hop.
+ * Moved here from the CLI (P114) beside the rule evaluator, which reports
+ * every violation at the weakest confidence on its path (I4).
+ */
+export const weakest = (levels: readonly Confidence[]): Confidence =>
+  levels.length === 0
+    ? 'static'
+    : levels.reduce((worst, level) => (CONFIDENCE_RANK[level] < CONFIDENCE_RANK[worst] ? level : worst));
 
 /**
  * Which class each method belongs to.

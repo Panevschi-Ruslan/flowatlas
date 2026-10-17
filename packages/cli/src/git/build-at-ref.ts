@@ -59,6 +59,20 @@ export interface BuildAtRefOptions {
   builtAt?: string;
   /** Where `<output>/cache/<sha>/` lives. Absent means do not cache at all. */
   cacheDir?: string;
+  /**
+   * A ref per repository, in place of the one `ref` every repository is read
+   * at (P117): `null` reads that repository's working tree. `check` reads each
+   * service at the ref an environment runs; the cache is the same as `diff`'s,
+   * so a tag read once is read once.
+   */
+  refFor?: (service: string) => string | null;
+  /**
+   * False to refuse, rather than read the working tree, a repository whose
+   * ref does not resolve or that is not a repository root (P117, I3). `diff`
+   * reads it as it stands and says it was assumed unchanged; an answer about
+   * a deployment cannot assume anything about what is deployed.
+   */
+  fallback?: boolean;
 }
 
 export interface BuildAtRefResult {
@@ -159,6 +173,26 @@ const reasonOf = (error: unknown): string => {
   return said.split('\n').filter((line) => line.trim() !== '').slice(-4).join('\n');
 };
 
+/**
+ * A repository that cannot be read at the ref it was asked for, when the
+ * caller said not to fall back to its working tree (`fallback: false`).
+ */
+export class UnreadableAtRef extends Error {
+  constructor(
+    readonly service: string,
+    readonly ref: string,
+    readonly reason: 'ref-not-found' | 'not-a-git-repo',
+    readonly repo: string,
+  ) {
+    super(
+      reason === 'ref-not-found'
+        ? `${service}: ref ${ref} not found in ${repo}`
+        : `${service}: ${repo} is not a git repository root, so it cannot be read at ${ref}`,
+    );
+    this.name = 'UnreadableAtRef';
+  }
+}
+
 interface OneSide {
   service: string;
   graph?: RepoGraph;
@@ -203,6 +237,7 @@ const readSide = async (
   if (ref === null) return fromTree();
 
   if (!(await isGitRepo(repoDir))) {
+    if (options.fallback === false) throw new UnreadableAtRef(service.name, ref, 'not-a-git-repo', service.repo);
     warnings.push({
       reason: 'not-a-git-repo',
       service: service.name,
@@ -214,6 +249,7 @@ const readSide = async (
 
   const sha = await resolveSha(repoDir, ref);
   if (sha === null) {
+    if (options.fallback === false) throw new UnreadableAtRef(service.name, ref, 'ref-not-found', service.repo);
     warnings.push({
       reason: 'ref-not-found',
       service: service.name,
@@ -297,12 +333,14 @@ export const buildAtRef = async (
   const readable = wanted.filter((service) => EXTRACTORS.has(service.type));
 
   const limit = options.concurrency ?? Math.max(cpus().length - 1, 1);
+  const refOf = (service: ServiceConfig): string | null => (options.refFor === undefined ? ref : options.refFor(service.name));
   const sides = await inPools(readable, limit, async (service) => {
     try {
-      return await readSide(loaded, service, ref, options);
+      return await readSide(loaded, service, refOf(service), options);
     } catch (error) {
+      if (error instanceof UnreadableAtRef) throw error;
       throw cannotRun(
-        `could not read ${service.name} at ${ref ?? 'the working tree'}`,
+        `could not read ${service.name} at ${refOf(service) ?? 'the working tree'}`,
         reasonOf(error).split('\n'),
       );
     }

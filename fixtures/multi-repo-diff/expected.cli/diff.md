@@ -229,6 +229,18 @@ Run `flowatlas docs --write` on this branch to regenerate them.
 | extra_field | orders → billing | customerId | `billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated` |
 | missing_required | orders → billing | customerRef | `billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated` |
 
+## Rules
+
+1 new, 0 fixed, 0 already there, 0 excused
+
+### New
+
+| rule | severity | what crossed | where | confidence |
+| --- | --- | --- | --- | --- |
+| `billing-stays-out-of-gift-wrapping` | error | billing GiftWrapConsumer.onGiftWrapped consumes channel order.gift-wrapped | `billing src/invoices/gift-wrap.consumer.ts:15` | static |
+
+- `billing-stays-out-of-gift-wrapping`: gift wrapping is fulfilment, which orders does
+
 ## Calls that stopped joining
 
 | caller | joined | what happened |

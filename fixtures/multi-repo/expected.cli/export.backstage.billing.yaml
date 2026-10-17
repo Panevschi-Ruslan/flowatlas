@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: billing
+  annotations:
+    flowatlas/graph-id: repo:billing
+spec:
+  type: service
+  lifecycle: experimental
+  owner: team-billing
+  system: bookshop
+  providesApis:
+    - billing-openapi
+  consumesApis:
+    - orders-asyncapi
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: billing-openapi
+  description: "The routes billing answers (2), read from the code by flowatlas."
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: team-billing
+  system: bookshop
+  definition:
+    $text: ./billing.openapi.yaml

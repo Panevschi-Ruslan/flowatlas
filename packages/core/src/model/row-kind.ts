@@ -75,6 +75,8 @@ const NOTES: readonly string[] = [
   'route-checked-in-body',
   'route-guard-skipped',
   'route-public-declared',
+  // A rule read over a service the build read in part (P114)
+  'rule-over-partial-read',
   // An end declared by a document rather than read (cli/doctor/age.ts); the old
   // spelling as well, since a stored row may still carry it.
   'document-age',
@@ -118,6 +120,10 @@ const GAPS: readonly string[] = [
   // What traffic reached and no reader drew (core/blind-spots.ts, P110): asked
   // of the observed file at read time, at info, never stored in the graph.
   'seen-not-in-code',
+  // A rule that could not be checked (P114): a selector that names nothing, a
+  // rule that fails its schema. Never a pass (I3).
+  'rule-matches-nothing',
+  'rule-invalid',
   // Reading and the build (core/project.ts, cli/commands/build.ts)
   'file-not-parsed',
   'service-read-nothing',

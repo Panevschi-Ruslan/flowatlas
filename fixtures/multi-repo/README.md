@@ -368,3 +368,27 @@ What the traffic answered against what the code declares (P106):
 `POST /invoices` and `POST /orders`, whose code declares none (undeclared).
 `expected.cli/doctor.observed.txt` and `expected.mcp.observed/undeclared_failures.*`,
 `get_flow.failures` and `describe_for_prompt.failures` hold the answers.
+
+## What a catalogue says of each service (P119)
+
+`flowatlas.catalog.json` is the same project with `services[].catalog` added:
+an owner, a lifecycle and the system `bookshop` for the gateway, orders and
+billing, a description and a source address for two of them, and only the
+system for `web`, which is how its owner and lifecycle come out `unknown` and
+listed. It writes to the same `.flowatlas`, so it reads the graph
+`flowatlas.config.json` built and is never built itself.
+
+`expected.cli/export.*` hold what `flowatlas export` writes from it:
+
+| Relation | From |
+|---|---|
+| `web` consumes `gateway-openapi`, and nothing else | the browser's requests join only the gateway's routes |
+| `gateway` consumes `orders-openapi` and `billing-openapi` | the base-address request and the marker request |
+| `billing` consumes `orders-asyncapi` | `order.created`, which orders publishes and billing handles |
+| `gateway` depends on `resource:api.stripe.com` | the request that leaves the project |
+| `orders` depends on `resource:orders` | its queries on the `orders` table |
+| `invoice.requested` | consumed by billing, published by nothing: listed, consumes nothing |
+
+The workspace holds a container per service, `orders store`, `order messages`
+and `invoice messages`, the host outside, and a dynamic view per flow that
+crosses containers, the browser's click first (it crosses three services).

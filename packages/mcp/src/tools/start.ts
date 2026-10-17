@@ -5,6 +5,8 @@ import { nextFor, withNext } from '../query/next.js';
 import { staleDocsCount } from '../query/docs.js';
 import { START_LIMITS, summariseProject, type StartSummary } from '../query/start.js';
 import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
+import { checksBeside } from './changes.js';
+import { rulesReportOf } from './rules.js';
 
 /** A reason, how often, where, and the first place it was seen: one row of `topGaps` or `topFindings`. */
 const reasonOutput = z
@@ -45,6 +47,14 @@ export const startOutput = {
   startFrom: z.array(nodeOutput),
   staleDocs: z.number().optional(),
   missingRepos: z.array(z.object({ token: z.string(), candidates: z.array(z.string()).optional() })).optional(),
+  /** The architecture rules' violations by severity, and rules not checked (P114); absent with no rules. */
+  rules: z.object({ errors: z.number(), warnings: z.number(), unchecked: z.number() }).optional(),
+  /**
+   * Each `check.<env>.json` beside the database and its verdict, as one line
+   * (`prod: not deployable · staging: deployable`, P117); absent with none.
+   * A line rather than a record: the tool list has no room for one.
+   */
+  checks: z.string().optional(),
   next: nextOutput,
 };
 
@@ -118,12 +128,33 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
         // Doc blocks that no longer say what the graph says (P120), when `flowatlas docs` has indexed any.
         const staleDocs = staleDocsCount(db, ctx.handle.path, input.service);
         const missingRepos = missingReposOf(db, ctx, input.service);
+        const report = rulesReportOf(db, ctx);
+        const touches = (item: { fromService: string; toService: string | null }): boolean =>
+          input.service === undefined || item.fromService === input.service || item.toService === input.service;
+        const broken = report?.violations.filter(touches) ?? [];
+        const rules =
+          report === undefined
+            ? undefined
+            : {
+                errors: broken.filter((item) => item.severity === 'error').length,
+                warnings: broken.filter((item) => item.severity === 'warning').length,
+                unchecked: report.unchecked.length,
+              };
+        const checks = checksBeside(ctx.handle.path);
+        const blocked = Object.keys(checks).find((environment) => checks[environment] === 'not deployable');
         return withNext(
-          { ...summary, ...(staleDocs === undefined ? {} : { staleDocs }), ...(missingRepos.length === 0 ? {} : { missingRepos }) },
-          nextFor(
-            summary.startFrom[0],
-            lonely === undefined ? undefined : { id: lonely, type: 'channel' },
-          ).slice(0, 3),
+          {
+            ...summary,
+            ...(staleDocs === undefined ? {} : { staleDocs }),
+            ...(missingRepos.length === 0 ? {} : { missingRepos }),
+            ...(rules === undefined ? {} : { rules }),
+            ...(Object.keys(checks).length === 0 ? {} : { checks: Object.entries(checks).map(([environment, verdict]) => `${environment}: ${verdict}`).join(' · ') }),
+          },
+          [
+            ...(blocked === undefined ? [] : [`what_changed({file: ${JSON.stringify(`check.${blocked}.json`)}, verdict: true})`]),
+            ...(rules !== undefined && rules.errors > 0 ? [`check_rules(${input.service === undefined ? '' : `{service: ${JSON.stringify(input.service)}}`})`] : []),
+            ...nextFor(summary.startFrom[0], lonely === undefined ? undefined : { id: lonely, type: 'channel' }),
+          ].slice(0, 3),
         );
       }),
   );

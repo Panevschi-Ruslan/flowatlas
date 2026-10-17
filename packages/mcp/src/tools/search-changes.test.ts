@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { saveAccepted, SCHEMA_VERSION, type ProjectGraph } from '@flowatlas/core';
-import { DIFF_FORMAT_VERSION, writeGraphDb, type DiffReport, type LinkReport } from '@flowatlas/linker';
+import { DIFF_FORMAT_VERSION, writeGraphDb, type DiffReport, type LinkReport, type RuleViolation } from '@flowatlas/linker';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -107,6 +107,8 @@ const diff: DiffReport = {
     },
   ],
   contracts: { new: [], fixed: [], preexisting: [], ignored: [] },
+  rules: { new: [], fixed: [], existing: [], excused: [] },
+  spec: null,
   warnings: [],
   timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 },
 };
@@ -451,7 +453,7 @@ describe('what_changed', () => {
     });
 
     it('reads a diff.json of format 1, and says it is too old to know the gaps', async () => {
-      const { unresolved: _unresolved, joins: _joins, flows: _flows, ...old } = diff;
+      const { unresolved: _unresolved, joins: _joins, flows: _flows, rules: _rules, spec: _spec, ...old } = diff;
       writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...old, diffFormatVersion: 1 }));
       try {
         const answer = await call('what_changed', { verdict: true });
@@ -462,17 +464,41 @@ describe('what_changed', () => {
       }
     });
 
-    it('reads a diff.json of format 2, whose missing flows do not make the verdict unknown (P116)', async () => {
-      const { flows: _flows, ...old } = diff;
+    it('reads a diff.json of format 2, whose missing flows say nothing and missing rules make it unknown (P116, P114)', async () => {
+      const { flows: _flows, rules: _rules, spec: _spec, ...old } = diff;
       writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...old, diffFormatVersion: 2 }));
       try {
         const answer = await call('what_changed', { verdict: true });
-        expect(answer.verdict).toBe('safe');
+        expect(answer.verdict).toBe('unknown');
+        expect(answer.because[0]).toBe('diff.json is format 2, which holds no rules; rerun flowatlas diff for new gaps, lost joins and rule violations');
         expect(answer.counts.flows).toBe(0);
         expect(answer.retest[0].flow).toBeUndefined();
       } finally {
         writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
       }
+    });
+
+    it('says unsafe on a new violation of a rule at error, and not on a guessed one (P114)', async () => {
+      const violation: RuleViolation = {
+        rule: 'web-not-orders',
+        shape: 'forbid',
+        severity: 'error',
+        key: 'rule|web-not-orders|a|b',
+        from: 'a',
+        to: 'b',
+        fromService: 'web',
+        toService: 'orders',
+        via: 'hits',
+        path: [{ from: 'a', to: 'b', type: 'hits', confidence: 'static' }],
+        confidence: 'static',
+        heuristic: false,
+        message: 'web requests orders GET /orders',
+      };
+      const broken = await withDiff({ rules: { new: [violation], fixed: [], existing: [], excused: [] } });
+      expect(broken.verdict).toBe('unsafe');
+      expect(broken.because[0]).toBe('1 new violation of an architecture rule: `web-not-orders`: web requests orders GET /orders');
+      const guessed = await withDiff({ rules: { new: [{ ...violation, confidence: 'heuristic' as const, heuristic: true }], fixed: [], existing: [], excused: [] } });
+      expect(guessed.verdict).toBe('safe');
     });
 
     it('ranks the ways in to retest by how many changed nodes each reaches, then by traffic', async () => {

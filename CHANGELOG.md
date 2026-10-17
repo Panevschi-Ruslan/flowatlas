@@ -723,10 +723,171 @@ only one of them moved.
   (the blocks about the node, each checked when asked), `start_here` gained
   `staleDocs`, and the page's details panel lists the docs that describe a
   node (`fixtures/multi-repo/docs`, `fixtures/multi-repo-diff/base/docs`).
+- **Architecture rules across services (P114).** `flowatlas.config.json`
+  gained `services[].tags` and a top-level `rules` list: each rule a `name`, a
+  `severity` (`error` by default), a `note` and one of four shapes - `forbid`
+  (`from` must not reach `to`, in one hop or `transitive`ly), `only` (nothing
+  outside `from` may reach `to`, a table's `op` too), `tags` (a service tagged
+  `source` joins only services carrying one of `mayReach`) and `reachable`
+  (a path that `must` exist, or must not) - over selectors by service, tag,
+  way in, table, channel, route and node type, along the edges between
+  repositories (`hits`, `http_calls`, `emits`, `consumes`, `queries`,
+  `triggers`; `calls` when named). New command `flowatlas rules` (`--format
+  text|json|markdown|github`, `--rule`, `--service`, `--fail-on`, `--max-nodes`,
+  `--out`, `--list`) writes `rules.json` (`rulesFormatVersion: 1`); each
+  violation carries its path, the crossing hop's `file:line` and the weakest
+  confidence, and one along a guessed edge fails a run only with
+  `rulesSettings.failOnHeuristic`. A rule naming nothing is listed as not
+  checked (`rule-matches-nothing`), never passed; one over a service read in
+  part says so (`rule-over-partial-read`); one that fails its schema is refused
+  naming it (`rule-invalid`). `doctor` gained a `rules` section (`--no-rules`;
+  `--strict` fails on a new violation at `error`), `flowatlas accept
+  rule:<name>` excuses violations, `flowatlas diff` gained a "Rules" section
+  and `--fail-on-rule-break`, and the MCP server a `check_rules` tool,
+  `violates` on `get_flow` steps, a "Rules it breaks" section in
+  `describe_for_prompt`, `rules` counts on `start_here`, a `rule` kind in
+  `findings` and a verdict that is `unsafe` on a new rule violation
+  (`fixtures/multi-repo-rules`).
 - **`what_changed` said what each changed flow does now (P116).** A way in
   under `entries` or `retest` whose flow changed gained `flow: { side, added,
   removed, changed, steps }`, `steps` the changed steps as text from detail 1
   (`+ orders → billing POST /invoices`), and `counts` gained `flows`.
+- **SARIF output for code scanning (P115).** `contracts`, `dead`, `cycles`,
+  `rules`, `doctor` and `diff` gained `--format sarif`: one SARIF 2.1.0 run per
+  command, under the category `flowatlas/<command>/`, which GitHub code
+  scanning shows on the lines of a pull request, keeps open while the finding
+  is there and closes when it is fixed. Every `ruleId` is a code already in use
+  (a doctor reason, a marker code, a contract finding kind, `dead-entry`,
+  `dead-channel`, `dead-provider`, `dead-field`, `cycle`, `no-way-in`, and
+  `rule/<name>` for an architecture rule), described from the hint catalogue.
+  One level map: contract and rule severities as they are (`info` → `note`),
+  a gap or finding row at `action` a warning and at `info` a note, a call that
+  lands nowhere and a wrong annotation errors, a dead row a note, a cycle a
+  warning; a note row (P81) and a place with nothing to join were never
+  written. Paths were the ones the configuration's directory sees (as
+  `doctor --format github` writes them since P191); a contract finding sat at
+  the sender's line with the receiver as a related location, a rule violation
+  at its crossing hop with its path, and a cycle with its hops, as a code
+  flow; a finding with no file sat at the line of `flowatlas.config.json`
+  naming its service or rule. `partialFingerprints` (`flowatlas/v1`, and
+  `primaryLocationLineHash` from the same key) came from the keys the baseline
+  already used, so moving a line kept an alert open. A row the baseline held
+  was `unchanged` and one it did not `new`; a row `accepted.json` names, a
+  violation it excused and a contract finding `@ContractIgnore` or
+  `contracts.ignoreEdges` excused were written suppressed with why; `diff`
+  wrote the new (`new`) and fixed (`absent`) contract findings and rule
+  violations. `--output <file>` wrote the log there and printed one line
+  about it, `--sarif-root <dir>` wrote paths relative to one checkout (and
+  left a result in another out, counted), `--sarif-level` left quieter
+  results out, and a log held at most 5,000 results unless `--max-nodes`
+  (`--max` on `dead` and `cycles`) said otherwise, saying how many were cut and
+  where the whole report was. The format changed no exit code. `docs/ci.md`
+  gained a "Code scanning" workflow; `toSarif` and the adapters were exported
+  from `@flowatlas/cli`.
+- **`flowatlas check --env <name>`: can this be deployed there (P117).** A
+  committed `flowatlas.deployed.json` (`deployedFormatVersion: 1`, path
+  `deployed.file` in the configuration or `--pins`) said which ref of each
+  service ran in each environment; `--pin <service>=<ref>` and
+  `FLOWATLAS_PIN_<SERVICE>` laid a pipeline's own versions over it. `check`
+  read every service at its pin (the deployed side), put the services being
+  shipped (`--service`, or every one whose head differed from its pin) at
+  `--head` or the working tree, ran what `diff` runs on the two and answered
+  `deployable` (exit 0) or `not deployable` (1) for what deploying introduced:
+  a new contract error, a new rule violation at `error`, a call a deployed
+  service makes to a route the candidate removes (with the caller's file and
+  line), a channel left with one end, a new handler of a channel nothing
+  deployed publishes, and a new request no deployed route serves. What already
+  ran wrong was listed under "already deployed" and never failed it. A pin that
+  did not resolve, an unknown environment and a service in a subdirectory of a
+  repository exited 2, naming `git fetch --tags` in which repository, and were
+  never read as the working tree in their place. `--env` was repeatable (one
+  section each, the worst exit); `--format text|markdown|json|sarif`; every
+  environment left `check.<env>.json` (`checkFormatVersion: 1`) holding the
+  whole `diff.json` of its two sides. The graph cache was `diff`'s.
+- **`flowatlas deployed set|show` (P117).** `set <env> <service> <ref>`
+  recorded a deployment in the pins file (`--resolve` recorded the commit the
+  ref named); `show [env]` printed each pin with its commit, kind and age, and
+  warned of a branch and of a ref the repository did not have.
+- **`flowatlas diff --env <name> [head-ref]` (P193).** The comparison `check`
+  makes, without its verdict, for a reviewer who wants the changed flows
+  against production in a pull-request comment: the base side was each
+  service at its pin, read as `check --env` reads it (`--pin`, `--pins` and
+  `FLOWATLAS_PIN_*` as there), and `diff.json`'s `base.ref` was the
+  environment's name; every section equalled the check document's `diff`. The
+  Markdown opened with the pins. A pin that did not resolve exited 2, never
+  assumed unchanged; `<base-ref>` and `--env` were exclusive. No format
+  changed.
+- **`what_changed({file: "check.prod.json"})` and `start_here`'s `checks` (P117).**
+  `what_changed` read a check document like a diff, with `check: { environment,
+  verdict, because }`; `start_here` said each environment's verdict in one line
+  and led `next` with the first one not deployable.
+- **A new handler of what nothing publishes is a lost join (P117).**
+  `lostJoins` also named a consumer the head side added to a channel nothing on
+  the head side publishes (`kind: 'no-producer'`, `now: 'never-produced'`), so
+  `diff`'s "Calls that stopped joining" and `what_changed`'s verdict say it too.
+  `buildAtRef` gained `refFor` (a ref per repository) and `fallback: false`.
+- **`flowatlas spec`: OpenAPI and AsyncAPI documents from the graph (P118).**
+  An OpenAPI 3.1 document of each service's routes (one per application) and
+  an AsyncAPI 3.0 document of each service's channel ends, written to
+  `<output>/spec/` from what the graph read: paths with their parameters'
+  names, query and header values, bodies and answers expanded from the type
+  registry into JSON Schema 2020-12 through the contract check's wire rules,
+  one response per failure status (a helper's choices each under theirs), the
+  guards in front, the public mark, and on every operation where it was read,
+  how surely and who calls it (`x-flowatlas-*`). A delivery's wrapping is
+  `x-flowatlas-envelope`. What could not be read is left out and counted, or
+  `{}` with `x-flowatlas-unread`; each document is read back through the
+  reader of its format before it is written. `--check` fails when a committed
+  copy is out of date; `--inventory` writes one table of every route
+  (guarded, public, callers, tables written, channels published, fails).
+- **`flowatlas spec diff <base> [head]` (P118).** Both sides' documents,
+  written in memory and compared operation by operation, each change one kind
+  of a fixed catalogue modelled on oasdiff's (`endpoint-removed`,
+  `request-property-added-required`, `response-property-removed`,
+  `channel-removed`, ...) with the callers it breaks on the base side; a
+  breaking change no caller in the project reaches, on a route nothing marks
+  public, is a warning saying so. `--fail-on`, `--format text|markdown|json|sarif`
+  (`spec/<kind>` rules), `spec-diff.json`. `flowatlas diff --spec` adds the same
+  table as "API changes".
+- **`flowatlas spec --against <service>=<file>`: a committed document against
+  the code (P195).** A hand-written OpenAPI or AsyncAPI document, YAML or
+  JSON, was read through its reader, written back in the code's normal form
+  and compared with the document written from the graph by `spec diff`'s
+  catalogue, the document as the base side: a route or channel end the
+  document declared and the code no longer answered was an error at the
+  document's line, one the code answered and the document left out was said,
+  and a field the two disagreed on was named, with the query and header values
+  and failure statuses the document declared compared too. Descriptions,
+  guards and formats were not compared. `--format text|markdown|json|sarif`
+  (command `spec-against`), `--fail-on`, `spec-against.json`
+  (`specAgainstFormatVersion: 1`). The new `services[].apiDocuments` listed a
+  repository's committed documents; `contracts` compared each in a section of
+  its own and failed on a broken promise at `--fail-on`
+  (`fixtures/nest-committed-openapi`).
+- **MCP `get_spec` and `describe_for_prompt({withSpec})` (P118).** A service's
+  document, or one route or channel end with the schemas it uses, as JSON text
+  bounded by `maxChars`; a route's prompt can carry its fragment.
+- **`flowatlas export backstage` and `flowatlas export structurizr` (P119).**
+  The map written into the tools that already keep one, from the joins the
+  graph made and nothing else. `backstage` writes a `Component` per service
+  (`service`, `website` or `function`), an `API` per service and kind pointing
+  at the OpenAPI or AsyncAPI document written beside it, `Resource`s for the
+  tables queried (one per table, owned by its writer) and the hosts called, and
+  one `Location` listing every file; `consumesApis` comes from requests into
+  another service's routes and deliveries off channels another service
+  publishes, `dependsOn` from queries, outside hosts and functions started by
+  name. Owner, lifecycle and system come from the new `services[].catalog`
+  (`owner`, `lifecycle`, `system`, `description`, `sourceUrl`) and are
+  `unknown` (and listed) when nobody wrote them. `structurizr` writes a DSL
+  workspace: a container per service, store and channel prefix, the hosts
+  outside, relationships described by what crosses them (collapsed past
+  `--max-labels`), the container view, and a dynamic view per flow in call
+  order (`--flow`, `--max-flows`). Only `static`, `declared` and `marker` joins
+  by default; `--include-heuristic` draws the rest, marked. Files go to
+  `<output>/export/<kind>/`, never into a configured repository, the same
+  bytes every run; `--check` writes nothing and fails when a committed copy
+  is out of date, naming the first relation that differs; `--json` prints the
+  entities or the model.
 
 ### Changed
 
@@ -868,6 +1029,25 @@ only one of them moved.
   or `changed`. Files of formats 1 and 2 are still read, without the sections
   they predate; the verdict reads no flows, so a format-2 file is not
   `unknown` for lacking them.
+- **`diff.json` became format 4 (P114).** It gained `rules: { new, fixed,
+  existing, excused }`. Files of formats 1 to 3 are still read, without the
+  sections they predate; a file without `rules` makes the verdict `unknown`.
+- **`diff.json` became format 5 (P118).** It gained `spec`: the API changes
+  with `--spec`, `null` without it. Files of formats 1 to 4 are still read,
+  with `spec` `null`; the verdict does not read it.
+- **The MCP tool list grew past its ceilings again (P118).** `get_spec` and
+  `describe_for_prompt`'s `withSpec` brought the part a model reads to 10,564
+  characters and the whole list to 28,880; the ceilings went to 10,600 and
+  28,900.
+- **The OpenAPI reader takes `2XX` as a success answer (P118).** After every
+  exact 2xx code, so a document flowatlas wrote reads back with its answer.
+- **`flowatlas.baseline.json` became format 2 (P114).** It gained `rules`, the
+  keys of the rule violations accepted; a version-1 baseline is still read, as
+  one that accepted none. `doctor`'s summary line gained `rules: errors=N
+  new=M`, and `--section` a sixth value, `rules`.
+- **The MCP tool list grew past its ceilings (P114).** `check_rules` and
+  `start_here`'s `rules` brought the part a model reads to 10,063 characters
+  and the whole list to 28,200; the test's ceilings went to 10,100 and 28,300.
 - **`flowatlas diff`'s documented defaults (P190).** `docs/CLI.md` said
   `--max-entries` 20 and `--max-nodes` 50; the command has always used 150 and
   100, which the reference now says.
@@ -1220,6 +1400,20 @@ only one of them moved.
   `flowatlas --help` lists twenty-two commands; it lists twenty-five, and now
   says "every command". `docs/mcp.md` said nineteen tools; there are
   twenty-three, as the tool-list test holds.
+- **A document's `null` in a list of types was dropped (P196).** OpenAPI 3.1
+  and JSON Schema say a value may be null as `type: ['string', 'null']`; the
+  document reader took the first type and read the field as never null, so the
+  contract check could not see a receiver that did not expect null. It is now
+  `string | null`, as `nullable: true` already was.
+- **An optional named request value was read as required (P197).**
+  `@Query('page') page?: number` (or `page = 1`) put `{page:number}` on the
+  route, so the written OpenAPI document required it and a caller leaving it
+  out looked like one leaving out a required value. It is now `{page?:number}`.
+- **`doctor --format github` annotated paths that were not there (P191).** An
+  annotation's file was the one inside its repository (`src/x.ts`), and the
+  checkout sees it under the directory the configuration gives the repository;
+  the mapping existed and was never passed. Annotations now name
+  `billing/src/x.ts`.
 - **`impact` said only one of its notes (P132).** An answer whose walk stopped
   at its limit, asked at `detail: 3`, said only that the level was clamped: the
   second note overwrote the first. It now says both: the walk limit under

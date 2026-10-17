@@ -1,0 +1,65 @@
+{
+  "specAgainstFormatVersion": 1,
+  "documents": [
+    {
+      "service": "shop",
+      "kind": "openapi",
+      "file": "openapi.yaml",
+      "declared": 4,
+      "written": 4
+    }
+  ],
+  "changes": [
+    {
+      "kind": "method-removed",
+      "level": "error",
+      "document": "shop",
+      "format": "openapi",
+      "service": "shop",
+      "operation": "DELETE /products/{productId}",
+      "field": null,
+      "base": "DELETE /products/{productId}",
+      "head": null,
+      "message": "DELETE /products/{productId}: the document declares this verb on the path; the code answers the path but not this verb",
+      "place": {
+        "side": "base",
+        "file": "openapi.yaml",
+        "line": 56
+      },
+      "callers": [],
+      "public": "declared in openapi.yaml",
+      "note": null,
+      "confidence": "declared",
+      "key": "method-removed|shop|DELETE /products/{productId}|"
+    },
+    {
+      "kind": "endpoint-added",
+      "level": "info",
+      "document": "shop",
+      "format": "openapi",
+      "service": "shop",
+      "operation": "GET /products/{id}/reviews",
+      "field": null,
+      "base": null,
+      "head": "GET /products/{id}/reviews",
+      "message": "GET /products/{id}/reviews: the code answers this; the document does not say it",
+      "place": {
+        "side": "head",
+        "file": "src/products/products.controller.ts",
+        "line": 27
+      },
+      "callers": [],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "endpoint-added|shop|GET /products/{id}/reviews|"
+    }
+  ],
+  "summary": {
+    "errors": 1,
+    "warnings": 0,
+    "infos": 1,
+    "breaking": 1,
+    "uncalled": 0
+  }
+}

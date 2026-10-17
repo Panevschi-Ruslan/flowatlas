@@ -9,6 +9,7 @@
 import { ROW_KIND_NAMES, type RowKind } from '@flowatlas/core';
 import { contractFindingSchema } from '@flowatlas/contracts';
 import type { ContractFinding } from '@flowatlas/contracts';
+import { ruleUncheckedSchema, ruleViolationSchema, type RuleNote, type RuleUnchecked, type RuleViolation } from '@flowatlas/linker';
 import { z } from 'zod';
 import { MARKER_CODES, type MarkerIssue } from './markers.js';
 import type { MissingRepoEntry } from './missing.js';
@@ -21,11 +22,16 @@ import type { MissingRepoEntry } from './missing.js';
  */
 export const DOCTOR_FORMAT_VERSION = 2;
 
-/** Version of `.flowatlas/baseline.json`, which moves independently. */
-export const BASELINE_FORMAT_VERSION = 1;
+/**
+ * Version of `flowatlas.baseline.json`, which moves independently.
+ *
+ * 2 (P114) added `rules`: the keys of the rule violations accepted. A
+ * baseline of version 1 is still read, as one that accepted no violation.
+ */
+export const BASELINE_FORMAT_VERSION = 2;
 
-/** The five things `doctor` looks at. Any subset can be asked for. */
-export const SECTIONS = ['unresolved', 'markers', 'desync', 'contracts', 'baseline'] as const;
+/** The six things `doctor` looks at. Any subset can be asked for. */
+export const SECTIONS = ['unresolved', 'markers', 'desync', 'contracts', 'rules', 'baseline'] as const;
 
 export type Section = (typeof SECTIONS)[number];
 
@@ -226,6 +232,31 @@ export interface DoctorReport {
     unchecked: number;
     truncated?: number;
   };
+  /**
+   * The architecture rules (P114): violations nothing excused, each marked
+   * `new` when the baseline does not hold its key. `--strict` fails on a new
+   * one at `error` (a guessed one only with `rulesSettings.failOnHeuristic`)
+   * and on a rule at `error` that could not be checked.
+   */
+  rules: {
+    status: SectionStatus;
+    note: string | null;
+    /** Rules the configuration declares. */
+    configured: number;
+    errors: number;
+    warnings: number;
+    infos: number;
+    /** Violations and unchecked rules the baseline does not hold. */
+    new: number;
+    /** Of those, the ones that fail a strict run. */
+    failing: number;
+    heuristic: number;
+    excused: number;
+    violations: Array<RuleViolation & { new: boolean }>;
+    unchecked: Array<RuleUnchecked & { new: boolean }>;
+    notes: RuleNote[];
+    truncated?: number;
+  };
   baseline: BaselineDelta;
   verdict: DoctorVerdict;
   /**
@@ -385,6 +416,22 @@ export const doctorReportSchema = z.object({
     errorCount: z.number().int().nonnegative(),
     ignored: z.number().int().nonnegative(),
     unchecked: z.number().int().nonnegative(),
+    truncated,
+  }),
+  rules: z.object({
+    status,
+    note: z.string().nullable(),
+    configured: z.number().int().nonnegative(),
+    errors: z.number().int().nonnegative(),
+    warnings: z.number().int().nonnegative(),
+    infos: z.number().int().nonnegative(),
+    new: z.number().int().nonnegative(),
+    failing: z.number().int().nonnegative(),
+    heuristic: z.number().int().nonnegative(),
+    excused: z.number().int().nonnegative(),
+    violations: z.array(ruleViolationSchema.extend({ new: z.boolean() })),
+    unchecked: z.array(ruleUncheckedSchema.extend({ new: z.boolean() })),
+    notes: z.array(z.object({ rule: z.string(), reason: z.string(), service: z.string(), message: z.string() })),
     truncated,
   }),
   baseline: z.object({

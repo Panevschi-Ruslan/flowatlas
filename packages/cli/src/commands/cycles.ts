@@ -4,6 +4,19 @@ import { loadGraph, type AnalysisGraph } from '../analysis/graph.js';
 import { maxRows, openProjectDb, print, wantsJson, type ReadOptions } from '../analysis/open.js';
 import { tarjanScc, type Cycle } from '../analysis/scc.js';
 import { ANALYTICS_FORMAT_VERSION, type CyclesResult } from '../analysis/shapes.js';
+import { processIo } from '../query/answer.js';
+import {
+  cycleFindings,
+  deliverSarif,
+  sarifBound,
+  sarifLevelFlag,
+  sarifPathsOf,
+  toSarif,
+  withSarifOptions,
+  type SarifFlags,
+  type SarifLog,
+} from '../sarif/index.js';
+import { VERSION } from '../version.js';
 
 /**
  * Edges a cycle is allowed to run through.
@@ -14,7 +27,7 @@ import { ANALYTICS_FORMAT_VERSION, type CyclesResult } from '../analysis/shapes.
  */
 export const CYCLE_EDGES = ['calls', 'handles', 'http_calls', 'hits', 'triggers'] as const;
 
-export interface CyclesOptions extends ReadOptions {
+export interface CyclesOptions extends ReadOptions, SarifFlags {
   crossService?: boolean;
   includeDi?: boolean;
   minLength?: string | number;
@@ -23,6 +36,8 @@ export interface CyclesOptions extends ReadOptions {
 export interface CyclesRun {
   result: CyclesResult;
   lines: string[];
+  /** With `--format sarif`: every cycle, bounded by `--max` (P115). */
+  sarif?: SarifLog;
 }
 
 /**
@@ -45,6 +60,7 @@ const asPath = (cycle: Cycle, graph: AnalysisGraph): string => {
 };
 
 export const runCycles = (options: CyclesOptions): CyclesRun => {
+  const sarifLevel = sarifLevelFlag(options.sarifLevel);
   const { db, close } = openProjectDb(options);
   try {
     const max = maxRows(options);
@@ -87,14 +103,27 @@ export const runCycles = (options: CyclesOptions): CyclesRun => {
     if (result.truncated !== undefined) lines.push(moreRows(result.truncated));
     for (const warning of warnings) lines.push(`warning: ${warning.reason} — ${warning.hint ?? ''}`);
 
-    return { result, lines };
+    const sarif =
+      options.format === 'sarif'
+        ? toSarif({
+            command: 'cycles',
+            version: VERSION,
+            findings: cycleFindings(all, db),
+            paths: sarifPathsOf(options, options.sarifRoot),
+            maxResults: sarifBound(options.max === undefined ? undefined : max),
+            ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
+            notes: warnings.map((warning) => ({ level: 'warning' as const, text: `${warning.reason}: ${warning.hint ?? ''}` })),
+          })
+        : undefined;
+
+    return { result, lines, ...(sarif === undefined ? {} : { sarif }) };
   } finally {
     close();
   }
 };
 
 export const registerCycles = (program: Command): void => {
-  program
+  const command = program
     .command('cycles')
     .description('call cycles across the project, cross-service ones first')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
@@ -102,10 +131,11 @@ export const registerCycles = (program: Command): void => {
     .option('--cross-service', 'only cycles that leave a service and come back')
     .option('--include-di', 'follow injects as well, so forwardRef cycles appear')
     .option('--min-length <n>', 'smallest cycle reported (1 includes self-recursion)', '2')
-    .option('--max <n>', 'most rows to print', '150')
-    .option('--format <kind>', 'json or table (default: table)')
-    .action((options: CyclesOptions) => {
-      const { result, lines } = runCycles(options);
-      print(result, lines, wantsJson(options));
-    });
+    .option('--max <n>', 'most rows to print (default 150; with --format sarif, most results, default 5000)')
+    .option('--format <kind>', 'json, table or sarif (default: table)');
+  withSarifOptions(command).action((options: CyclesOptions) => {
+    const { result, lines, sarif } = runCycles(options);
+    if (sarif !== undefined) deliverSarif(sarif, options, processIo);
+    else print(result, lines, wantsJson(options));
+  });
 };

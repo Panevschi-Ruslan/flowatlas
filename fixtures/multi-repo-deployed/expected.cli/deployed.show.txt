@@ -1,0 +1,16 @@
+pins: flowatlas.deployed.json
+
+prod
+  billing  v1  e93604ab  tag      3 days old
+  gateway  v1  5cce0519  tag      3 days old
+  orders   v1  f36068c5  tag      3 days old
+
+staging
+  billing  main  3a5a5b80  branch   3 days old  (a branch, read as it is now; record the commit with flowatlas deployed set --resolve)
+  gateway  main  5cce0519  branch   3 days old  (a branch, read as it is now; record the commit with flowatlas deployed set --resolve)
+  orders   main  f36068c5  branch   3 days old  (a branch, read as it is now; record the commit with flowatlas deployed set --resolve)
+
+canary
+  billing  v1  e93604ab  tag      3 days old
+  gateway  v1  5cce0519  tag      3 days old
+  orders   v9  —         missing  (does not resolve here; fetch it first (git fetch --tags), or check will refuse to decide)

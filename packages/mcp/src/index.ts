@@ -8,6 +8,7 @@
 export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS } from './server.js';
 export type { ServerOptions } from './server.js';
 export { DbHandle } from './query/db.js';
+export { ruleBreaksAt, rulesReportOf, violatedHops } from './tools/rules.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';
 export { resolveEntryRef, resolveSymbol, isResolved } from './query/entry-ref.js';
 export type { EntryRef, Resolved } from './query/entry-ref.js';
@@ -85,6 +86,7 @@ export { deadOptionsOf, deadRows, DEAD_KINDS } from './tools/dead.js';
 export type { DeadKind } from './tools/dead.js';
 export { findingsOf, FINDINGS_TOP, rankedFindingsOf } from './tools/findings.js';
 export { usesOfType, TYPE_USE_GROUPS } from './tools/type-usage.js';
+export { specOfNode, specsFor } from './tools/spec.js';
 export type { Carries, EdgeUse, EntryUse, TypeUses } from './tools/type-usage.js';
 export { CONTRACT_STATUS_RANK, crossingsBetween, crossingStatusOf } from './tools/contract.js';
 export { runSearch, SEARCH_KINDS } from './tools/search.js';

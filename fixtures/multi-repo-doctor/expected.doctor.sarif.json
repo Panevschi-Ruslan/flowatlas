@@ -1,0 +1,1896 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.5.1",
+          "semanticVersion": "0.5.1",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "channel-from-config",
+              "name": "channel-from-config",
+              "shortDescription": {
+                "text": "channel from config"
+              },
+              "help": {
+                "text": "The channel name is read from settings, so it cannot be followed. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
+                "markdown": "The channel name is read from settings, so it cannot be followed. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept channel-from-config --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            },
+            {
+              "id": "di-token-unknown",
+              "name": "di-token-unknown",
+              "shortDescription": {
+                "text": "di token unknown"
+              },
+              "help": {
+                "text": "No module in this repository provides the token these constructors ask for. Register it with { provide, useClass }, or force the adapter that does.",
+                "markdown": "No module in this repository provides the token these constructors ask for. Register it with { provide, useClass }, or force the adapter that does.\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept di-token-unknown --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            },
+            {
+              "id": "dynamic-http-url",
+              "name": "dynamic-http-url",
+              "shortDescription": {
+                "text": "dynamic http url"
+              },
+              "help": {
+                "text": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>').",
+                "markdown": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>').\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept dynamic-http-url --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            },
+            {
+              "id": "marker-arg-not-a-name",
+              "name": "marker-arg-not-a-name",
+              "shortDescription": {
+                "text": "annotation argument that is not a name"
+              },
+              "help": {
+                "text": "Each argument must be a string or an array of strings.",
+                "markdown": "Each argument must be a string or an array of strings."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "marker-callsservice-route-missing",
+              "name": "marker-callsservice-route-missing",
+              "shortDescription": {
+                "text": "@CallsService names a route the service does not serve"
+              },
+              "help": {
+                "text": "Correct the route, or check the target service's controllers.",
+                "markdown": "Correct the route, or check the target service's controllers."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "marker-callsservice-unknown-service",
+              "name": "marker-callsservice-unknown-service",
+              "shortDescription": {
+                "text": "@CallsService names no configured service"
+              },
+              "help": {
+                "text": "Add the service to services[], or to the aliases of the service it means, or correct the annotation.",
+                "markdown": "Add the service to services[], or to the aliases of the service it means, or correct the annotation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "marker-consumes-shadowed",
+              "name": "marker-consumes-shadowed",
+              "shortDescription": {
+                "text": "@Consumes the code already says"
+              },
+              "help": {
+                "text": "Static reading finds this subscription on its own; remove the annotation.",
+                "markdown": "Static reading finds this subscription on its own; remove the annotation."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "marker-consumes-without-consumer",
+              "name": "marker-consumes-without-consumer",
+              "shortDescription": {
+                "text": "@Consumes on a method nothing subscribes"
+              },
+              "help": {
+                "text": "Remove the annotation, or register the method as a handler.",
+                "markdown": "Remove the annotation, or register the method as a handler."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "marker-contractignore-unused",
+              "name": "marker-contractignore-unused",
+              "shortDescription": {
+                "text": "@ContractIgnore on no boundary"
+              },
+              "help": {
+                "text": "Nothing here crosses a service boundary; remove it, or move it to the method that makes the call.",
+                "markdown": "Nothing here crosses a service boundary; remove it, or move it to the method that makes the call."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "marker-emits-shadowed",
+              "name": "marker-emits-shadowed",
+              "shortDescription": {
+                "text": "@Emits the code already says"
+              },
+              "help": {
+                "text": "Static reading finds this publish on its own; remove the annotation.",
+                "markdown": "Static reading finds this publish on its own; remove the annotation."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "marker-emits-without-emit",
+              "name": "marker-emits-without-emit",
+              "shortDescription": {
+                "text": "@Emits on a method that publishes nothing"
+              },
+              "help": {
+                "text": "Remove the annotation, or publish from the method it is on.",
+                "markdown": "Remove the annotation, or publish from the method it is on."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "marker-flowentry-not-handler",
+              "name": "marker-flowentry-not-handler",
+              "shortDescription": {
+                "text": "@FlowEntry on a method nothing enters through"
+              },
+              "help": {
+                "text": "Move it to the handler that starts the flow.",
+                "markdown": "Move it to the handler that starts the flow."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "marker-names-nothing",
+              "name": "marker-names-nothing",
+              "shortDescription": {
+                "text": "annotation that names nothing"
+              },
+              "help": {
+                "text": "Give it a name, a list of names, or several arguments.",
+                "markdown": "Give it a name, a list of names, or several arguments."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "marker-route-not-found",
+              "name": "marker-route-not-found",
+              "shortDescription": {
+                "text": "marker route not found"
+              },
+              "help": {
+                "text": "@CallsService or @flowatlas-calls points at a route the named service does not serve. Check its controllers, or correct the annotation.",
+                "markdown": "@CallsService or @flowatlas-calls points at a route the named service does not serve. Check its controllers, or correct the annotation.\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept marker-route-not-found --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            },
+            {
+              "id": "marker-service-unknown",
+              "name": "marker-service-unknown",
+              "shortDescription": {
+                "text": "marker service unknown"
+              },
+              "help": {
+                "text": "@CallsService or @flowatlas-calls names a service that is not configured. Add it to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
+                "markdown": "@CallsService or @flowatlas-calls names a service that is not configured. Add it to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept marker-service-unknown --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            },
+            {
+              "id": "marker-unknown-arg",
+              "name": "marker-unknown-arg",
+              "shortDescription": {
+                "text": "annotation argument that could not be read"
+              },
+              "help": {
+                "text": "Marker arguments must be string literals, or consts from a package listed in sharedPackages.",
+                "markdown": "Marker arguments must be string literals, or consts from a package listed in sharedPackages."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "missing_required",
+              "name": "missing_required",
+              "shortDescription": {
+                "text": "field the receiver requires and the sender does not send"
+              },
+              "help": {
+                "text": "Send the field, or make it optional on the receiver. `flowatlas contracts --edge <key>` shows the boundary.",
+                "markdown": "Send the field, or make it optional on the receiver. `flowatlas contracts --edge <key>` shows the boundary."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "module-import-dynamic",
+              "name": "module-import-dynamic",
+              "shortDescription": {
+                "text": "module import dynamic"
+              },
+              "help": {
+                "text": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+                "markdown": "Import a module class, or X.forRoot(...); a computed import cannot be followed.\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept module-import-dynamic --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            },
+            {
+              "id": "no-way-in",
+              "name": "no-way-in",
+              "shortDescription": {
+                "text": "service with no way in"
+              },
+              "help": {
+                "text": "Its code was read and nothing in this graph reaches it, so no flow starts there. Check the service's type in flowatlas.config.json, or the reader that is meant to read it.",
+                "markdown": "Its code was read and nothing in this graph reaches it, so no flow starts there. Check the service's type in flowatlas.config.json, or the reader that is meant to read it."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "route-unguarded",
+              "name": "route-unguarded",
+              "shortDescription": {
+                "text": "route with no guard"
+              },
+              "help": {
+                "text": "Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+                "markdown": "Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept route-unguarded --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "kind": "finding"
+              }
+            },
+            {
+              "id": "target-route-not-found",
+              "name": "target-route-not-found",
+              "shortDescription": {
+                "text": "target route not found"
+              },
+              "help": {
+                "text": "The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.",
+                "markdown": "The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept target-route-not-found --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            },
+            {
+              "id": "type_mismatch",
+              "name": "type_mismatch",
+              "shortDescription": {
+                "text": "field sent as a type the receiver does not expect"
+              },
+              "help": {
+                "text": "Send the type the receiver declares, or change the declaration on the receiving side.",
+                "markdown": "Send the type the receiver declares, or change the declaration on the receiving side."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "unknown-base-url-env",
+              "name": "unknown-base-url-env",
+              "shortDescription": {
+                "text": "unknown base url env"
+              },
+              "help": {
+                "text": "Add the settings key to services[].baseUrlEnv of exactly one service, so the address names a service.",
+                "markdown": "Add the settings key to services[].baseUrlEnv of exactly one service, so the address names a service.\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept unknown-base-url-env --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            },
+            {
+              "id": "unknown-db-package",
+              "name": "unknown-db-package",
+              "shortDescription": {
+                "text": "unknown db package"
+              },
+              "help": {
+                "text": "Add a descriptor for the package to packages/adapters-db, so its methods are recorded as reads or writes.",
+                "markdown": "Add a descriptor for the package to packages/adapters-db, so its methods are recorded as reads or writes.\n\nSee every place with `flowatlas doctor`; accept one with `flowatlas accept unknown-db-package --service <name> --file <path> --note \"<why>\"`."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "kind": "gap"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/doctor/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "billing": {
+          "uri": "billing/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "gateway": {
+          "uri": "gateway/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "orders": {
+          "uri": "orders/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "toolExecutionNotifications": [
+            {
+              "level": "note",
+              "message": {
+                "text": "verdict: gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there"
+              }
+            },
+            {
+              "level": "note",
+              "message": {
+                "text": "verdict: 7 annotations the graph contradicts"
+              }
+            },
+            {
+              "level": "note",
+              "message": {
+                "text": "verdict: 4 contract errors nothing excused"
+              }
+            }
+          ]
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "marker-consumes-without-consumer",
+          "ruleIndex": 7,
+          "level": "error",
+          "message": {
+            "text": "@Consumes(\"order.refunded\") on InvoicesService.onOrderRefunded, which nothing subscribes and nothing calls. Remove the annotation, or register the method as a handler. Nothing in the repository connects it to a message."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 18
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "fd6a9ba16a9883404cf3168faf1bb402",
+            "primaryLocationLineHash": "fd6a9ba16a988340:1"
+          },
+          "properties": {
+            "service": "billing",
+            "marker": "Consumes"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 16,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: receiver orders requires `channel: string`; sender gateway does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 29
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "f4490cb4199b67003ea8994f73d12c6f",
+            "primaryLocationLineHash": "f4490cb4199b6700:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:31:12|http_calls|entry:orders:http:POST:/orders",
+            "field": "channel"
+          }
+        },
+        {
+          "ruleId": "marker-callsservice-route-missing",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "@CallsService points at DELETE /orders/:id/void, which orders does not serve. Did you mean POST /orders? Otherwise check orders's controllers."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 38
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "114fd29e7f5cfb0c6375fcb7c2726a0f",
+            "primaryLocationLineHash": "114fd29e7f5cfb0c:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "marker": "CallsService"
+          }
+        },
+        {
+          "ruleId": "marker-callsservice-unknown-service",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "@CallsService names warehouse, which is not a configured service. Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 47
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "ef0809d55f9f866b42426ee478df0ef4",
+            "primaryLocationLineHash": "ef0809d55f9f866b:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "marker": "CallsService"
+          }
+        },
+        {
+          "ruleId": "target-route-not-found",
+          "ruleIndex": 20,
+          "level": "error",
+          "message": {
+            "text": "target service orders has no route DELETE /orders/:param/void. Route renamed? Check orders's controllers, or annotate the call with @CallsService."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 58
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "96a9a5c1b7765c698704589621499ac8",
+            "primaryLocationLineHash": "96a9a5c1b7765c69:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "gateway",
+            "kind": "gap",
+            "call": "DELETE /orders/:param/void",
+            "targetService": "orders"
+          }
+        },
+        {
+          "ruleId": "unknown-base-url-env",
+          "ruleIndex": 22,
+          "level": "error",
+          "message": {
+            "text": "no service declares LEGACY_URL. Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 66
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "e496d6198cc79ff707ccca24cfa356df",
+            "primaryLocationLineHash": "e496d6198cc79ff7:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "gateway",
+            "kind": "gap",
+            "call": "GET /orders/:param/history"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 16,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: receiver orders requires `channel: string`; sender gateway does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 94
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d90b7f6556dcbf5156ea0b8763ba4382",
+            "primaryLocationLineHash": "d90b7f6556dcbf51:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:POST:/orders",
+            "field": "channel"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 21,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `type:gateway#CreateOrderDto` where receiver orders expects `string` ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 94
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "33dba5632004e8b06533db77b5a58f1f",
+            "primaryLocationLineHash": "33dba5632004e8b0:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:GET:/orders/:param"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 16,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: receiver orders requires `channel: string`; sender gateway does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 100
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "2f671804a9058e7c0ae473836a4d7cbe",
+            "primaryLocationLineHash": "2f671804a9058e7c:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:102:12|http_calls|entry:orders:http:POST:/orders/legacy",
+            "field": "channel"
+          }
+        },
+        {
+          "ruleId": "marker-emits-without-emit",
+          "ruleIndex": 10,
+          "level": "error",
+          "message": {
+            "text": "@Emits(\"order.audited\") on OrdersService.audit, which publishes nothing. Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 55
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "f023dde45dc62c5739c5a2e95c433c27",
+            "primaryLocationLineHash": "f023dde45dc62c57:1"
+          },
+          "properties": {
+            "service": "orders",
+            "marker": "Emits"
+          }
+        },
+        {
+          "ruleId": "marker-arg-not-a-name",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "@Emits on OrdersService.tally was given 7, which is not a name. Each argument must be a string or an array of strings. A value of another shape names nothing, and was not read as anything."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 68
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "c8fe045bdcb11df6e3e43e094f0900c7",
+            "primaryLocationLineHash": "c8fe045bdcb11df6:1"
+          },
+          "properties": {
+            "service": "orders",
+            "marker": "Emits"
+          }
+        },
+        {
+          "ruleId": "marker-names-nothing",
+          "ruleIndex": 12,
+          "level": "error",
+          "message": {
+            "text": "@Emits on OrdersService.sweep names nothing. Give it a name, a list of names, or several arguments. As written it annotates nothing and the method stays unread."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 78
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "f5c548b76fff9131cae2379baea60df4",
+            "primaryLocationLineHash": "f5c548b76fff9131:1"
+          },
+          "properties": {
+            "service": "orders",
+            "marker": "Emits"
+          }
+        },
+        {
+          "ruleId": "marker-unknown-arg",
+          "ruleIndex": 15,
+          "level": "error",
+          "message": {
+            "text": "@Emits on OrdersService.archive was given channelFor('archived'), which could not be read. Marker arguments must be string literals, or consts from a package listed in sharedPackages."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 99
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "4b3477bc9fb5b44b2581ac227e6bf4b9",
+            "primaryLocationLineHash": "4b3477bc9fb5b44b:1"
+          },
+          "properties": {
+            "service": "orders",
+            "marker": "Emits"
+          }
+        },
+        {
+          "ruleId": "marker-consumes-shadowed",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "@Consumes(\"order.created\") on InvoicesConsumer.onOrderCreated says what the code already says. Static reading finds this subscription on its own, so the annotation adds nothing. Remove it."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 18
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "b1d4b15409f6bbedeac8f771aab48add",
+            "primaryLocationLineHash": "b1d4b15409f6bbed:1"
+          },
+          "properties": {
+            "service": "billing",
+            "marker": "Consumes"
+          }
+        },
+        {
+          "ruleId": "no-way-in",
+          "ruleIndex": 18,
+          "level": "warning",
+          "message": {
+            "text": "gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "flowatlas.config.json",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 4
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "bc4852d8ca670f2970b3ee0de93d0728",
+            "primaryLocationLineHash": "bc4852d8ca670f29:1"
+          }
+        },
+        {
+          "ruleId": "module-import-dynamic",
+          "ruleIndex": 17,
+          "level": "warning",
+          "message": {
+            "text": "Import a module class, or X.forRoot(...); a computed import cannot be followed."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/app.module.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "1b193ddc58a27515f09a90cae31a7f40",
+            "primaryLocationLineHash": "1b193ddc58a27515:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "module-import-dynamic",
+          "ruleIndex": 17,
+          "level": "warning",
+          "message": {
+            "text": "Import a module class, or X.forRoot(...); a computed import cannot be followed."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/app.module.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "1c658691109bbab7aef8645cbaaea075",
+            "primaryLocationLineHash": "1c658691109bbab7:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "dynamic-http-url",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 40
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "e76d5703f220f3be1def2a9790c00d15",
+            "primaryLocationLineHash": "e76d5703f220f3be:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "marker-route-not-found",
+          "ruleIndex": 13,
+          "level": "warning",
+          "message": {
+            "text": "@CallsService points at DELETE /orders/:id/void, which orders does not serve. Check orders's controllers, or correct the annotation."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 40
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "6665dbbfe524c90f9eae87772374e9eb",
+            "primaryLocationLineHash": "6665dbbfe524c90f:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "dynamic-http-url",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "131e2a9b1d8b96155d524e6528795c6a",
+            "primaryLocationLineHash": "131e2a9b1d8b9615:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "marker-service-unknown",
+          "ruleIndex": 14,
+          "level": "warning",
+          "message": {
+            "text": "@CallsService names warehouse, which is not a configured service. Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "a7207549996afd12b0e7bea46f8bdac8",
+            "primaryLocationLineHash": "a7207549996afd12:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "module-import-dynamic",
+          "ruleIndex": 17,
+          "level": "warning",
+          "message": {
+            "text": "Import a module class, or X.forRoot(...); a computed import cannot be followed."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/app.module.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "15cbecf7b6a61be154a1d9f39aabb77a",
+            "primaryLocationLineHash": "15cbecf7b6a61be1:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "route-unguarded",
+          "ruleIndex": 19,
+          "level": "warning",
+          "message": {
+            "text": "POST /orders has no guard in front of it and reaches stored data. Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "366ba789d51eb50e5d5f153b5b9dd3f4",
+            "primaryLocationLineHash": "366ba789d51eb50e:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "finding"
+          }
+        },
+        {
+          "ruleId": "route-unguarded",
+          "ruleIndex": 19,
+          "level": "warning",
+          "message": {
+            "text": "POST /orders/legacy has no guard in front of it and reaches stored data. Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "404153f200c3c6179f6ce8e01c367b29",
+            "primaryLocationLineHash": "404153f200c3c617:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "finding"
+          }
+        },
+        {
+          "ruleId": "route-unguarded",
+          "ruleIndex": 19,
+          "level": "warning",
+          "message": {
+            "text": "GET /orders/:param has no guard in front of it and reaches stored data. Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "aa5b41974770380c3b3a00f2f47bf011",
+            "primaryLocationLineHash": "aa5b41974770380c:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "finding"
+          }
+        },
+        {
+          "ruleId": "di-token-unknown",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "No module in this repository provides LEDGER_CLIENT. Register it with { provide, useClass } or force the adapter that does."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d43a0585e8414d22d929029823ac1547",
+            "primaryLocationLineHash": "d43a0585e8414d22:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "di-token-unknown",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "No module in this repository provides AUDIT_CLIENT. Register it with { provide, useClass } or force the adapter that does."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 35
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "78013a29ba38370dda4520d1841413d9",
+            "primaryLocationLineHash": "78013a29ba38370d:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "marker-emits-shadowed",
+          "ruleIndex": 9,
+          "level": "warning",
+          "message": {
+            "text": "@Emits(\"order.created\") on OrdersService.create says what the code already says. Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 44
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3de04f6464e0f895e81e2515364c8d23",
+            "primaryLocationLineHash": "3de04f6464e0f895:1"
+          },
+          "properties": {
+            "service": "orders",
+            "marker": "Emits"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 46
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "91160123750216c40d393dedc1f371c0",
+            "primaryLocationLineHash": "91160123750216c4:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 57
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3f17b14ab72f4109a27afd9fffd769f1",
+            "primaryLocationLineHash": "3f17b14ab72f4109:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 70
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3f17b14ab72f4109a27afd9fffd769f1",
+            "primaryLocationLineHash": "3f17b14ab72f4109:2"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "channel-from-config",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "OrdersService.tally -> this.config.get('SWEEP_CHANNEL'). The channel name cannot be read here. Annotate OrdersService.tally with the channel it uses."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 71
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "8ecfca6ccecd9a53dd6d0ec12dda6be3",
+            "primaryLocationLineHash": "8ecfca6ccecd9a53:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 80
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3f17b14ab72f4109a27afd9fffd769f1",
+            "primaryLocationLineHash": "3f17b14ab72f4109:3"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "channel-from-config",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "OrdersService.sweep -> this.config.get('SWEEP_CHANNEL'). The channel name cannot be read here. Annotate OrdersService.sweep with the channel it uses."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 81
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "1bf0e1406a5c919ca762e11d36b69588",
+            "primaryLocationLineHash": "1bf0e1406a5c919c:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 91
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3f17b14ab72f4109a27afd9fffd769f1",
+            "primaryLocationLineHash": "3f17b14ab72f4109:4"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 101
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "81532df450113b209044e275a39b2495",
+            "primaryLocationLineHash": "81532df450113b20:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "channel-from-config",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "OrdersService.drain -> this.config.get('DRAIN_CHANNEL'). The channel name cannot be read here. Annotate OrdersService.drain with the channel it uses."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 126
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "fa19047b62ea5e666b4c7801ac60225c",
+            "primaryLocationLineHash": "fa19047b62ea5e66:1"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "marker-flowentry-not-handler",
+          "ruleIndex": 11,
+          "level": "warning",
+          "message": {
+            "text": "@FlowEntry names a flow on OrdersService.settle, which nothing enters the service through. Move it to the handler that starts the flow — the controller method, the bot handler, the message handler."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 133
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "17e4974cec21aed728e938484c23e278",
+            "primaryLocationLineHash": "17e4974cec21aed7:1"
+          },
+          "properties": {
+            "service": "orders",
+            "marker": "FlowEntry"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 135
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3f17b14ab72f4109a27afd9fffd769f1",
+            "primaryLocationLineHash": "3f17b14ab72f4109:5"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "marker-contractignore-unused",
+          "ruleIndex": 8,
+          "level": "warning",
+          "message": {
+            "text": "@ContractIgnore on OrdersService.reconcile, which is not on either end of any boundary. Nothing here crosses a service boundary, so nothing is being excused. Remove it, or move it to the method that makes the call."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 142
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "053c576f31de2fdeef09792484c0ab52",
+            "primaryLocationLineHash": "053c576f31de2fde:1"
+          },
+          "properties": {
+            "service": "orders",
+            "marker": "ContractIgnore"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 144
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3f17b14ab72f4109a27afd9fffd769f1",
+            "primaryLocationLineHash": "3f17b14ab72f4109:6"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "unknown-db-package",
+          "ruleIndex": 23,
+          "level": "warning",
+          "message": {
+            "text": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 148
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3f17b14ab72f4109a27afd9fffd769f1",
+            "primaryLocationLineHash": "3f17b14ab72f4109:7"
+          },
+          "baselineState": "unchanged",
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "dynamic-http-url",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 31
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "f7ed9ba50760c787ecc3cd4d924765db",
+            "primaryLocationLineHash": "f7ed9ba50760c787:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "dynamic-http-url",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 96
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d089e6ebebc2647cefc06cdf0f6116d4",
+            "primaryLocationLineHash": "d089e6ebebc2647c:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "dynamic-http-url",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {
+            "text": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 102
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "a489f4c0bdb286b7fad6d021ce3e7474",
+            "primaryLocationLineHash": "a489f4c0bdb286b7:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "channel-from-config",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "OrdersService.hold -> this.config.get('SWEEP_CHANNEL'). An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 92
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "05fe030098a9e39dd969793b1c5e941a",
+            "primaryLocationLineHash": "05fe030098a9e39d:1"
+          },
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        },
+        {
+          "ruleId": "channel-from-config",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "OrdersService.refund -> this.config.get('REFUND_CHANNEL'). An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 113
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d0264f1d60149a733049bd8b4b64d5db",
+            "primaryLocationLineHash": "d0264f1d60149a73:1"
+          },
+          "properties": {
+            "service": "orders",
+            "kind": "gap"
+          }
+        }
+      ]
+    }
+  ]
+}

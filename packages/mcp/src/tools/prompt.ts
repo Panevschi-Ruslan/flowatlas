@@ -1,5 +1,5 @@
 import { askNextOf, gapIdOf, isGapId, readAccepted, type GraphNode, type PromptSubject } from '@flowatlas/core';
-import { acceptedSplitOf, type AnchoredUnresolvedRow, type FindingRow, type GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, type AnchoredUnresolvedRow, type FindingRow, type GraphDb, type RuleViolation } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
@@ -29,6 +29,8 @@ import { READ_ONLY, withDb, type ToolContext } from './common.js';
 import { crossingsBetween } from './contract.js';
 import { rankedFindingsOf } from './findings.js';
 import { loadContractBreaks } from '../query/contracts.js';
+import { ruleBreaksAt, rulesReportOf } from './rules.js';
+import { specOfNode } from './spec.js';
 
 /**
  * The node an id names: as it is, as a channel without its prefix, or as an
@@ -71,6 +73,30 @@ const gapsAtPlace = (db: GraphDb, ref: string): string[] => {
 };
 
 /**
+ * The subject with the rules a violation of runs through it or one of its
+ * steps (P114): one section of the shared renderer. Added here rather than
+ * gathered, since the page's subject carries no rules.
+ */
+const withRules = (db: GraphDb, ctx: ToolContext, subject: PromptSubject): PromptSubject => {
+  const ids =
+    subject.scope === 'service'
+      ? new Set(db.allNodes().filter((node) => node.repo === subject.id && node.type !== 'channel').map((node) => node.id))
+      : new Set([subject.id, ...subject.steps.map((step) => step.id), ...(subject.members ?? []).map((member) => member.id)]);
+  const rules = ruleBreaksAt(rulesReportOf(db, ctx), ids);
+  return rules.length === 0 ? subject : { ...subject, rules };
+};
+
+/**
+ * The subject with its route's or channel end's part of the written document
+ * (P118), when asked: the same fragment `get_spec` answers with a path.
+ */
+const withSpec = (db: GraphDb, ctx: ToolContext, subject: PromptSubject, node: GraphNode, asked: boolean): PromptSubject => {
+  if (!asked) return subject;
+  const spec = specOfNode(db, ctx, node);
+  return spec === undefined ? subject : { ...subject, spec };
+};
+
+/**
  * `docs` names the blocks about the subject (P120), so the hand-off says which page describes it; `failures` is
  * an entry's run-time comparison (P106), as data beside the text that says it.
  */
@@ -103,7 +129,7 @@ const answer = (
  * text and the tools never disagree, and the rows nobody accepted (P143).
  * The page's parity test asks the same (P134).
  */
-export const promptScopeContext = (db: GraphDb, dbPath: string): ScopeContext => {
+export const promptScopeContext = (db: GraphDb, dbPath: string, rules?: readonly RuleViolation[]): ScopeContext => {
   const counts = loadObservedCounts(dbPath);
   let fresh: AnchoredUnresolvedRow[] | undefined;
   const rows = (): AnchoredUnresolvedRow[] => (fresh ??= acceptedSplitOf(db, db.allUnresolved(), readAccepted(dbPath)).fresh);
@@ -112,12 +138,12 @@ export const promptScopeContext = (db: GraphDb, dbPath: string): ScopeContext =>
     ...(counts === undefined ? {} : { counts }),
     crossings: (from, to) => crossingsBetween(db, from, to),
     findings: (service) =>
-      (ranked ??= rankedFindingsOf(db, rows(), loadContractBreaks(dbPath))).filter((row) => row.service === service).map(findingGapOf),
+      (ranked ??= rankedFindingsOf(db, rows(), loadContractBreaks(dbPath), rules)).filter((row) => row.service === service).map(findingGapOf),
     rows,
   };
 };
 
-const scopeContext = (db: GraphDb, ctx: ToolContext): ScopeContext => promptScopeContext(db, ctx.handle.path);
+const scopeContext = (db: GraphDb, ctx: ToolContext): ScopeContext => promptScopeContext(db, ctx.handle.path, rulesReportOf(db, ctx)?.violations);
 
 /** A file said as `service#path`, when nodes are in it. */
 const asFile = (db: GraphDb, ref: string): { service: string; file: string } | undefined => {
@@ -169,6 +195,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
         scope: z.enum(PROMPT_SCOPES).optional(),
         maxSteps: z.number().int().min(1).max(200).default(PROMPT_LIMITS.maxSteps).describe('chain steps'),
         maxChars: z.number().int().min(500).max(40000).default(PROMPT_LIMITS.maxChars),
+        withSpec: z.boolean().optional(),
       },
       annotations: READ_ONLY,
     },
@@ -193,7 +220,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
           if (scoped !== undefined && 'error' in scoped) {
             return { ...scoped, next: (scoped.scopes ?? []).slice(0, MAX_NEXT).map((scope) => `describe_for_prompt({id: ${JSON.stringify(trimmed)}${scope === 'node' ? '' : `, scope: ${JSON.stringify(scope)}`}})`) };
           }
-          if (scoped !== undefined) return answer(scoped.id, scoped.subject, input, undefined, withDocs(db, ctx.handle.path, scoped.id));
+          if (scoped !== undefined) return answer(scoped.id, withRules(db, ctx, scoped.subject), input, undefined, withDocs(db, ctx.handle.path, scoped.id));
         }
         const found = subjectOf(db, input.id);
         if (Array.isArray(found)) {
@@ -207,7 +234,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
               );
         }
         const counts = loadObservedCounts(ctx.handle.path);
-        const subject = gatherPromptSubject(db, found.node, counts);
+        const subject = withSpec(db, ctx, withRules(db, ctx, gatherPromptSubject(db, found.node, counts)), found.node, input.withSpec === true);
         // An entry seen at run time carries the comparison as data too (P106), beside the text that says it.
         const compared = counts === undefined ? undefined : failuresSeen(counts, found.node);
         return answer(found.node.id, subject, input, found.alsoAnswers, {

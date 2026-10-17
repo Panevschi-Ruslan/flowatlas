@@ -186,6 +186,22 @@ describe('schemas, as the registry holds them', () => {
     expect(graph.types['type:billing#N']?.fields?.[0]?.type).toBe('string | null');
   });
 
+  it('widens a field whose list of types holds null, as OpenAPI 3.1 spells nullable (P196)', () => {
+    const { graph } = read({
+      openapi: '3.1.0',
+      paths: {},
+      components: {
+        schemas: {
+          N: {
+            type: 'object',
+            properties: { n: { type: ['null', 'string'] }, items: { type: ['array', 'null'], items: { type: 'number' } }, nothing: { type: ['null'] } },
+          },
+        },
+      },
+    });
+    expect(graph.types['type:billing#N']?.fields?.map((field) => field.type)).toEqual(['string | null', 'number[] | null', 'null']);
+  });
+
   it('says nothing about a reference out of the document rather than inventing one', () => {
     const { graph } = read({
       openapi: '3.0.3',

@@ -698,7 +698,7 @@ them the check would report most of a real project as broken on its first run.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--format <name>` | `text` | `text`, `json` or `markdown` |
+| `--format <name>` | `text` | `text`, `json`, `markdown` or `sarif` ([SARIF](#--format-sarif-findings-for-code-scanning); `--severity` is then the least level written) |
 | `--severity <level>` | `info` | least severe finding to show: `error`, `warning` or `info` |
 | `--fail-on <level>` | `none` | exit 1 on a finding at this level or worse: `none`, `error`, `warning` |
 | `--edge <key>` | every boundary | only this one, as `from\|type\|to` |
@@ -708,6 +708,9 @@ them the check would report most of a real project as broken on its first run.
 | `--max-nodes <n>` | `150` | most findings to print; the file is always complete |
 | `--out <dir>` | the configured output | where to write `contracts.json` |
 | `--no-ignore` | off | report what `@ContractIgnore` excuses as ordinary findings |
+| `--output <file>` | stdout | with `--format sarif`: write the log here and print one line about it |
+| `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout ([SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 
 Every run writes the whole report to `<output>/contracts.json`, whatever it
 printed and whatever it exited with. Exit `0` means it ran and found nothing at
@@ -794,8 +797,11 @@ query per item and are bounded on purpose, by why (P89).
 
 | Flag | Default | Does |
 |---|---|---|
-| `--format <kind>` | `table` | `json` or `table` |
-| `--max <n>` | `150` | most rows, after which it says how many it cut |
+| `--format <kind>` | `table` | `json` or `table`; `cycles` and `dead` also `sarif` |
+| `--max <n>` | `150` | most rows, after which it says how many it cut; with `--format sarif`, most results (5,000) |
+
+`cycles` and `dead` also take `--output`, `--sarif-root` and `--sarif-level`
+with `--format sarif` ([SARIF](#--format-sarif-findings-for-code-scanning)).
 
 These say `table` where the walking commands say `tree`, because the output is
 rows rather than a shape.
@@ -2035,24 +2041,25 @@ line (counted: `not read: 2 lines not starting REPORT`).
 ### `flowatlas doctor`
 
 What could not be read, what the annotations get wrong, what has drifted, and
-whether any of it has grown since the baseline. Five sections over one built
-graph; it reads no repository's source, so two runs over one graph say the same
+whether any of it has grown since the baseline, and which architecture rules
+the graph breaks. Six sections over one built graph; it reads no repository's source, so two runs over one graph say the same
 thing. It looks at a repository only to say whether its dependencies are
 installed, and what a service with no way in looks like.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--section <name>` | all five | `unresolved`, `markers`, `desync`, `contracts`, `baseline`; repeatable |
+| `--section <name>` | all six | `unresolved`, `markers`, `desync`, `contracts`, `rules`, `baseline`; repeatable |
 | `--service <name>` | every one | narrow every section to one repository |
 | `--reason <code>` | every one | only the places of this reason, at every level it is at; repeatable, or a comma list. The sections default to `unresolved` and `desync`, the two made of rows that carry a reason. A reason neither the catalogue nor any row knows stops with exit 2 and the nearest names; `--accept` refuses it. With `--unresolved`, narrows the breakdown the same way |
-| `--strict` | off | exit 1 on a broken annotation, a contract error, or growth past the baseline |
+| `--strict` | off | exit 1 on a broken annotation, a contract error, a rule violation at `error` the baseline does not hold, or growth past the baseline |
 | `--strict-runtime` | off | exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered (with an observed file) |
 | `--accept` | off | write today's numbers as the baseline |
 | `--baseline <path>` | `<config dir>/flowatlas.baseline.json` | where the accepted numbers live |
 | `--no-baseline` | off | skip the growth check, so `--strict` asks only about annotations and contracts |
 | `--no-contracts` | off | do not run the contract check |
-| `--max-nodes <n>` | 6 per reason, 150 per section | most places named under one reason, and rows in each other section; what is printed (text, `github`, and `--format json` with its `truncated` counts) is cut, and the written `doctor.json` is always complete: every row of every reason and section, with no `truncated` field |
-| `--format <name>` | `text` | `text`, `json`, `github` |
+| `--no-rules` | off | do not check the architecture rules |
+| `--max-nodes <n>` | 6 per reason, 150 per section | most places named under one reason, and rows in each other section; what is printed (text, `github`, `sarif`, and `--format json` with its `truncated` counts) is cut, and the written `doctor.json` is always complete: every row of every reason and section, with no `truncated` field |
+| `--format <name>` | `text` | `text`, `json`, `github`, `sarif` ([SARIF](#--format-sarif-findings-for-code-scanning); every place up to 5,000 unless `--max-nodes` says, a cut naming `doctor.json`) |
 | `--out <dir>` | configured output | where `doctor.json` goes |
 | `--unresolved` | off | instead of the report, what the reader could not follow, grouped by cause and by package |
 | `--missing` | off | instead of the report, only the repositories probably missing from the project, each with every place that points at it (below); `--json` as data |
@@ -2062,6 +2069,9 @@ installed, and what a service with no way in looks like.
 | `--cause <code>` | every one | with `--unresolved`: only this cause, e.g. `module-not-installed` |
 | `--package <name>` | every one | with `--unresolved`: only what points into this package or module |
 | `--json` | off | shorthand for `--format json` |
+| `--output <file>` | stdout | with `--format sarif`: write the log here and print one line about it |
+| `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout ([SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 
 **`--unresolved`: why the reader stopped.** The report lists rows by reason,
 and a reason says what was not read - a call, a type, an injection. A row about
@@ -2171,6 +2181,19 @@ file not there, not parsed, or declaring no module) and `shape-file-unmatched`
 (a note: a shape something stronger answered, or one a service's own list
 names and it never imports). The three notes are at level `info`. `flowatlas shapes --suggest` says which packages
 are still worth a shape file.
+
+**Rules.** With `rules[]` in the configuration, the `rules` section lists each
+violation nothing excused (`flowatlas accept rule:<name>`), marked `new` when the
+baseline does not hold its key, with where it crosses and the rule's note, and
+each rule a side of which names nothing (`rule-matches-nothing`). `--strict`
+fails on a new one at `error` - a guessed one only with
+`rulesSettings.failOnHeuristic` - and `--accept` writes every key to the
+baseline's `rules` map (`baselineFormatVersion` 2; a version-1 baseline is read
+as one that accepted no violation). The summary line gains `rules: errors=N
+new=M`; `--format github` annotates each violation at the crossing hop, under
+the directory the configuration gives its repository. A rule that fails its
+schema stops the run with exit 2, naming it (`rule-invalid`). See
+[`flowatlas rules`](#flowatlas-rules).
 
 **Accepted gaps.** A gap accepted with `flowatlas accept` is left out of every
 count, the text says how many accepted gaps were left out, and `doctor.json`
@@ -2398,6 +2421,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info), `iot-action-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread`, `environment-from-files` |
+| Architecture rules (`flowatlas rules`, the `rules` section) | `rule-matches-nothing` (a side of a rule names nothing; never a pass), `rule-invalid` (a rule fails its schema; the configuration is refused), `rule-over-partial-read` (a note: the rule names a service read in part) |
 
 Three of these are worth knowing before they are met, because each is the
 tool declining to guess:
@@ -2420,6 +2444,49 @@ tool declining to guess:
   is enough to refuse it, and so is a service that commits no environment file at
   all (`fixtures/nest-mount-empty`, `fixtures/nest-mount-set`,
   `fixtures/nest-context-path`).
+
+### `flowatlas rules`
+
+Checks the architecture rules the configuration writes down - who may call,
+write, publish to or consume what, by service, tag, table and channel - over
+the joined graph, and says which edges break them. A rule is about the edges
+between repositories that a single repository's import graph never holds: a
+browser requesting a route of another repository, a service writing a table
+another owns, a handler consuming a channel. Nothing is read from source; a
+violation is only drawn along an edge the graph holds.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--format <name>` | `text` | `text`, `json`, `markdown`, `github` (an annotation per violation at the crossing hop) or `sarif` ([SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--rule <name>` | every rule | only this rule; repeatable |
+| `--service <name>` | every service | only violations this service is on either end of |
+| `--fail-on <level>` | `none` | exit 1 on a violation, or a rule that could not be checked, at this level or worse: `none`, `error`, `warning` |
+| `--max-nodes <n>` | `150` | most violations to print; the file is always complete |
+| `--out <dir>` | the configured output | where to write `rules.json` |
+| `--list` | off | print the configured rules with how many nodes each side selects |
+| `--output <file>` | stdout | with `--format sarif`: write the log here and print one line about it |
+| `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout ([SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
+
+Every run writes the whole report to `<output>/rules.json`
+(`rulesFormatVersion: 1`): each rule with its status (`held`, `broken`,
+`unchecked`) and how many nodes each side selected, every violation, the
+excused ones, the rules that could not be checked and the notes. A violation
+carries the rule, the two ends (`from`, `to`, by node id, and their services),
+the path (each hop's edge type and `confidence`), `at` - the file and line of
+the near end of the hop that crossed, where a fix goes - the weakest confidence
+on the path and `heuristic` when that is a guess. Exit `0` means nothing at or
+above `--fail-on`; `1` means something was; `2` means it could not run (no
+graph, no rules configured, a rule that fails its schema).
+
+A violation along a guessed edge is shown at its rule's severity and marked a
+guess; it fails a run only with `rulesSettings.failOnHeuristic: true`. A rule
+a side of which names a service, tag, table, channel or route the graph does
+not hold is never a pass: it is listed as not checked, with
+`rule-matches-nothing` and the nearest names, and fails at its severity. A rule
+naming a service the build read in part says so on each answer
+(`rule-over-partial-read`). The rules themselves are written under
+[`rules`](#rules) in the configuration.
 
 ### `flowatlas shapes --suggest`
 
@@ -2549,6 +2616,17 @@ graph server's `search` returns it. A reason on its own accepts it everywhere;
 refused, so a typo does not accept nothing silently. Accepting routes by rule
 is described under `doctor` above.
 
+**A rule's violations.** `rule:<name>` accepts violations of one architecture
+rule: `--service` narrows it to those starting in a service, `--file` to those
+crossing in a file (or a glob), `--path` to those with a route pattern at
+either end, and `--note` is always required. `doctor`, `rules`, `diff` and the
+graph server then list them as excused, never counted and never hidden.
+
+```sh
+flowatlas accept rule:only-orders-writes-orders --service billing \
+  --note 'the backfill job, until it is done'
+```
+
 **A file that cannot be read.** An `accepted.json` that is not JSON (a merge
 conflict, a truncated write), is JSON of the wrong shape (an entry without a
 `reason`), or carries an `acceptedFormatVersion` this version does not know is
@@ -2581,9 +2659,14 @@ are new. Markdown by default, because its destination is a pull request comment.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--service <name>` | every one | compare only this repository, repeatable |
-| `--format <name>` | `markdown` | `markdown` or `json` |
-| `--output <file>` | none | write what was printed here as well |
+| `--service <name>` | every one | compare only this repository, repeatable; with `--env`, the services that move (default: every one whose head differs from its pin) |
+| `--env <name>` | none | the base side is what this environment runs, each service at its pin, in place of `<base-ref>`; the one ref given is then the head |
+| `--pin <service>=<ref>` | none | with `--env`: the ref a service runs, over the pins file and `FLOWATLAS_PIN_<SERVICE>`, repeatable |
+| `--pins <path>` | `deployed.file`, or `flowatlas.deployed.json` | with `--env`: the pins file |
+| `--format <name>` | `markdown` | `markdown`, `json` or `sarif` (the new and fixed contract findings and rule violations, [SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead of stdout |
+| `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout |
+| `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 | `--fail-on-contract-break` | off | exit 1 on a new contract error, or on a service neither ref could be read for |
 | `--max-entries <n>` | 150 | ways in listed per changed node |
 | `--max-nodes <n>` | 100 | changed nodes walked backwards from |
@@ -2593,6 +2676,7 @@ are new. Markdown by default, because its destination is a pull request comment.
 | `--sequence-detail <level>` | `service` | `service` or `class`: what a participant of a flow's diagram is |
 | `--max-chars <n>` | 60000 | about the most characters of Markdown (a pull-request comment on GitHub holds 65,536): diagrams are dropped from the last one back, then whole flows, each counted, with `diff.json` named |
 | `--no-diagrams` | off | list each changed flow's steps without its Mermaid diagram |
+| `--spec` | off | also write both sides' OpenAPI and AsyncAPI documents in memory and add their changes, by kind, as **API changes** ([`spec diff`](#flowatlas-spec-diff-base-ref-head-ref)) |
 | `--concurrency <n>` | cores | repositories read at once |
 | `--no-cache` | off | read every commit again rather than believing the cache |
 | `--keep-worktrees` | off | leave the detached checkouts on disk, for debugging |
@@ -2603,6 +2687,20 @@ subdirectory of a repository rather than the root of one cannot be read at a
 ref: the run says so in Warnings, the verdict names it, and
 `--fail-on-contract-break` refuses rather than passing a comparison that did not
 cover it.
+
+**Against an environment.** `flowatlas diff --env prod [head-ref]` compares
+with what prod runs rather than with one ref of every repository: the base side
+is each service at the ref [`check --env`](#flowatlas-check---env-name) reads
+it at (the pins file, `FLOWATLAS_PIN_<SERVICE>`, then `--pin`), the head side
+the same with the services that move at the head ref or the working tree. The
+document is the one a check carries under its verdict, without the verdict:
+`diff.json`'s `base.ref` is the environment's name, and every section equals
+`check.prod.json`'s `diff` but for the timings. The Markdown opens with the
+pins (`| service | deployed | pinned by | head |`), the services the
+environment does not run, and notes. A pin that does not resolve, an unknown
+environment and a service in a subdirectory of a repository exit 2, naming
+which repository to fetch: never read as the working tree in their place.
+`<base-ref>` and `--env` are exclusive; `--pin` and `--pins` need `--env`.
 
 Besides the impact and the contracts, the document says two things a renamed
 route breaks that no compiler on either side sees. **Calls that stopped
@@ -2639,6 +2737,19 @@ has is drawn on that side alone, titled added or removed (a removed one read off
 the base graph). The flows that changed most, across most services, come first;
 ways in whose steps did not change are named on one line.
 
+**Rules**, after the contracts, applies the head's `rules[]` to both graphs and
+says which violations this revision introduced, fixed, left as they were and had
+excused (the head's `accepted.json`), each keyed `rule|<name>|<from>|<to>` with
+no line in it, so a violation that only moved down a file is the same one. The
+section is left out when no rule has a violation on either side.
+`--fail-on-rule-break` exits 1 on a new violation at `error` along edges that
+are not guesses (with `rulesSettings.failOnHeuristic`, guesses too), and on a
+service neither ref could be read for, as `--fail-on-contract-break` does.
+
+With `--spec`, **API changes** follows the contracts: the table `flowatlas spec
+diff` prints, every change of the two sides' documents by kind with the callers
+it breaks.
+
 **Docs this branch makes stale**, after the changed flows, lists each doc block
 (see `flowatlas docs`) on the head side that no longer says what the head
 graph says but did say what the base graph says, at its `file:line`, with the
@@ -2649,7 +2760,7 @@ are read from the working tree, or at the head ref from the repository of the
 service each is in. The section is in the Markdown only: `diff.json` is
 unchanged by it.
 
-`diff.json` is format 3 (`diffFormatVersion`). Format 2 added `unresolved`
+`diff.json` is format 5 (`diffFormatVersion`). Format 2 added `unresolved`
 (`{ added, removed }`, each row `{ id, kind, service, file, line?, reason,
 node?, sites, kept? }`, `kind` `gap` or `finding`; `kept`, written since P194
 without a format change, is set when both sides hold the id: the sites they
@@ -2662,9 +2773,360 @@ steps, counts, truncated? }`, `side` `both`, `head` or `base`, each participant
 `table`, `store` or `external`) and each step `{ status, kind, from, to, label,
 confidence, file?, line?, params?, returns?, takes?, group?, note? }` (`status`
 `same`, `added`, `removed` or `changed`; `kind` `enters`, `calls`, `http_calls`,
-`hits`, `emits`, `consumes`, `queries`, `caches`, `triggers` or `stop`). Files of
-formats 1 and 2 are still read, without the sections they predate; one from a
-newer flowatlas is refused by name.
+`hits`, `emits`, `consumes`, `queries`, `caches`, `triggers` or `stop`). Format
+4 adds `rules`: `{ new, fixed, existing, excused }`, each a list of violations
+as `rules.json` holds them. Format 5 adds `spec`: what `spec-diff.json` holds
+with `--spec`, and `null` without it (not computed, which an empty list would
+not say). Files of formats 1 to 4 are still read, without the sections they
+predate; one from a newer flowatlas is refused by name.
+
+A `no-producer` join whose `now` is `never-produced` is a consumer the head side
+added to a channel nothing on the head side publishes: a join the base side
+never made and the head side cannot make (P117).
+
+### `flowatlas spec`
+
+Writes an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) document of each
+service's routes and an [AsyncAPI 3.0](https://www.asyncapi.com/docs/reference/specification/v3.0.0)
+document of each service's channel ends, from what the graph already read: no
+framework plugin, nothing run. Build first; `spec` reads the graph.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--service <name>` | every one | only this service, repeatable |
+| `--kind <kind>` | `both` | `openapi`, `asyncapi` or `both`: only what each service has |
+| `--out <dir>` | `<output>/spec/` | where the files go; a directory inside a configured repository is refused, except with `--check`, which writes nothing |
+| `--format <name>` | `yaml` | `yaml` or `json` |
+| `--depth <n>` | 8 | named types followed into a shape before it is cut |
+| `--check` | off | write nothing; exit 1 when a file there differs from what would be written now, is missing, or is no longer written |
+| `--inventory` | off | also write `inventory.md` (or `inventory.json`): every route and procedure with its guards, public mark, callers, tables written, channels published and failure statuses |
+| `--no-verify` | off | do not read each document back |
+
+Files are `<service>.openapi.yaml`, `<service>@<application>.openapi.yaml` for
+a service with more than one application (one address space each), and
+`<service>.asyncapi.yaml`. Each is the same bytes every run (keys in a fixed
+order), so a repository can commit one and run `spec --check` in CI.
+
+What goes in, and from where:
+
+| In the document | From |
+|---|---|
+| paths and verbs | every `http` way in; `:param` is written `{name}` with the name the registration wrote (P34) |
+| `parameters` | the path's values, and the query and header values the handler reads (P29) |
+| `requestBody`, the `2XX` response | the request and answer types, expanded from the type registry into `components.schemas` (JSON Schema 2020-12) **through the contract check's wire rules**: a `Date` is a string with `format: date-time`, a field typed `undefined` is not there, `@Exclude()` drops a field, `@Expose({ name })` renames it, `@IsOptional()` on the receiving side accepts `null` |
+| failure responses | `fails` grouped per status (P87); a helper's choices each under their status (P90); an exception whose status is worked out at run time under `default` |
+| `operationId` | the handler's name |
+
+The success answer is `2XX`: which success status a route answers with is not
+something the graph reads. An AsyncAPI document has a `send` operation per
+publish and a `receive` operation per consumer, each with its own message; the
+channel is written by its address, the id without `channel:`.
+
+Nothing unread is written as fact. A route whose path was not read, one that
+answers every verb, and a second route on the same verb and path are left out
+and counted under `x-flowatlas-omitted`; a shape that cannot be said is `{}`
+with `x-flowatlas-unread` and the reason; the run prints both counts per
+document. Every document is read back through flowatlas's own reader of its
+format, which must find the routes and channel ends it was written from; a
+mismatch is a bug in flowatlas, printed as such, and the run exits 2.
+
+The `x-flowatlas-*` extensions:
+
+| Extension | On | Says |
+|---|---|---|
+| `x-flowatlas-source` | operation | `file:line` it was read at, inside the service's repository |
+| `x-flowatlas-confidence` | operation | the weakest of what it was read from (`static`, `declared`, `heuristic`…); a body or answer only a cast states is `heuristic` |
+| `x-flowatlas-callers` | route, `receive` | the requests joined to it, or the publishers of what it receives, counted by service |
+| `x-flowatlas-consumers` | `send` | the consumers of what it publishes, by service |
+| `x-flowatlas-guards` | route | each check in front: `name`, `layer`, `where` (`global`, `module`, `controller`, `route`), `via`, `skippedBy` (P76) |
+| `x-flowatlas-public`, `x-flowatlas-public-by` | route | open on purpose, and what says so: `@flowatlas-public <why>`, a decorator `doctor.publicDecorators` names, or `doctor.publicRoutes` |
+| `x-flowatlas-unread` | schema, response, message | why it is `{}`: `any-typed`, `transformed`, `too-deep`, `type-not-found`, `external-type`, `type-unread`, `generic-unread`, `not-json`, `nothing-sent`, `ref-unparsed`, `answer-unread`, `status-unread`, `payload-unread` |
+| `x-flowatlas-assumed` | response | every site of that status is the framework's default, written nowhere (P87) |
+| `x-flowatlas-sources` | response | `throw`, `guard`, `pipe` |
+| `x-flowatlas-claimed` | body, response | only a cast says the type |
+| `x-flowatlas-unnamed` | path parameter | the name is numbered, not the code's |
+| `x-flowatlas-type` | component | the registry id it was written from |
+| `x-flowatlas-envelope` | `receive` | how a delivery wraps the message: `{ path: 'Records[].body', text: true }` (R172) |
+| `x-flowatlas-forwards-to` | `receive` | the channels a delivery hands the message on to |
+| `x-flowatlas-expects-reply` | `send` | a request that waits for an answer |
+| `x-flowatlas-channel-kind` | channel | `topic`, `queue`, … |
+| `x-flowatlas-omitted` | document | the ends left out, by reason |
+
+Not written: `servers` (a host is configuration, kept out of artefacts),
+security schemes and OAuth flows, examples.
+
+#### `flowatlas spec --against <service>=<file>`: a committed document against the code
+
+A team that writes its document by hand asks the opposite of `--check`: does
+the document still describe the code? `--against` (repeatable) reads the file
+(YAML or JSON, OpenAPI 3 or AsyncAPI 2/3, the kind by its top key) through
+flowatlas's reader of that format, writes it back in the code's normal form
+(`2XX`, `{name}`, components by shape, not by name), writes the service's
+document from the graph, and compares the two with
+[`spec diff`](#flowatlas-spec-diff-base-ref-head-ref)'s catalogue - the
+document as the base side, the code as the head. `--against shop` alone takes
+the documents `services[].apiDocuments` lists; `shop@admin=<file>` compares
+with the code of one application. Nothing is written into a repository; the
+report is `spec-against.json` (`specAgainstFormatVersion: 1`) under the output.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--format <name>` | `text` | with `--against`: `text`, `markdown`, `json` or `sarif` (`spec/<kind>` rules, command `spec-against`) |
+| `--fail-on <level>` | `error` | `none`, `error` or `warning` |
+| `--max-rows <n>` | 50 | most changes printed; the file is complete |
+| `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead of stdout |
+
+Read that way, each kind says one thing:
+
+| Kind | Level | Says |
+|---|---|---|
+| `endpoint-removed`, `method-removed`, `channel-removed`, `channel-consumer-removed` | error (consumer: warning) | the document declares it; the code no longer answers it, placed at the document's line |
+| `endpoint-added` | info | the code answers it; the document does not say it, placed in the code |
+| `request-property-added-required`, `request-property-became-required` | error | the code requires a field or value the document does not declare, or lets a caller leave out |
+| `response-property-removed`, `message-property-removed`, `…-became-optional` | error | the document promises a field the code does not send, or may leave out |
+| `…-type-changed` | error | the two disagree on a field's type |
+| `request-property-removed`, `optional-property-added` | warning, info | the document declares a value the code does not read; the code reads or sends an optional one the document does not declare |
+| `response-status-added` | warning | the code can fail with a status the document does not declare (statuses the code only assumes or could not read are left out) |
+
+Every operation a document declares is public by being declared, so a
+promise the code does not keep is an error whether or not anything in the
+project calls it. Not compared: descriptions (prose), guards (a document names
+security schemes, the code guard classes) and `format`s, which a reader of a
+document does not keep. The query and header values and failure statuses the
+document declares are compared, from the document itself.
+`flowatlas contracts` runs the same comparison for every document
+`apiDocuments` lists, as a "spec against the code" section after the
+boundaries (and in its SARIF log), writing `spec-against.json` beside
+`contracts.json`; `--fail-on` there fails on a broken promise too. Its
+`--format json` stays `contracts.json`'s format.
+
+### `flowatlas spec diff <base-ref> [head-ref]`
+
+Builds both revisions through the cache `diff` uses, writes both sides'
+documents in memory and compares them operation by operation. Each change is
+one kind of a fixed catalogue (the kinds are the SARIF `ruleId`s,
+`spec/<kind>`), and carries the callers joined to it on the base side - which
+no document differ can know.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--service <name>` | every one | compare only this service, repeatable |
+| `--format <name>` | `text` | `text`, `markdown`, `json` or `sarif` |
+| `--fail-on <level>` | `error` | `none`, `error` or `warning` |
+| `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead |
+| `--max-rows <n>` | 50 | changes printed; `spec-diff.json` is complete |
+| `--depth <n>` | 8 | named types followed into a shape |
+| `--sarif-root`, `--sarif-level` | | as for [`--format sarif`](#--format-sarif-findings-for-code-scanning) |
+| `--no-cache`, `--keep-worktrees`, `--concurrency`, `--out` | | as for `diff` |
+
+| Level | Kinds |
+|---|---|
+| breaking (`error`) | `endpoint-removed`, `method-removed`, `path-param-added`, `request-property-became-required`, `request-property-added-required`, `request-property-type-changed`, `response-property-removed`, `response-property-type-changed`, `response-property-became-optional`, `response-status-removed` (a success status), `channel-removed` (a publish), `message-property-removed`, `message-property-type-changed`, `message-property-became-optional` |
+| `warning` | `request-property-removed` (callers still send it), `response-status-added` (a failure a caller may not handle), `security-added` (a guard now in front), `channel-consumer-removed` |
+| `info` | `endpoint-added` (a route or a channel end), `optional-property-added`, `description-changed` |
+
+Routes are matched by what a request is matched on, the verb and the path with
+its parameters as `:param`, so renaming a parameter is no change. Fields are
+compared as they go over the wire (both documents are written through the wire
+rules) and to `--depth`; a side written as unread is not compared.
+
+**Callers decide the level.** A breaking change with no caller in the project,
+on a route nothing marks public, is a `warning` saying `no caller in this
+project`; one with callers, or on a public route, stays an `error` with its
+callers listed (service, `file:line`, confidence). Exit 1 when a change is at
+or above `--fail-on`, or when a service could not be read at either ref.
+
+`spec-diff.json` (`specDiffFormatVersion: 1`) is `{ documents: { base, head },
+changes, summary: { errors, warnings, infos, breaking, uncalled } }`, each
+change `{ kind, level, document, format, service, operation, field, base,
+head, message, place, callers, public, note, confidence, key }`, `key`
+`<kind>|<document>|<operation>|<field>`.
+
+### `flowatlas export backstage|structurizr`
+
+Writes the map into the tools that already hold one: a
+[Backstage](https://backstage.io/docs/features/software-catalog/descriptor-format)
+catalogue whose relations are the joins the graph made, or a
+[Structurizr DSL](https://docs.structurizr.com/dsl/language) workspace with a C4
+container view and one dynamic view per flow. Build first; `export` reads the
+graph, writes only into the output directory, and sends nothing anywhere.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--out <dir>` | `<output>/export/<kind>/` | where the files go; a directory inside a configured repository is refused, except with `--check`, which writes nothing. The catalogue's own repository is fine when it is not a configured service |
+| `--service <name>` | every one | only this service, repeatable: its entities (or the joins touching it) and what they reach |
+| `--include-heuristic` | off | also draw joins the linker only guessed (`heuristic`, `runtime`), marked as such |
+| `--check` | off | write nothing; exit 1 when a file there differs from what would be written now, is missing, or is no longer written, printing the first line each differing file gained (`+`) and lost (`-`) with the entity and field it is under |
+| `--json` | off | print what would be written as data: the entities (Backstage) or the model (Structurizr), and the summary |
+| `--flow <entry>` | the ranked flows | structurizr only: draw this way in, repeatable, in the order given |
+| `--max-flows <n>` | 10 | structurizr only: most dynamic views |
+| `--max-labels <n>` | 3 | structurizr only: labels a relationship lists before it says `+N more` |
+
+Only `static`, `declared` and `marker` joins are drawn by default. Every file is
+the same bytes every run (sorted, no timestamp), so a repository can commit the
+export and run `--check` in CI ([ci.md](ci.md#a-committed-catalogue)).
+
+**Backstage.** One file per service, `<service>.yaml`, holding its `Component`
+and its `API`s; `resources.yaml`; the OpenAPI and AsyncAPI documents the APIs
+point at (written as [`spec`](#flowatlas-spec) writes them); and
+`catalog-locations.yaml`, one `Location` listing every entity file, so one
+registration in Backstage picks them all up.
+
+| Entity | Written from |
+|---|---|
+| `Component` per service | `spec.type` `service`, `website` (a browser repository) or `function` (every way in a function or workflow reached by name); `lifecycle`, `owner`, `system`, `description` from `services[].catalog`; an owner or lifecycle nobody gave is `unknown` and the run lists the services, a system nobody gave is left out |
+| `API` per service and kind | `<service>-openapi` for a service with routes, `<service>-asyncapi` for one that publishes; `definition` is `$text: ./<service>.openapi.yaml`, or an inline list of the operations when there is no single document (two applications, say) |
+| `providesApis` | the service's own APIs |
+| `consumesApis` | a request into another service's route (`http_calls`, `hits`): that service's OpenAPI API; a delivery off a channel another service publishes (`consumes`): the publisher's AsyncAPI API. A channel nothing in the project publishes names nothing, and the run lists it |
+| `dependsOn` | `resource:<table>` for every table queried; `resource:<host>` for every host outside the project called; `component:<service>` for a function or workflow of another service started by name |
+| `Resource` per table | `spec.type: database`, one per table name, owned by the owner of the service that writes it (the first by name when two do; the run says so), `flowatlas/written-by` and `flowatlas/read-by` naming the services |
+| `Resource` per host | `spec.type: external-api`, owner `unknown` |
+
+Annotations: `flowatlas/graph-id` (the node ids), `backstage.io/source-location`
+only from `services[].catalog.sourceUrl` (never guessed), and, because a
+Backstage relation holds no attributes, `flowatlas/heuristic-relations` on an
+entity naming the relations drawn from a heuristic join only, and
+`flowatlas/confidence: heuristic` on a resource only such joins reach. A name a
+catalogue cannot hold (`[a-z0-9]` words joined by `-`, `_` or `.`, at most 63
+characters) is normalised and the original kept as `title`.
+
+**Structurizr.** `workspace.dsl`: a `softwareSystem` named for the project (the
+one `catalog.system` every service shares, else the configuration's directory)
+holding a container per service (technology: its `type`), a container per
+service with tables (`<service> store`, tag `Database`) and a container per
+channel prefix (`order messages` for `order.created`, tag `Queue`); each host
+outside the project is a `softwareSystem` beside it (tag `External`), and a
+`person "User"` uses each browser repository.
+
+| Relationship | Description | Technology |
+|---|---|---|
+| a request into another service | `POST /invoices` | `HTTP` |
+| a function of another service started by name | `invokes nightly-report` | `Invoke` |
+| a publish, and a delivery | `publishes order.created`; `delivers order.created` (queue to consumer) | `Messaging` |
+| a query | `writes orders`, `reads invoices`, `reads and writes orders` | `SQL` |
+| a call outside the project | `POST /v1/charges` | `HTTP` |
+
+One relationship per pair and kind, its labels sorted and cut at `--max-labels`
+with `+N more`; one drawn only from heuristic joins is tagged `Heuristic`. Then
+`container <system> "Containers" { include * autolayout lr }`, one `dynamic`
+view per flow, and a `styles` block giving `Database`, `Queue` and `External`
+their shapes. Flows are walked as [`flow --format sequence`](#flowatlas-flow-entry)
+walks them, from every way in and every browser action, and ranked by the
+services they cross; a dynamic view holds the cross-container steps in call
+order, only on relationships of the model (a step on a heuristic join, a cache
+read or a caller the model does not hold is left out and counted). A way in
+whose flow never leaves its container gets no view, and two ways in that draw
+the same steps (a route and the function behind it) get one. The run counts
+what `--max-flows` and `--max-labels` cut.
+
+Neither Backstage nor the Structurizr CLI runs here: every file the snapshots
+and tests hold is checked against Backstage's entity rules (envelope, kind
+fields, names, references, annotation keys) and the DSL statements written
+(identifiers defined once before use, every dynamic step on a relationship of
+the model, quotes escaped, blocks closed), by `catalogProblems` and
+`dslProblems` of `@flowatlas/linker`.
+
+### `flowatlas check --env <name>`
+
+Can this be deployed there. `diff` compares a branch with `main`; a release
+pipeline needs it compared with the versions **running** where it ships, and
+`main` of another service is often ahead of those. `check` reads every service
+at the ref an environment runs (the *deployed* side), puts the version being
+shipped in place of its own (the *candidate* side), runs what `diff` runs on the
+two - the node, type and flow diff, the contracts, the rules, the joins - and
+answers `deployable` or `not deployable`.
+
+```sh
+flowatlas check --env prod --service orders --head release/1.9
+```
+
+| Flag | Default | Does |
+|---|---|---|
+| `--env <name>` | required | the environment to check against, repeatable: one section each, the exit is the worst |
+| `--service <name>` | every service whose head differs from its pin | a service being shipped, repeatable |
+| `--head <ref>` | the working tree | the ref the shipped services are read at |
+| `--pin <service>=<ref>` | none | the ref a service runs, over the pins file and the variables, repeatable; applies to every `--env` |
+| `--pins <path>` | `deployed.file`, else `flowatlas.deployed.json` beside the configuration | the pins file |
+| `--format <name>` | `text` | `text`, `markdown` (the verdict above `diff`'s whole document), `json` (the check document; an array for several environments) or `sarif` |
+| `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead of stdout |
+| `--sarif-root <dir>`, `--sarif-level <level>` | as `diff` | with `--format sarif` |
+| `--max-entries`, `--max-nodes`, `--max-flows`, `--concurrency`, `--no-cache`, `--keep-worktrees`, `--out` | as `diff` | |
+
+**The pins file**, `flowatlas.deployed.json`, committed beside the configuration
+like the baseline:
+
+```json
+{
+  "deployedFormatVersion": 1,
+  "environments": {
+    "prod":    { "orders": "v1.8.0", "billing": "v2.3.1", "gateway": "4f1c2a9" },
+    "staging": { "orders": "main", "billing": "main", "gateway": "main" }
+  }
+}
+```
+
+A ref is anything `git rev-parse` resolves in that service's repository: a
+tag, a branch, a sha. A service missing from an environment is not deployed
+there: it is on neither side and listed as such (unless `--service` names it,
+when it is read on the candidate side only, a first deploy). A service no
+configuration names is refused when the file is read. A pipeline that knows the
+running versions needs no file: `--pin orders=v1.8.0`, or the variable
+`FLOWATLAS_PIN_ORDERS=v1.8.0` (the service name upper-cased, every other
+character `_`). A variable wins over the file, a flag over both, and the
+document's notes say whose ref was used in place of whose.
+
+**The candidate side** moves the services `--service` names to `--head` (the
+working tree when absent); one whose head is its pin is "nothing to deploy for
+orders" and stays as deployed. Without `--service`, every pinned service whose
+head is a different commit moves, and one with uncommitted changes when the head
+is the working tree.
+
+**The verdict** counts only what deploying introduces against the deployed side:
+
+- a new contract error;
+- a new violation of an architecture rule at `error` (a guessed one only with
+  `rulesSettings.failOnHeuristic`);
+- a join deploying loses (`lostJoins` with the deployed side as base): a call a
+  deployed service makes to a route the candidate no longer serves, with the
+  caller's file and line; a channel left with consumers and no producer, or the
+  other way round; a new handler of a channel nothing deployed publishes;
+- a new request that joins no route anything deployed serves.
+
+A reason along a guessed edge still counts and says so. What the deployed side
+already does wrong - a contract error, a rule violation - is listed under
+**Already deployed** and never fails the run.
+
+| Exit | Means |
+|---|---|
+| 0 | deployable (or nothing to deploy) |
+| 1 | not deployable |
+| 2 | could not decide: an unknown environment, a pinned ref that does not resolve (fetch the tags first: the message names the repository and `git fetch --tags`), a service that is a subdirectory of a repository, or a `--head` a named service does not have |
+
+Unlike `diff`, a ref that does not resolve is never read as the working tree in
+its place: that answer would be about a project nobody deployed.
+
+Every environment leaves `<output>/check.<env>.json` (`checkFormatVersion: 1`):
+`{ checkFormatVersion, generatedAt, environment, pinsFile, pins: [{ service,
+ref, from: file|env|flag, sha, replaced? }], notDeployed, moved: [{ service,
+from: { ref, sha }, to: { ref, sha, dirty } }], head, verdict: { verdict,
+reasons, already, undecided, notes }, diff }`. Each reason is `{ kind:
+contract|rule|join, code, message, key, service, at?: { service, file, line? },
+confidence, heuristic }`; `diff` is a whole `diff.json` (deployed as `base`,
+the environment as its ref; candidate as `head`), or null when the run could not
+decide. The graphs come from the same `<output>/cache/` as `diff`'s, so a tag
+read once is read once.
+
+### `flowatlas deployed set|show`
+
+The pins file, kept by hand or by a pipeline after a deploy. Nothing in a
+repository is touched; `set` writes the pins file and nothing else.
+
+| Command | Does |
+|---|---|
+| `deployed set <env> <service> <ref>` | records `ref` as what `env` runs of `service`, every other pin kept; `--resolve` records the commit it names, so the file says what ran rather than a branch that will have moved |
+| `deployed show [env]` | each pin with its commit, its kind (`sha`, `tag`, `branch`, or `missing`) and its age; a branch is warned about, and so is a ref the repository does not have; `--json` for the same as JSON |
+
+Both take `--config` and `--pins`.
 
 ### `flowatlas cache <action>`
 
@@ -2767,6 +3229,80 @@ documents describe a node.
 
 ---
 
+### `--format sarif`: findings for code scanning
+
+`contracts`, `dead`, `cycles`, `rules`, `doctor` and `diff` write their
+findings as one SARIF 2.1.0 log, the format GitHub code scanning (and most
+other code hosts) reads: each result is shown on the line it is about in a
+pull request, stays open while the finding is there, and closes when it is
+fixed. The log goes to stdout, or with `--output <file>` to the file, with one
+line on stdout saying how many results of each level it holds. Uploading it is
+the CI's job (`docs/ci.md`, "Code scanning"); flowatlas sends nothing anywhere,
+and the format never changes an exit code.
+
+Each command is one run under its own category, `automationDetails.id`
+`flowatlas/<command>/`, so a job that uploads `doctor` and `contracts` keeps
+two lists of alerts and neither upload closes the other's.
+
+**Rules.** Every `ruleId` is a code flowatlas already uses, and the log lists
+only the rules its results use, described from the same catalogue as the text
+report's hints:
+
+| `ruleId` | From | Level |
+|---|---|---|
+| a doctor reason (`dynamic-http-url`, `route-unguarded`, …) | `doctor`'s unresolved rows | gap or finding at `action` → `warning`, at `info` → `note`; a note row (P81) and a place with nothing to join are never written |
+| `target-route-not-found`, `unknown-base-url-env`, … | `doctor`'s desync rows | `error` (said once, not again under its reason) |
+| a marker code (`marker-emits-without-emit`, …) | `doctor`'s annotations | the marker's own: `error` or `warning` |
+| `no-way-in` | `doctor`: a service nothing enters | `warning`, at the configuration line naming it |
+| `missing_required`, `type_mismatch`, `optionality_mismatch`, `extra_field` | `contracts`, `doctor`, `diff` | the finding's severity, `info` → `note` |
+| `rule/<name>` | `rules`, `doctor`, `diff` | the rule's severity, `info` → `note` |
+| `dead-entry`, `dead-channel`, `dead-provider`, `dead-field` | `dead` | `note`; only actionable entries and `dead` / `likely-dead` verdicts |
+| `cycle` | `cycles` | `warning` |
+
+**Where.** A path is written as the configuration's directory sees it: a row's
+file under the directory its service's repository is in (`billing/src/x.ts`),
+which is the path in a checkout of the whole project and the one
+`doctor --format github` annotates. `originalUriBaseIds` names the root
+(`%SRCROOT%`) and each service's directory under it. A contract finding is at
+the sender's line with the receiver as a related location, linked from the
+message; a rule violation is at its crossing hop with the target related and
+its path as a code flow; a cycle is at the node it starts from with its hops as
+a code flow; a route `dead` reports keeps the requests that could still reach
+it as related locations. A row with no line is placed at its file with no
+region, never at a guessed line; one with no file at the line of
+`flowatlas.config.json` naming its service, or its rule.
+
+For a project of several repositories uploaded one repository at a time,
+`--sarif-root <dir>` writes every path relative to that checkout, and leaves out
+a result whose place is in another one, counted in a notification
+(`results-elsewhere`); run once per repository with its own directory.
+
+**Fingerprints.** `partialFingerprints["flowatlas/v1"]` is a hash of the key
+the baseline already uses for that kind of finding - `unresolvedKey` for a
+doctor row, `findingKey` for a contract finding, a rule violation's key, a
+node id without its line for a dead row, a cycle's members - and
+`primaryLocationLineHash`, the one GitHub matches alerts on, is written from
+the same key with `:<n>` counting results that share it. None carries a line,
+so moving a finding keeps its alert; changing what it is about makes a new one.
+
+**Baseline and excuses.** `doctor` marks a row or rule violation the baseline
+holds `baselineState: "unchanged"` and one it does not `"new"`. A row
+`accepted.json` names, a violation it excused (`accept rule:<name>`) and a
+contract finding `@ContractIgnore` or `contracts.ignoreEdges` excused are
+written with `suppressions` (`external`, or `inSource` for the annotation) and
+the note, so code scanning shows them dismissed rather than new. `diff` writes
+only what the revision did: the contract findings and rule violations it
+introduced (`new`, on the head side) and the ones it fixed (`absent`, where
+they were on the base side).
+
+**Size.** A log holds at most 5,000 results, the most severe first (what code
+scanning shows of a run), unless `--max-nodes` (`--max` on `dead` and
+`cycles`) says otherwise, and never more than 25,000 (what it accepts); with
+`--format sarif`, `doctor` names every place up to that bound rather than six
+per reason. A cut is said in `invocations[0].toolExecutionNotifications`
+(`results-cut`) with how many were left out and the JSON file that has them
+all. `--sarif-level warning` leaves the notes out.
+
 ## Configuration
 
 Every key of `flowatlas.config.json`. Only `services` has no default.
@@ -2782,9 +3318,12 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
 | `aliases` | string[] | `[]` | other names the service is known by: the short name an annotation uses (`@CallsService('catalog', …)` for `catalog-api`), the name its worker is deployed under (a service binding's target), a host. Wherever a service is named — an annotation, `apiTarget`, a binding, a base address's host — an alias is the service. Unique across every name and alias; matched exactly, never by prefix |
+| `tags` | string[] | `[]` | names an architecture rule can select the service by: `frontend`, `edge`, `domain:payments`. A tag is a name only; nothing is inferred from it ([`rules`](#rules)) |
+| `catalog` | object | none | what a software catalogue says of the service and the code cannot, for [`export`](#flowatlas-export-backstagestructurizr): `{ "owner", "lifecycle", "system", "description", "sourceUrl" }`, every key optional. Written as given; an owner or lifecycle nobody gave is `unknown`, and nothing is guessed from the code |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
 | `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi", "path": … }`, path relative to this file |
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
+| `apiDocuments` | object[] | none | API documents the repository commits by hand, each compared with the one written from the code by `contracts` and [`spec --against`](#flowatlas-spec---against-servicefile-a-committed-document-against-the-code): `[{ "kind": "openapi" \| "asyncapi", "path": …, "application"? }]`, path relative to this file. Nothing is taken from them; refused on a service a `document` declares |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
 | `infra.vars` | string[] | none | for a service read from Terraform: the variable files a deployment is read with, in order, relative to the service's directory (`["infra/env/dev.tfvars"]`). Without it, a name two files set differently is reported, never picked |
@@ -2989,6 +3528,7 @@ worked example of a document that declares routes.
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |
 | `contracts.rules.disable` | string[] | `[]` | rules about the JSON wire this project's wire does not follow |
 | `contracts.ignoreEdges` | string[] | `[]` | boundaries whose drift is deliberate, as `from\|type\|to`, for code you cannot annotate |
+| `deployed.file` | string | `flowatlas.deployed.json` beside this file | the pins file `flowatlas check --env` reads and `flowatlas deployed set` writes: which ref of each service runs in each environment, relative to this file |
 | `doctor.baseline` | string | `flowatlas.baseline.json` beside this file | where the accepted numbers live, relative to this file |
 | `doctor.ignoreReasons` | string[] | `[]` | reasons left out of the growth check. Their rows are still printed; only the number `--strict` compares is quieter. A renamed reason's old spelling is still recognised |
 | `doctor.markers.warnAsError` | boolean | `false` | fail a strict run on a redundant annotation as well as a false one |
@@ -3004,6 +3544,8 @@ worked example of a document that declares routes.
 | `dead.infrastructure.builtIn` | boolean | `true` | `false` turns the built-in probe, webhook, callback and well-known rules off; the three lists still apply |
 | `callShape.boundedCalls` | string[] | `[]` | helpers of your own that split a list into chunks, beside the built-in `chunk`, `chunks`, `batches`, `inChunks` and `splitEvery`: a loop over what one returns is set aside |
 | `docs.files` | string[] | every `*.md` under this file | the Markdown files `flowatlas docs` reads for blocks tied to flows: paths or globs, relative to this configuration. Files in the output directory and `node_modules` are never read |
+| `rules` | object[] | `[]` | architecture rules: who may call, write, publish to or consume what ([`rules`](#rules)) |
+| `rulesSettings.failOnHeuristic` | boolean | `false` | whether a violation along a guessed edge can fail `rules --fail-on`, `doctor --strict` and `diff --fail-on-rule-break`; it is always shown |
 
 **A path segment written as a closed set.** A segment whose type is a union of
 string literals — `action: 'ship' | 'refund'` — is a segment that was
@@ -3188,6 +3730,58 @@ which the client infers from the server's own tree, as
 a `string` and parses it on the next line is another, `body-already-serialised`,
 because that is where the shape was lost rather than an end that disagrees about
 it.
+
+### `rules`
+
+Who may call, write, publish to or consume what, written down so a build fails
+when it stops being true. Each rule has a `name` (kebab-case and unique: the key
+a baseline and an accept use), a `severity` (`error` unless it says `warning`
+or `info`), an optional `note` (why; printed with every violation) and exactly
+one of four shapes:
+
+```json
+{
+  "rules": [
+    { "name": "frontends-reach-only-edge", "note": "the browser talks to the gateway",
+      "tags": { "source": "frontend", "mayReach": ["edge"] } },
+    { "name": "web-not-billing",
+      "forbid": { "from": { "service": "web" }, "to": { "service": "billing" } } },
+    { "name": "only-orders-writes-orders",
+      "only": { "from": { "service": "orders" }, "to": { "table": "orders" }, "op": "write" } },
+    { "name": "only-billing-consumes-invoices",
+      "only": { "from": { "service": "billing" }, "to": { "channel": "invoice.*" }, "via": ["consumes"] } },
+    { "name": "order-created-keeps-a-consumer",
+      "reachable": { "from": { "channel": "order.created" }, "to": { "service": "billing" }, "must": true } }
+  ]
+}
+```
+
+| Shape | Says | Broken by |
+|---|---|---|
+| `forbid: { from, to, via?, reach? }` | `from` must not reach `to` | `reach: "direct"` (default): one hop from a node `from` selects to one `to` selects. `"transitive"`: any path forward, through calls and channels, reported where it first enters `to` |
+| `only: { from, to, via?, op? }` | nothing outside `from` may reach `to` | a hop into `to` from a node `from` does not select; `op` (`read`, `write`, `delete`) narrows a table's queries |
+| `tags: { source, mayReach, via? }` | a service tagged `source` may join only services carrying one of `mayReach` (`*` any) | a hop from such a service into one carrying none of them; a consume joins the services that publish onto the channel, a publish joins nobody in particular |
+| `reachable: { from, to, must }` | with `must: true`, a path from `from` to `to` must exist | `true`: no path any more (one violation, with no hop to point at). `false`: every path that does |
+
+A **selector** is `{ service?, tag?, entry?, table?, channel?, route?, type? }`,
+every key optional and all of them ANDed; `*` (and `**`) is any run of
+characters. `service` and `tag` select the nodes of a service (a channel belongs
+to none), `entry` a way in by id or label, `table` and `channel` by name,
+`route` an HTTP way in as `METHOD /path` (`GET /orders/*`, matched as
+`doctor.publicRoutes` is), `type` a node type (`ui_api_call`, `method`, …).
+
+The **edges** a rule can name in `via`: `http_calls` (one service's request to
+another), `hits` (a browser's request), `emits`, `consumes`, `queries` (a
+table read or write), `triggers` (a workflow or a function started by name) and
+`calls` (inside one service, only when named). Without `via` a rule reads every
+kind but `calls`, and a hop inside one service - a service reading its own
+table - is read only when the rule's `to` names a `table` or its `via` names the
+hop's kind. A consume is read the way a dependency runs: the handler depends on
+the channel.
+
+A rule that fails this schema - two shapes, none, an unknown key, a name that
+is not kebab-case, a name used twice - is refused when the configuration is
+read, naming the rule (`rule-invalid`).
 
 ### `adapters`
 

@@ -16,8 +16,10 @@ import { registerPatterns } from './tools/patterns.js';
 import { registerPrompt } from './tools/prompt.js';
 import { registerReach } from './tools/reach.js';
 import { registerRuntime } from './tools/runtime.js';
+import { registerRules } from './tools/rules.js';
 import { registerSearch } from './tools/search.js';
 import { registerSource } from './tools/source.js';
+import { registerSpec } from './tools/spec.js';
 import { registerStart } from './tools/start.js';
 import { registerTypeUsage } from './tools/type-usage.js';
 import { registerTypes } from './tools/types.js';
@@ -38,10 +40,10 @@ export const INSTRUCTIONS = [
   '- entry: list_entries -> get_flow({entry: id}) -> get_source({symbol: id}) on the step that matters.',
   '- channel: who_emits / who_consumes({channel: id}) -> get_flow({entry: id}) on a handler.',
   '- symbol: find_symbol -> who_calls / impact({symbol: id}) -> get_flow on an entry it names.',
-  '- shape: get_type({type: id}) -> type_usage({type: id}): every way in, crossing, channel and call that takes or returns it, and the types holding it; check_contract for whether two services still agree.',
+  '- shape: get_type({type: id}) -> type_usage({type: id}): every way in, crossing, channel and call that takes or returns it, and the types holding it; check_contract for whether two services still agree; get_spec({service}) writes the routes of a service as OpenAPI 3.1 or its channels as AsyncAPI 3.0 (`kind`), and `path` ("GET /orders/{id}", a channel address) answers one operation with the schemas it uses.',
   '- search({query}) finds a route, channel, table, type, class or gap by name; what_changed reads the last flowatlas diff.',
   "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names; a wrapper of the project's own -> test_pattern on a draft rule for it.",
-  '- findings - a likely N+1, a route with no guard, a contract break, a channel with one end - are not gaps: findings() counts each kind with its top rows, ranked by reach; findings({kind}) lists one, each row with the call that shows it.',
+  '- findings - a likely N+1, a route with no guard, a contract break, a channel with one end, a broken architecture rule (check_rules lists those) - are not gaps: findings() counts each kind with its top rows, ranked by reach; findings({kind}) lists one, each row with the call that shows it.',
   "- dead({id}) says whether a node is dead: `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` (`outside` the project, or a call `oneOff` a segment) or `alive`; dead({service}) lists them, verdict first.",
   '- run time: hot_paths -> slow_steps({entry: id}) -> trace_for({entry: id}), one slow and one failing request as trees of node ids -> get_source on a slow step.',
   '- failures at run time: undeclared_failures lists ways in that answered a status no failure in their code declares, 5xx first -> trace_for({entry}) for a failing request; get_flow `failures` and `fails[].seen` set the statuses seen beside the declared ones.',
@@ -114,6 +116,8 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   registerDead(server, context);
   registerFindings(server, context);
   registerTypeUsage(server, context);
+  registerRules(server, context);
+  registerSpec(server, context);
   registerPrompts(server, context);
   registerResources(server, context, options.reasonCatalog);
   registerPatterns(server, context);

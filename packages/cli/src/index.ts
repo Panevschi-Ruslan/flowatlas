@@ -3,13 +3,17 @@ import { Command } from 'commander';
 import { registerAccept } from './commands/accept.js';
 import { registerBuild } from './commands/build.js';
 import { registerChannel } from './commands/channel.js';
+import { registerCheck } from './commands/check.js';
 import { registerConfig } from './commands/config.js';
 import { registerContracts } from './commands/contracts.js';
+import { registerRules } from './commands/rules.js';
 import { registerCycles } from './commands/cycles.js';
 import { registerDead } from './commands/dead.js';
+import { registerDeployed } from './commands/deployed.js';
 import { registerDiff } from './commands/diff.js';
 import { registerDocs } from './commands/docs.js';
 import { registerDoctor } from './commands/doctor.js';
+import { registerExport } from './commands/export.js';
 import { registerExtract } from './commands/extract.js';
 import { registerFlow } from './commands/flow.js';
 import { registerHotspots } from './commands/hotspots.js';
@@ -20,6 +24,7 @@ import { registerMcp } from './commands/mcp.js';
 import { registerObserve } from './commands/observe.js';
 import { registerShapes } from './commands/shapes.js';
 import { registerPatterns } from './commands/patterns.js';
+import { registerSpec } from './commands/spec.js';
 import { registerStats } from './commands/stats.js';
 import { registerTypes } from './commands/types.js';
 import { registerVisualise } from './commands/visualise.js';
@@ -43,6 +48,7 @@ export const createProgram = (): Command => {
   registerChannel(program);
   registerTypes(program);
   registerContracts(program);
+  registerRules(program);
   registerStats(program);
   registerCycles(program);
   registerDead(program);
@@ -54,6 +60,10 @@ export const createProgram = (): Command => {
   registerHotspots(program);
   registerVisualise(program);
   registerDiff(program);
+  registerCheck(program);
+  registerSpec(program);
+  registerExport(program);
+  registerDeployed(program);
   registerObserve(program);
   registerAccept(program);
   return program;
@@ -104,6 +114,8 @@ export { spliceRepoGraph } from './build/splice.js';
 export { watchProject } from './build/watch.js';
 export type { WatchHandle, WatchOptions } from './build/watch.js';
 export { runExtract, summarise } from './commands/extract.js';
+export { EXPORT_DIR, EXPORT_KINDS, EXPORT_WALK_NODES, registerExport, runExport } from './commands/export.js';
+export type { ExportCommandOptions, ExportFileState, ExportKind, ExportRun } from './commands/export.js';
 export { runInit, scanCandidates } from './commands/init.js';
 export { linkRepos, linkSuggested, unlinkRepos } from './commands/link.js';
 export type { SuggestedOptions, SuggestedResult } from './commands/link.js';
@@ -172,6 +184,9 @@ export type { Stats } from './commands/stats.js';
 export { runTypes, driftOf, globToRegExp, DRIFT_NOTE } from './commands/types.js';
 export type { Drift } from './commands/types.js';
 export { runContracts, registerContracts, CONTRACTS_FILE, FAIL_LEVELS } from './commands/contracts.js';
+export { narrowRules, registerRules, ruleReportOf, RULES_FORMATS, rulesContextOf, runRules } from './commands/rules.js';
+export type { RulesContext, RulesOptions, RulesRun } from './commands/rules.js';
+export { renderRulesGithub, renderRulesJson, renderRulesList, renderRulesMarkdown, renderRulesText, rulesSummaryLine } from './render/rules.js';
 export type { ContractsFormat, ContractsOptions, ContractsRun, FailLevel } from './commands/contracts.js';
 export {
   byReason,
@@ -315,10 +330,40 @@ export { DEFAULT_DOC_GLOB, DOCS_FORMATS, docFiles, docsIn, registerDocs, runDocs
 export type { DocResult, DocsFormat, DocsOptions, DocsProblem, DocsRun } from './commands/docs.js';
 export { DOC_VIEW_RENDERERS, renderDocView } from './docs/views.js';
 export type { DrawnView } from './docs/views.js';
-export type { DiffFormat, DiffOptions, DiffRun } from './commands/diff.js';
+export type { DiffFormat, DiffOptions, DiffRun, CompareInput } from './commands/diff.js';
+export { compareBuilt } from './commands/diff.js';
+export { runCheck, registerCheck, checkFileOf, CHECK_FORMATS } from './commands/check.js';
+export { inventoryFileName, registerSpec, runSpec, runSpecDiff, SPEC_DIFF_FORMATS, SPEC_DIR } from './commands/spec.js';
+export type { SpecCommandOptions, SpecDiffOptions, SpecDiffRun, SpecFile, SpecRun } from './commands/spec.js';
+export { againstReport, configuredCommitted, readCommitted, runSpecAgainst, SPEC_AGAINST_FORMATS } from './commands/spec-against.js';
+export type { SpecAgainstOptions, SpecAgainstRun } from './commands/spec-against.js';
+export {
+  AGAINST_NOT_COMPARED_SAID,
+  renderSpecAgainstMarkdown,
+  renderSpecAgainstText,
+  specAgainstLines,
+  renderInventoryJson,
+  renderInventoryMarkdown,
+  renderSpecDiffMarkdown,
+  renderSpecDiffText,
+  renderSpecFile,
+  SPEC_FORMATS,
+  specDiffLines,
+  specFileName,
+  summariseSpecDiff,
+} from './report/spec.js';
+export type { SpecFormat } from './report/spec.js';
+export { specBetween, specsOfGraph } from './report/spec-delta.js';
+export type { CheckCommandOptions, CheckFormat, CheckRun, CheckSection } from './commands/check.js';
+export { runDeployedSet, runDeployedShow, deployedShownOf, renderDeployedText, ageOf, registerDeployed } from './commands/deployed.js';
+export type { DeployedOptions, DeployedShown, PinShown } from './commands/deployed.js';
+export { checkReasonsOf } from './report/check-verdict.js';
+export type { CheckGraph, CheckReasons } from './report/check-verdict.js';
+export { environmentLead, renderCheckMarkdown, renderCheckText, summariseCheck, CHECK_MAX_ROWS } from './report/check-render.js';
+export type { EnvironmentSaid } from './git/environment.js';
 export { runCache, registerCache, CACHE_ACTIONS } from './commands/cache.js';
 export type { CacheAction, CacheOptions, CacheRun } from './commands/cache.js';
-export { buildAtRef } from './git/build-at-ref.js';
+export { buildAtRef, UnreadableAtRef } from './git/build-at-ref.js';
 export type { BuildAtRefOptions, BuildAtRefResult } from './git/build-at-ref.js';
 export { GraphCache } from './git/graph-cache.js';
 export type { CacheEntry, CacheMeta, CacheRow } from './git/graph-cache.js';
@@ -364,3 +409,24 @@ export { moreRows, renderTable, section } from './format/table.js';
 export type { Column } from './format/table.js';
 
 export { VERSION } from './version.js';
+export {
+  toSarif,
+  renderSarif,
+  sarifCounts,
+  sarifLevelOf,
+  fingerprintOf,
+  contractFindings,
+  cycleFindings,
+  deadFindings,
+  diffFindings,
+  doctorFindings,
+  ruleFindings,
+  specFindings,
+  sarifPathsOf,
+  SARIF_LEVELS,
+  SARIF_COMMANDS,
+  FINGERPRINT_VERSION,
+  DEFAULT_SARIF_RESULTS,
+  SARIF_RESULT_LIMIT,
+} from './sarif/index.js';
+export type { SarifFinding, SarifInput, SarifLevel, SarifLog, SarifPaths, SarifPlace, SarifRuleInfo } from './sarif/index.js';

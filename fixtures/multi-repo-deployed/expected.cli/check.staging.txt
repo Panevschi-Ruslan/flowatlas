@@ -1,0 +1,11 @@
+check staging: not deployable — 1 reason deploying gateway introduces
+deployed: billing main (3a5a5b80) · gateway main (5cce0519) · orders main (f36068c5)
+moving: gateway main (5cce0519) → invoice-on-checkout (66604417)
+not deployable, because deploying introduces:
+  - [contract] gateway → billing: receiver billing requires `currency: string`; sender gateway does not send it  (gateway src/clients/billing.client.ts:15)
+already deployed (listed, not counted):
+  - [contract] orders → billing: receiver billing requires `customerRef: string`; sender orders does not send it  (orders src/orders/orders.service.ts:10)
+  - [rule] billing-reads-no-order-events: billing PlacedConsumer.onPlaced consumes channel order.placed  (billing src/invoices/placed.consumer.ts:9)
+the whole answer: <scratch>/project/.flowatlas/check.staging.json
+--- stderr ---
+check staging: not deployable · 1 reason(s) · 2 already deployed · moved gateway

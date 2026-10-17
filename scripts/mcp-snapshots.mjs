@@ -28,6 +28,7 @@ import { createFlowatlasServer, DbHandle } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
 import { missingCandidatesFor, reasonCatalog, testPatternText, trafficHook } from '../packages/cli/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
+import { checkedDeployedProject } from './deployed-fixture.mjs';
 import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -112,6 +113,14 @@ const CASES = [
   // The pages that describe what was asked about (P120), from the docs.json `flowatlas docs` wrote.
   ['describe_for_prompt.documented', 'describe_for_prompt', { id: 'entry:gateway:http:GET:/orders/:param', maxSteps: 3 }],
   ['impact.documented', 'impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.create' }],
+  // The documents `flowatlas spec` writes (P118): a whole one, one route,
+  // one channel end found without its kind, a cut one, and a route's prompt
+  // with its fragment.
+  ['get_spec.orders', 'get_spec', { service: 'orders' }],
+  ['get_spec.one-route', 'get_spec', { service: 'orders', path: 'POST /orders' }],
+  ['get_spec.channel', 'get_spec', { service: 'billing', path: 'order.created' }],
+  ['get_spec.cut', 'get_spec', { service: 'gateway', maxChars: 600 }],
+  ['describe_for_prompt.with-spec', 'describe_for_prompt', { id: 'entry:orders:http:POST:/orders', withSpec: true, maxChars: 20000 }],
 ];
 
 /**
@@ -205,6 +214,31 @@ const DIFF_CASES = [
   ['resources.templates', '#listResourceTemplates', {}],
   ['resource.services', '#readResource', { uri: 'flowatlas://services' }],
   ['resource.service-orders', '#readResource', { uri: 'flowatlas://services/orders' }],
+];
+
+/**
+ * A deploy (P117): the `drop-lookup` branch of orders checked against prod
+ * (not deployable: a removed route the deployed gateway calls, a handler of
+ * what nothing in prod publishes), and against canary, whose pin of orders
+ * names a tag nobody made. `start_here` says each environment's verdict.
+ */
+const DEPLOYED_CASES = [
+  ['what_changed.check-prod', 'what_changed', { file: 'check.prod.json', verdict: true }],
+  ['what_changed.check-canary', 'what_changed', { file: 'check.canary.json' }],
+  ['what_changed.not-a-document', 'what_changed', { file: 'graph.db' }],
+  ['start_here.checks', 'start_here', {}],
+];
+
+/** The architecture rules of `fixtures/multi-repo-rules` (P114), as an assistant is handed them. */
+const RULES_CASES = [
+  ['check_rules.all', 'check_rules', {}],
+  ['check_rules.by-service', 'check_rules', { service: 'billing' }],
+  ['check_rules.one-rule', 'check_rules', { rule: 'frontends-reach-only-edge' }],
+  ['check_rules.typo', 'check_rules', { rule: 'only-orders-write-orders' }],
+  ['get_flow.violates', 'get_flow', { entry: 'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated' }],
+  ['describe_for_prompt.service', 'describe_for_prompt', { id: 'billing', scope: 'service' }],
+  ['start_here.rules', 'start_here', {}],
+  ['findings.rule', 'findings', { kind: 'rule' }],
 ];
 
 /**
@@ -386,11 +420,22 @@ const SUITES = [
     cases: PLUMBING_CASES,
   },
   {
+    fixture: join(root, 'fixtures', 'multi-repo-rules'),
+    outDir: join(root, 'fixtures', 'multi-repo-rules', 'expected.mcp'),
+    cases: RULES_CASES,
+  },
+  {
     outDir: join(root, 'fixtures', 'multi-repo-diff', 'expected.mcp'),
     cases: DIFF_CASES,
     // Made, built and diffed each run, and removed after: the fixture is two revisions as files.
     setup: () => diffFixtureProject(root),
     options: { reasonCatalog: reasonCatalog() },
+  },
+  {
+    outDir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.mcp'),
+    cases: DEPLOYED_CASES,
+    // Made, built and checked each run, and removed after: the fixture is three histories as files.
+    setup: () => checkedDeployedProject(root),
   },
 ];
 

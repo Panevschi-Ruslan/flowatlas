@@ -5,7 +5,7 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Twenty-three tools. Only one of them returns code.
+Twenty-six tools. Only one of them returns code.
 
 ---
 
@@ -73,8 +73,8 @@ and let it talk on stdin and stdout.
 `find_symbol`, `search`, `get_flow`, `who_calls`, `impact`, `who_emits`,
 `who_consumes`, `get_type`, `type_usage` and `what_changed`: 0 is ids only, 1 (the default)
 adds `file:line`, service and kind, 2 adds what the reader knows about each
-row, and 3 is answered at 2 and says so. Those tools, `check_contract`, `dead`
-and `findings` take
+row, and 3 is answered at 2 and says so. Those tools, `check_contract`, `dead`,
+`findings` and `check_rules` take
 `maxNodes`, the most rows an answer holds: 150 by default, 60 for `get_flow`,
 which also stops at about `maxChars` characters (12,000). `start_here`, `cant_follow`,
 `describe_for_prompt` and `get_source` take neither: they are bounded by their
@@ -105,7 +105,7 @@ running a tool that might can skip asking.
 A list reads a page at a time. `list_entries`, `find_symbol`, `search`,
 `who_emits`, `who_consumes`, `impact` (its `entries`), `what_changed` (every
 list), `cant_follow` (its `causes`), `dead` (its `rows`), `findings` (one kind's
-`rows`) and `type_usage` (every group at once) take `offset`, 0 by default. An answer
+`rows`), `check_rules` (its `violations`) and `type_usage` (every group at once) take `offset`, 0 by default. An answer
 that was cut says `total`, `nextOffset` and `truncated: "n more; next page
 offset k"`, and `next` starts with the same call from that offset:
 
@@ -150,8 +150,8 @@ all take the same optional `service` filter.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, a few entry ids to start from, and `missingRepos`: the repositories probably missing from the project, at most three, by name with the directories that look like each | `service`, `perService` |
-| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service (a service's gaps are the rows nobody accepted; the page's *Copy as prompt* writes every scope the same). No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a place as `file:line` or `service#file:line` - the gap written there - a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars` |
+| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, a few entry ids to start from, `missingRepos`: the repositories probably missing from the project, at most three, by name with the directories that look like each, with rules configured `rules: { errors, warnings, unchecked }` (`next` then starts with `check_rules()`), and with a `check.<env>.json` beside the database `checks`, one line of each environment's verdict (`prod: not deployable · staging: deployable`; `next` then starts with `what_changed` on the first that is not deployable) | `service`, `perService` |
+| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service (a service's gaps are the rows nobody accepted; the page's *Copy as prompt* writes every scope the same). No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a place as `file:line` or `service#file:line` - the gap written there - a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars`, `withSpec` (the OpenAPI or AsyncAPI fragment of a route or a channel end, P118) |
 
 `describe_for_prompt` and the page's *Copy as prompt* write the same text
 (P97): each gathers one subject - the server from the database, the page from
@@ -175,6 +175,11 @@ same for every subject:
   one says traffic settled it), and each declared one no request answered in
   the window (`declared, never seen in the window`), or that the hits were too
   few to say so.
+- *Rules it breaks · n* (P114): each architecture rule a violation of runs
+  through the subject or one of its steps (for a service, any of its nodes),
+  with its severity, what crossed, where, `(best guess)` along a guessed edge
+  and the rule's note. The server writes it; the page's *Copy as prompt* has no
+  rules to read and leaves it out.
 - For a channel, *Published by · n* and *Consumed by · n*, each consumer with
   the steps under it; for a check, *Where · n*, every row of the gap id at its
   line with the node it is on, then *How to close it*: one line per way that
@@ -266,7 +271,15 @@ pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 | Tool | Answers | Takes |
 |---|---|---|
 | `dead` | whether one node is dead, with what could make that wrong; or, without `id`, every row `flowatlas dead` lists, verdict first | `id`, or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `offset` |
-| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, or a finding's reason), `service`, `offset` |
+| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `offset` |
+| `check_rules` | the architecture rules of the configuration (P114), checked over the graph: each rule's status (`held`, `broken`, `unchecked`), each violation with its two ends, where it crosses (`loc`), the edge kind, the weakest confidence, `heuristic` for a guess, the rule's note and `next` (`get_flow` on the way in it starts behind, `get_source` on the crossing), the rules that could not be checked (`rule-matches-nothing`) and how many an accept excused | `rule`, `service`, `maxNodes`, `offset` |
+
+`check_rules` calls the function `flowatlas rules` calls (the linker's
+`evaluateRules`), with `accepted.json`'s `rule:<name>` entries excusing what
+they cover, so the two list the same violations. A `get_flow` step whose hop a
+violation runs along carries `violates: [rule names]`, and a broken rule is a
+`findings` kind of its own (`rule`, ranked by severity, then by the ways in
+reaching where it starts, shown by `check_rules({rule})`).
 
 `dead` reads the same functions `flowatlas dead` does (the linker's), so the
 two cannot disagree; a test compares them on three fixtures. A **verdict** is
@@ -543,6 +556,7 @@ window longer than the file holds says `short: true` and every row is `weak`.
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `offset` |
 | `check_contract` | what one side of a crossing sends against what the other expects; on an entry, what traffic carried into it against its code | `edge` (a crossing or an entry id), or `from` and `to` |
+| `get_spec` | a service's routes as the OpenAPI 3.1 document `flowatlas spec` writes, or its channel ends as AsyncAPI 3.0, as JSON text; with `path`, one operation and only the schemas it uses (P118) | `service` (required), `kind`, `path`, `maxChars` |
 
 `get_type` at `detail: 0` names the type and its fields (or its members); at 1
 it says what each field is, where the type is declared, and names each type it
@@ -589,6 +603,18 @@ would win), it lists every crossing from one into the other: each request
 crossing is `{ from, to, type, via?, status, check }`, worst `status` first,
 `check` the call that checks it in full; `byStatus` counts them and `maxNodes`
 bounds the list. With none it says so, and how many go the other way.
+
+`get_spec` writes the document from the database as it stands, through the
+wire rules, so a schema says what goes over the wire; a shape it could not read
+is `{}` with `x-flowatlas-unread` and the reason, and `unread` and `omitted`
+count them. `path` takes a route as a request would say it (`GET /orders/{id}`
+or `get /orders/:id`; a path alone answers every verb of it), a channel address
+(`order.created`), or an operation's key (`send order.created`); without
+`kind` it looks in both documents. The text is cut at `maxChars` (12,000) and
+says `truncated` with how much there was; a cut whole document lists its
+`operations` and `next` asks for one. `describe_for_prompt` with `withSpec: true`
+adds the route's or channel end's fragment as an *OpenAPI* (or *AsyncAPI*)
+section in a fenced JSON block.
 
 ### Why a flow stops
 
@@ -654,7 +680,7 @@ started without them says so.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke; with `verdict`, whether it is safe to merge and why | `service`, `verdict`, `offset` |
+| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke; with `verdict`, whether it is safe to merge and why. `file: "check.prod.json"` reads what `flowatlas check --env prod` compared instead (the deployed side as base) and adds `check: { environment, verdict, because }` | `service`, `file`, `verdict`, `offset` |
 
 It reads the `diff.json` that `flowatlas diff <base-ref>` writes rather than
 building two revisions inside a tool call; run the command to refresh it. At
@@ -681,22 +707,24 @@ order - `+ orders → billing POST /invoices`, `- gateway → orders GET
 (required))`, `+ gateway stops here: target-route-not-found` - at most 12 of
 them and a line counting the rest. The same steps `flowatlas diff` draws as a
 sequence diagram; an agent gets the text, never the diagram. A `diff.json` of
-format 2 has no flows, and says nothing less about the verdict.
+format 2 has no flows; the verdict does not read them.
 
 **The verdict.** `what_changed({verdict: true})` adds `verdict` - `safe`,
 `unsafe` or `unknown` - and `because`, one sentence per reason, unsafe ones
 first. The rule is fixed, so a reviewer can disagree with a reason rather than
 with a score:
 
-- **unsafe**: a new contract error; a call whose target went (it joined a
+- **unsafe**: a new contract error; a new violation of an architecture rule at
+  `error` along edges that are not guesses (P114); a call whose target went (it joined a
   route on the base side and joins nothing now), or a channel left with no
   producer or no consumer; a removed way in that another service still calls.
 - **unknown**: a service the base ref could not be read for (read from its
   working tree on both sides, so reported unchanged without being compared); a
   new gap on a path from a changed node back to a way in, which the reading
-  cannot see past; a `diff.json` of format 1, which holds no gap rows ("rerun
-  flowatlas diff for new gaps"). A format-2 file, which holds no flows, is read
-  as it is: the verdict does not read flows.
+  cannot see past; a `diff.json` older than format 4, which holds no rule
+  violations (format 1 no gap rows either: "rerun flowatlas diff for new gaps,
+  lost joins and rule violations"). The verdict does not read flows, so their
+  absence decides nothing.
 - **safe** otherwise.
 
 Beside it: `newGaps` (gap ids the head has and the base does not, each with

@@ -1,0 +1,8 @@
+{
+  "deployedFormatVersion": 1,
+  "environments": {
+    "prod": { "gateway": "v1", "orders": "v1", "billing": "v1" },
+    "staging": { "gateway": "main", "orders": "main", "billing": "main" },
+    "canary": { "gateway": "v1", "orders": "v9", "billing": "v1" }
+  }
+}

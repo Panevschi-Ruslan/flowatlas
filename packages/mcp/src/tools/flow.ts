@@ -19,6 +19,20 @@ import { trafficDiffers } from './contract.js';
  */
 const withDrift = (next: readonly string[], entry: string, differs: boolean): string[] =>
   !differs ? [...next] : [...next.slice(0, 1), callOf('check_contract', { edge: entry }), ...next.slice(1)].slice(0, MAX_NEXT);
+import { rulesReportOf, violatedHops } from './rules.js';
+
+/** Marks each step whose hop in a violation of an architecture rule runs along (P114). */
+const markViolations = (root: FlowNode, hops: ReadonlyMap<string, string[]>): void => {
+  if (hops.size === 0) return;
+  const visit = (row: FlowNode): void => {
+    for (const child of row.children) {
+      const rules = hops.get(`${row.node.id}|${child.node.id}`) ?? hops.get(`${child.node.id}|${row.node.id}`);
+      if (rules !== undefined && child.node.ref !== true) child.violates = rules;
+      visit(child);
+    }
+  };
+  visit(root);
+};
 
 /**
  * What `get_flow` shows when nobody says (P92 D4): a tree, not a list, so fewer
@@ -96,6 +110,7 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           maxChars: input.maxChars,
           detail,
         });
+        markViolations(flow.root, violatedHops(rulesReportOf(db, ctx)));
         const counts = loadObservedCounts(ctx.handle.path);
         if (counts !== undefined) {
           const seen = nodeRow(counts, ref.id);

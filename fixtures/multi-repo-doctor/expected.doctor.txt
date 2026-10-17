@@ -1,6 +1,6 @@
 gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there.
 
-unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync=2 · contracts: errors=4 ignored=1 · exit=0
+unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync=2 · contracts: errors=4 ignored=1 · rules: errors=0 new=0 · exit=0
 
 unresolved: 26 to act on · missed: 28 · notes: 0 · findings: 3
   5 missed places static reading cannot see, folded into 5 rows

@@ -59,12 +59,14 @@ describe('the tools a session is offered', () => {
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
       'check_contract',
+      'check_rules',
       'dead',
       'describe_for_prompt',
       'find_symbol',
       'findings',
       'get_flow',
       'get_source',
+      'get_spec',
       'get_type',
       'hot_paths',
       'impact',
@@ -169,12 +171,36 @@ describe('the tools a session is offered', () => {
    * says it carries `traffic`, 16 characters; P111, P122, P134 and P142 on the
    * other): twenty-four tools, 12,228 and 31,191, each ceiling the measured
    * size rounded up to the next 50, so neither moves.
+   * Raised by P114, which adds the tool its ticket asks for, `check_rules`
+   * (inputs `rule`, `service`, `maxNodes`, `offset`, a one-line description),
+   * and the optional `rules` counts on `start_here`'s output schema: 10,063
+   * and 28,200 after, from 9,659 and 27,446, ceilings set about a hundred over
+   * as before. A tool cannot be added inside 41 characters, and nothing in
+   * the others could give back 400 without losing a parameter's meaning.
+   * P117 fits inside them: `what_changed` took `file` (a check document) and
+   * said so in its description, and `start_here`'s output schema gained
+   * `checks`, one line rather than a record because a record does not fit:
+   * 10,092 and 28,256.
+   *
+   * Raised by P118, which adds the tool its ticket asks for, `get_spec`
+   * (inputs `service`, `kind`, `path`, `maxChars`, a one-line description, no
+   * output schema: the answer is a document's text, which a schema would only
+   * call a string), and `withSpec` on `describe_for_prompt`: 10,564 and 28,880,
+   * from 10,092 and 28,256, ceilings set just over. What `path` takes is said
+   * once in the instructions rather than on the input. Neither fits inside the
+   * eight characters P117 left, and nothing in the others could give back 470
+   * without losing a parameter's meaning.
+   *
+   * The two lines met (P114 to P119 and P193 to P197 on one side, 10,600 and
+   * 28,900; P120, P121, P105 to P113, P122 and the page tickets on the other,
+   * 12,250 and 31,200): twenty-six tools, 13,133 and 32,625, each ceiling the
+   * measured size rounded up to the next 50.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(12250);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(31200);
+    expect(read.length).toBeLessThan(13150);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(32650);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

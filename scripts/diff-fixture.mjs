@@ -30,6 +30,14 @@ const CONFIG = {
     { name: 'billing', repo: './billing', type: 'nestjs', baseUrlEnv: ['BILLING_URL'] },
   ],
   output: '.flowatlas',
+  // The head side breaks it: billing starts consuming order.gift-wrapped (P114).
+  rules: [
+    {
+      name: 'billing-stays-out-of-gift-wrapping',
+      note: 'gift wrapping is fulfilment, which orders does',
+      forbid: { from: { service: 'billing' }, to: { channel: 'order.gift-*' } },
+    },
+  ],
 };
 
 const quiet = { out() {}, err() {}, tty: false };

@@ -14,7 +14,8 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { loadConfig, readAccepted, type AcceptedProblem, type Unresolved } from '@flowatlas/core';
+import { ConfigInvalidError, loadConfig, readAccepted, type AcceptedProblem, type Unresolved } from '@flowatlas/core';
+import type { RulesReport } from '@flowatlas/linker';
 import type { CheckOptions } from '@flowatlas/contracts';
 import { acceptedSplitOf, withAnsweredDemoted, type GraphDb, type MissingService } from '@flowatlas/linker';
 import type { Command } from 'commander';
@@ -32,6 +33,7 @@ import { VERSION } from '../version.js';
 import {
   acceptedBy,
   readBaseline,
+  rulesSnapshotOf,
   snapshotOf,
   writeBaseline,
   type Baseline,
@@ -47,13 +49,28 @@ import {
 } from '../doctor/cant-follow.js';
 import { boundDoctorReport, missingReposOf, runDoctorComplete, type DoctorSettings } from '../doctor/run.js';
 import {
+  deliverSarif,
+  doctorCut,
+  doctorFindings,
+  doctorNotes,
+  namedLines,
+  sarifBound,
+  sarifLevelFlag,
+  sarifPathsOf,
+  toSarif,
+  withSarifOptions,
+  type AcceptedRow,
+  type SarifFlags,
+} from '../sarif/index.js';
+import { ruleReportOf, rulesContextOf, type RulesContext } from './rules.js';
+import {
   BASELINE_FORMAT_VERSION,
   SECTIONS,
   type DoctorReport,
   type Section,
 } from '../doctor/schema.js';
 
-export const FORMATS = ['text', 'json', 'github'] as const;
+export const FORMATS = ['text', 'json', 'github', 'sarif'] as const;
 export type DoctorFormat = (typeof FORMATS)[number];
 
 /** The file every run leaves behind, whatever it printed. */
@@ -62,7 +79,7 @@ export const DOCTOR_FILE = 'doctor.json';
 /** What `--accept` writes, and where `--strict` looks for it. */
 export const BASELINE_FILE = 'flowatlas.baseline.json';
 
-export interface DoctorOptions {
+export interface DoctorOptions extends SarifFlags {
   config?: string;
   db?: string;
   format?: string;
@@ -78,6 +95,8 @@ export interface DoctorOptions {
   reason?: string[];
   /** `false` only when `--no-contracts` was passed. */
   contracts?: boolean;
+  /** `false` only when `--no-rules` was passed (P114). */
+  rules?: boolean;
   maxNodes?: string;
   /** Where to write `doctor.json`. Defaults to the configured output. */
   out?: string;
@@ -224,27 +243,6 @@ interface FromConfig {
   missingServices: MissingService[];
 }
 
-/** A service's own `name`, as one line of a configuration writes it. */
-const NAMED = /"name"\s*:\s*("(?:[^"\\]|\\.)*")/;
-
-/**
- * The line each service is named on: the first line that names it.
- *
- * Read from the text, because the parsed configuration keeps no lines; a
- * service whose name is not written as `"name": "…"` on one line has none, and
- * its annotation names the file alone.
- */
-const serviceLines = (text: string, names: readonly string[]): Map<string, number> => {
-  const wanted = new Set(names);
-  const lines = new Map<string, number>();
-  text.split('\n').forEach((line, index) => {
-    const written = NAMED.exec(line)?.[1];
-    const name = written === undefined ? undefined : (JSON.parse(written) as string);
-    if (name !== undefined && wanted.has(name) && !lines.has(name)) lines.set(name, index + 1);
-  });
-  return lines;
-};
-
 /**
  * What a service's repository looks like, read from its directory, for the
  * verdict on a service with no way in (R170). The one place `doctor` opens a
@@ -307,7 +305,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       if (dir !== '' && dir !== '.') repoDirs.set(service.name, dir);
     }
     const file = relative(loaded.rootDir, loaded.configPath).replace(/\\/g, '/');
-    const lines = serviceLines(readFileSync(loaded.configPath, 'utf8'), services.map((service) => service.name));
+    const lines = namedLines(readFileSync(loaded.configPath, 'utf8'), services.map((service) => service.name));
     const serviceAt = new Map(services.map((service) => [service.name, { file, line: lines.get(service.name) ?? 0 }]));
     return {
       outputDir: loaded.outputDir,
@@ -458,6 +456,23 @@ const baselinePathFor = (options: DoctorOptions, settings: FromConfig): string |
   return settings.rootDir === undefined ? undefined : join(settings.rootDir, BASELINE_FILE);
 };
 
+/**
+ * The rules this run checks, or undefined when there are none or `--no-rules`
+ * was passed. A rule that fails its schema stops the run (exit 2, naming it):
+ * every other problem with the configuration is the rest of doctor's to
+ * answer around, as it always was.
+ */
+const rulesFor = (options: DoctorOptions): RulesContext | undefined => {
+  if (options.rules === false) return undefined;
+  try {
+    const context = rulesContextOf(options);
+    return context.ruleSet.rules.length === 0 ? undefined : context;
+  } catch (cause) {
+    if (cause instanceof CliError && cause.message.includes('rule-invalid')) throw cause;
+    return undefined;
+  }
+};
+
 /** The numbers this run would accept, ready to be committed. */
 const baselineOf = (
   db: GraphDb,
@@ -466,6 +481,7 @@ const baselineOf = (
   settings: FromConfig,
   now: string,
   who: string,
+  rules: RulesReport | undefined,
 ): Baseline => ({
   baselineFormatVersion: BASELINE_FORMAT_VERSION,
   schemaVersion: db.schemaVersion(),
@@ -485,6 +501,7 @@ const baselineOf = (
     infos: 0,
     ignored: report.contracts.ignored,
   },
+  rules: rules === undefined ? {} : rulesSnapshotOf(rules),
 });
 
 /**
@@ -499,8 +516,16 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   // section of rows is bounded at 150, and the places listed under one
   // reason at a handful. One number for both made `doctor` hundreds of
   // lines on a project whose commonest reason covered hundreds of places.
+  //
+  // A SARIF log is read by a code host that keeps its own list, so every
+  // place is written up to the bound code scanning shows (P115).
   const maxNodes =
-    options.maxNodes === undefined ? undefined : whole(options.maxNodes, 150, '--max-nodes');
+    options.maxNodes === undefined
+      ? format === 'sarif'
+        ? sarifBound(undefined)
+        : undefined
+      : whole(options.maxNodes, 150, '--max-nodes');
+  const sarifLevel = sarifLevelFlag(options.sarifLevel);
   const sections = sectionsFor(options);
   const accept = options.accept === true;
   const strict = options.strict === true;
@@ -520,9 +545,11 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   }
 
   const settings = fromConfig(options);
+  const ruleContext = sections.includes('rules') ? rulesFor(options) : undefined;
   const { db, close } = openProjectDb(options);
   try {
     const { rows: raw, note } = rowsFor(db, settings.outputDir);
+    const rulesReport = ruleContext === undefined ? undefined : ruleReportOf(db, ruleContext.ruleSet, dbPathFor(options));
     // How old each declared document is, asked now rather than read off the
     // graph. Both of its dates move whenever anybody commits, so the build
     // records neither and this is the only place the question is answered
@@ -572,6 +599,9 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         ...(options.strictRuntime === true ? { strictRuntime: true } : {}),
         sections,
         contracts: options.contracts !== false,
+        ...(rulesReport === undefined || ruleContext === undefined
+          ? {}
+          : { rules: { report: rulesReport, failOnHeuristic: ruleContext.ruleSet.failOnHeuristic, configured: ruleContext.ruleSet.rules.length } }),
         ...(read === undefined ? {} : { baseline: read }),
         baselinePath: wantsBaseline ? (path ?? null) : null,
         ignoreReasons: settings.ignoreReasons,
@@ -618,19 +648,47 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       }
       writeBaseline(
         path,
-        baselineOf(db, rows, report, settings, report.generatedAt, acceptedBy(settings.rootDir)),
+        baselineOf(db, rows, report, settings, report.generatedAt, acceptedBy(settings.rootDir), rulesReport),
       );
       baselineFile = path;
       exitCode = EXIT.ok;
       report.verdict.exitCode = EXIT.ok;
     }
 
+    // The rows accepted.json took out of the report, written to the log
+    // suppressed with their note rather than left out (P115).
+    const acceptedRows: AcceptedRow[] = split.rows.flatMap((row, index) => {
+      const entry = split.byEntry[index];
+      return entry === undefined || (options.service !== undefined && row.service !== options.service) ? [] : [{ row, entry }];
+    });
     const text =
-      format === 'json'
+      format === 'sarif'
+        ? deliverSarif(
+            toSarif({
+              command: 'doctor',
+              version: VERSION,
+              findings: doctorFindings(report, { lookup: db, accepted: acceptedRows }),
+              paths: sarifPathsOf(options, options.sarifRoot),
+              maxResults: sarifBound(maxNodes),
+              ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
+              // doctor.json keeps every row (P192), so a cut names it.
+              cutBefore: doctorCut(report),
+              ...(file === undefined ? {} : { completeFile: file }),
+              notes: doctorNotes(report),
+            }),
+            options,
+            io,
+          )
+        : format === 'json'
         ? renderDoctorJson(report)
         : format === 'github'
           ? renderDoctorGithub(report, {
               ...(file === undefined ? {} : { file }),
+              // Every annotation's file is relative to its repository; the
+              // checkout sees it under the directory the configuration names
+              // (P191: this was never passed, so annotations named paths that
+              // were not there).
+              repoDir: (service) => settings.repoDirs.get(service),
               serviceAt: (service) => settings.serviceAt.get(service),
               ...(settings.rootDir === undefined || settings.configPath === undefined
                 ? {}
@@ -644,9 +702,12 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
               ...textOptionsOf(settings),
             });
 
-    io.out(text);
+    if (format !== 'sarif') {
+      io.out(text);
+    }
     if (baselineFile !== undefined) {
-      io.err(`baseline written to ${baselineFile}: ${report.unresolved.total} places accepted\n`);
+      const ruleKeys = rulesReport === undefined ? 0 : Object.keys(rulesSnapshotOf(rulesReport)).length;
+      io.err(`baseline written to ${baselineFile}: ${report.unresolved.total} places accepted${ruleKeys === 0 ? '' : `, ${ruleKeys} rule violation${ruleKeys === 1 ? '' : 's'}`}\n`);
     }
     return {
       report,
@@ -797,13 +858,13 @@ export const cantFollowRowsOf = (
 };
 
 export const registerDoctor = (program: Command): void => {
-  program
+  const command = program
     .command('doctor')
     .description('what the map could not read, what the annotations get wrong, and what has drifted')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--format <name>', `one of ${FORMATS.join(', ')}`)
-    .option('--strict', 'exit 1 on a broken annotation, a contract error, or growth past the baseline')
+    .option('--strict', 'exit 1 on a broken annotation, a contract error, a rule violation the baseline does not hold, or growth past the baseline')
     .option('--strict-runtime', 'exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered')
     .option('--accept', 'write the current numbers to the baseline')
     .option('--baseline <path>', 'where the accepted numbers live (default: <output>/baseline.json)')
@@ -820,6 +881,7 @@ export const registerDoctor = (program: Command): void => {
       (value: string, all: string[] = []) => [...all, value],
     )
     .option('--no-contracts', 'do not run the contract check')
+    .option('--no-rules', 'do not check the architecture rules')
     .option('--max-nodes <n>', 'most places to print per reason; the file is always complete')
     .option('--out <dir>', 'where to write doctor.json (default: the configured output)')
     .option('--unresolved', "what the reader could not follow, grouped by cause and by package, instead of the report")
@@ -833,12 +895,12 @@ export const registerDoctor = (program: Command): void => {
       '--scan <dir>',
       'also look for a missing repository in this directory, one level down (repeatable)',
       (value: string, all: string[] = []) => [...all, value],
-    )
-    .action((options: DoctorOptions) => {
-      if (options.missing === true) {
-        runMissingCommand(options);
-        return;
-      }
+    );
+  withSarifOptions(command).action((options: DoctorOptions) => {
+    if (options.missing === true) {
+      runMissingCommand(options);
+      return;
+    }
       if (options.unresolved === true) {
         runCantFollowCommand(options);
         return;

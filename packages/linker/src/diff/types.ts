@@ -14,10 +14,14 @@ import type { Confidence, TypeEntry } from '@flowatlas/core';
  * 2 (P96) added `unresolved` (the gaps and findings each side has that the
  * other does not, by gap id) and `joins` (the calls that stopped joining).
  * 3 (P116) added `flows`: each way in the impact reaches, walked on both
- * sides and compared step by step. Every bump adds its sections to `DIFF_SECTIONS` and a lift in `schema.ts`, so
- * a document an older flowatlas wrote is still read.
+ * sides and compared step by step. 4 (P114) added `rules`: the architecture
+ * rules' violations new, fixed, already there and excused. 5 (P118) added
+ * `spec`: the API documents' changes by kind, or `null` when `--spec` was not
+ * asked for (not computed, which an empty list would not say). Every bump adds its
+ * sections to `DIFF_SECTIONS` and a lift in `schema.ts`, so a document an
+ * older flowatlas wrote is still read.
  */
-export const DIFF_FORMAT_VERSION = 3;
+export const DIFF_FORMAT_VERSION = 5;
 
 /**
  * The sections of `diff.json` by the format that introduced them.
@@ -30,6 +34,8 @@ export const DIFF_SECTIONS: Readonly<Record<string, number>> = Object.freeze({
   unresolved: 2,
   joins: 2,
   flows: 3,
+  rules: 4,
+  spec: 5,
 });
 
 /** The sections a document of this format predates, in `DIFF_SECTIONS` order. */
@@ -193,8 +199,9 @@ export interface UnresolvedDiff {
  *
  * `target-gone` a request that joined a route on the base side joins nothing
  * on the head side · `no-producer` a channel whose consumers are still there
- * lost the last thing that published it · `no-consumer` a channel still
- * published lost the last thing that handled it.
+ * lost the last thing that published it, or (`now` `never-produced`, P117) a
+ * consumer the head side added to a channel nothing publishes · `no-consumer`
+ * a channel still published lost the last thing that handled it.
  */
 export const LOST_JOIN_KINDS = ['target-gone', 'no-producer', 'no-consumer'] as const;
 export type LostJoinKind = (typeof LOST_JOIN_KINDS)[number];
@@ -217,8 +224,9 @@ export interface LostJoin {
   targetService: string | null;
   /**
    * What the head side says instead: the reason of the row it wrote on the
-   * caller (`target-route-not-found`), `no-edge` when it wrote none, or the
-   * kind for a channel.
+   * caller (`target-route-not-found`), `no-edge` when it wrote none, the
+   * kind for a channel, or `never-produced` for a consumer the head side added
+   * to a channel nothing publishes (P117).
    */
   now: string;
   /** True when the target is gone from the head graph, not only the join. */

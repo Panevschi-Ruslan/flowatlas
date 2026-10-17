@@ -19,6 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   buildProject,
+  renderSarif,
   runAccept,
   runCantFollowCommand,
   runPatternsExplain,
@@ -26,6 +27,7 @@ import {
   runPatternsTest,
   runChannel,
   runContracts,
+  runCycles,
   runDead,
   runDiff,
   runDocs,
@@ -36,11 +38,20 @@ import {
   runImpact,
   runObserve,
   runObserveDiff,
+  runRules,
   runShapesSuggest,
   runStats,
   runTypes,
+  runCheck,
+  runDeployedShow,
+  runSpec,
+  runSpecDiff,
+  runSpecAgainst,
+  runExport,
 } from '../packages/cli/dist/index.js';
+import { catalogProblems, dslProblems } from '../packages/linker/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
+import { makeDeployedProject, SHIPPED } from './deployed-fixture.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = join(root, 'fixtures', 'multi-repo');
@@ -229,6 +240,29 @@ const observeDiffOnCopy = (io, options = {}) => {
   }
 };
 
+/**
+ * What `flowatlas export` writes (P119), into a directory of its own that is
+ * removed afterwards: one written file, or what the run said, with that
+ * directory written as `<out>`. Every run is held to Backstage's entity rules
+ * and the DSL's statements first (`catalogProblems`, `dslProblems`), so a
+ * snapshot can never record a catalogue Backstage would refuse.
+ */
+const exportRun = (kind, exportConfig, options, show) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-export-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    const run = runExport(kind, { config: exportConfig, out, ...options }, { out: (text) => show === undefined && io.out(said(text)), err: (text) => io.err(said(text)), tty: false });
+    const problems = run.backstage !== undefined ? catalogProblems(run.backstage.entities) : dslProblems(run.structurizr.files[0].text);
+    if (problems.length > 0) throw new Error(`the export breaks its format: ${problems.join('; ')}`);
+    if (show !== undefined) io.out(readFileSync(join(out, show), 'utf8'));
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+
+/** The bookshop with what a catalogue says of each service (P119), every service but the browser given an owner. */
+const catalogConfig = join(fixture, 'flowatlas.catalog.json');
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
   ['docs.architecture.md', docsWritten],
@@ -285,6 +319,17 @@ const CASES = [
   ['types.list.json.l2.json', (io) => runTypes({ ...plain, format: 'json', detail: '2' }, io)],
   ['stats.tree.txt', (io) => runStats({ ...plain, format: 'tree' }, io)],
   ['stats.json', (io) => runStats({ ...plain, format: 'json' }, io)],
+  // The SARIF logs (P115): what nothing reaches, and the cycles (none here, so
+  // the empty run a project without one uploads).
+  ['dead.sarif.json', async (io) => io.out(renderSarif((await runDead({ config, format: 'sarif' })).sarif))],
+  ['cycles.sarif.json', (io) => io.out(renderSarif(runCycles({ config, format: 'sarif' }).sarif))],
+  // The bookshop as a Backstage catalogue and a Structurizr workspace (P119):
+  // what each run says, each entity file, and the workspace.
+  ['export.backstage.txt', exportRun('backstage', catalogConfig, {})],
+  ...['gateway', 'orders', 'billing', 'web', 'resources', 'catalog-locations'].map((name) => [`export.backstage.${name}.yaml`, exportRun('backstage', catalogConfig, {}, `${name}.yaml`)]),
+  ['export.structurizr.txt', exportRun('structurizr', catalogConfig, {})],
+  ['export.structurizr.dsl', exportRun('structurizr', catalogConfig, {}, 'workspace.dsl')],
+  ['export.structurizr.post-orders.dsl', exportRun('structurizr', catalogConfig, { flow: ['POST /orders'], maxLabels: '1' }, 'workspace.dsl')],
 ];
 
 /**
@@ -303,6 +348,7 @@ const CONTRACT_CASES = [
     (io) => runContracts({ config: contractsConfig, format: 'markdown' }, io),
   ],
   ['expected.contracts.json', (io) => runContracts({ config: contractsConfig, format: 'json' }, io)],
+  ['expected.contracts.sarif.json', (io) => runContracts({ config: contractsConfig, format: 'sarif' }, io)],
 ];
 
 const doctorFixture = join(root, 'fixtures', 'multi-repo-doctor');
@@ -336,6 +382,10 @@ const DOCTOR_CASES = [
   [
     'expected.doctor.reason.txt',
     (io) => runDoctorCommand({ config: doctorConfig, reason: ['unknown-db-package'], maxNodes: '20' }, io),
+  ],
+  [
+    'expected.doctor.sarif.json',
+    (io) => runDoctorCommand({ config: doctorConfig, baseline: doctorBaseline, format: 'sarif' }, io),
   ],
 ];
 
@@ -532,10 +582,60 @@ const QUEUE_CASES = [
   ['doctor.txt', (io) => runDoctorCommand({ config: queuesPlain.config }, io)],
 ];
 
+/**
+ * What `flowatlas spec` writes (P118), into a directory of its own that is
+ * removed afterwards: one written file, or what the run said, with that
+ * directory written as `<out>`.
+ */
+const specFile = (specConfig, options, file) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-spec-'));
+  try {
+    runSpec({ config: specConfig, out, ...options }, { out() {}, err() {}, tty: false });
+    io.out(readFileSync(join(out, file), 'utf8'));
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+const specSaid = (specConfig, options) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-spec-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    runSpec({ config: specConfig, out, ...options }, { out: (text) => io.out(said(text)), err: (text) => io.err(said(text)), tty: false });
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+
+/**
+ * The bookshop whose services disagree on purpose, as documents (P118): the
+ * routes orders answers, the channel ends of orders and billing, and every
+ * route in one table.
+ */
+const SPEC_CASES = [
+  ['spec.txt', specSaid(contractsConfig, { inventory: true })],
+  ['spec.orders.openapi.yaml', specFile(contractsConfig, {}, 'orders.openapi.yaml')],
+  ['spec.orders.asyncapi.yaml', specFile(contractsConfig, {}, 'orders.asyncapi.yaml')],
+  ['spec.billing.asyncapi.yaml', specFile(contractsConfig, {}, 'billing.asyncapi.yaml')],
+  ['spec.inventory.md', specFile(contractsConfig, { inventory: true, kind: 'openapi' }, 'inventory.md')],
+];
+
 const MULTI_EVENT_CASES = [
   ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...multiEventsPlain, format: 'tree' }, io)],
   ['channel.loan-returned.json', (io) => runChannel('eventbridge/library/library.loans/LoanReturned', { ...multiEventsPlain, format: 'json' }, io)],
   ['doctor.txt', (io) => runDoctorCommand({ config: multiEventsPlain.config }, io)],
+  // The channels as AsyncAPI documents (P118): a publish, a delivery that
+  // forwards, and a consumer handed the message wrapped (`x-flowatlas-envelope`).
+  ['spec.loans.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'loans.asyncapi.yaml')],
+  ['spec.routing.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'routing.asyncapi.yaml')],
+  ['spec.notifications.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'notifications.asyncapi.yaml')],
+  // Functions and channels as a catalogue and a workspace (P119): AsyncAPI
+  // APIs, a function started by name, queues, and the delivery matched by a
+  // pattern only, drawn when asked and named as a guess.
+  ['export.backstage.txt', exportRun('backstage', multiEventsPlain.config, {})],
+  ['export.backstage.routing.yaml', exportRun('backstage', multiEventsPlain.config, {}, 'routing.yaml')],
+  ['export.backstage.notifications.yaml', exportRun('backstage', multiEventsPlain.config, {}, 'notifications.yaml')],
+  ['export.backstage.heuristic.platform-events.yaml', exportRun('backstage', multiEventsPlain.config, { includeHeuristic: true }, 'platform-events.yaml')],
+  ['export.structurizr.dsl', exportRun('structurizr', multiEventsPlain.config, {}, 'workspace.dsl')],
 ];
 
 /**
@@ -816,6 +916,14 @@ const diffMarkdown = (options) => async (io) => {
   io.out(placed(run.text).replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total'));
 };
 
+/** `flowatlas spec diff HEAD~1`; the summary line it ends with on stderr is kept beside the text only, so a JSON file is JSON. */
+const specDiff = (options) => async (io) => {
+  const { scratch, config: diffConfig } = await diffProjectOnce();
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  const said = options.format === undefined ? (text) => io.err(placed(text)) : () => undefined;
+  await runSpecDiff('HEAD~1', undefined, { config: diffConfig, ...options }, { out: (text) => io.out(placed(text)), err: said, tty: false });
+};
+
 const DIFF_CASES = [
   ['diff.md', diffMarkdown({})],
   ['diff.class.md', diffMarkdown({ sequenceDetail: 'class', maxDiagrams: '1', context: '0' })],
@@ -827,6 +935,91 @@ const DIFF_CASES = [
       io.out(placed(`${JSON.stringify(report, null, 2)}\n`));
     },
   ],
+  // The new and fixed contract findings and rule violations as SARIF (P115).
+  ['diff.sarif.json', diffMarkdown({ format: 'sarif' })],
+  // The API documents' change (P118): under "API changes" with --spec, and
+  // as `flowatlas spec diff` draws it in each format.
+  ['diff.spec.md', diffMarkdown({ spec: true, diagrams: false })],
+  ['spec-diff.txt', specDiff({})],
+  ['spec-diff.md', specDiff({ format: 'markdown' })],
+  ['spec-diff.json', specDiff({ format: 'json' })],
+  ['spec-diff.sarif.json', specDiff({ format: 'sarif' })],
+];
+
+/**
+ * `flowatlas check --env` over `fixtures/multi-repo-deployed` (P117): the
+ * `drop-lookup` branch of orders against prod as a document and as the file
+ * beside it, the gateway's branch against staging (a field billing's `main`
+ * requires) and against prod and canary at once (canary's pin names a tag
+ * nobody made), the SARIF log, and the pins file as `deployed show` reads it.
+ * The repositories are made once with fixed dates, so every sha is the same
+ * on every machine; where the copy was made is a placeholder.
+ */
+let deployedProject;
+const deployedOnce = () => (deployedProject ??= makeDeployedProject(root));
+const deployedPlaced = (text) => text.split(deployedOnce().scratch).join('<scratch>');
+const checkRun = (options) => async (io) => {
+  const said = { out: (text) => io.out(deployedPlaced(text)), err: (text) => io.err(deployedPlaced(text)), tty: false };
+  await runCheck({ config: deployedOnce().config, generatedAt: FIXED, environ: {}, ...options }, said);
+};
+const GATEWAY_BRANCH = { service: ['gateway'], head: 'invoice-on-checkout' };
+
+const DEPLOYED_CASES = [
+  [
+    'check.prod.md',
+    async (io) => {
+      let text = '';
+      await checkRun({ env: ['prod'], format: 'markdown', ...SHIPPED })({ out: (more) => (text += more), err: () => undefined });
+      io.out(text.replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total'));
+    },
+  ],
+  [
+    'check.prod.json',
+    async (io) => {
+      const run = await runCheck({ config: deployedOnce().config, env: ['prod'], generatedAt: FIXED, environ: {}, ...SHIPPED }, quiet);
+      const { report } = run.sections[0];
+      const zeroed = { ...report, diff: report.diff === null ? null : { ...report.diff, timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 } } };
+      io.out(deployedPlaced(`${JSON.stringify(zeroed, null, 2)}\n`));
+    },
+  ],
+  ['check.staging.txt', checkRun({ env: ['staging'], ...GATEWAY_BRANCH })],
+  ['check.matrix.txt', checkRun({ env: ['prod', 'canary'], ...GATEWAY_BRANCH })],
+  ['check.prod.sarif.json', checkRun({ env: ['prod'], format: 'sarif', ...SHIPPED })],
+  ['deployed.show.txt', (io) => runDeployedShow(undefined, { config: deployedOnce().config, now: '2026-01-04T00:00:00.000Z' }, io)],
+  // `diff --env` (P193): check.prod.md's comparison, headed by the pins and no verdict.
+  [
+    'diff.env-prod.md',
+    async (io) => {
+      const run = await runDiff(undefined, SHIPPED.head, { config: deployedOnce().config, env: 'prod', service: SHIPPED.service, generatedAt: FIXED, environ: {} }, quiet);
+      io.out(deployedPlaced(run.text.replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total')));
+    },
+  ],
+];
+
+/**
+ * A committed OpenAPI document against the code (P195), over
+ * `fixtures/nest-committed-openapi`: the route the document still declares
+ * and the one it leaves out, in every format, and the same as a section of
+ * `contracts`. Each run writes into a directory of its own, said as `<out>`.
+ */
+const committedConfig = join(root, 'fixtures', 'nest-committed-openapi', 'flowatlas.config.json');
+const againstSaid = (run) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-against-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    run(out, { out: (text) => io.out(said(text)), err: () => undefined, tty: false });
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+const against = (options) => againstSaid((out, io) => runSpecAgainst({ config: committedConfig, out, against: ['shop'], ...options }, io));
+
+const AGAINST_CASES = [
+  ['spec-against.txt', against({})],
+  ['spec-against.md', against({ format: 'markdown' })],
+  ['spec-against.json', against({ format: 'json' })],
+  ['spec-against.sarif.json', against({ format: 'sarif' })],
+  ['contracts.txt', againstSaid((out, io) => runContracts({ config: committedConfig, out }, io))],
 ];
 
 const TERRAFORM_SHAPE_SUITES = [
@@ -862,6 +1055,23 @@ const TERRAFORM_SHAPE_SUITES = [
   ]),
 ];
 
+const rulesConfig = join(root, 'fixtures', 'multi-repo-rules', 'flowatlas.config.json');
+
+/**
+ * The architecture rules (P114) of the bookshop with tags: three broken once
+ * each, one kept, one naming a service that does not exist - in every format
+ * `flowatlas rules` draws, the list, and what `doctor` says of them.
+ */
+const RULES_CASES = [
+  ['rules.txt', (io) => runRules({ config: rulesConfig }, io)],
+  ['rules.json', (io) => runRules({ config: rulesConfig, format: 'json' }, io)],
+  ['rules.md', (io) => runRules({ config: rulesConfig, format: 'markdown' }, io)],
+  ['rules.github.txt', (io) => runRules({ config: rulesConfig, format: 'github' }, io)],
+  ['rules.sarif.json', (io) => runRules({ config: rulesConfig, format: 'sarif' }, io)],
+  ['rules.list.txt', (io) => runRules({ config: rulesConfig, list: true }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: rulesConfig, baseline: false }, io)],
+];
+
 /**
  * Sets of recordings, in several places.
  *
@@ -872,6 +1082,7 @@ const TERRAFORM_SHAPE_SUITES = [
 const SUITES = [
   { dir: outDir, owned: true, cases: CASES },
   { dir: contractsFixture, owned: false, cases: CONTRACT_CASES },
+  { dir: join(contractsFixture, 'expected.cli'), owned: true, cases: SPEC_CASES },
   { dir: doctorFixture, owned: false, cases: DOCTOR_CASES },
   { dir: foldedFixture, owned: false, cases: FOLDED_CASES },
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
@@ -901,6 +1112,9 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'house-patterns', 'expected.cli'), owned: true, cases: HOUSE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
   { dir: join(root, 'fixtures', 'missing-repo', 'expected.cli'), owned: true, cases: MISSING_REPO_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-rules', 'expected.cli'), owned: true, cases: RULES_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.cli'), owned: true, cases: DEPLOYED_CASES },
+  { dir: join(root, 'fixtures', 'nest-committed-openapi', 'expected.cli'), owned: true, cases: AGAINST_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 
@@ -960,6 +1174,7 @@ for (const [file, ask] of CASES) {
 }
 
 if (diffProject !== undefined) rmSync(diffProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+if (deployedProject !== undefined) rmSync(deployedProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 
 for (const { dir, owned, cases } of SUITES) {
   if (update || !owned) continue;

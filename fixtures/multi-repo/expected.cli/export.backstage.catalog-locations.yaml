@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: flowatlas-bookshop
+  description: "Every entity flowatlas exported from the code. Written by `flowatlas export backstage`; run it again rather than editing."
+spec:
+  targets:
+    - ./billing.yaml
+    - ./gateway.yaml
+    - ./orders.yaml
+    - ./resources.yaml
+    - ./web.yaml

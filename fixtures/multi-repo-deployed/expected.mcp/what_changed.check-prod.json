@@ -1,0 +1,160 @@
+{
+  "check": {
+    "environment": "prod",
+    "verdict": "not deployable",
+    "because": [
+      "orders InvoicePaidConsumer.onPaid is a new handler of invoice.paid, which nothing deployed publishes",
+      "gateway calls GET /orders/:param on orders, which is gone after this deploy (now target-route-not-found)"
+    ]
+  },
+  "base": {
+    "ref": "prod",
+    "label": "prod (billing e93604ab, gateway 5cce0519, orders f36068c5)"
+  },
+  "head": {
+    "ref": "drop-lookup",
+    "label": "drop-lookup (billing e93604ab, gateway 5cce0519, orders e6a023fe)"
+  },
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "counts": {
+    "nodes": {
+      "added": 5,
+      "removed": 2,
+      "changed": 2,
+      "moved": 0
+    },
+    "edges": {
+      "added": 3,
+      "removed": 3,
+      "changed": 0
+    },
+    "types": {
+      "added": 1,
+      "removed": 0,
+      "changed": 0
+    },
+    "entries": 2,
+    "contracts": {
+      "new": 0,
+      "breaks": 0,
+      "fixed": 0
+    },
+    "gaps": {
+      "added": 1,
+      "removed": 0
+    },
+    "lostJoins": 2,
+    "flows": 3
+  },
+  "nodes": {
+    "added": [
+      "channel:invoice.paid",
+      "consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid",
+      "entry:orders:event:invoice.paid",
+      "orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer",
+      "orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid"
+    ],
+    "removed": [
+      "entry:orders:http:GET:/orders/:param",
+      "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    ],
+    "changed": [
+      {
+        "id": "orders#src/app.module.ts:AppModule",
+        "service": "orders",
+        "label": "AppModule"
+      },
+      {
+        "id": "repo:orders",
+        "service": "orders",
+        "label": "orders"
+      }
+    ]
+  },
+  "types": {
+    "added": [
+      "type:orders#InvoicePaidEvent"
+    ],
+    "removed": [],
+    "changed": []
+  },
+  "breaks": [],
+  "warnings": [],
+  "verdict": "unsafe",
+  "because": [
+    "1 call lost its target: `http_out:gateway#src/clients/orders.client.ts:21:12` joined `entry:orders:http:GET:/orders/:param` and is now target-route-not-found",
+    "1 channel end lost the other end: `channel:invoice.paid` has no producer for the new `consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid`",
+    "1 removed way in is still called from another service: `entry:orders:http:GET:/orders/:param` (called from gateway)"
+  ],
+  "newGaps": [
+    {
+      "id": "gap:gateway|src/clients/orders.client.ts|target-route-not-found",
+      "reason": "target-route-not-found",
+      "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 21,
+      "node": "http_out:gateway#src/clients/orders.client.ts:21:12",
+      "sites": 1,
+      "next": "get_source({symbol: \"http_out:gateway#src/clients/orders.client.ts:21:12\"})"
+    }
+  ],
+  "vanishedTargets": [
+    {
+      "caller": "consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid",
+      "target": "channel:invoice.paid",
+      "now": "never-produced"
+    },
+    {
+      "caller": "http_out:gateway#src/clients/orders.client.ts:21:12",
+      "target": "entry:orders:http:GET:/orders/:param",
+      "now": "target-route-not-found"
+    }
+  ],
+  "retest": [
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "kind": "http",
+      "label": "GET /orders/:param",
+      "service": "gateway",
+      "confidence": "static",
+      "reaches": "entry:orders:http:GET:/orders/:param",
+      "flow": {
+        "side": "both",
+        "added": 1,
+        "removed": 1,
+        "changed": 0,
+        "steps": [
+          "- gateway → orders GET /orders/:param",
+          "+ gateway stops here: target-route-not-found"
+        ]
+      },
+      "changed": 2
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "kind": "http",
+      "label": "GET /orders/:param",
+      "service": "orders",
+      "confidence": "static",
+      "reaches": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "flow": {
+        "side": "base",
+        "added": 0,
+        "removed": 1,
+        "changed": 0,
+        "steps": [
+          "- client → orders GET /orders/:param"
+        ]
+      },
+      "changed": 1
+    }
+  ],
+  "newFindings": [],
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_source({symbol: \"http_out:gateway#src/clients/orders.client.ts:21:12\"})",
+    "who_calls({symbol: \"consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid\"})"
+  ]
+}

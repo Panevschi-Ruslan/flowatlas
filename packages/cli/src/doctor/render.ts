@@ -32,7 +32,7 @@ const more = (dropped: number | undefined, file?: string): string[] =>
  * list actually is.
  */
 export const summaryLine = (report: DoctorReport): string => {
-  const { unresolved, markers, desync, contracts, baseline, verdict } = report;
+  const { unresolved, markers, desync, contracts, rules, baseline, verdict } = report;
   const against =
     baseline.status === 'ok' || baseline.status === 'grew'
       ? `baseline ${baseline.total.baseline}, ${baseline.total.delta >= 0 ? '+' : ''}${baseline.total.delta}`
@@ -42,6 +42,7 @@ export const summaryLine = (report: DoctorReport): string => {
     `markers: errors=${markers.errors} warnings=${markers.warnings} · ` +
     `desync=${desync.rows.length + (desync.truncated ?? 0)} · ` +
     `contracts: errors=${contracts.errorCount} ignored=${contracts.ignored} · ` +
+    `rules: errors=${rules.errors} new=${rules.new} · ` +
     `exit=${verdict.exitCode}`
   );
 };
@@ -324,6 +325,33 @@ const contractSection = (report: DoctorReport, file?: string): string[] => {
   ];
 };
 
+/** Where a rule violation crosses, as a terminal can open it. */
+const rulePlace = (violation: { at?: { service: string; file: string; line?: number } }, repoDirs: ReadonlyMap<string, string>): string =>
+  violation.at === undefined ? 'no place in a file' : where(violation.at.service, violation.at.file, violation.at.line ?? 0, repoDirs);
+
+/**
+ * The architecture rules (P114): each violation nothing excused, marked new
+ * when the baseline does not hold it, with where it crosses and the rule's note.
+ */
+const rulesSection = (report: DoctorReport, repoDirs: ReadonlyMap<string, string>, file?: string): string[] => {
+  const { rules } = report;
+  if (rules.status === 'skipped') return [];
+  const counts = `${rules.errors} error${rules.errors === 1 ? '' : 's'}, ${rules.warnings} warning${rules.warnings === 1 ? '' : 's'}, ${rules.infos} info`;
+  const tail = `${rules.new} new · ${rules.excused} excused${rules.heuristic === 0 ? '' : ` · ${rules.heuristic} along a guessed edge`}`;
+  const heading = `rules: ${rules.configured} configured · ${counts} · ${tail}`;
+  if (rules.violations.length === 0 && rules.unchecked.length === 0 && rules.notes.length === 0) return [heading];
+  return [
+    heading,
+    ...rules.unchecked.map((item) => `  ${item.new ? 'new  ' : ''}${item.rule} (${item.severity}): ${item.message} (${item.reason})`),
+    ...rules.notes.map((item) => `  ${item.rule}: ${item.message} (${item.reason})`),
+    ...rules.violations.flatMap((item) => [
+      `  ${item.new ? 'new  ' : ''}${item.rule} (${item.severity}${item.heuristic ? ', a guess' : ''}): ${item.message}`,
+      `    at ${rulePlace(item, repoDirs)}${item.note === undefined ? '' : `  · why: ${item.note}`}`,
+    ]),
+    ...more(rules.truncated, file),
+  ];
+};
+
 const baselineSection = (report: DoctorReport): string[] => {
   const { baseline } = report;
   if (baseline.status === 'skipped') return [];
@@ -458,6 +486,7 @@ export const renderDoctorText = (report: DoctorReport, options: DoctorTextOption
     markerSection(report, options.file),
     desyncSection(report, options.file),
     contractSection(report, options.file),
+    rulesSection(report, options.repoDirs ?? NO_REPOS, options.file),
     baselineSection(report),
   ].filter((block) => block.length > 0);
 
@@ -629,6 +658,22 @@ export const renderDoctorGithub = (report: DoctorReport, options: GithubOptions 
         finding.message,
       ),
     );
+  }
+  // A rule violation at the crossing hop, where the fix goes (P114): an error
+  // only when it is new and fails a strict run, a warning otherwise.
+  for (const item of report.rules.violations) {
+    const fails = item.new && item.severity === 'error';
+    lines.push(
+      annotation(
+        fails ? 'error' : 'warning',
+        item.at === undefined ? undefined : at(item.at.file, item.at.line ?? 0, item.at.service),
+        `rule ${item.rule}`,
+        `${item.message}.${item.note === undefined ? '' : ` ${item.note}`}`,
+      ),
+    );
+  }
+  for (const item of report.rules.unchecked) {
+    lines.push(annotation(item.new && item.severity === 'error' ? 'error' : 'warning', undefined, `rule ${item.rule}: ${item.reason}`, item.message));
   }
   if (report.baseline.status === 'grew') {
     lines.push(

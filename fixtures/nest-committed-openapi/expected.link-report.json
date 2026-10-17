@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T21:31:23.194Z",
+  "configHash": "1c7c4600c4fd",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 4,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "committed-openapi-shop",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 0,
+    "uncalled": [
+      "entry:shop:http:GET:/products",
+      "entry:shop:http:GET:/products/:param",
+      "entry:shop:http:GET:/products/:param/reviews",
+      "entry:shop:http:POST:/products"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 11,
+    "edges": 4,
+    "types": 3,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

@@ -509,6 +509,22 @@ const promptGapLine = (gap) => {
   return `- ${promptCode(gap.reason)}${place.length === 0 ? '' : ` at ${place}`}: ${gap.message}.${ways}${hint}`.replace(/\.\./g, '.');
 };
 
+/* ── Rules it breaks (P114) ── */
+
+/** One broken rule: its name and severity, what crossed, where, and why the rule exists. */
+const promptRuleLine = (item) => {
+  const place = promptWhere(item);
+  const guess = PROMPT_CERTAIN.has(item.confidence) ? '' : ' (best guess)';
+  const why = item.note === undefined ? '' : ` Why: ${item.note}`;
+  return `- ${promptCode(item.rule)} · ${item.severity}${guess}: ${item.message}${place.length === 0 ? '' : ` at ${place}`}.${why}`.replace(/\.\./g, '.');
+};
+
+const promptRuleLines = (rules, limits) => {
+  const lines = rules.slice(0, limits.maxGaps).map(promptRuleLine);
+  if (rules.length > limits.maxGaps) lines.push(`- … ${rules.length - limits.maxGaps} more; check_rules lists them all`);
+  return lines;
+};
+
 /* ── Sections ── */
 
 const promptSection = (title, lines) => (lines.length === 0 ? [] : ['', `## ${title}`, '', ...lines]);
@@ -810,6 +826,7 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
           `Failures seen at run time · ${subject.failuresSeen.hits} hits, ${promptWindowSay(subject.failuresSeen.window)}`,
           promptSeenFailLines(subject.failuresSeen, bounds),
         )),
+    ...promptSection(`Rules it breaks · ${(subject.rules ?? []).length}`, promptRuleLines(subject.rules ?? [], bounds)),
     ...(isChannel
       ? promptSection(
           `Published by · ${producers.length}`,
@@ -823,6 +840,9 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
     ...(scoped === undefined ? [] : scoped(subject, bounds, throwsOf)),
     ...(isChannel || isCheck || scoped !== undefined ? [] : promptSection('Steps', chain.length === 0 ? ['- nothing further is recorded from here'] : chain)),
     ...promptSection('Shapes', promptShapes(subject.steps)),
+    ...(subject.spec === undefined
+      ? []
+      : promptSection(`${subject.spec.kind === 'asyncapi' ? 'AsyncAPI' : 'OpenAPI'} · ${subject.spec.operation}`, ['```json', ...subject.spec.text.split('\n'), '```'])),
     ...(isCheck || subject.scope === 'service'
       ? []
       : promptSection('Gaps', gapLines.length === 0 ? [subject.scope === undefined ? '- none recorded on this chain' : `- none recorded in this ${subject.scope}`] : gapLines)),
