@@ -19,13 +19,18 @@ export const waysInOf = (row: ReachedRow): number | undefined => {
 /**
  * The rows that record their ways in (as `waysOf` reads them), most first,
  * each in a place one of them held; every other row keeps its place. Stable, so rows reached alike
- * keep the order they came in.
+ * keep the order they came in, unless `tie` orders them (a finding before a
+ * note, where only one of a file's rows is kept: P130).
  */
-export const rankByReach = <T>(rows: readonly T[], waysOf: (row: T) => number | undefined): T[] => {
+export const rankByReach = <T>(
+  rows: readonly T[],
+  waysOf: (row: T) => number | undefined,
+  tie?: (a: T, b: T) => number,
+): T[] => {
   const places = rows.flatMap((row, index) => (waysOf(row) === undefined ? [] : [index]));
   const ranked = places
     .map((index) => rows[index] as T)
-    .sort((a, b) => (waysOf(b) ?? 0) - (waysOf(a) ?? 0));
+    .sort((a, b) => (waysOf(b) ?? 0) - (waysOf(a) ?? 0) || (tie?.(a, b) ?? 0));
   const out = [...rows];
   places.forEach((index, at) => {
     out[index] = ranked[at] as T;

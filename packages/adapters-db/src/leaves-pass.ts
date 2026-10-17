@@ -66,6 +66,7 @@ import {
   clientCallbacks,
   handovers,
   schemaTables,
+  statementMethods,
   tableReadings,
   type EntityNaming,
   type TableReading,
@@ -962,21 +963,26 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    *
    * What is left is a statement, read as a driver's query string is: one that
    * names no table is counted there, for every driver alike (R162), and one
-   * whose text is computed gets the row that reader writes for computed SQL.
+   * whose text is computed gets the row that reader writes for computed SQL -
+   * unless the library still names a table another way, when the call is read
+   * as its other methods are (P126).
    */
   const statementOf = (
     call: CallExpression,
     method: string,
     descriptor: DbDescriptor,
-    reading: TableReading | undefined,
   ): 'fragment' | { sql: SqlArgument; descriptor: DbDescriptor } | undefined => {
-    const index = reading?.statements?.get(method);
-    if (index === undefined) return undefined;
+    const statement = statementMethods.get(descriptor.package)?.get(method);
+    if (statement === undefined) return undefined;
+    const sql = readSqlArgument(call.getArguments()[statement.argument]);
+    if (statement.unreadFallsBack && !sql.complete) return undefined;
     const host = hostCallOf(call);
     if (host !== undefined && madeOn(host, descriptor.package)) return 'fragment';
-    const sql = readSqlArgument(call.getArguments()[index]);
     if (sql.text !== null && sqlOperation(sql.text) === null) return 'fragment';
-    return { sql, descriptor: { ...descriptor, tableOverride: { kind: 'sql-parse', argIndex: index } } };
+    return {
+      sql,
+      descriptor: { ...descriptor, tableOverride: { kind: 'sql-parse', argIndex: statement.argument } },
+    };
   };
 
   /**
@@ -1021,8 +1027,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     // A method that takes its statement as text, when the library has one: the
     // call is read as a driver's query is, or not read as a query at all.
-    const statement =
-      descriptor === undefined ? undefined : statementOf(call, method, descriptor, reading);
+    const statement = descriptor === undefined ? undefined : statementOf(call, method, descriptor);
     if (statement === 'fragment') {
       ctx.countExternalCall(`${origin?.package ?? descriptor?.package ?? 'unknown'}.${method}`);
       return true;
@@ -1078,13 +1083,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const keyInferred = own !== null ? own.inferred : descriptor?.package === 'local' ? baseKeyOf(origin)?.inferred : undefined;
     const reach = found === null ? undefined : reachOf(call, found.expression, keyInferred);
     // A manager's call names its entity by the class it is handed, and the
-    // class names the table: `manager.find(Rating, …)` (P88).
+    // class names the table: `manager.find(Rating, …)` (P88). A statement it is
+    // handed names its own (P126).
     const naming = descriptor === undefined ? undefined : entityNamings.get(descriptor.package);
+    const managerCall = naming !== undefined && origin !== null && naming.managers.has(origin.typeName);
     const entityClass =
       naming !== undefined &&
+      managerCall &&
+      statement === undefined &&
       descriptor !== undefined &&
-      origin !== null &&
-      naming.managers.has(origin.typeName) &&
       operationOf(descriptor, method) !== null
         ? entityClassAt(call, naming)
         : undefined;
@@ -1108,7 +1115,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // The type argument's class, read through its decorator the same way, so a
     // `Repository<Rating>` and `manager.find(Rating)` name one table (P88 D1).
     const entityTable =
-      naming === undefined || entityArgTable !== null ? undefined : statedTableOfType(origin?.typeArgs[0], naming);
+      naming === undefined || entityArgTable !== null || statement !== undefined
+        ? undefined
+        : statedTableOfType(origin?.typeArgs[0], naming);
 
     const fromPackage = entityFromPackage(origin);
     const workspacePackage =
@@ -1226,8 +1235,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // parameterised by the whole schema would otherwise register the schema as
     // the shape of every row written through it, which is the same fabrication
     // as reading it as a table, hidden in another field.
+    //
+    // And not for a statement, whose text says what it writes: the receiver's
+    // type argument is the repository's entity, which the SQL need not touch.
     const entityArg =
-      classification.op !== 'write'
+      classification.op !== 'write' || statement !== undefined
         ? undefined
         : entityClass !== undefined && entityArgTable !== null
           ? entityClass.getType()
@@ -1253,9 +1265,14 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         receiver: receiver.getText().slice(0, 80),
         source: classification.source,
         ...(reach?.from === undefined || classification.table === null ? {} : { tableFrom: reach.from }),
-        // A batch, or a write meant to run per item, for the loop around it (P89).
-        ...perItemMetaOf(descriptor, method, call, classification.op, sql?.complete === true ? sql.text : null),
-        ...(classification.entityType === undefined
+        // A batch, or a write meant to run per item, for the loop around it
+        // (P89). A manager is handed the entity class first, so its criteria
+        // are one argument later than a repository's (P126).
+        ...perItemMetaOf(descriptor, method, call, classification.op, {
+          sql: sql?.complete === true ? sql.text : null,
+          leading: managerCall && statement === undefined ? 1 : 0,
+        }),
+        ...(classification.entityType === undefined || statement !== undefined
           ? {}
           : { entityType: classification.entityType }),
         // The document this call writes, recorded in the registry so that

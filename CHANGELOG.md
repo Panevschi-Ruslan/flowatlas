@@ -296,6 +296,15 @@ only one of them moved.
   rest of its segment and any after it, or only the verb was unread — was
   listed by the build in `routes.nearMissed` and by `dead` as `confidence:
   "likely-dead"` with up to three `nearMiss` requests. No edge was drawn.
+- **TypeORM's raw SQL read as a statement (P126).** A whole statement handed
+  to `query` on a repository, an `EntityManager`, a `DataSource` or a
+  `QueryRunner` named the tables and the verb its text writes
+  (`meta.source: "sql-parse"`), where it had been a read of the repository's
+  entity or a `dynamic-table-name` row; a text not written out whole was read
+  as before. A loop of guarded raw `UPDATE`s through it was a `query-in-loop`
+  note and a loop of `… = ANY($1)` statements was set aside as a batch, as
+  through a driver; a manager's `update(Entity, criteria, …)` was read as
+  conditional by its criteria (`fixtures/loops-worth-fixing`).
 
 ### Changed
 
@@ -494,6 +503,10 @@ only one of them moved.
 
 ### Fixed
 
+- **A file's likely N+1 hidden behind its note (P130).** The MCP `search`
+  keeps one `query-in-loop` hit per file, and of loops reached alike it kept
+  the first; a finding now ranks before a note reached alike, so a file holding
+  both keeps its finding.
 - **`{ method }` was read as no verb at all (P91).** `fetch(url, { method })`
   written with a shorthand property was taken as the protocol's default, `GET`;
   it names a binding, and is read as one. An address joined with `+` to a

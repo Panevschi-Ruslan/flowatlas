@@ -29,6 +29,8 @@ describe('doctor on loops that run a query per item', () => {
     expect(findings?.level).toBe('info');
     expect(findings?.rows.map((row) => [row.symbol?.split(':').pop(), row.waysIn])).toEqual([
       ['ParcelsService.labelsFor', 3],
+      // A raw read through TypeORM, read as a statement (P126).
+      ['ParcelHandover.withCarriers', 1],
       ['ParcelsService.statuses', 1],
     ]);
   });
@@ -36,8 +38,15 @@ describe('doctor on loops that run a query per item', () => {
   it('counts the loops that are per item on purpose with the other notes', () => {
     const notes = groups.find((group) => group.kind === 'note');
     expect(notes?.level).toBe('info');
-    expect(notes?.rows.map((row) => row.symbol?.split(':').pop())).toEqual(['ParcelDispatch.claimAll', 'ParcelDispatch.notifyAll']);
-    expect(report.unresolved.notes).toBeGreaterThanOrEqual(2);
+    expect(notes?.rows.map((row) => row.symbol?.split(':').pop())).toEqual([
+      'ParcelDispatch.claimAll',
+      'ParcelDispatch.notifyAll',
+      // A guarded raw UPDATE through a query runner, and a manager's guarded
+      // update with its criteria after the entity class (P126).
+      'ParcelHandover.releaseAll',
+      'ParcelHandover.holdAll',
+    ]);
+    expect(report.unresolved.notes).toBeGreaterThanOrEqual(4);
   });
 
   it('says how many ways in reach each loop', () => {
@@ -50,8 +59,8 @@ describe('doctor on loops that run a query per item', () => {
 describe('stats on loops set aside', () => {
   it('counts each reason a loop was set aside for', () => {
     const json = JSON.parse(captured((io) => runStats({ config: CONFIG, format: 'json' }, io))) as { loopsBounded: Record<string, number> };
-    expect(json.loopsBounded).toEqual({ chunk: 1, page: 1, cursor: 1, retry: 1, literal: 1, 'batch-call': 1, migration: 1 });
+    expect(json.loopsBounded).toEqual({ chunk: 1, page: 1, cursor: 1, retry: 1, literal: 1, 'batch-call': 2, migration: 1 });
     const text = captured((io) => runStats({ config: CONFIG, format: 'tree' }, io));
-    expect(text).toContain('loops set aside: chunk 1 · page 1 · cursor 1 · retry 1 · literal 1 · batch-call 1 · migration 1');
+    expect(text).toContain('loops set aside: chunk 1 · page 1 · cursor 1 · retry 1 · literal 1 · batch-call 2 · migration 1');
   });
 });

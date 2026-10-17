@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:54:47.129Z",
+  "builtAt": "2026-10-17T05:29:47.634Z",
   "services": [
     {
       "name": "parcels",
@@ -81,6 +81,88 @@
         "receiver": "this.db.collection('parcels')",
         "source": "string-arg",
         "conditional": true
+      }
+    },
+    {
+      "id": "db_query:parcels#src/parcels/handover.ts:19:13",
+      "type": "db_query",
+      "label": "write parcels",
+      "repo": "parcels",
+      "file": "src/parcels/handover.ts",
+      "line": 19,
+      "meta": {
+        "op": "write",
+        "table": "parcels",
+        "tables": [
+          "parcels"
+        ],
+        "package": "typeorm",
+        "method": "query",
+        "receiver": "runner",
+        "source": "sql-parse",
+        "conditional": true
+      }
+    },
+    {
+      "id": "db_query:parcels#src/parcels/handover.ts:26:13",
+      "type": "db_query",
+      "label": "write parcels",
+      "repo": "parcels",
+      "file": "src/parcels/handover.ts",
+      "line": 26,
+      "meta": {
+        "op": "write",
+        "table": "parcels",
+        "tables": [
+          "parcels"
+        ],
+        "package": "typeorm",
+        "method": "update",
+        "receiver": "this.manager",
+        "source": "entity-arg",
+        "conditional": true,
+        "entityType": "Parcel",
+        "entityTypeId": "type:parcels#Parcel"
+      }
+    },
+    {
+      "id": "db_query:parcels#src/parcels/handover.ts:34:26",
+      "type": "db_query",
+      "label": "read parcels",
+      "repo": "parcels",
+      "file": "src/parcels/handover.ts",
+      "line": 34,
+      "meta": {
+        "op": "read",
+        "table": "parcels",
+        "tables": [
+          "parcels"
+        ],
+        "package": "typeorm",
+        "method": "query",
+        "receiver": "this.manager",
+        "source": "sql-parse",
+        "batch": true
+      }
+    },
+    {
+      "id": "db_query:parcels#src/parcels/handover.ts:44:24",
+      "type": "db_query",
+      "label": "read parcels",
+      "repo": "parcels",
+      "file": "src/parcels/handover.ts",
+      "line": 44,
+      "meta": {
+        "op": "read",
+        "table": "parcels",
+        "tables": [
+          "parcels",
+          "carriers"
+        ],
+        "package": "typeorm",
+        "method": "query",
+        "receiver": "this.parcels",
+        "source": "sql-parse"
       }
     },
     {
@@ -225,12 +307,28 @@
       }
     },
     {
+      "id": "entry:parcels:http:GET:/parcels/carriers",
+      "type": "entry",
+      "label": "GET /parcels/carriers",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 98,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/parcels/carriers",
+        "rawPath": "/parcels/carriers",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "entry:parcels:http:GET:/parcels/labels",
       "type": "entry",
       "label": "GET /parcels/labels",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 21,
+      "line": 23,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -246,7 +344,7 @@
       "label": "GET /parcels/labels/preview",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 31,
+      "line": 33,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -262,7 +360,7 @@
       "label": "GET /parcels/statuses",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 36,
+      "line": 38,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -278,7 +376,7 @@
       "label": "POST /parcels/:param/delivered",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 61,
+      "line": 63,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -294,7 +392,7 @@
       "label": "POST /parcels/claim",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 71,
+      "line": 73,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -310,7 +408,7 @@
       "label": "POST /parcels/export",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 41,
+      "line": 43,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -326,7 +424,7 @@
       "label": "POST /parcels/export/groups",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 46,
+      "line": 48,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -337,12 +435,44 @@
       }
     },
     {
+      "id": "entry:parcels:http:POST:/parcels/groups/count",
+      "type": "entry",
+      "label": "POST /parcels/groups/count",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 93,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/parcels/groups/count",
+        "rawPath": "/parcels/groups/count",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:parcels:http:POST:/parcels/hold",
+      "type": "entry",
+      "label": "POST /parcels/hold",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 88,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/parcels/hold",
+        "rawPath": "/parcels/hold",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "entry:parcels:http:POST:/parcels/labels/print",
       "type": "entry",
       "label": "POST /parcels/labels/print",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 26,
+      "line": 28,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -358,7 +488,7 @@
       "label": "POST /parcels/notify",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 76,
+      "line": 78,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -374,7 +504,7 @@
       "label": "POST /parcels/regions/seed",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 66,
+      "line": 68,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -385,12 +515,28 @@
       }
     },
     {
+      "id": "entry:parcels:http:POST:/parcels/release",
+      "type": "entry",
+      "label": "POST /parcels/release",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 83,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/parcels/release",
+        "rawPath": "/parcels/release",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "entry:parcels:http:POST:/parcels/sync",
       "type": "entry",
       "label": "POST /parcels/sync",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 51,
+      "line": 53,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -406,7 +552,7 @@
       "label": "POST /parcels/sync/scans",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 56,
+      "line": 58,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -414,6 +560,30 @@
         "rawPath": "/parcels/sync/scans",
         "controller": "ParcelsController",
         "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "parcels#node_modules/typeorm:DataSource",
+      "type": "provider",
+      "label": "DataSource",
+      "repo": "parcels",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "parcels#node_modules/typeorm:EntityManager",
+      "type": "provider",
+      "label": "EntityManager",
+      "repo": "parcels",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
       }
     },
     {
@@ -585,24 +755,43 @@
       }
     },
     {
-      "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
+      "id": "parcels#src/parcels/handover.ts:ParcelHandover",
       "type": "provider",
-      "label": "ParcelsController",
+      "label": "ParcelHandover",
       "repo": "parcels",
-      "file": "src/parcels/parcels.controller.ts",
-      "line": 10,
-      "kind": "controller",
+      "file": "src/parcels/handover.ts",
+      "line": 6,
+      "kind": "injectable",
       "meta": {
         "module": "ParcelsModule"
       }
     },
     {
-      "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.claim",
+      "id": "parcels#src/parcels/handover.ts:ParcelHandover.countGroups",
       "type": "method",
-      "label": "ParcelsController.claim",
+      "label": "ParcelHandover.countGroups",
       "repo": "parcels",
-      "file": "src/parcels/parcels.controller.ts",
-      "line": 71,
+      "file": "src/parcels/handover.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "groups",
+              "type": "string[][]"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "parcels#src/parcels/handover.ts:ParcelHandover.holdAll",
+      "type": "method",
+      "label": "ParcelHandover.holdAll",
+      "repo": "parcels",
+      "file": "src/parcels/handover.ts",
+      "line": 24,
       "meta": {
         "signature": {
           "params": [
@@ -616,12 +805,100 @@
       }
     },
     {
+      "id": "parcels#src/parcels/handover.ts:ParcelHandover.releaseAll",
+      "type": "method",
+      "label": "ParcelHandover.releaseAll",
+      "repo": "parcels",
+      "file": "src/parcels/handover.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "parcels#src/parcels/handover.ts:ParcelHandover.withCarriers",
+      "type": "method",
+      "label": "ParcelHandover.withCarriers",
+      "repo": "parcels",
+      "file": "src/parcels/handover.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
+      "type": "provider",
+      "label": "ParcelsController",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "ParcelsModule"
+      }
+    },
+    {
+      "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.claim",
+      "type": "method",
+      "label": "ParcelsController.claim",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 73,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.countGroups",
+      "type": "method",
+      "label": "ParcelsController.countGroups",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 93,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "groups",
+              "type": "string[][]"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
       "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.delivered",
       "type": "method",
       "label": "ParcelsController.delivered",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 61,
+      "line": 63,
       "meta": {
         "signature": {
           "params": [
@@ -640,7 +917,7 @@
       "label": "ParcelsController.exportAll",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 41,
+      "line": 43,
       "meta": {
         "signature": {
           "params": [
@@ -659,7 +936,7 @@
       "label": "ParcelsController.exportGroups",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 46,
+      "line": 48,
       "meta": {
         "signature": {
           "params": [
@@ -673,12 +950,31 @@
       }
     },
     {
+      "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.hold",
+      "type": "method",
+      "label": "ParcelsController.hold",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 88,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.labels",
       "type": "method",
       "label": "ParcelsController.labels",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 21,
+      "line": 23,
       "meta": {
         "signature": {
           "params": [
@@ -697,7 +993,7 @@
       "label": "ParcelsController.notify",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 76,
+      "line": 78,
       "meta": {
         "signature": {
           "params": [
@@ -716,7 +1012,7 @@
       "label": "ParcelsController.preview",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 31,
+      "line": 33,
       "meta": {
         "signature": {
           "params": [
@@ -735,7 +1031,7 @@
       "label": "ParcelsController.print",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 26,
+      "line": 28,
       "meta": {
         "signature": {
           "params": [
@@ -749,12 +1045,31 @@
       }
     },
     {
+      "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.release",
+      "type": "method",
+      "label": "ParcelsController.release",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 83,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.seed",
       "type": "method",
       "label": "ParcelsController.seed",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 66,
+      "line": 68,
       "meta": {
         "signature": {
           "params": [],
@@ -768,7 +1083,7 @@
       "label": "ParcelsController.statuses",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 36,
+      "line": 38,
       "meta": {
         "signature": {
           "params": [
@@ -787,7 +1102,7 @@
       "label": "ParcelsController.syncAll",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 51,
+      "line": 53,
       "meta": {
         "signature": {
           "params": [],
@@ -801,11 +1116,30 @@
       "label": "ParcelsController.syncScans",
       "repo": "parcels",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 56,
+      "line": 58,
       "meta": {
         "signature": {
           "params": [],
           "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "parcels#src/parcels/parcels.controller.ts:ParcelsController.withCarriers",
+      "type": "method",
+      "label": "ParcelsController.withCarriers",
+      "repo": "parcels",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 98,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "unknown[]"
         }
       }
     },
@@ -815,7 +1149,7 @@
       "label": "ParcelsModule",
       "repo": "parcels",
       "file": "src/parcels/parcels.module.ts",
-      "line": 11,
+      "line": 12,
       "kind": "static",
       "meta": {
         "controllers": [
@@ -827,7 +1161,8 @@
           "ParcelSync",
           "ParcelRetry",
           "RegionSeed",
-          "ParcelDispatch"
+          "ParcelDispatch",
+          "ParcelHandover"
         ],
         "exports": []
       }
@@ -1053,16 +1388,17 @@
       "repo": "parcels",
       "meta": {
         "stats": {
-          "files": 12,
-          "filesRead": 12,
+          "files": 13,
+          "filesRead": 13,
           "filesUnreadable": 0,
-          "classes": 13,
+          "classes": 14,
           "skippedExternalCalls": {
-            "typeorm": 7,
+            "typeorm": 12,
             "mongodb": 5,
             "nodemailer": 1,
             "@aws-sdk/client-sqs": 2,
             "mongodb.collection": 2,
+            "typeorm.createQueryRunner": 1,
             "mongodb.toArray": 1
           },
           "loopsBounded": {
@@ -1071,7 +1407,7 @@
             "cursor": 1,
             "retry": 1,
             "literal": 1,
-            "batch-call": 1,
+            "batch-call": 2,
             "migration": 1
           }
         },
@@ -1124,6 +1460,46 @@
       "confidence": "static",
       "file": "src/parcels/dispatch.ts",
       "line": 14
+    },
+    {
+      "from": "db_query:parcels#src/parcels/handover.ts:19:13",
+      "to": "table:parcels#parcels",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 19
+    },
+    {
+      "from": "db_query:parcels#src/parcels/handover.ts:26:13",
+      "to": "table:parcels#parcels",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 26
+    },
+    {
+      "from": "db_query:parcels#src/parcels/handover.ts:34:26",
+      "to": "table:parcels#parcels",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 34
+    },
+    {
+      "from": "db_query:parcels#src/parcels/handover.ts:44:24",
+      "to": "table:parcels#carriers",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 44
+    },
+    {
+      "from": "db_query:parcels#src/parcels/handover.ts:44:24",
+      "to": "table:parcels#parcels",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 44
     },
     {
       "from": "db_query:parcels#src/parcels/parcels.service.ts:19:28",
@@ -1182,6 +1558,21 @@
       "line": 37
     },
     {
+      "from": "entry:parcels:http:GET:/parcels/carriers",
+      "to": "parcels#src/parcels/parcels.controller.ts:ParcelsController.withCarriers",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "unknown[]",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 98,
+      "meta": {
+        "query": "{ids:string[]}"
+      }
+    },
+    {
       "from": "entry:parcels:http:GET:/parcels/labels",
       "to": "parcels#src/parcels/parcels.controller.ts:ParcelsController.labels",
       "type": "handles",
@@ -1191,7 +1582,7 @@
       ],
       "returns": "string[]",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 21,
+      "line": 23,
       "meta": {
         "query": "{ids:string[]}"
       }
@@ -1206,7 +1597,7 @@
       ],
       "returns": "string[]",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 31,
+      "line": 33,
       "meta": {
         "query": "{ids:string[]}"
       }
@@ -1221,7 +1612,7 @@
       ],
       "returns": "string[]",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 36,
+      "line": 38,
       "meta": {
         "query": "{ids:string[]}"
       }
@@ -1236,7 +1627,7 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 61,
+      "line": 63,
       "meta": {
         "params": "{id:string}"
       }
@@ -1251,7 +1642,7 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 71,
+      "line": 73,
       "meta": {
         "body": "string[]"
       }
@@ -1266,7 +1657,7 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 41,
+      "line": 43,
       "meta": {
         "body": "string[]"
       }
@@ -1281,9 +1672,39 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 46,
+      "line": 48,
       "meta": {
         "body": "string[][]"
+      }
+    },
+    {
+      "from": "entry:parcels:http:POST:/parcels/groups/count",
+      "to": "parcels#src/parcels/parcels.controller.ts:ParcelsController.countGroups",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string[][]"
+      ],
+      "returns": "number",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 93,
+      "meta": {
+        "body": "string[][]"
+      }
+    },
+    {
+      "from": "entry:parcels:http:POST:/parcels/hold",
+      "to": "parcels#src/parcels/parcels.controller.ts:ParcelsController.hold",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 88,
+      "meta": {
+        "body": "string[]"
       }
     },
     {
@@ -1296,7 +1717,7 @@
       ],
       "returns": "string[]",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 26,
+      "line": 28,
       "meta": {
         "body": "string[]"
       }
@@ -1311,7 +1732,7 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 76,
+      "line": 78,
       "meta": {
         "body": "string[]"
       }
@@ -1324,7 +1745,22 @@
       "params": [],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 66
+      "line": 68
+    },
+    {
+      "from": "entry:parcels:http:POST:/parcels/release",
+      "to": "parcels#src/parcels/parcels.controller.ts:ParcelsController.release",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 83,
+      "meta": {
+        "body": "string[]"
+      }
     },
     {
       "from": "entry:parcels:http:POST:/parcels/sync",
@@ -1334,7 +1770,7 @@
       "params": [],
       "returns": "number",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 51
+      "line": 53
     },
     {
       "from": "entry:parcels:http:POST:/parcels/sync/scans",
@@ -1344,7 +1780,7 @@
       "params": [],
       "returns": "number",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 56
+      "line": 58
     },
     {
       "from": "parcels#src/app.module.ts:AppModule",
@@ -1438,12 +1874,93 @@
       }
     },
     {
+      "from": "parcels#src/parcels/handover.ts:ParcelHandover",
+      "to": "parcels#node_modules/typeorm:DataSource",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 9
+    },
+    {
+      "from": "parcels#src/parcels/handover.ts:ParcelHandover",
+      "to": "parcels#node_modules/typeorm:EntityManager",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 10
+    },
+    {
+      "from": "parcels#src/parcels/handover.ts:ParcelHandover",
+      "to": "parcels#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 11
+    },
+    {
+      "from": "parcels#src/parcels/handover.ts:ParcelHandover.countGroups",
+      "to": "db_query:parcels#src/parcels/handover.ts:34:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 34,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 33,
+          "bounded": "batch-call"
+        }
+      }
+    },
+    {
+      "from": "parcels#src/parcels/handover.ts:ParcelHandover.holdAll",
+      "to": "db_query:parcels#src/parcels/handover.ts:26:13",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 26,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 25
+        }
+      }
+    },
+    {
+      "from": "parcels#src/parcels/handover.ts:ParcelHandover.releaseAll",
+      "to": "db_query:parcels#src/parcels/handover.ts:19:13",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 19,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 18
+        }
+      }
+    },
+    {
+      "from": "parcels#src/parcels/handover.ts:ParcelHandover.withCarriers",
+      "to": "db_query:parcels#src/parcels/handover.ts:44:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/parcels/handover.ts",
+      "line": 44,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 43
+        }
+      }
+    },
+    {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
       "to": "parcels#src/parcels/dispatch.ts:ParcelDispatch",
       "type": "injects",
       "confidence": "static",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 18
+      "line": 19
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
@@ -1451,7 +1968,15 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 14
+      "line": 15
+    },
+    {
+      "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
+      "to": "parcels#src/parcels/handover.ts:ParcelHandover",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 20
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
@@ -1459,7 +1984,7 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 13
+      "line": 14
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
@@ -1467,7 +1992,7 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 16
+      "line": 17
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
@@ -1475,7 +2000,7 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 17
+      "line": 18
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController",
@@ -1483,7 +2008,7 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 15
+      "line": 16
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.claim",
@@ -1495,7 +2020,19 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 73
+      "line": 75
+    },
+    {
+      "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.countGroups",
+      "to": "parcels#src/parcels/handover.ts:ParcelHandover.countGroups",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[][]"
+      ],
+      "returns": "number",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 95
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.delivered",
@@ -1507,7 +2044,7 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 63
+      "line": 65
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.exportAll",
@@ -1519,7 +2056,7 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 43
+      "line": 45
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.exportGroups",
@@ -1531,7 +2068,19 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 48
+      "line": 50
+    },
+    {
+      "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.hold",
+      "to": "parcels#src/parcels/handover.ts:ParcelHandover.holdAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 90
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.labels",
@@ -1543,7 +2092,7 @@
       ],
       "returns": "string[]",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 23
+      "line": 25
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.notify",
@@ -1555,7 +2104,7 @@
       ],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 78
+      "line": 80
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.preview",
@@ -1567,7 +2116,7 @@
       ],
       "returns": "string[]",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 33
+      "line": 35
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.print",
@@ -1579,7 +2128,19 @@
       ],
       "returns": "string[]",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 28
+      "line": 30
+    },
+    {
+      "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.release",
+      "to": "parcels#src/parcels/handover.ts:ParcelHandover.releaseAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 85
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.seed",
@@ -1589,7 +2150,7 @@
       "params": [],
       "returns": "void",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 68
+      "line": 70
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.statuses",
@@ -1601,7 +2162,7 @@
       ],
       "returns": "string[]",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 38
+      "line": 40
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.syncAll",
@@ -1611,7 +2172,7 @@
       "params": [],
       "returns": "number",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 53
+      "line": 55
     },
     {
       "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.syncScans",
@@ -1621,7 +2182,19 @@
       "params": [],
       "returns": "number",
       "file": "src/parcels/parcels.controller.ts",
-      "line": 58
+      "line": 60
+    },
+    {
+      "from": "parcels#src/parcels/parcels.controller.ts:ParcelsController.withCarriers",
+      "to": "parcels#src/parcels/handover.ts:ParcelHandover.withCarriers",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "unknown[]",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 100
     },
     {
       "from": "parcels#src/parcels/parcels.service.ts:ParcelsService",
@@ -1946,6 +2519,93 @@
       "reason": "payload-type-unknown",
       "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
       "symbol": "sqs/parcel-exports",
+      "service": "parcels"
+    },
+    {
+      "file": "src/parcels/handover.ts",
+      "line": 18,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 database query once per item, each a conditional write or a send to one recipient: per item on purpose.",
+      "hint": "Nothing to fix: a write that changes a row only in the state it expects, or a send to one recipient, has no batch form. If one of them has one after all, use it and the loop is no longer listed.",
+      "symbol": "parcels#src/parcels/handover.ts:ParcelHandover.releaseAll",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 18
+        },
+        "reaches": [
+          {
+            "id": "db_query:parcels#src/parcels/handover.ts:19:13",
+            "type": "db_query",
+            "words": "database query"
+          }
+        ],
+        "severity": "note",
+        "waysIn": 1,
+        "entries": [
+          "entry:parcels:http:POST:/parcels/release"
+        ]
+      },
+      "service": "parcels"
+    },
+    {
+      "file": "src/parcels/handover.ts",
+      "line": 25,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 database query once per item, each a conditional write or a send to one recipient: per item on purpose.",
+      "hint": "Nothing to fix: a write that changes a row only in the state it expects, or a send to one recipient, has no batch form. If one of them has one after all, use it and the loop is no longer listed.",
+      "symbol": "parcels#src/parcels/handover.ts:ParcelHandover.holdAll",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 25
+        },
+        "reaches": [
+          {
+            "id": "db_query:parcels#src/parcels/handover.ts:26:13",
+            "type": "db_query",
+            "words": "database query"
+          }
+        ],
+        "severity": "note",
+        "waysIn": 1,
+        "entries": [
+          "entry:parcels:http:POST:/parcels/hold"
+        ]
+      },
+      "service": "parcels"
+    },
+    {
+      "file": "src/parcels/handover.ts",
+      "line": 43,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 database query once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "parcels#src/parcels/handover.ts:ParcelHandover.withCarriers",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 43
+        },
+        "reaches": [
+          {
+            "id": "db_query:parcels#src/parcels/handover.ts:44:24",
+            "type": "db_query",
+            "words": "database query"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:parcels:http:GET:/parcels/carriers"
+        ]
+      },
       "service": "parcels"
     },
     {

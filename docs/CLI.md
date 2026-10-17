@@ -3097,7 +3097,9 @@ the rest); `meta.waysIn` is how many ways in of the service reach the loop and
 `meta.severity` is `likely` (a finding) or `note`: a loop whose every leaf is a
 conditional write - a filter naming a state besides the id
 (`findOneAndUpdate({ _id, status: 'queued' }, …)`, TypeORM
-`update({ id, status }, …)`, an SQL `UPDATE … AND col =` or `RETURNING`), or a
+`update({ id, status }, …)` or a manager's `update(Entity, { id, status }, …)`,
+an SQL `UPDATE … AND col =` or `RETURNING`, whether handed to a driver, to
+`knex.raw` or to TypeORM's `query`), or a
 helper under `callShape.conditionalWrites` - or a send to one recipient (a
 producer described with `perItem: true`, a request to a host under
 `callShape.perItemHosts`) is per item on purpose, and a note.

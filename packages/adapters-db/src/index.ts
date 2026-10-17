@@ -23,10 +23,11 @@ export {
   pgDescriptor,
   prismaDescriptor,
   sequelizeDescriptor,
+  statementMethods,
   tableReadings,
   typeormDescriptor,
 } from './descriptors/index.js';
-export type { EntityNaming, Handover, TableReading } from './descriptors/index.js';
+export type { EntityNaming, Handover, StatementMethod, TableReading } from './descriptors/index.js';
 export { entityTableName, locateTable, locateTableAt, statedEntityTable } from './descriptors/table.js';
 export type { EntityDecorator, TableLocator } from './descriptors/table.js';
 export { sqlOperation, sqlTables } from './sql.js';

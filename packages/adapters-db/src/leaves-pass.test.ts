@@ -520,3 +520,38 @@ describe('requests the dead-routes fixture makes', () => {
     expect(graph.unresolved.map((row) => row.reason)).not.toContain('dynamic-http-url');
   });
 });
+
+describe("TypeORM's raw SQL, read as a statement (P126)", () => {
+  const meta = (graph: RepoGraph, file: string): Record<string, unknown>[] =>
+    queriesIn(graph, file).map((node) => {
+      const { receiver: _spelling, entityTypeId: _id, ...rest } = node.meta ?? {};
+      return { line: node.line, ...rest };
+    });
+
+  it('names the tables and the verb a whole statement writes, and the flags read off its text', async () => {
+    const graph = await graphOf('loops-worth-fixing/parcels');
+    expect(meta(graph, 'src/parcels/handover.ts')).toEqual([
+      // `runner.query('UPDATE parcels … WHERE id = $2 AND status = $3')`
+      { line: 19, op: 'write', table: 'parcels', tables: ['parcels'], package: 'typeorm', method: 'query', source: 'sql-parse', conditional: true },
+      // `manager.update(Parcel, { id, status: 'open' }, …)`: the criteria after the class.
+      { line: 26, op: 'write', table: 'parcels', tables: ['parcels'], package: 'typeorm', method: 'update', source: 'entity-arg', conditional: true, entityType: 'Parcel' },
+      // `manager.query('SELECT … WHERE id = ANY($1)')`
+      { line: 34, op: 'read', table: 'parcels', tables: ['parcels'], package: 'typeorm', method: 'query', source: 'sql-parse', batch: true },
+      // `repository.query('SELECT … FROM parcels p JOIN carriers c …')`: the text, not the type argument.
+      { line: 44, op: 'read', table: 'parcels', tables: ['parcels', 'carriers'], package: 'typeorm', method: 'query', source: 'sql-parse' },
+    ]);
+  });
+
+  it('reads a statement not read whole as the library reads its other calls', async () => {
+    const graph = await graphOf('tables-set-elsewhere/ratings-api');
+    const raw = queriesIn(graph, 'src/ratings/ratings.repository.ts').filter((node) => node.meta?.['method'] === 'query');
+    // `this.em.query('SELECT * FROM ratings WHERE ' + where)`: the manager's
+    // own row for a table it cannot name, not the row for computed SQL.
+    expect(raw.map((node) => node.meta?.['source'])).toEqual(['none']);
+    const reasons = graph.unresolved
+      .filter((row) => row.file === 'src/ratings/ratings.repository.ts' && row.line === raw[0]?.line)
+      .map((row) => row.reason);
+    expect(reasons).toContain('dynamic-table-name');
+    expect(reasons).not.toContain('sql-parse-failed');
+  });
+});

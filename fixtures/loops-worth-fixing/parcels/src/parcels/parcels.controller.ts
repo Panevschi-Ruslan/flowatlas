@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 
 import { ParcelDispatch } from './dispatch';
 import { ParcelExport } from './export';
+import { ParcelHandover } from './handover';
 import { ParcelsService } from './parcels.service';
 import { ParcelRetry } from './retry';
 import { RegionSeed } from './seed';
@@ -16,6 +17,7 @@ export class ParcelsController {
     private readonly retry: ParcelRetry,
     private readonly seeds: RegionSeed,
     private readonly dispatch: ParcelDispatch,
+    private readonly handover: ParcelHandover,
   ) {}
 
   @Get('labels')
@@ -76,5 +78,25 @@ export class ParcelsController {
   @Post('notify')
   notify(@Body() recipients: string[]): Promise<void> {
     return this.dispatch.notifyAll(recipients);
+  }
+
+  @Post('release')
+  release(@Body() ids: string[]): Promise<void> {
+    return this.handover.releaseAll(ids);
+  }
+
+  @Post('hold')
+  hold(@Body() ids: string[]): Promise<void> {
+    return this.handover.holdAll(ids);
+  }
+
+  @Post('groups/count')
+  countGroups(@Body() groups: string[][]): Promise<number> {
+    return this.handover.countGroups(groups);
+  }
+
+  @Get('carriers')
+  withCarriers(@Query('ids') ids: string[]): Promise<unknown[]> {
+    return this.handover.withCarriers(ids);
   }
 }

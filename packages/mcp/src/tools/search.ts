@@ -137,10 +137,13 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
   const seen = new Set<string>();
   const rows: GapHit[] = [];
   // Rows reached from more ways in first, among themselves (P89), so the one
-  // hit a file keeps is its busiest, and the hits are ranked the same way.
+  // hit a file keeps is its busiest, and the hits are ranked the same way. A
+  // finding before a note reached alike: a file holding a likely N+1 and a
+  // per-item loop shares one gap id, and keeps the hit worth fixing (P130).
   const candidates = rankByReach(
     db.allUnresolved().filter((row) => (service === undefined || row.service === service) && gapText(row).includes(wanted)),
     waysInOf,
+    (a, b) => Number(kindOfRow(a) === 'note') - Number(kindOfRow(b) === 'note'),
   );
   // Which entry took each row, as every other surface decides it (P80).
   const split = acceptedSplitOf(db, candidates, accepted);

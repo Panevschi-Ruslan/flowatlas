@@ -725,7 +725,8 @@ prove, and the path is given so you can run it.
   table by the schema's `@@map` (`fixtures/prisma-not-generated`). Knex reached
   through an ORM manager's `getKnex()` is read as knex
   (`fixtures/nest-mikro-orm-knex`), and so is the SQL handed to `knex.raw`
-  (`fixtures/nest-knex-raw`). A MongoDB collection is read where the driver's
+  (`fixtures/nest-knex-raw`) or, when written out whole, to TypeORM's `query`
+  (`fixtures/loops-worth-fixing`). A MongoDB collection is read where the driver's
   chain names it, `db.collection('orders').find()`, and a repository base of
   your own reads the table each subclass states in a property you name
   (`fixtures/nest-mongo-tables`). Redis and cache-manager, outgoing requests and

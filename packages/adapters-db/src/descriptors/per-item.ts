@@ -46,8 +46,8 @@ const objectAt = (node: Node | undefined): Node | undefined => {
 };
 
 /** The object a path names inside an argument: `{ where: { … } }` at `['where']`. */
-const filterOf = (call: CallExpression, at: DbFilterAt): Node | undefined => {
-  let node = objectAt(call.getArguments()[at.argument]);
+const filterOf = (call: CallExpression, at: DbFilterAt, leading: number): Node | undefined => {
+  let node = objectAt(call.getArguments()[at.argument + leading]);
   for (const key of at.path) {
     if (node === undefined || !Node.isObjectLiteralExpression(node)) return undefined;
     const property = node.getProperty(key);
@@ -68,23 +68,34 @@ const namesAState = (filter: Node | undefined): boolean => {
     );
 };
 
+/** What the call site knows besides the call itself. */
+export interface PerItemRead {
+  /** The whole statement, when the call's text was read. */
+  sql?: string | null;
+  /**
+   * Arguments the receiver takes before the ones the descriptor counts: a
+   * TypeORM manager is handed the entity class first, `update(Parcel, criteria, …)`,
+   * where a repository's `update(criteria, …)` starts at the criteria (P126).
+   */
+  leading?: number;
+}
+
 /**
  * What a query's node says about running it per item: a batch by its method
  * or its statement, a conditional write by its filter or its statement.
- * `sql` is the whole statement when the call's text was read, `op` what the
- * classification settled.
+ * `op` is what the classification settled.
  */
 export const perItemMetaOf = (
   descriptor: DbDescriptor | undefined,
   method: string,
   call: CallExpression,
   op: DbOp | null,
-  sql?: string | null,
+  { sql, leading = 0 }: PerItemRead = {},
 ): PerItemMeta => {
   const text = sql ?? undefined;
   const batch = namedIn(descriptor?.batch, method) || (text !== undefined && sqlIsBatch(text));
   const at = descriptor?.filters !== undefined && Object.hasOwn(descriptor.filters, method) ? descriptor.filters[method] : undefined;
   const conditional =
-    op === 'write' && ((at !== undefined && namesAState(filterOf(call, at))) || (text !== undefined && sqlIsConditional(text)));
+    op === 'write' && ((at !== undefined && namesAState(filterOf(call, at, leading))) || (text !== undefined && sqlIsConditional(text)));
   return { ...(batch ? { batch: true } : {}), ...(conditional ? { conditional: true } : {}) };
 };

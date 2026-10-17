@@ -1,7 +1,7 @@
 {
   "query": "query-in-loop",
   "counts": {
-    "gaps": 2
+    "gaps": 3
   },
   "results": {
     "gaps": [
@@ -15,6 +15,17 @@
         "message": "A `for-of` loop runs 2 database queries once per item: likely N+1.",
         "severity": "likely",
         "waysIn": 3
+      },
+      {
+        "id": "gap:parcels|src/parcels/handover.ts|query-in-loop",
+        "type": "gap",
+        "reason": "query-in-loop",
+        "kind": "finding",
+        "service": "parcels",
+        "loc": "src/parcels/handover.ts:43",
+        "message": "A `for-of` loop runs 1 database query once per item: likely N+1.",
+        "severity": "likely",
+        "waysIn": 1
       },
       {
         "id": "gap:parcels|src/parcels/dispatch.ts|query-in-loop",

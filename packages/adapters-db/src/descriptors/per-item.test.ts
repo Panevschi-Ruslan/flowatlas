@@ -30,7 +30,7 @@ describe('a batch, by the descriptor (P89)', () => {
   });
 
   it('takes a statement with a list in it for a batch, whatever the method', () => {
-    expect(perItemMetaOf(undefined, 'query', callIn('x.y()'), 'read', 'SELECT * FROM parcels WHERE id = ANY($1)')).toEqual({ batch: true });
+    expect(perItemMetaOf(undefined, 'query', callIn('x.y()'), 'read', { sql: 'SELECT * FROM parcels WHERE id = ANY($1)' })).toEqual({ batch: true });
   });
 });
 
@@ -46,6 +46,14 @@ describe('a conditional write, by its filter (P89)', () => {
     expect(perItemMetaOf(sequelizeDescriptor, 'update', callIn("Parcel.update({ status: 'shut' }, { where: { id, status: 'open' } })"), 'write')).toEqual({ conditional: true });
   });
 
+  it("reads a TypeORM manager's criteria one argument later, after the entity class (P126)", () => {
+    const call = callIn("manager.update(Parcel, { id, status: 'open' }, { status: 'held' })");
+    expect(perItemMetaOf(typeormDescriptor, 'update', call, 'write', { leading: 1 })).toEqual({ conditional: true });
+    // Read at the repository's place, the class is not a filter.
+    expect(perItemMetaOf(typeormDescriptor, 'update', call, 'write')).toEqual({});
+    expect(perItemMetaOf(typeormDescriptor, 'update', callIn('manager.update(Parcel, { id }, {})'), 'write', { leading: 1 })).toEqual({});
+  });
+
   it('reads a filter bound to a const', () => {
     const call = callIn("const filter = { _id: id, version: 3 };\ncollection.updateOne(filter, {})");
     expect(perItemMetaOf(mongodbDescriptor, 'updateOne', call, 'write')).toEqual({ conditional: true });
@@ -59,6 +67,6 @@ describe('a conditional write, by its filter (P89)', () => {
 
   it('reads a guarded update statement', () => {
     const sql = "UPDATE parcels SET status = 'claimed' WHERE id = $1 AND status = 'queued'";
-    expect(perItemMetaOf(undefined, 'query', callIn('x.y()'), 'write', sql)).toEqual({ conditional: true });
+    expect(perItemMetaOf(undefined, 'query', callIn('x.y()'), 'write', { sql })).toEqual({ conditional: true });
   });
 });

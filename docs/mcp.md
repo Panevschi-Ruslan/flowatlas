@@ -126,7 +126,8 @@ A `query-in-loop` hit is one loop that runs a query, request or publish once per
 item (P89). It carries `severity` (`likely`, a finding, or `note`, a loop that is
 per item on purpose: a conditional write, a send to one recipient) and `waysIn`,
 how many ways in of its service reach it; the loop hits are ranked by `waysIn`,
-most first, and `describe_for_prompt` writes each loop on the chain with
+most first, a finding before a note reached alike (one hit per file and reason,
+so a file holding both keeps its finding: P130), and `describe_for_prompt` writes each loop on the chain with
 `Reached from N ways in.` in the same order. Loops bounded on purpose (chunks,
 pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 `flowatlas stats` counts them.

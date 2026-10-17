@@ -27,21 +27,6 @@ import type { EntityDecorator, TableLocator } from './table.js';
 export interface TableReading {
   locators: readonly TableLocator[];
   entityInTypeArgs: boolean;
-  /**
-   * Methods that take a statement as text instead of naming a table, and the
-   * argument the text is in.
-   *
-   * `knex.raw(sql)` is knex's way out of its own builder, and what it touches is
-   * written in the SQL rather than anywhere a locator looks. Its text is read by
-   * the same reader a driver's query string is, so a statement means the same
-   * thing whichever library it was handed to (R155).
-   *
-   * Such a call is a statement only where it is used on its own. Handed to a
-   * call of the same library - `.where(knex.raw('…'))` - it is a fragment of
-   * that call's query, and a text no verb opens is a fragment wherever it is
-   * kept. A `Map` because it is asked about every method name a program calls.
-   */
-  statements?: ReadonlyMap<string, number>;
 }
 
 /**
@@ -125,7 +110,9 @@ const typeormDescriptor: DbDescriptor = {
     softRemove: DELETE,
     clear: DELETE,
   },
-  // `update({ id, status: 'open' }, …)`: the criteria come first (P89).
+  // `update({ id, status: 'open' }, …)`: the criteria come first (P89). A
+  // manager is handed the entity class before them, `update(Parcel, { … }, …)`,
+  // and the pass reads its arguments one later (P126).
   filters: { update: FIRST_ARGUMENT_FILTER },
 };
 
@@ -602,7 +589,6 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
         { kind: 'chain-root-argument', index: 0 },
       ],
       entityInTypeArgs: true,
-      statements: new Map([['raw', 0]]),
     },
   ],
   ['kysely', { locators: [{ kind: 'argument', index: 0 }], entityInTypeArgs: false }],
@@ -617,6 +603,45 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
       entityInTypeArgs: false,
     },
   ],
+]);
+
+/**
+ * A method that takes a statement as text instead of naming a table, and the
+ * argument the text is in.
+ *
+ * `knex.raw(sql)` is knex's way out of its own builder, and TypeORM's `query`
+ * is the same door on its repository, its manager, its data source and its
+ * query runner: what either touches is written in the SQL rather than anywhere
+ * a locator looks. The text is read by the same reader a driver's query string
+ * is, so a statement means the same thing whichever library it was handed to
+ * (R155), and the flags a loop asks about, a batch and a conditional write, are
+ * read off it as they are off a driver's (P126).
+ *
+ * Such a call is a statement only where it is used on its own. Handed to a call
+ * of the same library - `.where(knex.raw('…'))` - it is a fragment of that
+ * call's query, and a text no verb opens is a fragment wherever it is kept.
+ *
+ * `unreadFallsBack` says what a text that is not read whole is. For `knex.raw`
+ * it is computed SQL, and says so in its row: nothing else in the call names a
+ * table. For TypeORM it is a call like the library's others, whose table the
+ * repository's type argument or the class a manager is handed still names, so
+ * the statement wins only where the text is read whole.
+ */
+export interface StatementMethod {
+  readonly argument: number;
+  readonly unreadFallsBack: boolean;
+}
+
+/**
+ * The statement methods of each library, keyed by the package its descriptor is
+ * chosen by, and then by method. Beside `tableReadings` rather than inside it,
+ * because a library may take a statement without its table needing a locator:
+ * TypeORM's table is in its types. `Map`s because both keys come out of
+ * somebody else's source (R130).
+ */
+export const statementMethods: ReadonlyMap<string, ReadonlyMap<string, StatementMethod>> = new Map([
+  ['knex', new Map<string, StatementMethod>([['raw', { argument: 0, unreadFallsBack: false }]])],
+  ['typeorm', new Map<string, StatementMethod>([['query', { argument: 0, unreadFallsBack: true }]])],
 ]);
 
 /**

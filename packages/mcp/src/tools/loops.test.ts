@@ -31,6 +31,9 @@ describe('loops that run a query per item', () => {
     const hits = answer.results.gaps as Array<{ loc: string; kind: string; severity: string; waysIn: number }>;
     expect(hits.map((hit) => [hit.loc, hit.kind, hit.severity, hit.waysIn])).toEqual([
       ['src/parcels/parcels.service.ts:18', 'finding', 'likely', 3],
+      // A file holding a likely N+1 and two per-item loops keeps its finding,
+      // ranked before a note reached alike (P130).
+      ['src/parcels/handover.ts:43', 'finding', 'likely', 1],
       ['src/parcels/dispatch.ts:13', 'note', 'note', 1],
     ]);
   });
