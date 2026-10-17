@@ -33,7 +33,8 @@ describe('the allow-list every reader ends with', () => {
     let read = 0;
     for (const reader of TRACE_READERS.values()) {
       for (const document of documents.filter((one) => reader.sniff(one))) {
-        for (const span of reader.read(document).spans) {
+        // A HAR needs its front end named; `web` is the fixture's.
+        for (const span of reader.read(document, 'web').spans) {
           for (const key of Object.keys(span)) expect(kept.has(key), `${reader.name}: ${key}`).toBe(true);
           read += 1;
         }

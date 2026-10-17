@@ -1,0 +1,13 @@
+9 spans read from 1 file(s)
+not read: 1 entry of type document, 1 entry of type script, 1 entry of type image, 1 entry of a static file
+3 joins seen, 0 entries hit, 1 seen at run time but not found in code, 3 that could be more than one place
+  external  web  analytics.example.net  (1)
+could be more than one place, so counted on none:
+  client    web  GET /orders/:value  (1)
+    any of ui_api_call:web#src/app/orders-api.service.ts:21:12, ui_api_call:web#src/app/orders-api.service.ts:73:12
+  client    web  GET /orders/:value  (1)
+    any of ui_api_call:web#src/app/orders-api.service.ts:34:12, ui_api_call:web#src/app/orders-api.service.ts:48:12
+  client    web  POST /orders/:value/invoice  (1)
+    any of ui_api_call:web#src/app/orders-api.service.ts:123:3, ui_api_call:web#src/app/orders-api.service.ts:138:3, ui_api_call:web#src/app/orders-api.service.ts:61:12
+window 2025-10-16T08:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
+<copy>/observed.json

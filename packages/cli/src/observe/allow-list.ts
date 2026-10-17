@@ -10,7 +10,8 @@
  * Never read, whatever the format: header values, cookies, request and
  * response bodies, user ids, query strings, hosts, statements, span names,
  * events, error and status messages, log lines, and a batch's objectives,
- * runtime and custom data.
+ * runtime and custom data; and of a browser's HAR file, every header, cookie,
+ * query string, request body and response content (P112).
  *
  * These lists say which fields of each record a reader looks at; what a span
  * may carry out of any reader is one list, `KEPT_FIELDS` in `span.ts`
@@ -100,10 +101,68 @@ export const NESTJS_OBSERVE_READS = {
   tags: ['http.method', 'http.url'],
 } as const satisfies AllowList;
 
+/**
+ * Zipkin v2 JSON (P112), a list of spans or a list of traces. Tags go through
+ * OTLP's key set (an OTel SDK's Zipkin exporter writes OTel keys) and Brave's
+ * own `http.path`; `error` and `otel.status_code` are read as `true` only. Not
+ * read: `name`, `annotations`, `remoteEndpoint`, `localEndpoint` beyond
+ * `serviceName`, `debug`, `shared`, `sql.query` and every other tag.
+ */
+export const ZIPKIN_READS = {
+  /** `timestamp` and `duration` are microseconds. */
+  span: ['traceId', 'id', 'parentId', 'kind', 'timestamp', 'duration', 'localEndpoint', 'tags'],
+  localEndpoint: ['serviceName'],
+  /** Beside `OTLP_READS.attributes`. A URL or a path is reduced to the shape of its path. */
+  tags: ['http.path', 'error', 'otel.status_code'],
+} as const satisfies AllowList;
+
+/**
+ * A Jaeger trace as its UI's "Download JSON" and its query API write it
+ * (P112): `{ data: [trace, ...] }`. Tags (`{ key, type, value }`) go through
+ * OTLP's key set. Not read: `operationName`, `logs`, `warnings`, `flags`, a
+ * process's `tags` (host name, IP, client version) and every other tag.
+ */
+export const JAEGER_READS = {
+  document: ['data'],
+  trace: ['traceID', 'spans', 'processes'],
+  /** `startTime` and `duration` are microseconds; the parent is the first `CHILD_OF` reference. */
+  span: ['traceID', 'spanID', 'references', 'startTime', 'duration', 'tags', 'processID'],
+  reference: ['refType', 'spanID'],
+  process: ['serviceName'],
+  tag: ['key', 'value'],
+  /** Beside `OTLP_READS.attributes`; `error` and `otel.status_code` are read as `true` only. */
+  tags: ['span.kind', 'error', 'otel.status_code'],
+} as const satisfies AllowList;
+
+/**
+ * A browser's HAR file (P112), the most sensitive file a user can hand over:
+ * it holds their cookies, tokens and the body of every request. Each entry is
+ * read for these fields by key and nothing else is ever a value the reader
+ * holds (D2). `request.url` is reduced to the shape of its path, its origin
+ * compared with the front end's base URLs and dropped; of `response.content`
+ * only `mimeType`, to tell an API call from a file, when `_resourceType` is
+ * not written. Never read: `request.headers`, `cookies`, `queryString`,
+ * `postData`, `headersSize`, `bodySize`, `response.headers`, `cookies`,
+ * `content.text`, `redirectURL`, `serverIPAddress`, `connection`, `timings`,
+ * `cache`, `pages`, `creator`, `browser`, `comment`, and every key starting
+ * `_` other than `_resourceType`.
+ */
+export const HAR_READS = {
+  document: ['log'],
+  log: ['entries'],
+  entry: ['startedDateTime', 'time', 'request', 'response', '_resourceType'],
+  request: ['method', 'url'],
+  response: ['status', 'content'],
+  content: ['mimeType'],
+} as const satisfies AllowList;
+
 /** Every reader's list, by reader name. */
 export const ALLOW_LISTS: Readonly<Record<string, AllowList>> = {
   otlp: OTLP_READS,
   'nestjs-observe': NESTJS_OBSERVE_READS,
+  zipkin: ZIPKIN_READS,
+  jaeger: JAEGER_READS,
+  har: HAR_READS,
 };
 
 type Json = Record<string, unknown>;

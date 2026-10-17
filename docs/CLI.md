@@ -1273,7 +1273,7 @@ window 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as 
 .flowatlas/observed.json
 ```
 
-Three ways a file can be written, picked by looking at it, and any of them may
+Six ways a file can be written, picked by looking at it, and any of them may
 be gzipped (a file that starts with gzip's magic bytes is unpacked first, so a
 body captured from a POST is read as it is):
 
@@ -1306,6 +1306,56 @@ body captured from a POST is read as it is):
   `mongodb`, `pg` or `mysql2` names its collection as the second word of `m`;
   any other is the method `c.m`. Only `http` and `https` snapshots are read as
   requests; a job is read for its span tree.
+- **Zipkin v2 JSON** (P112), what the Zipkin UI's *JSON* button and its
+  `/api/v2/traces` give: a list of spans, or a list of traces. Read: `traceId`,
+  `id`, `parentId`, `kind` (none is internal), `timestamp` and `duration`
+  (microseconds), `localEndpoint.serviceName` (else `--service`), and of the
+  `tags` the same keys as OTLP's (an OTel SDK's Zipkin exporter writes them)
+  plus Brave's `http.path`; an `error` tag, or `otel.status_code: ERROR`, is
+  *it failed*, its text never read. Never read: `name`, `annotations`,
+  `remoteEndpoint`, the rest of `localEndpoint`, `debug`, `shared`, `sql.query`
+  and every other tag.
+- **Jaeger JSON** (P112), what the Jaeger UI's *Download JSON* and its query
+  API give: `{ data: [{ traceID, spans, processes }] }`, or one trace on its
+  own. Read: `traceID`, `spanID`, the parent from the first `CHILD_OF`
+  reference (else the first `FOLLOWS_FROM`), `startTime` and `duration`
+  (microseconds), the process's `serviceName`, and of the `tags`
+  (`{ key, type, value }`, `bool` and `int64` too) `span.kind` and the same
+  keys as OTLP's; `error: true` or `otel.status_code: ERROR` is *it failed*.
+  Never read: `operationName`, `logs`, `warnings`, a process's `tags` (host
+  name, IP, client version) and every other tag. An export of the same
+  traffic as an OTLP file gives the same observed file.
+- **A browser's HAR** (P112): the Network tab's *Save all as HAR*, the record
+  of exactly the calls a front end makes into its API. Each call a script made
+  (`_resourceType` `xhr` or `fetch`; where the browser does not write it, a
+  JSON answer, or no answer type for a method other than `GET`) is a client
+  span of the front end: method, the path's shape, `response.status` (`0`, a
+  call the browser blocked or cancelled, is *it failed* with no status),
+  `time` and `startedDateTime`. Scripts, styles, images, fonts and pages are
+  skipped and counted. The front end is `--service`, else the one service the
+  map has browser calls for; with several, the file is refused with that hint.
+  The URL's origin is compared with where the front end's base URLs point -
+  the values its own files give `apiBaseEnv` keys, through `apiTarget`, and
+  the hosts each service is reached at (its name, `services[].hosts`, what
+  the project's files say) - and dropped: a match narrows the call to the
+  call site with a join into that service's route, and that join is counted
+  from the call alone (a HAR has no trace context, so it is never joined to a
+  back end's spans). A call to this machine or to the front end's own origin
+  is matched by path among the front end's calls. A call to an origin nothing
+  names is a third party, listed as `external` by its host only, never its
+  path; when every call is one, the summary says no base URL matched and to
+  name the API's host under `services[].hosts`.
+
+  **A HAR holds your cookies, tokens and the body of every request.**
+  flowatlas copies none of it: each entry is read for those fields by key and
+  nothing else of it is ever held - never `request.headers`, `cookies`,
+  `queryString`, `postData`, `response.headers`, `cookies`, `content` (only its
+  `mimeType`, to tell a call from a file), `redirectURL`, `serverIPAddress`,
+  `connection`, `timings`, `pages`, `creator`, `browser`, `comment`, or any
+  key starting `_` but `_resourceType`; the query and fragment are cut before
+  a span exists, and an error names the entry and the field, never quotes the
+  file. Nothing of the file is cached or written. Delete the HAR after the
+  run.
 
 **What is kept, and nothing else.** Every reader copies only what is on one
 allow-list, while it walks a span's attributes, before a span exists: service
@@ -1315,7 +1365,8 @@ destination, `Class.method`, table or collection, rpc service and method,
 HTTP status, duration, the error flag, start time, trace, span and parent
 ids, and on AWS the function, trigger, workflow, step, tables, the function
 invoked, the SDK operation and the service a destination is spelled for, each
-a deployed name. Never read: headers, cookies, query strings, bodies, statements and
+a deployed name; of a browser's call, the service its origin names, or a
+third party's host. Never read: headers, cookies, query strings, bodies, statements and
 queries, `enduser.*`, span names, events and exception text, status messages,
 hosts, and @nestjs/observe's `u`, `rq`, `tg` and `logs`. The file says so in a
 `privacy` block: the kept list, the dropped categories as fixed text, and how
@@ -1431,7 +1482,7 @@ over it unless told `--reset`.
 | Flag | Meaning |
 |---|---|
 | `--config <path>` / `--db <path>` | which graph to match against |
-| `--service <name>` | service of spans the file does not name one for |
+| `--service <name>` | service of spans the file does not name one for; for a HAR, the front end it was saved from |
 | `--since <dur>` | keep only the hours inside this window of now (`2h`, `24h`, `7d`, `2w`; whole hours, `30m` is refused) and its samples; kept in the file, so later runs keep cutting the same way. `--since all` stops cutting |
 | `--reset` | start the file again instead of adding to it |
 | `--no-samples` | keep no sample requests and remove the ones the file holds: then it holds no trace id at all |

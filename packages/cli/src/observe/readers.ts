@@ -1,6 +1,10 @@
 import { NESTJS_OBSERVE_READS, only, OTLP_READS } from './allow-list.js';
 import { destinationName, isAwsSpan, readAwsSpan } from './aws.js';
+import { harReader } from './har-reader.js';
+import { jaegerReader } from './jaeger-reader.js';
+import type { ReadContext } from './reader-parts.js';
 import { keepAllowed, pathOf, type ObservedSpan, type SpanKind } from './span.js';
+import { zipkinReader } from './zipkin-reader.js';
 
 /**
  * One way a trace file can be written, as a Strategy: `sniff` says whether a
@@ -11,12 +15,13 @@ import { keepAllowed, pathOf, type ObservedSpan, type SpanKind } from './span.js
 export interface TraceReader {
   name: string;
   sniff(document: unknown): boolean;
-  read(document: unknown, fallbackService?: string): TraceRead;
+  /** `context`: what a reader may be told beside the document (P112, `reader-parts.ts`). */
+  read(document: unknown, fallbackService?: string, context?: ReadContext): TraceRead;
 }
 
 /** Parts of a file a reader saw and did not read, counted so nothing is dropped unsaid. */
 export interface SkippedPart {
-  noun: 'snapshot' | 'job' | 'node' | 'span';
+  noun: 'snapshot' | 'job' | 'node' | 'span' | 'entry';
   /** Why, as it reads after the noun: `of protocol ws`, `without o, c and m`. */
   why: string;
   count: number;
@@ -31,6 +36,8 @@ export interface TraceRead {
    * how many, never which.
    */
   droppedAttributes: number;
+  /** Fixed sentences the summary says about the file, never quoting it (P112). */
+  notes?: string[];
 }
 
 type Json = Record<string, unknown>;
@@ -483,7 +490,7 @@ export const nestjsObserveReader: TraceReader = {
 
 /** Every format known, tried in order; the first whose sniff says yes reads the file. */
 export const TRACE_READERS: ReadonlyMap<string, TraceReader> = new Map(
-  [otlpReader, nestjsObserveReader].map((reader) => [reader.name, reader]),
+  [otlpReader, nestjsObserveReader, zipkinReader, jaegerReader, harReader].map((reader) => [reader.name, reader]),
 );
 
 export const readerFor = (document: unknown): TraceReader | undefined =>

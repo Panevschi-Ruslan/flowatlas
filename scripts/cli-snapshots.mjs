@@ -82,6 +82,14 @@ const OBSERVE_NOW = new Date('2025-10-16T09:00:00.000Z');
 const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json'].map((file) =>
   join(fixture, 'traces', file),
 );
+/**
+ * The same traffic exported by Zipkin and by Jaeger (P112) in place of the
+ * OTLP file: each summary is `observe.txt` again, which is the point. And the
+ * fixture's front end saved as a HAR, read with the configuration so its
+ * calls' origins name the services they reached.
+ */
+const tracesWith = (file) => TRACES.map((path, index) => (index === 0 ? join(fixture, 'traces', file) : path));
+const HAR = [join(fixture, 'traces', 'web.har')];
 const observeOnCopy = (io, runs, from = fixture) => {
   const copy = mkdtempSync(join(tmpdir(), 'flowatlas-observe-'));
   const said = (text) => text.split(copy).join('<copy>');
@@ -123,6 +131,9 @@ const CASES = [
   ['observe.txt', (io) => observeOnCopy(io, [[TRACES, {}]])],
   ['observe.json', (io) => observeOnCopy(io, [[TRACES, { format: 'json' }]])],
   ['observe.again.txt', (io) => observeOnCopy(io, [[TRACES.slice(0, 1), { print: () => {} }], [TRACES, {}]])],
+  ['observe.zipkin.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.zipkin.json'), {}]])],
+  ['observe.jaeger.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.jaeger.json'), {}]])],
+  ['observe.har.txt', (io) => observeOnCopy(io, [[HAR, { config }]])],
   ['accept.unreadable.txt', acceptUnreadable],
   ['flow.get-orders.tree.l0.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '0' }, io)],
   ['flow.get-orders.tree.l1.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree' }, io)],

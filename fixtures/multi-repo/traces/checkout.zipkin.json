@@ -1,0 +1,247 @@
+[
+  [
+    {
+      "traceId": "a1000000000000000000000000000001",
+      "id": "b100000000000001",
+      "kind": "SERVER",
+      "name": "GET /orders/ord-1042",
+      "timestamp": 1760600000000000,
+      "duration": 520000,
+      "localEndpoint": {
+        "serviceName": "gateway",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "http.request.method": "GET",
+        "http.route": "/orders/:id",
+        "http.path": "/orders/ord-1042",
+        "http.request.header.authorization": "Bearer not-a-real-token",
+        "enduser.id": "user-7781",
+        "code.namespace": "OrdersController",
+        "code.function": "findOne",
+        "http.status_code": "200",
+        "http.request.header.cookie": "sid=cookie-val-55"
+      },
+      "annotations": [
+        {
+          "timestamp": 1760600000000010,
+          "value": "wire send for ord-1042"
+        }
+      ],
+      "debug": true,
+      "shared": false
+    },
+    {
+      "traceId": "a1000000000000000000000000000001",
+      "id": "b100000000000002",
+      "parentId": "b100000000000001",
+      "kind": "CLIENT",
+      "name": "GET",
+      "timestamp": 1760600000001000,
+      "duration": 500000,
+      "localEndpoint": {
+        "serviceName": "gateway",
+        "ipv4": "198.51.100.8"
+      },
+      "remoteEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.7",
+        "port": 8080
+      },
+      "tags": {
+        "http.method": "GET",
+        "http.url": "http://orders.local/orders/ord-1042?expand=lines",
+        "http.status_code": "200"
+      }
+    },
+    {
+      "traceId": "a1000000000000000000000000000001",
+      "id": "c100000000000001",
+      "parentId": "b100000000000002",
+      "kind": "SERVER",
+      "name": "GET /orders/:id",
+      "timestamp": 1760600000002000,
+      "duration": 496000,
+      "localEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "http.request.method": "GET",
+        "http.route": "/orders/:id",
+        "http.status_code": "200"
+      }
+    },
+    {
+      "traceId": "a1000000000000000000000000000001",
+      "id": "c100000000000002",
+      "parentId": "c100000000000001",
+      "name": "OrdersService.findOne",
+      "timestamp": 1760600000003000,
+      "duration": 492000,
+      "localEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "code.function.name": "OrdersService.findOne"
+      }
+    },
+    {
+      "traceId": "a1000000000000000000000000000001",
+      "id": "c100000000000003",
+      "parentId": "c100000000000002",
+      "kind": "CLIENT",
+      "name": "mongodb.find",
+      "localEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.8"
+      },
+      "remoteEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.7",
+        "port": 8080
+      },
+      "tags": {
+        "db.collection.name": "orders",
+        "db.query.text": "{ \"_id\": \"ord-1042\" }",
+        "db.statement": "db.orders.find(secret-stmt-8)",
+        "sql.query": "db.orders.find(secret-stmt-8)"
+      }
+    }
+  ],
+  [
+    {
+      "traceId": "a1000000000000000000000000000004",
+      "id": "b400000000000001",
+      "kind": "SERVER",
+      "name": "GET /orders/:id",
+      "timestamp": 1760600006000000,
+      "duration": 45000,
+      "localEndpoint": {
+        "serviceName": "gateway",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "http.request.method": "GET",
+        "http.route": "/orders/:id",
+        "http.status_code": "200"
+      }
+    },
+    {
+      "traceId": "a1000000000000000000000000000004",
+      "id": "b400000000000002",
+      "parentId": "b400000000000001",
+      "kind": "CLIENT",
+      "name": "GET",
+      "timestamp": 1760600006001000,
+      "duration": 39000,
+      "localEndpoint": {
+        "serviceName": "gateway",
+        "ipv4": "198.51.100.8"
+      },
+      "remoteEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.7",
+        "port": 8080
+      },
+      "tags": {
+        "http.method": "GET",
+        "http.url": "http://orders.local/orders/ord-2001",
+        "http.status_code": "200"
+      }
+    }
+  ],
+  [
+    {
+      "traceId": "a1000000000000000000000000000003",
+      "id": "b300000000000001",
+      "kind": "SERVER",
+      "name": "GET /metrics",
+      "timestamp": 1760600005000000,
+      "duration": 2000,
+      "localEndpoint": {
+        "serviceName": "gateway",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "http.request.method": "GET",
+        "http.route": "/metrics",
+        "http.status_code": "200"
+      }
+    }
+  ],
+  [
+    {
+      "traceId": "a1000000000000000000000000000002",
+      "id": "c200000000000001",
+      "kind": "SERVER",
+      "name": "POST /orders",
+      "timestamp": 1760600003000000,
+      "duration": 35000,
+      "localEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "http.request.method": "POST",
+        "http.route": "/orders",
+        "http.status_code": "500",
+        "otel.status_code": "ERROR",
+        "error": "insert failed for ord-1043 at stack frame"
+      }
+    },
+    {
+      "traceId": "a1000000000000000000000000000002",
+      "id": "c200000000000002",
+      "parentId": "c200000000000001",
+      "kind": "PRODUCER",
+      "name": "order.created publish",
+      "timestamp": 1760600003001000,
+      "duration": 3000,
+      "localEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "messaging.system": "kafka",
+        "messaging.destination.name": "order.created"
+      }
+    },
+    {
+      "traceId": "a1000000000000000000000000000002",
+      "id": "c200000000000003",
+      "parentId": "c200000000000001",
+      "kind": "PRODUCER",
+      "name": "order.audited publish",
+      "timestamp": 1760600003002000,
+      "duration": 500,
+      "localEndpoint": {
+        "serviceName": "orders",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "messaging.system": "kafka",
+        "messaging.destination.name": "order.audited"
+      }
+    },
+    {
+      "traceId": "a1000000000000000000000000000002",
+      "id": "d200000000000001",
+      "parentId": "c200000000000002",
+      "kind": "CONSUMER",
+      "name": "order.created process",
+      "timestamp": 1760600003500000,
+      "duration": 12000,
+      "localEndpoint": {
+        "serviceName": "billing",
+        "ipv4": "198.51.100.8"
+      },
+      "tags": {
+        "messaging.system": "kafka",
+        "messaging.destination.name": "order.created",
+        "messaging.kafka.message.key": "ord-1043"
+      }
+    }
+  ]
+]

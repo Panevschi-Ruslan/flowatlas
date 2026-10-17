@@ -84,6 +84,9 @@ export const OBSERVED_KEPT = [
   'tables',
   'awsOp',
   'transport',
+  // Where a browser call went (P112): the service its origin names, or a third party by its host only.
+  'peerService',
+  'thirdParty',
 ] as const;
 
 /**
@@ -107,6 +110,11 @@ export const OBSERVED_DROPPED: readonly string[] = [
   'cloud account ids and regions (an ARN or a queue URL is cut to the name inside it)',
   'parameters of a cloud SDK call (keys, items, message bodies, workflow input)',
   'workflow step names the map does not declare',
+  'HAR cookies, authorization and every other request and response header',
+  'HAR request bodies (postData) and response content',
+  'HAR pages, initiators, timings, server addresses and connections',
+  'the origin of a browser call (compared with the base URLs, then dropped)',
+  'the path of a call to a third party (kept by host only)',
 ];
 
 /**
@@ -114,7 +122,8 @@ export const OBSERVED_DROPPED: readonly string[] = [
  * `table` and `cloud` are a deployed function, workflow, workflow step or
  * table the map does not have, and a cloud SDK call of a service nothing here
  * reads, by `<service>/<method>` only (P107): a step is named `<workflow>/?`,
- * never by a name the map lacks.
+ * never by a name the map lacks. `external` is a browser call to a host no
+ * base URL of the front end names, a third party, by its host only (P112).
  */
 export type UnmatchedKind =
   | 'http'
@@ -127,7 +136,8 @@ export type UnmatchedKind =
   | 'workflow'
   | 'state'
   | 'table'
-  | 'cloud';
+  | 'cloud'
+  | 'external';
 
 /** The figures `summarise` gives, beside a roll-up row's count. Optional: a version-1 or 2 file has none. */
 export interface ObservedFigures {

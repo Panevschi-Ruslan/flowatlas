@@ -4,6 +4,7 @@ import { extname } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import {
   describeObservedProblem,
+  loadConfig,
   mergeObserved,
   OBSERVED_FORMAT_VERSION,
   parseDuration,
@@ -12,16 +13,19 @@ import {
   type ObservedSource,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
+import { settingsOfProject } from '../build/settings/index.js';
 import { dbPathFor, openDbFromOptions, type DbOptions } from '../db.js';
 import { cannotRun } from '../exit.js';
 import { indexGraph, matchSpans, type Observed } from '../observe/match.js';
+import { frontEndContextOf } from '../observe/origins.js';
 import { decodeTraceRequest, ProtobufError } from '../observe/otlp-protobuf.js';
+import { TraceFileError, type FrontEndContext, type ReadContext } from '../observe/reader-parts.js';
 import { OTLP_KEEP, readerFor, type SkippedPart } from '../observe/readers.js';
 import type { ObservedSpan } from '../observe/span.js';
 import { readObservedBeside, saveObserved } from '../observe/store.js';
 
 export interface ObserveOptions extends DbOptions {
-  /** Service a span belongs to when the file does not say. */
+  /** Service a span belongs to when the file does not say; for a HAR, the front end it was saved from. */
   service?: string;
   format?: string;
   /** `--since <dur>`: keep only the hours inside it; `all` stops cutting. */
@@ -47,6 +51,8 @@ export interface ObserveRun {
   skipped: SkippedPart[];
   /** Files left alone because their contents were already read into the file. */
   repeated: string[];
+  /** What the readers said about the files, in fixed sentences (P112). */
+  notes: string[];
   /** The version of the file this run upgraded, when it was older. */
   upgradedFrom?: number;
 }
@@ -135,19 +141,29 @@ export interface TraceFiles {
   droppedAttributes: number;
   /** Files whose contents were in `known`, or earlier in the list, and so not read again. */
   repeated: string[];
+  /** What the readers said about the files, each sentence once (P112). */
+  notes: string[];
 }
 
-/** Reads each file with the reader its contents call for. Only file paths: nothing is fetched. */
+/** The formats `observe` reads, as a refusal names them. */
+const FORMATS_SAID = 'OTLP (resourceSpans), a @nestjs/observe batch (serviceId, snapshots), Zipkin v2 JSON, Jaeger JSON (data) or a HAR (log.entries)';
+
+/**
+ * Reads each file with the reader its contents call for. Only file paths:
+ * nothing is fetched. `frontEnd` says where the project's front ends send
+ * their calls, asked only when a HAR is read (P112).
+ */
 export const readTraceFiles = (
   files: readonly string[],
   service?: string,
-  options: { known?: ReadonlySet<string>; now?: Date } = {},
+  options: { known?: ReadonlySet<string>; now?: Date; frontEnd?: () => FrontEndContext } = {},
 ): TraceFiles => {
   const spans: ObservedSpan[] = [];
   const formats: Record<string, string> = {};
   const skipped = new Map<string, SkippedPart>();
   const sources: ObservedSource[] = [];
   const repeated: string[] = [];
+  const notes = new Set<string>();
   const known = new Set(options.known);
   const readAt = (options.now ?? new Date()).toISOString();
   let droppedAttributes = 0;
@@ -161,11 +177,18 @@ export const readTraceFiles = (
     let read = 0;
     for (const document of documentsOf(file, bytes)) {
       const reader = readerFor(document);
-      if (reader === undefined) {
-        throw cannotRun(`${file} is neither OTLP (resourceSpans) nor a @nestjs/observe batch (serviceId, snapshots)`);
-      }
+      if (reader === undefined) throw cannotRun(`${file} is none of ${FORMATS_SAID}`);
       formats[file] = reader.name;
-      const result = reader.read(document, service);
+      const context: ReadContext = { source: sha256, ...(options.frontEnd === undefined ? {} : { frontEnd: options.frontEnd }) };
+      let result;
+      try {
+        result = reader.read(document, service, context);
+      } catch (cause) {
+        // A reader's refusal names the format, the record and the field, never the file's contents.
+        if (cause instanceof TraceFileError) throw cannotRun(`${file}: ${cause.message}`);
+        throw cause;
+      }
+      for (const note of result.notes ?? []) notes.add(note);
       spans.push(...result.spans);
       read += result.spans.length;
       droppedAttributes += result.droppedAttributes;
@@ -178,7 +201,7 @@ export const readTraceFiles = (
     }
     sources.push({ sha256, format: formats[file] ?? 'empty', spans: read, readAt });
   }
-  return { spans, formats, skipped: [...skipped.values()], sources, droppedAttributes, repeated };
+  return { spans, formats, skipped: [...skipped.values()], sources, droppedAttributes, repeated, notes: [...notes] };
 };
 
 const LISTED = 20;
@@ -211,6 +234,7 @@ const summary = (run: ObserveRun, labels: ReadonlyMap<string, string>): string[]
     );
   }
   if (run.skipped.length > 0) lines.push(`not read: ${run.skipped.map(skippedSaid).join(', ')}`);
+  lines.push(...run.notes);
   lines.push(
     `${Object.keys(observed.joins).length} joins seen, ${Object.keys(observed.entries).length} entries hit, ` +
       `${observed.unmatched.length} seen at run time but not found in code, ` +
@@ -265,6 +289,18 @@ const sinceOf = (since: string | undefined): string | undefined => {
 };
 
 /**
+ * The configuration and what its repositories' files say, for where a front
+ * end's calls go (P112): the one `--config` names, else the one the working
+ * directory is in unless `--db` was given alone, as the database is found.
+ */
+const projectOf = (options: ObserveOptions) => {
+  const from = options.config ?? (options.db === undefined ? process.cwd() : undefined);
+  if (from === undefined) return undefined;
+  const loaded = loadConfig(from);
+  return { config: loaded.config, settings: settingsOfProject(loaded) };
+};
+
+/**
  * Lays trace files over the built graph and adds them to the observed file
  * beside it: what the file held, plus this run, cut to the window.
  */
@@ -278,13 +314,20 @@ export const runObserve = (files: readonly string[], options: ObserveOptions = {
     throw cannotRun(`${describeObservedProblem(before.problem)}; run again with --reset to start a new one`);
   }
   const previous = before.observed;
-  const read = readTraceFiles(files, options.service, { known: new Set(previous?.sources.map((source) => source.sha256)), now });
   const db = openDbFromOptions(options);
   let run: Observed;
   let labels: Map<string, string>;
+  let read: TraceFiles;
   try {
     const nodes = db.allNodes();
     labels = labelsOf(nodes);
+    let frontEnd: FrontEndContext | undefined;
+    read = readTraceFiles(files, options.service, {
+      known: new Set(previous?.sources.map((source) => source.sha256)),
+      now,
+      // Read only when a HAR asks: the configuration and its repositories' setting files.
+      frontEnd: () => (frontEnd ??= frontEndContextOf(nodes, projectOf(options))),
+    });
     run = matchSpans(indexGraph(nodes, db.allEdges()), read.spans, {
       sources: read.sources,
       droppedAttributes: read.droppedAttributes,
@@ -307,6 +350,7 @@ export const runObserve = (files: readonly string[], options: ObserveOptions = {
     formats: read.formats,
     skipped: read.skipped,
     repeated: read.repeated,
+    notes: read.notes,
     ...(previous !== undefined && previous.observedFormatVersion < OBSERVED_FORMAT_VERSION
       ? { upgradedFrom: previous.observedFormatVersion }
       : {}),
@@ -321,10 +365,13 @@ export const registerObserve = (program: Command): void => {
   program
     .command('observe')
     .description('add what real traffic did - which joins ran, how long they took, how they answered - from trace files')
-    .argument('<file...>', 'OTLP JSON, JSON lines or protobuf, or @nestjs/observe batches, gzipped or not; nothing is sent anywhere')
+    .argument(
+      '<file...>',
+      'OTLP JSON, JSON lines or protobuf, @nestjs/observe batches, Zipkin or Jaeger JSON, or a browser HAR, gzipped or not; nothing is sent anywhere',
+    )
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
-    .option('--service <name>', 'service a span belongs to when the file does not name one')
+    .option('--service <name>', 'service a span belongs to when the file does not name one; for a HAR, the front end it was saved from')
     .option('--since <dur>', 'keep only the hours inside this window (2h, 24h, 7d), kept for later runs; all stops cutting')
     .option('--reset', 'start the observed file again instead of adding to it')
     .option('--no-samples', 'keep no sample requests, and remove the ones the file holds: then it holds no trace id')

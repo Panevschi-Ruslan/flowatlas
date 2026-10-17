@@ -8,6 +8,27 @@ only one of them moved.
 
 ### Added
 
+- **Zipkin, Jaeger and HAR readers (P112).** `flowatlas observe` reads Zipkin
+  v2 JSON (a list of spans or of traces) and Jaeger JSON (the UI's *Download
+  JSON*, `{ data: [...] }`) into the same spans as OTLP: their tags go through
+  OTLP's key set, so an export of the same traffic gives the same observed
+  file; span and operation names, annotations, logs, endpoints and process
+  tags are never read. It reads a browser's HAR (*Save all as HAR*) into
+  client spans of the front end (`--service`, else the map's one front end):
+  each call a script made, by method, path shape, status (`0` is a failure),
+  time and duration; files are skipped and counted. The URL's origin is
+  compared with the front end's base URLs (`apiBaseEnv` values, `apiTarget`,
+  `services[].hosts`) and dropped, and narrows the call to the `ui_api_call`
+  whose join reaches a route of that service; that join is counted. A call to
+  an origin nothing names is a third party, new unmatched kind `external`, by
+  host only. Headers, cookies, query strings, request bodies and response
+  content are never read, by key; an error names the entry and the field and
+  never quotes the file. New span fields `peerService` and `thirdParty` in
+  `privacy.kept`, five new `privacy.dropped` categories; same format-3 file.
+  The fixture's `gateway` and `orders` name the hosts the front end reaches
+  them at (`fixtures/multi-repo/traces/web.har`, `checkout.zipkin.json`,
+  `checkout.jaeger.json`).
+
 - **AWS traffic matched to the map (P107).** `flowatlas observe` reads what an
   OpenTelemetry-instrumented Lambda function or the AWS Distro's layer writes,
   and lands it on the nodes the Terraform and state machine readers draw: a

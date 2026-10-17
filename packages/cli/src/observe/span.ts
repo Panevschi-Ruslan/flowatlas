@@ -59,6 +59,12 @@ export interface ObservedSpan {
   awsOp?: string;
   /** Which service's channels `destination` is spelled for (`sqs/<name>`, `sns/<name>`, ...). */
   transport?: AwsTransport;
+  // Where a browser call went (P112). The origin it was sent to is compared
+  // with the front end's base URLs inside the reader and never kept.
+  /** The service the call's origin names; the call is matched to a join into that service. */
+  peerService?: string;
+  /** The host of a third party the call went to, when no base URL names its origin; such a call has no path. */
+  thirdParty?: string;
 }
 
 export type FaasTrigger = 'http' | 'pubsub' | 'datasource' | 'timer' | 'other';

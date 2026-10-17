@@ -562,9 +562,36 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
       tally.miss(span, 'client', nameOf(span));
       return;
     }
+    if (confirmed === undefined && span.peerService !== undefined) {
+      peerCall(span, outs);
+      return;
+    }
     countOne(span, 'client', nameOf(span), outs, (node) => {
       tally.hit('symbols', node.id, span);
       if (confirmed === undefined) countJoin(span, index.from.get(node.id) ?? [], nameOf(span), 'caller');
+    });
+  };
+
+  /**
+   * A call whose origin named the service it went to (P112, a browser's): the
+   * call sites with a join into a route of that service that fits the call,
+   * and only that join. When none has one, a call site with no join at all
+   * ran (the map draws no join for it); one whose joins all go elsewhere did
+   * not make this call.
+   */
+  const peerCall = (span: ObservedSpan, outs: readonly GraphNode[]): void => {
+    const routes = new Set(matchRoute(index.httpEntries, span, (node) => node.repo === span.peerService).map((node) => node.id));
+    const joinsOf = (node: GraphNode): GraphEdge[] => (index.from.get(node.id) ?? []).filter(isJoinEdge);
+    const into = (node: GraphNode): GraphEdge[] => joinsOf(node).filter((edge) => routes.has(edge.to));
+    const reaching = outs.filter((node) => into(node).length > 0);
+    const sites = reaching.length > 0 ? reaching : outs.filter((node) => joinsOf(node).length === 0);
+    if (sites.length === 0) {
+      tally.miss(span, 'client', nameOf(span));
+      return;
+    }
+    countOne(span, 'client', nameOf(span), sites, (node) => {
+      tally.hit('symbols', node.id, span);
+      countJoin(span, into(node), nameOf(span), 'caller');
     });
   };
 
@@ -579,6 +606,11 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
   // Server spans first, so a client span knows whether its far side was seen.
   for (const span of spans) if (span.kind === 'server') server(span);
   for (const span of spans) {
+    // A browser's call to a host no base URL names: a third party, by its host only (P112).
+    if (span.thirdParty !== undefined) {
+      tally.miss(span, 'external', span.thirdParty);
+      continue;
+    }
     // A deployed function, a workflow or a cloud SDK call is read in `match-aws.ts` (P107).
     if (aws.claims(span)) aws.match(span);
     else if (span.destination !== undefined && span.kind === 'producer') messaging(span, 'emits');

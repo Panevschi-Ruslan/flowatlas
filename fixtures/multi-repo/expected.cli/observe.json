@@ -26,7 +26,9 @@
       "state",
       "tables",
       "awsOp",
-      "transport"
+      "transport",
+      "peerService",
+      "thirdParty"
     ],
     "dropped": [
       "request and response headers",
@@ -44,7 +46,12 @@
       "@nestjs/observe user, request, tags, logs, objectives, runtime and custom data",
       "cloud account ids and regions (an ARN or a queue URL is cut to the name inside it)",
       "parameters of a cloud SDK call (keys, items, message bodies, workflow input)",
-      "workflow step names the map does not declare"
+      "workflow step names the map does not declare",
+      "HAR cookies, authorization and every other request and response header",
+      "HAR request bodies (postData) and response content",
+      "HAR pages, initiators, timings, server addresses and connections",
+      "the origin of a browser call (compared with the base URLs, then dropped)",
+      "the path of a call to a third party (kept by host only)"
     ],
     "droppedAttributes": 24,
     "samples": {
