@@ -135,6 +135,7 @@ const KIND_WORDS: Readonly<Record<string, readonly [string, string]>> = {
   cloud: ['cloud call', 'cloud calls'],
   join: ['join', 'joins'],
   external: ['outside host', 'outside hosts'],
+  peer: ['peer service', 'peer services'],
 };
 
 /** `2 routes`, `1 cloud call`; a kind with no words of its own is said as itself. */

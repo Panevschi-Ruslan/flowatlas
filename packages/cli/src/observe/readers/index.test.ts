@@ -177,6 +177,41 @@ describe('the OTLP reader', () => {
     ]);
     expect(skipped).toEqual([{ noun: 'span', why: 'without a trace id and a span id', count: 1 }]);
   });
+
+  it('reads peer.service as a name only: an address dropped, a value-like name masked (P146)', () => {
+    const client = (spanId: string, peer: string) => ({
+      traceId: 't',
+      spanId,
+      kind: 3,
+      attributes: [
+        { key: 'http.request.method', value: { stringValue: 'POST' } },
+        { key: 'url.full', value: { stringValue: 'https://ledger.example.test/entries?token=x' } },
+        { key: 'peer.service', value: { stringValue: peer } },
+      ],
+    });
+    const { spans, droppedAttributes } = otlpReader.read({
+      resourceSpans: [
+        {
+          resource: { attributes: [{ key: 'service.name', value: { stringValue: 'shop' } }] },
+          scopeSpans: [
+            {
+              spans: [
+                client('a', ' ledger '),
+                client('b', 'ledger.internal.example.test'),
+                client('c', '10.0.4.2:8443'),
+                client('d', 'ledger-7f3a9c'),
+                client('e', 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d'),
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    expect(spans.map((span) => span.peerName)).toEqual(['ledger', undefined, undefined, ':value', ':value']);
+    expect(spans[0]).toMatchObject({ kind: 'client', method: 'POST', path: '/entries' });
+    expect(droppedAttributes).toBe(0);
+    expect(JSON.stringify(spans)).not.toMatch(/10\.0\.4\.2|internal\.example|7f3a9c|a1b2c3d4/);
+  });
 });
 
 describe('a saved series of @nestjs/observe batch posts', () => {

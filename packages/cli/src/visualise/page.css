@@ -2133,8 +2133,15 @@ kbd {
 .w-axis { display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); align-items: end; gap: 10px; }
 .w-axis-say { font-family: var(--f-mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; }
 .w-ticks { position: relative; height: 16px; border-bottom: 1px solid var(--rule); }
-.w-tick { position: absolute; bottom: 1px; transform: translateX(-50%); font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
-.w-tick:first-child { transform: none; }
+/* A tick's label stays on one line (an absolute box at the right edge has no
+   width to wrap into), centred on its place but for the ends: the first is
+   written from its place, a last one at the edge up to it (P145). */
+.w-tick {
+  position: absolute; bottom: 1px; transform: translateX(-50%); white-space: nowrap;
+  font-family: var(--f-mono); font-size: 12px; color: var(--faint);
+}
+.w-tick.is-start { transform: none; }
+.w-tick.is-end { transform: translateX(-100%); }
 .w-row {
   display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); align-items: center; gap: 10px;
   padding: 1px 14px; min-height: 22px;

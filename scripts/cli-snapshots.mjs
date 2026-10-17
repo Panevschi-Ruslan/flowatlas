@@ -776,6 +776,8 @@ const HOUSE_CASES = [
  * output, where the joins are made and no group is left.
  */
 const missingRepoPlain = plainFor('missing-repo');
+const missingRepoDir = join(root, 'fixtures', 'missing-repo');
+const MISSING_REPO_TRACES = [join(missingRepoDir, 'traces', 'peer.otlp.json')];
 const missingRepoLinked = join(root, 'fixtures', 'missing-repo', 'variants', 'linked', 'flowatlas.config.json');
 let missingRepoLinkedBuilt;
 const missingRepoLinkedOnce = async () => {
@@ -792,6 +794,9 @@ const MISSING_REPO_CASES = [
   ['link.suggested.txt', (io) => linkSuggested({ config: missingRepoPlain.config, dryRun: true, print: (line) => io.out(`${line}\n`) })],
   ['doctor.linked.txt', async (io) => runDoctorCommand({ config: await missingRepoLinkedOnce() }, io)],
   ['doctor.missing.linked.txt', async (io) => runMissingCommand({ config: await missingRepoLinkedOnce() }, io)],
+  // Calls whose OTel peer.service names the unconfigured repository (P146): counted as `peer`, the evidence P144 reads.
+  ['observe.peer.txt', (io) => observeOnCopy(io, [[MISSING_REPO_TRACES, {}]], missingRepoDir)],
+  ['observe.peer.json', (io) => observeOnCopy(io, [[MISSING_REPO_TRACES, { format: 'json' }]], missingRepoDir)],
 ];
 
 /**

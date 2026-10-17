@@ -250,3 +250,31 @@ describe('what a span measured, on the place it is credited to (P105)', () => {
     expect(tree.children!.map((child) => child.start)).toEqual([12, undefined]);
   });
 });
+
+/** What a call's OTel `peer.service` names (P146): a service the map lacks is counted as `peer`, by its name only. */
+describe('a call that names its peer', () => {
+  const graph = indexGraph([call(ONE, '/products/:id'), route(PRODUCT, '/products/:id')], [joined(ONE, PRODUCT)]);
+  const named = (peerName: string, over: Partial<ObservedSpan> = {}): ObservedSpan => ({
+    ...caller('client', '/products/:value'),
+    spanId: `to-${peerName}`,
+    at: '2026-01-01T00:00:00.000Z',
+    peerName,
+    ...over,
+  });
+
+  it('counts a peer the map has no service of, beside the call site the span still hits', () => {
+    const observed = matchSpans(graph, [named('ledger'), named('ledger', { spanId: 'again' })]);
+    expect(observed.unmatched).toEqual([expect.objectContaining({ service: 'shop', kind: 'peer', name: 'ledger', count: 2 })]);
+    expect(observed.symbols[ONE]?.hits).toBe(2);
+  });
+
+  it('leaves out a peer that is a service of the map, by name or as P122 groups names', () => {
+    const observed = matchSpans(graph, [named('catalog'), named('catalog-api'), named('Catalog Service'), named('shop')]);
+    expect(observed.unmatched).toEqual([]);
+  });
+
+  it('counts a masked name as :value, and reads peer.service only on a client or producer span', () => {
+    const observed = matchSpans(graph, [named(':value'), named('ledger', { kind: 'server', spanId: 'server-side', method: undefined })]);
+    expect(observed.unmatched.map((row) => [row.kind, row.name])).toEqual([['peer', ':value']]);
+  });
+});

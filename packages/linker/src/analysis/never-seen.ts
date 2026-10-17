@@ -93,7 +93,7 @@ const servicesSeen = (db: GraphDb, counts: ObservedRollUp): { any: Set<string>; 
     if (node !== undefined && node.repo !== '') any.add(node.repo);
     return node;
   };
-  for (const id of [...Object.keys(counts.entries), ...Object.keys(counts.channels)]) add(id);
+  for (const id of [...Object.keys(counts.entries), ...Object.keys(counts.channels), ...Object.keys(counts.shapes ?? {})]) add(id);
   for (const id of Object.keys(counts.symbols)) {
     const node = add(id);
     if (node?.type === 'method') symbols.add(node.repo);
@@ -124,19 +124,35 @@ const joinedNodes = (counts: ObservedRollUp): Map<string, { count: number; lastS
   return found;
 };
 
+type Times = { count: number; lastSeen: string | null };
+
 /**
- * How often each handler ran, as the ways in it handles were hit: a request
- * to a route ran its handler whether or not a span named the method, so a
- * handler of a busy way in is never "never seen".
+ * The ways in traffic carried bodies to (P113 `--shapes`), by how many and how
+ * lately: a body placed on a route reached it, even when its call fit several
+ * call sites and so was credited to no join and no hit (P85). Read as seen
+ * (P148), never added to the counts.
  */
-const handledNodes = (db: GraphDb, counts: ObservedRollUp): Map<string, { count: number; lastSeen: string | null }> => {
-  const found = new Map<string, { count: number; lastSeen: string | null }>();
+const shapedEntries = (counts: ObservedRollUp): Map<string, Times> =>
+  new Map(Object.entries(counts.shapes ?? {}).flatMap(([id, shapes]) =>
+    shapes.samples > 0 ? [[id, { count: shapes.samples, lastSeen: shapes.lastSeen ?? null }] as const] : []));
+
+/**
+ * How often each handler ran, as the ways in it handles were hit (or, with
+ * none, carried bodies, P148): a request to a route ran its handler whether
+ * or not a span named the method, so a handler of a busy way in is never
+ * "never seen".
+ */
+const handledNodes = (db: GraphDb, counts: ObservedRollUp): Map<string, Times> => {
+  const found = new Map<string, Times>();
+  const reached = new Map<string, Times>(shapedEntries(counts));
   for (const [id, seen] of Object.entries(counts.entries)) {
-    if (seen.hits === 0) continue;
+    if (seen.hits > 0) reached.set(id, { count: seen.hits, lastSeen: seen.lastSeen ?? null });
+  }
+  for (const [id, seen] of reached) {
     for (const edge of db.edgesFrom(id, ['handles'])) {
       const had = found.get(edge.to) ?? { count: 0, lastSeen: null };
-      const lastSeen = had.lastSeen === null || (seen.lastSeen != null && seen.lastSeen > had.lastSeen) ? (seen.lastSeen ?? null) : had.lastSeen;
-      found.set(edge.to, { count: had.count + seen.hits, lastSeen });
+      const lastSeen = had.lastSeen === null || (seen.lastSeen !== null && seen.lastSeen > had.lastSeen) ? seen.lastSeen : had.lastSeen;
+      found.set(edge.to, { count: had.count + seen.count, lastSeen });
     }
   }
   return found;
@@ -209,7 +225,9 @@ export const neverSeen = (db: GraphDb, observed: ObservedInput, options: NeverSe
   const served = servicesSeen(db, counts);
   const joined = joinedNodes(counts);
   const handled = handledNodes(db, counts);
-  const seenTimes = (id: string): number => hitsOf(counts, id) || joined.get(id)?.count || handled.get(id)?.count || 0;
+  const shaped = shapedEntries(counts);
+  const seenTimes = (id: string): number =>
+    hitsOf(counts, id) || joined.get(id)?.count || handled.get(id)?.count || shaped.get(id)?.count || 0;
 
   const candidates = candidatesOf(db).filter((candidate) => options.service === undefined || candidate.service === options.service);
   const families = new Map<string, Candidate[]>();
@@ -315,12 +333,13 @@ export const trafficOverlay = (db: GraphDb, observed: ObservedInput, since?: str
   const never = new Map(answer.rows.map((row) => [row.id, row]));
   const joined = joinedNodes(counts);
   const handled = handledNodes(db, counts);
+  const shaped = shapedEntries(counts);
   return {
     window,
     seenOf: (id) => {
       const own = counts.entries[id] ?? counts.symbols[id] ?? counts.channels[id];
       if (own !== undefined && own.hits > 0) return { count: own.hits, lastSeen: own.lastSeen ?? null };
-      const through = joined.get(id) ?? handled.get(id);
+      const through = joined.get(id) ?? handled.get(id) ?? shaped.get(id);
       return through === undefined || through.count === 0 ? undefined : through;
     },
     neverOf: (id) => never.get(id),

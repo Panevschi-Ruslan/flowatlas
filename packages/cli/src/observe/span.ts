@@ -71,6 +71,14 @@ export interface ObservedSpan {
    * since a sample of one span with an id made up for it says nothing.
    */
   sampleable?: false;
+  /**
+   * The service a client or producer span's OTel `peer.service` names (P146),
+   * as written but for `peerNameOf`: an address dropped, a value-like name
+   * masked. Kept whatever it names; `observe` counts the ones no service on
+   * the map is, as `peer` (evidence for a repository not configured), and
+   * matches nothing by it (P112's `peerService` is what narrows a call).
+   */
+  peerName?: string;
 }
 
 export type FaasTrigger = 'http' | 'pubsub' | 'datasource' | 'timer' | 'other';
@@ -111,6 +119,18 @@ export const VALUE = ':value';
  * (P113 D2), kept in core beside the shape it also folds.
  */
 export { isValueKey };
+
+/**
+ * What a `peer.service` value is kept as (P146): a service's name as written;
+ * nothing when it is empty or an address (a port, a path, a dotted host name or
+ * an IP: hosts are never kept); `VALUE` when it looks like a value by the rule a
+ * path segment is masked by (`isValueKey`: a digit, a token, an email).
+ */
+export const peerNameOf = (value: string | undefined): string | undefined => {
+  const name = value?.trim();
+  if (name === undefined || name === '' || /[:/\\.\s]/.test(name)) return undefined;
+  return isValueKey(name) ? VALUE : name;
+};
 
 /**
  * Path only: no scheme, host, query or fragment, and every segment that looks

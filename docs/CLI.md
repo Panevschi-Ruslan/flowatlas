@@ -1348,9 +1348,13 @@ same way in.
   mark of no width. When `flowatlas observe` measured times, the waterfall is
   drawn in milliseconds instead: each step as long as its typical figure (the
   join into it, else its own span), *p50* or *p95* by a switch on the bar (kept
-  in this browser), laid end to end in call order, a parent at least as long as
-  what runs under it. The axis says *typical time per step (p50), not one
-  request*, since medians laid end to end are a shape, not a latency; a step
+  in this browser). What a step calls sits inside its bar: the first call
+  starts where the step starts (so a chain of nested steps starts together),
+  the next after it, side-by-side ones from one place, and a parent is at least
+  as long as what runs inside it. The axis says *typical time per step (p50), not one
+  request*, since typical times drawn this way are a shape, not a latency, and
+  its tick labels stay on one line inside the axis, the last one written up to
+  its place at the right edge; a step
   with no figure keeps a small hatched stand-in, and its tooltip says so. A
   step where more than one request in a hundred failed carries *n% errors*. The steps above the Graph tab's drawing follow the same
   switch, and the command list (⌘K) offers it on this tab.
@@ -1648,7 +1652,9 @@ HTTP status, duration, the error flag, start time, trace, span and parent
 ids, and on AWS the function, trigger, workflow, step, tables, the function
 invoked, the SDK operation and the service a destination is spelled for, each
 a deployed name; of a browser's call, the service its origin names, or a
-third party's host. Never read: headers, cookies, query strings, bodies, statements and
+third party's host; and of a client or producer span, the service OpenTelemetry's
+`peer.service` names - a name only: an address (a port, a dotted host, an IP)
+is dropped, and a value-like name is masked as `:value`. Never read: headers, cookies, query strings, bodies, statements and
 queries, `enduser.*`, span names, events and exception text, status messages,
 hosts, and @nestjs/observe's `u`, `rq`, `tg` and `logs`. The file says so in a
 `privacy` block: the kept list, the dropped categories as fixed text, and how
@@ -1663,6 +1669,15 @@ service; a client span to the outbound call with that method and path; and a
 server span whose parent is in another service to the join from that service
 into the entry. What matches nothing is listed as seen at run time, not found
 in code.
+
+A call whose `peer.service` names a service the map has none of (P146) is
+counted as `peer`, by the calling service and that name, beside whatever
+else the span matched: `peer gateway payments-api (6)`. The name is the
+map's when it groups with one of its services the way `doctor`'s
+missing-repository groups do (separators, generic words such as `api` or
+`service`, and the plural taken off), so `orders-api` is `orders` and is not
+counted. Nothing is matched by `peer.service`; it is evidence that a
+repository the calls go to is not in the configuration.
 
 **On AWS Lambda (P107).** A span an OpenTelemetry-instrumented function, or
 the AWS Distro's Lambda layer, writes lands on the node the Terraform and the
@@ -1805,7 +1820,11 @@ Zipkin, Jaeger, the AWS exports) are said once and read as without the flag.
 
 The shapes go on the route each exchange reached, by status for answers,
 under `shapes` in `observed.json` and in each hour's bucket, so `--since` cuts
-them like the counts. `observe` then compares each route's shapes with its
+them like the counts. A route that holds shapes from the window was reached,
+even when the call that carried them fit several call sites and so was
+counted on none (P148): it is never *not seen in* the window, nor is its
+handler, and `dead` calls it alive, seen as many times as bodies reached it;
+its hits and joins stay what the spans said. `observe` then compares each route's shapes with its
 code through the contracts package and the wire rules (a `Date` declared and
 a string carried is not drift): the request against the route's body type,
 each 2xx answer against its declared return type, or against the type the

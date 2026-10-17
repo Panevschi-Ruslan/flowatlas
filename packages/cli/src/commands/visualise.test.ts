@@ -209,6 +209,29 @@ describe('the page made of its parts (P103)', () => {
     return readFileSync(file, 'utf8');
   };
 
+  it('counts a route traffic carried bodies to as seen, though its call fit several call sites (P148)', () => {
+    const invoice = 'entry:gateway:http:POST:/orders/:param/invoice';
+    const files = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json', 'web.otlp.json', 'web.har']
+      .map((file) => join(ROOT, 'fixtures', 'multi-repo', 'traces', file));
+    const neverOf = (shapes: boolean) => {
+      const copy = join(scratch, shapes ? 'shaped' : 'unshaped');
+      cpSync(join(ROOT, 'fixtures', 'multi-repo', '.flowatlas'), copy, { recursive: true });
+      runObserve(files, { config: CONFIG, db: join(copy, 'graph.db'), now: new Date('2025-10-16T09:00:00.000Z'), shapes, print: () => {} });
+      const file = join(copy, 'graph.html');
+      runVisualise({ config: CONFIG, db: join(copy, 'graph.db'), out: file, print: () => {} });
+      const data = dataOf(readFileSync(file, 'utf8'));
+      const observed = JSON.parse(readFileSync(join(copy, 'observed.json'), 'utf8'));
+      return { never: (data.observed.never?.rows ?? []).map(([node]: [number]) => node), at: data.entryIds[invoice], observed };
+    };
+    const shaped = neverOf(true);
+    const plain = neverOf(false);
+    // The bodies reached the route; the call was counted on none, so it has no hit either way.
+    expect(shaped.observed.shapes[invoice].samples).toBeGreaterThan(0);
+    expect(shaped.observed.entries[invoice]).toBeUndefined();
+    expect(shaped.never).not.toContain(shaped.at);
+    expect(plain.never).toContain(plain.at);
+  });
+
   it('draws run time from the fixture’s traces: the slow hop first everywhere (P111)', async () => {
     const html = runTimePage();
     const data = dataOf(html);

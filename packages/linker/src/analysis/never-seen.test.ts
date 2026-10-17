@@ -1,4 +1,4 @@
-import { joinIdOf, observedFromParts, type Agg, type ObservedBucket, type UnmatchedAgg } from '@flowatlas/core';
+import { joinIdOf, observedFromParts, type Agg, type EntryShapes, type ObservedBucket, type UnmatchedAgg } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { deadEntries, deadVerdict } from './dead.js';
 import { buildTestDb, edge, node } from './__fixtures__/test-db.js';
@@ -13,6 +13,8 @@ interface Hour {
   channels?: Record<string, number>;
   joins?: Record<string, number>;
   unmatched?: Array<Omit<UnmatchedAgg, keyof Agg> & { count: number }>;
+  /** Bodies placed on a way in by `--shapes` (P113), by how many. */
+  shapes?: Record<string, number>;
 }
 
 const record = (counts: Record<string, number> | undefined, at: string): Record<string, Agg> =>
@@ -29,6 +31,10 @@ const observedOf = (hours: Hour[]) => {
     channels: record(h.channels, h.hour),
     unmatched: (h.unmatched ?? []).map(({ count, ...row }) => ({ ...row, ...agg(count, h.hour) })),
     ambiguous: [],
+    ...(h.shapes === undefined ? {} : {
+      shapes: Object.fromEntries(Object.entries(h.shapes).map(([id, n]) =>
+        [id, { request: { t: 'object', n }, samples: n, lastSeen: h.hour } as EntryShapes])),
+    }),
   }));
   return observedFromParts({ buckets, samples: {}, sources: [], droppedAttributes: 0, samplesKept: true });
 };
@@ -115,6 +121,21 @@ describe('never seen', () => {
     expect(withSymbols.rows.filter((row) => row.type === 'method').map((row) => [row.id, row.confidence])).toEqual([
       ['orders#a.ts:OrdersController.cancel', 'strong'],
     ]);
+  });
+
+  it('counts a way in traffic carried bodies to as seen, and its handler, though no span was credited to it (P148)', () => {
+    const db = buildTestDb({
+      nodes: [route(BUSY), route(QUIET), node('orders#a.ts:OrdersController.cancel'), node('orders#a.ts:Other.one')],
+      edges: [edge(QUIET, 'orders#a.ts:OrdersController.cancel', { type: 'handles' })],
+    });
+    const hours: Hour[] = [
+      { hour: '2026-01-01T00:00:00.000Z', entries: { [BUSY]: 25 }, symbols: { 'orders#a.ts:Other.one': 1 }, shapes: { [QUIET]: 2 } },
+    ];
+    const shaped = neverSeen(db, observedOf(hours));
+    const plain = neverSeen(db, observedOf([{ ...hours[0]!, shapes: undefined }]));
+    db.close();
+    expect(shaped.rows).toEqual([]);
+    expect(plain.rows.map((row) => row.id)).toEqual([QUIET, 'orders#a.ts:OrdersController.cancel']);
   });
 
   it('counts a handler as seen when the way in it handles was hit, whether or not a span named it', () => {
@@ -207,6 +228,16 @@ describe('dead, with traffic as evidence', () => {
     db.close();
     expect(probe).toMatchObject({ verdict: 'likely-dead', evidence: { outside: 'probe', neverSeen: { window: '7d', confidence: 'strong' } } });
     expect(weak).toMatchObject({ verdict: 'unknown', evidence: { outside: 'cron', neverSeen: { confidence: 'weak' } } });
+  });
+
+  it('says alive for a way in traffic carried bodies to, by how many bodies, and counts no hit (P148)', () => {
+    const db = graph();
+    const observed = observedOf([{ hour: '2026-01-01T00:00:00.000Z', entries: { [BUSY]: 25 }, shapes: { [QUIET]: 2 } }]);
+    const answer = deadVerdict(db, db.report(), QUIET, { observed });
+    db.close();
+    expect(answer).toMatchObject({ verdict: 'alive', evidence: { seen: { count: 2 } } });
+    expect(answer!.evidence.neverSeen).toBeUndefined();
+    expect(observed.entries[QUIET]).toBeUndefined();
   });
 
   it('keeps a static dead and adds the silence as corroboration', () => {

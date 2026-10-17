@@ -8,7 +8,7 @@ import { observedPeriodSay, timeTicks, traceRowsOf } from '../steps.js';
    Run time changes only when the page was written with --observed-diff. */
 export function createTraces(page) {
   const { LB, MT, RP, data, entryIx, esc, graphLink, hueOf, keys, lightSteps, model, nodes, plural, repoName, repos, seen,
-    sheetEl, store, titleEl } = page;
+    sheetEl, store, ticksHtml, titleEl } = page;
 
   /* ── Traces: real requests, as they ran ───────────────────────────── */
 
@@ -58,8 +58,7 @@ export function createTraces(page) {
   const treeHtml = ({ entry, sample }) => {
     const { rows, total, cut } = traceRowsOf(sample);
     const width = Math.max(total, 0.01);
-    const ticks = timeTicks(width).map((n) =>
-      `<span class="w-tick" style="left:${(n / width) * 100}%">${n === 0 ? '0' : esc(promptMsSay(n))}</span>`).join('');
+    const ticks = ticksHtml(timeTicks(width), width, (n) => (n === 0 ? '0' : promptMsSay(n)));
     return `<h4 class="tr-head">${routeOf(entry)} <span class="hint">${esc(repoName(entry))}` +
       (sample.ms === undefined ? '' : ' &middot; ' + esc(promptMsSay(sample.ms))) +
       (sample.status === undefined ? '' : ' &middot; status ' + sample.status) + ' &middot; ' +

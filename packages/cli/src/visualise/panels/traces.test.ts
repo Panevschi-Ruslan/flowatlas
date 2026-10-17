@@ -28,6 +28,11 @@ describe('the traces', () => {
     expect(picks[1]!.classList.contains('is-failure')).toBe(true);
     const tree = document.querySelector('#tab-sheet .tr-tree')!;
     expect(textOf(tree.querySelector('.w-axis-say'))).toBe('one request, as it ran');
+    // The last tick, 300 of 310 ms, is written up to its place, so it stays on the axis (P145).
+    const ticks = tree.querySelectorAll('.w-tick');
+    expect(textOf(ticks[ticks.length - 1]!)).toBe('300 ms');
+    expect(ticks[ticks.length - 1]!.getAttribute('class')).toBe('w-tick is-end');
+    expect(ticks[0]!.getAttribute('class')).toBe('w-tick is-start');
     const rows = tree.querySelectorAll('.tr-row');
     expect(rows).toHaveLength(5);
     // The hop is most of the request: it starts 4 ms in and lasts 300 of 310.

@@ -1,5 +1,5 @@
 import { destinationName, isAwsSpan, readAwsSpan, type SpanAttributes } from '../aws.js';
-import { pathOf, type ObservedSpan } from '../span.js';
+import { pathOf, peerNameOf, type ObservedSpan } from '../span.js';
 import { statusOf } from './shared.js';
 
 /**
@@ -38,8 +38,8 @@ const rpcOf = (attrs: ReadonlyMap<string, string>): string | undefined => {
 
 /**
  * What a span's attributes say, as span fields: method, route, the shape of
- * its path, destination, symbol, collection, RPC, status and the cloud fields
- * (P107). `resource` holds what the span's resource says (a Lambda function's
+ * its path, destination, symbol, collection, RPC, status, the service
+ * `peer.service` names (P146, `peerNameOf`) and the cloud fields (P107). `resource` holds what the span's resource says (a Lambda function's
  * name), under the span's own words. `http.path` is Brave's (Zipkin) and is
  * read only where a format's key set lets it through.
  */
@@ -59,6 +59,7 @@ export const fieldsOfAttributes = (read: SpanAttributes, resource?: SpanAttribut
     collection: attrs.get('db.collection.name') ?? attrs.get('db.mongodb.collection') ?? attrs.get('db.sql.table'),
     rpc: rpcOf(attrs),
     status: statusOf(attrs.get('http.response.status_code') ?? attrs.get('http.status_code')),
+    peerName: peerNameOf(attrs.get('peer.service')),
     ...aws,
   };
 };

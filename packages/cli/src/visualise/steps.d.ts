@@ -197,6 +197,8 @@ export interface TraceRow {
 }
 export declare const traceRowsOf: (sample: Pick<PackedSample, 'tree' | 'ms' | 'cut'>) => { rows: TraceRow[]; total: number; cut: number };
 export declare const timeTicks: (total: number) => number[];
+export declare const END_TICK_SHARE: number;
+export declare const tickPlaces: (ticks: number[], total: number) => Array<{ n: number; at: number; align: 'start' | 'middle' | 'end' }>;
 export declare const observedPeriodSay: (period: { from: string | null; to?: string | null } | null | undefined) => string;
 export declare const stepBreakOf: (
   model: GraphModel,
