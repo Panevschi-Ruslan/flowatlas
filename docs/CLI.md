@@ -1207,14 +1207,23 @@ the tables, addresses and channels they reach, and the next service's way in.
   by status and exception, and so do the ways-in list and the details panel;
   the step that throws is marked. The details panel lists each status and
   exception once with how many places raise it, the places behind a
-  disclosure, and a status nothing on the path writes as `500?`. A scheduled way in shows its expression and the zone it fires in.
+  disclosure, and a status nothing on the path writes as `500?`. With an
+  observed file beside the graph (P106), each declared status says what
+  traffic answered: `404 seen ×3`, or `409 never seen` for a way in hit at
+  least 20 times in the window; and each status from 400 up that it answered
+  and no failure declares is a chip of its own, `500 ×4 not declared`, drawn
+  quieter where the framework answers it anyway (the router's 404, a 401 or
+  403 from a check in front of it, a 400 for a body it cannot read) with the
+  reason on hover. The details panel lists the same under the declared ones,
+  with the window they are over. A scheduled way in shows its expression and the zone it fires in.
   A step's log lines are folded under it, as templates.
 - **Moving around.** Hovering a row lights its node in the Graph tab's
   drawing, where a way in's steps also open above the drawing; a row opens its
   `file:line` and *show in graph*. The depth goes to
   4, 8, 12 or 24 steps.
 - **Copy as prompt** copies the way in as Markdown for an assistant: what is in
-  front of it, what it can fail with, its schedule, the steps `get_flow` walks
+  front of it, what it can fail with and, with an observed file, what it was
+  seen failing with (P106), its schedule, the steps `get_flow` walks
   with their ids, repo-relative `file:line` and marks, shapes in and out, log
   lines, open gaps with their reasons, and the graph server's calls to make
   next. No source code. The same button is on a channel and on a check row,
@@ -1256,57 +1265,138 @@ path: it opens on the machine that has the file, at that path.
 
 ### `flowatlas observe <file...>`
 
-Lays trace files you already have over the built graph and writes
+Lays trace files you already have over the built graph and adds them to
 `.flowatlas/observed.json` beside `graph.db`: which joins real traffic went
-through, how often each way in was hit, and what ran that the code does not
-show. Local only: it reads the files named and sends nothing anywhere.
+through, how often each way in was hit, how long each took and how it
+answered, and what ran that the code does not show. Local only: it reads the
+files named and sends nothing anywhere.
 
 ```
-$ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json
-22 spans read from 2 file(s)
+$ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json traces/billing.batches.observe.json
+70 spans read from 3 file(s)
 not read: 1 snapshot of protocol ws, 1 node without o, c and m, 1 job without a span tree
 3 joins seen, 6 entries hit, 6 seen at run time but not found in code, 1 that could be more than one place
+  db        billing  invoices  (2)
   client    billing  GET /orders/:value  (1)
   code      billing  LedgerClient.post  (1)
-  db        billing  invoices  (1)
   http      billing  GET /healthz  (1)
   http      gateway  GET /metrics  (1)
   messaging orders  order.audited  (1)
 could be more than one place, so counted on none:
   client    gateway  GET /orders/:value  (1)
     any of http_out:gateway#src/clients/orders.client.ts:33:12, http_out:gateway#src/clients/orders.client.ts:59:12
+slowest entries (p95):
+  gateway GET /orders/:param  count 2  p50 47.26ms  p95 520ms  max 520ms  errors 0%
+  orders GET /orders/:param  count 1  p50 496ms  p95 496ms  max 496ms  errors 0%
+  orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
+  billing event order.created  count 1  p50 12ms  p95 12ms  max 12ms  errors 0%
+  billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
+failing most:
+  orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
+  billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
+window 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
 .flowatlas/observed.json
 ```
 
-Two formats, picked by looking at each file. Either may be gzipped: a file
-that starts with gzip's magic bytes is unpacked first, so a body captured from
-the SDK's POST is read as it is.
+Six ways a file can be written, picked by looking at it, and any of them may
+be gzipped (a file that starts with gzip's magic bytes is unpacked first, so a
+body captured from a POST is read as it is):
 
 - **OTLP/JSON** (`resourceSpans` / `scopeSpans` / `spans`, one document or one
   per line). Read: `service.name`, span kind, `http.request.method` /
   `http.method`, `http.route`, the path of `url.full` / `http.url`,
-  `http.response.status_code`, `messaging.destination.name`, `code.namespace`
-  + `code.function` (or `code.function.name`), `db.collection.name`,
-  `rpc.service` / `rpc.method`, the start and end time, and whether the status
-  is an error.
+  `http.response.status_code` / `http.status_code`, `messaging.destination.name`,
+  `code.namespace` + `code.function` (or `code.function.name`),
+  `db.collection.name`, `rpc.service` / `rpc.method`, the start and end time
+  (to the nanosecond), and whether `status.code` is an error; and on AWS the
+  names listed under *On AWS Lambda* below (`faas.*`, `cloud.resource_id`,
+  `rpc.system`, `messaging.system`, `aws.*`), `aws.dynamodb.table_names` as a
+  list.
+- **OTLP protobuf**, an `ExportTraceServiceRequest` as the collector's file
+  exporter or an OTLP/HTTP body writes it. A `.pb`, `.binpb` or `.protobuf`
+  file is read as protobuf first; any other file is, when it is not JSON. The
+  same keys are read; every other attribute is skipped as bytes while the
+  request is walked, never decoded, and so are span names, events and the
+  status message. A request that is cut short says where:
+  `traces/x.pb is not an OTLP trace request (byte 1832)`.
 - **@nestjs/observe** telemetry batches, the JSON the SDK (0.3.x) posts to its
-  endpoint: `{ serviceId, snapshots, jobs, ... }`, or a bare array of request
+  endpoint: `{ serviceId, snapshots, jobs, ... }`, a saved series of posts
+  `{ batches: [ ... ] }` (read one after another), or a bare array of request
   snapshots exported by hand. Read: `serviceId` (else `--service`); per
-  snapshot `ti` trace id, `ct` time, `d` duration, `p` protocol, `op` the
-  route the router matched, `a.m` method, `a.sc` status and the path of
-  `a.ou`; and the span tree in `t`, whose nodes need `o`, `c` and `m`. A node
-  of class `http` is an outgoing request (`http.method` and the path of
-  `http.url`); one of class `mongodb`, `pg` or `mysql2` names its collection
-  as the second word of `m`; any other is the method `c.m`. Only `http` and
-  `https` snapshots are read as requests; a job is read for its span tree.
+  snapshot `ti` trace id, `ct` time, `d` duration, `e` (an error, read as
+  *it failed*), `p` protocol, `op` the route the router matched, `a.m` method,
+  `a.sc` status and the path of `a.ou`; and the span tree in `t`, whose nodes
+  need `o`, `c` and `m` and give `d` and `e` too. A node of class `http` is an
+  outgoing request (`http.method` and the path of `http.url`); one of class
+  `mongodb`, `pg` or `mysql2` names its collection as the second word of `m`;
+  any other is the method `c.m`. Only `http` and `https` snapshots are read as
+  requests; a job is read for its span tree.
+- **Zipkin v2 JSON** (P112), what the Zipkin UI's *JSON* button and its
+  `/api/v2/traces` give: a list of spans, or a list of traces. Read: `traceId`,
+  `id`, `parentId`, `kind` (none is internal), `timestamp` and `duration`
+  (microseconds), `localEndpoint.serviceName` (else `--service`), and of the
+  `tags` the same keys as OTLP's (an OTel SDK's Zipkin exporter writes them)
+  plus Brave's `http.path`; an `error` tag, or `otel.status_code: ERROR`, is
+  *it failed*, its text never read. Never read: `name`, `annotations`,
+  `remoteEndpoint`, the rest of `localEndpoint`, `debug`, `shared`, `sql.query`
+  and every other tag.
+- **Jaeger JSON** (P112), what the Jaeger UI's *Download JSON* and its query
+  API give: `{ data: [{ traceID, spans, processes }] }`, or one trace on its
+  own. Read: `traceID`, `spanID`, the parent from the first `CHILD_OF`
+  reference (else the first `FOLLOWS_FROM`), `startTime` and `duration`
+  (microseconds), the process's `serviceName`, and of the `tags`
+  (`{ key, type, value }`, `bool` and `int64` too) `span.kind` and the same
+  keys as OTLP's; `error: true` or `otel.status_code: ERROR` is *it failed*.
+  Never read: `operationName`, `logs`, `warnings`, a process's `tags` (host
+  name, IP, client version) and every other tag. An export of the same
+  traffic as an OTLP file gives the same observed file.
+- **A browser's HAR** (P112): the Network tab's *Save all as HAR*, the record
+  of exactly the calls a front end makes into its API. Each call a script made
+  (`_resourceType` `xhr` or `fetch`; where the browser does not write it, a
+  JSON answer, or no answer type for a method other than `GET`) is a client
+  span of the front end: method, the path's shape, `response.status` (`0`, a
+  call the browser blocked or cancelled, is *it failed* with no status),
+  `time` and `startedDateTime`. Scripts, styles, images, fonts and pages are
+  skipped and counted. The front end is `--service`, else the one service the
+  map has browser calls for; with several, the file is refused with that hint.
+  The URL's origin is compared with where the front end's base URLs point -
+  the values its own files give `apiBaseEnv` keys, through `apiTarget`, and
+  the hosts each service is reached at (its name, `services[].hosts`, what
+  the project's files say) - and dropped: a match narrows the call to the
+  call site with a join into that service's route, and that join is counted
+  from the call alone (a HAR has no trace context, so it is never joined to a
+  back end's spans). A call to this machine or to the front end's own origin
+  is matched by path among the front end's calls. A call to an origin nothing
+  names is a third party, listed as `external` by its host only, never its
+  path; when every call is one, the summary says no base URL matched and to
+  name the API's host under `services[].hosts`.
 
-Each reader works from an allow-list of fields (`allow-list.ts`); everything
-else is dropped on read: headers, bodies, user ids, query strings, hosts,
-statements, tags, error messages (an error is at most *it failed*), log lines,
-and a batch's version, objectives, runtime and custom data. A path segment
-holding a value (any digit, or a long token) becomes `:value`, which only a
-route parameter matches. What a reader saw and did not read is counted in the
-summary, never dropped unsaid:
+  **A HAR holds your cookies, tokens and the body of every request.**
+  flowatlas copies none of it: each entry is read for those fields by key and
+  nothing else of it is ever held - never `request.headers`, `cookies`,
+  `queryString`, `postData`, `response.headers`, `cookies`, `content` (only its
+  `mimeType`, to tell a call from a file), `redirectURL`, `serverIPAddress`,
+  `connection`, `timings`, `pages`, `creator`, `browser`, `comment`, or any
+  key starting `_` but `_resourceType`; the query and fragment are cut before
+  a span exists, and an error names the entry and the field, never quotes the
+  file. Nothing of the file is cached or written. Delete the HAR after the
+  run.
+
+**What is kept, and nothing else.** Every reader copies only what is on one
+allow-list, while it walks a span's attributes, before a span exists: service
+name, span kind, HTTP method, route template, the path with every value-like
+segment (any digit, or a long token) masked as `:value`, messaging
+destination, `Class.method`, table or collection, rpc service and method,
+HTTP status, duration, the error flag, start time, trace, span and parent
+ids, and on AWS the function, trigger, workflow, step, tables, the function
+invoked, the SDK operation and the service a destination is spelled for, each
+a deployed name; of a browser's call, the service its origin names, or a
+third party's host. Never read: headers, cookies, query strings, bodies, statements and
+queries, `enduser.*`, span names, events and exception text, status messages,
+hosts, and @nestjs/observe's `u`, `rq`, `tg` and `logs`. The file says so in a
+`privacy` block: the kept list, the dropped categories as fixed text, and how
+many attribute keys were seen and not read — a count, never a name. What a
+reader saw and did not read as a whole is counted in the summary too:
 `not read: 1 snapshot of protocol ws, 1 node without o, c and m`.
 
 A server span is matched to an entry by method and route template (the most
@@ -1317,6 +1407,32 @@ server span whose parent is in another service to the join from that service
 into the entry. What matches nothing is listed as seen at run time, not found
 in code.
 
+**On AWS Lambda (P107).** A span an OpenTelemetry-instrumented function, or
+the AWS Distro's Lambda layer, writes lands on the node the Terraform and the
+state machine readers draw for it:
+
+| The span says | It is matched to |
+|---|---|
+| `faas.name`, else the function's ARN in `cloud.resource_id` (an alias or a version after it cut), else `aws.lambda.invoked_arn` | the `invoke` entry of that deployed name; with `http.route` too, the route as well |
+| `aws.step_functions.state_machine.arn` or a state machine's ARN in `cloud.resource_id`, on the run's span | the `workflow` entry |
+| `aws.step_functions.state.name` | the step, only when that workflow has a step of that name; and the join from the step into the function its task invokes, when that function's span is under it |
+| `rpc.system=aws-api`, `rpc.service=DynamoDB`, `aws.dynamodb.table_names` (a list) | each `table`, the step's query of it, and for a write the `emits` join onto `dynamodb/<table>` when its stream is read |
+| `SQS`, `SNS`, `Kinesis`, `S3` sends: `aws.sqs.queue.url`, `aws.sns.topic.arn`, `aws.kinesis.stream_name`, `aws.s3.bucket`, `messaging.destination.name` | the channel as the readers spell it (`order-placed` on an SQS span is `sqs/order-placed`) and the `emits` join from the caller |
+| `EventBridge` `PutEvents` (`aws.eventbridge.bus_name`, else `default`) | the bus's one channel, or the one the caller's code puts events on; with several, none, and an ambiguity row |
+| `Lambda` `Invoke` (`faas.invoked_name`), `SFN` `StartExecution` | the join from the call site into the `invoke` or `workflow` entry |
+| a consumer span with `messaging.system=aws_sqs`, or `faas.trigger` `pubsub` / `datasource` with no message span | the channel, the `consumes` join onto the mapping, and the join from it into the function |
+
+Which join a call ran is settled by where it ran: the function's code read
+down from its handler, or the step it is part of, so a write onto a table
+from the function and one from a workflow step are told apart. A function,
+workflow, step or table the map does not have is listed as `function`,
+`workflow`, `state` (named `<workflow>/?`, never by a step name the map
+lacks) or `table`; an SDK call of a service nothing here reads as `cloud`, by
+`<service>/<method>` only. Every ARN and URL is cut to the name inside it with
+the forms the deployment readers use, before a span exists, so no account id
+or region reaches the file; no request parameter (a key, an item, a message
+body, a workflow's input) is ever read. See `fixtures/lambda-traces`.
+
 **A span counts once.** It is credited to a join, an entry, a method or a
 table only when exactly one fits. When several do — two routes tied for its
 path, two calls from the caller's service into the entry, two outbound calls
@@ -1326,23 +1442,76 @@ credited and the span is listed under `ambiguous` with the places it could be
 *could be more than one place, so counted on none*. When the far side of a
 call was read, the join it confirms settles which call it was.
 
+**Timings, statuses, errors.** Each place a span was credited to keeps a
+count, a histogram of durations (log buckets about 9% wide, so a p95 is within
+that of the true one), the exact max, every status seen and how many failed.
+A failure is the error flag or a 5xx; a 4xx is in the status mix only, since
+a 404 is often the right answer. An entry or a method is timed on the span
+that matched it; a join on the caller's span when one was read (it holds the
+network and the far side's queue, which is what *this step is slow* means),
+the callee's otherwise, and `measuredAt` says which. A span with no end time,
+or one before its start, is counted without a duration; a status that is not a
+number is left out. The summary names the five entries with the highest p95,
+the five failing most, and the window.
+
+**Runs add up.** Each run loads the file, adds what it read hour by hour of
+span start time, and writes it back, so two runs over two files give the same
+file as one run over both. A file is known by the hash of its contents, never
+by its path: reading the same export again (gzipped or not) is skipped and
+said. The file keeps, per entry, the three slowest and the three latest
+failing requests as trees of what each span was credited to — the only place
+a trace id is written, with no span or parent id — for the graph server's
+`trace_for`. A format-1 or format-2 file is carried forward: its counts become
+one hour at its latest time, with no timings, and the summary says it was
+upgraded.
+
 `visualise` ships the file into the page when it is there; the page shows
 *seen at run time, could be more than one place* with each candidate beside
-the unmatched list. The graph server's `get_flow` and `who_calls` show
-`observed: n` on the rows it counted and `seenAmbiguous: n` on a row that a
-request could have been. Nothing is drawn from a trace: an edge it did not
-confirm keeps the confidence it was read with.
+the unmatched list, and carries `p50`, `p95`, `max`, errors, statuses and the
+window for the page to draw (not drawn yet). The graph server's `get_flow` and
+`who_calls` show `observed: n` with `p95` and `errorRate` beside it on the rows
+it counted, and `seenAmbiguous: n` on a row that a request could have been;
+`hot_paths`, `slow_steps`, `trace_for` and `undeclared_failures` answer from
+it (see the [MCP guide](mcp.md)). The statuses each way in answered are set
+beside the failures its code declares (P106): on the page's failure chips, in
+`get_flow`, `describe_for_prompt` and *Copy as prompt*, and as `doctor` rows
+(see [`flowatlas doctor`](#flowatlas-doctor)). Nothing is drawn from a trace: an edge it did not
+confirm keeps the confidence it was read with, and the graph and its hash
+never depend on traffic.
 
-The file is `observedFormatVersion: 2` (version 1 spread a span over every
-candidate and had no `ambiguous`; the page and the graph server still read
-it). A file that cannot be read makes `visualise` say so and show nothing seen
-at run time.
+The file is `observedFormatVersion: 3`:
+
+```
+{
+  observedFormatVersion: 3, spans,
+  privacy:   { kept, dropped, droppedAttributes, samples: { kept, perEntry: 3, spansPerSample: 200 } },
+  window:    { since?, from, to },
+  sources:   [{ sha256, format, spans, readAt }],
+  joins:     { [joinId]:    { count, lastSeen, firstSeen, p50?, p95?, max?, statuses?, errors, errorRate, measuredAt } },
+  entries:   { [entryId]:   { hits, lastSeen, firstSeen, ...the same figures } },
+  symbols, channels: { [nodeId]: { hits, ... } },
+  unmatched: [{ service?, kind, name, count, ... }],
+  ambiguous: [{ service?, kind, name, candidates, more?, count }],
+  samples:   { [entryId]: { slow: [sample], failing: [sample] } },
+  buckets:   [{ hour, spans, joins, entries, symbols, channels, unmatched, ambiguous }]
+}
+```
+
+The top level is the window rolled up, under the names version 1 used, so a
+reader of version 1 or 2 finds its fields meaning the same thing; `buckets`
+hold the hours it is made of. Times are milliseconds. The page and the graph
+server read versions 1, 2 and 3; a file that cannot be read makes `visualise`
+say so and show nothing seen at run time, and makes `observe` refuse to write
+over it unless told `--reset`.
 
 | Flag | Meaning |
 |---|---|
 | `--config <path>` / `--db <path>` | which graph to match against |
-| `--service <name>` | service of spans the file does not name one for |
-| `--format json` | print `observed.json` instead of the summary |
+| `--service <name>` | service of spans the file does not name one for; for a HAR, the front end it was saved from |
+| `--since <dur>` | keep only the hours inside this window of now (`2h`, `24h`, `7d`, `2w`; whole hours, `30m` is refused) and its samples; kept in the file, so later runs keep cutting the same way. `--since all` stops cutting |
+| `--reset` | start the file again instead of adding to it |
+| `--no-samples` | keep no sample requests and remove the ones the file holds: then it holds no trace id at all |
+| `--format json` | print `observed.json` (format 3) instead of the summary |
 
 ---
 
@@ -1361,6 +1530,7 @@ installed, and what a service with no way in looks like.
 | `--section <name>` | all five | `unresolved`, `markers`, `desync`, `contracts`, `baseline`; repeatable |
 | `--service <name>` | every one | narrow every section to one repository |
 | `--strict` | off | exit 1 on a broken annotation, a contract error, or growth past the baseline |
+| `--strict-runtime` | off | exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered (with an observed file) |
 | `--accept` | off | write today's numbers as the baseline |
 | `--baseline <path>` | `<config dir>/flowatlas.baseline.json` | where the accepted numbers live |
 | `--no-baseline` | off | skip the growth check, so `--strict` asks only about annotations and contracts |
@@ -1481,9 +1651,25 @@ line of `flowatlas.config.json` that names the service. A service declared by a
 document is never named: none of its code was read, and a document that declares
 no way in describes a service nothing here enters.
 
+**Failures seen at run time (P106).** With an observed file beside the
+database (`flowatlas observe`), doctor sets the statuses each way in answered
+beside the failures its code declares, and adds two kinds of row, both at
+`info`: `failure-seen-undeclared` (a finding), one per way in and status from
+400 up that no failure declares, at the handler, saying how many of its
+requests answered it over which window, with `expected: <why>` where the
+framework answers it anyway; and `failure-declared-unseen` (a note), one per
+declared failure no request answered in the window, at the throw, said only of
+a way in hit at least 20 times. They are asked at doctor time and never stored
+in the graph; being `info`, they move neither the exit code nor the baseline.
+Traffic differs per environment and per week, and a build should not fail
+because nobody hit a 409 on Sunday; `--strict-runtime` is there for a team that
+wants it, and exits 1 on any of these rows but an expected status. `flowatlas
+accept` takes one like any other row.
+
 The exit code is decided by the first of these that applies: a graph that cannot
 be reported on, a baseline that cannot be read, or `--strict` with no baseline
-(2); `--strict` and a check that found something (1); otherwise 0.
+(2); `--strict` and a check that found something, or `--strict-runtime` and a
+failure row from traffic (1); otherwise 0.
 
 Every unresolved row is read at one of three levels, and only the first two say
 the graph is missing something:

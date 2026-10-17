@@ -32,6 +32,7 @@ import {
   runDoctorCommand,
   runFlow,
   runImpact,
+  runObserve,
   runShapesSuggest,
   runStats,
   runTypes,
@@ -107,6 +108,60 @@ const docsWritten = (io) => {
   }
 };
 
+/**
+ * `observe` over the fixture's three trace files (P105), on a copy of the
+ * fixture's output so no other snapshot reads the file it writes: the summary,
+ * the file itself (`--format json`), and a second run over a file already read.
+ * The clock is fixed, so the window and `readAt` are the same every run.
+ * `observe.json` is also the observed file the MCP snapshots and tests answer from.
+ */
+const OBSERVE_NOW = new Date('2025-10-16T09:00:00.000Z');
+const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json'].map((file) =>
+  join(fixture, 'traces', file),
+);
+/**
+ * The same traffic exported by Zipkin and by Jaeger (P112) in place of the
+ * OTLP file: each summary is `observe.txt` again, which is the point. And the
+ * fixture's front end saved as a HAR, read with the configuration so its
+ * calls' origins name the services they reached.
+ */
+const tracesWith = (file) => TRACES.map((path, index) => (index === 0 ? join(fixture, 'traces', file) : path));
+const HAR = [join(fixture, 'traces', 'web.har')];
+const observeOnCopy = (io, runs, from = fixture) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-observe-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(from, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    for (const [files, options] of runs) {
+      runObserve(files, { db, now: OBSERVE_NOW, print: (line) => io.out(said(`${line}\n`)), ...options });
+    }
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
+/**
+ * `doctor` beside the observed file (P106): the rows about failures traffic
+ * answered and the code does not declare, and declared ones nobody answered,
+ * for billing, under `--strict-runtime` so the verdict says them too.
+ */
+const doctorObservedOnCopy = (io) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-doctor-observed-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    runObserve(TRACES, { db, now: OBSERVE_NOW, print: () => {} });
+    runDoctorCommand(
+      { config, db, out: copy, section: ['unresolved'], service: 'billing', strictRuntime: true },
+      { ...io, out: (text) => io.out(said(text)) },
+    );
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
   ['docs.architecture.md', docsWritten],
@@ -114,6 +169,13 @@ const CASES = [
   ['docs.check.json', docsAsked({ check: true, format: 'json' })],
   ['docs.check.github.txt', docsAsked({ check: true, format: 'github' })],
   ['docs.list.txt', docsAsked({ list: true })],
+  ['doctor.observed.txt', doctorObservedOnCopy],
+  ['observe.txt', (io) => observeOnCopy(io, [[TRACES, {}]])],
+  ['observe.json', (io) => observeOnCopy(io, [[TRACES, { format: 'json' }]])],
+  ['observe.again.txt', (io) => observeOnCopy(io, [[TRACES.slice(0, 1), { print: () => {} }], [TRACES, {}]])],
+  ['observe.zipkin.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.zipkin.json'), {}]])],
+  ['observe.jaeger.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.jaeger.json'), {}]])],
+  ['observe.har.txt', (io) => observeOnCopy(io, [[HAR, { config }]])],
   ['accept.unreadable.txt', acceptUnreadable],
   ['flow.get-orders.tree.l0.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '0' }, io)],
   ['flow.get-orders.tree.l1.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree' }, io)],
@@ -293,6 +355,19 @@ const DEPLOYED_WORKFLOW_CASES = [
     (io) => runImpact('lending#src/handlers/notify-borrower.ts:handler', { ...deployedWorkflowsPlain, format: 'tree', entriesOnly: true }, io),
   ],
   ['doctor.txt', (io) => runDoctorCommand({ config: deployedWorkflowsPlain.config }, io)],
+];
+
+/**
+ * `observe` over a Lambda project's trace (P107): one checkout through an
+ * HTTP API, a queue, a table's stream and a workflow, as an OpenTelemetry
+ * Lambda layer writes it, laid over the map its Terraform and state machine
+ * draw. The summary and the file, with the clock fixed.
+ */
+const lambdaTracesFixture = join(root, 'fixtures', 'lambda-traces');
+const LAMBDA_TRACES = [join(lambdaTracesFixture, 'traces', 'adot.otlp.json')];
+const LAMBDA_TRACE_CASES = [
+  ['observe.txt', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { reset: true }]], lambdaTracesFixture)],
+  ['observe.json', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { format: 'json', reset: true }]], lambdaTracesFixture)],
 ];
 
 const multiRepoWorkflowsFixture = join(root, 'fixtures', 'multi-repo-stepfunctions');
@@ -664,6 +739,7 @@ const SUITES = [
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },
+  { dir: join(lambdaTracesFixture, 'expected.cli'), owned: true, cases: LAMBDA_TRACE_CASES },
   { dir: join(root, 'fixtures', 'eventbridge-terraform', 'expected.cli'), owned: true, cases: EVENT_CASES },
   { dir: join(root, 'fixtures', 'sqs-sns-terraform', 'expected.cli'), owned: true, cases: QUEUE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-events', 'expected.cli'), owned: true, cases: MULTI_EVENT_CASES },

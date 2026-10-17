@@ -1,0 +1,43 @@
+{
+  "entry": "entry:billing:http:POST:/invoices",
+  "slow": {
+    "id": "entry:billing:http:POST:/invoices",
+    "label": "POST /invoices",
+    "service": "billing",
+    "kind": "server",
+    "ms": 11.65,
+    "status": 201,
+    "children": [
+      {
+        "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+        "label": "InvoicesController.create",
+        "kind": "internal",
+        "ms": 11.15
+      }
+    ]
+  },
+  "failing": {
+    "id": "entry:billing:http:POST:/invoices",
+    "label": "POST /invoices",
+    "service": "billing",
+    "kind": "server",
+    "ms": 41.5,
+    "status": 500,
+    "error": true,
+    "children": [
+      {
+        "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+        "label": "InvoicesController.create",
+        "kind": "internal",
+        "ms": 41
+      }
+    ]
+  },
+  "note": "the failing request is also the slowest sampled",
+  "truncated": "2 spans not shown; ask with a larger maxNodes",
+  "next": [
+    "get_flow({entry: \"entry:billing:http:POST:/invoices\"})",
+    "get_source({symbol: \"billing#src/invoices/invoices.controller.ts:InvoicesController.create\"})",
+    "slow_steps({entry: \"entry:billing:http:POST:/invoices\", minCount: 1})"
+  ]
+}

@@ -135,6 +135,9 @@ const GATED = {
       'marker-reason-missing',
       'route-shadowed',
       'fails-filter-unread',
+      // What traffic answered beside what a route declares (P106), asked at doctor time.
+      'failure-seen-undeclared',
+      'failure-declared-unseen',
       'server-action-unread',
       // The application or module the routes hang from.
       'application-root-unread',

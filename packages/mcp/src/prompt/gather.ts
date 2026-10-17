@@ -1,5 +1,6 @@
 import {
   accessOf,
+  comparisonSays,
   failuresOf,
   joinIdOf,
   kindOfRow,
@@ -18,7 +19,9 @@ import {
   type GraphNode,
   type PromptAccess,
   type PromptCheckPlace,
+  type FailureComparison,
   type PromptFailure,
+  type PromptFailuresSeen,
   type PromptGap,
   type PromptLog,
   type PromptMarks,
@@ -38,7 +41,7 @@ import {
 } from '@flowatlas/linker';
 import { projectDetail } from '../query/detail.js';
 import { buildFlowTree, REVERSE_EDGES } from '../query/flow.js';
-import type { ObservedCounts } from '../query/observed.js';
+import { failuresSeen, type ObservedCounts } from '../query/observed.js';
 import type { CompactNode, FlowNode } from '../query/types.js';
 
 /**
@@ -255,6 +258,9 @@ const reachedFromOf = (db: GraphDb, node: GraphNode): PromptStep[] | undefined =
         .slice(0, PROMPT_WALK.reachedFrom)
         .map((found) => placeStep(projectDetail(found, 1), 1));
 
+/** A comparison as the prompt subject holds it: without the entry id the subject already is (P106). */
+export const promptFailuresSeen = ({ entry: _entry, ...rest }: FailureComparison): PromptFailuresSeen => rest;
+
 /**
  * Everything the Markdown says about one node, read from the graph.
  *
@@ -298,6 +304,7 @@ export const gatherPromptSubject = (
   const access = accessFor(node);
   const schedule = node.type === 'entry' ? scheduleFor(node) : undefined;
   const hits = node.type === 'entry' ? (counts?.entries[node.id]?.hits ?? 0) : 0;
+  const compared = counts === undefined ? undefined : failuresSeen(counts, node);
   return {
     id: compact.id,
     label: compact.label,
@@ -309,6 +316,7 @@ export const gatherPromptSubject = (
     ...(hits > 0 ? { hits } : {}),
     ...(access === undefined ? {} : { access }),
     ...(fails.length === 0 ? {} : { fails }),
+    ...(comparisonSays(compared) ? { failuresSeen: promptFailuresSeen(compared) } : {}),
     steps,
     stepsCut: flow.left ?? 0,
     ...(flow.stoppedBy === undefined ? {} : { stepsCutBy: flow.stoppedBy[0] }),

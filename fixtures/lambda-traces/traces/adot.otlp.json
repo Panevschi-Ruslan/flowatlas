@@ -1,0 +1,1081 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "checkout"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "aws"
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "aws_lambda"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eu-west-1"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "111122223333"
+            }
+          },
+          {
+            "key": "faas.version",
+            "value": {
+              "stringValue": "$LATEST"
+            }
+          },
+          {
+            "key": "cloud.resource_id",
+            "value": {
+              "stringValue": "arn:aws:lambda:eu-west-1:111122223333:function:checkout:live"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "@opentelemetry/instrumentation-aws-lambda"
+          },
+          "spans": [
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "c100000000000001",
+              "name": "arn:aws:lambda:eu-west-1:111122223333:function:checkout:live",
+              "kind": 2,
+              "startTimeUnixNano": "1760603400000000000",
+              "endTimeUnixNano": "1760603400180000000",
+              "attributes": [
+                {
+                  "key": "faas.trigger",
+                  "value": {
+                    "stringValue": "http"
+                  }
+                },
+                {
+                  "key": "faas.execution",
+                  "value": {
+                    "stringValue": "exec-planted-0001"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout"
+                  }
+                },
+                {
+                  "key": "http.target",
+                  "value": {
+                    "stringValue": "/checkout?promo=planted-promo"
+                  }
+                },
+                {
+                  "key": "http.status_code",
+                  "value": {
+                    "intValue": "201"
+                  }
+                },
+                {
+                  "key": "aws.lambda.invoked_arn",
+                  "value": {
+                    "stringValue": "arn:aws:lambda:eu-west-1:111122223333:function:checkout:live"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "c100000000000002",
+              "parentSpanId": "c100000000000001",
+              "name": "DynamoDB.PutItem",
+              "kind": 3,
+              "startTimeUnixNano": "1760603400005000000",
+              "endTimeUnixNano": "1760603400025000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "DynamoDB"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "PutItem"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "aws.dynamodb.table_names",
+                  "value": {
+                    "arrayValue": {
+                      "values": [
+                        {
+                          "stringValue": "orders"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "key": "db.system",
+                  "value": {
+                    "stringValue": "dynamodb"
+                  }
+                },
+                {
+                  "key": "db.statement",
+                  "value": {
+                    "stringValue": "{\"Item\":\"planted-item\"}"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "c100000000000003",
+              "parentSpanId": "c100000000000001",
+              "name": "order-placed send",
+              "kind": 4,
+              "startTimeUnixNano": "1760603400030000000",
+              "endTimeUnixNano": "1760603400042000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "SQS"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "SendMessage"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "messaging.system",
+                  "value": {
+                    "stringValue": "aws_sqs"
+                  }
+                },
+                {
+                  "key": "messaging.destination.name",
+                  "value": {
+                    "stringValue": "order-placed"
+                  }
+                },
+                {
+                  "key": "aws.sqs.queue.url",
+                  "value": {
+                    "stringValue": "https://sqs.eu-west-1.amazonaws.com/111122223333/order-placed"
+                  }
+                },
+                {
+                  "key": "messaging.message.id",
+                  "value": {
+                    "stringValue": "msg-planted-0001"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "c100000000000004",
+              "parentSpanId": "c100000000000001",
+              "name": "SFN.StartExecution",
+              "kind": 3,
+              "startTimeUnixNano": "1760603400045000000",
+              "endTimeUnixNano": "1760603400070000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "SFN"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "StartExecution"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "aws.step_functions.state_machine.arn",
+                  "value": {
+                    "stringValue": "arn:aws:states:eu-west-1:111122223333:stateMachine:fulfil-order"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "c100000000000005",
+              "parentSpanId": "c100000000000001",
+              "name": "DynamoDB.GetItem",
+              "kind": 3,
+              "startTimeUnixNano": "1760603400072000000",
+              "endTimeUnixNano": "1760603400080000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "DynamoDB"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "GetItem"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "aws.dynamodb.table_names",
+                  "value": {
+                    "arrayValue": {
+                      "values": [
+                        {
+                          "stringValue": "carts"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "c100000000000006",
+              "parentSpanId": "c100000000000001",
+              "name": "SecretsManager.GetSecretValue",
+              "kind": 3,
+              "startTimeUnixNano": "1760603400082000000",
+              "endTimeUnixNano": "1760603400095000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "SecretsManager"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "GetSecretValue"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "aws.secretsmanager.secret.arn",
+                  "value": {
+                    "stringValue": "arn:aws:secretsmanager:eu-west-1:111122223333:secret:planted-secret"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "fulfil-order"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eu-west-1"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "111122223333"
+            }
+          },
+          {
+            "key": "cloud.resource_id",
+            "value": {
+              "stringValue": "arn:aws:states:eu-west-1:111122223333:stateMachine:fulfil-order"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "@opentelemetry/instrumentation-aws-lambda"
+          },
+          "spans": [
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "f100000000000001",
+              "parentSpanId": "c100000000000004",
+              "name": "fulfil-order",
+              "kind": 2,
+              "startTimeUnixNano": "1760603400075000000",
+              "endTimeUnixNano": "1760603400900000000",
+              "attributes": [
+                {
+                  "key": "aws.step_functions.execution.arn",
+                  "value": {
+                    "stringValue": "arn:aws:states:eu-west-1:111122223333:execution:fulfil-order:planted-run"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "f100000000000002",
+              "parentSpanId": "f100000000000001",
+              "name": "ReserveStock",
+              "kind": 1,
+              "startTimeUnixNano": "1760603400080000000",
+              "endTimeUnixNano": "1760603400300000000",
+              "attributes": [
+                {
+                  "key": "aws.step_functions.state.name",
+                  "value": {
+                    "stringValue": "ReserveStock"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "f100000000000003",
+              "parentSpanId": "f100000000000001",
+              "name": "ChargeCard",
+              "kind": 1,
+              "startTimeUnixNano": "1760603400310000000",
+              "endTimeUnixNano": "1760603400600000000",
+              "attributes": [
+                {
+                  "key": "aws.step_functions.state.name",
+                  "value": {
+                    "stringValue": "ChargeCard"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "f100000000000004",
+              "parentSpanId": "f100000000000001",
+              "name": "MarkPaid",
+              "kind": 1,
+              "startTimeUnixNano": "1760603400610000000",
+              "endTimeUnixNano": "1760603400700000000",
+              "attributes": [
+                {
+                  "key": "aws.step_functions.state.name",
+                  "value": {
+                    "stringValue": "MarkPaid"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "f100000000000005",
+              "parentSpanId": "f100000000000004",
+              "name": "DynamoDB",
+              "kind": 3,
+              "startTimeUnixNano": "1760603400615000000",
+              "endTimeUnixNano": "1760603400690000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "DynamoDB"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "UpdateItem"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "aws.dynamodb.table_names",
+                  "value": {
+                    "arrayValue": {
+                      "values": [
+                        {
+                          "stringValue": "arn:aws:dynamodb:eu-west-1:111122223333:table/orders"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "f100000000000006",
+              "parentSpanId": "f100000000000001",
+              "name": "SendReceipt",
+              "kind": 1,
+              "startTimeUnixNano": "1760603400710000000",
+              "endTimeUnixNano": "1760603400890000000",
+              "attributes": [
+                {
+                  "key": "aws.step_functions.state.name",
+                  "value": {
+                    "stringValue": "SendReceipt"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "f100000000000007",
+              "parentSpanId": "f100000000000006",
+              "name": "SNS",
+              "kind": 4,
+              "startTimeUnixNano": "1760603400715000000",
+              "endTimeUnixNano": "1760603400880000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "SNS"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "Publish"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "aws.sns.topic.arn",
+                  "value": {
+                    "stringValue": "arn:aws:sns:eu-west-1:111122223333:receipts"
+                  }
+                },
+                {
+                  "key": "messaging.system",
+                  "value": {
+                    "stringValue": "aws_sns"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "reserve-stock"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "aws"
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "aws_lambda"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eu-west-1"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "111122223333"
+            }
+          },
+          {
+            "key": "faas.version",
+            "value": {
+              "stringValue": "$LATEST"
+            }
+          },
+          {
+            "key": "faas.name",
+            "value": {
+              "stringValue": "reserve-stock"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "@opentelemetry/instrumentation-aws-lambda"
+          },
+          "spans": [
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "a100000000000001",
+              "parentSpanId": "f100000000000002",
+              "name": "reserve-stock",
+              "kind": 2,
+              "startTimeUnixNano": "1760603400090000000",
+              "endTimeUnixNano": "1760603400290000000",
+              "attributes": [
+                {
+                  "key": "faas.trigger",
+                  "value": {
+                    "stringValue": "other"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "charge-card"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "aws"
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "aws_lambda"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eu-west-1"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "111122223333"
+            }
+          },
+          {
+            "key": "faas.version",
+            "value": {
+              "stringValue": "$LATEST"
+            }
+          },
+          {
+            "key": "faas.name",
+            "value": {
+              "stringValue": "charge-card"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "@opentelemetry/instrumentation-aws-lambda"
+          },
+          "spans": [
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "b100000000000001",
+              "parentSpanId": "f100000000000003",
+              "name": "charge-card",
+              "kind": 2,
+              "startTimeUnixNano": "1760603400320000000",
+              "endTimeUnixNano": "1760603400590000000",
+              "attributes": [
+                {
+                  "key": "faas.trigger",
+                  "value": {
+                    "stringValue": "other"
+                  }
+                }
+              ],
+              "status": {
+                "code": 2,
+                "message": "card declined for planted-customer"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "ship-order"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "aws"
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "aws_lambda"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eu-west-1"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "111122223333"
+            }
+          },
+          {
+            "key": "faas.version",
+            "value": {
+              "stringValue": "$LATEST"
+            }
+          },
+          {
+            "key": "faas.name",
+            "value": {
+              "stringValue": "ship-order"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "@opentelemetry/instrumentation-aws-lambda"
+          },
+          "spans": [
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "d100000000000001",
+              "parentSpanId": "c100000000000003",
+              "name": "ship-order",
+              "kind": 2,
+              "startTimeUnixNano": "1760603401000000000",
+              "endTimeUnixNano": "1760603401400000000",
+              "attributes": [
+                {
+                  "key": "faas.trigger",
+                  "value": {
+                    "stringValue": "pubsub"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "d100000000000002",
+              "parentSpanId": "d100000000000001",
+              "name": "order-placed process",
+              "kind": 5,
+              "startTimeUnixNano": "1760603401002000000",
+              "endTimeUnixNano": "1760603401390000000",
+              "attributes": [
+                {
+                  "key": "messaging.system",
+                  "value": {
+                    "stringValue": "aws_sqs"
+                  }
+                },
+                {
+                  "key": "messaging.destination.name",
+                  "value": {
+                    "stringValue": "order-placed"
+                  }
+                },
+                {
+                  "key": "messaging.operation",
+                  "value": {
+                    "stringValue": "process"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "d100000000000003",
+              "parentSpanId": "d100000000000002",
+              "name": "DynamoDB.GetItem",
+              "kind": 3,
+              "startTimeUnixNano": "1760603401010000000",
+              "endTimeUnixNano": "1760603401030000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "DynamoDB"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "GetItem"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "aws.dynamodb.table_names",
+                  "value": {
+                    "arrayValue": {
+                      "values": [
+                        {
+                          "stringValue": "orders"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "d100000000000004",
+              "parentSpanId": "d100000000000002",
+              "name": "Lambda.Invoke",
+              "kind": 3,
+              "startTimeUnixNano": "1760603401040000000",
+              "endTimeUnixNano": "1760603401380000000",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "aws-api"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "Lambda"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "Invoke"
+                  }
+                },
+                {
+                  "key": "aws.request_id",
+                  "value": {
+                    "stringValue": "REQ-PLANTED-1"
+                  }
+                },
+                {
+                  "key": "faas.invoked_name",
+                  "value": {
+                    "stringValue": "print-label"
+                  }
+                },
+                {
+                  "key": "faas.invoked_provider",
+                  "value": {
+                    "stringValue": "aws"
+                  }
+                },
+                {
+                  "key": "faas.invoked_region",
+                  "value": {
+                    "stringValue": "eu-west-1"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "print-label"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "aws"
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "aws_lambda"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eu-west-1"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "111122223333"
+            }
+          },
+          {
+            "key": "faas.version",
+            "value": {
+              "stringValue": "$LATEST"
+            }
+          },
+          {
+            "key": "faas.name",
+            "value": {
+              "stringValue": "print-label"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "@opentelemetry/instrumentation-aws-lambda"
+          },
+          "spans": [
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "e100000000000001",
+              "parentSpanId": "d100000000000004",
+              "name": "print-label",
+              "kind": 2,
+              "startTimeUnixNano": "1760603401050000000",
+              "endTimeUnixNano": "1760603401370000000",
+              "attributes": [
+                {
+                  "key": "faas.trigger",
+                  "value": {
+                    "stringValue": "other"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "index-orders"
+            }
+          },
+          {
+            "key": "cloud.provider",
+            "value": {
+              "stringValue": "aws"
+            }
+          },
+          {
+            "key": "cloud.platform",
+            "value": {
+              "stringValue": "aws_lambda"
+            }
+          },
+          {
+            "key": "cloud.region",
+            "value": {
+              "stringValue": "eu-west-1"
+            }
+          },
+          {
+            "key": "cloud.account.id",
+            "value": {
+              "stringValue": "111122223333"
+            }
+          },
+          {
+            "key": "faas.version",
+            "value": {
+              "stringValue": "$LATEST"
+            }
+          },
+          {
+            "key": "faas.name",
+            "value": {
+              "stringValue": "index-orders"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "@opentelemetry/instrumentation-aws-lambda"
+          },
+          "spans": [
+            {
+              "traceId": "a7c0ffee000000000000000000000001",
+              "spanId": "9100000000000001",
+              "parentSpanId": "c100000000000002",
+              "name": "index-orders",
+              "kind": 2,
+              "startTimeUnixNano": "1760603401500000000",
+              "endTimeUnixNano": "1760603401520000000",
+              "attributes": [
+                {
+                  "key": "faas.trigger",
+                  "value": {
+                    "stringValue": "datasource"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

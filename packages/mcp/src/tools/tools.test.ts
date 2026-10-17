@@ -54,7 +54,7 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the nineteen the project promises', async () => {
+  it('are exactly the twenty-three the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
@@ -66,12 +66,16 @@ describe('the tools a session is offered', () => {
       'get_flow',
       'get_source',
       'get_type',
+      'hot_paths',
       'impact',
       'list_entries',
       'search',
+      'slow_steps',
       'start_here',
       'test_pattern',
+      'trace_for',
       'type_usage',
+      'undeclared_failures',
       'what_changed',
       'who_calls',
       'who_consumes',
@@ -113,12 +117,33 @@ describe('the tools a session is offered', () => {
    * schema) and one clause of the instructions: about 450 characters read,
    * about 500 in all. With P96 beside it, 10,100 and 28,037. With P120's
    * `staleDocs` beside it, 10,100 and 28,067.
+   *
+   * Raised by P105, which added three tools (`slow_steps`, `hot_paths`,
+   * `trace_for`): 9,595 and 27,382 before, 10,802 and 29,040 after. Each
+   * says one short sentence and takes only the bounds it needs, with no
+   * output schema; how the three chain is said once in the instructions,
+   * which are not part of this count. Three tools' names, inputs and the
+   * schema header the SDK writes for each cannot fit in the hundred
+   * characters left, so both ceilings move by what the three cost and the
+   * same margin as before.
+   *
+   * Raised by P106, which added one tool (`undeclared_failures`): 10,802 and
+   * 29,040 before, 11,259 and 29,649 after. It says one short sentence and
+   * takes the four bounds the ticket names (`service`, `minCount`, `minHits`,
+   * `limit`), with no output schema; the fields it adds to `get_flow` and
+   * `describe_for_prompt` are in answers, not in the list. The 457
+   * characters of one tool cannot fit in the hundred left, so both ceilings
+   * move by what it costs and the same margin as before.
+   *
+   * The two lines met (P121 with P120 and P96 beside it on one side, P105
+   * and P106 on the other): twenty-three tools, 11,764 and 30,334, each
+   * ceiling the measured size rounded up to the next 50.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(10150);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(28100);
+    expect(read.length).toBeLessThan(11800);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(30350);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

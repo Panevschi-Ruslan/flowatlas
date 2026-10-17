@@ -23,6 +23,8 @@ import { dbPathFor } from '../db.js';
 import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
 import { expandReasons } from '../doctor/hints.js';
+import { runtimeFailureRows } from '../doctor/runtime.js';
+import { readObservedBeside } from '../observe/store.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { looksLike } from '../stacks.js';
 import { VERSION } from '../version.js';
@@ -63,6 +65,8 @@ export interface DoctorOptions {
   db?: string;
   format?: string;
   strict?: boolean;
+  /** `--strict-runtime`: a failure traffic answered and the code does not declare, or one it declares and nobody answered, exits 1 (P106). */
+  strictRuntime?: boolean;
   accept?: boolean;
   /** A path, or `false` when `--no-baseline` was passed. */
   baseline?: string | false;
@@ -423,7 +427,12 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
     // accept writes and the count the report prints are the same rows (R36);
     // gaps somebody accepted (P72, P76) leave every count, and are said once.
     // The one split every surface uses (P80): see `acceptedSplitOf`.
-    const split = acceptedSplitOf(db, [...raw, ...age], readAccepted(dbPathFor(options)));
+    // What traffic answered beside what the code declares (P106), when an
+    // observed file sits beside the database: asked now, like the ages above,
+    // and at info, so it moves neither the exit code nor the baseline unless
+    // --strict-runtime says it should.
+    const runtime = runtimeFailureRows(db, readObservedBeside(dbPathFor(options)).observed);
+    const split = acceptedSplitOf(db, [...raw, ...age, ...runtime], readAccepted(dbPathFor(options)));
     const rows = split.fresh;
     const path = baselinePathFor(options, settings);
 
@@ -442,6 +451,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       { db, unresolved: rows, ...(note === undefined ? {} : { note }) },
       {
         strict,
+        ...(options.strictRuntime === true ? { strictRuntime: true } : {}),
         sections,
         ...(maxNodes === undefined ? {} : { maxNodes }),
         contracts: options.contracts !== false,
@@ -620,6 +630,7 @@ export const registerDoctor = (program: Command): void => {
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--format <name>', `one of ${FORMATS.join(', ')}`)
     .option('--strict', 'exit 1 on a broken annotation, a contract error, or growth past the baseline')
+    .option('--strict-runtime', 'exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered')
     .option('--accept', 'write the current numbers to the baseline')
     .option('--baseline <path>', 'where the accepted numbers live (default: <output>/baseline.json)')
     .option('--no-baseline', 'skip the growth check, so --strict asks only about annotations and contracts')

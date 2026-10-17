@@ -12,7 +12,7 @@ Read from the source by flowatlas, without running it. Steps are in call order; 
 
 - **InvoicesConsumer.onOrderCreated** `consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated` — billing `src/invoices/invoices.consumer.ts:17` — consumes (static)
   - **InvoicesConsumer.onOrderCreated** `billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated` — billing `src/invoices/invoices.consumer.ts:17` — handles (static) — takes `type:billing#OrderCreatedEvent`; returns `void`
-    - **InvoicesService.create** `billing#src/invoices/invoices.service.ts:InvoicesService.create` — billing `src/invoices/invoices.service.ts:10` — calls (static) — takes `type:billing#CreateInvoiceDto`; returns `type:billing#InvoiceDto`
+    - **InvoicesService.create** `billing#src/invoices/invoices.service.ts:InvoicesService.create` — billing `src/invoices/invoices.service.ts:14` — calls (static) — takes `type:billing#CreateInvoiceDto`; returns `type:billing#InvoiceDto`
 
 ## Shapes
 

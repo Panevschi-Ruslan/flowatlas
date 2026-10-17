@@ -4,4 +4,4 @@
   -  consumers (1)
     ~  InvoicesConsumer.onOrderCreated    billing/src/invoices/invoices.consumer.ts:17
       -> InvoicesConsumer.onOrderCreated  billing/src/invoices/invoices.consumer.ts:17
-        -> InvoicesService.create         billing/src/invoices/invoices.service.ts:10
+        -> InvoicesService.create         billing/src/invoices/invoices.service.ts:14

@@ -1,0 +1,39 @@
+{
+  "entry": "entry:orders:http:POST:/orders",
+  "failing": {
+    "id": "entry:orders:http:POST:/orders",
+    "label": "POST /orders",
+    "service": "orders",
+    "kind": "server",
+    "ms": 35,
+    "status": 500,
+    "error": true,
+    "children": [
+      {
+        "id": "channel:order.created",
+        "label": "order.created",
+        "kind": "producer",
+        "ms": 3,
+        "children": [
+          {
+            "id": "entry:billing:event:order.created",
+            "label": "order.created",
+            "service": "billing",
+            "kind": "consumer",
+            "ms": 12
+          }
+        ]
+      },
+      {
+        "label": "order.audited",
+        "kind": "producer",
+        "ms": 0.5
+      }
+    ]
+  },
+  "note": "the failing request is also the slowest sampled",
+  "next": [
+    "get_flow({entry: \"entry:orders:http:POST:/orders\"})",
+    "slow_steps({entry: \"entry:orders:http:POST:/orders\", minCount: 1})"
+  ]
+}

@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>162 fixtures</span>
-    <span>389 snapshot files</span>
+    <span>163 fixtures</span>
+    <span>394 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="23">23</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="24">24</span></h2>
     <ul>
       <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
         <div class="head">
@@ -508,6 +508,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A lending library's reading room: borrowers ask a librarian over a WebSocket API (R174).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="lambda-traces serverless, wired in terraform a small shop's checkout on aws lambda, deployed with terraform, with one state machine, and a trace of one checkout as an opentelemetry lambda layer writes it: what `flowatlas observe` lays over the map the terraform and the state machine draw (p107).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-traces">lambda-traces</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A small shop's checkout on AWS Lambda, deployed with Terraform, with one state machine, and a trace of one checkout as an OpenTelemetry Lambda layer writes it: what <code>flowatlas observe</code> lays over the map the Terraform and the state machine draw (P107).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="lambda-workspace-root serverless, wired in terraform a lending library's loans service whose repository is the root of a workspace: the functions are in its own `src/`, and the client they start workflows through is a member in `packages/workflows`, inside the same directory (r175).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-workspace-root">lambda-workspace-root</a>
@@ -636,7 +644,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">4 services</span>
         </div>
         <p>One project, four repositories that call each other.</p>
-        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.project-graph.json</code> <code>expected.prompt</code></p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.mcp.observed</code> <code>expected.project-graph.json</code> <code>expected.prompt</code></p>
       </li>
       <li class="fixture" data-search="multi-repo-analytics several repositories five repositories arranged so that each of the four analytics commands has exactly one thing to find and nothing to guess at.">
         <div class="head">

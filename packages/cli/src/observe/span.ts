@@ -7,6 +7,8 @@
  * `allow-list.ts`). A path keeps its shape and loses its query; a template
  * keeps its parameters by name only.
  */
+import { OBSERVED_KEPT } from '@flowatlas/core';
+
 export type SpanKind = 'server' | 'client' | 'producer' | 'consumer' | 'internal';
 
 export interface ObservedSpan {
@@ -32,13 +34,67 @@ export interface ObservedSpan {
   rpc?: string;
   /** ISO time the span started, when the file says. */
   at?: string;
-  /** HTTP status answered, when the file says (P85). Kept, not matched on. */
+  /** HTTP status answered, when the file says (P85, P105). Kept, not matched on. */
   status?: number;
-  /** How long the span took, in milliseconds (P85). Kept, not matched on. */
+  /** How long the span took, in milliseconds to two decimals (P85, P105). Kept, not matched on. */
   durationMs?: number;
   /** The span ended in an error. Never the error itself: no message, no stack. */
   error?: true;
+  // A deployed function, workflow and the cloud calls they make (P107). Every
+  // one is the name a thing is deployed under: an ARN or a URL is cut to the
+  // name inside it before the span exists, so no account or region is held.
+  /** The function the span ran in, as it is deployed (`checkout`; an alias or a version cut). */
+  faas?: string;
+  /** What started the function: `http`, `pubsub`, `datasource`, `timer` or `other`. */
+  trigger?: FaasTrigger;
+  /** The function an SDK `Invoke` call invokes. */
+  invokes?: string;
+  /** The workflow the span ran in, or the one an SDK call starts. */
+  workflow?: string;
+  /** The step of `workflow` the span is; matched only against the steps the map has. */
+  state?: string;
+  /** The tables a DynamoDB call names, each by its name. */
+  tables?: string[];
+  /** The operation of a cloud SDK call: `PutItem`, `SendMessage`, `StartExecution`. */
+  awsOp?: string;
+  /** Which service's channels `destination` is spelled for (`sqs/<name>`, `sns/<name>`, ...). */
+  transport?: AwsTransport;
+  // Where a browser call went (P112). The origin it was sent to is compared
+  // with the front end's base URLs inside the reader and never kept.
+  /** The service the call's origin names; the call is matched to a join into that service. */
+  peerService?: string;
+  /** The host of a third party the call went to, when no base URL names its origin; such a call has no path. */
+  thirdParty?: string;
 }
+
+export type FaasTrigger = 'http' | 'pubsub' | 'datasource' | 'timer' | 'other';
+
+export type AwsTransport = 'sqs' | 'sns' | 'eventbridge' | 'kinesis' | 's3' | 'dynamodb';
+
+/**
+ * Every field a span may carry out of a reader (P105 §4), the list the
+ * observed file's `privacy.kept` names. Typed against `ObservedSpan`, so a
+ * field added to one and not the other does not compile.
+ */
+export const KEPT_FIELDS: readonly (keyof ObservedSpan)[] = OBSERVED_KEPT;
+
+/** And the other way round: a field of `ObservedSpan` missing from the list does not compile either. */
+type Unlisted = Exclude<keyof ObservedSpan, (typeof OBSERVED_KEPT)[number]>;
+const everyFieldListed: [Unlisted] extends [never] ? true : Unlisted = true;
+void everyFieldListed;
+
+const KEPT: ReadonlySet<string> = new Set(KEPT_FIELDS);
+
+/**
+ * The span with only `KEPT_FIELDS`, none of them undefined: the last call
+ * every reader makes, so whatever a reader is changed to build, nothing else
+ * leaves it.
+ */
+export const keepAllowed = (span: ObservedSpan): ObservedSpan => {
+  const kept: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(span)) if (KEPT.has(key) && value !== undefined) kept[key] = value;
+  return kept as unknown as ObservedSpan;
+};
 
 /** What a path segment that holds a value is replaced with; it matches only a route parameter. */
 export const VALUE = ':value';

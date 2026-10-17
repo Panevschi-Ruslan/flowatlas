@@ -19,6 +19,7 @@ export type {
   RouteIndex,
 } from './http-link.js';
 export { resolveUiCall, uiFindingFor, uiReasonOf } from './ui-link.js';
+export { hostIndexOf } from './base-url-value.js';
 export type { UiIndex, UiOutcome, UiOutcomeKind, UiVia } from './ui-link.js';
 export {
   DECLARED_BY,

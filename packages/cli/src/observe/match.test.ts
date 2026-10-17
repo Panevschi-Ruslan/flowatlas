@@ -71,7 +71,7 @@ describe('a request counts once', () => {
   it('credits the one join from a caller with one call into the entry', () => {
     const graph = indexGraph([call(ONE, '/products/:id'), route(PRODUCT, '/products/:id')], [joined(ONE, PRODUCT)]);
     const observed = matchSpans(graph, [caller('internal'), server('/products/:value', 'caller')]);
-    expect(observed.joins[edgeIdOf(joined(ONE, PRODUCT))]).toEqual({ count: 1, lastSeen: '2026-01-01T00:00:00.000Z' });
+    expect(observed.joins[edgeIdOf(joined(ONE, PRODUCT))]).toMatchObject({ count: 1, lastSeen: '2026-01-01T00:00:00.000Z' });
     expect(observed.ambiguous).toEqual([]);
   });
 
@@ -82,7 +82,7 @@ describe('a request counts once', () => {
     );
     const observed = matchSpans(graph, [caller('client', '/products/p1'), server('/products/:value', 'caller')]);
     expect(Object.keys(observed.joins)).toEqual([edgeIdOf(joined(ONE, PRODUCT))]);
-    expect(observed.symbols).toEqual({ [ONE]: { hits: 1 } });
+    expect(observed.symbols).toEqual({ [ONE]: expect.objectContaining({ hits: 1 }) });
     expect(observed.ambiguous).toEqual([]);
   });
 
@@ -111,7 +111,7 @@ describe('a request counts once', () => {
       [joined(ONE, PRODUCT)],
     );
     const observed = matchSpans(graph, [caller('client', '/products/p1'), server('/products/:value', 'caller')]);
-    expect(observed.entries).toEqual({ [PRODUCT]: { hits: 1, lastSeen: '2026-01-01T00:00:00.000Z' } });
+    expect(observed.entries).toEqual({ [PRODUCT]: expect.objectContaining({ hits: 1, lastSeen: '2026-01-01T00:00:00.000Z' }) });
     expect(Object.keys(observed.joins)).toEqual([edgeIdOf(joined(ONE, PRODUCT))]);
   });
 
@@ -135,7 +135,7 @@ describe('a request counts once', () => {
     const one = indexGraph([call(ONE, '/products/:id'), route(PRODUCT, '/products/:id')], [joined(ONE, PRODUCT)]);
     const alone = matchSpans(one, [caller('client', '/products/p1')]);
     expect(Object.keys(alone.joins)).toEqual([edgeIdOf(joined(ONE, PRODUCT))]);
-    expect(alone.symbols).toEqual({ [ONE]: { hits: 1 } });
+    expect(alone.symbols).toEqual({ [ONE]: expect.objectContaining({ hits: 1 }) });
 
     const two = indexGraph(
       [call(ONE, '/products/:id'), call(TWO, '/products/:key'), route(PRODUCT, '/products/:id')],
@@ -156,5 +156,64 @@ describe('a request counts once', () => {
     ]);
     expect(observed.ambiguous[0]!.candidates).toHaveLength(5);
     expect(observed.ambiguous[0]!.more).toBe(2);
+  });
+});
+
+describe('what a span measured, on the place it is credited to (P105)', () => {
+  const graph = indexGraph([call(ONE, '/products/:id'), route(PRODUCT, '/products/:id')], [joined(ONE, PRODUCT)]);
+  const timed = (span: ObservedSpan, durationMs: number, status?: number): ObservedSpan => ({
+    ...span,
+    durationMs,
+    ...(status === undefined ? {} : { status }),
+  });
+
+  it('times a join on the caller when the caller was seen, and on the callee when not', () => {
+    const both = matchSpans(graph, [timed(caller('client', '/products/p1'), 40), timed(server('/products/:value', 'caller'), 25, 200)]);
+    expect(both.joins[edgeIdOf(joined(ONE, PRODUCT))]).toMatchObject({ count: 1, max: 40, measuredAt: 'caller' });
+    expect(both.entries[PRODUCT]).toMatchObject({ hits: 1, max: 25, statuses: { '200': 1 } });
+    const far = matchSpans(graph, [caller('internal'), timed(server('/products/:value', 'caller'), 25)]);
+    expect(far.joins[edgeIdOf(joined(ONE, PRODUCT))]).toMatchObject({ count: 1, max: 25, measuredAt: 'callee' });
+  });
+
+  it('counts the error flag and a 5xx as errors, and a 4xx in the status mix only', () => {
+    const spans = [
+      { ...timed(server('/products/:value'), 5, 500), spanId: 'a' },
+      { ...timed(server('/products/:value'), 5, 404), spanId: 'b' },
+      { ...timed(server('/products/:value'), 5, 200), spanId: 'c', error: true as const },
+      { ...timed(server('/products/:value'), 5, 200), spanId: 'd' },
+    ];
+    expect(matchSpans(graph, spans).entries[PRODUCT]).toMatchObject({
+      hits: 4,
+      errors: 2,
+      errorRate: 0.5,
+      statuses: { '200': 2, '404': 1, '500': 1 },
+    });
+  });
+
+  it('puts each span in the hour it started, a span with no time in its trace\'s', () => {
+    const late = { ...server('/products/:value'), traceId: 'u', spanId: 'late', at: '2026-01-01T03:10:00.000Z' };
+    const child = { traceId: 'u', spanId: 'child', parentId: 'late', kind: 'client' as const, service: 'catalog', collection: 'x' };
+    const observed = matchSpans(graph, [server('/products/:value'), late, child]);
+    expect(observed.buckets.map((bucket) => [bucket.hour, bucket.spans])).toEqual([
+      ['2026-01-01T00:00:00.000Z', 1],
+      ['2026-01-01T03:00:00.000Z', 2],
+    ]);
+    expect(observed.entries[PRODUCT]).toMatchObject({ hits: 2, firstSeen: '2026-01-01T00:00:00.000Z', lastSeen: '2026-01-01T03:10:00.000Z' });
+  });
+
+  it('keeps a slow and a failing request of an entry as a tree of what each span was credited to, with no span id', () => {
+    const spans = [timed(caller('client', '/products/p1'), 40), { ...timed(server('/products/:value', 'caller'), 25, 503) }];
+    const { samples } = matchSpans(graph, spans);
+    const sample = samples[PRODUCT]!;
+    expect(sample.failing).toHaveLength(1);
+    expect(sample.slow[0]).toEqual({
+      traceId: 't',
+      at: '2026-01-01T00:00:00.000Z',
+      ms: 25,
+      status: 503,
+      error: true,
+      spans: 1,
+      tree: { id: PRODUCT, label: 'GET /products/:value', service: 'catalog', kind: 'server', ms: 25, status: 503 },
+    });
   });
 });

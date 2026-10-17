@@ -79,7 +79,8 @@ and `findings` take
 which also stops at about `maxChars` characters (12,000). `start_here`, `cant_follow`,
 `describe_for_prompt` and `get_source` take neither: they are bounded by their
 own limits (`perService`; `top` and `samples`; `maxSteps` and `maxChars`;
-`maxLines`). Answers are bounded and say when they were cut, rather than
+`maxLines`), as are `hot_paths`, `slow_steps` and `undeclared_failures`
+(`limit`) and `trace_for` (`maxNodes` per tree). Answers are bounded and say when they were cut, rather than
 filling a context window.
 
 ### Answers
@@ -163,6 +164,14 @@ same for every subject:
 - *In front of it* (the checks and opt-outs, P76) and *Can fail with* with the
   statuses in the heading, one line per status and exception with how many
   places raise it (P87).
+- For a way in seen at run time, *Failures seen at run time · n hits, <window>*
+  (P106): each status it answered that no failure declares (`**500** ×4, 10% of
+  requests — not declared`, with `expected: <why>` where the framework answers
+  it anyway and `maybe <exception>` for a declared failure that names no
+  status), each declared one traffic answered (`declared, seen ×n`; an assumed
+  one says traffic settled it), and each declared one no request answered in
+  the window (`declared, never seen in the window`), or that the hits were too
+  few to say so.
 - For a channel, *Published by · n* and *Consumed by · n*, each consumer with
   the steps under it; for a check, *Where · n*, every row of the gap id at its
   line with the node it is on; for a symbol or a check, *Reached from*, the
@@ -428,14 +437,30 @@ What `get_flow` says beside the chain:
   only when every choice agrees, and `family: 'auth'` marks a helper whose
   answer could not be read that refuses a check of who is asking.
   `describe_for_prompt` writes it as `toHttpError (401 | 403 | 423)` with the
-  classes it is chosen from. Read for NestJS.
+  classes it is chosen from. Read for NestJS. With an observed file, each row
+  gains **`seen: n`**, the requests that answered a status it declares in the
+  window (absent when none did).
+- **`failures`** on the root entry, with an observed file that saw it answer
+  statuses (P106): `{ hits, window, undeclared: [{ status, count, share,
+  expected?, maybe? }], declaredNeverSeen: [{ status?, exception, at, loc? }],
+  tooFewHits? }`. `undeclared` is each status from 400 up that no failure of
+  the root declares, the ones no reason explains first, then 5xx, then the
+  most common; `expected` says why the framework answers it anyway (the
+  router's 404 and 405, a 401 or 403 from a check in front of it, a 400 for a
+  body it cannot read). `declaredNeverSeen` is each declared failure no
+  request answered, said only of a way in hit at least 20 times in the
+  window; below that, `tooFewHits: true`. An `assumed` status never seen is
+  not listed: the code never declared it. `describe_for_prompt` carries the
+  same `failures` beside its text for an entry.
 - **Guards** in front of a NestJS route carry `where` (`global`, `module`,
   `controller`, `route`), `via` (`APP_GUARD in AuthModule.forRoot`), and
   `skippedBy` when an opt-out decorator switches one off; the entry carries
   `optOuts`.
 - **`observed: n`** on a row real traffic went through, after
   `flowatlas observe` has read a trace file: the count on the join into it, or
-  the entry's hits. Absent when nothing saw it.
+  the entry's hits. Absent when nothing saw it. Beside it, **`p95`** (in
+  milliseconds) and **`errorRate`** (the error flag or a 5xx, over the
+  requests whose outcome is known) where the file measured them.
 - **`seenAmbiguous: n`** on a row that requests could have been, or whose
   join into it they could have run, but fit other places as well: those are
   counted on none of them, so `observed` never spreads one request over
@@ -444,7 +469,32 @@ What `get_flow` says beside the chain:
   repository's own files, the code's own fallback or the setting's name, saying
   where the value came from.
 
-`who_calls` rows carry `observed: n` and `seenAmbiguous: n` the same way.
+`who_calls` rows carry `observed: n`, `p95`, `errorRate` and `seenAmbiguous: n`
+the same way. When the observed file holds a sample request of an entry, the
+entry's hints in `get_flow` and `list_entries` name `trace_for` second.
+
+### What ran
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `hot_paths` | the ways in real traffic used most, busiest first, each with its p50, p95, max and error rate and the joins it reached most | `service`, `limit` (10), `joins` (5) |
+| `slow_steps` | the joins and methods real traffic was slowest on, each with its count, p50, p95, max, error rate and, for a join, `measuredAt` (`caller` or `callee`) | `entry` (only what it reaches), `service`, `by` (`p95`, `max`, `p50`), `minCount` (5), `limit` (10) |
+| `trace_for` | one slow and one failing request of an entry, as trees of `{ id?, label, service?, kind, ms?, status?, error?, children }`, `id` the node each span was credited to | `entry` (required: an id or a route said aloud), `maxNodes` (60, per tree) |
+| `undeclared_failures` | the ways in whose traffic answered a status no failure in their code declares, worst first (requests answering a 5xx no reason explains, then any status no reason explains, then the largest share), each `{ entry, label, service, hits, undeclared, declaredNeverSeen?, tooFewHits?, next }` with `next` naming `trace_for` for a failing request and `get_source` on the handler; the answer carries the `window` | `service`, `minCount` (1, requests per status), `minHits` (20, the floor for "never seen"), `limit` (20) |
+
+They answer from the observed file `flowatlas observe` writes beside the
+graph (see the [CLI guide](CLI.md#flowatlas-observe-file)); with none they
+say so. A row names only places the graph still has, so a file older than
+the last build answers for what is still there. `slow_steps` leaves out a call
+site whose join is listed, since both are timed on the same span. A
+`trace_for` tree carries no trace or span id; the failing request is shown
+once when it is also the slowest, and an entry with no sample says what would
+give it one. Each answer is cut at its `limit` or `maxNodes` and says so, and
+`next` chains them: `hot_paths` → `slow_steps({entry})` → `trace_for({entry})`
+→ `get_source` on a slow step, and `undeclared_failures` → `trace_for({entry})`
+→ `get_source` on the handler. Only statuses and counts are compared: the
+observed file keeps no exception text, so which exception caused an
+undeclared 500 is never guessed.
 
 ### Messages and types
 

@@ -102,6 +102,18 @@
                       ],
                       "returns": "type:gateway#InvoiceDto"
                     },
+                    "fails": [
+                      {
+                        "status": 409,
+                        "exception": "ConflictException",
+                        "sources": [
+                          "throw"
+                        ],
+                        "sites": 1,
+                        "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                        "loc": "src/invoices/invoices.service.ts:15"
+                      }
+                    ],
                     "children": [
                       {
                         "node": {
@@ -124,7 +136,7 @@
                               "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
                               "type": "method",
                               "label": "InvoicesService.create",
-                              "loc": "src/invoices/invoices.service.ts:10"
+                              "loc": "src/invoices/invoices.service.ts:14"
                             },
                             "edge": {
                               "type": "calls",

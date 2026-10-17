@@ -1,4 +1,4 @@
-import type { FailRef } from './fails.js';
+import type { FailRef, FailuresSeenRef } from './fails.js';
 import type { DetailLevel } from '@flowatlas/core';
 
 /**
@@ -93,10 +93,16 @@ export interface FlowNode {
   guards?: GuardRef[];
   /** Times real traffic went through this row, from the observed file (P72); absent when nothing saw it. */
   observed?: number;
+  /** The 95th percentile of how long it took, in milliseconds, where the observed file measured it (P105). */
+  p95?: number;
+  /** Errors (the error flag or a 5xx) over the requests seen, where the file knows their outcome (P105). */
+  errorRate?: number;
   /** Requests that could have been this row and were counted on nothing, fitting other places too (P85). */
   seenAmbiguous?: number;
   /** What a way in can fail with, on an entry that says (P68). */
   fails?: FailRef[];
+  /** On a way in seen at run time: the statuses it answered that nothing declares, and the declared ones never seen (P106). */
+  failures?: FailuresSeenRef;
   /** Decorators on the handler or its class that let a request past a check (P76). */
   optOuts?: OptOutRef[];
   /**

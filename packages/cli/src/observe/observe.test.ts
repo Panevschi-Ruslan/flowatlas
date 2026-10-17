@@ -15,7 +15,8 @@ import { edgeIdOf, indexGraph, matchSpans, routeScore, templateOf } from './matc
 import { nestjsObserveReader, otlpReader, readerFor } from './readers.js';
 import { pathOf } from './span.js';
 
-const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures/multi-repo');
+const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures');
+const fixture = join(fixtures, 'multi-repo');
 const graph = JSON.parse(readFileSync(join(fixture, 'expected.project-graph.json'), 'utf8')) as ProjectGraph & {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -38,17 +39,21 @@ describe('trace readers', () => {
     expect(Object.values(formats)).toEqual(['otlp', 'nestjs-observe']);
     const text = JSON.stringify(spans);
     for (const secret of PLANTED) expect(text).not.toContain(secret);
+    // A cookie, a statement, a user, a span name and an exception went; the status and the duration stay (P105).
+    expect(spans.find((span) => span.spanId === 'c200000000000001')).toMatchObject({ status: 500, durationMs: 35, error: true });
     expect(pathOf('http://h/orders/ord-1042?x=1')).toBe('/orders/:value');
     expect(pathOf('/orders/latest')).toBe('/orders/latest');
   });
 
-  it('reads a gzip copy of the batch as the batch itself', () => {
+  it('reads a gzip copy of the batch as the batch itself, known by the same hash', () => {
     const copy = join(scratch, 'billing.observe.json.gz');
     writeFileSync(copy, gzipSync(readFileSync(batchFile)));
-    expect(readTraceFiles([copy])).toEqual({
-      ...readTraceFiles([batchFile]),
+    const now = new Date('2026-01-01T00:00:00.000Z');
+    expect(readTraceFiles([copy], undefined, { now })).toEqual({
+      ...readTraceFiles([batchFile], undefined, { now }),
       formats: { [copy]: 'nestjs-observe' },
     });
+    expect(readTraceFiles([batchFile, copy]).repeated).toEqual([copy]);
   });
 
   it('refuses a truncated gzip file by name', () => {
@@ -74,10 +79,10 @@ describe('matchSpans over the multi-repo fixture', () => {
 
   it('reads entries, symbols and times from the @nestjs/observe batch alone', () => {
     const alone = matchSpans(index, readTraceFiles([batchFile]).spans);
-    expect(alone.observedFormatVersion).toBe(2);
+    expect(alone.observedFormatVersion).toBe(3);
     expect(alone.entries).toEqual({
-      'entry:billing:http:GET:/invoices/:param': { hits: 1, lastSeen: '2025-10-16T07:33:31.000Z' },
-      'entry:billing:http:POST:/invoices': { hits: 1, lastSeen: '2025-10-16T07:33:30.000Z' },
+      'entry:billing:http:GET:/invoices/:param': expect.objectContaining({ hits: 1, lastSeen: '2025-10-16T07:33:31.000Z', p95: 1.1, statuses: { '200': 1 } }),
+      'entry:billing:http:POST:/invoices': expect.objectContaining({ hits: 1, lastSeen: '2025-10-16T07:33:30.000Z', max: 6.4, errors: 0 }),
     });
     expect(alone.symbols).toMatchObject({
       'billing#src/invoices/invoices.controller.ts:InvoicesController.create': { hits: 1 },
@@ -87,7 +92,7 @@ describe('matchSpans over the multi-repo fixture', () => {
     });
     // billing calls nothing in code, so its outgoing request and its collection are seen, not joined.
     expect(alone.joins).toEqual({});
-    expect(alone.unmatched).toEqual([
+    expect(alone.unmatched.map(({ service, kind, name, count }) => ({ service, kind, name, count }))).toEqual([
       { service: 'billing', kind: 'client', name: 'GET /orders/:value', count: 1 },
       { service: 'billing', kind: 'code', name: 'LedgerClient.post', count: 1 },
       { service: 'billing', kind: 'db', name: 'invoices', count: 1 },
@@ -98,9 +103,9 @@ describe('matchSpans over the multi-repo fixture', () => {
   it('confirms the cross-service HTTP join from parent and child spans', () => {
     expect(
       observed.joins['http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param'],
-    ).toEqual({ count: 1, lastSeen: '2025-10-16T07:33:20.001Z' });
+    ).toMatchObject({ count: 1, lastSeen: '2025-10-16T07:33:20.001Z', measuredAt: 'caller', max: 500 });
     // The far side settled which of the two calls that fit the client span it was.
-    expect(observed.symbols['http_out:gateway#src/clients/orders.client.ts:33:12']).toEqual({ hits: 1 });
+    expect(observed.symbols['http_out:gateway#src/clients/orders.client.ts:33:12']).toMatchObject({ hits: 1 });
   });
 
   it('credits a call that fits two call sites to neither, and says so', () => {
@@ -128,8 +133,10 @@ describe('matchSpans over the multi-repo fixture', () => {
   it('counts entry hits by method and route template, and symbols by Class.method', () => {
     expect(observed.entries['entry:billing:http:POST:/invoices']?.hits).toBe(1);
     expect(observed.entries['entry:billing:http:GET:/invoices/:param']?.hits).toBe(1);
-    expect(observed.symbols['orders#src/orders/orders.service.ts:OrdersService.findOne']).toEqual({ hits: 1 });
-    expect(observed.symbols['table:orders#orders']).toEqual({ hits: 1 });
+    expect(observed.symbols['orders#src/orders/orders.service.ts:OrdersService.findOne']).toMatchObject({ hits: 1, max: 492 });
+    // A span with no start or end is counted, without a duration (I3).
+    expect(observed.symbols['table:orders#orders']).toMatchObject({ hits: 1 });
+    expect(observed.symbols['table:orders#orders']).not.toHaveProperty('max');
   });
 
   it('lists what ran but is not in code', () => {
@@ -153,8 +160,9 @@ describe('matchSpans over the multi-repo fixture', () => {
       (item) => edgeIdOf(item) === 'producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created',
     );
     expect(packed.joins[String(edge)]?.count).toBe(1);
-    expect(packed.entries['entry:orders:http:POST:/orders']).toEqual({ hits: 1 });
-    expect(unmatchedOf(packed)).toEqual(observed.unmatched.map(({ count: _, ...span }) => span));
+    expect(unmatchedOf(packed)).toEqual(observed.unmatched.map(({ service, kind, name }) => ({ service, kind, name })));
+    expect(packed.entries['entry:orders:http:POST:/orders']).toEqual({ hits: 1, p50: 35, p95: 35, max: 35, errors: 1, statuses: { '500': 1 } });
+    expect(packed.window).toEqual({ from: '2025-10-16T07:00:00.000Z', to: '2025-10-16T08:00:00.000Z' });
     expect(ambiguousOf(packed)).toEqual([
       {
         service: 'gateway',
@@ -181,7 +189,7 @@ describe('flowatlas observe, then visualise', () => {
     expect(printed.some((line) => line.includes('any of http_out:gateway#src/clients/orders.client.ts:33:12'))).toBe(true);
   });
 
-  it('writes a version-2 file core reads back', () => {
+  it('writes a version-3 file core reads back', () => {
     expect(readObserved(run.path)).toEqual({ observed: run.observed });
   });
 
@@ -196,5 +204,105 @@ describe('flowatlas observe, then visualise', () => {
     const data = page.slice(start, page.indexOf('</script>', start));
     expect(JSON.parse(data).observed.ambiguous).toHaveLength(1);
     for (const secret of PLANTED) expect(data).not.toContain(secret);
+  });
+});
+
+describe('matchSpans over the lambda-traces fixture (P107)', () => {
+  const lambda = join(fixtures, 'lambda-traces');
+  const lambdaGraph = JSON.parse(readFileSync(join(lambda, 'expected.project-graph.json'), 'utf8')) as ProjectGraph & {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+  };
+  const trace = join(lambda, 'traces/adot.otlp.json');
+  const { spans } = readTraceFiles([trace]);
+  const observed = matchSpans(indexGraph(lambdaGraph.nodes, lambdaGraph.edges), spans);
+  const STATES = 'shop#statemachine/fulfil-order.asl.json:fulfil-order';
+
+  it('credits every function, the workflow and the route behind one checkout', () => {
+    expect(Object.keys(observed.entries).sort()).toEqual([
+      'entry:shop:event:dynamodb/orders',
+      'entry:shop:http:POST:/checkout',
+      'entry:shop:invoke:charge-card',
+      // Named only by its ARN, through the alias it was invoked by.
+      'entry:shop:invoke:checkout',
+      'entry:shop:invoke:index-orders',
+      'entry:shop:invoke:print-label',
+      'entry:shop:invoke:reserve-stock',
+      'entry:shop:invoke:ship-order',
+      'entry:shop:workflow:fulfil-order',
+    ]);
+    expect(observed.entries['entry:shop:invoke:charge-card']).toMatchObject({ hits: 1, errors: 1, max: 270 });
+  });
+
+  it('counts every join the trace was written to run, on the side that called', () => {
+    expect(Object.fromEntries(Object.entries(observed.joins).map(([id, seen]) => [id, [seen.count, seen.measuredAt]]))).toEqual({
+      // The write and the send from checkout's own code, and the workflow it starts.
+      'producer:shop#src/handlers/checkout.ts:15:9 -emits-> channel:dynamodb/orders': [1, 'caller'],
+      'producer:shop#src/handlers/checkout.ts:16:9 -emits-> channel:sqs/order-placed': [1, 'caller'],
+      'producer:shop#src/handlers/checkout.ts:17:9 -calls-> entry:shop:workflow:fulfil-order': [1, 'caller'],
+      // Each step into the function its task invokes, the write onto the stream and the receipt.
+      [`${STATES}/ReserveStock -calls-> entry:shop:invoke:reserve-stock`]: [1, 'caller'],
+      [`${STATES}/ChargeCard -calls-> entry:shop:invoke:charge-card`]: [1, 'caller'],
+      'producer:shop#statemachine/fulfil-order.asl.json:21:5 -emits-> channel:dynamodb/orders': [1, 'caller'],
+      'producer:shop#statemachine/fulfil-order.asl.json:41:5 -emits-> channel:sns/receipts': [1, 'caller'],
+      // The queue's message into ship-order, and ship-order's own invoke.
+      'channel:sqs/order-placed -consumes-> consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order': [1, 'callee'],
+      'consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order -calls-> entry:shop:invoke:ship-order': [1, 'callee'],
+      'producer:shop#src/handlers/ship-order.ts:11:11 -calls-> entry:shop:invoke:print-label': [1, 'caller'],
+      // The table's stream into index-orders, which leaves no message span of its own.
+      'channel:dynamodb/orders -consumes-> consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders': [1, 'callee'],
+      'consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders -triggers-> entry:shop:event:dynamodb/orders': [1, 'callee'],
+    });
+    expect(observed.ambiguous).toEqual([]);
+  });
+
+  it('credits the steps, the table and the call sites', () => {
+    expect(Object.keys(observed.symbols).sort()).toEqual([
+      'db_query:shop#statemachine/fulfil-order.asl.json:21:5',
+      'producer:shop#src/handlers/checkout.ts:17:9',
+      'producer:shop#src/handlers/ship-order.ts:11:11',
+      `${STATES}/ChargeCard`,
+      `${STATES}/MarkPaid`,
+      `${STATES}/ReserveStock`,
+      `${STATES}/SendReceipt`,
+      'table:shop#orders',
+    ]);
+    // checkout's write, the step's write and ship-order's read.
+    expect(observed.symbols['table:shop#orders']?.hits).toBe(3);
+    expect(observed.channels).toMatchObject({
+      'channel:dynamodb/orders': { hits: 3 },
+      'channel:sqs/order-placed': { hits: 2 },
+      'channel:sns/receipts': { hits: 1 },
+    });
+  });
+
+  it('leaves only the two planted calls unmatched', () => {
+    expect(observed.unmatched.map(({ service, kind, name, count }) => ({ service, kind, name, count }))).toEqual([
+      { service: 'checkout', kind: 'cloud', name: 'SecretsManager/GetSecretValue', count: 1 },
+      { service: 'checkout', kind: 'table', name: 'carts', count: 1 },
+    ]);
+  });
+
+  it('keeps no ARN, account id, region or request parameter, in the spans or the file', () => {
+    const planted = ['111122223333', 'eu-west-1', 'arn:', 'amazonaws', 'planted', 'PLANTED', 'promo'];
+    for (const secret of planted) expect(JSON.stringify(spans)).not.toContain(secret);
+    const out = mkdtempSync(join(scratch, 'lambda-'));
+    const dbPath = join(out, 'graph.db');
+    const report = JSON.parse(readFileSync(join(lambda, 'expected.link-report.json'), 'utf8')) as LinkReport;
+    writeGraphDb(lambdaGraph, report, dbPath);
+    const run = runObserve([trace], { db: dbPath, print: () => {} });
+    const file = readFileSync(run.path, 'utf8');
+    for (const secret of planted) expect(file).not.toContain(secret);
+    expect(run.observed.privacy.kept).toEqual(expect.arrayContaining(['faas', 'workflow', 'state', 'tables', 'awsOp', 'transport']));
+  });
+
+  it('names a step the map does not have by its workflow only, in the row and in the sample', () => {
+    const step = spans.find((span) => span.state === 'MarkPaid')!;
+    const unknown = { ...step, state: 'RefundCustomerAcme7' };
+    const seen = matchSpans(indexGraph(lambdaGraph.nodes, lambdaGraph.edges), spans.map((span) => (span === step ? unknown : span)));
+    expect(seen.unmatched).toContainEqual(expect.objectContaining({ kind: 'state', name: 'fulfil-order/?', count: 1 }));
+    expect(JSON.stringify(seen)).not.toContain('RefundCustomerAcme7');
+    expect(JSON.stringify(seen.samples)).toContain('fulfil-order/?');
+    expect(JSON.stringify(seen.samples)).toContain('fulfil-order/ReserveStock');
   });
 });

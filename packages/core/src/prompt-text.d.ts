@@ -71,6 +71,19 @@ export interface PromptFailGroup<T extends PromptFailure = PromptFailure> {
   at: T[];
 }
 
+/**
+ * What a way in answered at run time, beside what it declares (P106): core's
+ * `FailureComparison` without its entry id.
+ */
+export interface PromptFailuresSeen {
+  hits: number;
+  window: { since?: string; from: string | null; to: string | null };
+  undeclared: Array<{ status: number; count: number; share: number; expected?: string; maybe?: string[] }>;
+  declaredSeen: Array<{ status: number; exception: string; count: number; assumed?: true }>;
+  declaredNeverSeen: Array<{ status?: number; exception: string; at: string; loc?: string }>;
+  tooFewHits?: true;
+}
+
 /** What a step's line is marked with beyond its join, as far as the reader knows. */
 export interface PromptMarks {
   /** Runs only when the step before it fails, or under one that does. */
@@ -210,6 +223,8 @@ export interface PromptSubject {
   access?: PromptAccess;
   /** Every place a way in fails, ungrouped: the renderer groups them, and marks the steps they are thrown in. */
   fails?: PromptFailure[];
+  /** What a way in answered at run time against what it declares, where a trace was imported (P106). */
+  failuresSeen?: PromptFailuresSeen;
   /** For a check: its places. */
   check?: { places: PromptCheckPlace[] };
   steps: PromptStep[];

@@ -256,3 +256,37 @@ describe('scoped subjects', () => {
     expect(text).toContain('  - … 2 more step(s) not shown; ask describe_for_prompt({id: "shop#src/carts.service.ts:Carts.drop"})');
   });
 });
+
+describe('failures seen at run time (P106)', () => {
+  const window = { since: '7d', from: '2026-01-01T00:00:00.000Z', to: '2026-01-08T00:00:00.000Z' };
+
+  it('says each status no failure declares, the declared ones traffic answered, and the window it is over', () => {
+    const text = renderPrompt(
+      entry({
+        failuresSeen: {
+          hits: 40,
+          window,
+          undeclared: [
+            { status: 500, count: 4, share: 0.1 },
+            { status: 404, count: 1, share: 0.025, expected: 'the router answers it before the handler runs' },
+          ],
+          declaredSeen: [{ status: 500, exception: 'Error', count: 4, assumed: true }],
+          declaredNeverSeen: [{ status: 409, exception: 'ConflictException', at: 'shop#a', loc: 'src/a.ts:3' }],
+        },
+      }),
+    );
+    expect(text).toContain('## Failures seen at run time · 40 hits, 2026-01-01T00:00:00.000Z to 2026-01-08T00:00:00.000Z (kept: the last 7d)');
+    expect(text).toContain('- **500** ×4, 10% of requests — not declared\n');
+    expect(text).toContain('- **404** ×1, 2.5% of requests — not declared; expected: the router answers it before the handler runs');
+    expect(text).toContain('- **500?** `Error` — assumed, seen ×4: traffic, not the code, settled it');
+    expect(text).toContain('- **409** `ConflictException` — declared, never seen in the window — at `src/a.ts:3`');
+  });
+
+  it('says when there were too few hits to call a declared failure never seen, and cuts what does not fit', () => {
+    const many = Array.from({ length: PROMPT_LIMITS.maxFails + 2 }, (_, i) => ({ status: 400 + i, count: 1, share: 0.5 }));
+    const text = renderPrompt(entry({ failuresSeen: { hits: 2, window, undeclared: many, declaredSeen: [], declaredNeverSeen: [], tooFewHits: true } }));
+    expect(text).toContain('- … 2 more; ask undeclared_failures for the rest');
+    expect(text).toContain('- 2 hits are too few to say a declared failure was never seen');
+    expect(renderPrompt(entry())).not.toContain('Failures seen at run time');
+  });
+});

@@ -18,7 +18,8 @@
  * case whose tool starts with `#` asks the client that, not a tool.
  */
 import { isDeepStrictEqual } from 'node:util';
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -231,9 +232,54 @@ const PATTERN_CASES = [
 const patternTester = (input) =>
   testPatternText(input, { config: loadConfig(join(housePatterns, 'flowatlas.config.json'), { checkRepos: false }).config });
 
+/**
+ * What real traffic did (P105), asked of the multi-repo graph with the
+ * observed file `flowatlas observe` wrote over the fixture's traces: the
+ * CLI's `observe.json` snapshot, put beside a copy of the fixture's database
+ * so no other suite sees it. The busiest ways in, the slowest steps, a slow
+ * and a failing request step by step, an entry with no sample, and the rows
+ * of get_flow, who_calls and list_entries with timings beside `observed`;
+ * then the statuses ways in answered that their code does not declare, and
+ * the declared ones nobody answered, on their own and on get_flow and
+ * describe_for_prompt (P106).
+ */
+const OBSERVED_CASES = [
+  ['hot_paths.all', 'hot_paths', {}],
+  ['hot_paths.by-service', 'hot_paths', { service: 'billing', limit: 1, joins: 1 }],
+  ['slow_steps.all', 'slow_steps', { minCount: 1 }],
+  ['slow_steps.by-max', 'slow_steps', { by: 'max', minCount: 1, limit: 3 }],
+  ['slow_steps.entry', 'slow_steps', { entry: 'entry:gateway:http:GET:/orders/:param', minCount: 1 }],
+  ['slow_steps.too-few', 'slow_steps', { minCount: 50 }],
+  ['trace_for.route', 'trace_for', { entry: 'POST /orders' }],
+  ['trace_for.cross-service', 'trace_for', { entry: 'entry:gateway:http:GET:/orders/:param' }],
+  ['trace_for.cut', 'trace_for', { entry: 'POST /invoices', maxNodes: 2 }],
+  ['trace_for.no-sample', 'trace_for', { entry: 'entry:orders:http:POST:/orders/:param/archive' }],
+  ['get_flow.observed', 'get_flow', { entry: 'entry:gateway:http:GET:/orders/:param' }],
+  ['who_calls.observed', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 6 }],
+  ['list_entries.observed', 'list_entries', { service: 'billing' }],
+  ['undeclared_failures.all', 'undeclared_failures', {}],
+  ['undeclared_failures.bounded', 'undeclared_failures', { service: 'billing', limit: 1, minHits: 2 }],
+  ['get_flow.failures', 'get_flow', { entry: 'POST /invoices' }],
+  ['describe_for_prompt.failures', 'describe_for_prompt', { id: 'entry:billing:http:POST:/invoices' }],
+];
+
+/** A copy of the fixture's output with the observed file beside it, removed when the run ends. */
+const observedCopy = () => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-mcp-observed-'));
+  cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+  copyFileSync(join(fixture, 'expected.cli', 'observe.json'), join(copy, 'observed.json'));
+  return copy;
+};
+
 const SUITES = [
   { fixture, outDir, cases: CASES, prompts: PROMPTS },
   { fixture: housePatterns, outDir: join(housePatterns, 'expected.mcp'), cases: PATTERN_CASES, options: { patternTester } },
+  {
+    fixture,
+    outDir: join(fixture, 'expected.mcp.observed'),
+    cases: OBSERVED_CASES,
+    copy: observedCopy,
+  },
   {
     fixture: join(root, 'fixtures', 'nest-check-through-helper'),
     outDir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.mcp'),
@@ -271,7 +317,12 @@ for (const suite of SUITES) {
   const made = suite.setup === undefined ? undefined : await suite.setup();
   const configPath = made?.config ?? join(suite.fixture, 'flowatlas.config.json');
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-  const server = createFlowatlasServer({ configPath, ...(suite.options ?? {}) });
+  const copy = suite.copy?.();
+  const server = createFlowatlasServer({
+    configPath,
+    ...(copy === undefined ? {} : { dbPath: join(copy, 'graph.db') }),
+    ...(suite.options ?? {}),
+  });
   await server.connect(serverSide);
   const client = new Client({ name: 'snapshots', version: '0' });
   await client.connect(clientSide);
@@ -345,6 +396,7 @@ for (const suite of SUITES) {
 
   await client.close();
   if (made !== undefined) rmSync(made.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  if (copy !== undefined) rmSync(copy, { recursive: true, force: true });
 }
 
 if (problems.length > 0) {

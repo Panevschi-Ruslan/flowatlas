@@ -6,7 +6,8 @@ import { projectDetail } from '../query/detail.js';
 import { withDocs } from '../query/docs.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
-import { loadObservedCounts } from '../query/observed.js';
+import { failuresSeenRef, type FailuresSeenRef } from '../query/fails.js';
+import { failuresSeen, loadObservedCounts } from '../query/observed.js';
 import { describeForPrompt, PROMPT_LIMITS } from '../prompt/describe.js';
 import {
   fileIdOf,
@@ -52,17 +53,30 @@ const checkOf = (db: GraphDb, ctx: ToolContext, gapId: string): PromptSubject | 
   return gatherCheckSubject(db, gapId, rowsOfGap(split.rows, gapId));
 };
 
-/** `docs` names the blocks about the subject (P120), so the hand-off says which page describes it. */
+/**
+ * `docs` names the blocks about the subject (P120), so the hand-off says which page describes it; `failures` is
+ * an entry's run-time comparison (P106), as data beside the text that says it.
+ */
 const answer = (
   id: string,
   subject: PromptSubject,
   input: { maxSteps: number; maxChars: number },
   alsoAnswers?: string[],
-  docs: { docs?: unknown[] } = {},
+  extra: { docs?: unknown[]; failures?: FailuresSeenRef } = {},
 ) => {
   const next = askNextOf(subject);
   const markdown = describeForPrompt(subject, { ...PROMPT_LIMITS, maxSteps: input.maxSteps, maxChars: input.maxChars });
-  return withNext({ id, ...(alsoAnswers === undefined ? {} : { alsoAnswers }), markdown, ...docs }, next);
+  const { docs, failures } = extra;
+  return withNext(
+    {
+      id,
+      ...(alsoAnswers === undefined ? {} : { alsoAnswers }),
+      markdown,
+      ...(docs === undefined ? {} : { docs }),
+      ...(failures === undefined ? {} : { failures }),
+    },
+    next,
+  );
 };
 
 /**
@@ -165,8 +179,14 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
                   .map((node) => `describe_for_prompt({id: ${JSON.stringify(node.id)}${input.scope === undefined || input.scope === 'node' ? '' : `, scope: ${JSON.stringify(input.scope)}`}})`),
               );
         }
-        const subject = gatherPromptSubject(db, found.node, loadObservedCounts(ctx.handle.path));
-        return answer(found.node.id, subject, input, found.alsoAnswers, withDocs(db, ctx.handle.path, found.node.id));
+        const counts = loadObservedCounts(ctx.handle.path);
+        const subject = gatherPromptSubject(db, found.node, counts);
+        // An entry seen at run time carries the comparison as data too (P106), beside the text that says it.
+        const compared = counts === undefined ? undefined : failuresSeen(counts, found.node);
+        return answer(found.node.id, subject, input, found.alsoAnswers, {
+          ...withDocs(db, ctx.handle.path, found.node.id),
+          ...(compared === undefined ? {} : { failures: failuresSeenRef(compared) }),
+        });
       }),
   );
 };

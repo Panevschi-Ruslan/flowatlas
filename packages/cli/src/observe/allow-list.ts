@@ -7,10 +7,17 @@
  * reduced on the way in, and the comment beside each says how: a URL keeps the
  * shape of its path and loses its host and query, an error is at most `true`.
  *
- * Never read, whatever the format: header values, request and response
- * bodies, user ids, query strings, hosts, statements, error messages, log
- * lines, and a batch's objectives, runtime and custom data. P105 extends this
- * list for every reader.
+ * Never read, whatever the format: header values, cookies, request and
+ * response bodies, user ids, query strings, hosts, statements, span names,
+ * events, error and status messages, log lines, and a batch's objectives,
+ * runtime and custom data; and of a browser's HAR file, every header, cookie,
+ * query string, request body and response content (P112).
+ *
+ * These lists say which fields of each record a reader looks at; what a span
+ * may carry out of any reader is one list, `KEPT_FIELDS` in `span.ts`
+ * (P105), which every reader's last call (`keepAllowed`) applies. OTLP
+ * attributes off `OTLP_READS.attributes` are counted and skipped while they
+ * are walked, in JSON (`otlpAttributes`) and in protobuf (`otlp-protobuf.ts`).
  */
 export interface AllowList {
   readonly [record: string]: readonly string[];
@@ -19,7 +26,7 @@ export interface AllowList {
 export const OTLP_READS = {
   resource: ['attributes'],
   /** Of the resource's attributes. */
-  resourceAttributes: ['service.name'],
+  resourceAttributes: ['service.name', 'faas.name', 'cloud.resource_id'],
   scopes: ['scopeSpans', 'instrumentationLibrarySpans'],
   scope: ['spans'],
   /** `status` is read for its code only: an error is `true`, its message is not read. */
@@ -46,7 +53,33 @@ export const OTLP_READS = {
     'db.sql.table',
     'rpc.service',
     'rpc.method',
+    // A deployed function or workflow and the cloud calls it makes (P107),
+    // read in `aws.ts`. An ARN or a URL is cut to the name inside it there,
+    // and no request parameter (`Key`, `Item`, `MessageBody`, `Input`) is read.
+    'rpc.system',
+    'messaging.system',
+    'faas.name',
+    'faas.trigger',
+    'faas.invoked_name',
+    'cloud.resource_id',
+    'aws.lambda.invoked_arn',
+    'aws.lambda.function.name',
+    'aws.dynamodb.table_names',
+    'aws.sqs.queue.url',
+    'aws.sqs.queue_url',
+    'aws.sns.topic.arn',
+    'aws.sns.topic_arn',
+    'aws.kinesis.stream_name',
+    'aws.s3.bucket',
+    'aws.eventbridge.bus_name',
+    'aws.step_functions.state_machine.arn',
+    'aws.step_functions.state.name',
   ],
+  /**
+   * The span attributes read as a list of names; every other attribute is a
+   * single string or number, and a list under any other key is not read.
+   */
+  listAttributes: ['aws.dynamodb.table_names'],
 } as const satisfies AllowList;
 
 /**
@@ -68,10 +101,68 @@ export const NESTJS_OBSERVE_READS = {
   tags: ['http.method', 'http.url'],
 } as const satisfies AllowList;
 
+/**
+ * Zipkin v2 JSON (P112), a list of spans or a list of traces. Tags go through
+ * OTLP's key set (an OTel SDK's Zipkin exporter writes OTel keys) and Brave's
+ * own `http.path`; `error` and `otel.status_code` are read as `true` only. Not
+ * read: `name`, `annotations`, `remoteEndpoint`, `localEndpoint` beyond
+ * `serviceName`, `debug`, `shared`, `sql.query` and every other tag.
+ */
+export const ZIPKIN_READS = {
+  /** `timestamp` and `duration` are microseconds. */
+  span: ['traceId', 'id', 'parentId', 'kind', 'timestamp', 'duration', 'localEndpoint', 'tags'],
+  localEndpoint: ['serviceName'],
+  /** Beside `OTLP_READS.attributes`. A URL or a path is reduced to the shape of its path. */
+  tags: ['http.path', 'error', 'otel.status_code'],
+} as const satisfies AllowList;
+
+/**
+ * A Jaeger trace as its UI's "Download JSON" and its query API write it
+ * (P112): `{ data: [trace, ...] }`. Tags (`{ key, type, value }`) go through
+ * OTLP's key set. Not read: `operationName`, `logs`, `warnings`, `flags`, a
+ * process's `tags` (host name, IP, client version) and every other tag.
+ */
+export const JAEGER_READS = {
+  document: ['data'],
+  trace: ['traceID', 'spans', 'processes'],
+  /** `startTime` and `duration` are microseconds; the parent is the first `CHILD_OF` reference. */
+  span: ['traceID', 'spanID', 'references', 'startTime', 'duration', 'tags', 'processID'],
+  reference: ['refType', 'spanID'],
+  process: ['serviceName'],
+  tag: ['key', 'value'],
+  /** Beside `OTLP_READS.attributes`; `error` and `otel.status_code` are read as `true` only. */
+  tags: ['span.kind', 'error', 'otel.status_code'],
+} as const satisfies AllowList;
+
+/**
+ * A browser's HAR file (P112), the most sensitive file a user can hand over:
+ * it holds their cookies, tokens and the body of every request. Each entry is
+ * read for these fields by key and nothing else is ever a value the reader
+ * holds (D2). `request.url` is reduced to the shape of its path, its origin
+ * compared with the front end's base URLs and dropped; of `response.content`
+ * only `mimeType`, to tell an API call from a file, when `_resourceType` is
+ * not written. Never read: `request.headers`, `cookies`, `queryString`,
+ * `postData`, `headersSize`, `bodySize`, `response.headers`, `cookies`,
+ * `content.text`, `redirectURL`, `serverIPAddress`, `connection`, `timings`,
+ * `cache`, `pages`, `creator`, `browser`, `comment`, and every key starting
+ * `_` other than `_resourceType`.
+ */
+export const HAR_READS = {
+  document: ['log'],
+  log: ['entries'],
+  entry: ['startedDateTime', 'time', 'request', 'response', '_resourceType'],
+  request: ['method', 'url'],
+  response: ['status', 'content'],
+  content: ['mimeType'],
+} as const satisfies AllowList;
+
 /** Every reader's list, by reader name. */
 export const ALLOW_LISTS: Readonly<Record<string, AllowList>> = {
   otlp: OTLP_READS,
   'nestjs-observe': NESTJS_OBSERVE_READS,
+  zipkin: ZIPKIN_READS,
+  jaeger: JAEGER_READS,
+  har: HAR_READS,
 };
 
 type Json = Record<string, unknown>;

@@ -1,0 +1,1267 @@
+{
+  "observedFormatVersion": 3,
+  "spans": 70,
+  "privacy": {
+    "kept": [
+      "traceId",
+      "spanId",
+      "parentId",
+      "service",
+      "kind",
+      "method",
+      "route",
+      "path",
+      "destination",
+      "symbol",
+      "collection",
+      "rpc",
+      "at",
+      "status",
+      "durationMs",
+      "error",
+      "faas",
+      "trigger",
+      "invokes",
+      "workflow",
+      "state",
+      "tables",
+      "awsOp",
+      "transport",
+      "peerService",
+      "thirdParty"
+    ],
+    "dropped": [
+      "request and response headers",
+      "cookies",
+      "query strings and fragments",
+      "hosts and ports",
+      "values in a path (masked as :value)",
+      "request and response bodies",
+      "database statements and queries",
+      "end-user attributes",
+      "span names",
+      "span events and exception text",
+      "status messages",
+      "every attribute not on the kept list",
+      "@nestjs/observe user, request, tags, logs, objectives, runtime and custom data",
+      "cloud account ids and regions (an ARN or a queue URL is cut to the name inside it)",
+      "parameters of a cloud SDK call (keys, items, message bodies, workflow input)",
+      "workflow step names the map does not declare",
+      "HAR cookies, authorization and every other request and response header",
+      "HAR request bodies (postData) and response content",
+      "HAR pages, initiators, timings, server addresses and connections",
+      "the origin of a browser call (compared with the base URLs, then dropped)",
+      "the path of a call to a third party (kept by host only)"
+    ],
+    "droppedAttributes": 24,
+    "samples": {
+      "kept": true,
+      "perEntry": 3,
+      "spansPerSample": 200
+    }
+  },
+  "window": {
+    "from": "2025-10-16T07:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z"
+  },
+  "sources": [
+    {
+      "sha256": "d51b7a9f48070d639bba27814da91e2e34538c87089761b0466cc5d1bcd375af",
+      "format": "otlp",
+      "spans": 12,
+      "readAt": "2025-10-16T09:00:00.000Z"
+    },
+    {
+      "sha256": "7aa93a0f890bd8268a24a65a3aabb1b392794c0dfb2e4b96a7b76afc855c4f0e",
+      "format": "nestjs-observe",
+      "spans": 10,
+      "readAt": "2025-10-16T09:00:00.000Z"
+    },
+    {
+      "sha256": "12749c3cca637c47e3d602c554aab511047450df05e4e1e5e69003e26d6d0bf3",
+      "format": "nestjs-observe",
+      "spans": 48,
+      "readAt": "2025-10-16T09:00:00.000Z"
+    }
+  ],
+  "joins": {
+    "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated": {
+      "count": 1,
+      "lastSeen": "2025-10-16T07:33:23.500Z",
+      "firstSeen": "2025-10-16T07:33:23.500Z",
+      "p50": 12,
+      "p95": 12,
+      "max": 12,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "callee"
+    },
+    "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param": {
+      "count": 1,
+      "lastSeen": "2025-10-16T07:33:20.001Z",
+      "firstSeen": "2025-10-16T07:33:20.001Z",
+      "p50": 500,
+      "p95": 500,
+      "max": 500,
+      "statuses": {
+        "200": 1
+      },
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created": {
+      "count": 1,
+      "lastSeen": "2025-10-16T07:33:23.001Z",
+      "firstSeen": "2025-10-16T07:33:23.001Z",
+      "p50": 3,
+      "p95": 3,
+      "max": 3,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    }
+  },
+  "entries": {
+    "entry:billing:event:order.created": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T07:33:23.500Z",
+      "firstSeen": "2025-10-16T07:33:23.500Z",
+      "p50": 12,
+      "p95": 12,
+      "max": 12,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:billing:http:GET:/invoices/:param": {
+      "hits": 3,
+      "lastSeen": "2025-10-16T08:05:01.000Z",
+      "firstSeen": "2025-10-16T07:33:31.000Z",
+      "p50": 2.95,
+      "p95": 3.2,
+      "max": 3.2,
+      "statuses": {
+        "200": 2,
+        "404": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:billing:http:POST:/invoices": {
+      "hits": 22,
+      "lastSeen": "2025-10-16T08:39:00.000Z",
+      "firstSeen": "2025-10-16T07:33:30.000Z",
+      "p50": 8.35,
+      "p95": 11.81,
+      "max": 41.5,
+      "statuses": {
+        "201": 21,
+        "500": 1
+      },
+      "errors": 1,
+      "errorRate": 0.0455
+    },
+    "entry:gateway:http:GET:/orders/:param": {
+      "hits": 2,
+      "lastSeen": "2025-10-16T07:33:26.000Z",
+      "firstSeen": "2025-10-16T07:33:20.000Z",
+      "p50": 47.26,
+      "p95": 520,
+      "max": 520,
+      "statuses": {
+        "200": 2
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:orders:http:GET:/orders/:param": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T07:33:20.002Z",
+      "firstSeen": "2025-10-16T07:33:20.002Z",
+      "p50": 496,
+      "p95": 496,
+      "max": 496,
+      "statuses": {
+        "200": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:orders:http:POST:/orders": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T07:33:23.000Z",
+      "firstSeen": "2025-10-16T07:33:23.000Z",
+      "p50": 35,
+      "p95": 35,
+      "max": 35,
+      "statuses": {
+        "500": 1
+      },
+      "errors": 1,
+      "errorRate": 1
+    }
+  },
+  "symbols": {
+    "billing#src/invoices/invoices.controller.ts:InvoicesController.create": {
+      "hits": 22,
+      "lastSeen": "2025-10-16T08:39:00.000Z",
+      "firstSeen": "2025-10-16T07:33:30.000Z",
+      "p50": 7.66,
+      "p95": 11.81,
+      "max": 41,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "billing#src/invoices/invoices.controller.ts:InvoicesController.findOne": {
+      "hits": 3,
+      "lastSeen": "2025-10-16T08:05:01.000Z",
+      "firstSeen": "2025-10-16T07:33:31.000Z",
+      "p50": 2.71,
+      "p95": 3,
+      "max": 3,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "billing#src/invoices/invoices.service.ts:InvoicesService.create": {
+      "hits": 2,
+      "lastSeen": "2025-10-16T08:06:00.000Z",
+      "firstSeen": "2025-10-16T07:33:30.000Z",
+      "p50": 3.22,
+      "p95": 40.2,
+      "max": 40.2,
+      "errors": 1,
+      "errorRate": 0.5
+    },
+    "billing#src/invoices/invoices.service.ts:InvoicesService.findOne": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T07:33:40.000Z",
+      "firstSeen": "2025-10-16T07:33:40.000Z",
+      "p50": 0.5,
+      "p95": 0.5,
+      "max": 0.5,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "gateway#src/orders/orders.controller.ts:OrdersController.findOne": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T07:33:20.000Z",
+      "firstSeen": "2025-10-16T07:33:20.000Z",
+      "p50": 520,
+      "p95": 520,
+      "max": 520,
+      "statuses": {
+        "200": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "http_out:gateway#src/clients/orders.client.ts:33:12": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T07:33:20.001Z",
+      "firstSeen": "2025-10-16T07:33:20.001Z",
+      "p50": 500,
+      "p95": 500,
+      "max": 500,
+      "statuses": {
+        "200": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "orders#src/orders/orders.service.ts:OrdersService.findOne": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T07:33:20.003Z",
+      "firstSeen": "2025-10-16T07:33:20.003Z",
+      "p50": 492,
+      "p95": 492,
+      "max": 492,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "table:orders#orders": {
+      "hits": 1,
+      "lastSeen": null,
+      "firstSeen": null,
+      "errors": 0,
+      "errorRate": 0
+    }
+  },
+  "channels": {
+    "channel:order.created": {
+      "hits": 2,
+      "lastSeen": "2025-10-16T07:33:23.500Z",
+      "firstSeen": "2025-10-16T07:33:23.001Z",
+      "p50": 3.22,
+      "p95": 12,
+      "max": 12,
+      "errors": 0,
+      "errorRate": 0
+    }
+  },
+  "unmatched": [
+    {
+      "service": "billing",
+      "kind": "db",
+      "name": "invoices",
+      "count": 2,
+      "lastSeen": "2025-10-16T08:06:00.000Z",
+      "firstSeen": "2025-10-16T07:33:30.000Z",
+      "p50": 0.81,
+      "p95": 38.9,
+      "max": 38.9,
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "billing",
+      "kind": "client",
+      "name": "GET /orders/:value",
+      "count": 1,
+      "lastSeen": "2025-10-16T07:33:30.000Z",
+      "firstSeen": "2025-10-16T07:33:30.000Z",
+      "p50": 1.2,
+      "p95": 1.2,
+      "max": 1.2,
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "billing",
+      "kind": "code",
+      "name": "LedgerClient.post",
+      "count": 1,
+      "lastSeen": "2025-10-16T07:33:30.000Z",
+      "firstSeen": "2025-10-16T07:33:30.000Z",
+      "p50": 2,
+      "p95": 2,
+      "max": 2,
+      "errors": 1,
+      "errorRate": 1
+    },
+    {
+      "service": "billing",
+      "kind": "http",
+      "name": "GET /healthz",
+      "count": 1,
+      "lastSeen": "2025-10-16T07:33:33.000Z",
+      "firstSeen": "2025-10-16T07:33:33.000Z",
+      "p50": 0.2,
+      "p95": 0.2,
+      "max": 0.2,
+      "statuses": {
+        "404": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "gateway",
+      "kind": "http",
+      "name": "GET /metrics",
+      "count": 1,
+      "lastSeen": "2025-10-16T07:33:25.000Z",
+      "firstSeen": "2025-10-16T07:33:25.000Z",
+      "p50": 2,
+      "p95": 2,
+      "max": 2,
+      "statuses": {
+        "200": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "orders",
+      "kind": "messaging",
+      "name": "order.audited",
+      "count": 1,
+      "lastSeen": "2025-10-16T07:33:23.002Z",
+      "firstSeen": "2025-10-16T07:33:23.002Z",
+      "p50": 0.5,
+      "p95": 0.5,
+      "max": 0.5,
+      "errors": 0,
+      "errorRate": 0
+    }
+  ],
+  "ambiguous": [
+    {
+      "service": "gateway",
+      "kind": "client",
+      "name": "GET /orders/:value",
+      "candidates": [
+        "http_out:gateway#src/clients/orders.client.ts:33:12",
+        "http_out:gateway#src/clients/orders.client.ts:59:12"
+      ],
+      "count": 1
+    }
+  ],
+  "samples": {
+    "entry:billing:event:order.created": {
+      "slow": [
+        {
+          "traceId": "a1000000000000000000000000000002",
+          "at": "2025-10-16T07:33:23.500Z",
+          "ms": 12,
+          "spans": 1,
+          "tree": {
+            "id": "entry:billing:event:order.created",
+            "label": "order.created",
+            "service": "billing",
+            "kind": "consumer",
+            "ms": 12
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:billing:http:GET:/invoices/:param": {
+      "slow": [
+        {
+          "traceId": "f1000000000000000000000000000001",
+          "at": "2025-10-16T08:05:00.000Z",
+          "ms": 3.2,
+          "status": 200,
+          "spans": 2,
+          "tree": {
+            "id": "entry:billing:http:GET:/invoices/:param",
+            "label": "GET /invoices/:id",
+            "service": "billing",
+            "kind": "server",
+            "ms": 3.2,
+            "status": 200,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.findOne",
+                "label": "InvoicesController.findOne",
+                "service": "billing",
+                "kind": "internal",
+                "ms": 3
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "f1000000000000000000000000000002",
+          "at": "2025-10-16T08:05:01.000Z",
+          "ms": 2.8,
+          "status": 404,
+          "spans": 2,
+          "tree": {
+            "id": "entry:billing:http:GET:/invoices/:param",
+            "label": "GET /invoices/:id",
+            "service": "billing",
+            "kind": "server",
+            "ms": 2.8,
+            "status": 404,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.findOne",
+                "label": "InvoicesController.findOne",
+                "service": "billing",
+                "kind": "internal",
+                "ms": 2.5
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "e1000000000000000000000000000002",
+          "at": "2025-10-16T07:33:31.000Z",
+          "ms": 1.1,
+          "status": 200,
+          "spans": 2,
+          "tree": {
+            "id": "entry:billing:http:GET:/invoices/:param",
+            "label": "GET /invoices/:id",
+            "service": "billing",
+            "kind": "server",
+            "ms": 1.1,
+            "status": 200,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.findOne",
+                "label": "InvoicesController.findOne",
+                "service": "billing",
+                "kind": "internal",
+                "ms": 1
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:billing:http:POST:/invoices": {
+      "slow": [
+        {
+          "traceId": "f1000000000000000000000000000003",
+          "at": "2025-10-16T08:06:00.000Z",
+          "ms": 41.5,
+          "status": 500,
+          "error": true,
+          "spans": 4,
+          "tree": {
+            "id": "entry:billing:http:POST:/invoices",
+            "label": "POST /invoices",
+            "service": "billing",
+            "kind": "server",
+            "ms": 41.5,
+            "status": 500,
+            "error": true,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+                "label": "InvoicesController.create",
+                "service": "billing",
+                "kind": "internal",
+                "ms": 41,
+                "children": [
+                  {
+                    "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                    "label": "InvoicesService.create",
+                    "service": "billing",
+                    "kind": "internal",
+                    "ms": 40.2,
+                    "error": true,
+                    "children": [
+                      {
+                        "label": "invoices",
+                        "service": "billing",
+                        "kind": "client",
+                        "ms": 38.9
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "f1000000000000000000000000000023",
+          "at": "2025-10-16T08:39:00.000Z",
+          "ms": 11.65,
+          "status": 201,
+          "spans": 2,
+          "tree": {
+            "id": "entry:billing:http:POST:/invoices",
+            "label": "POST /invoices",
+            "service": "billing",
+            "kind": "server",
+            "ms": 11.65,
+            "status": 201,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+                "label": "InvoicesController.create",
+                "service": "billing",
+                "kind": "internal",
+                "ms": 11.15
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "f1000000000000000000000000000022",
+          "at": "2025-10-16T08:38:00.000Z",
+          "ms": 11.3,
+          "status": 201,
+          "spans": 2,
+          "tree": {
+            "id": "entry:billing:http:POST:/invoices",
+            "label": "POST /invoices",
+            "service": "billing",
+            "kind": "server",
+            "ms": 11.3,
+            "status": 201,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+                "label": "InvoicesController.create",
+                "service": "billing",
+                "kind": "internal",
+                "ms": 10.8
+              }
+            ]
+          }
+        }
+      ],
+      "failing": [
+        {
+          "traceId": "f1000000000000000000000000000003",
+          "at": "2025-10-16T08:06:00.000Z",
+          "ms": 41.5,
+          "status": 500,
+          "error": true,
+          "spans": 4,
+          "tree": {
+            "id": "entry:billing:http:POST:/invoices",
+            "label": "POST /invoices",
+            "service": "billing",
+            "kind": "server",
+            "ms": 41.5,
+            "status": 500,
+            "error": true,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+                "label": "InvoicesController.create",
+                "service": "billing",
+                "kind": "internal",
+                "ms": 41,
+                "children": [
+                  {
+                    "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                    "label": "InvoicesService.create",
+                    "service": "billing",
+                    "kind": "internal",
+                    "ms": 40.2,
+                    "error": true,
+                    "children": [
+                      {
+                        "label": "invoices",
+                        "service": "billing",
+                        "kind": "client",
+                        "ms": 38.9
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "entry:gateway:http:GET:/orders/:param": {
+      "slow": [
+        {
+          "traceId": "a1000000000000000000000000000001",
+          "at": "2025-10-16T07:33:20.000Z",
+          "ms": 520,
+          "status": 200,
+          "spans": 5,
+          "tree": {
+            "id": "entry:gateway:http:GET:/orders/:param",
+            "label": "GET /orders/:id",
+            "service": "gateway",
+            "kind": "server",
+            "ms": 520,
+            "status": 200,
+            "children": [
+              {
+                "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+                "label": "GET /orders/:value",
+                "service": "gateway",
+                "kind": "client",
+                "ms": 500,
+                "status": 200,
+                "children": [
+                  {
+                    "id": "entry:orders:http:GET:/orders/:param",
+                    "label": "GET /orders/:id",
+                    "service": "orders",
+                    "kind": "server",
+                    "ms": 496,
+                    "status": 200,
+                    "children": [
+                      {
+                        "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+                        "label": "OrdersService.findOne",
+                        "service": "orders",
+                        "kind": "internal",
+                        "ms": 492,
+                        "children": [
+                          {
+                            "id": "table:orders#orders",
+                            "label": "orders",
+                            "service": "orders",
+                            "kind": "client"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "a1000000000000000000000000000004",
+          "at": "2025-10-16T07:33:26.000Z",
+          "ms": 45,
+          "status": 200,
+          "spans": 2,
+          "tree": {
+            "id": "entry:gateway:http:GET:/orders/:param",
+            "label": "GET /orders/:id",
+            "service": "gateway",
+            "kind": "server",
+            "ms": 45,
+            "status": 200,
+            "children": [
+              {
+                "label": "GET /orders/:value",
+                "service": "gateway",
+                "kind": "client",
+                "ms": 39,
+                "status": 200
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:orders:http:GET:/orders/:param": {
+      "slow": [
+        {
+          "traceId": "a1000000000000000000000000000001",
+          "at": "2025-10-16T07:33:20.002Z",
+          "ms": 496,
+          "status": 200,
+          "spans": 3,
+          "tree": {
+            "id": "entry:orders:http:GET:/orders/:param",
+            "label": "GET /orders/:id",
+            "service": "orders",
+            "kind": "server",
+            "ms": 496,
+            "status": 200,
+            "children": [
+              {
+                "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+                "label": "OrdersService.findOne",
+                "service": "orders",
+                "kind": "internal",
+                "ms": 492,
+                "children": [
+                  {
+                    "id": "table:orders#orders",
+                    "label": "orders",
+                    "service": "orders",
+                    "kind": "client"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:orders:http:POST:/orders": {
+      "slow": [
+        {
+          "traceId": "a1000000000000000000000000000002",
+          "at": "2025-10-16T07:33:23.000Z",
+          "ms": 35,
+          "status": 500,
+          "error": true,
+          "spans": 4,
+          "tree": {
+            "id": "entry:orders:http:POST:/orders",
+            "label": "POST /orders",
+            "service": "orders",
+            "kind": "server",
+            "ms": 35,
+            "status": 500,
+            "error": true,
+            "children": [
+              {
+                "id": "channel:order.created",
+                "label": "order.created",
+                "service": "orders",
+                "kind": "producer",
+                "ms": 3,
+                "children": [
+                  {
+                    "id": "entry:billing:event:order.created",
+                    "label": "order.created",
+                    "service": "billing",
+                    "kind": "consumer",
+                    "ms": 12
+                  }
+                ]
+              },
+              {
+                "label": "order.audited",
+                "service": "orders",
+                "kind": "producer",
+                "ms": 0.5
+              }
+            ]
+          }
+        }
+      ],
+      "failing": [
+        {
+          "traceId": "a1000000000000000000000000000002",
+          "at": "2025-10-16T07:33:23.000Z",
+          "ms": 35,
+          "status": 500,
+          "error": true,
+          "spans": 4,
+          "tree": {
+            "id": "entry:orders:http:POST:/orders",
+            "label": "POST /orders",
+            "service": "orders",
+            "kind": "server",
+            "ms": 35,
+            "status": 500,
+            "error": true,
+            "children": [
+              {
+                "id": "channel:order.created",
+                "label": "order.created",
+                "service": "orders",
+                "kind": "producer",
+                "ms": 3,
+                "children": [
+                  {
+                    "id": "entry:billing:event:order.created",
+                    "label": "order.created",
+                    "service": "billing",
+                    "kind": "consumer",
+                    "ms": 12
+                  }
+                ]
+              },
+              {
+                "label": "order.audited",
+                "service": "orders",
+                "kind": "producer",
+                "ms": 0.5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "buckets": [
+    {
+      "hour": "2025-10-16T07:00:00.000Z",
+      "spans": 22,
+      "joins": {
+        "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:23.500Z",
+          "lastSeen": "2025-10-16T07:33:23.500Z",
+          "hist": {
+            "29": 1
+          },
+          "max": 12,
+          "callee": 1
+        },
+        "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:20.001Z",
+          "lastSeen": "2025-10-16T07:33:20.001Z",
+          "statuses": {
+            "200": 1
+          },
+          "hist": {
+            "72": 1
+          },
+          "max": 500
+        },
+        "producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:23.001Z",
+          "lastSeen": "2025-10-16T07:33:23.001Z",
+          "hist": {
+            "13": 1
+          },
+          "max": 3
+        }
+      },
+      "entries": {
+        "entry:billing:event:order.created": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:23.500Z",
+          "lastSeen": "2025-10-16T07:33:23.500Z",
+          "hist": {
+            "29": 1
+          },
+          "max": 12
+        },
+        "entry:billing:http:GET:/invoices/:param": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:31.000Z",
+          "lastSeen": "2025-10-16T07:33:31.000Z",
+          "statuses": {
+            "200": 1
+          },
+          "hist": {
+            "1": 1
+          },
+          "max": 1.1
+        },
+        "entry:billing:http:POST:/invoices": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:30.000Z",
+          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "statuses": {
+            "201": 1
+          },
+          "hist": {
+            "21": 1
+          },
+          "max": 6.4
+        },
+        "entry:gateway:http:GET:/orders/:param": {
+          "count": 2,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:20.000Z",
+          "lastSeen": "2025-10-16T07:33:26.000Z",
+          "statuses": {
+            "200": 2
+          },
+          "hist": {
+            "44": 1,
+            "72": 1
+          },
+          "max": 520
+        },
+        "entry:orders:http:GET:/orders/:param": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:20.002Z",
+          "lastSeen": "2025-10-16T07:33:20.002Z",
+          "statuses": {
+            "200": 1
+          },
+          "hist": {
+            "72": 1
+          },
+          "max": 496
+        },
+        "entry:orders:http:POST:/orders": {
+          "count": 1,
+          "errors": 1,
+          "firstSeen": "2025-10-16T07:33:23.000Z",
+          "lastSeen": "2025-10-16T07:33:23.000Z",
+          "statuses": {
+            "500": 1
+          },
+          "hist": {
+            "41": 1
+          },
+          "max": 35
+        }
+      },
+      "symbols": {
+        "billing#src/invoices/invoices.controller.ts:InvoicesController.create": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:30.000Z",
+          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "hist": {
+            "21": 1
+          },
+          "max": 6
+        },
+        "billing#src/invoices/invoices.controller.ts:InvoicesController.findOne": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:31.000Z",
+          "lastSeen": "2025-10-16T07:33:31.000Z",
+          "hist": {
+            "0": 1
+          },
+          "max": 1
+        },
+        "billing#src/invoices/invoices.service.ts:InvoicesService.create": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:30.000Z",
+          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "hist": {
+            "13": 1
+          },
+          "max": 3
+        },
+        "billing#src/invoices/invoices.service.ts:InvoicesService.findOne": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:40.000Z",
+          "lastSeen": "2025-10-16T07:33:40.000Z",
+          "hist": {
+            "-8": 1
+          },
+          "max": 0.5
+        },
+        "gateway#src/orders/orders.controller.ts:OrdersController.findOne": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:20.000Z",
+          "lastSeen": "2025-10-16T07:33:20.000Z",
+          "statuses": {
+            "200": 1
+          },
+          "hist": {
+            "72": 1
+          },
+          "max": 520
+        },
+        "http_out:gateway#src/clients/orders.client.ts:33:12": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:20.001Z",
+          "lastSeen": "2025-10-16T07:33:20.001Z",
+          "statuses": {
+            "200": 1
+          },
+          "hist": {
+            "72": 1
+          },
+          "max": 500
+        },
+        "orders#src/orders/orders.service.ts:OrdersService.findOne": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:20.003Z",
+          "lastSeen": "2025-10-16T07:33:20.003Z",
+          "hist": {
+            "72": 1
+          },
+          "max": 492
+        },
+        "table:orders#orders": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": null,
+          "lastSeen": null
+        }
+      },
+      "channels": {
+        "channel:order.created": {
+          "count": 2,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:23.001Z",
+          "lastSeen": "2025-10-16T07:33:23.500Z",
+          "hist": {
+            "13": 1,
+            "29": 1
+          },
+          "max": 12
+        }
+      },
+      "unmatched": [
+        {
+          "service": "billing",
+          "kind": "client",
+          "name": "GET /orders/:value",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:30.000Z",
+          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "hist": {
+            "2": 1
+          },
+          "max": 1.2
+        },
+        {
+          "service": "billing",
+          "kind": "code",
+          "name": "LedgerClient.post",
+          "count": 1,
+          "errors": 1,
+          "firstSeen": "2025-10-16T07:33:30.000Z",
+          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "hist": {
+            "8": 1
+          },
+          "max": 2
+        },
+        {
+          "service": "billing",
+          "kind": "db",
+          "name": "invoices",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:30.000Z",
+          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "hist": {
+            "-3": 1
+          },
+          "max": 0.8
+        },
+        {
+          "service": "billing",
+          "kind": "http",
+          "name": "GET /healthz",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:33.000Z",
+          "lastSeen": "2025-10-16T07:33:33.000Z",
+          "statuses": {
+            "404": 1
+          },
+          "hist": {
+            "-19": 1
+          },
+          "max": 0.2
+        },
+        {
+          "service": "gateway",
+          "kind": "http",
+          "name": "GET /metrics",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:25.000Z",
+          "lastSeen": "2025-10-16T07:33:25.000Z",
+          "statuses": {
+            "200": 1
+          },
+          "hist": {
+            "8": 1
+          },
+          "max": 2
+        },
+        {
+          "service": "orders",
+          "kind": "messaging",
+          "name": "order.audited",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:23.002Z",
+          "lastSeen": "2025-10-16T07:33:23.002Z",
+          "hist": {
+            "-8": 1
+          },
+          "max": 0.5
+        }
+      ],
+      "ambiguous": [
+        {
+          "service": "gateway",
+          "kind": "client",
+          "name": "GET /orders/:value",
+          "candidates": [
+            "http_out:gateway#src/clients/orders.client.ts:33:12",
+            "http_out:gateway#src/clients/orders.client.ts:59:12"
+          ],
+          "count": 1
+        }
+      ]
+    },
+    {
+      "hour": "2025-10-16T08:00:00.000Z",
+      "spans": 48,
+      "joins": {},
+      "entries": {
+        "entry:billing:http:GET:/invoices/:param": {
+          "count": 2,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:05:00.000Z",
+          "lastSeen": "2025-10-16T08:05:01.000Z",
+          "statuses": {
+            "200": 1,
+            "404": 1
+          },
+          "hist": {
+            "12": 1,
+            "13": 1
+          },
+          "max": 3.2
+        },
+        "entry:billing:http:POST:/invoices": {
+          "count": 21,
+          "errors": 1,
+          "firstSeen": "2025-10-16T08:06:00.000Z",
+          "lastSeen": "2025-10-16T08:39:00.000Z",
+          "statuses": {
+            "201": 20,
+            "500": 1
+          },
+          "hist": {
+            "19": 2,
+            "20": 1,
+            "21": 2,
+            "22": 1,
+            "23": 2,
+            "24": 2,
+            "25": 2,
+            "26": 3,
+            "27": 2,
+            "28": 3,
+            "43": 1
+          },
+          "max": 41.5
+        }
+      },
+      "symbols": {
+        "billing#src/invoices/invoices.controller.ts:InvoicesController.create": {
+          "count": 21,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:06:00.000Z",
+          "lastSeen": "2025-10-16T08:39:00.000Z",
+          "hist": {
+            "17": 1,
+            "18": 1,
+            "19": 1,
+            "20": 2,
+            "21": 1,
+            "22": 2,
+            "23": 2,
+            "24": 2,
+            "25": 2,
+            "26": 2,
+            "27": 3,
+            "28": 1,
+            "43": 1
+          },
+          "max": 41
+        },
+        "billing#src/invoices/invoices.controller.ts:InvoicesController.findOne": {
+          "count": 2,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:05:00.000Z",
+          "lastSeen": "2025-10-16T08:05:01.000Z",
+          "hist": {
+            "11": 1,
+            "13": 1
+          },
+          "max": 3
+        },
+        "billing#src/invoices/invoices.service.ts:InvoicesService.create": {
+          "count": 1,
+          "errors": 1,
+          "firstSeen": "2025-10-16T08:06:00.000Z",
+          "lastSeen": "2025-10-16T08:06:00.000Z",
+          "hist": {
+            "43": 1
+          },
+          "max": 40.2
+        }
+      },
+      "channels": {},
+      "unmatched": [
+        {
+          "service": "billing",
+          "kind": "db",
+          "name": "invoices",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:06:00.000Z",
+          "lastSeen": "2025-10-16T08:06:00.000Z",
+          "hist": {
+            "42": 1
+          },
+          "max": 38.9
+        }
+      ],
+      "ambiguous": []
+    }
+  ]
+}

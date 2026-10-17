@@ -6,6 +6,7 @@ import type { GraphModel } from './graph.js';
 import type { PackedGraph } from './pack.js';
 import type { PackedFail } from './fails.js';
 import type { PackedAccessOf } from './access.js';
+import type { PackedFailuresSeen } from './observed.js';
 import type { PromptLimits, PromptSubject, PROMPT_WALK } from '@flowatlas/core';
 
 type PromptWalk = typeof PROMPT_WALK;
@@ -57,6 +58,8 @@ export interface Seen {
   ambiguous: ReadonlyArray<SeenAmbiguous>;
   join(edge: number): { count: number; lastSeen: string } | null;
   entry(node: number): number;
+  /** A way in's statuses against what it declares (P106), or null. */
+  failures(node: number): PackedFailuresSeen | null;
 }
 
 /** A span that fit several places: `places` are edge positions for a `join`, node positions otherwise. */
@@ -127,6 +130,15 @@ export interface PackedFailGroup {
 export declare const failGroups: (fails: readonly PackedFail[]) => PackedFailGroup[];
 export declare const failSay: (fail: PackedFail) => string;
 export declare const choiceStatuses: (fail: PackedFail) => string;
+/** One failure chip and what traffic said of it (P106). */
+export interface FailChip {
+  text: string;
+  mark: '' | 'seen' | 'never' | 'undeclared' | 'expected';
+  title?: string;
+}
+export declare const failChipsSeen: (fails: readonly PackedFail[], compared: PackedFailuresSeen | null | undefined) => FailChip[];
+export declare const failSeenSay: (group: PackedFailGroup, compared: PackedFailuresSeen | null | undefined) => string;
+export declare const failWindowSay: (window: PackedFailuresSeen['window'] | undefined) => string;
 export declare const unmatchedOf: (
   observed: Pick<NonNullable<PackedGraph['observed']>, 'unmatched' | 'services' | 'kinds'>,
 ) => Array<{ service?: string; kind: string; name: string }>;

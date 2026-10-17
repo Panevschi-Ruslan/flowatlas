@@ -1,0 +1,95 @@
+{
+  "batches": [
+    {
+      "serviceId": "billing",
+      "serviceVersion": "1.4.2-build.77",
+      "snapshots": [
+        {
+          "ct": "2025-10-16T08:05:00.000Z",
+          "ti": "f1000000000000000000000000000001",
+          "d": 3.2,
+          "p": "http",
+          "op": "/invoices/:id",
+          "a": { "m": "GET", "sc": 200, "ou": "/invoices/inv-9001?session=s3cr3t" },
+          "u": "user-7781",
+          "t": [{ "o": "auto", "c": "InvoicesController", "m": "findOne", "d": 3 }]
+        },
+        {
+          "ct": "2025-10-16T08:05:01.000Z",
+          "ti": "f1000000000000000000000000000002",
+          "d": 2.8,
+          "p": "http",
+          "op": "/invoices/:id",
+          "a": { "m": "GET", "sc": 404, "ou": "/invoices/inv-9002" },
+          "t": [{ "o": "auto", "c": "InvoicesController", "m": "findOne", "d": 2.5 }]
+        }
+      ]
+    },
+    {
+      "serviceId": "billing",
+      "snapshots": [
+        {
+          "ct": "2025-10-16T08:06:00.000Z",
+          "ti": "f1000000000000000000000000000003",
+          "d": 41.5,
+          "p": "http",
+          "op": "/invoices",
+          "a": { "m": "POST", "sc": 500, "ou": "/invoices" },
+          "e": { "message": "post to ledger failed for customer cus-311" },
+          "rq": { "headers": { "cookie": "sid=cookie-val-55" }, "body": { "orderId": "ord-1043" } },
+          "t": [
+            {
+              "o": "auto",
+              "c": "InvoicesController",
+              "m": "create",
+              "d": 41,
+              "ch": [
+                {
+                  "o": "auto",
+                  "c": "InvoicesService",
+                  "m": "create",
+                  "d": 40.2,
+                  "e": { "message": "timeout from ledger.internal", "stack": "at InvoicesService.create" },
+                  "ch": [
+                    {
+                      "o": "auto",
+                      "c": "mongodb",
+                      "m": "insert invoices",
+                      "d": 38.9,
+                      "t": { "db.statement": "{\"insert\":\"invoices\",\"documents\":[{\"_id\":\"inv-9001\"}]}" }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "serviceId": "billing",
+      "snapshots": [
+        { "ct": "2025-10-16T08:20:00.000Z", "ti": "f1000000000000000000000000000004", "d": 5.0, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 4.5 }] },
+        { "ct": "2025-10-16T08:21:00.000Z", "ti": "f1000000000000000000000000000005", "d": 5.35, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 4.85 }] },
+        { "ct": "2025-10-16T08:22:00.000Z", "ti": "f1000000000000000000000000000006", "d": 5.7, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 5.2 }] },
+        { "ct": "2025-10-16T08:23:00.000Z", "ti": "f1000000000000000000000000000007", "d": 6.05, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 5.55 }] },
+        { "ct": "2025-10-16T08:24:00.000Z", "ti": "f1000000000000000000000000000008", "d": 6.4, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 5.9 }] },
+        { "ct": "2025-10-16T08:25:00.000Z", "ti": "f1000000000000000000000000000009", "d": 6.75, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 6.25 }] },
+        { "ct": "2025-10-16T08:26:00.000Z", "ti": "f1000000000000000000000000000010", "d": 7.1, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 6.6 }] },
+        { "ct": "2025-10-16T08:27:00.000Z", "ti": "f1000000000000000000000000000011", "d": 7.45, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 6.95 }] },
+        { "ct": "2025-10-16T08:28:00.000Z", "ti": "f1000000000000000000000000000012", "d": 7.8, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 7.3 }] },
+        { "ct": "2025-10-16T08:29:00.000Z", "ti": "f1000000000000000000000000000013", "d": 8.15, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 7.65 }] },
+        { "ct": "2025-10-16T08:30:00.000Z", "ti": "f1000000000000000000000000000014", "d": 8.5, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 8.0 }] },
+        { "ct": "2025-10-16T08:31:00.000Z", "ti": "f1000000000000000000000000000015", "d": 8.85, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 8.35 }] },
+        { "ct": "2025-10-16T08:32:00.000Z", "ti": "f1000000000000000000000000000016", "d": 9.2, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 8.7 }] },
+        { "ct": "2025-10-16T08:33:00.000Z", "ti": "f1000000000000000000000000000017", "d": 9.55, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 9.05 }] },
+        { "ct": "2025-10-16T08:34:00.000Z", "ti": "f1000000000000000000000000000018", "d": 9.9, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 9.4 }] },
+        { "ct": "2025-10-16T08:35:00.000Z", "ti": "f1000000000000000000000000000019", "d": 10.25, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 9.75 }] },
+        { "ct": "2025-10-16T08:36:00.000Z", "ti": "f1000000000000000000000000000020", "d": 10.6, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 10.1 }] },
+        { "ct": "2025-10-16T08:37:00.000Z", "ti": "f1000000000000000000000000000021", "d": 10.95, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 10.45 }] },
+        { "ct": "2025-10-16T08:38:00.000Z", "ti": "f1000000000000000000000000000022", "d": 11.3, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 10.8 }] },
+        { "ct": "2025-10-16T08:39:00.000Z", "ti": "f1000000000000000000000000000023", "d": 11.65, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 11.15 }] }
+      ]
+    }
+  ]
+}

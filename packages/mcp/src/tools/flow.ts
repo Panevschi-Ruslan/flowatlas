@@ -4,10 +4,11 @@ import { projectDetail } from '../query/detail.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { withDocs } from '../query/docs.js';
 import { buildFlowTree, type FlowResult } from '../query/flow.js';
-import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
+import { failuresSeenRef, markFailsSeen } from '../query/fails.js';
+import { failuresSeen, figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow, sampledIn } from '../query/observed.js';
 import type { FlowNode } from '../query/types.js';
 import { nearNames } from './entries.js';
-import { MAX_NEXT, withNext } from '../query/next.js';
+import { MAX_NEXT, withNext, withTraceFor } from '../query/next.js';
 import { slimTree } from '../query/wire.js';
 import { bound, callOf, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
 
@@ -89,11 +90,17 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
         });
         const counts = loadObservedCounts(ctx.handle.path);
         if (counts !== undefined) {
-          const seen = nodeSeen(counts, ref.id);
-          if (seen !== undefined) flow.root.observed = seen;
+          const seen = nodeRow(counts, ref.id);
+          if (seen !== undefined) Object.assign(flow.root, { observed: seen.hits, ...figuresOf(seen) });
           const unsure = nodeAmbiguous(counts, ref.id);
           if (unsure !== undefined) flow.root.seenAmbiguous = unsure;
           markObserved(counts, ref.id, flow.root.children, 'forward');
+          // What the way in answered against what it declares (P106).
+          const compared = failuresSeen(counts, ref.node);
+          if (compared !== undefined) {
+            markFailsSeen(flow.root.fails, { count: compared.hits, ...(seen?.statuses === undefined ? {} : { statuses: seen.statuses }) });
+            flow.root.failures = failuresSeenRef(compared);
+          }
         }
         return withNext(
           {
@@ -107,7 +114,7 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
             ...withDocs(db, ctx.handle.path, ref.id),
             ...(note === undefined ? {} : { note }),
           },
-          flowNext(ref.id, flow),
+          withTraceFor(flowNext(ref.id, flow), ref.node, sampledIn(ctx.handle.path)),
         );
       }),
   );

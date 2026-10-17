@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "label": "POST /invoices",
+      "service": "billing",
+      "count": 22,
+      "p50": 8.35,
+      "p95": 11.81,
+      "max": 41.5,
+      "errorRate": 0.0455
+    }
+  ],
+  "total": 3,
+  "truncated": "2 more entries; ask with a larger limit",
+  "next": [
+    "get_flow({entry: \"entry:billing:http:POST:/invoices\"})",
+    "trace_for({entry: \"entry:billing:http:POST:/invoices\"})",
+    "slow_steps({entry: \"entry:billing:http:POST:/invoices\", minCount: 1})"
+  ]
+}

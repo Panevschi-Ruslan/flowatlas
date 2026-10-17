@@ -7,7 +7,7 @@ import { isResolved, resolveSymbol, type EntryRef } from '../query/entry-ref.js'
 import { REVERSE_EDGES, walkBack } from '../query/flow.js';
 import { truncationMessage, type FlowNode, type WalkLimit } from '../query/types.js';
 import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
-import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
+import { figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow } from '../query/observed.js';
 import { slimForest } from '../query/wire.js';
 import { withDocs } from '../query/docs.js';
 import {
@@ -264,7 +264,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         const firstEntry = findFirst(callers, (item) => item.node.type === 'entry');
         const counts = loadObservedCounts(ctx.handle.path);
         if (counts !== undefined) markObserved(counts, target.id, callers, 'backward');
-        const seen = counts === undefined ? undefined : nodeSeen(counts, target.id);
+        const seen = counts === undefined ? undefined : nodeRow(counts, target.id);
         const unsure = counts === undefined ? undefined : nodeAmbiguous(counts, target.id);
 
         const stoppedBy = stoppedByOf(walked.cut);
@@ -286,7 +286,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           {
             target: {
               ...projectDetail(target, detail),
-              ...(seen === undefined ? {} : { observed: seen }),
+              ...(seen === undefined ? {} : { observed: seen.hits, ...figuresOf(seen) }),
               ...(unsure === undefined ? {} : { seenAmbiguous: unsure }),
             },
             ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),

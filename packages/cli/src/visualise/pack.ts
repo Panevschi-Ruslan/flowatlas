@@ -669,7 +669,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     ...withAccess(packAccess(input.nodes)),
     ...(logs === undefined ? {} : { logs }),
     ...withDocs(packDocs(input.docs, position)),
-    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds, position) }),
+    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds, position, input.nodes) }),
     ...(accepted.packed === undefined ? {} : { accepted: accepted.packed }),
     ...packCantFollow(accepted.fresh, position),
     ...packStandIns(packedEdges),

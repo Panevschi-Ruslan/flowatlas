@@ -1674,6 +1674,11 @@
     border: 1px solid color-mix(in srgb, var(--bad) 60%, var(--rule)); border-radius: 9px; padding: 0 6px;
   }
   .row-meta .fail-chips { font-size: 11px; }
+  /* What traffic answered beside what the code declares (P106). */
+  .fail-chip.is-seen { color: var(--good); border-color: color-mix(in srgb, var(--good) 60%, var(--rule)); }
+  .fail-chip.is-never { color: var(--muted); border-color: var(--rule); border-style: dashed; }
+  .fail-chip.is-undeclared { background: color-mix(in srgb, var(--bad) 14%, transparent); font-weight: 600; }
+  .fail-chip.is-expected { color: var(--muted); border-color: var(--rule); border-style: dotted; }
   .sched { font-family: var(--f-mono); font-size: 11.5px; color: var(--accent); }
   .fail-list { list-style: none; margin: 4px 0 0; padding: 0; }
   .fail-list li { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; padding: 3px 0;
@@ -2230,7 +2235,7 @@ __STEPS_LOGIC__
           (files[nodes[i][FL]] ? ' &middot; ' + esc(files[nodes[i][FL]].split('/').pop()) : '') +
           (seen.entry(i) ? ` &middot; <span class="row-seen" title="Hits seen at run time">seen &times;${seen.entry(i).toLocaleString()}</span>` : '') +
           (scheduleOf(model, i) ? ` &middot; <span class="sched">${esc(scheduleSay(scheduleOf(model, i)))}</span>` : '') +
-          '</span>' + (failsOf(model, i).length ? `<span class="row-meta">${failChipsHtml(i)}</span>` : '');
+          '</span>' + (failChipsHtml(i) ? `<span class="row-meta">${failChipsHtml(i)}</span>` : '');
         b.addEventListener('click', () => {
           current = i;
           drawEntries();
@@ -2737,9 +2742,13 @@ __STEPS_LOGIC__
     /* What a way in can fail with and when a job fires (P68, P71), said the
        same way on the Ways in list, the Steps header and the details panel. */
     const failChipsHtml = (i) => {
-      const chips = failChips(failsOf(model, i));
-      return chips.length === 0 ? '' : '<span class="fail-chips" title="What the code says this way in can fail with">can fail with ' +
-        chips.map((chip) => `<span class="fail-chip">${esc(chip)}</span>`).join('<span aria-hidden="true">·</span>') + '</span>';
+      // Beside each declared status, what traffic answered, and each status it answered that nothing declares (P106).
+      const chips = failChipsSeen(failsOf(model, i), seen.failures(i));
+      const declares = failsOf(model, i).length > 0;
+      return chips.length === 0 ? '' : `<span class="fail-chips" title="${declares ? 'What the code says this way in can fail with' : 'What traffic answered that the code does not declare'}">` +
+        (declares ? 'can fail with ' : 'seen failing with ') +
+        chips.map((chip) => `<span class="fail-chip${chip.mark ? ' is-' + chip.mark : ''}"${chip.title ? ` title="${esc(chip.title)}"` : ''}>${esc(chip.text)}</span>`)
+          .join('<span aria-hidden="true">·</span>') + '</span>';
     };
     const scheduleSay = (schedule) => schedule.expression + (schedule.zone ? ' · ' + schedule.zone : '');
     const entryHeadHtml = (i) => {
@@ -2755,16 +2764,30 @@ __STEPS_LOGIC__
     const failHelperHtml = (f) => f.v !== 'helper' ? ''
       : f.ch && f.ch.length ? `<span class="hint" title="The helper picks one at run time; which a request gets is not known">chosen at run time from ${f.ch.map((c) => esc(c.x)).join(', ')}</span>`
         : `<span class="hint">${f.fam === 'auth' ? 'refuses a check of who is asking; ' : ''}what the helper returns was not read</span>`;
+    /* A status traffic answered that no failure declares (P106): how often, and why it may be expected. */
+    const undeclaredHtml = (row) => `<li><span class="fail-chip ${row.expected ? 'is-expected' : 'is-undeclared'}">${row.status}</span>` +
+      `<span class="hint">&times;${row.count}, ${Math.round(row.share * 1000) / 10}% of requests, not declared` +
+      (row.expected ? '; expected: ' + esc(row.expected) : '') +
+      (row.maybe ? '; maybe ' + row.maybe.map((x) => `<code>${esc(x)}</code>`).join(', ') + ', which name no status' : '') + '</span></li>';
     const failsHtml = (v) => {
       const groups = failGroups(failsOf(model, v));
-      if (groups.length === 0) return '';
-      return `<section><h4>Can fail with &middot; ${groups.length}</h4>${failChipsHtml(v)}<ul class="fail-list">` +
+      const compared = seen.failures(v);
+      const undeclared = compared ? compared.undeclared : [];
+      if (groups.length === 0 && undeclared.length === 0) return '';
+      const seenSay = (g) => {
+        const said = failSeenSay(g, compared);
+        return said ? `<span class="hint fail-seen">${said}</span>` : '';
+      };
+      const heading = groups.length > 0 ? `Can fail with &middot; ${groups.length}` : `Seen failing with &middot; ${undeclared.length}`;
+      return `<section><h4>${heading}</h4>${failChipsHtml(v)}<ul class="fail-list">` +
         groups.map((g) => `<li><span class="fail-chip"${g.a ? ' title="Assumed: no code on the path writes this status"' : ''}>` +
-          `${g.s === undefined ? esc(failHelperChip(g.sites[0])) : g.s + (g.a ? '?' : '')}</span><code>${esc(g.x)}</code>` + failHelperHtml(g.sites[0]) +
+          `${g.s === undefined ? esc(failHelperChip(g.sites[0])) : g.s + (g.a ? '?' : '')}</span><code>${esc(g.x)}</code>` + failHelperHtml(g.sites[0]) + seenSay(g) +
           (g.n === 1 ? failSiteHtml(v, g.sites[0])
             : `<details class="fail-sites"><summary class="hint">${esc(g.srcs.join('/'))} &times;${g.n}</summary><ul>` +
               g.sites.map((f) => `<li>${failSiteHtml(v, f)}</li>`).join('') + '</ul></details>') +
-          '</li>').join('') + '</ul></section>';
+          '</li>').join('') + undeclared.map(undeclaredHtml).join('') +
+        (compared && compared.tooFewHits ? `<li><span class="hint">${compared.hits} hits are too few to say a declared failure was never seen</span></li>` : '') +
+        '</ul>' + (compared ? `<p class="hint">Run time: ${compared.hits} hits, ${esc(failWindowSay(compared.window))}.</p>` : '') + '</section>';
     };
     /* The pages that describe a node (P120): blocks of Markdown files tied to
        it by flowatlas docs, and whether each still says what the graph says. */

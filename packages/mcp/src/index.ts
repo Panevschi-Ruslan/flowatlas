@@ -69,6 +69,7 @@ export {
   gatherPromptSubject,
   gatherScopedSubject,
   gatherServiceSubject,
+  promptFailuresSeen,
   PROMPT_SCOPES,
   rowsOfGap,
   scopesFor,
@@ -107,7 +108,19 @@ export {
 } from './resources.js';
 export type { ReasonEntry, ReasonHint } from './resources.js';
 export { startSummaryOf } from './tools/start.js';
-export { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen, joinIdOf } from './query/observed.js';
+export {
+  failuresSeen,
+  figuresOf,
+  loadObserved,
+  loadObservedCounts,
+  markObserved,
+  nodeAmbiguous,
+  nodeRow,
+  nodeSeen,
+  joinIdOf,
+} from './query/observed.js';
+export { failuresSeenRef, markFailsSeen } from './query/fails.js';
+export type { FailRef, FailuresSeenRef } from './query/fails.js';
 export type { ObservedCounts, TreeDirection } from './query/observed.js';
 export { cantFollowFor } from './tools/cant-follow.js';
 export type { CantFollowAnswer, CantFollowPlace } from './tools/cant-follow.js';

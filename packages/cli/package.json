@@ -90,6 +90,7 @@
     "@flowatlas/adapters-broker": "workspace:*",
     "@flowatlas/adapters-db": "workspace:*",
     "@flowatlas/adapters-entry": "workspace:*",
+    "@flowatlas/aws": "workspace:*",
     "@flowatlas/contracts": "workspace:*",
     "@flowatlas/core": "workspace:*",
     "@flowatlas/extractor-angular": "workspace:*",

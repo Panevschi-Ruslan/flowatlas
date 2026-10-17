@@ -1,13 +1,14 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PROMPT_LIMITS, PROMPT_WALK, readAccepted, renderPrompt, type GraphNode, type PromptSubject } from '@flowatlas/core';
+import { observedPathFor, PROMPT_LIMITS, PROMPT_WALK, readAccepted, readObserved, renderPrompt, type GraphNode, type PromptSubject } from '@flowatlas/core';
 import { acceptedSplitOf, openGraphDb, type GraphDb } from '@flowatlas/linker';
-import { gatherCheckSubject, gatherClassSubject, gatherFileSubject, gatherPromptSubject, rowsOfGap } from '@flowatlas/mcp';
+import { gatherCheckSubject, gatherClassSubject, gatherFileSubject, gatherPromptSubject, loadObservedCounts, rowsOfGap } from '@flowatlas/mcp';
 import { describe, expect, it } from 'vitest';
 import { packDatabase } from '../commands/visualise.js';
 import { createModel, type GraphModel } from './graph.js';
-import { promptFor, stepIdOf, subjectOf } from './steps.js';
+import { createSeen, promptFor, stepIdOf, subjectOf } from './steps.js';
 
 /**
  * One text for the page and the MCP server (P97): the same subject gathered
@@ -126,6 +127,42 @@ describe('one prompt text for the page and the MCP server (P97)', () => {
         expect({ id, page }).toEqual({ id, page: server });
         expect(subjects[1]).toEqual(subjects[0]);
       }
+    }
+  });
+});
+
+/**
+ * With traffic beside the graph (P106): the statuses each way in answered
+ * against what it declares, gathered from the observed file by the server and
+ * from the pack by the page, are the same text. The observed file is the CLI's
+ * `observe.json` snapshot, beside a copy of the fixture's database.
+ */
+describe('a way in seen at run time, the same from both sides (P106)', () => {
+  it('writes every way in of the fixture the same with its failures seen', () => {
+    const copy = mkdtempSync(join(tmpdir(), 'flowatlas-parity-observed-'));
+    try {
+      cpSync(join(MULTI_REPO, '.flowatlas'), copy, { recursive: true });
+      const dbPath = join(copy, 'graph.db');
+      copyFileSync(join(MULTI_REPO, 'expected.cli', 'observe.json'), observedPathFor(dbPath));
+      const db = openGraphDb(dbPath, { readonly: true });
+      try {
+        const observed = readObserved(observedPathFor(dbPath)).observed!;
+        const model = createModel(packDatabase(db, readAccepted(dbPath), { observed })) as GraphModel;
+        const seen = createSeen(model.data);
+        const counts = loadObservedCounts(dbPath);
+        let said = 0;
+        for (const node of db.nodesByType('entry')) {
+          const server = renderPrompt(gatherPromptSubject(db, node, counts), PROMPT_LIMITS);
+          const page = promptFor(model, { node: model.nodes.findIndex((_, i) => stepIdOf(model, i) === node.id) }, { ...kit, seen });
+          expect({ id: node.id, page }).toEqual({ id: node.id, page: server });
+          if (page.includes('## Failures seen at run time')) said += 1;
+        }
+        expect(said).toBeGreaterThanOrEqual(3);
+      } finally {
+        db.close();
+      }
+    } finally {
+      rmSync(copy, { recursive: true, force: true });
     }
   });
 });

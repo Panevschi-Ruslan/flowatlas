@@ -8,6 +8,97 @@ only one of them moved.
 
 ### Added
 
+- **Zipkin, Jaeger and HAR readers (P112).** `flowatlas observe` reads Zipkin
+  v2 JSON (a list of spans or of traces) and Jaeger JSON (the UI's *Download
+  JSON*, `{ data: [...] }`) into the same spans as OTLP: their tags go through
+  OTLP's key set, so an export of the same traffic gives the same observed
+  file; span and operation names, annotations, logs, endpoints and process
+  tags are never read. It reads a browser's HAR (*Save all as HAR*) into
+  client spans of the front end (`--service`, else the map's one front end):
+  each call a script made, by method, path shape, status (`0` is a failure),
+  time and duration; files are skipped and counted. The URL's origin is
+  compared with the front end's base URLs (`apiBaseEnv` values, `apiTarget`,
+  `services[].hosts`) and dropped, and narrows the call to the `ui_api_call`
+  whose join reaches a route of that service; that join is counted. A call to
+  an origin nothing names is a third party, new unmatched kind `external`, by
+  host only. Headers, cookies, query strings, request bodies and response
+  content are never read, by key; an error names the entry and the field and
+  never quotes the file. New span fields `peerService` and `thirdParty` in
+  `privacy.kept`, five new `privacy.dropped` categories; same format-3 file.
+  The fixture's `gateway` and `orders` name the hosts the front end reaches
+  them at (`fixtures/multi-repo/traces/web.har`, `checkout.zipkin.json`,
+  `checkout.jaeger.json`).
+
+- **AWS traffic matched to the map (P107).** `flowatlas observe` reads what an
+  OpenTelemetry-instrumented Lambda function or the AWS Distro's layer writes,
+  and lands it on the nodes the Terraform and state machine readers draw: a
+  function's span on its `invoke` entry (by `faas.name`, or the ARN in
+  `cloud.resource_id` with its alias cut), a workflow's run on its `workflow`
+  entry, a step on its node, a DynamoDB call on each table it names
+  (`aws.dynamodb.table_names`, now read as a list in JSON and protobuf), and
+  SQS, SNS, EventBridge, Kinesis and S3 sends on the channel as the readers
+  spell it (`order-placed` on an SQS span is `sqs/order-placed`), with the
+  `emits` join from the caller; `Lambda` `Invoke` and `SFN` `StartExecution`
+  on the join into the entry they reach, a queue's or a stream's delivery on
+  the `consumes` join and the mapping's join into the function, and a step on
+  the join into the function its task invokes. Which of several joins a call
+  ran is settled by the function or step it ran in; a bus with several events
+  and no telling which is counted on none. New unmatched kinds `function`,
+  `workflow`, `state` (named `<workflow>/?`, never by a step name the map
+  lacks), `table` and `cloud` (an SDK call of a service nothing reads, by `<service>/<method>`
+  only); new ambiguity kind `channel`. Every ARN and URL is cut to the name
+  inside it before a span exists, so no account id or region reaches the file,
+  and no request parameter is read; `privacy.kept` and `privacy.dropped` say
+  so. A `calls` edge into an entry (a step, a mapping or a call site that
+  invokes a function or starts a workflow) counts as a join, for the page and
+  for `slow_steps` too (`fixtures/lambda-traces`).
+
+- **Failures seen but not declared (P106).** With an observed file beside the
+  graph, the statuses each way in answered are set beside the failures its
+  code declares, over the file's window: a status from 400 up that no failure
+  declares is *undeclared* (an unhandled throw, a constraint nobody mapped),
+  with `expected: <why>` where the framework answers it anyway (the router's
+  404 and 405, a 401 or 403 from a check in front of it, a 400 for a body it
+  cannot read); a declared failure no request answered is *declared, never
+  seen*, said only of a way in hit at least 20 times. An assumed status that
+  traffic answered is confirmed, one it never answered is not reported, and a
+  failure that names no status is `maybe` beside an unexplained status, never
+  folded into it. The page's failure chips say `404 seen ×3`, `409 never seen`
+  and `500 ×4 not declared`; `get_flow` and `describe_for_prompt` carry
+  `failures` and each `fails` row `seen`; the copied prompt has a *Failures
+  seen at run time* section; the MCP server gained `undeclared_failures`, worst
+  first; `flowatlas doctor` gained `failure-seen-undeclared` and
+  `failure-declared-unseen` rows at `info`, and `--strict-runtime` to make them
+  count. One pure comparison in core, `compareSeenFailures`
+  (`fixtures/multi-repo/traces`).
+
+- **How long it took, how it answered, and runs that add up (P105).**
+  `flowatlas observe` kept each span's duration, HTTP status and error flag:
+  every entry, join, method, table and channel it credits gained a count, a
+  p50, p95 and max (from log buckets about 9% wide, the max exact), the
+  statuses seen and an error rate (the error flag or a 5xx; a 4xx is in the
+  status mix only). A join is timed on the caller's span when one was read,
+  and says `measuredAt`. Runs add to `observed.json` hour by hour instead of
+  overwriting it: `--since <dur>` keeps a window of whole hours (kept for later
+  runs; `--since all` stops cutting), `--reset` starts again, and a file
+  already read, known by the hash of its contents, is skipped and said. The
+  file went to `observedFormatVersion: 3`, with a `privacy` block (the fields
+  kept, the categories dropped, how many attribute keys went unread), the
+  `window`, the `sources` read, the hour `buckets`, and per entry the three
+  slowest and three latest failing requests as trees of what each span was
+  credited to, the only place a trace id is written (`--no-samples` keeps
+  none). Format 1 and 2 files are read and carried forward as one hour without
+  timings. Every reader ends with one allow-list (`KEPT_FIELDS`,
+  `keepAllowed`), and OTLP attributes off it are skipped while they are
+  walked. `observe` also reads OTLP protobuf (`.pb`, or any file that is not
+  JSON), gzipped or not, with no dependency, and a saved series of
+  @nestjs/observe posts (`{ batches: [...] }`); the summary names the five
+  slowest and five most failing entries and the window. The MCP server gained
+  `hot_paths`, `slow_steps` and `trace_for`, and `get_flow` and `who_calls`
+  rows gained `p95` and `errorRate` beside `observed`; the page data carries
+  the figures and the window for the page to draw later
+  (`fixtures/multi-repo/traces`).
+
 - **What each route can fail with (P68).** A NestJS entry gained
   `meta.fails: [{status, exception, at, file, line, source}]`: the built-in
   exceptions and `new HttpException(..., status)` thrown by its handler, by the
@@ -487,7 +578,12 @@ only one of them moved.
   table access (`db.tables`) and a described subscription withdraw the
   `call-dynamic-receiver` row at their call, as a described publish did
   (`fixtures/data-kit-tables`: seven fewer places).
-
+- **The MCP tool list grew to twenty-three (P105, P106, P121).** `hot_paths`,
+  `slow_steps` and `trace_for` (P105), `undeclared_failures` (P106) and
+  `test_pattern` (P121) each say one short sentence with no output schema; the
+  server's instructions name the run-time tools as chains. The test's ceilings
+  were raised from 9,700 to 11,800 characters for the part a model reads and
+  from 27,500 to 30,350 for the whole list (11,764 and 30,334 with all five).
 - **`flowatlas dead` printed a verdict (P95).** The entries table's
   `confidence` column became `verdict` (`dead`, `likely-dead`, `unknown`), the
   channel and provider tables gained one, and a route a request one segment
