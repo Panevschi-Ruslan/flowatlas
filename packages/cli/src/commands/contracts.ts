@@ -18,11 +18,14 @@ import {
   type Direction,
   type Severity,
 } from '@flowatlas/contracts';
-import { loadConfig } from '@flowatlas/core';
+import { loadConfig, type LoadedConfig } from '@flowatlas/core';
+import { DEFAULT_SPEC_DEPTH, SPEC_AGAINST_FILE, type SpecAgainstReport } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { openProjectDb, type ReadOptions } from '../analysis/open.js';
 import { cannotRun, CliError, EXIT } from '../exit.js';
 import { processIo, type QueryIo } from '../query/answer.js';
+import { renderSpecAgainstText, specAgainstLines } from '../report/spec.js';
+import { againstFailures, againstReport, configuredCommitted, withChanges } from './spec-against.js';
 import {
   renderContractsJson,
   renderContractsMarkdown,
@@ -31,6 +34,7 @@ import {
 import {
   contractFindings,
   deliverSarif,
+  specFindings,
   sarifBound,
   sarifLevelFlag,
   sarifPathsOf,
@@ -71,6 +75,8 @@ export interface ContractsRun {
   text: string;
   /** Where the complete report was written, or undefined when nowhere was known. */
   file?: string;
+  /** Every document a service's configuration lists under `apiDocuments`, against its code (P195). */
+  documents?: SpecAgainstReport;
   exitCode: number;
 }
 
@@ -99,6 +105,8 @@ const whole = (value: string | undefined, fallback: number, flag: string): numbe
 
 /** What the project asked for in `flowatlas.config.json`, when there is one. */
 interface FromConfig {
+  /** The configuration, for what is read beside the graph: the committed API documents. */
+  loaded?: LoadedConfig;
   outputDir?: string;
   depth?: number;
   disableRules?: string[];
@@ -110,6 +118,7 @@ const fromConfig = (options: ContractsOptions): FromConfig => {
     const loaded = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
     const contracts = loaded.config.contracts;
     return {
+      loaded,
       outputDir: loaded.outputDir,
       ...(contracts.depth === undefined ? {} : { depth: contracts.depth }),
       disableRules: [...contracts.rules.disable],
@@ -217,13 +226,23 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
     }
     const report = checkContracts(db, check);
 
+    // The documents services commit by hand, against their code (P195): the
+    // comparison `spec --against` makes, for every one the configuration lists.
+    const committed = settings.loaded === undefined ? [] : configuredCommitted(settings.loaded);
+    const documents = settings.loaded === undefined || committed.length === 0 ? undefined : againstReport(settings.loaded, db, committed, DEFAULT_SPEC_DEPTH);
+
     const out = options.out ?? settings.outputDir;
     let file: string | undefined;
+    let documentsFile: string | undefined;
     if (out !== undefined) {
       const directory = isAbsolute(out) ? out : resolve(out);
       mkdirSync(directory, { recursive: true });
       file = join(directory, CONTRACTS_FILE);
       writeFileSync(file, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+      if (documents !== undefined) {
+        documentsFile = join(directory, SPEC_AGAINST_FILE);
+        writeFileSync(documentsFile, `${JSON.stringify(documents, null, 2)}\n`, 'utf8');
+      }
     }
 
     const view = narrow(report, {
@@ -231,7 +250,10 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
       ...(options.service === undefined ? {} : { service: options.service }),
       ...(direction === undefined ? {} : { direction }),
     });
+    // `--service` narrows the documents too; `--edge` and `--direction` name boundaries, which a document is not.
+    const documentsShown = documents === undefined ? undefined : options.service === undefined ? documents : withChanges(documents, documents.changes.filter((change) => change.service === options.service));
     const drawn = { severity, maxNodes, ...(file === undefined ? {} : { file }) };
+    const documentsDrawn = { maxRows: maxNodes, ...(documentsFile === undefined ? {} : { file: documentsFile }) };
     let text: string;
     if (format === 'sarif') {
       // Every finding of the view and every one excused, the sender's line
@@ -240,7 +262,7 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
       const log = toSarif({
         command: 'contracts',
         version: VERSION,
-        findings: contractFindings(view, { lookup: db }),
+        findings: [...contractFindings(view, { lookup: db }), ...specFindings(documentsShown?.changes ?? [])],
         paths: sarifPathsOf(options, options.sarifRoot),
         maxResults: sarifBound(options.maxNodes === undefined ? undefined : maxNodes),
         minLevel: sarifLevel ?? SEVERITY_LEVEL[severity],
@@ -248,20 +270,23 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
       });
       text = deliverSarif(log, options, io);
     } else {
+      // The JSON is contracts.json's format and stays it; the documents' answer is spec-against.json.
       text =
         format === 'json'
           ? renderContractsJson(view, drawn)
           : format === 'markdown'
-            ? renderContractsMarkdown(view, drawn)
-            : renderContractsText(view, drawn);
+            ? `${renderContractsMarkdown(view, drawn)}${documentsShown === undefined ? '' : `\n${specAgainstLines(documentsShown, documentsDrawn).join('\n')}\n`}`
+            : `${renderContractsText(view, drawn)}${documentsShown === undefined ? '' : `\n${renderSpecAgainstText(documentsShown, documentsDrawn)}`}`;
       io.out(text);
     }
+    const documentsFail = documentsShown !== undefined && failOn !== 'none' && againstFailures(documentsShown, failOn).length > 0;
     return {
       report,
       shown: view,
       text,
       ...(file === undefined ? {} : { file }),
-      exitCode: fails(view, failOn) ? EXIT.failed : EXIT.ok,
+      ...(documents === undefined ? {} : { documents }),
+      exitCode: fails(view, failOn) || documentsFail ? EXIT.failed : EXIT.ok,
     };
   } finally {
     close();
@@ -285,9 +310,12 @@ export const registerContracts = (program: Command): void => {
     .option('--out <dir>', 'where to write contracts.json (default: the configured output)')
     .option('--no-ignore', 'report the findings @ContractIgnore excuses as ordinary ones');
   withSarifOptions(command).action((options: ContractsOptions) => {
-      const { exitCode } = runContracts(options);
+      const { exitCode, documents } = runContracts(options);
       if (exitCode !== EXIT.ok) {
-        throw new CliError('contract findings at or above --fail-on', EXIT.failed);
+        throw new CliError(
+          documents === undefined ? 'contract findings at or above --fail-on' : 'contract findings, or promises a committed document makes that the code does not keep, at or above --fail-on',
+          EXIT.failed,
+        );
       }
     });
 };

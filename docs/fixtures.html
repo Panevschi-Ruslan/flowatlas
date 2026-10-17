@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>163 fixtures</span>
-    <span>394 snapshot files</span>
+    <span>164 fixtures</span>
+    <span>398 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -774,7 +774,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>NestJS <span class="count" data-total="33">33</span></h2>
+    <h2>NestJS <span class="count" data-total="34">34</span></h2>
     <ul>
       <li class="fixture" data-search="nest-addressing nestjs where a nestjs service's addresses are decided, and what it costs to read the wrong file (r89).">
         <div class="head">
@@ -807,6 +807,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A service whose outgoing requests all go through a client class it wrote itself.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-committed-openapi nestjs one nestjs service, `shop`, whose repository commits an openapi document it writes by hand (`shop/openapi.yaml`), for `flowatlas spec --against` and the &quot;committed api documents&quot; section of `flowatlas contracts` (p195).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-committed-openapi">nest-committed-openapi</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>One NestJS service, <code>shop</code>, whose repository commits an OpenAPI document it writes by hand (<code>shop/openapi.yaml</code>), for <code>flowatlas spec --against</code> and the &quot;Committed API documents&quot; section of <code>flowatlas contracts</code> (P195).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-context-path nestjs a nestjs service whose every address begins with a mount the deployment sets, and a browser that asks for those addresses under a base already carrying it.">
         <div class="head">

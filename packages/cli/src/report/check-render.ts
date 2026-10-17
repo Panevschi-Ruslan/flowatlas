@@ -5,6 +5,7 @@
  * deployed side as base - so a reviewer reads one document either way.
  */
 import type { CheckReason, CheckReport } from '@flowatlas/linker';
+import type { EnvironmentSaid } from '../git/environment.js';
 import { renderDiffMarkdown, type DiffMarkdownOptions } from './diff-markdown.js';
 
 /** Most reasons listed in either format; the file has every one (I9). */
@@ -88,13 +89,14 @@ const reasonRows = (reasons: readonly CheckReason[], file: string): string[] => 
   ];
 };
 
-const pinRows = (report: CheckReport): string[] => {
+/** Each service's pin and where the other side reads it: `candidate` in a check, `head` in `diff --env`. */
+const pinRows = (report: Pick<CheckReport, 'pins' | 'moved'>, other: 'candidate' | 'head' = 'candidate'): string[] => {
   if (report.pins.length === 0 && report.moved.length === 0) return [];
   const moved = new Map(report.moved.map((move) => [move.service, move]));
   const names = [...new Set([...report.pins.map((pin) => pin.service), ...moved.keys()])].sort();
   const pins = new Map(report.pins.map((pin) => [pin.service, pin]));
   return [
-    '| service | deployed | pinned by | candidate |',
+    `| service | deployed | pinned by | ${other} |`,
     '| --- | --- | --- | --- |',
     ...names.map((name) => {
       const pin = pins.get(name);
@@ -125,6 +127,23 @@ const leadOf = (report: CheckReport, file: string): string[] => {
   if (verdict.notes.length > 0) lines.push('### Notes', '', ...verdict.notes.map((note) => `- ${escape(note)}`), '');
   return lines;
 };
+
+/**
+ * The head of `diff --env`'s document (P193): what the environment runs and
+ * what moved, as a check says it, and no verdict - the body below is the
+ * same `renderDiffMarkdown` draws under one.
+ */
+export const environmentLead = (said: EnvironmentSaid, head: string | null): string[] => [
+  '## flowatlas diff',
+  '',
+  `\`${said.environment}\` → \`${head ?? 'working tree'}\``,
+  '',
+  `The base side is what ${said.environment} runs${said.pinsFile === null ? '' : `, pinned in ${code(said.pinsFile)}`}.`,
+  '',
+  ...pinRows(said, 'head'),
+  ...(said.notDeployed.length === 0 ? [] : [`Not deployed in ${said.environment}: ${said.notDeployed.map(code).join(', ')}.`, '']),
+  ...(said.notes.length === 0 ? [] : ['### Notes', '', ...said.notes.map((note) => `- ${escape(note)}`), '']),
+];
 
 /** One environment's answer as a document; with a comparison, `diff`'s body under the verdict. */
 export const renderCheckMarkdown = (report: CheckReport, file: string, options: Omit<DiffMarkdownOptions, 'file' | 'lead'> = {}): string => {

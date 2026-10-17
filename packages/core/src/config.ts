@@ -99,6 +99,17 @@ const serviceEntrySchema = z.strictObject({
    * file actually used when a path turns out not to be a file.
    */
   openapi: z.string().min(1).optional(),
+  /**
+   * API documents the repository commits by hand (P195), each compared with
+   * the one written from its code by `flowatlas contracts` and `flowatlas
+   * spec --against`. Unlike `document`, nothing is taken from them: the code
+   * is read, and the document is checked against it. `path` is relative to
+   * the configuration file; `application` names the address space it
+   * describes when the service has more than one.
+   */
+  apiDocuments: z
+    .array(z.strictObject({ kind: z.string().min(1), path: z.string().min(1), application: z.string().min(1).optional() }))
+    .optional(),
   type: z.string().min(1).optional(),
   /** Environment variables that hold this service's own base URL. */
   baseUrlEnv: z.array(z.string().min(1)).optional(),
@@ -230,6 +241,14 @@ export const serviceConfigSchema = serviceEntrySchema
         code: 'custom',
         path: ['document'],
         message: 'a service is declared by one document: write document, not openapi as well.',
+      });
+      return;
+    }
+    if (documentOf(service) !== undefined && service.apiDocuments !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['apiDocuments'],
+        message: 'a service declared by a document has no code to compare a document with: apiDocuments needs a repo.',
       });
       return;
     }

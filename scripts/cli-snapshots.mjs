@@ -37,6 +37,7 @@ import {
   runDeployedShow,
   runSpec,
   runSpecDiff,
+  runSpecAgainst,
   runExport,
 } from '../packages/cli/dist/index.js';
 import { catalogProblems, dslProblems } from '../packages/linker/dist/index.js';
@@ -695,6 +696,40 @@ const DEPLOYED_CASES = [
   ['check.matrix.txt', checkRun({ env: ['prod', 'canary'], ...GATEWAY_BRANCH })],
   ['check.prod.sarif.json', checkRun({ env: ['prod'], format: 'sarif', ...SHIPPED })],
   ['deployed.show.txt', (io) => runDeployedShow(undefined, { config: deployedOnce().config, now: '2026-01-04T00:00:00.000Z' }, io)],
+  // `diff --env` (P193): check.prod.md's comparison, headed by the pins and no verdict.
+  [
+    'diff.env-prod.md',
+    async (io) => {
+      const run = await runDiff(undefined, SHIPPED.head, { config: deployedOnce().config, env: 'prod', service: SHIPPED.service, generatedAt: FIXED, environ: {} }, quiet);
+      io.out(deployedPlaced(run.text.replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total')));
+    },
+  ],
+];
+
+/**
+ * A committed OpenAPI document against the code (P195), over
+ * `fixtures/nest-committed-openapi`: the route the document still declares
+ * and the one it leaves out, in every format, and the same as a section of
+ * `contracts`. Each run writes into a directory of its own, said as `<out>`.
+ */
+const committedConfig = join(root, 'fixtures', 'nest-committed-openapi', 'flowatlas.config.json');
+const againstSaid = (run) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-against-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    run(out, { out: (text) => io.out(said(text)), err: () => undefined, tty: false });
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+const against = (options) => againstSaid((out, io) => runSpecAgainst({ config: committedConfig, out, against: ['shop'], ...options }, io));
+
+const AGAINST_CASES = [
+  ['spec-against.txt', against({})],
+  ['spec-against.md', against({ format: 'markdown' })],
+  ['spec-against.json', against({ format: 'json' })],
+  ['spec-against.sarif.json', against({ format: 'sarif' })],
+  ['contracts.txt', againstSaid((out, io) => runContracts({ config: committedConfig, out }, io))],
 ];
 
 const TERRAFORM_SHAPE_SUITES = [
@@ -786,6 +821,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-rules', 'expected.cli'), owned: true, cases: RULES_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.cli'), owned: true, cases: DEPLOYED_CASES },
+  { dir: join(root, 'fixtures', 'nest-committed-openapi', 'expected.cli'), owned: true, cases: AGAINST_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

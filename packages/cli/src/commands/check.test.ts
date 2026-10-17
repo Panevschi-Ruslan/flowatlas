@@ -1,14 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { parseCheckReport } from '@flowatlas/linker';
+import { parseCheckReport, parseGraphDiff, type DiffReport } from '@flowatlas/linker';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { makeDeployedProject } from '../../../../scripts/deployed-fixture.mjs';
 import { EXIT } from '../exit.js';
 import { sarifProblems } from '../sarif/schema-check.js';
 import type { SarifLog } from '../sarif/types.js';
 import { runCheck, type CheckCommandOptions, type CheckRun } from './check.js';
-import { runDiff } from './diff.js';
+import { runDiff, type DiffOptions, type DiffRun } from './diff.js';
 
 /**
  * `flowatlas check --env` (P117) over `fixtures/multi-repo-deployed`: prod
@@ -177,5 +177,66 @@ describe('flowatlas check --env (P117)', () => {
       writeFileSync(file, before);
       execFileSync('git', ['-C', join(project, 'orders'), 'status', '--porcelain']);
     }
+  }, 300_000);
+});
+
+/**
+ * `flowatlas diff --env` (P193): `check`'s comparison without its verdict.
+ * The base side is every service at its pin, read the way `check` reads it,
+ * so the two documents agree section by section.
+ */
+describe('flowatlas diff --env (P193)', () => {
+  const diffEnv = (head: string | undefined, options: Partial<DiffOptions>): Promise<DiffRun> =>
+    runDiff(undefined, head, { config, generatedAt: FIXED, environ: {}, ...options }, quiet);
+  const untimed = (report: DiffReport | null) => (report === null ? null : { ...report, timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 } });
+
+  it('writes the document check carries under its verdict, for the same pins and the same branch', async () => {
+    // Read once, so both runs below take every commit from the cache alike.
+    await check({ env: ['prod'], service: ['orders'], head: 'drop-lookup' });
+    const diff = await diffEnv('drop-lookup', { env: 'prod', service: ['orders'] });
+    const checked = only(await check({ env: ['prod'], service: ['orders'], head: 'drop-lookup' }));
+    expect(diff.exitCode).toBe(EXIT.ok);
+    expect(diff.report.base.ref).toBe('prod');
+    expect(diff.report.head.ref).toBe('drop-lookup');
+    expect(diff.report.joins.lost.map((lost) => lost.kind).sort()).toEqual(['no-producer', 'target-gone']);
+    expect(checked.diff).not.toBeNull();
+    expect(untimed(diff.report)).toEqual(untimed(checked.diff));
+    expect(untimed(parseGraphDiff(JSON.parse(readFileSync(diff.file, 'utf8'))))).toEqual(untimed(checked.diff));
+    expect(diff.environment).toMatchObject({ environment: 'prod', pinsFile: 'flowatlas.deployed.json', notDeployed: [] });
+    expect(diff.environment?.moved.map((move) => move.service)).toEqual(['orders']);
+  }, 300_000);
+
+  it('heads its Markdown with what the environment runs, and no verdict', async () => {
+    const diff = await diffEnv('drop-lookup', { env: 'prod', service: ['orders'] });
+    expect(diff.text.startsWith('## flowatlas diff\n\n`prod` → `drop-lookup`\n\nThe base side is what prod runs, pinned in `flowatlas.deployed.json`.\n')).toBe(true);
+    expect(diff.text).toContain('| service | deployed | pinned by | head |');
+    expect(diff.text).toMatch(/\| `orders` \| `v1` [0-9a-f]{8} \| file \| `drop-lookup` [0-9a-f]{8} \|/);
+    expect(diff.text).not.toContain('deployable');
+  }, 300_000);
+
+  it('stops on a pin that does not resolve, and never reads the working tree in its place', async () => {
+    await expect(diffEnv(undefined, { env: 'canary' })).rejects.toMatchObject({
+      code: EXIT.cannotRun,
+      message: expect.stringContaining('orders: v9 (from the pins file) does not resolve in ./orders'),
+      details: [expect.stringContaining('git -C ./orders fetch --tags')],
+    });
+    await expect(diffEnv(undefined, { env: 'edge' })).rejects.toMatchObject({ code: EXIT.cannotRun, message: expect.stringContaining('no environment named "edge"') });
+  }, 300_000);
+
+  it('takes the environment or a base ref, never both, and pins only with an environment', async () => {
+    await expect(runDiff('v1', undefined, { config, env: 'prod' }, quiet)).rejects.toMatchObject({ code: EXIT.cannotRun, message: expect.stringContaining('exclusive') });
+    await expect(runDiff(undefined, undefined, { config }, quiet)).rejects.toMatchObject({ code: EXIT.cannotRun, message: expect.stringContaining('a base ref is required') });
+    await expect(runDiff('v1', undefined, { config, pin: ['billing=main'] }, quiet)).rejects.toMatchObject({ code: EXIT.cannotRun, message: expect.stringContaining('need --env') });
+    await expect(diffEnv(undefined, { env: 'not a name' })).rejects.toMatchObject({ code: EXIT.cannotRun });
+  });
+
+  it('lays --pin over the file, moves every service whose head differs without --service, and gates as diff does', async () => {
+    const moved = await diffEnv(undefined, { env: 'prod' });
+    expect(moved.environment?.moved.map((move) => move.service)).toEqual(['billing']);
+    const pinned = await diffEnv('invoice-on-checkout', { env: 'prod', service: ['gateway'], pin: ['billing=main'], failOnContractBreak: true });
+    expect(pinned.report.base.services['billing']).toMatchObject({ ref: 'main' });
+    expect(pinned.environment?.notes).toContain('billing: main from --pin, in place of v1 from the pins file');
+    expect(pinned.report.contracts.new).toContainEqual(expect.objectContaining({ kind: 'missing_required', field: 'currency' }));
+    expect(pinned.exitCode).toBe(EXIT.failed);
   }, 300_000);
 });

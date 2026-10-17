@@ -258,7 +258,13 @@ export { compareBuilt } from './commands/diff.js';
 export { runCheck, registerCheck, checkFileOf, CHECK_FORMATS } from './commands/check.js';
 export { inventoryFileName, registerSpec, runSpec, runSpecDiff, SPEC_DIFF_FORMATS, SPEC_DIR } from './commands/spec.js';
 export type { SpecCommandOptions, SpecDiffOptions, SpecDiffRun, SpecFile, SpecRun } from './commands/spec.js';
+export { againstReport, configuredCommitted, readCommitted, runSpecAgainst, SPEC_AGAINST_FORMATS } from './commands/spec-against.js';
+export type { SpecAgainstOptions, SpecAgainstRun } from './commands/spec-against.js';
 export {
+  AGAINST_NOT_COMPARED_SAID,
+  renderSpecAgainstMarkdown,
+  renderSpecAgainstText,
+  specAgainstLines,
   renderInventoryJson,
   renderInventoryMarkdown,
   renderSpecDiffMarkdown,
@@ -276,7 +282,8 @@ export { runDeployedSet, runDeployedShow, deployedShownOf, renderDeployedText, a
 export type { DeployedOptions, DeployedShown, PinShown } from './commands/deployed.js';
 export { checkReasonsOf } from './report/check-verdict.js';
 export type { CheckGraph, CheckReasons } from './report/check-verdict.js';
-export { renderCheckMarkdown, renderCheckText, summariseCheck, CHECK_MAX_ROWS } from './report/check-render.js';
+export { environmentLead, renderCheckMarkdown, renderCheckText, summariseCheck, CHECK_MAX_ROWS } from './report/check-render.js';
+export type { EnvironmentSaid } from './git/environment.js';
 export { runCache, registerCache, CACHE_ACTIONS } from './commands/cache.js';
 export type { CacheAction, CacheOptions, CacheRun } from './commands/cache.js';
 export { buildAtRef, UnreadableAtRef } from './git/build-at-ref.js';

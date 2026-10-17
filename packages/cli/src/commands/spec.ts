@@ -49,6 +49,7 @@ import { specsOfGraph } from '../report/spec-delta.js';
 import { deliverSarif, sarifBound, sarifLevelFlag, sarifPathsOf, specFindings, toSarif, withSarifOptions } from '../sarif/index.js';
 import { VERSION } from '../version.js';
 import { buildSides, collect, oneOf, sharedBuild, whole } from './diff.js';
+import { runSpecAgainst, SPEC_AGAINST_FORMATS, type SpecAgainstOptions } from './spec-against.js';
 
 /** Where the documents go under the output directory when `--out` is not given. */
 export const SPEC_DIR = 'spec';
@@ -326,12 +327,24 @@ export const registerSpec = (program: Command): void => {
     .option('--service <name>', 'only this service, repeatable', collect, [])
     .option('--kind <kind>', `one of ${SPEC_WANTED.join(', ')} (default both: only what each service has)`)
     .option('--out <dir>', `where to write (default: <output>/${SPEC_DIR}/; never inside a repository)`)
-    .option('--format <name>', `one of ${SPEC_FORMATS.join(', ')}`)
+    .option('--format <name>', `one of ${SPEC_FORMATS.join(', ')}; with --against, one of ${SPEC_AGAINST_FORMATS.join(', ')}`)
     .option('--depth <n>', `named types followed into a shape before it is cut (default ${DEFAULT_SPEC_DEPTH})`)
     .option('--check', 'write nothing; exit 1 when a file there differs from what would be written now')
     .option('--inventory', 'also write one table of every route: guarded, public, callers, tables, channels, fails')
     .option('--no-verify', 'do not read each document back through its reader')
-    .action((options: SpecCommandOptions) => {
+    .option('--against <service=file>', 'compare a committed OpenAPI or AsyncAPI document with the code, repeatable; <service> alone for its configured apiDocuments', collect, [])
+    .option('--fail-on <level>', `with --against: ${SPEC_FAIL_LEVELS.join(', ')} (default error)`)
+    .option('--max-rows <n>', 'with --against: most changes printed (the file is complete)')
+    .option('--output <file>', 'with --against: write what was printed to this file as well; with --format sarif, the log goes there instead of stdout');
+  withSarifOptions(spec, { output: false }).action((options: SpecCommandOptions & SpecAgainstOptions) => {
+      if ((options.against ?? []).length > 0) {
+        const run = runSpecAgainst(options);
+        if (run.exitCode !== EXIT.ok) {
+          const { errors, warnings } = run.report.summary;
+          throw new CliError(`the code does not keep ${errors} promise${errors === 1 ? '' : 's'} its document makes${options.failOn === 'warning' ? `, and ${warnings} to check` : ''}`, EXIT.failed);
+        }
+        return;
+      }
       const { exitCode, problems } = runSpec(options);
       if (exitCode === EXIT.cannotRun) throw new CliError(`${problems.length} document(s) did not read back into what they were written from; this is a bug in flowatlas`, EXIT.cannotRun);
       if (exitCode !== EXIT.ok) throw new CliError('a document there is not what would be written now', EXIT.failed);

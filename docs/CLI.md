@@ -1794,7 +1794,10 @@ are new. Markdown by default, because its destination is a pull request comment.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--service <name>` | every one | compare only this repository, repeatable |
+| `--service <name>` | every one | compare only this repository, repeatable; with `--env`, the services that move (default: every one whose head differs from its pin) |
+| `--env <name>` | none | the base side is what this environment runs, each service at its pin, in place of `<base-ref>`; the one ref given is then the head |
+| `--pin <service>=<ref>` | none | with `--env`: the ref a service runs, over the pins file and `FLOWATLAS_PIN_<SERVICE>`, repeatable |
+| `--pins <path>` | `deployed.file`, or `flowatlas.deployed.json` | with `--env`: the pins file |
 | `--format <name>` | `markdown` | `markdown`, `json` or `sarif` (the new and fixed contract findings and rule violations, [SARIF](#--format-sarif-findings-for-code-scanning)) |
 | `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead of stdout |
 | `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout |
@@ -1819,6 +1822,20 @@ subdirectory of a repository rather than the root of one cannot be read at a
 ref: the run says so in Warnings, the verdict names it, and
 `--fail-on-contract-break` refuses rather than passing a comparison that did not
 cover it.
+
+**Against an environment.** `flowatlas diff --env prod [head-ref]` compares
+with what prod runs rather than with one ref of every repository: the base side
+is each service at the ref [`check --env`](#flowatlas-check---env-name) reads
+it at (the pins file, `FLOWATLAS_PIN_<SERVICE>`, then `--pin`), the head side
+the same with the services that move at the head ref or the working tree. The
+document is the one a check carries under its verdict, without the verdict:
+`diff.json`'s `base.ref` is the environment's name, and every section equals
+`check.prod.json`'s `diff` but for the timings. The Markdown opens with the
+pins (`| service | deployed | pinned by | head |`), the services the
+environment does not run, and notes. A pin that does not resolve, an unknown
+environment and a service in a subdirectory of a repository exit 2, naming
+which repository to fetch: never read as the working tree in their place.
+`<base-ref>` and `--env` are exclusive; `--pin` and `--pins` need `--env`.
 
 Besides the impact and the contracts, the document says two things a renamed
 route breaks that no compiler on either side sees. **Calls that stopped
@@ -1954,6 +1971,51 @@ The `x-flowatlas-*` extensions:
 
 Not written: `servers` (a host is configuration, kept out of artefacts),
 security schemes and OAuth flows, examples.
+
+#### `flowatlas spec --against <service>=<file>`: a committed document against the code
+
+A team that writes its document by hand asks the opposite of `--check`: does
+the document still describe the code? `--against` (repeatable) reads the file
+(YAML or JSON, OpenAPI 3 or AsyncAPI 2/3, the kind by its top key) through
+flowatlas's reader of that format, writes it back in the code's normal form
+(`2XX`, `{name}`, components by shape, not by name), writes the service's
+document from the graph, and compares the two with
+[`spec diff`](#flowatlas-spec-diff-base-ref-head-ref)'s catalogue - the
+document as the base side, the code as the head. `--against shop` alone takes
+the documents `services[].apiDocuments` lists; `shop@admin=<file>` compares
+with the code of one application. Nothing is written into a repository; the
+report is `spec-against.json` (`specAgainstFormatVersion: 1`) under the output.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--format <name>` | `text` | with `--against`: `text`, `markdown`, `json` or `sarif` (`spec/<kind>` rules, command `spec-against`) |
+| `--fail-on <level>` | `error` | `none`, `error` or `warning` |
+| `--max-rows <n>` | 50 | most changes printed; the file is complete |
+| `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead of stdout |
+
+Read that way, each kind says one thing:
+
+| Kind | Level | Says |
+|---|---|---|
+| `endpoint-removed`, `method-removed`, `channel-removed`, `channel-consumer-removed` | error (consumer: warning) | the document declares it; the code no longer answers it, placed at the document's line |
+| `endpoint-added` | info | the code answers it; the document does not say it, placed in the code |
+| `request-property-added-required`, `request-property-became-required` | error | the code requires a field or value the document does not declare, or lets a caller leave out |
+| `response-property-removed`, `message-property-removed`, `…-became-optional` | error | the document promises a field the code does not send, or may leave out |
+| `…-type-changed` | error | the two disagree on a field's type |
+| `request-property-removed`, `optional-property-added` | warning, info | the document declares a value the code does not read; the code reads or sends an optional one the document does not declare |
+| `response-status-added` | warning | the code can fail with a status the document does not declare (statuses the code only assumes or could not read are left out) |
+
+Every operation a document declares is public by being declared, so a
+promise the code does not keep is an error whether or not anything in the
+project calls it. Not compared: descriptions (prose), guards (a document names
+security schemes, the code guard classes) and `format`s, which a reader of a
+document does not keep. The query and header values and failure statuses the
+document declares are compared, from the document itself.
+`flowatlas contracts` runs the same comparison for every document
+`apiDocuments` lists, as a "spec against the code" section after the
+boundaries (and in its SARIF log), writing `spec-against.json` beside
+`contracts.json`; `--fail-on` there fails on a broken promise too. Its
+`--format json` stays `contracts.json`'s format.
 
 ### `flowatlas spec diff <base-ref> [head-ref]`
 
@@ -2291,6 +2353,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
 | `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi", "path": … }`, path relative to this file |
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
+| `apiDocuments` | object[] | none | API documents the repository commits by hand, each compared with the one written from the code by `contracts` and [`spec --against`](#flowatlas-spec---against-servicefile-a-committed-document-against-the-code): `[{ "kind": "openapi" \| "asyncapi", "path": …, "application"? }]`, path relative to this file. Nothing is taken from them; refused on a service a `document` declares |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
 | `infra.vars` | string[] | none | for a service read from Terraform: the variable files a deployment is read with, in order, relative to the service's directory (`["infra/env/dev.tfvars"]`). Without it, a name two files set differently is reported, never picked |

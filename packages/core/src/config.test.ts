@@ -278,6 +278,34 @@ describe('a service declared by a document', () => {
   });
 });
 
+describe('API documents a repository commits by hand (P195)', () => {
+  const serviceOf = (service: Record<string, unknown>) =>
+    parseConfig({ services: [{ name: 'billing', ...service }] }).services[0];
+
+  it('keeps them beside a repository that is read, the code still the source', () => {
+    const service = serviceOf({
+      repo: './billing',
+      type: 'nestjs',
+      apiDocuments: [{ kind: 'openapi', path: './billing/openapi.yaml' }, { kind: 'asyncapi', path: './billing/events.yaml', application: 'admin' }],
+    });
+    expect(service?.apiDocuments).toEqual([
+      { kind: 'openapi', path: './billing/openapi.yaml' },
+      { kind: 'asyncapi', path: './billing/events.yaml', application: 'admin' },
+    ]);
+    expect(service?.document).toBeUndefined();
+  });
+
+  it('refuses them on a service a document declares: there is no code to compare with', () => {
+    expect(() =>
+      serviceOf({ document: { kind: 'openapi', path: './b.json' }, apiDocuments: [{ kind: 'openapi', path: './b.json' }] }),
+    ).toThrow(/apiDocuments needs a repo/);
+  });
+
+  it('leaves a configuration without them as it was', () => {
+    expect(serviceOf({ repo: './billing' })).not.toHaveProperty('apiDocuments');
+  });
+});
+
 describe('findConfig', () => {
   it('finds the file in the directory itself', () => {
     const root = makeRoot();

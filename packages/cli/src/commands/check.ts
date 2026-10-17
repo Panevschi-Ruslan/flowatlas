@@ -17,27 +17,12 @@
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import {
-  DeployedInvalidError,
-  deployedPathOf,
-  loadConfig,
-  loadDeployed,
-  parsePinFlags,
-  pinsFor,
-  pinsFromEnv,
-  ruleSetOf,
-  type Deployed,
-  type LoadedConfig,
-  type Pin,
-  type ProjectGraph,
-} from '@flowatlas/core';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { loadConfig, ruleSetOf, type LoadedConfig, type ProjectGraph } from '@flowatlas/core';
 import {
   CHECK_FORMAT_VERSION,
   checkReportSchema,
   graphDiffSchema,
-  type CheckMove,
-  type CheckPin,
   type CheckRefusal,
   type CheckReport,
   type CheckVerdictWord,
@@ -45,8 +30,8 @@ import {
 } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { cannotRun, CliError, EXIT, type ExitCode } from '../exit.js';
-import { buildAtRef, UnreadableAtRef, type BuildAtRefOptions } from '../git/build-at-ref.js';
-import { isDirty, isGitRepo, resolveSha } from '../git/worktree.js';
+import type { BuildAtRefOptions } from '../git/build-at-ref.js';
+import { environmentNameOf, pinSourcesOf, readEnvironment, type PinFlags, type PinSources } from '../git/environment.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { checkReasonsOf } from '../report/check-verdict.js';
 import { renderCheckMarkdown, renderCheckText, summariseCheck } from '../report/check-render.js';
@@ -72,7 +57,8 @@ export type CheckFormat = (typeof CHECK_FORMATS)[number];
 /** The document each environment's run leaves behind, whatever it printed. */
 export const checkFileOf = (environment: string): string => `check.${environment}.json`;
 
-export interface CheckCommandOptions {
+/** `--pin`, `--pins` and where `FLOWATLAS_PIN_*` are read from come from `PinFlags`, as `diff --env`'s do. */
+export interface CheckCommandOptions extends PinFlags {
   config?: string;
   /** Environments to answer for, each a section; the exit is the worst. */
   env?: string[];
@@ -80,10 +66,6 @@ export interface CheckCommandOptions {
   service?: string[];
   /** The ref the shipped services are read at; the working tree when absent. */
   head?: string;
-  /** `<service>=<ref>`, over the pins file and the environment variables. */
-  pin?: string[];
-  /** The pins file, in place of `deployed.file` or `flowatlas.deployed.json`. */
-  pins?: string;
   format?: string;
   /** Where to write what was printed; with `--format sarif`, the log alone. */
   output?: string;
@@ -100,8 +82,6 @@ export interface CheckCommandOptions {
   out?: string;
   /** Fixed timestamp, for output that is the same on two runs. */
   generatedAt?: string;
-  /** Where `FLOWATLAS_PIN_*` are read from; the process's environment when absent. */
-  environ?: Readonly<Record<string, string | undefined>>;
 }
 
 /** One environment's answer, with both sides' graphs for placing its findings. */
@@ -125,8 +105,6 @@ const EXIT_OF: Readonly<Record<CheckVerdictWord, ExitCode>> = {
   undecided: EXIT.cannotRun,
 };
 
-const short = (sha: string | null): string => (sha === null ? 'working tree' : sha.slice(0, 8));
-
 /** The configured services `--service` names, refused by name when one is not. */
 const shippedServices = (loaded: LoadedConfig, names: readonly string[] | undefined): string[] | undefined => {
   if (names === undefined || names.length === 0) return undefined;
@@ -137,127 +115,6 @@ const shippedServices = (loaded: LoadedConfig, names: readonly string[] | undefi
   }
   return [...new Set(names)];
 };
-
-/** What the run reads the pins of every environment from. */
-interface PinSources {
-  deployed: Deployed | null;
-  /** The pins file, relative to the configuration, when there is one. */
-  file: string | null;
-  env: Record<string, string>;
-  flags: Record<string, string>;
-}
-
-const pinSourcesOf = (loaded: LoadedConfig, options: CheckCommandOptions): PinSources => {
-  const services = loaded.config.services.map((service) => service.name);
-  const path = deployedPathOf(loaded.rootDir, loaded.config.deployed?.file, options.pins);
-  let deployed: Deployed | null;
-  try {
-    deployed = loadDeployed(path, services);
-  } catch (error) {
-    if (error instanceof DeployedInvalidError) throw cannotRun(error.message, error.hint === undefined ? [] : [error.hint]);
-    throw error;
-  }
-  if (deployed === null && options.pins !== undefined) throw cannotRun(`no pins file at ${path}`);
-  const flags = parsePinFlags(options.pin ?? [], services);
-  if (flags.problems.length > 0) throw cannotRun(flags.problems[0] ?? 'a --pin is not <service>=<ref>', flags.problems.slice(1));
-  return {
-    deployed,
-    file: deployed === null ? null : relative(loaded.rootDir, path).replace(/\\/g, '/') || path,
-    env: pinsFromEnv(options.environ ?? process.env, services),
-    flags: flags.pins,
-  };
-};
-
-const FROM_SAID: Readonly<Record<Pin['from'], string>> = { file: 'the pins file', env: 'FLOWATLAS_PIN_*', flag: '--pin' };
-
-/**
- * Every pin resolved to a commit, or the refusals that make the environment
- * undecidable: a ref the repository does not have (fetch its tags first), or
- * a service that is a directory inside a repository rather than one.
- */
-const resolvePins = async (loaded: LoadedConfig, pins: readonly Pin[]): Promise<{ resolved: CheckPin[]; refusals: CheckRefusal[] }> => {
-  const resolved: CheckPin[] = [];
-  const refusals: CheckRefusal[] = [];
-  for (const pin of pins) {
-    const service = loaded.config.services.find((entry) => entry.name === pin.service);
-    if (service === undefined) continue;
-    const repo = loaded.repoDir(service);
-    const sha = (await isGitRepo(repo)) ? await resolveSha(repo, pin.ref) : null;
-    resolved.push({ service: pin.service, ref: pin.ref, from: pin.from, sha, ...(pin.replaced === undefined ? {} : { replaced: pin.replaced }) });
-    if (sha !== null) continue;
-    refusals.push(
-      (await isGitRepo(repo))
-        ? {
-            reason: 'ref-not-found',
-            service: pin.service,
-            message: `${pin.service}: ${pin.ref} (from ${FROM_SAID[pin.from]}) does not resolve in ${service.repo}`,
-            hint: `Fetch it first: git -C ${service.repo} fetch --tags (in CI, check out with fetch-depth: 0).`,
-          }
-        : {
-            reason: 'not-a-git-repo',
-            service: pin.service,
-            message: `${pin.service}: ${service.repo} is not a git repository root, so it cannot be read at ${pin.ref}`,
-            hint: 'check reads every deployed service at its ref; point the service at the root of its repository.',
-          },
-    );
-  }
-  return { resolved, refusals };
-};
-
-/**
- * The services the candidate side reads somewhere else than their pin.
- *
- * Named ones (`--service`) move unless their head is their pin, which is said
- * ("nothing to deploy for orders"); without names, every pinned service whose
- * head is a different commit, or the same one with uncommitted changes when
- * the head is the working tree.
- */
-const movesOf = async (
-  loaded: LoadedConfig,
-  pins: readonly CheckPin[],
-  shipped: readonly string[] | undefined,
-  head: string | null,
-): Promise<{ moved: CheckMove[]; refusals: CheckRefusal[]; notes: string[] }> => {
-  const moved: CheckMove[] = [];
-  const refusals: CheckRefusal[] = [];
-  const notes: string[] = [];
-  const byService = new Map(pins.map((pin) => [pin.service, pin]));
-  const candidates = shipped ?? pins.map((pin) => pin.service);
-  for (const name of candidates) {
-    const service = loaded.config.services.find((entry) => entry.name === name);
-    if (service === undefined) continue;
-    const repo = loaded.repoDir(service);
-    const pin = byService.get(name);
-    const git = await isGitRepo(repo);
-    const sha = git ? await resolveSha(repo, head ?? 'HEAD') : null;
-    if (head !== null && sha === null) {
-      if (shipped !== undefined) {
-        refusals.push({
-          reason: 'head-not-found',
-          service: name,
-          message: `${name}: --head ${head} does not resolve in ${service.repo}`,
-          hint: `Fetch it first (git -C ${service.repo} fetch), or name the ref that holds what ships.`,
-        });
-      }
-      continue;
-    }
-    const dirty = head === null && git ? await isDirty(repo) : false;
-    const from = { ref: pin?.ref ?? null, sha: pin?.sha ?? null };
-    if (pin !== undefined && sha !== null && sha === pin.sha && !dirty) {
-      if (shipped !== undefined) notes.push(`nothing to deploy for ${name}: ${head ?? 'its working tree'} is ${pin.ref} (${short(pin.sha)})`);
-      continue;
-    }
-    if (pin === undefined) notes.push(`${name} is not deployed here yet: read on the candidate side only`);
-    moved.push({ service: name, from, to: { ref: head, sha: head === null && dirty ? null : sha, dirty } });
-  }
-  return { moved, refusals, notes };
-};
-
-/** The notes a header owes the reader: whose ref replaced whose (§10). */
-const pinNotes = (pins: readonly CheckPin[]): string[] =>
-  pins.flatMap((pin) =>
-    pin.replaced === undefined ? [] : [`${pin.service}: ${pin.ref} from ${FROM_SAID[pin.from]}, in place of ${pin.replaced.ref} from ${FROM_SAID[pin.replaced.from]}`],
-  );
 
 interface SectionContext {
   loaded: LoadedConfig;
@@ -278,105 +135,60 @@ const undecided = (base: Omit<CheckReport, 'verdict' | 'diff'>, refusals: CheckR
   diff: null,
 });
 
-/** One environment: its pins, its two sides, the comparison and the verdict. */
+/** One environment: its pins, its two sides (`readEnvironment`, shared with `diff --env`), the comparison and the verdict. */
 const checkEnvironment = async (environment: string, ctx: SectionContext): Promise<Omit<CheckSection, 'file' | 'exitCode'>> => {
-  const { loaded, sources, head } = ctx;
+  const { loaded, head } = ctx;
   const started = Date.now();
-  const { pins: wanted, known } = pinsFor(sources.deployed, environment, { env: sources.env, flags: sources.flags });
-  const configured = loaded.config.services.map((service) => service.name);
-  const base = {
+  const read = await readEnvironment(environment, {
+    loaded,
+    sources: ctx.sources,
+    shipped: ctx.shipped,
+    head,
+    build: { workDir: join(ctx.workDir, environment), cacheDir: ctx.outputDir, ...ctx.build },
+  });
+  const described = {
     checkFormatVersion: CHECK_FORMAT_VERSION,
     generatedAt: ctx.generatedAt,
     environment,
-    pinsFile: sources.file,
-    pins: [] as CheckPin[],
-    notDeployed: configured.filter((name) => !wanted.some((pin) => pin.service === name)).sort(),
-    moved: [] as CheckMove[],
+    pinsFile: ctx.sources.file,
+    pins: read.pins,
+    notDeployed: read.notDeployed,
+    moved: read.moved,
     head,
   };
-  if (!known) {
-    const named = Object.keys(sources.deployed?.environments ?? {}).sort();
-    return {
-      report: undecided(
-        base,
-        [
-          {
-            reason: 'unknown-environment',
-            service: null,
-            message: `no environment named ${JSON.stringify(environment)}${sources.file === null ? ' and no pins file' : ` in ${sources.file}`}${named.length === 0 ? '' : ` (known: ${named.join(', ')})`}`,
-            hint: `Record what runs there with flowatlas deployed set ${environment} <service> <ref>, or pass each running version with --pin <service>=<ref>.`,
-          },
-        ],
-        [],
-      ),
-    };
-  }
+  const notes = [...read.notes];
+  if (read.sides === null) return { report: undecided(described, read.refusals, notes) };
 
-  const { resolved, refusals } = await resolvePins(loaded, wanted);
-  const moves = await movesOf(loaded, resolved, ctx.shipped, head);
-  const notes = [...pinNotes(resolved), ...moves.notes];
-  const described = { ...base, pins: resolved, moved: moves.moved, notDeployed: base.notDeployed.filter((name) => !moves.moved.some((move) => move.service === name)) };
-  if (refusals.length > 0 || moves.refusals.length > 0) return { report: undecided(described, [...refusals, ...moves.refusals], notes) };
-
-  const workDir = join(ctx.workDir, environment);
-  const shared = { workDir, cacheDir: ctx.outputDir, fallback: false, ...ctx.build };
-  const pinned = new Map(resolved.map((pin) => [pin.service, pin.ref]));
-  try {
-    const deployed = await buildAtRef(loaded, null, {
-      ...shared,
-      side: 'base',
-      services: resolved.map((pin) => pin.service),
-      refFor: (service) => pinned.get(service) ?? null,
-    });
-    const movedNames = moves.moved.map((move) => move.service);
-    const candidate = await buildAtRef(loaded, null, {
-      ...shared,
-      side: 'head',
-      services: movedNames,
-      refFor: () => head,
-      inherit: deployed.repoGraphs,
-      inheritSources: deployed.sources,
-    });
-    const diff: DiffReport = compareBuilt({
-      loaded,
-      base: deployed,
-      head: candidate,
-      baseRef: environment,
-      headRef: head,
-      limits: ctx.limits,
-      sequenceDetail: ctx.sequenceDetail,
-      generatedAt: ctx.generatedAt,
-      started,
-    });
-    graphDiffSchema.parse(diff);
-    const found = checkReasonsOf(diff, { deployed: deployed.graph, candidate: candidate.graph }, { failOnHeuristic: ruleSetOf(loaded.config).failOnHeuristic });
-    if (moves.moved.length === 0 && ctx.shipped === undefined) notes.push(`nothing differs from what ${environment} runs`);
-    return {
-      report: {
-        ...described,
-        verdict: {
-          verdict: found.reasons.length > 0 ? 'not deployable' : 'deployable',
-          reasons: found.reasons,
-          already: found.already,
-          undecided: [],
-          notes: [...notes, ...found.notes],
-        },
-        diff,
+  const { deployed, candidate } = read.sides;
+  const diff: DiffReport = compareBuilt({
+    loaded,
+    base: deployed,
+    head: candidate,
+    baseRef: environment,
+    headRef: head,
+    limits: ctx.limits,
+    sequenceDetail: ctx.sequenceDetail,
+    generatedAt: ctx.generatedAt,
+    started,
+  });
+  graphDiffSchema.parse(diff);
+  const found = checkReasonsOf(diff, { deployed: deployed.graph, candidate: candidate.graph }, { failOnHeuristic: ruleSetOf(loaded.config).failOnHeuristic });
+  if (read.moved.length === 0 && ctx.shipped === undefined) notes.push(`nothing differs from what ${environment} runs`);
+  return {
+    report: {
+      ...described,
+      verdict: {
+        verdict: found.reasons.length > 0 ? 'not deployable' : 'deployable',
+        reasons: found.reasons,
+        already: found.already,
+        undecided: [],
+        notes: [...notes, ...found.notes],
       },
-      deployed: deployed.graph,
-      candidate: candidate.graph,
-    };
-  } catch (error) {
-    // A ref that moved between resolving it and reading it: still never the working tree.
-    if (!(error instanceof UnreadableAtRef)) throw error;
-    return {
-      report: undecided(
-        described,
-        [{ reason: error.reason, service: error.service, message: error.message, hint: `Fetch it first: git -C ${error.repo} fetch --tags.` }],
-        notes,
-      ),
-    };
-  }
+      diff,
+    },
+    deployed: deployed.graph,
+    candidate: candidate.graph,
+  };
 };
 
 /**
@@ -396,8 +208,7 @@ export const runCheck = async (options: CheckCommandOptions, io: QueryIo = proce
   const sarifLevel = sarifLevelFlag(options.sarifLevel);
   const environments = [...new Set(options.env ?? [])];
   if (environments.length === 0) throw cannotRun('--env is required: the environment to check against, e.g. --env prod');
-  const bad = environments.find((name) => !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name));
-  if (bad !== undefined) throw cannotRun(`--env ${JSON.stringify(bad)} is not an environment name (letters, digits, ".", "_" and "-")`);
+  for (const name of environments) environmentNameOf(name);
 
   const loaded = loadConfig(options.config ?? process.cwd());
   const shipped = shippedServices(loaded, options.service);

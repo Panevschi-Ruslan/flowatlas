@@ -6,6 +6,7 @@
 import { CONFIDENCE_LEVELS } from '@flowatlas/core';
 import { z } from 'zod';
 import { SPEC_KINDS } from '../document/written.js';
+import { SPEC_AGAINST_FORMAT_VERSION, type SpecAgainstReport } from './against.js';
 import { SPEC_CHANGE_KIND_NAMES, SPEC_CHANGE_LEVELS, SPEC_DIFF_FORMAT_VERSION, type SpecDiffReport } from './types.js';
 
 const count = z.number().int().min(0);
@@ -54,4 +55,23 @@ export const parseSpecDiff = (value: unknown): SpecDiffReport => {
     throw new Error(`spec-diff.json is format ${version}, written by a newer flowatlas; this one reads format ${SPEC_DIFF_FORMAT_VERSION}`);
   }
   return specDiffReportSchema.parse(value) as SpecDiffReport;
+};
+
+/** `spec-against.json` (P195): every committed document against the code. */
+export const specAgainstReportSchema = z.strictObject({
+  specAgainstFormatVersion: z.literal(SPEC_AGAINST_FORMAT_VERSION),
+  documents: z.array(
+    z.strictObject({ service: z.string().min(1), kind: z.enum(SPEC_KINDS), file: z.string().min(1), declared: count, written: count }),
+  ),
+  changes: z.array(specChangeSchema),
+  summary: z.strictObject({ errors: count, warnings: count, infos: count, breaking: count, uncalled: count }),
+});
+
+/** Reads `spec-against.json`, refusing one a newer flowatlas wrote by name. */
+export const parseSpecAgainst = (value: unknown): SpecAgainstReport => {
+  const version = (value as { specAgainstFormatVersion?: unknown } | null)?.specAgainstFormatVersion;
+  if (typeof version === 'number' && version > SPEC_AGAINST_FORMAT_VERSION) {
+    throw new Error(`spec-against.json is format ${version}, written by a newer flowatlas; this one reads format ${SPEC_AGAINST_FORMAT_VERSION}`);
+  }
+  return specAgainstReportSchema.parse(value) as SpecAgainstReport;
 };

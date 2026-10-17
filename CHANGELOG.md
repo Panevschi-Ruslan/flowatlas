@@ -507,6 +507,15 @@ only one of them moved.
   recorded a deployment in the pins file (`--resolve` recorded the commit the
   ref named); `show [env]` printed each pin with its commit, kind and age, and
   warned of a branch and of a ref the repository did not have.
+- **`flowatlas diff --env <name> [head-ref]` (P193).** The comparison `check`
+  makes, without its verdict, for a reviewer who wants the changed flows
+  against production in a pull-request comment: the base side was each
+  service at its pin, read as `check --env` reads it (`--pin`, `--pins` and
+  `FLOWATLAS_PIN_*` as there), and `diff.json`'s `base.ref` was the
+  environment's name; every section equalled the check document's `diff`. The
+  Markdown opened with the pins. A pin that did not resolve exited 2, never
+  assumed unchanged; `<base-ref>` and `--env` were exclusive. No format
+  changed.
 - **`what_changed({file: "check.prod.json"})` and `start_here`'s `checks` (P117).**
   `what_changed` read a check document like a diff, with `check: { environment,
   verdict, because }`; `start_here` said each environment's verdict in one line
@@ -539,6 +548,21 @@ only one of them moved.
   public, is a warning saying so. `--fail-on`, `--format text|markdown|json|sarif`
   (`spec/<kind>` rules), `spec-diff.json`. `flowatlas diff --spec` adds the same
   table as "API changes".
+- **`flowatlas spec --against <service>=<file>`: a committed document against
+  the code (P195).** A hand-written OpenAPI or AsyncAPI document, YAML or
+  JSON, was read through its reader, written back in the code's normal form
+  and compared with the document written from the graph by `spec diff`'s
+  catalogue, the document as the base side: a route or channel end the
+  document declared and the code no longer answered was an error at the
+  document's line, one the code answered and the document left out was said,
+  and a field the two disagreed on was named, with the query and header values
+  and failure statuses the document declared compared too. Descriptions,
+  guards and formats were not compared. `--format text|markdown|json|sarif`
+  (command `spec-against`), `--fail-on`, `spec-against.json`
+  (`specAgainstFormatVersion: 1`). The new `services[].apiDocuments` listed a
+  repository's committed documents; `contracts` compared each in a section of
+  its own and failed on a broken promise at `--fail-on`
+  (`fixtures/nest-committed-openapi`).
 - **MCP `get_spec` and `describe_for_prompt({withSpec})` (P118).** A service's
   document, or one route or channel end with the schemas it uses, as JSON text
   bounded by `maxChars`; a route's prompt can carry its fragment.
@@ -900,6 +924,15 @@ only one of them moved.
 
 ### Fixed
 
+- **A document's `null` in a list of types was dropped (P196).** OpenAPI 3.1
+  and JSON Schema say a value may be null as `type: ['string', 'null']`; the
+  document reader took the first type and read the field as never null, so the
+  contract check could not see a receiver that did not expect null. It is now
+  `string | null`, as `nullable: true` already was.
+- **An optional named request value was read as required (P197).**
+  `@Query('page') page?: number` (or `page = 1`) put `{page:number}` on the
+  route, so the written OpenAPI document required it and a caller leaving it
+  out looked like one leaving out a required value. It is now `{page?:number}`.
 - **`doctor --format github` annotated paths that were not there (P191).** An
   annotation's file was the one inside its repository (`src/x.ts`), and the
   checkout sees it under the directory the configuration gives the repository;

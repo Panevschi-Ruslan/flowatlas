@@ -10,6 +10,10 @@
  * `--fail-on-contract-break` a pipeline blocks a merge on a boundary this branch
  * broke — and only on the ones it broke. `--fail-on-rule-break` does the same
  * for the architecture rules (P114): a violation this branch introduced.
+ *
+ * `--env <name>` puts what an environment runs in place of the base ref
+ * (P193): each service at its pin, read the way `check --env` reads it, and
+ * the same document `check` carries under its verdict, without the verdict.
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -33,8 +37,10 @@ import { DEFAULT_WALK_NODES } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun, CliError, EXIT } from '../exit.js';
 import { buildAtRef, type BuildAtRefOptions, type BuildAtRefResult } from '../git/build-at-ref.js';
+import { environmentNameOf, pinSourcesOf, readEnvironment, type EnvironmentSaid, type PinFlags } from '../git/environment.js';
 import { isDirty } from '../git/worktree.js';
 import { processIo, type QueryIo } from '../query/answer.js';
+import { environmentLead } from '../report/check-render.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
 import { DIFF_MARKDOWN_DEFAULTS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
 import { flowChanges } from '../report/flow-changes.js';
@@ -61,10 +67,16 @@ export type DiffFormat = (typeof FORMATS)[number];
 /** The file every run leaves behind, whatever it printed. */
 export const DIFF_FILE = 'diff.json';
 
-export interface DiffOptions {
+/** `--pin`, `--pins` and `FLOWATLAS_PIN_*` count only with `--env`, as in `check`. */
+export interface DiffOptions extends PinFlags {
   config?: string;
-  /** Repositories to compare. Every other one is the same on both sides. */
+  /**
+   * Repositories to compare. Every other one is the same on both sides: its
+   * head, or with `--env` what the environment runs.
+   */
   service?: string[];
+  /** The base side is what this environment runs, in place of a base ref (P193). */
+  env?: string;
   format?: string;
   /**
    * Where to write what was printed. The JSON document is always written too.
@@ -115,6 +127,8 @@ export interface DiffRun {
   unread?: string[];
   /** What a failing run failed on: a new contract error, a new rule violation, or both. */
   failedOn?: Array<'contract' | 'rule'>;
+  /** With `--env`: what the environment runs and what moved, as `check` says it. */
+  environment?: EnvironmentSaid;
 }
 
 export const oneOf = <T extends string>(
@@ -375,6 +389,68 @@ export const buildSides = async (
 };
 
 /**
+ * Both sides of `diff --env` (P193), as `check --env` reads them: the base
+ * every pinned service at its pin, the head the same with the services that
+ * move (`--service`, or every one whose head differs from its pin) at the
+ * head ref or the working tree. A pin that names nothing to read stops the
+ * run (exit 2): a comparison with an environment never assumes a service is
+ * what its working tree is.
+ */
+const environmentSides = async (
+  loaded: LoadedConfig,
+  environment: string,
+  headRef: string | null,
+  shipped: readonly string[] | undefined,
+  pinFlags: PinFlags,
+  shared: Omit<BuildAtRefOptions, 'side'>,
+): Promise<{ head: BuildAtRefResult; base: BuildAtRefResult; said: EnvironmentSaid }> => {
+  const sources = pinSourcesOf(loaded, pinFlags);
+  const read = await readEnvironment(environment, { loaded, sources, shipped, head: headRef, build: shared });
+  if (read.sides === null) {
+    const [first, ...rest] = read.refusals;
+    throw cannotRun(`cannot read what ${environment} runs: ${first?.message ?? 'nothing pinned'}`, [
+      ...(first === undefined ? [] : [first.hint]),
+      ...rest.map((refusal) => `${refusal.message}. ${refusal.hint}`),
+    ]);
+  }
+  const said: EnvironmentSaid = {
+    environment,
+    pinsFile: sources.file,
+    pins: read.pins,
+    moved: read.moved,
+    notDeployed: read.notDeployed,
+    notes: read.moved.length === 0 && shipped === undefined ? [...read.notes, `nothing differs from what ${environment} runs`] : read.notes,
+  };
+  return { head: read.sides.candidate, base: read.sides.deployed, said };
+};
+
+/** What the base side is: a ref every repository is read at, or what an environment runs. */
+type BaseSide = { kind: 'ref'; ref: string } | { kind: 'environment'; environment: string };
+
+/**
+ * The base side the arguments name. `<base-ref>` and `--env` are exclusive;
+ * the pins flags say what an environment runs, so they need one.
+ */
+const baseSideOf = (baseRef: string | undefined, options: DiffOptions): BaseSide => {
+  if (options.env !== undefined) {
+    const environment = environmentNameOf(options.env);
+    if (baseRef !== undefined) {
+      throw cannotRun(`--env ${environment} and the base ref ${baseRef} are exclusive: the environment is the base side`, [
+        `Name the head alone: flowatlas diff --env ${environment} [head-ref].`,
+      ]);
+    }
+    return { kind: 'environment', environment };
+  }
+  if (baseRef === undefined) {
+    throw cannotRun('a base ref is required: flowatlas diff <base-ref> [head-ref], or flowatlas diff --env <name> [head-ref]');
+  }
+  if ((options.pin ?? []).length > 0 || options.pins !== undefined) {
+    throw cannotRun('--pin and --pins say what an environment runs, so they need --env <name>');
+  }
+  return { kind: 'ref', ref: baseRef };
+};
+
+/**
  * Runs the comparison and draws it.
  *
  * The document is written before anything is printed or any exit code is
@@ -382,7 +458,7 @@ export const buildSides = async (
  * why it failed.
  */
 export const runDiff = async (
-  baseRef: string,
+  baseRef: string | undefined,
   headRef: string | undefined,
   options: DiffOptions,
   io: QueryIo = processIo,
@@ -401,6 +477,8 @@ export const runDiff = async (
   const sequenceDetail = sequenceDetailOf(options.sequenceDetail);
   const sarifLevel = sarifLevelFlag(options.sarifLevel);
 
+  const against = baseSideOf(baseRef, options);
+
   const loaded = loadConfig(options.config ?? process.cwd());
   const services = wantedServices(loaded, options.service);
   const head = headRef ?? null;
@@ -412,19 +490,26 @@ export const runDiff = async (
   const shared = sharedBuild(workDir, outputDir, options);
 
   try {
-    const { head: builtHead, base: builtBase } = await buildSides(loaded, baseRef, head, services, shared);
+    const sides =
+      against.kind === 'ref'
+        ? { ...(await buildSides(loaded, against.ref, head, services, shared)), said: undefined }
+        : await environmentSides(loaded, against.environment, head, (options.service ?? []).length > 0 ? services : undefined, options, shared);
+    const { head: builtHead, base: builtBase, said } = sides;
+    // With --env, a service that stays as deployed is read at its pin whatever its tree holds.
+    const moving = said === undefined ? null : new Set(said.moved.map((move) => move.service));
+    const dirty = (await dirtyWarnings(loaded, head)).filter((warning) => moving === null || moving.has(warning.service ?? ''));
 
     const report = compareBuilt({
       loaded,
       base: builtBase,
       head: builtHead,
-      baseRef,
+      baseRef: against.kind === 'ref' ? against.ref : against.environment,
       headRef: head,
       limits: { maxEntries, maxNodes, maxFlows },
       sequenceDetail,
       generatedAt: options.generatedAt ?? new Date().toISOString(),
       started,
-      warnings: await dirtyWarnings(loaded, head),
+      warnings: dirty,
       ...(options.spec === true ? { spec: true } : {}),
     });
     const { contracts, rules } = report;
@@ -456,9 +541,10 @@ export const runDiff = async (
           )
         : format === 'json'
           ? `${JSON.stringify(report, null, 2)}\n`
-          : renderDiffMarkdown(report, { file, ...markdown });
+          : renderDiffMarkdown(report, { file, ...markdown, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) });
     if (format !== 'sarif') io.out(text);
     io.err(`${summariseDiff(report)}\n`);
+    for (const note of said?.notes ?? []) io.err(`note: ${note}\n`);
     for (const kept of [...builtHead.worktrees, ...builtBase.worktrees]) {
       io.err(`worktree kept: ${kept}\n`);
     }
@@ -500,6 +586,7 @@ export const runDiff = async (
       exitCode: refusedContracts || refusedRules ? EXIT.failed : EXIT.ok,
       ...(unread.size === 0 ? {} : { unread: [...unread] }),
       ...(failedOn.length === 0 ? {} : { failedOn }),
+      ...(said === undefined ? {} : { environment: said }),
     };
   } finally {
     if (options.keepWorktrees === true) io.err(`work kept: ${workDir}\n`);
@@ -513,10 +600,13 @@ export const registerDiff = (program: Command): void => {
   const command = program
     .command('diff')
     .description('what a branch changes, who would notice, and what it breaks')
-    .argument('<base-ref>', 'the ref to compare against, e.g. main')
+    .argument('[base-ref]', 'the ref to compare against, e.g. main (left out with --env)')
     .argument('[head-ref]', 'the ref to compare (default: the working tree)')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
-    .option('--service <name>', 'compare only this repository, repeatable', collect, [])
+    .option('--env <name>', 'compare with what this environment runs, each service at its pin, in place of a base ref')
+    .option('--pin <service=ref>', 'with --env: the ref a service runs, over the pins file, repeatable', collect, [])
+    .option('--pins <path>', 'with --env: the pins file (default: deployed.file, or flowatlas.deployed.json beside the configuration)')
+    .option('--service <name>', 'compare only this repository, repeatable (with --env: the ones that move)', collect, [])
     .option('--format <name>', `one of ${FORMATS.join(', ')}`)
     .option('--output <file>', 'write what was printed to this file as well; with --format sarif, the log goes there instead of stdout')
     .option('--fail-on-contract-break', 'exit 1 when this revision introduces a contract error')
@@ -534,7 +624,14 @@ export const registerDiff = (program: Command): void => {
     .option('--out <dir>', 'where to write diff.json (default: the configured output)')
     .option('--no-cache', 'read every commit again rather than believing the cache')
     .option('--keep-worktrees', 'leave the detached checkouts on disk, for debugging');
-  withSarifOptions(command, { output: false }).action(async (baseRef: string, headRef: string | undefined, options: DiffOptions) => {
+  withSarifOptions(command, { output: false }).action(async (first: string | undefined, second: string | undefined, options: DiffOptions) => {
+      // With --env the one ref given is the head: `diff --env prod drop-lookup`.
+      if (options.env !== undefined && second !== undefined) {
+        throw cannotRun(`--env ${options.env} and the base ref ${first ?? ''} are exclusive: the environment is the base side`, [
+          `Name the head alone: flowatlas diff --env ${options.env} ${second}.`,
+        ]);
+      }
+      const [baseRef, headRef] = options.env === undefined ? [first, second] : [undefined, first];
       const { exitCode, unread, failedOn } = await runDiff(baseRef, headRef, options);
       if (exitCode !== EXIT.ok) {
         const said = { contract: 'a contract error', rule: 'a violation of an architecture rule' } as const;

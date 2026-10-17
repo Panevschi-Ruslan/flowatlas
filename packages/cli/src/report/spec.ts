@@ -11,6 +11,7 @@ import {
   type InventoryRow,
   type SpecCaller,
   type SpecChange,
+  type SpecAgainstReport,
   type SpecDiffReport,
   type WrittenSpec,
 } from '@flowatlas/linker';
@@ -88,7 +89,7 @@ const said = (change: SpecChange): string =>
   change.message.startsWith(`${change.operation}: `) ? change.message.slice(change.operation.length + 2) : change.message;
 
 /** How many changes of each level, and how many breaking ones nobody calls. */
-export const summariseSpecDiff = (report: SpecDiffReport): string => {
+export const summariseSpecDiff = (report: Pick<SpecDiffReport, 'summary'>): string => {
   const { errors, warnings, infos, breaking, uncalled } = report.summary;
   return `${errors} error${errors === 1 ? '' : 's'}, ${warnings} warning${warnings === 1 ? '' : 's'}, ${infos} info${infos === 1 ? '' : 's'} · ${breaking} breaking by kind, ${uncalled} of them with no caller in this project`;
 };
@@ -162,5 +163,72 @@ export const renderSpecDiffText = (
   if (report.changes.length > shown.length) lines.push(`... and ${report.changes.length - shown.length} more changes${options.file === undefined ? '' : `, in ${options.file}`}`);
   if (shown.length > 0) lines.push('');
   lines.push(summariseSpecDiff(report));
+  return `${lines.join('\n')}\n`;
+};
+
+/* ── a committed document against the code (P195) ── */
+
+/** What a comparison with a document never looks at, said under every answer. */
+export const AGAINST_NOT_COMPARED_SAID = 'not compared: descriptions, guards and formats (a document names them in words of its own)';
+
+/** Where a change is: the document's line for a promise, the code's for what the code does. */
+const againstPlace = (change: SpecChange): string =>
+  change.place === null ? '' : `${change.place.side === 'base' ? 'document' : 'code'} ${change.place.file}${change.place.line === undefined ? '' : `:${change.place.line}`}`;
+
+const documentSaid = (document: SpecAgainstReport['documents'][number]): string =>
+  `${document.kind} ${document.service} ${document.file}: ${plural(document.declared, 'operation')} declared, ${document.written} in the code`;
+
+/** The comparison for a terminal: each document, then each change with where it is and who calls it. */
+export const renderSpecAgainstText = (report: SpecAgainstReport, options: { maxRows?: number; file?: string } = {}): string => {
+  const max = options.maxRows ?? 50;
+  const shown = report.changes.slice(0, max);
+  const lines = ['spec against the code', ...report.documents.map((document) => `  ${documentSaid(document)}`), ''];
+  if (report.changes.length === 0) lines.push('every document describes the code', '');
+  for (const change of shown) {
+    lines.push(`${change.level.padEnd(7)} ${change.kind}  ${change.document}  ${change.operation}${change.field === null ? '' : `  ${change.field}`}`);
+    lines.push(`        ${said(change)}`);
+    const place = againstPlace(change);
+    if (place !== '') lines.push(`        at ${place}`);
+    if (change.callers.length > 0) lines.push(`        callers: ${callersOf(change, (text) => text)} (${change.confidence})`);
+  }
+  if (report.changes.length > shown.length) lines.push(`... and ${report.changes.length - shown.length} more changes${options.file === undefined ? '' : `, in ${options.file}`}`);
+  if (shown.length > 0) lines.push('');
+  lines.push(summariseSpecDiff(report), AGAINST_NOT_COMPARED_SAID);
+  return `${lines.join('\n')}\n`;
+};
+
+/** The comparison as Markdown lines, under a heading of the caller's: `spec --against` and `contracts` both draw it. */
+export const specAgainstLines = (report: SpecAgainstReport, options: { maxRows?: number; file?: string; heading?: string } = {}): string[] => {
+  const max = options.maxRows ?? 50;
+  const lines = [options.heading ?? '## Committed API documents', '', ...report.documents.map((document) => `- ${escape(documentSaid(document))}`), '', summariseSpecDiff(report), ''];
+  if (report.changes.length === 0) return [...lines, 'Every document describes the code.', '', `_${AGAINST_NOT_COMPARED_SAID}._`, ''];
+  const shown = report.changes.slice(0, max);
+  lines.push(
+    row(['level', 'change', 'operation', 'field', 'what', 'where', 'callers']),
+    row(['---', '---', '---', '---', '---', '---', '---']),
+    ...shown.map((change) =>
+      row([
+        change.level,
+        code(change.kind),
+        `${code(change.document)} ${code(change.operation)}`,
+        change.field === null ? '—' : code(change.field),
+        escape(said(change)),
+        againstPlace(change) === '' ? '—' : code(againstPlace(change)),
+        change.callers.length === 0 ? '—' : callersOf(change, code),
+      ]),
+    ),
+    '',
+    ...more(report.changes.length - shown.length, 'changes', options.file),
+    `_${AGAINST_NOT_COMPARED_SAID}._`,
+    '',
+  );
+  return lines;
+};
+
+export const renderSpecAgainstMarkdown = (report: SpecAgainstReport, options: { maxRows?: number; file?: string } = {}): string => {
+  const lines = [
+    ...specAgainstLines(report, { ...options, heading: '## flowatlas spec --against' }),
+    ...(options.file === undefined ? [] : [`The complete report is ${code(options.file)}.`, '']),
+  ];
   return `${lines.join('\n')}\n`;
 };

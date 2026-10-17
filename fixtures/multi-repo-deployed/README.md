@@ -28,8 +28,10 @@ sends `customerId` (a contract error), and consumes an `order.*` channel the
 rule `billing-reads-no-order-events` forbids: both run everywhere, so every
 check lists them under "already deployed" and none fails on them.
 
-`expected.cli/` holds what `flowatlas check` and `flowatlas deployed show` say
-(`scripts/cli-snapshots.mjs`); `expected.mcp/` what the server answers about the
+`expected.cli/` holds what `flowatlas check` and `flowatlas deployed show` say,
+and `diff.env-prod.md` what `flowatlas diff --env prod drop-lookup --service
+orders` says (P193: `check.prod.md`'s comparison under the pins, without the
+verdict) (`scripts/cli-snapshots.mjs`); `expected.mcp/` what the server answers about the
 check documents (`scripts/mcp-snapshots.mjs`). The tests are
 `packages/cli/src/commands/check.test.ts`, `deployed.test.ts` and
 `packages/cli/src/git/build-at-ref.test.ts`.
