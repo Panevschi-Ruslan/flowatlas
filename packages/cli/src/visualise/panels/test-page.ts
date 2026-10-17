@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { readAccepted } from '@flowatlas/core';
+import { readAccepted, saveAccepted, type AcceptedGap, type Unresolved } from '@flowatlas/core';
 import { packDatabase } from '../../commands/visualise.js';
 import { buildTestProject } from '../../test-graph.js';
 import { createModel, type GraphModel } from '../graph.js';
@@ -26,10 +26,15 @@ export const pageMarkup = (): string => {
 /**
  * The test project (test-graph.ts) packed as the command packs it: three
  * services, a guard chain, a cross-service call, a channel with a handler and
- * one without, a cycle, check rows, and a map.
+ * one without, a cycle, check rows, and a map. `extra` adds check rows, and
+ * what `flowatlas accept` wrote beside the database.
  */
-export const testPack = (name = 'page'): PackedGraph => {
-  const { db, dbPath } = buildTestProject(name);
+export const testPack = (
+  name = 'page',
+  extra: { unresolved?: readonly Unresolved[]; accepted?: readonly AcceptedGap[] } = {},
+): PackedGraph => {
+  const { db, dbPath } = buildTestProject(name, extra.unresolved === undefined ? {} : { unresolved: extra.unresolved });
+  if (extra.accepted !== undefined) saveAccepted(dbPath, extra.accepted);
   try {
     return packDatabase(db, readAccepted(dbPath));
   } finally {

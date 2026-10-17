@@ -268,8 +268,8 @@ export const pictureName = (project, label, ext) => {
 
 /**
  * What the page says for a code a reader would otherwise be handed raw: a
- * check row's reason, an edge's type as a verb, and how far an edge is
- * trusted. The code stays wherever a machine reads it - the address, a prompt,
+ * check row's reason, an edge's type as a verb, how far an edge is trusted,
+ * and what a finding risks. The code stays wherever a machine reads it - the address, a prompt,
  * the MCP server - and in the tooltip of the word, so it can be found and
  * copied. One table, so the words can be reviewed together and cannot drift
  * from panel to panel.
@@ -483,6 +483,12 @@ export const PAGE_WORDS = Object.freeze({
     heuristic: 'best guess',
     runtime: 'seen at run time',
   }),
+  /* What a finding risks (P100, core's `riskOf`): the Risks section's groups on Not joined. */
+  risk: Object.freeze({
+    auth: 'who may ask',
+    performance: 'likely N+1 and cost',
+    wiring: 'wired wrong or meeting nothing',
+  }),
 });
 
 /**
@@ -540,7 +546,7 @@ export const SHORTCUTS = Object.freeze([
 
 /** The headings the overlay lists the keys under, in its order. */
 export const SHORTCUT_PLACES = Object.freeze({
-  anywhere: 'Anywhere', find: 'In the search', graph: 'On the Graph tab', map: 'On the Map tab', menu: 'In the command list',
+  anywhere: 'Anywhere', find: 'In the search', graph: 'On the Graph tab', map: 'On the Map tab', menu: 'In the command list or a row menu',
 });
 
 const SHORTCUT_BY_ID = new Map(SHORTCUTS.map((shortcut) => [shortcut.id, shortcut]));

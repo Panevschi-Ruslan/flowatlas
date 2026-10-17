@@ -2,5 +2,5 @@
 import type { Page, Panel } from './page.js';
 
 export declare function createStepsUi(page: Page): Panel<
-  'drawSteps' | 'setStepMode' | 'stepMode' | 'stepRowHtml' | 'stepsInGraph' | 'stepsView' | 'waterfallHtml'
+  'drawSteps' | 'promptOf' | 'setStepMode' | 'stepMode' | 'stepRowHtml' | 'stepsInGraph' | 'stepsView' | 'waterfallHtml'
 >;

@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { wasMissed, type UnresolvedLevel } from './graph.js';
-import { kindOfRow, reasonsWithoutKind, ROW_KIND_NAMES, ROW_KINDS, type RowKind } from './row-kind.js';
+import {
+  findingsWithoutRisk,
+  kindOfRow,
+  reasonsWithoutKind,
+  RISK_NAMES,
+  RISKS,
+  riskOf,
+  ROW_KIND_NAMES,
+  ROW_KINDS,
+  type RowKind,
+} from './row-kind.js';
 
 describe('what a row is about', () => {
   // A fixed list, so a reason moved from one kind to another is a change
@@ -79,5 +89,32 @@ describe('the read gate over kinds', () => {
 
   it('says nothing about a list of classified reasons', () => {
     expect(reasonsWithoutKind(ROW_KINDS.keys())).toEqual([]);
+  });
+});
+
+describe('which risk a finding is (P100)', () => {
+  it('gives every finding a risk, and nothing else one', () => {
+    const findings = [...ROW_KINDS].filter(([, kind]) => kind === 'finding').map(([reason]) => reason);
+    expect(findings.filter((reason) => riskOf(reason) === undefined)).toEqual([]);
+    expect([...RISKS.keys()].filter((reason) => ROW_KINDS.get(reason) !== 'finding')).toEqual([]);
+    expect(new Set(RISKS.values())).toEqual(new Set(RISK_NAMES));
+  });
+
+  it('reads a route with nothing in front of it as auth, and a query per item as performance', () => {
+    expect(riskOf('route-unguarded')).toBe('auth');
+    expect(riskOf('route-shadowed')).toBe('auth');
+    expect(riskOf('query-in-loop')).toBe('performance');
+    expect(riskOf('route-claimed-twice')).toBe('wiring');
+  });
+
+  it('has no risk for a gap, a note or a reason nobody classified', () => {
+    expect(riskOf('target-route-not-found')).toBeUndefined();
+    expect(riskOf('route-checked-in-body')).toBeUndefined();
+    expect(riskOf('something-new')).toBeUndefined();
+  });
+
+  it('names the findings with no risk for the read gate, and only findings', () => {
+    expect(findingsWithoutRisk()).toEqual([]);
+    expect(findingsWithoutRisk(['route-unguarded', 'type-unresolved', 'something-new'])).toEqual([]);
   });
 });

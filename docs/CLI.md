@@ -1286,15 +1286,53 @@ same way in.
   for character (P97): a check row is copied as its gap id, which the tool
   takes.
 
-The **Not joined** tab lists every row by reason, under its kind: *Missed*
-(gaps), *Notes* (how a join or a reading was made) and *Findings* (about the
-code). The strip above the page says the same figures the build line does:
-*Missed*, with "joined from files" (notes) and "findings" under it, counted from
-the rows, so a database built by 0.5.x still shows them. Rows accepted with
-`flowatlas accept` are left out unless *show accepted* is on, then muted with
-their note and, for a rule, the rule that took them; each reason and each row
-has *Accept all like this*, which copies the command (the page is a file and
-writes nothing). Below the reasons, *Can't follow* groups what the reader could
+The **Not joined** tab is split by what a row is, as the pack says it (P81's
+row kinds and core's `riskOf`), never by the words in a reason. Three
+sections, in this order, each with its count and a sentence on what would
+appear when it is empty:
+
+1. **Couldn't join**: gaps, the calls, imports and addresses the reader could
+   not join to what answers them, by reason. *By cause and package* is folded
+   under them (see below).
+2. **Risks**: findings about the code itself, grouped *who may ask* (auth:
+   `route-unguarded`, `route-shadowed`, a public marker with no reason), then
+   *likely N+1 and cost* (`query-in-loop`), then *wired wrong or meeting
+   nothing* (two declarations of one route, an end nothing meets). A row's
+   tone is its risk's.
+3. **Accepted**: the rows accepted with `flowatlas accept`, each rule once with
+   how many rows it took, then every accepted row with its note (folded past
+   ten rows). The counts above leave them out.
+
+Notes (how a join or a reading was made, with nothing missed) are not listed;
+one line says how many there are, and `flowatlas doctor` lists them. Every row
+is in one section, the accepted list or that line, and a reason is listed once.
+The strip above the page says the same figures the build line does: *Missed*,
+with "joined from files" (notes) and "findings" under it, counted from the
+rows, so a database built by 0.5.x still shows them.
+
+Each reason is a row that opens: the summary is the reason in words (the code
+in its tooltip), its count and its first place; opened, it lists every place
+it stands for (service, `file:line`, message, *show in graph*), fifty at most,
+then `flowatlas doctor --max-nodes <n>` for the rest. Each row and each place
+has one `⋯` menu (keyboard: Enter opens it, the arrows move, Enter runs, Escape
+closes and hands the keyboard back):
+
+- *Copy as prompt*, the row as Markdown for an assistant;
+- *Copy accept command*, the `flowatlas accept` command for this place: a
+  route row by its route exactly (`--path 'GET /orders/:param'`), any other row
+  by its file (`--file`; `accept` matches a file, never a line, so it holds
+  through an edit above it). A row with no single place names only its
+  service, and the menu warns that it then takes the reason across it;
+- *Copy accept command for every row like this*, only where a rule takes more
+  than the place: the routes beside it (`likeRoute`, `GET /orders/*`) or the
+  files beside it (`src/orders/*`). It always ends in `--dry-run`, so run as it
+  is it lists what it would take and writes nothing.
+
+The menu says it copies a command to run in the project; the page is a file
+and writes nothing. What was copied is shown in a toast. The rows a node's
+details panel lists on the Graph tab have the same menu.
+
+*By cause and package*, under Couldn't join, groups what the reader could
 not follow by cause and then by package, as `doctor --unresolved` does: one
 part per cause with its hint and a few places, each with *show in graph*, and a
 table by package. Once `flowatlas observe` has run, *seen at run time, not
@@ -1323,7 +1361,7 @@ shows one, and where in the tab to go after it:
 |---|---|
 | `#steps/<key>` (and an older `#walk/<key>`) | Steps on the way in whose node key is `<key>` |
 | `#crossings`, `#busiest`, `#changes` | that tab |
-| `#missing`, `#missing/reason=<reason>` | Not joined, at that reason's row |
+| `#missing`, `#missing/reason=<reason>` | Not joined, at that reason's row, opened to its places |
 | `#graph` | the Graph tab, on the way in picked |
 
 Any of them takes a way in (`#crossings/<key>`), which becomes the one picked.
@@ -2127,9 +2165,9 @@ flowatlas accept route-unguarded --service catalog --path 'GET /api/public/*' \
 A rule goes on accepting rows nobody has looked at, so one with `--path` or a
 file glob needs `--note`, and `--dry-run` lists what it would take before
 anything is written. `doctor` leaves the rows out of its counts; the page's
-*Not joined* tab lists them as accepted by that rule, and every row there has
-an *Accept all like this* button that copies the command for its reason, its
-service and the routes beside it. `accepted.json` is written as version 2,
+*Not joined* tab lists them under Accepted, by that rule, and every row there
+has a `⋯` menu that copies the command for that one route, or for the routes
+beside it with `--dry-run`. `accepted.json` is written as version 2,
 which an older `flowatlas` refuses rather than reading the rule as wider than
 it is.
 

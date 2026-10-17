@@ -16,7 +16,8 @@
  *   logsOf        the lines a step logs
  *   scheduleOf    when a scheduled way in fires, and in which zone
  *   accessOf      what stands in front of a way in, and from where
- *   acceptCommandFor  the `flowatlas accept` line that takes every gap like one
+ *   acceptCommandForPlace  the `flowatlas accept` line that takes one place
+ *   acceptCommandForLike   the one that takes every row like it, with --dry-run
  */
 
 /**
@@ -521,7 +522,7 @@ export const optOutSay = (item) =>
   '@' + item[0] + ' on ' + (item[2] === 'controller' ? 'its controller' : 'this route') +
   (item[1] ? ', open on purpose' : ', switches a check off') + (item[3] ? '; ' + item[3] + ' reads it' : '; no check in front reads it');
 
-/* ── Accepting every gap like one (P76) ── */
+/* ── Accepting one place, or every row like it (P76, P100) ── */
 
 /** A word the shell reads as it is written. */
 const shellWord = (text) => (/^[\w./:@=-]+$/.test(text) ? text : "'" + String(text).replace(/'/g, "'\\''") + "'");
@@ -542,19 +543,55 @@ export const likeRoute = (route) => {
   return parts.length <= 2 ? route.method + ' ' + route.path : route.method + ' ' + parts.slice(0, -1).join('/') + '/*';
 };
 
+/** The route a row of a route reason is about, or null. */
+const routeOfPlace = ({ reason, message }) =>
+  (reason.startsWith('route-') ? routeOfMessage(message) : null);
+
+/** The files "like" one: the others in its folder (`src/orders/*`), or null for a file at the top. */
+const likeFile = (file) => {
+  const at = file.lastIndexOf('/');
+  return at <= 0 ? null : file.slice(0, at) + '/*';
+};
+
+/** `flowatlas accept <reason> [--service <s>] …`, the words after it given. */
+const acceptLine = (reason, service, rest) =>
+  ['flowatlas', 'accept', shellWord(reason), ...(service ? ['--service', shellWord(service)] : []), ...rest].join(' ');
+
 /**
- * The `flowatlas accept` line that accepts every gap like this one: the same
- * reason in the same service and, for a route finding, on the routes beside
- * it. The page cannot write `accepted.json`, so it hands over the command; a
- * rule needs a reason in words, which is left for the person to write.
+ * The `flowatlas accept` line that takes one place: a route row by its route
+ * exactly, any other by its file. `accept` matches a file, never a line, so
+ * the entry holds through an edit above it; every row of the reason in that
+ * file is taken, which is the row a reader looked at and its neighbours in the
+ * same file. A row with no file names only its service, and the menu says
+ * that it then takes the reason across the service. The page cannot write
+ * `accepted.json`, so it hands over the command; why is left for the person.
  */
-export const acceptCommandFor = ({ reason, service, message }) => {
-  const words = ['flowatlas', 'accept', shellWord(reason)];
-  if (service) words.push('--service', shellWord(service));
-  const route = reason.startsWith('route-') && message !== undefined ? routeOfMessage(message) : null;
-  if (route !== null) words.push('--path', shellWord(likeRoute(route)));
-  words.push('--note', shellWord('<why these are fine>'));
-  return words.join(' ');
+export const acceptCommandForPlace = (place) => {
+  const route = routeOfPlace(place);
+  const where = route !== null ? ['--path', shellWord(route.method + ' ' + route.path)]
+    : place.file ? ['--file', shellWord(place.file)] : [];
+  return acceptLine(place.reason, place.service, [...where, '--note', shellWord('<why this one is fine>')]);
+};
+
+/**
+ * The line that takes every row like this one, or null when no rule would
+ * take more than the place does: a route row, the routes beside it
+ * (`likeRoute`); any other, the same reason in the files beside it. A rule
+ * goes on taking rows nobody has looked at, so it always ends in `--dry-run`:
+ * run as it is, it lists what it would take and writes nothing.
+ */
+export const acceptCommandForLike = (place) => {
+  const route = routeOfPlace(place);
+  let where = null;
+  if (route !== null) {
+    const like = likeRoute(route);
+    if (like !== route.method + ' ' + route.path) where = ['--path', shellWord(like)];
+  } else if (place.file) {
+    const like = likeFile(place.file);
+    if (like !== null) where = ['--file', shellWord(like)];
+  }
+  return where === null ? null
+    : acceptLine(place.reason, place.service, [...where, '--note', shellWord('<why these are fine>'), '--dry-run']);
 };
 
 /* ── Copy as prompt (P67, P97) ── */

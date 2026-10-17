@@ -7,7 +7,8 @@ import { createMap, mapCallOrder, mapSeenCount, mapTopTargets, mapView } from '.
 import { packGraph, type PackedGraph } from './pack.js';
 import { packSites } from './sites.js';
 import {
-  acceptCommandFor,
+  acceptCommandForLike,
+  acceptCommandForPlace,
   accessOf,
   createSeen,
   failChips,
@@ -432,16 +433,36 @@ describe('who covers a way in, and accepting every gap like one (P76)', () => {
     expect(text).toContain('- @Public on this route, open on purpose; JwtAuthGuard reads it');
   });
 
-  it('writes the accept command for the routes beside one, quoted for a shell', () => {
+  it('writes the accept command for one place: a route by its route, any other row by its file (P100)', () => {
+    const route = { reason: 'route-unguarded', service: 'inventory', file: 'src/levels.controller.ts', line: 14,
+      message: 'GET /levels/:param/low has no guard in front of it.' };
+    expect(acceptCommandForPlace(route)).toBe(
+      "flowatlas accept route-unguarded --service inventory --path 'GET /levels/:param/low' --note '<why this one is fine>'");
+    const place = { reason: 'channel-dynamic', service: 'billing', file: 'src/billing/notify.ts', line: 31, message: 'a channel built at run time' };
+    expect(acceptCommandForPlace(place)).toBe(
+      "flowatlas accept channel-dynamic --service billing --file src/billing/notify.ts --note '<why this one is fine>'");
+    // A row with no single place names only its service.
+    expect(acceptCommandForPlace({ reason: 'service-read-nothing', service: 'billing', file: '' })).toBe(
+      "flowatlas accept service-read-nothing --service billing --note '<why this one is fine>'");
+    // A route reason whose message names no route is taken by its file.
+    expect(acceptCommandForPlace({ ...route, message: 'no route here' })).toContain('--file src/levels.controller.ts');
+    expect(acceptCommandForPlace({ reason: 'r', service: "it's", file: 'a b.ts' })).toBe(
+      "flowatlas accept r --service 'it'\\''s' --file 'a b.ts' --note '<why this one is fine>'");
+  });
+
+  it('writes the accept command for every row like one as a rule that ends in --dry-run (P100)', () => {
     expect(likeRoute({ method: 'GET', path: '/levels/summary' })).toBe('GET /levels/*');
     expect(likeRoute({ method: 'GET', path: '/health' })).toBe('GET /health');
-    expect(
-      acceptCommandFor({ reason: 'route-unguarded', service: 'inventory', message: 'GET /levels/:param/low has no guard in front of it.' }),
-    ).toBe("flowatlas accept route-unguarded --service inventory --path 'GET /levels/:param/*' --note '<why these are fine>'");
-    expect(acceptCommandFor({ reason: 'channel-dynamic', service: 'billing' })).toBe(
-      "flowatlas accept channel-dynamic --service billing --note '<why these are fine>'",
-    );
-    expect(acceptCommandFor({ reason: 'r', service: "it's" })).toContain("--service 'it'\\''s'");
+    const route = { reason: 'route-unguarded', service: 'inventory', file: 'src/levels.controller.ts', line: 14,
+      message: 'GET /levels/:param/low has no guard in front of it.' };
+    expect(acceptCommandForLike(route)).toBe(
+      "flowatlas accept route-unguarded --service inventory --path 'GET /levels/:param/*' --note '<why these are fine>' --dry-run");
+    expect(acceptCommandForLike({ reason: 'channel-dynamic', service: 'billing', file: 'src/billing/notify.ts' })).toBe(
+      "flowatlas accept channel-dynamic --service billing --file 'src/billing/*' --note '<why these are fine>' --dry-run");
+    // No rule takes more than the place: a route one segment deep, a file at the top, no file at all.
+    expect(acceptCommandForLike({ ...route, message: 'GET /health has no guard in front of it.' })).toBeNull();
+    expect(acceptCommandForLike({ reason: 'channel-dynamic', service: 'billing', file: 'main.ts' })).toBeNull();
+    expect(acceptCommandForLike({ reason: 'service-read-nothing', service: 'billing' })).toBeNull();
   });
 });
 

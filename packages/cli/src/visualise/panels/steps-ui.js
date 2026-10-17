@@ -318,7 +318,8 @@ export function createStepsUi(page) {
   })();
 
   /* Copy as prompt: one handler for every button that asks, on any tab, in
-     the words describe_for_prompt answers with (P97). */
+     the words describe_for_prompt answers with (P97). `promptOf('row:<at>')`
+     is the same text for a row menu (P100). */
   const promptKit = { seen, walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
   const promptOf = (asked) => {
     const [kind, at] = asked.split(':');
@@ -336,20 +337,9 @@ export function createStepsUi(page) {
     event.preventDefault();
     copyPrompt(button, button.dataset.prompt);
   });
-  document.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-accept-cmd]');
-    if (!button) return;
-    event.preventDefault();
-    const command = button.dataset.acceptCmd;
-    const copied = await copyText(command);
-    flash(button, copied ? 'Copied' : 'Could not copy', copied);
-    if (!button.nextElementSibling || !button.nextElementSibling.classList.contains('accept-cmd')) {
-      button.insertAdjacentHTML('afterend', `<code class="accept-cmd">${esc(command)}</code>`);
-    }
-  });
   document.getElementById('s-copy').addEventListener('click', (event) => {
     if (store.get('current') !== null) copyPrompt(event.currentTarget, 'entry:' + store.get('current'));
   });
 
-  return { drawSteps, setStepMode, stepMode, stepRowHtml, stepsInGraph, stepsView, waterfallHtml };
+  return { drawSteps, promptOf, setStepMode, stepMode, stepRowHtml, stepsInGraph, stepsView, waterfallHtml };
 }

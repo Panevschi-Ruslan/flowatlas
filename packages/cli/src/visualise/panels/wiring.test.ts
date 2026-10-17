@@ -99,8 +99,11 @@ describe('the wiring', () => {
       expect(page.store.get('view')).toBe(view);
     }
     const { document, window } = mountPage(data, { address: 'file:///project/graph.html#missing/reason=di-token-unknown' });
-    const row = document.querySelector('#tab-sheet tr.is-target') as any;
+    const row = document.querySelector('#tab-sheet .nj-row.is-target') as any;
     expect(row.dataset.reason).toBe('di-token-unknown');
+    // Opened to its places (P100).
+    expect(row.querySelector('details').open).toBe(true);
+    expect(row.querySelectorAll('.nj-place').length).toBeGreaterThan(0);
     expect(window.location.hash).toBe('#missing/reason=di-token-unknown');
     expect(document.getElementById('table-bar')!.hidden).toBe(false);
   });

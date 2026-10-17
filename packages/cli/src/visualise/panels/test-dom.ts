@@ -271,6 +271,13 @@ export class FakeElement extends FakeNode {
   }
   get hidden(): boolean { return this.hasAttribute('hidden'); }
   set hidden(on: boolean) { this.toggleAttribute('hidden', Boolean(on)); }
+  /** A `<details>` opened or closed, and told so by a `toggle` event, as a browser tells it. */
+  get open(): boolean { return this.hasAttribute('open'); }
+  set open(on: boolean) {
+    if (this.hasAttribute('open') === Boolean(on)) return;
+    this.toggleAttribute('open', Boolean(on));
+    this.dispatchEvent(new FakeEvent('toggle', { bubbles: false }));
+  }
   get disabled(): boolean { return this.hasAttribute('disabled'); }
   set disabled(on: boolean) { this.toggleAttribute('disabled', Boolean(on)); }
   get tabIndex(): number { return Number(this.getAttribute('tabindex') ?? -1); }
@@ -319,7 +326,12 @@ export class FakeElement extends FakeNode {
     this.doc.activeElement = this.doc.body;
     this.dispatchEvent(new FakeEvent('focusout', { relatedTarget: null }));
   }
-  click(): void { this.dispatchEvent(new FakeEvent('click')); }
+  click(): void {
+    // A summary's click opens or closes its details, unless a listener prevented it.
+    if (!this.dispatchEvent(new FakeEvent('click'))) return;
+    const parent = this.parentElement;
+    if (this.localName === 'summary' && parent !== null && parent.localName === 'details') parent.open = !parent.open;
+  }
   matches(selector: string): boolean { return parseSelectors(selector).some((complex) => matchComplex(this, complex, null)); }
   closest(selector: string): FakeElement | null {
     const list = parseSelectors(selector);

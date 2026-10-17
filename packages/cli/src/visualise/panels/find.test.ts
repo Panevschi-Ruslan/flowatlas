@@ -112,7 +112,7 @@ describe('the search over everything', () => {
     const reason = data.unresolved[0]!.reason;
     page.goToFound({ label: 'a row', sub: '', node: -1, reason });
     expect(page.store.get('view')).toBe('missing');
-    const row = document.querySelector(`#tab-sheet tr[data-reason="${reason}"]`)!;
+    const row = document.querySelector(`#tab-sheet .nj-row[data-reason="${reason}"]`)!;
     expect(row.classList.contains('is-found')).toBe(true);
   });
 

@@ -4,6 +4,7 @@ import { createWays } from './ways.js';
 import { createSheet } from './sheet.js';
 import { createTables } from './tables.js';
 import { createFind } from './find.js';
+import { createMenu } from './menu.js';
 import { createMissing } from './missing.js';
 import { createGraphDraw } from './graph-draw.js';
 import { createDetails } from './details.js';
@@ -22,7 +23,7 @@ import { wirePage } from './wiring.js';
    it is being set up. The order is the one the page always had: it decides
    which listener on a shared element hears an event first. */
 export const PANELS = [
-  createBand, createWays, createSheet, createTables, createFind, createMissing, createGraphDraw, createDetails,
+  createBand, createWays, createSheet, createTables, createFind, createMenu, createMissing, createGraphDraw, createDetails,
   createChecking, createGraphUi, createFrameUi, createMapUi, createStepsUi, createPalette, wirePage,
 ];
 

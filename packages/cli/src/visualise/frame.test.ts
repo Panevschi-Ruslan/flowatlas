@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { CONFIDENCE_LEVELS, EDGE_TYPES } from '@flowatlas/core';
+import { CONFIDENCE_LEVELS, EDGE_TYPES, RISK_NAMES } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { KNOWN_REASONS } from '../doctor/hints.js';
 import {
@@ -320,6 +320,7 @@ describe('the words the page says for codes (P101)', () => {
   it('has a verb for every edge type and a word for every trust, each told apart from the others', () => {
     expect(Object.keys(PAGE_WORDS.edge).sort()).toEqual([...EDGE_TYPES].sort());
     expect(Object.keys(PAGE_WORDS.trust).sort()).toEqual([...CONFIDENCE_LEVELS].sort());
+    expect(Object.keys(PAGE_WORDS.risk).sort()).toEqual([...RISK_NAMES].sort());
     for (const table of Object.values(PAGE_WORDS)) {
       const words = Object.values(table);
       expect(new Set(words).size, words.join(', ')).toBe(words.length);

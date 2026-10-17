@@ -101,11 +101,16 @@ export {
   type RowCounts,
 } from './model/graph.js';
 export {
+  findingsWithoutRisk,
   kindOfRow,
   reasonsWithoutKind,
+  RISK_NAMES,
+  RISKS,
+  riskOf,
   ROW_KIND_NAMES,
   ROW_KINDS,
   type KindedRow,
+  type Risk,
   type RowKind,
 } from './model/row-kind.js';
 export type {

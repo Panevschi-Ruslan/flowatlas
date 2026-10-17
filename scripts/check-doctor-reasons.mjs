@@ -55,6 +55,11 @@
  * registry. `reasonsWithoutKind` is the check, unit tested in the core with a
  * reason nobody classified.
  *
+ * And of every finding, which risk it is (P100, `riskOf` beside the kinds):
+ * the page lists findings under Risks by auth, performance and wiring, and a
+ * finding with no risk would sit under none of them. `findingsWithoutRisk` is
+ * that check.
+ *
  * Run from the repository root:
  *
  *   node scripts/check-doctor-reasons.mjs
@@ -66,7 +71,7 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { reasonsWithoutKind } from '../packages/core/dist/index.js';
+import { findingsWithoutRisk, reasonsWithoutKind } from '../packages/core/dist/index.js';
 import { isKnownReason, KNOWN_REASONS } from '../packages/cli/dist/index.js';
 
 const root = process.cwd();
@@ -187,4 +192,13 @@ if (unkinded.length > 0) {
   process.exit(1);
 }
 
-console.log(`    ${written.size} reason(s) written in the sources, all registered; ${KNOWN_REASONS.length} known, all with a kind`);
+const riskless = findingsWithoutRisk(KNOWN_REASONS);
+
+if (riskless.length > 0) {
+  for (const reason of riskless) console.error(`    ${reason} — a finding with no risk`);
+  console.error('    FAIL: a finding has no risk, so the page cannot list it under auth, performance or wiring.');
+  console.error('    Give each one a risk in packages/core/src/model/row-kind.ts (RISK_OF).');
+  process.exit(1);
+}
+
+console.log(`    ${written.size} reason(s) written in the sources, all registered; ${KNOWN_REASONS.length} known, all with a kind, every finding with a risk`);

@@ -182,12 +182,15 @@ export function wirePage(page) {
         'renamed after the link was made.' + (store.get('current') === null ? '' : ` Shown instead: ${wayInSay(store.get('current'))}.`));
     }
     if (asked.view === 'missing' && asked.rest.reason) {
-      const row = sheetEl.querySelector(`tr[data-reason="${CSS.escape(asked.rest.reason)}"]`);
+      const row = page.reasonRowOf(asked.rest.reason);
       if (row === null) {
         said.push(`This link opens Not joined on <code>${esc(asked.rest.reason)}</code>, which has no rows here ` +
           '(or only accepted ones): it was fixed, or accepted, after the link was made.');
       } else {
+        // The reason a link names is marked and opened to its places (P100).
         row.classList.add('is-target');
+        const details = row.querySelector('.nj-details');
+        if (details !== null) details.open = true;
         row.scrollIntoView({ block: 'center' });
       }
     }

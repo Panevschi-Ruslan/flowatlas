@@ -1,4 +1,4 @@
-import { createModel, editorUrl, serviceOfRow } from '../graph.js';
+import { ROW, createModel, editorUrl, serviceOfRow } from '../graph.js';
 import { createKeys, wordFor } from '../frame.js';
 import { createSeen, failChips, failsOf, scheduleOf } from '../steps.js';
 
@@ -151,10 +151,29 @@ export function createPageContext(data) {
     const at = accepted.byRule ? accepted.byRule[String(r)] : undefined;
     return at === undefined ? '' : (accepted.rules || [])[at] || '';
   };
-  /* The command that accepts every row like this one; the page cannot write the file itself. */
-  const acceptLikeHtml = (command) =>
-    `<button class="tool" data-accept-cmd="${esc(command)}" title="Copy the flowatlas accept command for every row like this; ` +
-    'run it with --dry-run first to see what it takes">Accept all like this</button>';
+
+  /* What a check row is (P81, P100), as the pack says it - never guessed from
+     the words of its reason: its reason's kind (gap, note, finding) and, for
+     a finding, its risk (auth, performance, wiring), or the row's own kind
+     where what it recorded makes it another (P89's per-item loops). A row of
+     a reason the pack has no class for is a gap, as in the core. */
+  const reasonClass = data.dicts.reasonClass || [];
+  const rowKinds = data.rowKinds || {};
+  const classOf = (r) => reasonClass[data.rows[r][ROW.reason]] || ['gap'];
+  const rowKind = (r) => rowKinds[String(r)] || classOf(r)[0];
+  const rowRisk = (r) => (rowKind(r) === 'finding' ? classOf(r)[1] : undefined);
+  /* A row's tag tone: from its risk, so a gap and a finding are told apart by
+     what they are rather than by `not-found` in a reason. */
+  const RISK_TONES = { auth: 'bad', performance: 'warn', wiring: 'warn' };
+  const rowTone = (r) => RISK_TONES[rowRisk(r)] || '';
+  /* One place of a row, as the accept commands read it (steps.js). */
+  const rowPlace = (r) => {
+    const row = data.rows[r];
+    return {
+      reason: reasons[row[ROW.reason]], service: rowService(row) || '',
+      file: row[ROW.file] >= 0 ? files[row[ROW.file]] : '', line: row[ROW.line] || 0, message: row[ROW.message],
+    };
+  };
   /* `1 node`, `2,048 nodes`. */
   const plural = (n, one, many) => n.toLocaleString() + ' ' + (n === 1 ? one : many);
 
@@ -205,8 +224,8 @@ export function createPageContext(data) {
 
   const store = createStore({ current: null, view: 'map', shown: new Set(repos) });
 
-  return { CROSSES, FL, GLYPH, KD, LB, LN, MT, RP, TY, acceptLikeHtml, accepted, acceptedNote,
+  return { CROSSES, FL, GLYPH, KD, LB, LN, MT, RP, TY, accepted, acceptedNote,
     acceptedRows, acceptedRule, confidences, copyText, data, edgeTypes, entryHeadHtml, entryIx, esc, failChipsHtml,
     files, flash, graphLink, guards, hueOf, keys, kinds, model, nodes, opener, plural, reachesCrossing, reasons,
-    repoName, repos, rowService, scheduleSay, seen, store, trustHtml, typeName, types, wordHtml };
+    repoName, repos, rowKind, rowPlace, rowRisk, rowService, rowTone, scheduleSay, seen, store, trustHtml, typeName, types, wordHtml };
 }

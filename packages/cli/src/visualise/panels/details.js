@@ -1,6 +1,6 @@
 import { ANSWER_SAYS, CLAIMED_MARK, PARAM_FLAG, ROW, answersOf, describe, faceOf, refParts,
   typeInfo } from '../graph.js';
-import { acceptCommandFor, accessOf, accessSay, choiceStatuses, failGroups, failsOf,
+import { accessOf, accessSay, choiceStatuses, failGroups, failsOf,
   optOutSay, scheduleOf } from '../steps.js';
 
 /* The Graph tab's details panel: a node's place, what stands in front of it,
@@ -8,9 +8,9 @@ import { acceptCommandFor, accessOf, accessSay, choiceStatuses, failGroups, fail
    and the rows that name it. */
 export function createDetails(page) {
   const { ALSO_SAYS, DOORS, FILE_LIMIT, FL, GROUP_LIMIT, KD, LB, LN, LOOK_SAYS, RP, SHAPED,
-    TYPE_KIND_SAYS, acceptLikeHtml, acceptedNote, acceptedRows, acceptedRule, card, confidences,
+    TYPE_KIND_SAYS, acceptedNote, acceptedRows, acceptedRule, card, confidences,
     contextOf, data, edgeTypes, esc, failChipsHtml, files, glyphOf, graphLink, hueOf, kinds, lookOf,
-    metaOf, metaValueHtml, model, nodes, opener, panel, placeOf, plural, reasons, repoName, rowService,
+    metaOf, metaValueHtml, model, nodes, opener, panel, placeOf, plural, reasons, repoName, rowMenu, rowTone,
     scheduleSay, stage, state, typeOf, wordHtml } = page;
 
   /* ── the details panel ── */
@@ -72,11 +72,14 @@ export function createDetails(page) {
   const rowHtml = (r) => {
     const row = data.rows[r];
     const reason = reasons[row[ROW.reason]];
-    const tone = reason.includes('not-found') ? 'bad' : reason.includes('dynamic') ? 'warn' : '';
+    // Its tone from what it is (P100), never from the words of its reason.
+    const tone = rowTone(r);
     const file = row[ROW.file] >= 0 ? files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : '';
     const hint = row[ROW.hint] >= 0 ? data.dicts.hints[row[ROW.hint]] : '';
     const isAccepted = acceptedRows.has(r);
-    return `<div class="g-row${isAccepted ? ' is-accepted' : ''}">${wordHtml('reason', reason, 'tag' + (tone ? ' is-' + tone : ''))} ` +
+    // One menu for what can be copied from the row (P100): as a prompt, and the accept commands.
+    return `<div class="g-row${isAccepted ? ' is-accepted' : ''}"><span class="g-row-menu">${rowMenu(r)}</span>` +
+      `${wordHtml('reason', reason, 'tag' + (tone ? ' is-' + tone : ''))} ` +
       (isAccepted ? '<span class="tag is-accepted-tag" title="Accepted with flowatlas accept">accepted</span> ' : '') +
       `<span class="hint">${esc(data.dicts.levels[row[ROW.level]])}` +
       (row[ROW.sites] > 1 ? ` &middot; ${row[ROW.sites]} places` : '') +
@@ -85,9 +88,7 @@ export function createDetails(page) {
       `<p>${esc(row[ROW.message])}</p>` +
       (isAccepted && acceptedRule(r) ? `<p class="accepted-note">accepted by rule <code>${esc(acceptedRule(r))}</code></p>` : '') +
       (isAccepted && acceptedNote(r) ? `<p class="accepted-note">${esc(acceptedNote(r))}</p>` : '') +
-      (isAccepted ? '' : acceptLikeHtml(acceptCommandFor({ reason, service: rowService(row), message: row[ROW.message] }))) +
-      (hint ? `<p class="hint-text">${esc(hint)}</p>` : '') +
-      `<button class="tool" data-prompt="row:${r}" title="Copy as Markdown for an assistant">Copy as prompt</button></div>`;
+      (hint ? `<p class="hint-text">${esc(hint)}</p>` : '') + '</div>';
   };
 
   /* What a node takes and gives back, worded by what kind of thing it is. */

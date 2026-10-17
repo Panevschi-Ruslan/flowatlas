@@ -75,7 +75,7 @@ describe('the command list', () => {
     const listed = document.querySelectorAll('#keys-list [data-shortcut]').map((row: any) => row.dataset.shortcut);
     expect(listed.sort()).toEqual(SHORTCUTS.map((shortcut) => shortcut.id).sort());
     expect(document.querySelectorAll('#keys-list h4').map(textOf)).toEqual(
-      ['Anywhere', 'In the search', 'On the Graph tab', 'On the Map tab', 'In the command list']);
+      ['Anywhere', 'In the search', 'On the Graph tab', 'On the Map tab', 'In the command list or a row menu']);
     key(help.querySelector('.keys-box'), { key: 'Escape' });
     expect(help.hidden).toBe(true);
     // Not from a field, where ? is typed.

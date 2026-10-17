@@ -132,7 +132,17 @@ export declare const accessSay: (check: PackedAccessOf['g'][number]) => string;
 export declare const optOutSay: (item: NonNullable<PackedAccessOf['o']>[number]) => string;
 export declare const routeOfMessage: (message: string | undefined) => { method: string; path: string } | null;
 export declare const likeRoute: (route: { method: string; path: string }) => string;
-export declare const acceptCommandFor: (row: { reason: string; service?: string; message?: string }) => string;
+/** One place of a Not joined row, as the accept commands read it (P100). */
+export interface AcceptPlace {
+  reason: string;
+  service?: string;
+  /** Repo-relative; '' or absent for a row with no single place. */
+  file?: string;
+  line?: number;
+  message?: string;
+}
+export declare const acceptCommandForPlace: (place: AcceptPlace) => string;
+export declare const acceptCommandForLike: (place: AcceptPlace) => string | null;
 export declare const failChips: (fails: readonly PackedFail[]) => string[];
 /** One status and exception a way in fails with, and the places that raise it (P87). */
 export interface PackedFailGroup {

@@ -25,6 +25,17 @@ describe('the details panel', () => {
     expect(panel.querySelector('[data-prompt]')!.getAttribute('data-prompt')).toBe(`entry:${at('entry:gateway:http:POST:/orders')}`);
   });
 
+  it('gives each row that names the node one menu, and no inline buttons (P100)', () => {
+    const { page, document } = mountPage(data);
+    page.graph.go(at('http_out:gateway#src/clients/orders.client.ts:20:4'));
+    const rows = document.querySelectorAll('#g-details .g-row');
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.querySelectorAll('[data-row-menu]')).toHaveLength(1);
+      expect(row.querySelectorAll('[data-prompt], [data-accept-cmd]')).toHaveLength(0);
+    }
+  });
+
   it('closes, and says nothing, when no node is open', () => {
     const { page, document } = mountPage(data);
     page.graph.go(at('channel:order.created'));

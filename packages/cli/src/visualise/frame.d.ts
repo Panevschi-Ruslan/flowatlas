@@ -84,8 +84,9 @@ export declare const PAGE_WORDS: Readonly<{
   reason: Readonly<Record<string, string>>;
   edge: Readonly<Record<string, string>>;
   trust: Readonly<Record<string, string>>;
+  risk: Readonly<Record<string, string>>;
 }>;
-export declare const wordFor: (kind: 'reason' | 'edge' | 'trust', code: string) => string;
+export declare const wordFor: (kind: 'reason' | 'edge' | 'trust' | 'risk', code: string) => string;
 
 /** A key the page answers, where, and what it does; `keys` empty for a gesture. */
 export interface Shortcut {

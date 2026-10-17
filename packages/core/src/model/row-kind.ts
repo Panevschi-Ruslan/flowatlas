@@ -322,3 +322,78 @@ export const kindOfRow = (row: KindedRow): RowKind =>
  */
 export const reasonsWithoutKind = (reasons: Iterable<string>): string[] =>
   [...reasons].filter((reason) => !ROW_KINDS.has(reason));
+
+/**
+ * Which risk a finding is (P100): who may ask, what it costs, or how it is
+ * wired. The page lists findings under Risks by this, auth first, and gives a
+ * row its tone from it rather than from the words in its reason.
+ *
+ * - **auth** — who may reach what: a route with nothing in front of it
+ *   (`route-unguarded`), one whose guards never run because a worker answers
+ *   first (`route-shadowed`), a public marker with no reason to review it by
+ *   (`marker-reason-missing`).
+ * - **performance** — work repeated per item: a query once per item of a loop
+ *   (`query-in-loop`, the likely N+1).
+ * - **wiring** — code put together wrong, or meeting nothing: two declarations
+ *   where the framework takes one, a declaration the framework never serves or
+ *   refuses, an end nothing on the other side meets.
+ *
+ * Named by reason, never by framework, like the kinds. Only a finding has a
+ * risk: a gap or a note is about the reading, not the code.
+ * `scripts/check-doctor-reasons.mjs` fails on a finding with no risk here, so
+ * a new finding is placed on purpose.
+ */
+export const RISK_NAMES = ['auth', 'performance', 'wiring'] as const;
+
+/** What kind of risk a finding is. */
+export type Risk = (typeof RISK_NAMES)[number];
+
+const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
+  ['auth', ['route-unguarded', 'route-shadowed', 'marker-reason-missing']],
+  ['performance', ['query-in-loop']],
+  [
+    'wiring',
+    [
+      'route-claimed-twice',
+      'route-file-not-served',
+      'wizard-step-conflict',
+      'workflow-name-duplicate',
+      'orphan-scene-decorator',
+      'orphan-update-decorator',
+      'procedure-call-mismatch',
+      'workflow-definition-invalid',
+      's3-write-matches-nothing',
+      'stream-no-writer',
+      'subscription-matches-nothing',
+    ],
+  ],
+];
+
+const riskRegistry = (): Map<string, Risk> => {
+  const risks = new Map<string, Risk>();
+  for (const [risk, reasons] of RISK_OF) {
+    for (const reason of reasons) {
+      const already = risks.get(reason);
+      if (already !== undefined) throw new Error(`risk of ${reason} given twice (${already}, ${risk})`);
+      // A risk is what a finding is about; on a gap or a note it would put a
+      // reading caveat under Risks.
+      if (ROW_KINDS.get(reason) !== 'finding') throw new Error(`risk given to ${reason}, which is not a finding`);
+      risks.set(reason, risk);
+    }
+  }
+  return risks;
+};
+
+/** The risk of every finding, by reason. */
+export const RISKS: ReadonlyMap<string, Risk> = riskRegistry();
+
+/** Which risk a finding's reason is; undefined for a gap, a note, or a reason nobody classified. */
+export const riskOf = (reason: string): Risk | undefined => RISKS.get(reason);
+
+/**
+ * The finding reasons of a list that have no risk, in the order given; every
+ * finding by default. For the read gate, beside `reasonsWithoutKind`.
+ */
+export const findingsWithoutRisk = (
+  reasons: Iterable<string> = [...ROW_KINDS].filter(([, kind]) => kind === 'finding').map(([reason]) => reason),
+): string[] => [...reasons].filter((reason) => ROW_KINDS.get(reason) === 'finding' && !RISKS.has(reason));

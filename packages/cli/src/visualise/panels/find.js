@@ -8,7 +8,7 @@ import { formatViewHash, pressed, wordFor } from '../frame.js';
    the place it lands is marked. It is also how a path's end is picked on the
    Graph tab, and how the Ways in list is filtered. */
 export function createFind(page) {
-  const { entryIx, esc, keys, model, repoName, sheetEl, store } = page;
+  const { entryIx, esc, keys, model, repoName, store } = page;
 
   /* ── one search over everything (P73, P101) ─────────────────────── */
 
@@ -124,7 +124,7 @@ export function createFind(page) {
     history.pushState(null, '', location.href);
     if (hit.reason !== undefined) {
       page.showView('missing', undefined, { reason: hit.reason });
-      if (markFound(sheetEl.querySelector(`tr[data-reason="${CSS.escape(hit.reason)}"]`))) return;
+      if (markFound(page.reasonRowOf(hit.reason))) return;
       // Its rows were all accepted: the node it names, when it names one.
       if (hit.node < 0) return;
     }

@@ -437,6 +437,25 @@ only one of them moved.
   line under a cut list says whether the depth or the 300 rows left steps out,
   and the second has a button for 300 more. `stepsOf` rows gained `start` and
   `span` (units on the waterfall) and the result `cut`.
+- **Not joined was split by what a row is (P100).** The tab's one table became
+  three sections, each with its count and a line on what would appear when
+  empty: *Couldn't join* (gaps by reason, with the breakdown by cause and
+  package folded under them), *Risks* (findings, grouped *who may ask*, *likely
+  N+1 and cost*, then *wired wrong or meeting nothing*) and *Accepted* (each
+  rule once, then every accepted row with its note), which replaced the *show
+  accepted* checkbox. The split came from the pack (`dicts.reasonClass`, a
+  reason's row kind and risk, and `rowKinds` for a row of another kind than its
+  reason's), never from the words of a reason, and a row's tone was its risk's.
+  Notes left the tab, with one line saying how many and that `doctor` lists
+  them. A reason row opened to every place it stood for, fifty at most, and
+  each row and place had one `⋯` menu - *Copy as prompt*, *Copy accept command*
+  for that place (a route by its route, another row by its file), and *Copy
+  accept command for every row like this* where a rule took more, always ending
+  in `--dry-run` - in place of the inline *Copy as prompt* and *Accept all like
+  this* buttons; what was copied was shown in a toast. The Graph's details
+  rows gained the same menu. Core gained `riskOf(reason)` (`auth`,
+  `performance`, `wiring`), `RISK_NAMES`, `RISKS` and `findingsWithoutRisk`,
+  and the reasons gate failed on a finding with no risk.
 - **The page's source in modules (P103). `page.html` kept only its markup:
   its styles moved to `page.css` and its script to one module per panel under
   `src/visualise/panels/`, each a factory handed the page so far, written in
