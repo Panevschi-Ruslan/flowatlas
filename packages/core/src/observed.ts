@@ -1,6 +1,7 @@
 import { readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { z } from 'zod';
+import { isEntryId } from './ids.js';
 import { emptyAgg, mergeAgg, summarise, type Agg } from './observed-stats.js';
 
 /**
@@ -74,6 +75,15 @@ export const OBSERVED_KEPT = [
   'status',
   'durationMs',
   'error',
+  // Where a deployed function or workflow ran, and what it called (P107): names only.
+  'faas',
+  'trigger',
+  'invokes',
+  'workflow',
+  'state',
+  'tables',
+  'awsOp',
+  'transport',
 ] as const;
 
 /**
@@ -94,9 +104,30 @@ export const OBSERVED_DROPPED: readonly string[] = [
   'status messages',
   'every attribute not on the kept list',
   '@nestjs/observe user, request, tags, logs, objectives, runtime and custom data',
+  'cloud account ids and regions (an ARN or a queue URL is cut to the name inside it)',
+  'parameters of a cloud SDK call (keys, items, message bodies, workflow input)',
+  'workflow step names the map does not declare',
 ];
 
-export type UnmatchedKind = 'http' | 'client' | 'messaging' | 'code' | 'db' | 'rpc';
+/**
+ * What a span that matched nothing named. `function`, `workflow`, `state`,
+ * `table` and `cloud` are a deployed function, workflow, workflow step or
+ * table the map does not have, and a cloud SDK call of a service nothing here
+ * reads, by `<service>/<method>` only (P107): a step is named `<workflow>/?`,
+ * never by a name the map lacks.
+ */
+export type UnmatchedKind =
+  | 'http'
+  | 'client'
+  | 'messaging'
+  | 'code'
+  | 'db'
+  | 'rpc'
+  | 'function'
+  | 'workflow'
+  | 'state'
+  | 'table'
+  | 'cloud';
 
 /** The figures `summarise` gives, beside a roll-up row's count. Optional: a version-1 or 2 file has none. */
 export interface ObservedFigures {
@@ -132,10 +163,11 @@ export interface UnmatchedSpan extends ObservedFigures {
 }
 
 /**
- * What a span could be and was not credited to. `entry`, `symbol`, `table`
- * and `client` candidates are node ids; `join` candidates are join ids.
+ * What a span could be and was not credited to. `entry`, `symbol`, `table`,
+ * `client` and `channel` candidates are node ids; `join` candidates are join
+ * ids. `channel` is a send that names a bus and not the event (P107).
  */
-export type AmbiguousKind = 'entry' | 'join' | 'client' | 'symbol' | 'table';
+export type AmbiguousKind = 'entry' | 'join' | 'client' | 'symbol' | 'table' | 'channel';
 
 export interface AmbiguousSpan {
   service?: string;
@@ -260,6 +292,17 @@ export interface Observed {
 
 /** Edge types that join two places, the ones `observed` counts joins on. */
 export const JOIN_EDGE_TYPES: readonly string[] = ['http_calls', 'hits', 'emits', 'consumes', 'triggers'];
+
+const JOIN_TYPES: ReadonlySet<string> = new Set(JOIN_EDGE_TYPES);
+
+/**
+ * An edge `observed` counts as a join: one of `JOIN_EDGE_TYPES`, or a `calls`
+ * edge into an entry - a step, a mapping or a call site that invokes a
+ * deployed function or starts a workflow by its name (P107), which is a way
+ * in reached from another place, not a call inside one.
+ */
+export const isJoinEdge = (edge: { type: string; to: string }): boolean =>
+  JOIN_TYPES.has(edge.type) || (edge.type === 'calls' && isEntryId(edge.to));
 
 /** The one grammar a join is named by: `<from> -<type>-> <to>`. */
 export const joinIdOf = (from: string, type: string, to: string): string => `${from} -${type}-> ${to}`;

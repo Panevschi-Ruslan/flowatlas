@@ -8,6 +8,30 @@ only one of them moved.
 
 ### Added
 
+- **AWS traffic matched to the map (P107).** `flowatlas observe` reads what an
+  OpenTelemetry-instrumented Lambda function or the AWS Distro's layer writes,
+  and lands it on the nodes the Terraform and state machine readers draw: a
+  function's span on its `invoke` entry (by `faas.name`, or the ARN in
+  `cloud.resource_id` with its alias cut), a workflow's run on its `workflow`
+  entry, a step on its node, a DynamoDB call on each table it names
+  (`aws.dynamodb.table_names`, now read as a list in JSON and protobuf), and
+  SQS, SNS, EventBridge, Kinesis and S3 sends on the channel as the readers
+  spell it (`order-placed` on an SQS span is `sqs/order-placed`), with the
+  `emits` join from the caller; `Lambda` `Invoke` and `SFN` `StartExecution`
+  on the join into the entry they reach, a queue's or a stream's delivery on
+  the `consumes` join and the mapping's join into the function, and a step on
+  the join into the function its task invokes. Which of several joins a call
+  ran is settled by the function or step it ran in; a bus with several events
+  and no telling which is counted on none. New unmatched kinds `function`,
+  `workflow`, `state` (named `<workflow>/?`, never by a step name the map
+  lacks), `table` and `cloud` (an SDK call of a service nothing reads, by `<service>/<method>`
+  only); new ambiguity kind `channel`. Every ARN and URL is cut to the name
+  inside it before a span exists, so no account id or region reaches the file,
+  and no request parameter is read; `privacy.kept` and `privacy.dropped` say
+  so. A `calls` edge into an entry (a step, a mapping or a call site that
+  invokes a function or starts a workflow) counts as a join, for the page and
+  for `slow_steps` too (`fixtures/lambda-traces`).
+
 - **Failures seen but not declared (P106).** With an observed file beside the
   graph, the statuses each way in answered are set beside the failures its
   code declares, over the file's window: a status from 400 up that no failure

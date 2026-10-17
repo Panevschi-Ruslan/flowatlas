@@ -40,7 +40,30 @@ export interface ObservedSpan {
   durationMs?: number;
   /** The span ended in an error. Never the error itself: no message, no stack. */
   error?: true;
+  // A deployed function, workflow and the cloud calls they make (P107). Every
+  // one is the name a thing is deployed under: an ARN or a URL is cut to the
+  // name inside it before the span exists, so no account or region is held.
+  /** The function the span ran in, as it is deployed (`checkout`; an alias or a version cut). */
+  faas?: string;
+  /** What started the function: `http`, `pubsub`, `datasource`, `timer` or `other`. */
+  trigger?: FaasTrigger;
+  /** The function an SDK `Invoke` call invokes. */
+  invokes?: string;
+  /** The workflow the span ran in, or the one an SDK call starts. */
+  workflow?: string;
+  /** The step of `workflow` the span is; matched only against the steps the map has. */
+  state?: string;
+  /** The tables a DynamoDB call names, each by its name. */
+  tables?: string[];
+  /** The operation of a cloud SDK call: `PutItem`, `SendMessage`, `StartExecution`. */
+  awsOp?: string;
+  /** Which service's channels `destination` is spelled for (`sqs/<name>`, `sns/<name>`, ...). */
+  transport?: AwsTransport;
 }
+
+export type FaasTrigger = 'http' | 'pubsub' | 'datasource' | 'timer' | 'other';
+
+export type AwsTransport = 'sqs' | 'sns' | 'eventbridge' | 'kinesis' | 's3' | 'dynamodb';
 
 /**
  * Every field a span may carry out of a reader (P105 §4), the list the

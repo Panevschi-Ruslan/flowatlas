@@ -82,11 +82,11 @@ const OBSERVE_NOW = new Date('2025-10-16T09:00:00.000Z');
 const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json'].map((file) =>
   join(fixture, 'traces', file),
 );
-const observeOnCopy = (io, runs) => {
+const observeOnCopy = (io, runs, from = fixture) => {
   const copy = mkdtempSync(join(tmpdir(), 'flowatlas-observe-'));
   const said = (text) => text.split(copy).join('<copy>');
   try {
-    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    cpSync(join(from, '.flowatlas'), copy, { recursive: true });
     const db = join(copy, 'graph.db');
     for (const [files, options] of runs) {
       runObserve(files, { db, now: OBSERVE_NOW, print: (line) => io.out(said(`${line}\n`)), ...options });
@@ -300,6 +300,19 @@ const DEPLOYED_WORKFLOW_CASES = [
     (io) => runImpact('lending#src/handlers/notify-borrower.ts:handler', { ...deployedWorkflowsPlain, format: 'tree', entriesOnly: true }, io),
   ],
   ['doctor.txt', (io) => runDoctorCommand({ config: deployedWorkflowsPlain.config }, io)],
+];
+
+/**
+ * `observe` over a Lambda project's trace (P107): one checkout through an
+ * HTTP API, a queue, a table's stream and a workflow, as an OpenTelemetry
+ * Lambda layer writes it, laid over the map its Terraform and state machine
+ * draw. The summary and the file, with the clock fixed.
+ */
+const lambdaTracesFixture = join(root, 'fixtures', 'lambda-traces');
+const LAMBDA_TRACES = [join(lambdaTracesFixture, 'traces', 'adot.otlp.json')];
+const LAMBDA_TRACE_CASES = [
+  ['observe.txt', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { reset: true }]], lambdaTracesFixture)],
+  ['observe.json', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { format: 'json', reset: true }]], lambdaTracesFixture)],
 ];
 
 const multiRepoWorkflowsFixture = join(root, 'fixtures', 'multi-repo-stepfunctions');
@@ -602,6 +615,7 @@ const SUITES = [
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },
+  { dir: join(lambdaTracesFixture, 'expected.cli'), owned: true, cases: LAMBDA_TRACE_CASES },
   { dir: join(root, 'fixtures', 'eventbridge-terraform', 'expected.cli'), owned: true, cases: EVENT_CASES },
   { dir: join(root, 'fixtures', 'sqs-sns-terraform', 'expected.cli'), owned: true, cases: QUEUE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-events', 'expected.cli'), owned: true, cases: MULTI_EVENT_CASES },

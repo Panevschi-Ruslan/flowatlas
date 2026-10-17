@@ -1,4 +1,5 @@
 import { NESTJS_OBSERVE_READS, only, OTLP_READS } from './allow-list.js';
+import { destinationName, isAwsSpan, readAwsSpan } from './aws.js';
 import { keepAllowed, pathOf, type ObservedSpan, type SpanKind } from './span.js';
 
 /**
@@ -90,22 +91,53 @@ const msOf = (value: unknown): number | undefined => {
 
 const OTLP_ATTRIBUTES: ReadonlySet<string> = new Set(OTLP_READS.attributes);
 
+/** The attributes read as a list of names (P107); a list under any other key is not read. */
+export const OTLP_LISTS: ReadonlySet<string> = new Set(OTLP_READS.listAttributes);
+
+const scalarOf = (value: unknown): string | undefined => {
+  const scalar = isObject(value) ? (value['stringValue'] ?? value['intValue']) : value;
+  return typeof scalar === 'string' || typeof scalar === 'number' ? String(scalar) : undefined;
+};
+
+/** The strings of an OTLP `arrayValue`, `{ values: [{ stringValue }, ...] }`; a bare array is read too. */
+const listOf = (value: unknown): string[] | undefined => {
+  const array = isObject(value) && isObject(value['arrayValue']) ? value['arrayValue']['values'] : value;
+  if (!Array.isArray(array)) return undefined;
+  const names = array.flatMap((item) => {
+    const name = scalarOf(item);
+    return name === undefined || name === '' ? [] : [name];
+  });
+  return names.length === 0 ? undefined : names;
+};
+
+/** What an attribute list held that the reader reads: strings by key, and the few lists. */
+interface OtlpAttributes {
+  text: Map<string, string>;
+  lists: Map<string, string[]>;
+}
+
 /**
  * OTLP attribute values are wrapped by type; only the listed keys, and only
- * strings and numbers. A key off the list is counted and its value never
- * looked at, so a header or a statement is not held past this loop.
+ * strings and numbers, or a list of strings under a key `OTLP_LISTS` names. A
+ * key off the list is counted and its value never looked at, so a header or a
+ * statement is not held past this loop.
  */
-const otlpAttributes = (attributes: unknown, allowed: ReadonlySet<string>, dropped: Dropped): Map<string, string> => {
-  const found = new Map<string, string>();
+const otlpAttributes = (attributes: unknown, allowed: ReadonlySet<string>, dropped: Dropped): OtlpAttributes => {
+  const found: OtlpAttributes = { text: new Map(), lists: new Map() };
   for (const attribute of list(attributes)) {
     if (!isObject(attribute) || typeof attribute['key'] !== 'string') continue;
-    if (!allowed.has(attribute['key'])) {
+    const key = attribute['key'];
+    if (!allowed.has(key)) {
       dropped.count += 1;
       continue;
     }
-    const value = attribute['value'];
-    const scalar = isObject(value) ? (value['stringValue'] ?? value['intValue']) : value;
-    if (typeof scalar === 'string' || typeof scalar === 'number') found.set(attribute['key'], String(scalar));
+    if (OTLP_LISTS.has(key)) {
+      const names = listOf(attribute['value']);
+      if (names !== undefined) found.lists.set(key, names);
+      continue;
+    }
+    const scalar = scalarOf(attribute['value']);
+    if (scalar !== undefined) found.text.set(key, scalar);
   }
   return found;
 };
@@ -164,12 +196,16 @@ const otlpError = (status: unknown): true | undefined => {
   return code === 2 || code === 'STATUS_CODE_ERROR' ? true : undefined;
 };
 
-const otlpSpan = (raw: unknown, service: string | undefined, dropped: Dropped): ObservedSpan | undefined => {
+const otlpSpan = (raw: unknown, resource: OtlpAttributes, service: string | undefined, dropped: Dropped): ObservedSpan | undefined => {
   const span = only(raw, OTLP_READS.span);
   const traceId = text(span['traceId']);
   const spanId = text(span['spanId']);
   if (traceId === undefined || spanId === undefined) return undefined;
-  const attrs = otlpAttributes(span['attributes'], OTLP_ATTRIBUTES, dropped);
+  const read = otlpAttributes(span['attributes'], OTLP_ATTRIBUTES, dropped);
+  const attrs = read.text;
+  // A Lambda function's resource says which function every span of it ran in; the span's own word wins.
+  const both = { text: new Map([...resource.text, ...read.text]), lists: read.lists };
+  const aws = isAwsSpan(both) ? readAwsSpan(both) : {};
   const url = attrs.get('url.full') ?? attrs.get('http.url') ?? attrs.get('url.path') ?? attrs.get('http.target');
   const method = attrs.get('http.request.method') ?? attrs.get('http.method');
   const start = nanosOf(span['startTimeUnixNano']);
@@ -182,7 +218,7 @@ const otlpSpan = (raw: unknown, service: string | undefined, dropped: Dropped): 
       method: method?.toUpperCase(),
       route: attrs.get('http.route'),
       path: url === undefined ? undefined : pathOf(url),
-      destination: attrs.get('messaging.destination.name') ?? attrs.get('messaging.destination'),
+      destination: destinationName(attrs.get('messaging.destination.name') ?? attrs.get('messaging.destination')),
       symbol: symbolOf(attrs),
       collection: attrs.get('db.collection.name') ?? attrs.get('db.mongodb.collection') ?? attrs.get('db.sql.table'),
       rpc: rpcOf(attrs),
@@ -190,6 +226,7 @@ const otlpSpan = (raw: unknown, service: string | undefined, dropped: Dropped): 
       status: statusOf(attrs.get('http.response.status_code') ?? attrs.get('http.status_code')),
       durationMs: durationOf(start, end),
       error: otlpError(span['status']),
+      ...aws,
     },
   );
 };
@@ -216,11 +253,12 @@ export const otlpReader: TraceReader = {
     for (const raw of list((document as Json)['resourceSpans'])) {
       const resource = only(raw, ['resource', ...OTLP_READS.scopes]);
       const resAttrs = otlpAttributes(only(resource['resource'], OTLP_READS.resource)['attributes'], RESOURCE_ATTRIBUTES, dropped);
-      const service = resAttrs.get('service.name') ?? fallbackService;
+      const service = resAttrs.text.get('service.name') ?? fallbackService;
+      resAttrs.text.delete('service.name');
       const scopes = OTLP_READS.scopes.flatMap((key) => list(resource[key]));
       for (const scope of scopes) {
         for (const span of list(only(scope, OTLP_READS.scope)['spans'])) {
-          const read = otlpSpan(span, service, dropped);
+          const read = otlpSpan(span, resAttrs, service, dropped);
           if (read === undefined) skips.add('span', 'without a trace id and a span id');
           else spans.push(read);
         }

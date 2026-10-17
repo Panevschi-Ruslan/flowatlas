@@ -57,6 +57,9 @@ const anyValue = (value: Json): number[] => {
   if (typeof value['boolValue'] === 'boolean') return varintField(2, value['boolValue'] ? 1 : 0);
   if (value['intValue'] !== undefined) return varintField(3, BigInt(value['intValue']));
   if (typeof value['doubleValue'] === 'number') return doubleField(4, value['doubleValue']);
+  if (value['arrayValue'] !== undefined) {
+    return bytesField(5, (value['arrayValue']['values'] as Json[]).flatMap((item) => bytesField(1, anyValue(item))));
+  }
   return [];
 };
 const keyValue = (attribute: Json): number[] => [...textField(1, attribute['key']), ...bytesField(2, anyValue(attribute['value']))];
@@ -151,6 +154,20 @@ describe('OTLP protobuf', () => {
     expect(readTraceFiles([gz]).spans).toEqual(expected);
     expect(readTraceFiles([lines]).spans).toEqual(expected);
     expect(readTraceFiles([pb]).sources[0]).toMatchObject({ format: 'otlp', spans: expected.length });
+  });
+
+  it('decodes a list attribute only under a key read as a list (P107)', () => {
+    const lambda = JSON.parse(
+      readFileSync(join(dirname(fixture), '../../lambda-traces/traces/adot.otlp.json'), 'utf8'),
+    ) as Json;
+    const decoded = otlpReader.read(decodeTraceRequest(encodeTraceRequest(lambda), OTLP_KEEP));
+    expect(decoded.spans).toEqual(otlpReader.read(lambda).spans);
+    expect(decoded.spans.filter((one) => one.tables !== undefined).map((one) => one.tables)).toEqual([['orders'], ['carts'], ['orders'], ['orders']]);
+    // A list under a key read as one string is skipped as bytes.
+    const listed = { resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: 'aa', spanId: 'bb', kind: 3, attributes: [
+      { key: 'rpc.service', value: { arrayValue: { values: [{ stringValue: 'not-a-list-key' }] } } },
+    ] }] }] }] };
+    expect(JSON.stringify(decodeTraceRequest(encodeTraceRequest(listed), OTLP_KEEP))).not.toContain('not-a-list-key');
   });
 
   it('names a file that is neither JSON nor a trace request, with the byte', () => {

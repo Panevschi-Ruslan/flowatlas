@@ -19,8 +19,14 @@
  *                              attributes = 9, status = 15
  *   Status                     code = 3
  *   KeyValue                   key = 1, value = 2
- *   AnyValue                   string_value = 1, bool_value = 2, int_value = 3, double_value = 4
+ *   AnyValue                   string_value = 1, bool_value = 2, int_value = 3, double_value = 4,
+ *                              array_value = 5 (read only under a key `OTLP_READS.listAttributes` names)
+ *   ArrayValue                 values = 1
  */
+import { OTLP_READS } from './allow-list.js';
+
+/** The keys whose value is read as a list (P107); under any other key a list is skipped as bytes. */
+const LISTS: ReadonlySet<string> = new Set(OTLP_READS.listAttributes);
 
 /** Bytes that are not a trace request, and where reading them stopped. */
 export class ProtobufError extends Error {
@@ -100,12 +106,13 @@ const sub = (field: Field & { at: number }): Generator<Field & { at: number }> =
 const isBytes = (field: Field): field is Field & { wire: 2; value: Uint8Array } => field.wire === BYTES;
 const isNumber = (field: Field): field is Field & { wire: 0 | 1; value: bigint } => field.wire === VARINT || field.wire === FIXED64;
 
-type JsonValue = { stringValue: string } | { boolValue: boolean } | { intValue: string } | { doubleValue: number };
+type ScalarValue = { stringValue: string } | { boolValue: boolean } | { intValue: string } | { doubleValue: number };
+type JsonValue = ScalarValue | { arrayValue: { values: ScalarValue[] } };
 
 /** Signed 64-bit from the varint's two's complement. */
 const int64 = (value: bigint): bigint => BigInt.asIntN(64, value);
 
-const anyValueOf = (field: Field & { at: number }): JsonValue | undefined => {
+const anyValueOf = (field: Field & { at: number }, list = false): JsonValue | undefined => {
   let value: JsonValue | undefined;
   for (const part of sub(field)) {
     if (part.no === 1 && isBytes(part)) value = { stringValue: textOf(part.value, part.at) };
@@ -115,6 +122,13 @@ const anyValueOf = (field: Field & { at: number }): JsonValue | undefined => {
       const view = new DataView(new ArrayBuffer(8));
       view.setBigUint64(0, part.value, true);
       value = { doubleValue: view.getFloat64(0, true) };
+    } else if (part.no === 5 && list && isBytes(part)) {
+      const values: ScalarValue[] = [];
+      for (const item of sub(part)) {
+        const scalar = item.no === 1 && isBytes(item) ? anyValueOf(item) : undefined;
+        if (scalar !== undefined && !('arrayValue' in scalar)) values.push(scalar);
+      }
+      value = { arrayValue: { values } };
     }
   }
   return value;
@@ -138,7 +152,7 @@ const keyValueOf = (field: Field & { at: number }, keep: Keep): { key: string; v
     keep.dropped.count += 1;
     return undefined;
   }
-  const value = raw === undefined ? undefined : anyValueOf(raw);
+  const value = raw === undefined ? undefined : anyValueOf(raw, LISTS.has(key));
   return value === undefined ? undefined : { key, value };
 };
 

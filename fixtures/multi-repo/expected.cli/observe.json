@@ -18,7 +18,15 @@
       "at",
       "status",
       "durationMs",
-      "error"
+      "error",
+      "faas",
+      "trigger",
+      "invokes",
+      "workflow",
+      "state",
+      "tables",
+      "awsOp",
+      "transport"
     ],
     "dropped": [
       "request and response headers",
@@ -33,9 +41,12 @@
       "span events and exception text",
       "status messages",
       "every attribute not on the kept list",
-      "@nestjs/observe user, request, tags, logs, objectives, runtime and custom data"
+      "@nestjs/observe user, request, tags, logs, objectives, runtime and custom data",
+      "cloud account ids and regions (an ARN or a queue URL is cut to the name inside it)",
+      "parameters of a cloud SDK call (keys, items, message bodies, workflow input)",
+      "workflow step names the map does not declare"
     ],
-    "droppedAttributes": 27,
+    "droppedAttributes": 24,
     "samples": {
       "kept": true,
       "perEntry": 3,

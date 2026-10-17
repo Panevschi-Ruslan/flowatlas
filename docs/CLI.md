@@ -1283,7 +1283,10 @@ body captured from a POST is read as it is):
   `http.response.status_code` / `http.status_code`, `messaging.destination.name`,
   `code.namespace` + `code.function` (or `code.function.name`),
   `db.collection.name`, `rpc.service` / `rpc.method`, the start and end time
-  (to the nanosecond), and whether `status.code` is an error.
+  (to the nanosecond), and whether `status.code` is an error; and on AWS the
+  names listed under *On AWS Lambda* below (`faas.*`, `cloud.resource_id`,
+  `rpc.system`, `messaging.system`, `aws.*`), `aws.dynamodb.table_names` as a
+  list.
 - **OTLP protobuf**, an `ExportTraceServiceRequest` as the collector's file
   exporter or an OTLP/HTTP body writes it. A `.pb`, `.binpb` or `.protobuf`
   file is read as protobuf first; any other file is, when it is not JSON. The
@@ -1309,8 +1312,10 @@ allow-list, while it walks a span's attributes, before a span exists: service
 name, span kind, HTTP method, route template, the path with every value-like
 segment (any digit, or a long token) masked as `:value`, messaging
 destination, `Class.method`, table or collection, rpc service and method,
-HTTP status, duration, the error flag, start time, and trace, span and parent
-ids. Never read: headers, cookies, query strings, bodies, statements and
+HTTP status, duration, the error flag, start time, trace, span and parent
+ids, and on AWS the function, trigger, workflow, step, tables, the function
+invoked, the SDK operation and the service a destination is spelled for, each
+a deployed name. Never read: headers, cookies, query strings, bodies, statements and
 queries, `enduser.*`, span names, events and exception text, status messages,
 hosts, and @nestjs/observe's `u`, `rq`, `tg` and `logs`. The file says so in a
 `privacy` block: the kept list, the dropped categories as fixed text, and how
@@ -1325,6 +1330,32 @@ service; a client span to the outbound call with that method and path; and a
 server span whose parent is in another service to the join from that service
 into the entry. What matches nothing is listed as seen at run time, not found
 in code.
+
+**On AWS Lambda (P107).** A span an OpenTelemetry-instrumented function, or
+the AWS Distro's Lambda layer, writes lands on the node the Terraform and the
+state machine readers draw for it:
+
+| The span says | It is matched to |
+|---|---|
+| `faas.name`, else the function's ARN in `cloud.resource_id` (an alias or a version after it cut), else `aws.lambda.invoked_arn` | the `invoke` entry of that deployed name; with `http.route` too, the route as well |
+| `aws.step_functions.state_machine.arn` or a state machine's ARN in `cloud.resource_id`, on the run's span | the `workflow` entry |
+| `aws.step_functions.state.name` | the step, only when that workflow has a step of that name; and the join from the step into the function its task invokes, when that function's span is under it |
+| `rpc.system=aws-api`, `rpc.service=DynamoDB`, `aws.dynamodb.table_names` (a list) | each `table`, the step's query of it, and for a write the `emits` join onto `dynamodb/<table>` when its stream is read |
+| `SQS`, `SNS`, `Kinesis`, `S3` sends: `aws.sqs.queue.url`, `aws.sns.topic.arn`, `aws.kinesis.stream_name`, `aws.s3.bucket`, `messaging.destination.name` | the channel as the readers spell it (`order-placed` on an SQS span is `sqs/order-placed`) and the `emits` join from the caller |
+| `EventBridge` `PutEvents` (`aws.eventbridge.bus_name`, else `default`) | the bus's one channel, or the one the caller's code puts events on; with several, none, and an ambiguity row |
+| `Lambda` `Invoke` (`faas.invoked_name`), `SFN` `StartExecution` | the join from the call site into the `invoke` or `workflow` entry |
+| a consumer span with `messaging.system=aws_sqs`, or `faas.trigger` `pubsub` / `datasource` with no message span | the channel, the `consumes` join onto the mapping, and the join from it into the function |
+
+Which join a call ran is settled by where it ran: the function's code read
+down from its handler, or the step it is part of, so a write onto a table
+from the function and one from a workflow step are told apart. A function,
+workflow, step or table the map does not have is listed as `function`,
+`workflow`, `state` (named `<workflow>/?`, never by a step name the map
+lacks) or `table`; an SDK call of a service nothing here reads as `cloud`, by
+`<service>/<method>` only. Every ARN and URL is cut to the name inside it with
+the forms the deployment readers use, before a span exists, so no account id
+or region reaches the file; no request parameter (a key, an item, a message
+body, a workflow's input) is ever read. See `fixtures/lambda-traces`.
 
 **A span counts once.** It is credited to a join, an entry, a method or a
 table only when exactly one fits. When several do — two routes tied for its

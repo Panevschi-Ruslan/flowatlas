@@ -15,7 +15,8 @@ import { edgeIdOf, indexGraph, matchSpans, routeScore, templateOf } from './matc
 import { nestjsObserveReader, otlpReader, readerFor } from './readers.js';
 import { pathOf } from './span.js';
 
-const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures/multi-repo');
+const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures');
+const fixture = join(fixtures, 'multi-repo');
 const graph = JSON.parse(readFileSync(join(fixture, 'expected.project-graph.json'), 'utf8')) as ProjectGraph & {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -203,5 +204,105 @@ describe('flowatlas observe, then visualise', () => {
     const data = page.slice(start, page.indexOf('</script>', start));
     expect(JSON.parse(data).observed.ambiguous).toHaveLength(1);
     for (const secret of PLANTED) expect(data).not.toContain(secret);
+  });
+});
+
+describe('matchSpans over the lambda-traces fixture (P107)', () => {
+  const lambda = join(fixtures, 'lambda-traces');
+  const lambdaGraph = JSON.parse(readFileSync(join(lambda, 'expected.project-graph.json'), 'utf8')) as ProjectGraph & {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+  };
+  const trace = join(lambda, 'traces/adot.otlp.json');
+  const { spans } = readTraceFiles([trace]);
+  const observed = matchSpans(indexGraph(lambdaGraph.nodes, lambdaGraph.edges), spans);
+  const STATES = 'shop#statemachine/fulfil-order.asl.json:fulfil-order';
+
+  it('credits every function, the workflow and the route behind one checkout', () => {
+    expect(Object.keys(observed.entries).sort()).toEqual([
+      'entry:shop:event:dynamodb/orders',
+      'entry:shop:http:POST:/checkout',
+      'entry:shop:invoke:charge-card',
+      // Named only by its ARN, through the alias it was invoked by.
+      'entry:shop:invoke:checkout',
+      'entry:shop:invoke:index-orders',
+      'entry:shop:invoke:print-label',
+      'entry:shop:invoke:reserve-stock',
+      'entry:shop:invoke:ship-order',
+      'entry:shop:workflow:fulfil-order',
+    ]);
+    expect(observed.entries['entry:shop:invoke:charge-card']).toMatchObject({ hits: 1, errors: 1, max: 270 });
+  });
+
+  it('counts every join the trace was written to run, on the side that called', () => {
+    expect(Object.fromEntries(Object.entries(observed.joins).map(([id, seen]) => [id, [seen.count, seen.measuredAt]]))).toEqual({
+      // The write and the send from checkout's own code, and the workflow it starts.
+      'producer:shop#src/handlers/checkout.ts:15:9 -emits-> channel:dynamodb/orders': [1, 'caller'],
+      'producer:shop#src/handlers/checkout.ts:16:9 -emits-> channel:sqs/order-placed': [1, 'caller'],
+      'producer:shop#src/handlers/checkout.ts:17:9 -calls-> entry:shop:workflow:fulfil-order': [1, 'caller'],
+      // Each step into the function its task invokes, the write onto the stream and the receipt.
+      [`${STATES}/ReserveStock -calls-> entry:shop:invoke:reserve-stock`]: [1, 'caller'],
+      [`${STATES}/ChargeCard -calls-> entry:shop:invoke:charge-card`]: [1, 'caller'],
+      'producer:shop#statemachine/fulfil-order.asl.json:21:5 -emits-> channel:dynamodb/orders': [1, 'caller'],
+      'producer:shop#statemachine/fulfil-order.asl.json:41:5 -emits-> channel:sns/receipts': [1, 'caller'],
+      // The queue's message into ship-order, and ship-order's own invoke.
+      'channel:sqs/order-placed -consumes-> consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order': [1, 'callee'],
+      'consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order -calls-> entry:shop:invoke:ship-order': [1, 'callee'],
+      'producer:shop#src/handlers/ship-order.ts:11:11 -calls-> entry:shop:invoke:print-label': [1, 'caller'],
+      // The table's stream into index-orders, which leaves no message span of its own.
+      'channel:dynamodb/orders -consumes-> consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders': [1, 'callee'],
+      'consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders -triggers-> entry:shop:event:dynamodb/orders': [1, 'callee'],
+    });
+    expect(observed.ambiguous).toEqual([]);
+  });
+
+  it('credits the steps, the table and the call sites', () => {
+    expect(Object.keys(observed.symbols).sort()).toEqual([
+      'db_query:shop#statemachine/fulfil-order.asl.json:21:5',
+      'producer:shop#src/handlers/checkout.ts:17:9',
+      'producer:shop#src/handlers/ship-order.ts:11:11',
+      `${STATES}/ChargeCard`,
+      `${STATES}/MarkPaid`,
+      `${STATES}/ReserveStock`,
+      `${STATES}/SendReceipt`,
+      'table:shop#orders',
+    ]);
+    // checkout's write, the step's write and ship-order's read.
+    expect(observed.symbols['table:shop#orders']?.hits).toBe(3);
+    expect(observed.channels).toMatchObject({
+      'channel:dynamodb/orders': { hits: 3 },
+      'channel:sqs/order-placed': { hits: 2 },
+      'channel:sns/receipts': { hits: 1 },
+    });
+  });
+
+  it('leaves only the two planted calls unmatched', () => {
+    expect(observed.unmatched.map(({ service, kind, name, count }) => ({ service, kind, name, count }))).toEqual([
+      { service: 'checkout', kind: 'cloud', name: 'SecretsManager/GetSecretValue', count: 1 },
+      { service: 'checkout', kind: 'table', name: 'carts', count: 1 },
+    ]);
+  });
+
+  it('keeps no ARN, account id, region or request parameter, in the spans or the file', () => {
+    const planted = ['111122223333', 'eu-west-1', 'arn:', 'amazonaws', 'planted', 'PLANTED', 'promo'];
+    for (const secret of planted) expect(JSON.stringify(spans)).not.toContain(secret);
+    const out = mkdtempSync(join(scratch, 'lambda-'));
+    const dbPath = join(out, 'graph.db');
+    const report = JSON.parse(readFileSync(join(lambda, 'expected.link-report.json'), 'utf8')) as LinkReport;
+    writeGraphDb(lambdaGraph, report, dbPath);
+    const run = runObserve([trace], { db: dbPath, print: () => {} });
+    const file = readFileSync(run.path, 'utf8');
+    for (const secret of planted) expect(file).not.toContain(secret);
+    expect(run.observed.privacy.kept).toEqual(expect.arrayContaining(['faas', 'workflow', 'state', 'tables', 'awsOp', 'transport']));
+  });
+
+  it('names a step the map does not have by its workflow only, in the row and in the sample', () => {
+    const step = spans.find((span) => span.state === 'MarkPaid')!;
+    const unknown = { ...step, state: 'RefundCustomerAcme7' };
+    const seen = matchSpans(indexGraph(lambdaGraph.nodes, lambdaGraph.edges), spans.map((span) => (span === step ? unknown : span)));
+    expect(seen.unmatched).toContainEqual(expect.objectContaining({ kind: 'state', name: 'fulfil-order/?', count: 1 }));
+    expect(JSON.stringify(seen)).not.toContain('RefundCustomerAcme7');
+    expect(JSON.stringify(seen.samples)).toContain('fulfil-order/?');
+    expect(JSON.stringify(seen.samples)).toContain('fulfil-order/ReserveStock');
   });
 });

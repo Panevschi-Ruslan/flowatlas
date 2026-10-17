@@ -25,7 +25,7 @@ export interface AllowList {
 export const OTLP_READS = {
   resource: ['attributes'],
   /** Of the resource's attributes. */
-  resourceAttributes: ['service.name'],
+  resourceAttributes: ['service.name', 'faas.name', 'cloud.resource_id'],
   scopes: ['scopeSpans', 'instrumentationLibrarySpans'],
   scope: ['spans'],
   /** `status` is read for its code only: an error is `true`, its message is not read. */
@@ -52,7 +52,33 @@ export const OTLP_READS = {
     'db.sql.table',
     'rpc.service',
     'rpc.method',
+    // A deployed function or workflow and the cloud calls it makes (P107),
+    // read in `aws.ts`. An ARN or a URL is cut to the name inside it there,
+    // and no request parameter (`Key`, `Item`, `MessageBody`, `Input`) is read.
+    'rpc.system',
+    'messaging.system',
+    'faas.name',
+    'faas.trigger',
+    'faas.invoked_name',
+    'cloud.resource_id',
+    'aws.lambda.invoked_arn',
+    'aws.lambda.function.name',
+    'aws.dynamodb.table_names',
+    'aws.sqs.queue.url',
+    'aws.sqs.queue_url',
+    'aws.sns.topic.arn',
+    'aws.sns.topic_arn',
+    'aws.kinesis.stream_name',
+    'aws.s3.bucket',
+    'aws.eventbridge.bus_name',
+    'aws.step_functions.state_machine.arn',
+    'aws.step_functions.state.name',
   ],
+  /**
+   * The span attributes read as a list of names; every other attribute is a
+   * single string or number, and a list under any other key is not read.
+   */
+  listAttributes: ['aws.dynamodb.table_names'],
 } as const satisfies AllowList;
 
 /**

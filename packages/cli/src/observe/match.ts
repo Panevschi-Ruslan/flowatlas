@@ -4,8 +4,10 @@ import {
   emptyAgg,
   hourOf,
   isError,
-  JOIN_EDGE_TYPES,
+  isJoinEdge,
   joinIdOf,
+  STEP_OF_META,
+  wasRead,
   observedFromParts,
   SAMPLES_PER_ENTRY,
   SPANS_PER_SAMPLE,
@@ -25,6 +27,8 @@ import {
   type UnmatchedAgg,
   type UnmatchedKind,
 } from '@flowatlas/core';
+import { channelLabelOf } from './aws.js';
+import { matchAws } from './match-aws.js';
 import { VALUE, type ObservedSpan } from './span.js';
 
 export { OBSERVED_FORMAT_VERSION, type Observed } from '@flowatlas/core';
@@ -107,6 +111,21 @@ const metaText = (node: GraphNode, field: string): string | undefined => {
 /** A symbol as code names it: `Class.method`, the last part of a node id. */
 const symbolKey = (node: GraphNode): string => node.id.slice(node.id.lastIndexOf(':') + 1);
 
+/**
+ * One way a message reaches a function (P107): the channel, the `consumes`
+ * join onto the subscriber a deployment declares, and the join from that
+ * subscriber into the entry it runs - the `invoke` entry, or an `event` entry
+ * that names its function.
+ */
+export interface Delivery {
+  channel: GraphNode;
+  consumes: GraphEdge;
+  wayIn: GraphEdge;
+  entry: GraphNode;
+  /** The deployed name of the function the entry runs, when the map says it. */
+  fn?: string;
+}
+
 export interface GraphIndex {
   services: ReadonlySet<string>;
   httpEntries: Routed[];
@@ -115,10 +134,27 @@ export interface GraphIndex {
   channels: Map<string, GraphNode>;
   methods: Map<string, GraphNode[]>;
   tables: Map<string, GraphNode[]>;
+  /** `invoke` entries by the deployed name of their function; one whose name was not read is left out. */
+  invokes: Map<string, GraphNode[]>;
+  /** `workflow` entries by the deployed name of their workflow, the same way. */
+  workflows: Map<string, GraphNode[]>;
+  /** Steps (`function` nodes of kind `state`) by `<workflow>/<step>`. */
+  states: Map<string, GraphNode[]>;
+  /** Every way a message reaches a function, by channel id and by the function's deployed name. */
+  deliveries: { byChannel: Map<string, Delivery[]>; byFunction: Map<string, Delivery[]> };
   from: Map<string, GraphEdge[]>;
   to: Map<string, GraphEdge[]>;
   nodes: Map<string, GraphNode>;
 }
+
+/** The deployed name an `invoke` or `workflow` entry is keyed by, when it was read. */
+const deployedKey = (node: GraphNode): string | undefined => {
+  const key = metaText(node, 'key') ?? node.id.slice(node.id.indexOf(`:${node.kind}:`) + node.kind!.length + 2);
+  return key === '' || !wasRead(key) ? undefined : key;
+};
+
+/** A step's name, its label before the bracket that says what kind of step it is. */
+const stateName = (node: GraphNode): string => node.label.split(' [')[0]!;
 
 export const indexGraph = (nodes: readonly GraphNode[], edges: readonly GraphEdge[]): GraphIndex => {
   const index: GraphIndex = {
@@ -129,6 +165,10 @@ export const indexGraph = (nodes: readonly GraphNode[], edges: readonly GraphEdg
     channels: new Map(),
     methods: new Map(),
     tables: new Map(),
+    invokes: new Map(),
+    workflows: new Map(),
+    states: new Map(),
+    deliveries: { byChannel: new Map(), byFunction: new Map() },
     from: new Map(),
     to: new Map(),
     nodes: new Map(nodes.map((node) => [node.id, node])),
@@ -146,7 +186,14 @@ export const indexGraph = (nodes: readonly GraphNode[], edges: readonly GraphEdg
       if (node.kind === 'http') {
         const row = routed(node);
         if (row !== undefined) index.httpEntries.push(row);
+      } else if (node.kind === 'invoke' || node.kind === 'workflow') {
+        const key = deployedKey(node);
+        if (key !== undefined) push(node.kind === 'invoke' ? index.invokes : index.workflows, key, node);
       } else if (pattern !== undefined) push(index.eventEntries, pattern, node);
+    },
+    function: (node) => {
+      const workflow = node.kind === 'state' ? metaText(node, STEP_OF_META) : undefined;
+      if (workflow !== undefined) push(index.states, `${workflow}/${stateName(node)}`, node);
     },
     http_out: (node) => {
       const row = routed(node);
@@ -165,15 +212,24 @@ export const indexGraph = (nodes: readonly GraphNode[], edges: readonly GraphEdg
     push(index.from, edge.from, edge);
     push(index.to, edge.to, edge);
   }
+  for (const consumes of edges) {
+    const channel = consumes.type === 'consumes' ? index.nodes.get(consumes.from) : undefined;
+    if (channel?.type !== 'channel') continue;
+    for (const wayIn of index.from.get(consumes.to) ?? []) {
+      const entry = isJoinEdge(wayIn) ? index.nodes.get(wayIn.to) : undefined;
+      if (entry?.type !== 'entry') continue;
+      const fn = entry.kind === 'invoke' ? deployedKey(entry) : metaText(entry, 'function');
+      const delivery: Delivery = { channel, consumes, wayIn, entry, ...(fn === undefined ? {} : { fn }) };
+      push(index.deliveries.byChannel, channel.id, delivery);
+      if (fn !== undefined) push(index.deliveries.byFunction, fn, delivery);
+    }
+  }
   return index;
 };
 
 // --- matching ----------------------------------------------------------------
 
-/** Edge types that join two places, the ones `observed` is counted on. */
-const JOINS: ReadonlySet<string> = new Set(JOIN_EDGE_TYPES);
-
-const inService = (index: GraphIndex, service: string | undefined) => (node: GraphNode): boolean =>
+export const inService = (index: GraphIndex, service: string | undefined) => (node: GraphNode): boolean =>
   service === undefined || !index.services.has(service) || node.repo === service;
 
 const routeOf = (span: ObservedSpan): string[] | undefined => {
@@ -216,10 +272,11 @@ const emptyHour = (): HourTally => ({
  * names, and its duration, status and error flag go into that thing's `Agg`.
  * `placeOf` remembers the node each span was credited to, for the samples.
  */
-class Tally {
+export class Tally {
   readonly hours = new Map<string, HourTally>();
   readonly placeOf = new Map<ObservedSpan, string>();
-  readonly entryOf = new Map<ObservedSpan, string>();
+  /** The entries a span was credited to: a function behind a route is both the route and the function (P107). */
+  readonly entryOf = new Map<ObservedSpan, string[]>();
 
   constructor(private readonly hourFor: (span: ObservedSpan) => string) {}
 
@@ -257,8 +314,10 @@ class Tally {
 
   entry(id: string, span: ObservedSpan): void {
     this.add(this.hour(span).entries, id, span);
-    this.entryOf.set(span, id);
-    this.placeOf.set(span, id);
+    const had = this.entryOf.get(span);
+    // A sample's node says the first entry the span was credited to: the route, before its function.
+    if (had === undefined) this.placeOf.set(span, id);
+    this.entryOf.set(span, [...(had ?? []), id]);
   }
 
   hit(kind: 'symbols' | 'channels', id: string, span: ObservedSpan): void {
@@ -333,7 +392,7 @@ const byCount = (
 /** The join edges among `edges`, each once. */
 const joinsAmong = (edges: Iterable<GraphEdge>): GraphEdge[] => {
   const once = new Map<string, GraphEdge>();
-  for (const edge of edges) if (JOINS.has(edge.type)) once.set(edgeIdOf(edge), edge);
+  for (const edge of edges) if (isJoinEdge(edge)) once.set(edgeIdOf(edge), edge);
   return [...once.values()];
 };
 
@@ -509,16 +568,26 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
     });
   };
 
+  const childrenOf = new Map<ObservedSpan, ObservedSpan[]>();
+  for (const span of spans) {
+    const parent = parentOf(span);
+    if (parent !== undefined) push(childrenOf, parent, span);
+  }
+  const aws = matchAws(index, tally, { parentOf, childrenOf: (span) => childrenOf.get(span) ?? [] }, { countOne, countJoin });
+
   for (const span of spans) tally.span(span);
   // Server spans first, so a client span knows whether its far side was seen.
   for (const span of spans) if (span.kind === 'server') server(span);
   for (const span of spans) {
-    if (span.destination !== undefined && span.kind === 'producer') messaging(span, 'emits');
+    // A deployed function, a workflow or a cloud SDK call is read in `match-aws.ts` (P107).
+    if (aws.claims(span)) aws.match(span);
+    else if (span.destination !== undefined && span.kind === 'producer') messaging(span, 'emits');
     else if (span.destination !== undefined && span.kind === 'consumer') messaging(span, 'consumes');
     else if (span.rpc !== undefined && span.kind === 'server') rpc(span);
     if (span.symbol !== undefined) symbol(span);
-    if (span.collection !== undefined) table(span);
-    if (span.kind === 'client' && span.method !== undefined && routeOf(span) !== undefined) client(span);
+    if (span.collection !== undefined && span.tables === undefined) table(span);
+    // An SDK call is sent as HTTP to the service's endpoint: that request is the call, not one of the code's.
+    if (span.kind === 'client' && span.awsOp === undefined && span.method !== undefined && routeOf(span) !== undefined) client(span);
   }
 
   return observedFromParts({
@@ -553,15 +622,21 @@ const hourOfSpan = (spans: readonly ObservedSpan[], now: Date): ((span: Observed
   };
 };
 
-/** What a span said, from kept fields only: never its name. */
-const labelOf = (span: ObservedSpan): string => {
+/**
+ * What a span said, from kept fields only: never its name. A workflow step
+ * is named only when it was credited to a step the map has (P107 D3).
+ */
+const labelOf = (span: ObservedSpan, placed: boolean): string => {
   if (span.method !== undefined && (span.route ?? span.path) !== undefined) return nameOf(span);
-  return span.destination ?? span.symbol ?? span.rpc ?? span.collection ?? span.method ?? span.kind;
+  if (span.state !== undefined && span.workflow !== undefined) return `${span.workflow}/${placed ? span.state : '?'}`;
+  if (span.awsOp !== undefined && span.rpc !== undefined) return span.rpc;
+  if (span.kind === 'server' && (span.faas ?? span.workflow) !== undefined) return (span.faas ?? span.workflow)!;
+  return channelLabelOf(span) ?? span.symbol ?? span.rpc ?? span.collection ?? span.method ?? span.kind;
 };
 
 const nodeOf = (span: ObservedSpan, id: string | undefined): TraceTree => ({
   ...(id === undefined ? {} : { id }),
-  label: labelOf(span),
+  label: labelOf(span, id !== undefined),
   ...serviceOf(span),
   kind: span.kind,
   ...(span.durationMs === undefined ? {} : { ms: span.durationMs }),
@@ -641,7 +716,7 @@ const samplesOf = (
     if (span.parentId !== undefined) push(childrenOf, `${span.traceId}/${span.parentId}`, span);
   }
   const byEntry = new Map<string, ObservedSpan[]>();
-  for (const [span, entry] of tally.entryOf) push(byEntry, entry, span);
+  for (const [span, entries] of tally.entryOf) for (const entry of entries) push(byEntry, entry, span);
   const samples: Record<string, EntrySamples> = {};
   const atOf = (span: ObservedSpan): string => span.at ?? hourFor(span);
   for (const [entry, roots] of [...byEntry.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {

@@ -708,6 +708,7 @@ export {
   describeObservedProblem,
   HOUR_MS,
   hourOf,
+  isJoinEdge,
   JOIN_EDGE_TYPES,
   joinIdOf,
   joinOfId,

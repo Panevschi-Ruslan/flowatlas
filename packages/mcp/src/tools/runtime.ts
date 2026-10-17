@@ -1,7 +1,7 @@
 import {
   compareEntryFailures,
   FAILURE_MIN_HITS,
-  JOIN_EDGE_TYPES,
+  isJoinEdge,
   joinOfId,
   type FailureComparison,
   type GraphNode,
@@ -33,8 +33,6 @@ const NO_FILE = 'nothing was observed: run flowatlas observe <trace files> besid
 /** How far a walk from an entry goes to find the joins it reaches; a step is a hop. */
 const REACH_NODES = 2000;
 
-const JOINS: ReadonlySet<string> = new Set(JOIN_EDGE_TYPES);
-
 /** The nodes and joins an entry reaches, walking the edges a flow follows. */
 const reachOf = (db: GraphDb, entry: string): { nodes: Set<string>; joins: Set<string> } => {
   const nodes = new Set([entry]);
@@ -43,7 +41,7 @@ const reachOf = (db: GraphDb, entry: string): { nodes: Set<string>; joins: Set<s
   while (queue.length > 0 && nodes.size < REACH_NODES) {
     const from = queue.shift()!;
     for (const edge of db.edgesFrom(from, FORWARD_EDGES)) {
-      if (JOINS.has(edge.type)) joins.add(`${edge.from} -${edge.type}-> ${edge.to}`);
+      if (isJoinEdge(edge)) joins.add(`${edge.from} -${edge.type}-> ${edge.to}`);
       if (!nodes.has(edge.to)) {
         nodes.add(edge.to);
         queue.push(edge.to);
