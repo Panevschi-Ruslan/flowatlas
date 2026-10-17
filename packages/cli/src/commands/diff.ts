@@ -26,14 +26,18 @@ import {
   type DiffReport,
   type DiffSide,
   type DiffWarning,
+  type GraphDb,
 } from '@flowatlas/linker';
+import { DEFAULT_WALK_NODES } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun, CliError, EXIT } from '../exit.js';
 import { buildAtRef, type BuildAtRefResult } from '../git/build-at-ref.js';
 import { isDirty } from '../git/worktree.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
-import { renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
+import { DIFF_MARKDOWN_DEFAULTS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
+import { flowChanges } from '../report/flow-changes.js';
+import { sequenceDetailOf } from './flow.js';
 import { registerCache } from './cache.js';
 
 export const FORMATS = ['markdown', 'json'] as const;
@@ -61,6 +65,18 @@ export interface DiffOptions {
   out?: string;
   /** Fixed timestamp, for output that is the same on two runs. */
   generatedAt?: string;
+  /** Most changed flows drawn in the Markdown; the rest are named and counted (P116). */
+  maxDiagrams?: string;
+  /** Unchanged steps kept on each side of a change; longer runs fold to a count. */
+  context?: string;
+  /** `service` or `class`: what a participant of a flow's diagram is. */
+  sequenceDetail?: string;
+  /** About the most characters the Markdown may take; diagrams go first, from the last. */
+  maxChars?: string;
+  /** Commander sets this to false for `--no-diagrams`: step lists without the Mermaid. */
+  diagrams?: boolean;
+  /** Most ways in walked for `flows`; the rest are counted in a warning. */
+  maxFlows?: string;
 }
 
 export interface DiffRun {
@@ -95,6 +111,19 @@ const whole = (value: string | undefined, fallback: number, flag: string): numbe
   }
   return parsed;
 };
+
+/** A count that may be zero: `--context 0` folds every unchanged step. */
+const count = (value: string | undefined, fallback: number, flag: string): number => {
+  if (value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw cannotRun(`${flag} must be a whole number of at least 0, not ${JSON.stringify(value)}`);
+  }
+  return parsed;
+};
+
+/** How many ways in a run walks for its flows when nobody says. */
+export const DEFAULT_MAX_FLOWS = 50;
 
 const sideOf = (ref: string | null, built: BuildAtRefResult): DiffSide => ({
   ref,
@@ -149,21 +178,26 @@ const dirtyWarnings = async (loaded: LoadedConfig, headRef: string | null): Prom
  * than on the diff: `nodes.changed` is always complete in the file.
  */
 const impactOf = (
-  built: { head: BuildAtRefResult; base: BuildAtRefResult },
+  dbs: { head: GraphDb; base: GraphDb },
   diff: ReturnType<typeof diffGraphs>,
   limits: { maxEntries: number; maxNodes: number },
 ): { rows: BlastRow[]; skipped: number } => {
   const wanted = impactedNodes(diff);
   const taken = wanted.slice(0, limits.maxNodes);
+  const rows: BlastRow[] = [];
+  const onHead = taken.filter((item) => item.side === 'head').map((item) => item.id);
+  const onBase = taken.filter((item) => item.side === 'base').map((item) => item.id);
+  rows.push(...blastRadius(dbs.head, onHead, { maxEntries: limits.maxEntries, side: 'head' }).rows);
+  rows.push(...blastRadius(dbs.base, onBase, { maxEntries: limits.maxEntries, side: 'base' }).rows);
+  return { rows, skipped: wanted.length - taken.length };
+};
+
+/** Both sides' databases, open for as long as `use` reads them. */
+const withGraphs = <T>(built: { head: BuildAtRefResult; base: BuildAtRefResult }, use: (dbs: { head: GraphDb; base: GraphDb }) => T): T => {
   const head = openGraphDb(built.head.dbPath);
   const base = openGraphDb(built.base.dbPath);
   try {
-    const rows: BlastRow[] = [];
-    const onHead = taken.filter((item) => item.side === 'head').map((item) => item.id);
-    const onBase = taken.filter((item) => item.side === 'base').map((item) => item.id);
-    rows.push(...blastRadius(head, onHead, { maxEntries: limits.maxEntries, side: 'head' }).rows);
-    rows.push(...blastRadius(base, onBase, { maxEntries: limits.maxEntries, side: 'base' }).rows);
-    return { rows, skipped: wanted.length - taken.length };
+    return use({ head, base });
   } finally {
     head.close();
     base.close();
@@ -187,6 +221,14 @@ export const runDiff = async (
   const format = oneOf(options.format, FORMATS, 'markdown', '--format');
   const maxEntries = whole(options.maxEntries, 150, '--max-entries');
   const maxNodes = whole(options.maxNodes, 100, '--max-nodes');
+  const maxFlows = count(options.maxFlows, DEFAULT_MAX_FLOWS, '--max-flows');
+  const markdown = {
+    maxDiagrams: count(options.maxDiagrams, DIFF_MARKDOWN_DEFAULTS.maxDiagrams, '--max-diagrams'),
+    context: count(options.context, DIFF_MARKDOWN_DEFAULTS.context, '--context'),
+    maxChars: whole(options.maxChars, DIFF_MARKDOWN_DEFAULTS.maxChars, '--max-chars'),
+    diagrams: options.diagrams !== false,
+  };
+  const sequenceDetail = sequenceDetailOf(options.sequenceDetail);
 
   const loaded = loadConfig(options.config ?? process.cwd());
   const services = wantedServices(loaded, options.service);
@@ -231,7 +273,17 @@ export const runDiff = async (
       depth: settings.depth,
       disableRules: settings.rules.disable,
     });
-    const impact = impactOf({ head: builtHead, base: builtBase }, diff, { maxEntries, maxNodes });
+    const { impact, flows } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
+      const rows = impactOf(dbs, diff, { maxEntries, maxNodes });
+      return {
+        impact: rows,
+        flows: flowChanges({ impact: rows.rows, nodes: diff.nodes, types: diff.types }, dbs, {
+          maxFlows,
+          maxNodes: DEFAULT_WALK_NODES,
+          detail: sequenceDetail,
+        }),
+      };
+    });
     const contracts = classifyContracts(
       checkContracts(builtBase.graph, check),
       checkContracts(builtHead.graph, check),
@@ -251,6 +303,14 @@ export const runDiff = async (
         hint: `Raise --max-nodes above ${maxNodes}, or narrow the run with --service.`,
       });
     }
+    if (flows.skipped > 0) {
+      warnings.push({
+        reason: 'flows-truncated',
+        service: null,
+        message: `${flows.skipped} ways in were not walked for their flows; the impact table lists them, Changed flows does not`,
+        hint: `Raise --max-flows above ${maxFlows}, or narrow the run with --service.`,
+      });
+    }
 
     const report: DiffReport = {
       diffFormatVersion: DIFF_FORMAT_VERSION,
@@ -265,6 +325,7 @@ export const runDiff = async (
       unresolved: diff.unresolved,
       joins: diff.joins,
       impact: impact.rows,
+      flows: flows.flows,
       contracts,
       warnings,
       timing: {
@@ -285,7 +346,7 @@ export const runDiff = async (
     const text =
       format === 'json'
         ? `${JSON.stringify(report, null, 2)}\n`
-        : renderDiffMarkdown(report, { file });
+        : renderDiffMarkdown(report, { file, ...markdown });
     io.out(text);
     io.err(`${summariseDiff(report)}\n`);
     for (const kept of [...builtHead.worktrees, ...builtBase.worktrees]) {
@@ -344,6 +405,12 @@ export const registerDiff = (program: Command): void => {
     .option('--fail-on-contract-break', 'exit 1 when this revision introduces a contract error')
     .option('--max-entries <n>', 'most ways in to list per changed node')
     .option('--max-nodes <n>', 'most changed nodes to walk backwards from')
+    .option('--max-flows <n>', `most ways in to walk for their flows (default ${DEFAULT_MAX_FLOWS})`)
+    .option('--max-diagrams <n>', `most changed flows to draw (default ${DIFF_MARKDOWN_DEFAULTS.maxDiagrams})`)
+    .option('--context <n>', `unchanged steps kept beside a change in a flow (default ${DIFF_MARKDOWN_DEFAULTS.context})`)
+    .option('--sequence-detail <level>', 'one participant per service (default) or per class')
+    .option('--max-chars <n>', `about the most characters of Markdown (default ${DIFF_MARKDOWN_DEFAULTS.maxChars})`)
+    .option('--no-diagrams', 'list the steps of each changed flow without its Mermaid diagram')
     .option('--concurrency <n>', 'how many repositories to read at once')
     .option('--out <dir>', 'where to write diff.json (default: the configured output)')
     .option('--no-cache', 'read every commit again rather than believing the cache')

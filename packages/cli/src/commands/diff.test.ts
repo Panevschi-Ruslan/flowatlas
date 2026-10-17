@@ -47,7 +47,7 @@ beforeAll(async () => {
     git(repo, 'add', '-A');
     git(repo, 'commit', '-q', '-m', 'base');
   }
-  // The head revision, laid over the base as six files.
+  // The head revision, laid over the base as eight files.
   cpSync(join(FIXTURE, 'head'), project, { recursive: true });
   for (const repo of EDITED) {
     git(repo, 'add', '-A');
@@ -123,7 +123,7 @@ describe('what a revision changed, across four repositories', () => {
   });
 
   it('names a gap the revision added, in the method it changed, by gap id (P96)', () => {
-    expect(run.report.diffFormatVersion).toBe(2);
+    expect(run.report.diffFormatVersion).toBe(3);
     expect(run.report.unresolved.added).toContainEqual(
       expect.objectContaining({
         id: 'gap:orders|src/shipments/shipments.service.ts|call-dynamic-receiver',
@@ -133,6 +133,44 @@ describe('what a revision changed, across four repositories', () => {
     );
     expect(run.report.nodes.changed.map((change) => change.id)).toContain('orders#src/shipments/shipments.service.ts:ShipmentsService.track');
     expect(run.report.unresolved.removed).toEqual([]);
+  });
+
+  it('walks each way in on both sides and says what its flow does now (P116)', () => {
+    const flow = run.report.flows.find((item) => item.entry === 'entry:gateway:http:POST:/orders');
+    const said = (flow?.steps ?? []).filter((step) => step.status !== 'same').map((step) => [step.status, step.kind, step.label, step.note]);
+    // The gateway's request carries the body the head's handler now wants more
+    // of, and orders publishes once more, which billing takes.
+    expect(said).toEqual([
+      ['changed', 'http_calls', 'POST /orders', 'body: +channel (required)'],
+      ['added', 'emits', 'order.gift-wrapped', undefined],
+      ['added', 'consumes', 'order.gift-wrapped', undefined],
+    ]);
+    expect(flow?.side).toBe('both');
+    // The first flow drawn is the one that changed most across most services.
+    expect(run.report.flows[0]?.entry).toBe('entry:gateway:http:POST:/orders');
+    expect(run.text).toContain('## Changed flows');
+    expect(run.text).toContain('```mermaid\nsequenceDiagram');
+  });
+
+  it('draws the request to the renamed route removed, read off the base graph, and the stop that took its place (P116)', () => {
+    const flow = run.report.flows.find((item) => item.entry === 'entry:gateway:http:GET:/orders/:param/shipment');
+    expect(flow?.steps.filter((step) => step.status !== 'same').map((step) => [step.status, step.kind, step.label])).toEqual([
+      ['removed', 'http_calls', 'GET /shipments/:param'],
+      ['added', 'stop', 'target-route-not-found'],
+    ]);
+    // A way in one side has is drawn on that side alone.
+    expect(run.report.flows.find((item) => item.entry === 'entry:orders:http:GET:/shipments/:param')?.side).toBe('base');
+    expect(run.report.flows.find((item) => item.entry === 'entry:orders:http:GET:/shipments/:param/status')?.side).toBe('head');
+  });
+
+  it('matches a step whose line moved as the same step, and a flow that did nothing new as unchanged (P116)', () => {
+    // The import split moved `POST /orders` five lines down in orders: its way
+    // in is one step on both sides, changed only by the body it takes.
+    const orders = run.report.flows.find((item) => item.entry === 'entry:orders:http:POST:/orders');
+    expect(orders?.steps.filter((step) => step.kind === 'enters').map((step) => [step.status, step.line])).toEqual([['changed', 23]]);
+    // The billing handler of order.created changed by an annotation only.
+    const billing = run.report.flows.find((item) => item.entry === 'entry:billing:event:order.created');
+    expect(billing?.counts).toMatchObject({ added: 0, removed: 0, changed: 0 });
   });
 
   it('stops a build on a break this revision introduced, when asked to', async () => {
@@ -152,5 +190,6 @@ describe('what a revision changed, across four repositories', () => {
     expect(again.report.contracts).toEqual(run.report.contracts);
     expect(again.report.impact).toEqual(run.report.impact);
     expect(again.report.counts).toEqual(run.report.counts);
+    expect(again.report.flows).toEqual(run.report.flows);
   }, 300_000);
 });

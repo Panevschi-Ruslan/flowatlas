@@ -542,7 +542,18 @@ count beside a shorter list shows the cut; under `service` every count is that
 service's (types by the service in their id), and a service the diff does not
 name answers zeros and `note: "no such service in the diff"`. `counts.gaps`
 and `counts.lostJoins` count the gap ids the branch added and removed and the
-calls that stopped joining.
+calls that stopped joining, and `counts.flows` the ways in whose flow changed.
+
+**What a flow does now.** A way in under `entries` (or `retest`) whose flow the
+branch changed carries `flow`: `{ side, added, removed, changed, steps }`, the
+step counts of its flow compared on both graphs (`side` `head` for a way in
+only the head has), and from `detail` 1 the changed steps as text, in call
+order - `+ orders → billing POST /invoices`, `- gateway → orders GET
+/shipments/:param`, `~ gateway → orders POST /orders (body: +channel
+(required))`, `+ gateway stops here: target-route-not-found` - at most 12 of
+them and a line counting the rest. The same steps `flowatlas diff` draws as a
+sequence diagram; an agent gets the text, never the diagram. A `diff.json` of
+format 2 has no flows, and says nothing less about the verdict.
 
 **The verdict.** `what_changed({verdict: true})` adds `verdict` - `safe`,
 `unsafe` or `unknown` - and `because`, one sentence per reason, unsafe ones
@@ -556,7 +567,8 @@ with a score:
   working tree on both sides, so reported unchanged without being compared); a
   new gap on a path from a changed node back to a way in, which the reading
   cannot see past; a `diff.json` of format 1, which holds no gap rows ("rerun
-  flowatlas diff for new gaps").
+  flowatlas diff for new gaps"). A format-2 file, which holds no flows, is read
+  as it is: the verdict does not read flows.
 - **safe** otherwise.
 
 Beside it: `newGaps` (gap ids the head has and the base does not, each with

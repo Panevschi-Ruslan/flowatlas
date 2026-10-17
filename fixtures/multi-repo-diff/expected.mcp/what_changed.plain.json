@@ -10,18 +10,18 @@
   "generatedAt": "2026-01-01T00:00:00.000Z",
   "counts": {
     "nodes": {
-      "added": 0,
+      "added": 4,
       "removed": 0,
-      "changed": 1,
+      "changed": 2,
       "moved": 3
     },
     "edges": {
-      "added": 0,
+      "added": 2,
       "removed": 0,
       "changed": 0
     },
     "types": {
-      "added": 0,
+      "added": 1,
       "removed": 0,
       "changed": 0
     },
@@ -35,21 +35,34 @@
       "added": 0,
       "removed": 0
     },
-    "lostJoins": 0
+    "lostJoins": 0,
+    "flows": 3
   },
   "nodes": {
-    "added": [],
+    "added": [
+      "billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer",
+      "billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+      "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+      "entry:billing:event:order.gift-wrapped"
+    ],
     "removed": [],
     "changed": [
       {
         "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
         "service": "billing",
         "label": "InvoicesConsumer.onOrderCreated"
+      },
+      {
+        "id": "repo:billing",
+        "service": "billing",
+        "label": "billing"
       }
     ]
   },
   "types": {
-    "added": [],
+    "added": [
+      "type:billing#GiftWrappedEvent"
+    ],
     "removed": [],
     "changed": []
   },

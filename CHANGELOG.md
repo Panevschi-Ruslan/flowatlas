@@ -404,6 +404,28 @@ only one of them moved.
   its kind, cause and `doctor`'s sentence, `flowatlas://services` the services,
   and `flowatlas://services/{name}` one service's summary, crossings and top
   findings.
+- **Changed flows as sequence diagrams in `flowatlas diff` (P116).** After the
+  impact, the document gained a "Changed flows" section: each way in the impact
+  lists, and each way in the branch added or removed, walked on both graphs
+  and compared step by step, matched on what a step is rather than its line.
+  Each changed flow got a `<details>` with a Mermaid sequence diagram across
+  the services (added steps green and prefixed `+`, removed ones red with the
+  cross arrow and `−`, a changed body or confidence in a note, a guess said as
+  `(best guess)`, a place the walk could not see past as `stops here: <reason>`)
+  and the same steps as a `diff` block under it. New flags `--max-diagrams`
+  (5), `--context` (3), `--sequence-detail service|class`, `--max-chars`
+  (60,000: diagrams were dropped from the last back, then flows, each counted),
+  `--no-diagrams` and `--max-flows` (50, the rest counted in a
+  `flows-truncated` warning). `fixtures/multi-repo-diff` gained a sixth edit:
+  `orders` publishes `order.gift-wrapped` and `billing` takes it.
+- **`flowatlas flow --format sequence` (P116).** The walk from one way in drawn
+  as the same Mermaid sequence diagram `diff` draws, without the marks, walked
+  16 hops unless `--depth` says; `--sequence-detail class` drew a participant
+  per class.
+- **`what_changed` said what each changed flow does now (P116).** A way in
+  under `entries` or `retest` whose flow changed gained `flow: { side, added,
+  removed, changed, steps }`, `steps` the changed steps as text from detail 1
+  (`+ orders → billing POST /invoices`), and `counts` gained `flows`.
 
 ### Changed
 
@@ -418,6 +440,14 @@ only one of them moved.
   and findings each side has that the other does not) and `joins.lost`. A file
   of format 1 is still read, without them; one from a newer flowatlas is
   refused by name.
+- **`diff.json` became format 3 (P116).** It gained `flows`: one per way in
+  walked, with its participants and its steps, each `same`, `added`, `removed`
+  or `changed`. Files of formats 1 and 2 are still read, without the sections
+  they predate; the verdict reads no flows, so a format-2 file is not
+  `unknown` for lacking them.
+- **`flowatlas diff`'s documented defaults (P190).** `docs/CLI.md` said
+  `--max-entries` 20 and `--max-nodes` 50; the command has always used 150 and
+  100, which the reference now says.
 - **`what_changed` said `base` and `head` as objects (P96).** Each became
   `{ ref, label }`, `label` `working tree` where no ref was read and the ref
   with each service's commit otherwise: `head: null` had read as "no head".
