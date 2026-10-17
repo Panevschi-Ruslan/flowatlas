@@ -49,7 +49,7 @@ describe('a chain written for a prompt', () => {
   });
 
   it('says how many steps it left out', () => {
-    const text = describeForPrompt(subject({ stepsCut: 3 }), { maxSteps: 1, maxGaps: 10, maxChars: 8000 });
+    const text = describeForPrompt(subject({ stepsCut: 3 }), { maxSteps: 1, maxGaps: 10, maxFails: 12, maxChars: 8000 });
     expect(text).toContain('4 more step(s) not shown');
   });
 
@@ -57,19 +57,43 @@ describe('a chain written for a prompt', () => {
     expect(describeForPrompt(subject({ gaps: [] }))).toContain('- none recorded on this chain');
   });
 
-  it('leads with what the way in can fail with, status first (P68)', () => {
+  it('leads with what the way in can fail with, one line per status and exception (P68, P87)', () => {
     const text = describeForPrompt(
       subject({
         fails: [
-          { status: 404, exception: 'NotFoundException', at: 'shop#src/carts.service.ts:CartsService.create', loc: 'src/carts.service.ts:9', source: 'throw' },
-          { exception: 'RpcException', at: 'shop#src/carts.service.ts:CartsService.create', source: 'throw' },
+          {
+            status: 404,
+            exception: 'NotFoundException',
+            sources: ['throw'],
+            sites: 6,
+            at: 'shop#src/carts.service.ts:CartsService.create',
+            loc: 'src/carts.service.ts:9',
+          },
+          { status: 500, exception: 'CartLocked', assumed: true, declared: 423, sources: ['throw'], sites: 1, at: 'shop#S.a', loc: 'src/s.ts:3' },
+          { status: 500, exception: 'Error', assumed: true, sources: ['throw'], sites: 1, at: 'shop#S.a' },
+          { exception: 'RpcException', sources: ['throw'], sites: 1, at: 'shop#src/carts.service.ts:CartsService.create' },
         ],
       }),
     );
     expect(text).toContain('## Can fail with');
-    expect(text).toContain('- **404** `NotFoundException` — throw at `src/carts.service.ts:9` (`shop#src/carts.service.ts:CartsService.create`)');
+    expect(text).toContain('- **404** `NotFoundException` — throw ×6, first at `src/carts.service.ts:9`');
+    expect(text).toContain('- **500?** `CartLocked` — throw at `src/s.ts:3` — assumed: the class states 423 and nothing maps it');
+    expect(text).toContain('- **500?** `Error` — throw at `shop#S.a` — assumed: no code on the path writes this status');
     expect(text).toContain('- **no status** `RpcException`');
     expect(text.indexOf('## Can fail with')).toBeLessThan(text.indexOf('## Chain'));
+  });
+
+  it('caps the failure section and says how many were left out', () => {
+    const fails = Array.from({ length: 15 }, (_, i) => ({
+      status: 400 + i,
+      exception: `E${i}`,
+      sources: ['throw' as const],
+      sites: 1,
+      at: 'shop#S.a',
+    }));
+    const text = describeForPrompt(subject({ fails }));
+    expect(text.split('\n').filter((line) => line.startsWith('- **4'))).toHaveLength(12);
+    expect(text).toContain('- … 3 more; ask get_flow for the rest');
   });
 
   it('writes no failure section for a subject that has none', () => {

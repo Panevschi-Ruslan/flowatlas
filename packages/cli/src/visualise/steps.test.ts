@@ -6,7 +6,7 @@ import { answersOf, createModel, type GraphModel } from './graph.js';
 import { createMap, mapCallOrder, mapSeenCount, mapTopTargets, mapView } from './map.js';
 import { packGraph, type PackedGraph } from './pack.js';
 import { packSites } from './sites.js';
-import { acceptCommandFor, accessOf, createSeen, failChips, failsOf, likeRoute, promptFor, scheduleOf, stepsOf } from './steps.js';
+import { acceptCommandFor, accessOf, createSeen, failChips, failGroups, failsOf, likeRoute, promptFor, scheduleOf, stepsOf } from './steps.js';
 
 /**
  * A synthetic shop: a route calls a service that reads a table, publishes to
@@ -206,6 +206,17 @@ describe('failures, loops, logs and schedules on the steps (P74)', () => {
   it('says the statuses once each, lowest first, then the exceptions with none', () => {
     expect(failChips(failsOf(model, 0))).toEqual(['401', '409', 'Error']);
     expect(failsOf(model, 3)).toEqual([]);
+  });
+
+  it('groups each status and exception once with how many places raise it, and draws an assumed status as 500? (P87)', () => {
+    const fail = (over: object) => ({ s: 500, x: 'Error', at: 1, src: 'throw' as const, ...over });
+    const groups = failGroups([fail({ a: 1 }), fail({ a: 1, l: 4 }), fail({ s: 404, x: 'Missing' }), fail({ s: 404, x: 'Missing', src: 'guard' })]);
+    expect(groups.map((group) => [group.s, group.x, group.a, group.n, group.srcs])).toEqual([
+      [404, 'Missing', undefined, 2, ['throw', 'guard']],
+      [500, 'Error', 1, 2, ['throw']],
+    ]);
+    expect(failChips([fail({ a: 1 }), fail({ s: 404 })])).toEqual(['404', '500?']);
+    expect(failChips([fail({ a: 1 }), fail({})])).toEqual(['500']);
   });
 
   it('marks the step that throws, the call per item and the likely N+1, and carries the logs', () => {

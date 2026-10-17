@@ -1118,7 +1118,9 @@ the tables, addresses and channels they reach, and the next service's way in.
   an address that was not read. A join that was a best guess says so.
 - **What it can fail with.** The heading lists what the way in can fail with,
   by status and exception, and so do the ways-in list and the details panel;
-  the step that throws is marked. A scheduled way in shows its expression and the zone it fires in.
+  the step that throws is marked. The details panel lists each status and
+  exception once with how many places raise it, the places behind a
+  disclosure, and a status nothing on the path writes as `500?`. A scheduled way in shows its expression and the zone it fires in.
   A step's log lines are folded under it, as templates.
 - **Moving around.** Hovering a row lights its node in the Graph tab's
   drawing, where a way in's steps also open above the drawing; a row opens its
@@ -1485,7 +1487,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | A package that is not installed, read in its place | `package-from-repo` (nothing), `package-version-differs` (info), `package-source-ambiguous`, `shape-file-unread`, `shape-file-unmatched` (nothing) |
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
-| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
+| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic`, `fails-filter-unread` |
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
@@ -2868,15 +2870,53 @@ see it.
 ### What a way in can fail with, and how its calls run
 
 A NestJS entry carries `meta.fails`: what a request to it can end in, as
-`[{status, exception, at, file, line, source}]`, sorted by status. `source` is
-`throw` for an exception its handler throws, or a service or helper it calls
-throws - the built-in HTTP exceptions, `new HttpException(..., status)`, and
-classes that extend them; `guard` for a guard's refusal (403, 401 for passport's
-`AuthGuard`, 429 for the throttler); and `pipe` for the framework's pipes on the
-route or on a parameter (400). A throw caught in the same body is left out, and
-so is a rethrow; a plain `Error` is 500; an entry that is not a request keeps
-the exception and no status (`fixtures/nest-failures`). `get_flow`,
-`describe_for_prompt`, the page and the search box all read it.
+`[{status, exception, at, file, line, source, assumed?, declared?}]`, one row
+per place, sorted by status. `source` is `throw` for an exception its handler
+throws, or a service or helper it calls throws - the built-in HTTP exceptions,
+`new HttpException(..., status)`, classes that extend them, and the project's
+own error classes; `guard` for a guard's refusal; and `pipe` for the
+framework's pipes on the route or on a parameter (400). A throw caught in the
+same body is left out, and so is a rethrow; an entry that is not a request
+keeps the exception and no status (`fixtures/nest-failures`).
+
+What is listed is what the route can actually answer (`fixtures/nest-fails-accurate`):
+
+- **Validation.** A `ValidationPipe` installed for the whole application
+  (`useGlobalPipes`, `APP_PIPE`) or with `@UsePipes` adds its 400 only to a
+  route whose handler takes a `@Body`, `@Query` or `@Param` whose declared type
+  is a class. A primitive, a list, an interface, a type literal or a `Record`
+  gives it nothing to validate. Any other pipe in front of a route adds what it
+  refuses with only when the handler takes a value pipes are handed. A
+  `Parse*Pipe` handed to a parameter keeps its 400.
+- **Domain errors.** An error class of the project's own that states its
+  status - `readonly status = 404`, `statusCode = HttpStatus.CONFLICT`, a
+  getter `get status()`, a `getStatus()`, or what its constructor stores from
+  `super(message, 409)` - is answered with that status where an exception
+  filter in front of the route reads it off the exception
+  (`exception.status`, `exception.getStatus()`, a destructure, with a `??`
+  fallback or an `instanceof` test). Filters are read from `useGlobalFilters`,
+  `APP_FILTER` providers and `@UseFilters` on the controller or the handler,
+  asked handler first, then controller, then application, and matched by
+  their `@Catch(...)` against the class and every class it extends. A filter
+  that answers a fixed status (`response.status(400)`) answers everything it
+  catches with that one.
+- **Guards.** An installed guard refuses with 403, or with what the table
+  knows for it (401 for passport's `AuthGuard`, 429 for the throttler). A
+  guard written in the project adds the 403 only where its `canActivate` can
+  answer anything but `true`: a `return false`, a value typed `boolean`, a
+  body that can end without returning. One whose every answer is `true`, and
+  which otherwise throws, adds only what it throws; one that extends
+  `AuthGuard('jwt')` and leaves `canActivate` to it answers 401.
+- **Assumed.** A status nothing on the path writes carries `assumed: true`: an
+  error that is not one of the framework's (a plain `Error`, or a class whose
+  own status no filter reads, with that status in `declared`), a chain of
+  bases too long to follow, a status behind a filter whose answer cannot be
+  read. Such a filter is a `fails-filter-unread` row at `info`. The page draws
+  an assumed status as `500?`.
+
+`get_flow`, `describe_for_prompt`, the page and the search box all read it,
+and all of them group it: each status and exception once, with how many places
+raise it.
 
 A `calls` edge says how the call runs. Inside a `for`, `for…of`, `for…in`,
 `while` or `do` body, or a function handed to `map`, `forEach`, `reduce` and the

@@ -217,7 +217,7 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
   };
   const rootGuards = guardsOf(db, entryId, detail);
   if (rootGuards.length > 0) root.guards = rootGuards;
-  const rootFails = failsOf(start);
+  const rootFails = failsOf(start, detail);
   if (rootFails.length > 0) root.fails = rootFails;
   const rootOptOuts = optOutsOf(start);
   if (rootOptOuts.length > 0) root.optOuts = rootOptOuts;
@@ -276,7 +276,7 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
         };
         const guards = guardsOf(db, edge.to, detail);
         if (guards.length > 0) child.guards = guards;
-        const fails = failsOf(target);
+        const fails = failsOf(target, detail);
         if (fails.length > 0) child.fails = fails;
 
         used += 1;

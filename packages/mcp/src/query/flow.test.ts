@@ -94,6 +94,28 @@ describe('walking outward from an entry', () => {
     db.close();
   });
 
+  it('groups what the way in fails with by status and exception, and lists the places at detail 2 (P87)', () => {
+    const graph = straightLine('http', 'GET /orders');
+    const [first, ...rest] = graph.nodes;
+    const fails = [
+      { status: 404, exception: 'OrderMissing', at: 'orders#s.ts:Service.read', file: 's.ts', line: 22, source: 'throw' },
+      { status: 404, exception: 'OrderMissing', at: 'orders#s.ts:Service.read', file: 's.ts', line: 25, source: 'throw' },
+      { status: 500, exception: 'Error', at: 'orders#c.ts:Controller.handle', file: 'c.ts', line: 12, source: 'throw', assumed: true },
+    ];
+    const db = buildTestDb({ ...graph, nodes: [{ ...first!, meta: { ...first!.meta, fails } }, ...rest] });
+    const brief = buildFlowTree(db, 'entry:orders:http:GET /orders', {}).root;
+    expect(brief.fails).toEqual([
+      { status: 404, exception: 'OrderMissing', sources: ['throw'], sites: 2, at: 'orders#s.ts:Service.read', loc: 's.ts:22' },
+      { status: 500, exception: 'Error', assumed: true, sources: ['throw'], sites: 1, at: 'orders#c.ts:Controller.handle', loc: 'c.ts:12' },
+    ]);
+    const full = buildFlowTree(db, 'entry:orders:http:GET /orders', { detail: 2 }).root;
+    expect(full.fails?.[0]?.places).toEqual([
+      { at: 'orders#s.ts:Service.read', loc: 's.ts:22', source: 'throw' },
+      { at: 'orders#s.ts:Service.read', loc: 's.ts:25', source: 'throw' },
+    ]);
+    db.close();
+  });
+
   it('walks a bot callback exactly as it walks a route', () => {
     const asRoute = buildTestDb(straightLine('http', 'GET /orders'));
     const asCallback = buildTestDb(straightLine('bot_callback', 'order_confirm'));

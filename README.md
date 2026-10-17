@@ -781,7 +781,11 @@ prove, and the path is given so you can run it.
   (`fixtures/nest-route-access`).
 - **What a way in can fail with.** A NestJS route lists the exceptions its
   handler and the code it calls throw, a guard's refusal and the framework's
-  pipes, each with the status it is answered with (`fixtures/nest-failures`).
+  pipes, each with the status it is answered with (`fixtures/nest-failures`):
+  a validation 400 only where a class is validated, a domain error's own
+  status where an exception filter reads it, a guard's 403 only where it can
+  say no, and every status that is only a default marked assumed
+  (`fixtures/nest-fails-accurate`).
   A query, request or publish run once per item of a loop is a
   `query-in-loop` row, calls side by side are marked, and every step carries
   the lines it logs as templates, never values (`fixtures/nest-query-loop`,

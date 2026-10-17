@@ -701,8 +701,8 @@ export type {
 } from './observed.js';
 export { compileGlob, expandGlob, isGlob, NEVER_WALKED } from './glob.js';
 export type { Glob } from './glob.js';
-export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, settleFailures } from './failures.js';
-export type { Failure, FailureSource } from './failures.js';
+export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, groupFailures, settleFailures } from './failures.js';
+export type { Failure, FailureGroup, FailureSource } from './failures.js';
 
 export {
   CAUSE_META,

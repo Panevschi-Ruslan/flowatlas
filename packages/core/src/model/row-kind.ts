@@ -131,6 +131,8 @@ const GAPS: readonly string[] = [
   'middleware-matcher-unread',
   'bootstrap-not-found',
   'application-root-unread',
+  // What a route fails with (the failures pass, P87)
+  'fails-filter-unread',
   // Routes and registries (the entry adapters)
   'route-path-dynamic',
   'route-mount-unread',

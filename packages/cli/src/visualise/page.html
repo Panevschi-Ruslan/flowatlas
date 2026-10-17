@@ -1679,6 +1679,8 @@
   .fail-list li { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; padding: 3px 0;
     border-top: 1px solid var(--rule-soft); font-size: 12px; }
   .fail-list code { overflow-wrap: anywhere; }
+  .fail-sites summary { cursor: pointer; }
+  .fail-sites ul { list-style: none; margin: 2px 0 0; padding: 0 0 0 10px; }
   .is-accepted { opacity: .62; }
   .is-accepted .tag { border-style: dashed; }
   .accepted-note { font-size: 12px; color: var(--muted); font-style: italic; }
@@ -2721,14 +2723,20 @@ __STEPS_LOGIC__
       const schedule = scheduleOf(model, i);
       return (schedule ? `<span class="hint">fires <span class="sched">${esc(scheduleSay(schedule))}</span></span>` : '') + failChipsHtml(i);
     };
+    /* One line per status and exception, the places behind a disclosure (P87). */
+    const failSiteHtml = (v, f) => `<span class="hint">${esc(f.src)}${f.at >= 0 ? ' in ' + esc(nodes[f.at][LB]) : f.id ? ' in ' + esc(f.id.split(':').pop()) : ''}` +
+      (f.f ? ' &middot; ' + opener(nodes[v][RP], files.indexOf(f.f), f.l || 0, f.f + (f.l ? ':' + f.l : '')) : '') + '</span>' +
+      (f.at >= 0 ? graphLink(f.at) : '');
     const failsHtml = (v) => {
-      const fails = failsOf(model, v);
-      if (fails.length === 0) return '';
-      return `<section><h4>Can fail with &middot; ${fails.length}</h4>${failChipsHtml(v)}<ul class="fail-list">` +
-        fails.map((f) => `<li><span class="fail-chip">${f.s === undefined ? 'no status' : f.s}</span><code>${esc(f.x)}</code>` +
-          `<span class="hint">${esc(f.src)}${f.at >= 0 ? ' in ' + esc(nodes[f.at][LB]) : f.id ? ' in ' + esc(f.id.split(':').pop()) : ''}` +
-          (f.f ? ' &middot; ' + opener(nodes[v][RP], files.indexOf(f.f), f.l || 0, f.f + (f.l ? ':' + f.l : '')) : '') + '</span>' +
-          (f.at >= 0 ? graphLink(f.at) : '') + '</li>').join('') + '</ul></section>';
+      const groups = failGroups(failsOf(model, v));
+      if (groups.length === 0) return '';
+      return `<section><h4>Can fail with &middot; ${groups.length}</h4>${failChipsHtml(v)}<ul class="fail-list">` +
+        groups.map((g) => `<li><span class="fail-chip"${g.a ? ' title="Assumed: no code on the path writes this status"' : ''}>` +
+          `${g.s === undefined ? 'no status' : g.s + (g.a ? '?' : '')}</span><code>${esc(g.x)}</code>` +
+          (g.n === 1 ? failSiteHtml(v, g.sites[0])
+            : `<details class="fail-sites"><summary class="hint">${esc(g.srcs.join('/'))} &times;${g.n}</summary><ul>` +
+              g.sites.map((f) => `<li>${failSiteHtml(v, f)}</li>`).join('') + '</ul></details>') +
+          '</li>').join('') + '</ul></section>';
     };
     /* What stands in front of a way in, and from where (P76). */
     const accessHtml = (v) => {

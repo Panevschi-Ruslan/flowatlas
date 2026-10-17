@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-shared-failures",
-  "generatedAt": "2026-10-17T00:57:50.091Z",
+  "generatedAt": "2026-10-17T01:51:43.332Z",
   "nodes": [
     {
       "id": "entry:nest-shared-failures:http:DELETE:/billing/:param",
@@ -31,14 +31,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -103,14 +95,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -173,14 +157,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -245,14 +221,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -307,14 +275,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -371,14 +331,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -433,14 +385,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -505,14 +449,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -575,14 +511,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -647,14 +575,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -709,14 +629,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -781,14 +693,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -843,14 +747,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -915,14 +811,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -977,14 +865,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -1049,14 +929,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -1112,14 +984,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
@@ -1174,14 +1038,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/main.ts",
-            "line": 8,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",

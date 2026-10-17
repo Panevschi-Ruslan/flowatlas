@@ -9,7 +9,7 @@
  *   stepsOf       a way in, depth first in call order: a waterfall of rows
  *   createSeen    what was seen at run time, when the pack carries it
  *   promptFor     a way in, a channel or a check row as bounded Markdown
- *   failsOf       what a way in can fail with, and failChips the statuses
+ *   failsOf       what a way in can fail with, failGroups each answer once, failChips the statuses
  *   logsOf        the lines a step logs
  *   scheduleOf    when a scheduled way in fires, and in which zone
  *   accessOf      what stands in front of a way in, and from where
@@ -116,13 +116,34 @@ const NO_FAILS = Object.freeze([]);
 export const failsOf = (model, entry) => (model.fails && model.fails.get(entry)) || NO_FAILS;
 
 /**
+ * Each status and exception a way in fails with once, by status then
+ * exception: `{ s?, x, a?, srcs, n, sites }`, `a` only when every site is
+ * assumed, `n` how many places raise it (P87).
+ */
+export const failGroups = (fails) => {
+  const byKey = new Map();
+  for (const fail of fails) {
+    const key = (fail.s === undefined ? '' : fail.s) + ' ' + fail.x;
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key).push(fail);
+  }
+  return [...byKey.values()].map((sites) => ({
+    ...(sites[0].s === undefined ? {} : { s: sites[0].s }), x: sites[0].x,
+    ...(sites.every((f) => f.a) ? { a: 1 } : {}),
+    srcs: [...new Set(sites.map((f) => f.src))], n: sites.length, sites,
+  })).sort((a, b) => (a.s ?? 1000) - (b.s ?? 1000) || (a.x < b.x ? -1 : a.x > b.x ? 1 : 0));
+};
+
+/**
  * The statuses a way in can fail with, lowest first and each once, then the
- * exceptions that name no status: what a chip line says.
+ * exceptions that name no status: what a chip line says. A status every place
+ * only assumes is `500?`.
  */
 export const failChips = (fails) => {
   const statuses = [...new Set(fails.filter((f) => f.s !== undefined).map((f) => f.s))].sort((a, b) => a - b);
   const bare = [...new Set(fails.filter((f) => f.s === undefined).map((f) => f.x))].sort();
-  return [...statuses.map(String), ...bare];
+  const assumed = (s) => fails.every((f) => f.s !== s || f.a);
+  return [...statuses.map((s) => s + (assumed(s) ? '?' : '')), ...bare];
 };
 
 /** The failures of a way in written in one node, by that node's position. */
@@ -132,8 +153,8 @@ const failsByNode = (fails) => {
   return out;
 };
 
-/** A failure as a few words: `409 ConflictException`, or the exception alone. */
-export const failSay = (fail) => (fail.s === undefined ? fail.x : fail.s + ' ' + fail.x);
+/** A failure as a few words: `409 ConflictException`, `500? Error`, or the exception alone. */
+export const failSay = (fail) => (fail.s === undefined ? fail.x : fail.s + (fail.a ? '? ' : ' ') + fail.x);
 
 const NO_LOGS = Object.freeze([]);
 
@@ -414,12 +435,15 @@ const stepLine = (model, row) => {
     (marks.length ? ' [' + marks.join(', ') + ']' : ''), ...logs];
 };
 
-/** What a way in can fail with, a line each: status, exception, how, where. */
-const failLines = (model, entry) => failsOf(model, entry).map((fail) => {
+/** What a way in can fail with, a line per status and exception: how, how many places, the first of them. */
+const failLines = (model, entry) => failGroups(failsOf(model, entry)).map((group) => {
+  const [fail] = group.sites;
   const where = fail.f ? fail.f + (fail.l ? ':' + fail.l : '') : '';
   const node = fail.at >= 0 ? model.nodes[fail.at][1] : fail.id || '';
-  return `- ${fail.s === undefined ? 'no status' : fail.s} ${tick(fail.x)} (${fail.src})` +
-    (node ? ' in ' + tick(node) : '') + (where ? ' at ' + tick(where) : '');
+  return `- ${group.s === undefined ? 'no status' : group.s + (group.a ? '?' : '')} ${tick(group.x)} (${group.srcs.join('/')}` +
+    (group.n > 1 ? ` ×${group.n}, first` : '') + ')' +
+    (node ? ' in ' + tick(node) : '') + (where ? ' at ' + tick(where) : '') +
+    (group.a ? ' — assumed: no code on the path writes this status' : '');
 });
 
 /* ── What stands in front of a way in (P76) ── */

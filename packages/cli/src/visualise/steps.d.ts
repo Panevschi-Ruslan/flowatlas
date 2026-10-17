@@ -109,6 +109,16 @@ export declare const routeOfMessage: (message: string | undefined) => { method: 
 export declare const likeRoute: (route: { method: string; path: string }) => string;
 export declare const acceptCommandFor: (row: { reason: string; service?: string; message?: string }) => string;
 export declare const failChips: (fails: readonly PackedFail[]) => string[];
+/** One status and exception a way in fails with, and the places that raise it (P87). */
+export interface PackedFailGroup {
+  s?: number;
+  x: string;
+  a?: 1;
+  srcs: PackedFail['src'][];
+  n: number;
+  sites: readonly PackedFail[];
+}
+export declare const failGroups: (fails: readonly PackedFail[]) => PackedFailGroup[];
 export declare const failSay: (fail: PackedFail) => string;
 export declare const unmatchedOf: (
   observed: Pick<NonNullable<PackedGraph['observed']>, 'unmatched' | 'services' | 'kinds'>,

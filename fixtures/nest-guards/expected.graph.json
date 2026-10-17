@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-guards",
-  "generatedAt": "2026-10-16T15:10:51.224Z",
+  "generatedAt": "2026-10-17T01:51:18.815Z",
   "nodes": [
     {
       "id": "entry:nest-guards:http:GET:/admin/audit",
@@ -57,14 +57,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
-            "file": "src/main.ts",
-            "line": 10,
-            "source": "pipe"
-          },
           {
             "status": 403,
             "exception": "ForbiddenException",
@@ -123,14 +115,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
-            "file": "src/main.ts",
-            "line": 10,
-            "source": "pipe"
-          },
-          {
             "status": 403,
             "exception": "ForbiddenException",
             "at": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
@@ -178,14 +162,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
-            "file": "src/main.ts",
-            "line": 10,
-            "source": "pipe"
-          },
           {
             "status": 403,
             "exception": "ForbiddenException",
@@ -269,14 +245,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
-            "file": "src/main.ts",
-            "line": 10,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",
@@ -368,14 +336,6 @@
         },
         "fails": [
           {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
-            "file": "src/main.ts",
-            "line": 10,
-            "source": "pipe"
-          },
-          {
             "status": 401,
             "exception": "UnauthorizedException",
             "at": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
@@ -457,22 +417,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
-            "file": "src/main.ts",
-            "line": 10,
-            "source": "pipe"
-          },
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-guards#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/orders/orders.controller.ts",
-            "line": 40,
-            "source": "pipe"
-          },
           {
             "status": 401,
             "exception": "UnauthorizedException",

@@ -45,7 +45,7 @@ export interface PromptSubject {
   kind?: string;
   service?: string;
   loc?: string;
-  /** What a way in can fail with, for an entry that says (P68). */
+  /** What a way in can fail with, one per status and exception, for an entry that says (P68, P87). */
   fails?: FailRef[];
   /** What stands in front of a way in and from where, one line each (P76). */
   access?: string[];
@@ -66,11 +66,13 @@ export interface PromptLimits {
   maxSteps: number;
   /** Most gaps written. */
   maxGaps: number;
+  /** Most failure lines written, one per status and exception (P87). */
+  maxFails: number;
   /** The ceiling on the whole text, in characters. */
   maxChars: number;
 }
 
-export const PROMPT_LIMITS: PromptLimits = { maxSteps: 40, maxGaps: 10, maxChars: 8000 };
+export const PROMPT_LIMITS: PromptLimits = { maxSteps: 40, maxGaps: 10, maxFails: 12, maxChars: 8000 };
 
 const code = (text: string): string => `\`${text.replace(/`/g, "'")}\``;
 
@@ -104,11 +106,22 @@ const gapLine = (gap: PromptGap): string => {
   return `- ${code(gap.reason)}${place.length === 0 ? '' : ` at ${place}`}: ${gap.message}.${hint}`.replace(/\.\./g, '.');
 };
 
-/** One way the subject fails: the status first, since that is what a caller sees. */
+/**
+ * One answer the subject fails with: the status first, since that is what a
+ * caller sees, then how many places raise it (P87). A status nothing on the
+ * path writes is marked `?` and says why.
+ */
 const failLine = (fail: FailRef): string => {
-  const status = fail.status === undefined ? 'no status' : String(fail.status);
-  const place = fail.loc === undefined ? code(fail.at) : `${code(fail.loc)} (${code(fail.at)})`;
-  return `- **${status}** ${code(fail.exception)} — ${fail.source} at ${place}`;
+  const status = fail.status === undefined ? 'no status' : `${fail.status}${fail.assumed === true ? '?' : ''}`;
+  const count = fail.sites > 1 ? ` ×${fail.sites}, first` : '';
+  const place = fail.loc === undefined ? code(fail.at) : code(fail.loc);
+  const assumed =
+    fail.assumed !== true
+      ? ''
+      : fail.declared === undefined
+        ? ' — assumed: no code on the path writes this status'
+        : ` — assumed: the class states ${fail.declared} and nothing maps it`;
+  return `- **${status}** ${code(fail.exception)} — ${fail.sources.join('/')}${count} at ${place}${assumed}`;
 };
 
 /** First edge on the chain that says what it carries, read as the subject's shapes. */
@@ -147,13 +160,17 @@ export const describeForPrompt = (subject: PromptSubject, limits: PromptLimits =
     ...(shapes.out === undefined ? [] : [`- out: ${code(shapes.out)}`]),
   ];
 
+  const allFails = subject.fails ?? [];
+  const fails = allFails.slice(0, limits.maxFails).map(failLine);
+  if (allFails.length > limits.maxFails) fails.push(`- … ${allFails.length - limits.maxFails} more; ask get_flow for the rest`);
+
   const gaps = subject.gaps.slice(0, limits.maxGaps).map(gapLine);
   if (subject.gaps.length > limits.maxGaps) gaps.push(`- … ${subject.gaps.length - limits.maxGaps} more gap(s)`);
 
   const body = [
     ...head,
     ...section('In front of it', (subject.access ?? []).map((line) => `- ${line}`)),
-    ...section('Can fail with', (subject.fails ?? []).map(failLine)),
+    ...section('Can fail with', fails),
     ...section('Published by', (subject.producers ?? []).map(stepLine)),
     ...section('Reached from', (subject.reachedFrom ?? []).map(stepLine)),
     ...section('Chain', chain.length === 0 ? ['- nothing further is recorded from here'] : chain),

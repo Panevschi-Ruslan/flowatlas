@@ -99,7 +99,7 @@ The server's instructions describe the same chains. `list_entries`,
 | Tool | Answers | Takes |
 |---|---|---|
 | `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
-| `describe_for_prompt` | one entry, channel or symbol as Markdown to hand on: what is in front of it, what it can fail with, the chain in call order with repo-relative `file:line`, shapes in and out, gaps with their reasons, and the ids to ask next. No source code; bounded by `maxSteps` and `maxChars` | `id` (required), `maxSteps`, `maxChars` |
+| `describe_for_prompt` | one entry, channel or symbol as Markdown to hand on: what is in front of it, what it can fail with, the chain in call order with repo-relative `file:line`, shapes in and out, gaps with their reasons, and the ids to ask next. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception) and `maxChars` | `id` (required), `maxSteps`, `maxChars` |
 
 `describe_for_prompt` is rendered by `describeForPrompt`, a pure function
 exported from `@flowatlas/mcp`, so a page can copy the same text.
@@ -149,7 +149,10 @@ is what `flowatlas accept` takes, every hit carries its `kind` (`gap`, `note` or
 `accepted.json` that cannot be read marks nothing accepted and says so in
 `note`. Under
 `fails`, an exception name or a status (`NotFoundException`, `404`) lists the
-ways in that can fail with it, each with the id `get_flow` takes.
+ways in that can fail with it, one hit per route with the id `get_flow` takes:
+the first answer that matched (`exception`, `status`, `assumed` when nothing
+on the path writes that status, `sites`), and `more` when others on the same
+route matched too.
 
 ### Following a chain
 
@@ -186,9 +189,14 @@ without an entry point of their own.
 
 What `get_flow` says beside the chain:
 
-- **`fails`** on each entry: the exceptions it can end in, with the status the
-  framework answers each with and where it is thrown (`source` is `throw`,
-  `guard` or `pipe`). Read for NestJS.
+- **`fails`** on each entry: what it can end in, one entry per status and
+  exception - `{ status?, exception, assumed?, declared?, sources, sites, at,
+  loc? }`, with `at` and `loc` the first place it is raised and `sources` how
+  (`throw`, `guard`, `pipe`). `assumed: true` is a status nothing on the path
+  writes, such as the framework's 500 for an error it does not know;
+  `declared` is the status the error class states where no filter maps it. At
+  `detail >= 2` each entry adds `places: [{ at, loc, source }]`. Read for
+  NestJS.
 - **Guards** in front of a NestJS route carry `where` (`global`, `module`,
   `controller`, `route`), `via` (`APP_GUARD in AuthModule.forRoot`), and
   `skippedBy` when an opt-out decorator switches one off; the entry carries

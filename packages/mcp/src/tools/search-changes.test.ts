@@ -194,7 +194,7 @@ describe('search', () => {
     const found = await call('search', { query: 'coupon' });
     expect(Object.keys(found.results)).toEqual(['fails']);
     expect(found.results.fails).toEqual([
-      { id: ROUTE, type: 'entry', label: 'POST /orders', exception: 'CouponRejectedError', status: 422, service: 'orders' },
+      { id: ROUTE, type: 'entry', label: 'POST /orders', exception: 'CouponRejectedError', status: 422, sites: 1, service: 'orders' },
     ]);
     expect(found.next[0]).toBe(`get_flow({entry: ${JSON.stringify(ROUTE)}})`);
     expect((await call('search', { query: '422', kinds: ['fails'] })).counts).toEqual({ fails: 1 });

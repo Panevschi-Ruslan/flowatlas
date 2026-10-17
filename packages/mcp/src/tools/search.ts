@@ -3,6 +3,7 @@ import {
   describeAccepted,
   describeAcceptedProblem,
   failuresOf,
+  groupFailures,
   gapIdOf,
   isRule,
   kindOfRow,
@@ -65,8 +66,15 @@ export interface FailHit {
   id: string;
   type: 'entry';
   label: string;
+  /** The first answer on the route the query matched, by status then exception. */
   exception: string;
   status?: number;
+  /** That status is the framework's default, written nowhere on the path (P87). */
+  assumed?: true;
+  /** How many places on the route raise that answer. */
+  sites: number;
+  /** Other answers on the same route the query matched too, when there are any. */
+  more?: number;
   service?: string;
 }
 
@@ -156,25 +164,31 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
   return cut(rows, limit);
 };
 
-/** Ways in by what they can fail with: the exception's name or its status (P68). */
+/**
+ * Ways in by what they can fail with: the exception's name or its status
+ * (P68). One hit per route, naming the first answer that matched and how many
+ * more did (P87).
+ */
 const fails: Finder = ({ db, text, service, limit }) => {
   const wanted = text.toLowerCase();
   const rows: FailHit[] = [];
   for (const node of db.nodesByType('entry').filter(inService(service))) {
-    const seen = new Set<string>();
-    for (const item of failuresOf(node)) {
-      const said = item.status === undefined ? item.exception : `${item.status} ${item.exception}`;
-      if (seen.has(said) || !said.toLowerCase().includes(wanted)) continue;
-      seen.add(said);
-      rows.push({
-        id: node.id,
-        type: 'entry',
-        label: node.label,
-        exception: item.exception,
-        ...(item.status === undefined ? {} : { status: item.status }),
-        service: node.repo,
-      });
-    }
+    const matched = groupFailures(failuresOf(node)).filter((group) =>
+      (group.status === undefined ? group.exception : `${group.status} ${group.exception}`).toLowerCase().includes(wanted),
+    );
+    const [first] = matched;
+    if (first === undefined) continue;
+    rows.push({
+      id: node.id,
+      type: 'entry',
+      label: node.label,
+      exception: first.exception,
+      ...(first.status === undefined ? {} : { status: first.status }),
+      ...(first.assumed === true ? { assumed: true as const } : {}),
+      sites: first.sites,
+      ...(matched.length > 1 ? { more: matched.length - 1 } : {}),
+      service: node.repo,
+    });
   }
   rows.sort((a, b) => (a.exception < b.exception ? -1 : a.exception > b.exception ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   return cut(rows, limit);

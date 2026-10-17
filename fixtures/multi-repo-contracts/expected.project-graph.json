@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:32.201Z",
+  "builtAt": "2026-10-17T01:51:02.301Z",
   "services": [
     {
       "name": "gateway",
@@ -386,17 +386,7 @@
         "path": "/orders/drafts/batch",
         "rawPath": "/orders/drafts/batch",
         "controller": "OrdersController",
-        "adapter": "nestjs-http",
-        "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/orders/orders.controller.ts",
-            "line": 110,
-            "source": "pipe"
-          }
-        ]
+        "adapter": "nestjs-http"
       }
     },
     {

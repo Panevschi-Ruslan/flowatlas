@@ -132,6 +132,7 @@ const GATED = {
       'route-guard-skipped',
       'route-checked-in-body',
       'route-shadowed',
+      'fails-filter-unread',
       'server-action-unread',
       // The application or module the routes hang from.
       'application-root-unread',

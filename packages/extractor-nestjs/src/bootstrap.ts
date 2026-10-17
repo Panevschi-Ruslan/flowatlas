@@ -116,6 +116,13 @@ export interface BootstrapInfo {
   globals: BootstrapGlobal[];
   /** Call sites that name a wrapper the analysis could not follow. */
   dynamicGlobals: Array<{ layer: WrappingLayer; line: number; text: string }>;
+  /**
+   * Exception filters installed with `useGlobalFilters` (P87). Not a wrapping
+   * layer: a filter is not drawn, it only decides what a throw is answered with.
+   */
+  filters: WrapperRef[];
+  /** `useGlobalFilters` arguments that name no class. */
+  dynamicFilters: Array<{ line: number; text: string }>;
   /** Address parts that open with a hole, by the call that wrote them. */
   leadingHoles: Partial<Record<AddressingCall, LeadingHole>>;
   /** The leading part of every address, when it is read from settings (R144). */
@@ -372,6 +379,15 @@ const readGlobals =
     }
   };
 
+/** `app.useGlobalFilters(new DomainErrorFilter())`: what answers a throw for every route (P87). */
+const readGlobalFilters: CallReader = (call, info) => {
+  for (const argument of call.getArguments()) {
+    const wrapper = readWrapper(argument);
+    if (wrapper === undefined) info.dynamicFilters.push({ line: startLineOf(argument), text: argument.getText() });
+    else info.filters.push(wrapper);
+  }
+};
+
 /**
  * The two calls that decide where every route of the service answers.
  *
@@ -394,6 +410,7 @@ const ADDRESS_READERS: ReadonlyMap<string, CallReader> = new Map([
 const ENTRY_READERS: ReadonlyMap<string, CallReader> = new Map([
   ...ADDRESS_READERS,
   ...Object.entries(GLOBAL_METHODS).map(([name, layer]) => [name, readGlobals(layer)] as const),
+  ['useGlobalFilters', readGlobalFilters],
 ]);
 
 /** Walks one file, handing each call it knows to the reader for it. */
@@ -550,6 +567,8 @@ const emptyInfo = (): BootstrapInfo => ({
   unreadAddressing: [],
   globals: [],
   dynamicGlobals: [],
+  filters: [],
+  dynamicFilters: [],
   leadingHoles: {},
 });
 

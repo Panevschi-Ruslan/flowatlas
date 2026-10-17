@@ -54,8 +54,10 @@ export const failsByEntry = (data) => {
   const out = new Map();
   if (!data.fails) return out;
   const { fails: all = [], exceptions: xs, failSources: ss, files } = data.dicts;
-  const one = all.map(([s, x, at, f, l, src, id]) => Object.freeze({ ...(s < 0 ? {} : { s }), x: wordIn(xs, x), at,
-    ...(id === undefined ? {} : { id }), ...(f < 0 ? {} : { f: files[f] }), ...(l < 0 ? {} : { l }), src: wordIn(ss, src) }));
+  // A negated status is an assumed one (P87); -1 is none.
+  const one = all.map(([s, x, at, f, l, src, id]) => Object.freeze({ ...(s === -1 ? {} : { s: Math.abs(s) }), x: wordIn(xs, x), at,
+    ...(id === undefined ? {} : { id }), ...(f < 0 ? {} : { f: files[f] }), ...(l < 0 ? {} : { l }), src: wordIn(ss, src),
+    ...(s < -1 ? { a: 1 } : {}) }));
   for (const [entry, list] of Object.entries(data.fails)) out.set(Number(entry), list.map((r) => one[r]));
   return out;
 };
@@ -875,7 +877,7 @@ export const FIND_GROUPS = Object.freeze({
         if (!node) continue;
         const seen = new Set();
         for (const fail of fails) {
-          const label = fail.s === undefined ? fail.x : fail.s + ' ' + fail.x;
+          const label = fail.s === undefined ? fail.x : fail.s + (fail.a ? '? ' : ' ') + fail.x;
           if (seen.has(label)) continue;
           seen.add(label);
           // Found by the exception and status only, not by the way in's path.

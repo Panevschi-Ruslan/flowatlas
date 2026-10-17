@@ -79,6 +79,16 @@ describe('packing what each way in can fail with (P68, P84)', () => {
     );
   });
 
+  it('ships an assumed status negated, and expands it to `a` (P87)', () => {
+    const plain = { status: 500, exception: 'Error', at: 'api#src/stock.ts:check', source: 'throw' };
+    const data = pack([{ ...nodes[0]!, meta: { fails: [{ ...plain, assumed: true }, { ...plain, line: 3 }] } }]);
+    expect(data.dicts.fails?.map((record) => record[0]).sort()).toEqual([-500, 500]);
+    expect(failsByEntry(data).get(0)!.map((fail) => [fail.s, fail.a])).toEqual([
+      [500, 1],
+      [500, undefined],
+    ]);
+  });
+
   it('ships nothing when no entry says', () => {
     expect(packFails(failuresByEntry(nodes.slice(1, 3)), new Map(), new Map())).toBeUndefined();
     const data = pack(nodes.slice(1, 3));

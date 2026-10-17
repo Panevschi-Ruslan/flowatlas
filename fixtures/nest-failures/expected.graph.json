@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-failures",
-  "generatedAt": "2026-10-16T15:10:49.879Z",
+  "generatedAt": "2026-10-17T01:51:17.595Z",
   "nodes": [
     {
       "id": "entry:nest-failures:http:DELETE:/orders/:param",
@@ -78,7 +78,8 @@
             "at": "nest-failures#src/orders/orders.service.ts:OrdersService.remove",
             "file": "src/orders/orders.service.ts",
             "line": 38,
-            "source": "throw"
+            "source": "throw",
+            "assumed": true
           }
         ]
       }
@@ -166,14 +167,6 @@
           ]
         },
         "fails": [
-          {
-            "status": 400,
-            "exception": "BadRequestException",
-            "at": "nest-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
-            "file": "src/orders/orders.controller.ts",
-            "line": 29,
-            "source": "pipe"
-          },
           {
             "status": 400,
             "exception": "CouponRejectedError",

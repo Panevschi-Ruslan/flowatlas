@@ -27,6 +27,14 @@ export interface Failure {
   file?: string;
   line?: number;
   source: FailureSource;
+  /**
+   * The status was written nowhere on the path: what the framework answers an
+   * error nothing maps, a class whose own status no filter reads, a chain of
+   * bases too long to follow (P87). Said so, never stated as fact.
+   */
+  assumed?: true;
+  /** The status the thrown class declares for itself, where nothing maps it and the caller gets `status` instead (P87). */
+  declared?: number;
 }
 
 /** The key on an entry's `meta` that holds its failures. */
@@ -43,7 +51,16 @@ export const compareFailures = (a: Failure, b: Failure): number =>
   (a.line ?? 0) - (b.line ?? 0);
 
 const failureKey = (item: Failure): string =>
-  [item.status ?? '', item.exception, item.at, item.file ?? '', item.line ?? '', item.source].join('\u0000');
+  [
+    item.status ?? '',
+    item.exception,
+    item.at,
+    item.file ?? '',
+    item.line ?? '',
+    item.source,
+    item.assumed === true ? 1 : '',
+    item.declared ?? '',
+  ].join('\u0000');
 
 /** One list, without repeats, in a stable order. */
 export const settleFailures = (items: Iterable<Failure>): Failure[] => {
@@ -65,4 +82,57 @@ const isFailure = (value: unknown): value is Failure => {
 export const failuresOf = (node: { meta?: Record<string, unknown> } | undefined): Failure[] => {
   const value = node?.meta?.[FAILS_META];
   return Array.isArray(value) ? value.filter(isFailure) : [];
+};
+
+/**
+ * One status and exception a way in fails with, and every place it comes from
+ * (P87).
+ *
+ * The stored list is one row per site, which is what a mark on a step needs;
+ * a reader asking "what can this answer" wants each answer once, with how many
+ * places raise it. Grouping is a read: nothing on disk changes.
+ */
+export interface FailureGroup {
+  status?: number;
+  exception: string;
+  /** Present when every site of the group is assumed. */
+  assumed?: true;
+  /** The status the class declares, when every site agrees on one. */
+  declared?: number;
+  /** How the sites come about, in `FAILURE_SOURCES` order, each once. */
+  sources: FailureSource[];
+  /** How many places raise it. */
+  sites: number;
+  /** The sites themselves, in the stored order. */
+  at: Failure[];
+}
+
+const groupKey = (item: Failure): string => `${item.status ?? ''}\u0000${item.exception}`;
+
+/** Each (status, exception) once, by status then exception, with its sites. */
+export const groupFailures = (fails: readonly Failure[]): FailureGroup[] => {
+  const byKey = new Map<string, Failure[]>();
+  for (const item of fails) {
+    const key = groupKey(item);
+    const list = byKey.get(key);
+    if (list === undefined) byKey.set(key, [item]);
+    else list.push(item);
+  }
+  const groups = [...byKey.values()].map((at): FailureGroup => {
+    const [first] = at as [Failure, ...Failure[]];
+    const declared = at.every((item) => item.declared !== undefined && item.declared === first.declared)
+      ? first.declared
+      : undefined;
+    const used = new Set(at.map((item) => item.source));
+    return {
+      ...(first.status === undefined ? {} : { status: first.status }),
+      exception: first.exception,
+      ...(at.every((item) => item.assumed === true) ? { assumed: true as const } : {}),
+      ...(declared === undefined ? {} : { declared }),
+      sources: FAILURE_SOURCES.filter((source) => used.has(source)),
+      sites: at.length,
+      at,
+    };
+  });
+  return groups.sort((a, b) => (a.status ?? 1000) - (b.status ?? 1000) || cmp(a.exception, b.exception));
 };

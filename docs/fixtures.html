@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>154 fixtures</span>
-    <span>354 snapshot files</span>
+    <span>155 fixtures</span>
+    <span>355 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -734,7 +734,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>NestJS <span class="count" data-total="31">31</span></h2>
+    <h2>NestJS <span class="count" data-total="32">32</span></h2>
     <ul>
       <li class="fixture" data-search="nest-addressing nestjs where a nestjs service's addresses are decided, and what it costs to read the wrong file (r89).">
         <div class="head">
@@ -790,6 +790,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>Every kind of way into a NestJS service that is not a plain HTTP route.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-fails-accurate nestjs what a route can really answer with (p87): a library-loans api whose `main.ts` installs a global `validationpipe` and a global `domainerrorfilter` (`@catch(domainerror)`, answering `e.status`).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-fails-accurate">nest-fails-accurate</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>What a route can really answer with (P87): a library-loans API whose <code>main.ts</code> installs a global <code>ValidationPipe</code> and a global <code>DomainErrorFilter</code> (<code>@Catch(DomainError)</code>, answering <code>e.status</code>).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-failures nestjs what each route can fail with (p68), written on the entry as `meta.fails`: `[{ status, exception, at, file, line, source }]`, sorted by status.">

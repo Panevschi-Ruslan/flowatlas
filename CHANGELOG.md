@@ -257,6 +257,28 @@ only one of them moved.
 
 ### Changed
 
+- **What a route fails with is what it can answer (P87).** Under a global or
+  `@UsePipes` `ValidationPipe`, a route listed the 400 only when its handler
+  takes a `@Body`, `@Query` or `@Param` typed as a class; any other pipe in
+  front of a route only when the handler takes a value pipes are handed. A
+  project's own error class that states its status (`readonly status = 404`,
+  a getter, `getStatus()`, or what its constructor stores from `super(..., 409)`)
+  was answered with that status where an exception filter in front of the route
+  (`useGlobalFilters`, `APP_FILTER`, `@UseFilters`, matched by its `@Catch`)
+  reads it off the exception; a filter answering a fixed status gave that one.
+  A guard written in the project kept its synthetic 403 only where its
+  `canActivate` can answer anything but `true`, and one extending passport's
+  `AuthGuard(...)` answered 401. A status written nowhere on the path - an
+  unknown error's 500, a declared status nothing maps (kept in `declared`), a
+  filter whose answer cannot be read - gained `assumed: true` in `meta.fails`,
+  and a filter of that kind became a `fails-filter-unread` row at `info`.
+  `meta.fails` stayed one row per site; every reader grouped it: `get_flow`'s
+  `fails` became one entry per (status, exception) with `sources`, `sites`,
+  `loc` and, at `detail >= 2`, `places`; `describe_for_prompt` wrote one line
+  per group (`- **404** \`LoanNotFound\` — throw ×6, first at ...`), capped by
+  `maxFails` (12); a `fails` search hit is one per route; the page's error card
+  and *Copy as prompt* list the groups with counts, draw an assumed status as
+  `500?` and keep the places behind a disclosure (`fixtures/nest-fails-accurate`).
 - **Fewer `route-unguarded` rows (P76).** A route covered by an app-wide guard,
   or opened by a public-sounding opt-out decorator on the handler or its class,
   no longer had a row; an opt-out that switches one check off made it

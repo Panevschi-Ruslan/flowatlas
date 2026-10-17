@@ -20,6 +20,8 @@ export interface PackedFail {
   f?: string;
   l?: number;
   src: Failure['source'];
+  /** The status is the framework's default, written nowhere on the path (P87): drawn `500?`. */
+  a?: 1;
 }
 
 /**
@@ -27,7 +29,9 @@ export interface PackedFail {
  * source, id?]`. `exception` and `source` are positions in `dicts.exceptions`
  * and `dicts.failSources`, or the word itself where listing it would not pay
  * (`wordsOf`); `file` is a position in `dicts.files`. A status, file or line
- * the code does not say is -1. `id` is there only when `at` is -1.
+ * the code does not say is -1. `id` is there only when `at` is -1. An assumed
+ * status (P87) is shipped negated: `-500` is a 500 nothing on the path wrote,
+ * which costs one character where a flag would cost a field.
  *
  * A guard's refusal, a pipe's 400 and a shared service's throws stand in front
  * of every route they guard or serve, so the same failure is the same record
@@ -68,7 +72,7 @@ export const packFails = (
   const rawOf = (item: Failure): Raw => {
     const at = position.get(item.at) ?? -1;
     const raw: Raw = [
-      item.status ?? -1,
+      item.status === undefined ? -1 : item.assumed === true ? -item.status : item.status,
       item.exception,
       at,
       item.file === undefined ? -1 : (fileIx.get(item.file) ?? -1),
