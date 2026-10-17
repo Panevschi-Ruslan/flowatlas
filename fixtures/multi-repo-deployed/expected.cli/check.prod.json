@@ -1,0 +1,662 @@
+{
+  "checkFormatVersion": 1,
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "environment": "prod",
+  "pinsFile": "flowatlas.deployed.json",
+  "pins": [
+    {
+      "service": "billing",
+      "ref": "v1",
+      "from": "file",
+      "sha": "e93604abb1902da8f7876e4f2aca9cf8a520e2d0"
+    },
+    {
+      "service": "gateway",
+      "ref": "v1",
+      "from": "file",
+      "sha": "5cce0519682cbc7b2a0af31e93183c8f2c81690f"
+    },
+    {
+      "service": "orders",
+      "ref": "v1",
+      "from": "file",
+      "sha": "f36068c57e21ee45249f91d381d52f1e8e99de28"
+    }
+  ],
+  "notDeployed": [],
+  "moved": [
+    {
+      "service": "orders",
+      "from": {
+        "ref": "v1",
+        "sha": "f36068c57e21ee45249f91d381d52f1e8e99de28"
+      },
+      "to": {
+        "ref": "drop-lookup",
+        "sha": "e6a023fe12726bf09f1b0bb24fb3683a03d83225",
+        "dirty": false
+      }
+    }
+  ],
+  "head": "drop-lookup",
+  "verdict": {
+    "verdict": "not deployable",
+    "reasons": [
+      {
+        "kind": "join",
+        "code": "no-producer",
+        "message": "orders InvoicePaidConsumer.onPaid is a new handler of invoice.paid, which nothing deployed publishes",
+        "key": "join|no-producer|consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid|channel:invoice.paid",
+        "service": "orders",
+        "at": {
+          "service": "orders",
+          "file": "src/orders/invoice-paid.consumer.ts",
+          "line": 13
+        },
+        "confidence": "static",
+        "heuristic": false
+      },
+      {
+        "kind": "join",
+        "code": "target-gone",
+        "message": "gateway calls GET /orders/:param on orders, which is gone after this deploy (now target-route-not-found)",
+        "key": "join|target-gone|http_out:gateway#src/clients/orders.client.ts|entry:orders:http:GET:/orders/:param",
+        "service": "gateway",
+        "at": {
+          "service": "gateway",
+          "file": "src/clients/orders.client.ts",
+          "line": 21
+        },
+        "confidence": "static",
+        "heuristic": false
+      }
+    ],
+    "already": [
+      {
+        "kind": "contract",
+        "code": "missing_required",
+        "message": "orders → billing: receiver billing requires `customerRef: string`; sender orders does not send it",
+        "key": "producer:orders#src/orders/orders.service.ts:13:5|emits|consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced|payload|missing_required|type:billing#OrderPlacedEvent|customerRef",
+        "service": "orders",
+        "at": {
+          "service": "orders",
+          "file": "src/orders/orders.service.ts",
+          "line": 10
+        },
+        "confidence": "static",
+        "heuristic": false
+      },
+      {
+        "kind": "rule",
+        "code": "billing-reads-no-order-events",
+        "message": "billing-reads-no-order-events: billing PlacedConsumer.onPlaced consumes channel order.placed",
+        "key": "rule|billing-reads-no-order-events|consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced|channel:order.placed",
+        "service": "billing",
+        "at": {
+          "service": "billing",
+          "file": "src/invoices/placed.consumer.ts",
+          "line": 9
+        },
+        "confidence": "static",
+        "heuristic": false
+      }
+    ],
+    "undecided": [],
+    "notes": []
+  },
+  "diff": {
+    "diffFormatVersion": 4,
+    "schemaVersion": 6,
+    "generatedAt": "2026-01-01T00:00:00.000Z",
+    "base": {
+      "ref": "prod",
+      "services": {
+        "gateway": {
+          "sha": "5cce0519682cbc7b2a0af31e93183c8f2c81690f",
+          "ref": "v1",
+          "cached": true,
+          "nodeModules": "present"
+        },
+        "orders": {
+          "sha": "f36068c57e21ee45249f91d381d52f1e8e99de28",
+          "ref": "v1",
+          "cached": true,
+          "nodeModules": "present"
+        },
+        "billing": {
+          "sha": "e93604abb1902da8f7876e4f2aca9cf8a520e2d0",
+          "ref": "v1",
+          "cached": true,
+          "nodeModules": "present"
+        }
+      }
+    },
+    "head": {
+      "ref": "drop-lookup",
+      "services": {
+        "gateway": {
+          "sha": "5cce0519682cbc7b2a0af31e93183c8f2c81690f",
+          "ref": "v1",
+          "cached": true,
+          "nodeModules": "present"
+        },
+        "orders": {
+          "sha": "e6a023fe12726bf09f1b0bb24fb3683a03d83225",
+          "ref": "drop-lookup",
+          "cached": true,
+          "nodeModules": "present"
+        },
+        "billing": {
+          "sha": "e93604abb1902da8f7876e4f2aca9cf8a520e2d0",
+          "ref": "v1",
+          "cached": true,
+          "nodeModules": "present"
+        }
+      }
+    },
+    "nodes": {
+      "added": [
+        "channel:invoice.paid",
+        "consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid",
+        "entry:orders:event:invoice.paid",
+        "orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer",
+        "orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid"
+      ],
+      "removed": [
+        "entry:orders:http:GET:/orders/:param",
+        "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      ],
+      "changed": [
+        {
+          "id": "orders#src/app.module.ts:AppModule",
+          "service": "orders",
+          "label": "AppModule",
+          "fields": [
+            "meta.controllers"
+          ]
+        },
+        {
+          "id": "repo:orders",
+          "service": "orders",
+          "label": "orders",
+          "fields": [
+            "meta.stats"
+          ]
+        }
+      ],
+      "moved": []
+    },
+    "edges": {
+      "added": [
+        {
+          "from": "channel:invoice.paid",
+          "to": "consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid",
+          "type": "consumes"
+        },
+        {
+          "from": "consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid",
+          "to": "orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid",
+          "type": "handles"
+        },
+        {
+          "from": "entry:orders:event:invoice.paid",
+          "to": "orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid",
+          "type": "handles"
+        }
+      ],
+      "removed": [
+        {
+          "from": "entry:orders:http:GET:/orders/:param",
+          "to": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+          "type": "handles"
+        },
+        {
+          "from": "http_out:gateway#src/clients/orders.client.ts:21:12",
+          "to": "entry:orders:http:GET:/orders/:param",
+          "type": "http_calls"
+        },
+        {
+          "from": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+          "to": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+          "type": "calls"
+        }
+      ],
+      "changed": []
+    },
+    "types": {
+      "added": [
+        "type:orders#InvoicePaidEvent"
+      ],
+      "removed": [],
+      "changed": []
+    },
+    "counts": {
+      "base": {
+        "nodes": 36,
+        "edges": 24,
+        "types": 8,
+        "unresolved": {
+          "rows": 2,
+          "sites": 2
+        }
+      },
+      "head": {
+        "nodes": 39,
+        "edges": 24,
+        "types": 9,
+        "unresolved": {
+          "rows": 3,
+          "sites": 3
+        }
+      }
+    },
+    "unresolved": {
+      "added": [
+        {
+          "id": "gap:gateway|src/clients/orders.client.ts|target-route-not-found",
+          "kind": "gap",
+          "service": "gateway",
+          "file": "src/clients/orders.client.ts",
+          "line": 21,
+          "reason": "target-route-not-found",
+          "node": "http_out:gateway#src/clients/orders.client.ts:21:12",
+          "sites": 1
+        }
+      ],
+      "removed": []
+    },
+    "joins": {
+      "lost": [
+        {
+          "kind": "no-producer",
+          "caller": "consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid",
+          "target": "channel:invoice.paid",
+          "edge": "consumes",
+          "service": "orders",
+          "targetService": null,
+          "now": "never-produced",
+          "targetRemoved": false
+        },
+        {
+          "kind": "target-gone",
+          "caller": "http_out:gateway#src/clients/orders.client.ts:21:12",
+          "target": "entry:orders:http:GET:/orders/:param",
+          "edge": "http_calls",
+          "service": "gateway",
+          "targetService": "orders",
+          "now": "target-route-not-found",
+          "targetRemoved": true
+        }
+      ]
+    },
+    "impact": [
+      {
+        "node": "orders#src/app.module.ts:AppModule",
+        "service": "orders",
+        "label": "AppModule",
+        "side": "head",
+        "entries": [],
+        "counts": {},
+        "truncated": 0,
+        "services": [
+          "orders"
+        ],
+        "servicesWithoutEntry": [],
+        "reached": 0,
+        "partial": false
+      },
+      {
+        "node": "repo:orders",
+        "service": "orders",
+        "label": "orders",
+        "side": "head",
+        "entries": [],
+        "counts": {},
+        "truncated": 0,
+        "services": [
+          "orders"
+        ],
+        "servicesWithoutEntry": [],
+        "reached": 0,
+        "partial": false
+      },
+      {
+        "node": "entry:orders:http:GET:/orders/:param",
+        "service": "orders",
+        "label": "GET /orders/:param",
+        "side": "base",
+        "entries": [
+          {
+            "id": "entry:gateway:http:GET:/orders/:param",
+            "service": "gateway",
+            "kind": "http",
+            "type": "entry",
+            "label": "GET /orders/:param",
+            "file": "src/orders/gateway.controller.ts",
+            "line": 17,
+            "depth": 4,
+            "confidence": "static"
+          }
+        ],
+        "counts": {
+          "gateway:http": 1
+        },
+        "truncated": 0,
+        "services": [
+          "gateway",
+          "orders"
+        ],
+        "servicesWithoutEntry": [],
+        "reached": 4,
+        "partial": false
+      },
+      {
+        "node": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+        "service": "orders",
+        "label": "OrdersController.findOne",
+        "side": "base",
+        "entries": [
+          {
+            "id": "entry:orders:http:GET:/orders/:param",
+            "service": "orders",
+            "kind": "http",
+            "type": "entry",
+            "label": "GET /orders/:param",
+            "file": "src/orders/orders.controller.ts",
+            "line": 17,
+            "depth": 1,
+            "confidence": "static"
+          },
+          {
+            "id": "entry:gateway:http:GET:/orders/:param",
+            "service": "gateway",
+            "kind": "http",
+            "type": "entry",
+            "label": "GET /orders/:param",
+            "file": "src/orders/gateway.controller.ts",
+            "line": 17,
+            "depth": 5,
+            "confidence": "static"
+          }
+        ],
+        "counts": {
+          "gateway:http": 1,
+          "orders:http": 1
+        },
+        "truncated": 0,
+        "services": [
+          "gateway",
+          "orders"
+        ],
+        "servicesWithoutEntry": [],
+        "reached": 5,
+        "partial": false
+      }
+    ],
+    "flows": [
+      {
+        "entry": "entry:gateway:http:GET:/orders/:param",
+        "label": "GET /orders/:param",
+        "service": "gateway",
+        "side": "both",
+        "reaches": 2,
+        "participants": [
+          {
+            "id": "caller",
+            "label": "client",
+            "kind": "caller"
+          },
+          {
+            "id": "gateway",
+            "label": "gateway",
+            "kind": "service",
+            "service": "gateway"
+          },
+          {
+            "id": "orders",
+            "label": "orders",
+            "kind": "service",
+            "service": "orders"
+          }
+        ],
+        "steps": [
+          {
+            "kind": "enters",
+            "from": "caller",
+            "to": "gateway",
+            "label": "GET /orders/:param",
+            "confidence": "static",
+            "file": "src/orders/gateway.controller.ts",
+            "line": 17,
+            "params": [
+              "string"
+            ],
+            "returns": "void",
+            "status": "same"
+          },
+          {
+            "kind": "http_calls",
+            "from": "gateway",
+            "to": "orders",
+            "label": "GET /orders/:param",
+            "confidence": "static",
+            "file": "src/clients/orders.client.ts",
+            "line": 21,
+            "returns": "type:gateway#OrderDto",
+            "takes": [
+              "string"
+            ],
+            "status": "removed"
+          },
+          {
+            "kind": "stop",
+            "from": "gateway",
+            "to": "gateway",
+            "label": "target-route-not-found",
+            "confidence": "static",
+            "file": "src/clients/orders.client.ts",
+            "line": 21,
+            "status": "added"
+          }
+        ],
+        "counts": {
+          "same": 1,
+          "added": 1,
+          "removed": 1,
+          "changed": 0
+        }
+      },
+      {
+        "entry": "entry:orders:event:invoice.paid",
+        "label": "event invoice.paid",
+        "service": "orders",
+        "side": "head",
+        "reaches": 1,
+        "participants": [
+          {
+            "id": "caller",
+            "label": "broker",
+            "kind": "caller"
+          },
+          {
+            "id": "orders",
+            "label": "orders",
+            "kind": "service",
+            "service": "orders"
+          }
+        ],
+        "steps": [
+          {
+            "kind": "enters",
+            "from": "caller",
+            "to": "orders",
+            "label": "event invoice.paid",
+            "confidence": "static",
+            "file": "src/orders/invoice-paid.consumer.ts",
+            "line": 13,
+            "params": [
+              "type:orders#InvoicePaidEvent"
+            ],
+            "returns": "void",
+            "status": "added"
+          }
+        ],
+        "counts": {
+          "same": 0,
+          "added": 1,
+          "removed": 0,
+          "changed": 0
+        }
+      },
+      {
+        "entry": "entry:orders:http:GET:/orders/:param",
+        "label": "GET /orders/:param",
+        "service": "orders",
+        "side": "base",
+        "reaches": 1,
+        "participants": [
+          {
+            "id": "caller",
+            "label": "client",
+            "kind": "caller"
+          },
+          {
+            "id": "orders",
+            "label": "orders",
+            "kind": "service",
+            "service": "orders"
+          }
+        ],
+        "steps": [
+          {
+            "kind": "enters",
+            "from": "caller",
+            "to": "orders",
+            "label": "GET /orders/:param",
+            "confidence": "static",
+            "file": "src/orders/orders.controller.ts",
+            "line": 17,
+            "params": [
+              "string"
+            ],
+            "returns": "type:orders#OrderDto",
+            "status": "removed"
+          }
+        ],
+        "counts": {
+          "same": 0,
+          "added": 0,
+          "removed": 1,
+          "changed": 0
+        }
+      }
+    ],
+    "contracts": {
+      "new": [],
+      "fixed": [],
+      "preexisting": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:orders#src/orders/orders.service.ts:13:5",
+            "to": "consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/orders/orders.service.ts:13:5|emits|consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderPlacedEvent",
+            "symbol": "orders#src/orders/orders.service.ts:OrdersService.create"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#OrderPlacedEvent",
+            "symbol": "billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced"
+          },
+          "typeId": "type:billing#OrderPlacedEvent",
+          "field": "customerId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender orders sends `customerId: string`; receiver billing declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "producer:orders#src/orders/orders.service.ts:13:5",
+            "to": "consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/orders/orders.service.ts:13:5|emits|consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderPlacedEvent",
+            "symbol": "orders#src/orders/orders.service.ts:OrdersService.create"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#OrderPlacedEvent",
+            "symbol": "billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced"
+          },
+          "typeId": "type:billing#OrderPlacedEvent",
+          "field": "customerRef",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver billing requires `customerRef: string`; sender orders does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "ignored": []
+    },
+    "rules": {
+      "new": [],
+      "fixed": [],
+      "existing": [
+        {
+          "rule": "billing-reads-no-order-events",
+          "shape": "forbid",
+          "severity": "error",
+          "note": "billing hears about orders over HTTP only",
+          "key": "rule|billing-reads-no-order-events|consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced|channel:order.placed",
+          "from": "consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced",
+          "to": "channel:order.placed",
+          "fromService": "billing",
+          "toService": null,
+          "via": "consumes",
+          "path": [
+            {
+              "from": "channel:order.placed",
+              "to": "consumer:billing#src/invoices/placed.consumer.ts:PlacedConsumer.onPlaced",
+              "type": "consumes",
+              "confidence": "static"
+            }
+          ],
+          "at": {
+            "service": "billing",
+            "file": "src/invoices/placed.consumer.ts",
+            "line": 9
+          },
+          "confidence": "static",
+          "message": "billing PlacedConsumer.onPlaced consumes channel order.placed",
+          "heuristic": false
+        }
+      ],
+      "excused": []
+    },
+    "warnings": [],
+    "timing": {
+      "baseMs": 0,
+      "headMs": 0,
+      "diffMs": 0,
+      "totalMs": 0
+    }
+  }
+}

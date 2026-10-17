@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { diffGraphs, impactedNodes } from './diff-graphs.js';
-import { lostJoins } from './lost-joins.js';
+import { lostJoins, NEVER_PRODUCED } from './lost-joins.js';
 import { graphDiffSchema, graphDiffSchemaV2, graphDiffSchemaV3, parseGraphDiff } from './schema.js';
 import { edge, field, graphOf, node, object } from './test-graph.js';
 import { DIFF_FORMAT_VERSION, sectionsMissing } from './types.js';
@@ -364,6 +364,37 @@ describe('lostJoins (P96)', () => {
     ]);
     // Gone whole: nobody is left to notice.
     expect(lostJoins(both, graphOf())).toEqual([]);
+  });
+
+  it('names a consumer the head side added to a channel nothing publishes, and only a new one (P117)', () => {
+    const channel = 'channel:invoice.paid';
+    const consumer = 'consumer:orders#src/orders/invoice-paid.consumer.ts:InvoicePaidConsumer.onPaid';
+    const older = 'consumer:orders#src/orders/paid.consumer.ts:PaidConsumer.on';
+    const producer = 'producer:billing#src/invoices.controller.ts:12:5';
+    const before = graphOf({ nodes: [node(channel, 'channel', { repo: '' })] });
+    const after = graphOf({
+      nodes: [node(channel, 'channel', { repo: '' }), node(consumer, 'consumer', { repo: 'orders' })],
+      edges: [edge(channel, consumer, { type: 'consumes' })],
+    });
+
+    expect(lostJoins(before, after)).toEqual([
+      { kind: 'no-producer', caller: consumer, target: channel, edge: 'consumes', service: 'orders', targetService: null, now: NEVER_PRODUCED, targetRemoved: false },
+    ]);
+    // A consumer the base side already had is no change, whoever publishes.
+    expect(lostJoins(after, after)).toEqual([]);
+    const both = graphOf({
+      nodes: [node(channel, 'channel', { repo: '' }), node(older, 'consumer', { repo: 'orders' })],
+      edges: [edge(channel, older, { type: 'consumes' })],
+    });
+    expect(lostJoins(both, graphOf({ nodes: [...both.nodes, node(consumer, 'consumer', { repo: 'orders' })], edges: [...both.edges, edge(channel, consumer, { type: 'consumes' })] }))).toEqual([
+      expect.objectContaining({ caller: consumer, now: NEVER_PRODUCED }),
+    ]);
+    // Something publishes it on the head side: the join is made.
+    const fed = graphOf({
+      nodes: [...after.nodes, node(producer, 'producer', { repo: 'billing' })],
+      edges: [...after.edges, edge(producer, channel, { type: 'emits' })],
+    });
+    expect(lostJoins(before, fed)).toEqual([]);
   });
 });
 

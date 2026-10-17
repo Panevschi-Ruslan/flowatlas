@@ -7,6 +7,7 @@
  * only one section of it.
  */
 import type { ContractFinding } from '@flowatlas/contracts';
+import type { Confidence, PinSource } from '@flowatlas/core';
 import type { RuleViolation } from '../rules/types.js';
 import type { FlowChange } from './sequence.js';
 import type { BlastRow, GraphDiff } from './types.js';
@@ -128,4 +129,109 @@ export interface DiffReport {
   rules: DiffRules;
   warnings: DiffWarning[];
   timing: DiffTiming;
+}
+
+/* ── `flowatlas check --env` (P117) ── */
+
+/**
+ * Version of `check.<env>.json`, independent of the diff format it carries:
+ * a check document holds a whole `diff.json` (deployed side as base,
+ * candidate as head) under `diff`, read through `parseGraphDiff` like any.
+ */
+export const CHECK_FORMAT_VERSION = 1;
+
+/** `deployable` exits 0, `not deployable` 1, `undecided` 2. */
+export const CHECK_VERDICTS = ['deployable', 'not deployable', 'undecided'] as const;
+export type CheckVerdictWord = (typeof CHECK_VERDICTS)[number];
+
+/** What a reason is about: a contract finding, an architecture rule, a join deploying would lose. */
+export const CHECK_REASON_KINDS = ['contract', 'rule', 'join'] as const;
+export type CheckReasonKind = (typeof CHECK_REASON_KINDS)[number];
+
+/** Why a check could not decide, by the words the refusal is made of. */
+export const CHECK_REFUSALS = ['unknown-environment', 'ref-not-found', 'not-a-git-repo', 'head-not-found'] as const;
+export type CheckRefusalReason = (typeof CHECK_REFUSALS)[number];
+
+/** A file and line inside a service's repository. */
+export interface CheckPlace {
+  service: string;
+  file: string;
+  line?: number;
+}
+
+/**
+ * One thing deploying would introduce, or one already running.
+ *
+ * `code` is the finding kind (`missing_required`), the rule's name, or the
+ * lost join's kind; `key` the line-free key the diff already classifies it by
+ * (`findingKey`, `rule|…`, `join|<kind>|<caller>|<target>`). `heuristic` is
+ * true when the edge it rests on is a guess (I4): it still counts, and says so.
+ */
+export interface CheckReason {
+  kind: CheckReasonKind;
+  code: string;
+  message: string;
+  key: string;
+  /** Whose: the sender, the rule's `from` service, the caller's service. */
+  service: string | null;
+  at?: CheckPlace;
+  confidence: Confidence;
+  heuristic: boolean;
+}
+
+/** One service's ref in the environment, whose word it is, and the commit it named. */
+export interface CheckPin {
+  service: string;
+  ref: string;
+  from: PinSource;
+  /** The commit the ref resolved to; null when it resolved to none (the run is then undecided). */
+  sha: string | null;
+  replaced?: { ref: string; from: PinSource };
+}
+
+/** A service the candidate side reads somewhere else than its pin. */
+export interface CheckMove {
+  service: string;
+  /** The pin; `ref` null for a service the environment does not run yet. */
+  from: { ref: string | null; sha: string | null };
+  /** `--head`, or null for the working tree (`dirty` when it has uncommitted work). */
+  to: { ref: string | null; sha: string | null; dirty: boolean };
+}
+
+/** Why there is no verdict: the environment, or a ref that names nothing to read. */
+export interface CheckRefusal {
+  reason: CheckRefusalReason;
+  service: string | null;
+  message: string;
+  hint: string;
+}
+
+export interface CheckVerdict {
+  verdict: CheckVerdictWord;
+  /** What deploying introduces: every one of them is why it is not deployable. */
+  reasons: CheckReason[];
+  /** Problems the deployed side already has: listed, never failing the run (D1). */
+  already: CheckReason[];
+  /** Why it could not decide; non-empty exactly when `verdict` is `undecided`. */
+  undecided: CheckRefusal[];
+  /** What the reader should know about how the answer was reached: overrides, nothing to deploy. */
+  notes: string[];
+}
+
+/** `<output>/check.<env>.json`: one environment's answer, and the comparison it was read from. */
+export interface CheckReport {
+  checkFormatVersion: number;
+  generatedAt: string;
+  environment: string;
+  /** The pins file read, relative to the configuration; null when every pin came from flags or variables. */
+  pinsFile: string | null;
+  pins: CheckPin[];
+  /** Configured services this environment does not run: on neither side. */
+  notDeployed: string[];
+  moved: CheckMove[];
+  /** `--head`, or null for the working tree. */
+  head: string | null;
+  verdict: CheckVerdict;
+  /** Deployed as base, candidate as head; null when there was nothing to compare. */
+  diff: DiffReport | null;
 }

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { nextFor, withNext } from '../query/next.js';
 import { START_LIMITS, summariseProject, type StartSummary } from '../query/start.js';
 import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
+import { checksBeside } from './changes.js';
 import { rulesReportOf } from './rules.js';
 
 /** A reason, how often, where, and the first place it was seen: one row of `topGaps` or `topFindings`. */
@@ -45,6 +46,12 @@ export const startOutput = {
   startFrom: z.array(nodeOutput),
   /** The architecture rules' violations by severity, and rules not checked (P114); absent with no rules. */
   rules: z.object({ errors: z.number(), warnings: z.number(), unchecked: z.number() }).optional(),
+  /**
+   * Each `check.<env>.json` beside the database and its verdict, as one line
+   * (`prod: not deployable · staging: deployable`, P117); absent with none.
+   * A line rather than a record: the tool list has no room for one.
+   */
+  checks: z.string().optional(),
   next: nextOutput,
 };
 
@@ -107,9 +114,16 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
                 warnings: broken.filter((item) => item.severity === 'warning').length,
                 unchecked: report.unchecked.length,
               };
+        const checks = checksBeside(ctx.handle.path);
+        const blocked = Object.keys(checks).find((environment) => checks[environment] === 'not deployable');
         return withNext(
-          { ...summary, ...(rules === undefined ? {} : { rules }) },
+          {
+            ...summary,
+            ...(rules === undefined ? {} : { rules }),
+            ...(Object.keys(checks).length === 0 ? {} : { checks: Object.entries(checks).map(([environment, verdict]) => `${environment}: ${verdict}`).join(' · ') }),
+          },
           [
+            ...(blocked === undefined ? [] : [`what_changed({file: ${JSON.stringify(`check.${blocked}.json`)}, verdict: true})`]),
             ...(rules !== undefined && rules.errors > 0 ? [`check_rules(${input.service === undefined ? '' : `{service: ${JSON.stringify(input.service)}}`})`] : []),
             ...nextFor(summary.startFrom[0], lonely === undefined ? undefined : { id: lonely, type: 'channel' }),
           ].slice(0, 3),

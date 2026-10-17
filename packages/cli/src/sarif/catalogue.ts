@@ -132,6 +132,32 @@ export const noWayInRule = (): SarifRuleInfo => ({
   level: 'warning',
 });
 
+/** What each kind of lost join is (P96), as a rule `check` reports under (P117). */
+const JOIN_HELP: Readonly<Record<string, readonly [short: string, help: string]>> = Object.freeze({
+  'target-gone': [
+    'call whose route deploying removes',
+    'A caller that is deployed asks for a route the version being deployed no longer serves. Deploy the caller first, keep the route, or ship both together.',
+  ],
+  'no-producer': [
+    'handler with nothing publishing to it',
+    'After the deploy, nothing deployed publishes what this handler consumes. Deploy the publisher first, or ship both together.',
+  ],
+  'no-target': [
+    'new call to a route nothing deployed serves',
+    'The version being deployed asks for a route no deployed service serves. Deploy the service that serves it first, or ship both together.',
+  ],
+  'no-consumer': [
+    'publish with nothing handling it',
+    'After the deploy, nothing deployed handles what this publishes. Deploy the handler first, or ship both together.',
+  ],
+});
+
+/** A join deploying would lose, reported as `join/<kind>`. */
+export const joinRule = (kind: string): SarifRuleInfo => {
+  const known = Object.hasOwn(JOIN_HELP, kind) ? JOIN_HELP[kind] : undefined;
+  return { id: `join/${kind}`, short: known?.[0] ?? words(kind), help: known?.[1] ?? genericHint(kind), level: 'error' };
+};
+
 /** A P114 architecture rule, reported as `rule/<name>`. */
 export const architectureRule = (
   rule: { rule: string; shape: string; note?: string },

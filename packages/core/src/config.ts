@@ -1087,6 +1087,13 @@ export const flowatlasConfigSchema = z
       })
       .default({ depth: DEFAULT_TYPE_MAX_DEPTH, rules: { disable: [] }, ignoreEdges: [] }),
     /**
+     * Where the file saying which ref of each service runs in each environment
+     * is (P117): `flowatlas check --env` reads it, `flowatlas deployed set`
+     * writes it. Relative to this configuration; `flowatlas.deployed.json`
+     * beside it when not given.
+     */
+    deployed: z.strictObject({ file: z.string().min(1).optional() }).optional(),
+    /**
      * What a health check treats as already agreed to.
      *
      * `ignoreReasons` is for noise a project has decided to live with — a data

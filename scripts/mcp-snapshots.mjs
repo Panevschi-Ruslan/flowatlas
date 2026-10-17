@@ -26,6 +26,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer } from '@flowatlas/mcp';
 import { reasonCatalog } from '../packages/cli/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
+import { checkedDeployedProject } from './deployed-fixture.mjs';
 import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -187,6 +188,19 @@ const DIFF_CASES = [
   ['resource.service-orders', '#readResource', { uri: 'flowatlas://services/orders' }],
 ];
 
+/**
+ * A deploy (P117): the `drop-lookup` branch of orders checked against prod
+ * (not deployable: a removed route the deployed gateway calls, a handler of
+ * what nothing in prod publishes), and against canary, whose pin of orders
+ * names a tag nobody made. `start_here` says each environment's verdict.
+ */
+const DEPLOYED_CASES = [
+  ['what_changed.check-prod', 'what_changed', { file: 'check.prod.json', verdict: true }],
+  ['what_changed.check-canary', 'what_changed', { file: 'check.canary.json' }],
+  ['what_changed.not-a-document', 'what_changed', { file: 'graph.db' }],
+  ['start_here.checks', 'start_here', {}],
+];
+
 /** The architecture rules of `fixtures/multi-repo-rules` (P114), as an assistant is handed them. */
 const RULES_CASES = [
   ['check_rules.all', 'check_rules', {}],
@@ -254,6 +268,12 @@ const SUITES = [
     // Made, built and diffed each run, and removed after: the fixture is two revisions as files.
     setup: () => diffFixtureProject(root),
     options: { reasonCatalog: reasonCatalog() },
+  },
+  {
+    outDir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.mcp'),
+    cases: DEPLOYED_CASES,
+    // Made, built and checked each run, and removed after: the fixture is three histories as files.
+    setup: () => checkedDeployedProject(root),
   },
 ];
 

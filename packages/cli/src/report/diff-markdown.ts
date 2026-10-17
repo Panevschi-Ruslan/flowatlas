@@ -9,6 +9,7 @@ import type { Confidence, GraphNode } from '@flowatlas/core';
 import type { ContractFinding } from '@flowatlas/contracts';
 import {
   flowChanged,
+  NEVER_PRODUCED,
   sayCounts,
   sayStep,
   servicesCrossed,
@@ -40,6 +41,11 @@ export interface DiffMarkdownOptions {
   maxChars?: number;
   /** False for step lists without the Mermaid. */
   diagrams?: boolean;
+  /**
+   * Lines in place of the `## flowatlas diff` heading and its refs: what
+   * `check` (P117) puts above the same body, its verdict first.
+   */
+  lead?: readonly string[];
 }
 
 /**
@@ -47,7 +53,7 @@ export interface DiffMarkdownOptions {
  * 65,536 characters a pull-request comment on GitHub may hold, with room for
  * whatever a workflow adds around it.
  */
-export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions, 'file'>>> = Object.freeze({
+export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions, 'file' | 'lead'>>> = Object.freeze({
   maxRows: 50,
   maxDiagrams: 5,
   context: 3,
@@ -57,7 +63,7 @@ export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions,
 
 const DEFAULTS = DIFF_MARKDOWN_DEFAULTS;
 
-type Settings = Required<Omit<DiffMarkdownOptions, 'file'>> & DiffMarkdownOptions;
+type Settings = Required<Omit<DiffMarkdownOptions, 'file' | 'lead'>> & DiffMarkdownOptions;
 
 const escape = (text: string): string => text.replace(/\|/g, '\\|');
 
@@ -429,7 +435,7 @@ const ruleLines = (report: DiffReport, options: DiffMarkdownOptions & { maxRows:
 /** How each kind of lost join is said in the table's last column. */
 const LOST_SAY: Readonly<Record<LostJoin['kind'], (lost: LostJoin) => string>> = {
   'target-gone': (lost) => `${lost.targetRemoved ? 'its target is gone' : 'joins nothing'}; now ${code(lost.now)}`,
-  'no-producer': () => 'nothing publishes it any more',
+  'no-producer': (lost) => (lost.now === NEVER_PRODUCED ? 'a new handler of what nothing publishes' : 'nothing publishes it any more'),
   'no-consumer': () => 'nothing handles it any more',
 };
 
@@ -610,10 +616,12 @@ export const renderDiffMarkdown = (report: DiffReport, options: DiffMarkdownOpti
   const drawn = Math.min(changed, settings.maxDiagrams);
   const render = (room: FlowRoom): string => {
     const lines = [
-      '## flowatlas diff',
-      '',
-      `\`${report.base.ref ?? 'working tree'}\` → \`${report.head.ref ?? 'working tree'}\``,
-      '',
+      ...(settings.lead ?? [
+        '## flowatlas diff',
+        '',
+        `\`${report.base.ref ?? 'working tree'}\` → \`${report.head.ref ?? 'working tree'}\``,
+        '',
+      ]),
       ...sideLines(report),
       ...warningLines(report),
       ...impactLines(report, settings),

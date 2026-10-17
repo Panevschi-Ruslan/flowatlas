@@ -272,6 +272,54 @@ already there and excused, and only a new one at `error` fails the build.
 A pre-existing error is somebody else's problem and an excused one is nobody's,
 so neither stops the build.
 
+## Before a deploy
+
+A pull request is compared with `main`. A deploy should be compared with what
+runs: `main` of another service is often ahead of what is deployed, so a branch
+that agrees with it can still break production. `flowatlas check` reads every
+service at the ref an environment runs and puts the one being shipped in its
+place:
+
+```sh
+flowatlas check --env prod --service orders --head "$GITHUB_SHA" --format markdown --output check.md
+```
+
+The running versions come from a committed `flowatlas.deployed.json`, or from the
+deploy job itself, which usually knows them already:
+
+```sh
+flowatlas check --env prod --service orders --head "$GITHUB_SHA" \
+  --pin billing="$BILLING_RUNNING" --pin gateway="$GATEWAY_RUNNING"
+# or: FLOWATLAS_PIN_BILLING=v2.3.1 FLOWATLAS_PIN_GATEWAY=4f1c2a9 flowatlas check --env prod --service orders
+```
+
+It exits 0 when deployable, 1 when deploying would introduce a contract error, a
+violation of a rule at `error`, or a call or channel left with nothing to join
+(each named with the file and line of the end left behind), and 2 when it cannot
+decide. Problems already running in that environment are listed and never fail
+the job. Several environments at once (`--env staging --env prod`) are one
+section each, and the exit is the worst.
+
+Every pinned ref must be in the checkout. Check every repository out with its
+whole history and tags, or the run refuses rather than guess:
+
+```yaml
+- uses: actions/checkout@v4
+  with: { repository: acme/billing, path: billing, fetch-depth: 0 }
+- run: git -C billing fetch --tags
+```
+
+After the deploy, record what ran, by commit, and commit the file back (or keep
+it in the pipeline's own store and pass `--pins`):
+
+```sh
+flowatlas deployed set prod orders "$GITHUB_SHA" --resolve
+git commit -m "deployed orders to prod" flowatlas.deployed.json
+```
+
+`flowatlas deployed show` prints each environment's pins with their commits and
+ages, and warns of a pin that names a branch, which moves.
+
 ## Three things that will bite you otherwise
 
 **Every repository needs its dependencies installed.** flowatlas reads types, and

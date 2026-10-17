@@ -833,3 +833,21 @@ export {
   whyUntyped,
 } from './follow-cause.js';
 export type { FollowCause } from './follow-cause.js';
+export {
+  DEPLOYED_FILE,
+  DEPLOYED_FORMAT_VERSION,
+  DeployedInvalidError,
+  PIN_SOURCES,
+  deployedPathOf,
+  deployedSchema,
+  emptyDeployed,
+  loadDeployed,
+  parseDeployed,
+  parsePinFlags,
+  pinEnvName,
+  pinsFor,
+  pinsFromEnv,
+  withPin,
+  writeDeployed,
+} from './deployed.js';
+export type { Deployed, Pin, PinSource } from './deployed.js';

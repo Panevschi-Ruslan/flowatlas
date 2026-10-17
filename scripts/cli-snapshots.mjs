@@ -33,8 +33,11 @@ import {
   runShapesSuggest,
   runStats,
   runTypes,
+  runCheck,
+  runDeployedShow,
 } from '../packages/cli/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
+import { makeDeployedProject, SHIPPED } from './deployed-fixture.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = join(root, 'fixtures', 'multi-repo');
@@ -553,6 +556,48 @@ const DIFF_CASES = [
   ['diff.sarif.json', diffMarkdown({ format: 'sarif' })],
 ];
 
+/**
+ * `flowatlas check --env` over `fixtures/multi-repo-deployed` (P117): the
+ * `drop-lookup` branch of orders against prod as a document and as the file
+ * beside it, the gateway's branch against staging (a field billing's `main`
+ * requires) and against prod and canary at once (canary's pin names a tag
+ * nobody made), the SARIF log, and the pins file as `deployed show` reads it.
+ * The repositories are made once with fixed dates, so every sha is the same
+ * on every machine; where the copy was made is a placeholder.
+ */
+let deployedProject;
+const deployedOnce = () => (deployedProject ??= makeDeployedProject(root));
+const deployedPlaced = (text) => text.split(deployedOnce().scratch).join('<scratch>');
+const checkRun = (options) => async (io) => {
+  const said = { out: (text) => io.out(deployedPlaced(text)), err: (text) => io.err(deployedPlaced(text)), tty: false };
+  await runCheck({ config: deployedOnce().config, generatedAt: FIXED, environ: {}, ...options }, said);
+};
+const GATEWAY_BRANCH = { service: ['gateway'], head: 'invoice-on-checkout' };
+
+const DEPLOYED_CASES = [
+  [
+    'check.prod.md',
+    async (io) => {
+      let text = '';
+      await checkRun({ env: ['prod'], format: 'markdown', ...SHIPPED })({ out: (more) => (text += more), err: () => undefined });
+      io.out(text.replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total'));
+    },
+  ],
+  [
+    'check.prod.json',
+    async (io) => {
+      const run = await runCheck({ config: deployedOnce().config, env: ['prod'], generatedAt: FIXED, environ: {}, ...SHIPPED }, quiet);
+      const { report } = run.sections[0];
+      const zeroed = { ...report, diff: report.diff === null ? null : { ...report.diff, timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 } } };
+      io.out(deployedPlaced(`${JSON.stringify(zeroed, null, 2)}\n`));
+    },
+  ],
+  ['check.staging.txt', checkRun({ env: ['staging'], ...GATEWAY_BRANCH })],
+  ['check.matrix.txt', checkRun({ env: ['prod', 'canary'], ...GATEWAY_BRANCH })],
+  ['check.prod.sarif.json', checkRun({ env: ['prod'], format: 'sarif', ...SHIPPED })],
+  ['deployed.show.txt', (io) => runDeployedShow(undefined, { config: deployedOnce().config, now: '2026-01-04T00:00:00.000Z' }, io)],
+];
+
 const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
   terraformShape('lambda-terraform-openapi', [
@@ -640,6 +685,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-rules', 'expected.cli'), owned: true, cases: RULES_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.cli'), owned: true, cases: DEPLOYED_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 
@@ -699,6 +745,7 @@ for (const [file, ask] of CASES) {
 }
 
 if (diffProject !== undefined) rmSync(diffProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+if (deployedProject !== undefined) rmSync(deployedProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 
 for (const { dir, owned, cases } of SUITES) {
   if (update || !owned) continue;

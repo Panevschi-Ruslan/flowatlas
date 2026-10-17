@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>162 fixtures</span>
-    <span>391 snapshot files</span>
+    <span>163 fixtures</span>
+    <span>393 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -620,7 +620,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Several repositories <span class="count" data-total="14">14</span></h2>
+    <h2>Several repositories <span class="count" data-total="15">15</span></h2>
     <ul>
       <li class="fixture" data-search="ground-truth several repositories two repositories holding the shapes the other fixtures never write down, and one thing none of them has: **a recording is not its authority**.">
         <div class="head">
@@ -693,6 +693,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>Two services, and only one of them has any source here.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="multi-repo-deployed several repositories a bookshop of three services - `gateway`, `orders`, `billing` - for `flowatlas check --env` (p117): whether a version can be deployed against what an environment runs, rather than against `main`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-deployed">multi-repo-deployed</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A bookshop of three services - <code>gateway</code>, <code>orders</code>, <code>billing</code> - for <code>flowatlas check --env</code> (P117): whether a version can be deployed against what an environment runs, rather than against <code>main</code>.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.mcp</code></p>
       </li>
       <li class="fixture" data-search="multi-repo-diff several repositories two revisions of one project, for `flowatlas diff`.">
         <div class="head">

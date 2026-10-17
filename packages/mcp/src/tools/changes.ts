@@ -1,9 +1,12 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { DetailLevel } from '@flowatlas/core';
 import {
   findingKindOf,
   flowChanged,
+  isCheckDocument,
+  NEVER_PRODUCED,
+  parseCheckReport,
   parseGraphDiff,
   sayStep,
   sectionsMissing,
@@ -407,7 +410,7 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
   const ends = scoped.lost.filter((join) => join.kind !== 'target-gone');
   if (ends.length > 0) {
     unsafe.push(
-      `${plural(ends.length, 'channel end')} lost the other end${firstOf(ends, (join) => `${quoted(join.target)} has ${join.kind === 'no-producer' ? 'no producer' : 'no consumer'} left for ${quoted(join.caller)}`)}`,
+      `${plural(ends.length, 'channel end')} lost the other end${firstOf(ends, (join) => join.now === NEVER_PRODUCED ? `${quoted(join.target)} has no producer for the new ${quoted(join.caller)}` : `${quoted(join.target)} has ${join.kind === 'no-producer' ? 'no producer' : 'no consumer'} left for ${quoted(join.caller)}`)}`,
     );
   }
   const removedEntries = [
@@ -651,18 +654,69 @@ const verdictNextOf = (changes: WhatChanged): string[] => {
   return hints.length > 0 ? hints.slice(0, MAX_NEXT) : nextOf(changes);
 };
 
-export const readDiff = (dbPath: string): { report: DiffReport } | { error: string } => {
-  const path = join(dirname(dbPath), DIFF_FILE);
-  if (!existsSync(path)) {
-    return { error: `no ${DIFF_FILE} beside the database; run flowatlas diff <base-ref> first` };
+/** A document `what_changed` may be pointed at: `diff.json`, or a `check.<env>.json` (P117), beside the database. */
+const READABLE = /^(?:diff\.json|check\.[A-Za-z0-9][A-Za-z0-9._-]*\.json)$/;
+
+/** What a check document adds to the answer: which environment, and its verdict (P117). */
+export interface CheckSaid {
+  environment: string;
+  verdict: string;
+  /** The reasons it is not deployable, or why it could not decide. */
+  because: string[];
+}
+
+/**
+ * The last `flowatlas diff`, or (`file`) a check document, read into one
+ * `DiffReport`: a check's `diff` is its deployed side as base and the
+ * candidate as head, so every reader of a diff reads it too.
+ */
+export const readDiff = (dbPath: string, file: string = DIFF_FILE): { report: DiffReport; check?: CheckSaid } | { error: string } => {
+  if (!READABLE.test(file)) {
+    return { error: `${JSON.stringify(file)} is not a document what_changed reads: diff.json, or check.<env>.json beside the database` };
   }
-  try {
-    return { report: parseGraphDiff(JSON.parse(readFileSync(path, 'utf8'))) };
-  } catch (cause) {
+  const path = join(dirname(dbPath), file);
+  if (!existsSync(path)) {
     return {
-      error: `cannot read ${path}: ${cause instanceof Error ? cause.message : String(cause)}; run flowatlas diff again`,
+      error: file === DIFF_FILE ? `no ${DIFF_FILE} beside the database; run flowatlas diff <base-ref> first` : `no ${file} beside the database; run flowatlas check --env <name> first`,
     };
   }
+  try {
+    const value: unknown = JSON.parse(readFileSync(path, 'utf8'));
+    if (!isCheckDocument(value)) return { report: parseGraphDiff(value) };
+    const check = parseCheckReport(value);
+    const because =
+      check.verdict.verdict === 'undecided'
+        ? check.verdict.undecided.map((refusal) => `${refusal.message}. ${refusal.hint}`)
+        : check.verdict.reasons.map((reason) => reason.message);
+    const said: CheckSaid = { environment: check.environment, verdict: check.verdict.verdict, because };
+    if (check.diff === null) return { error: `${file} holds no comparison: ${check.environment} is ${check.verdict.verdict}; ${because.join('; ')}` };
+    return { report: check.diff, check: said };
+  } catch (cause) {
+    return {
+      error: `cannot read ${path}: ${cause instanceof Error ? cause.message : String(cause)}; run ${file === DIFF_FILE ? 'flowatlas diff' : 'flowatlas check'} again`,
+    };
+  }
+};
+
+/** Every `check.<env>.json` beside the database and its verdict, for `start_here` (P117). */
+export const checksBeside = (dbPath: string): Record<string, string> => {
+  const found: Record<string, string> = {};
+  let names: string[];
+  try {
+    names = readdirSync(dirname(dbPath));
+  } catch {
+    return found;
+  }
+  for (const name of names.sort()) {
+    if (name === DIFF_FILE || !READABLE.test(name)) continue;
+    try {
+      const check = parseCheckReport(JSON.parse(readFileSync(join(dirname(dbPath), name), 'utf8')));
+      found[check.environment] = check.verdict.verdict;
+    } catch {
+      // A document this build cannot read says nothing about a deploy.
+    }
+  }
+  return found;
 };
 
 /**
@@ -685,9 +739,10 @@ export const registerChanges = (server: McpServer, ctx: ToolContext): void => {
     'what_changed',
     {
       title: 'What a branch changed',
-      description: 'The last `flowatlas diff`: what changed, the ways in it reaches, contracts broken; `verdict`: safe to merge, and why.',
+      description: 'The last `flowatlas diff` (or `check`): what changed, the ways in it reaches, contracts broken; `verdict`: safe, and why.',
       inputSchema: {
         service: serviceInput,
+        file: z.string().optional(),
         verdict: z.boolean().optional(),
         ...commonInput,
         ...pageInput,
@@ -695,7 +750,7 @@ export const registerChanges = (server: McpServer, ctx: ToolContext): void => {
       annotations: READ_ONLY,
     },
     (input) => {
-      const read = readDiff(ctx.handle.path);
+      const read = readDiff(ctx.handle.path, input.file);
       if ('error' in read) return respond({ error: read.error });
       const { detail, maxNodes, note } = bound(input);
       const opened = ctx.handle.open();
@@ -711,11 +766,11 @@ export const registerChanges = (server: McpServer, ctx: ToolContext): void => {
           ? { verdict: { ...(db === undefined ? {} : { db }), ...(observed === undefined ? {} : { observed }) } }
           : {}),
       });
-      const args = { service: input.service, verdict: input.verdict, detail: input.detail, maxNodes };
+      const args = { service: input.service, file: input.file, verdict: input.verdict, detail: input.detail, maxNodes };
       const notes = [changes.note, note].filter((text): text is string => text !== undefined);
       return respond(
         withNext(
-          { ...changes, ...(notes.length === 0 ? {} : { note: notes.join('; ') }) },
+          { ...(read.check === undefined ? {} : { check: read.check }), ...changes, ...(notes.length === 0 ? {} : { note: notes.join('; ') }) },
           pagedNext(
             { tool: 'what_changed', args, nextOffset: changes.nextOffset },
             input.verdict === true ? verdictNextOf(changes) : nextOf(changes),

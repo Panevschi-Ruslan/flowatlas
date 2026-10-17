@@ -1873,6 +1873,112 @@ confidence, file?, line?, params?, returns?, takes?, group?, note? }` (`status`
 as `rules.json` holds them. Files of formats 1 to 3 are still read, without the
 sections they predate; one from a newer flowatlas is refused by name.
 
+A `no-producer` join whose `now` is `never-produced` is a consumer the head side
+added to a channel nothing on the head side publishes: a join the base side
+never made and the head side cannot make (P117).
+
+### `flowatlas check --env <name>`
+
+Can this be deployed there. `diff` compares a branch with `main`; a release
+pipeline needs it compared with the versions **running** where it ships, and
+`main` of another service is often ahead of those. `check` reads every service
+at the ref an environment runs (the *deployed* side), puts the version being
+shipped in place of its own (the *candidate* side), runs what `diff` runs on the
+two - the node, type and flow diff, the contracts, the rules, the joins - and
+answers `deployable` or `not deployable`.
+
+```sh
+flowatlas check --env prod --service orders --head release/1.9
+```
+
+| Flag | Default | Does |
+|---|---|---|
+| `--env <name>` | required | the environment to check against, repeatable: one section each, the exit is the worst |
+| `--service <name>` | every service whose head differs from its pin | a service being shipped, repeatable |
+| `--head <ref>` | the working tree | the ref the shipped services are read at |
+| `--pin <service>=<ref>` | none | the ref a service runs, over the pins file and the variables, repeatable; applies to every `--env` |
+| `--pins <path>` | `deployed.file`, else `flowatlas.deployed.json` beside the configuration | the pins file |
+| `--format <name>` | `text` | `text`, `markdown` (the verdict above `diff`'s whole document), `json` (the check document; an array for several environments) or `sarif` |
+| `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead of stdout |
+| `--sarif-root <dir>`, `--sarif-level <level>` | as `diff` | with `--format sarif` |
+| `--max-entries`, `--max-nodes`, `--max-flows`, `--concurrency`, `--no-cache`, `--keep-worktrees`, `--out` | as `diff` | |
+
+**The pins file**, `flowatlas.deployed.json`, committed beside the configuration
+like the baseline:
+
+```json
+{
+  "deployedFormatVersion": 1,
+  "environments": {
+    "prod":    { "orders": "v1.8.0", "billing": "v2.3.1", "gateway": "4f1c2a9" },
+    "staging": { "orders": "main", "billing": "main", "gateway": "main" }
+  }
+}
+```
+
+A ref is anything `git rev-parse` resolves in that service's repository: a
+tag, a branch, a sha. A service missing from an environment is not deployed
+there: it is on neither side and listed as such (unless `--service` names it,
+when it is read on the candidate side only, a first deploy). A service no
+configuration names is refused when the file is read. A pipeline that knows the
+running versions needs no file: `--pin orders=v1.8.0`, or the variable
+`FLOWATLAS_PIN_ORDERS=v1.8.0` (the service name upper-cased, every other
+character `_`). A variable wins over the file, a flag over both, and the
+document's notes say whose ref was used in place of whose.
+
+**The candidate side** moves the services `--service` names to `--head` (the
+working tree when absent); one whose head is its pin is "nothing to deploy for
+orders" and stays as deployed. Without `--service`, every pinned service whose
+head is a different commit moves, and one with uncommitted changes when the head
+is the working tree.
+
+**The verdict** counts only what deploying introduces against the deployed side:
+
+- a new contract error;
+- a new violation of an architecture rule at `error` (a guessed one only with
+  `rulesSettings.failOnHeuristic`);
+- a join deploying loses (`lostJoins` with the deployed side as base): a call a
+  deployed service makes to a route the candidate no longer serves, with the
+  caller's file and line; a channel left with consumers and no producer, or the
+  other way round; a new handler of a channel nothing deployed publishes;
+- a new request that joins no route anything deployed serves.
+
+A reason along a guessed edge still counts and says so. What the deployed side
+already does wrong - a contract error, a rule violation - is listed under
+**Already deployed** and never fails the run.
+
+| Exit | Means |
+|---|---|
+| 0 | deployable (or nothing to deploy) |
+| 1 | not deployable |
+| 2 | could not decide: an unknown environment, a pinned ref that does not resolve (fetch the tags first: the message names the repository and `git fetch --tags`), a service that is a subdirectory of a repository, or a `--head` a named service does not have |
+
+Unlike `diff`, a ref that does not resolve is never read as the working tree in
+its place: that answer would be about a project nobody deployed.
+
+Every environment leaves `<output>/check.<env>.json` (`checkFormatVersion: 1`):
+`{ checkFormatVersion, generatedAt, environment, pinsFile, pins: [{ service,
+ref, from: file|env|flag, sha, replaced? }], notDeployed, moved: [{ service,
+from: { ref, sha }, to: { ref, sha, dirty } }], head, verdict: { verdict,
+reasons, already, undecided, notes }, diff }`. Each reason is `{ kind:
+contract|rule|join, code, message, key, service, at?: { service, file, line? },
+confidence, heuristic }`; `diff` is a whole `diff.json` (deployed as `base`,
+the environment as its ref; candidate as `head`), or null when the run could not
+decide. The graphs come from the same `<output>/cache/` as `diff`'s, so a tag
+read once is read once.
+
+### `flowatlas deployed set|show`
+
+The pins file, kept by hand or by a pipeline after a deploy. Nothing in a
+repository is touched; `set` writes the pins file and nothing else.
+
+| Command | Does |
+|---|---|
+| `deployed set <env> <service> <ref>` | records `ref` as what `env` runs of `service`, every other pin kept; `--resolve` records the commit it names, so the file says what ran rather than a branch that will have moved |
+| `deployed show [env]` | each pin with its commit, its kind (`sha`, `tag`, `branch`, or `missing`) and its age; a branch is warned about, and so is a ref the repository does not have; `--json` for the same as JSON |
+
+Both take `--config` and `--pins`.
+
 ### `flowatlas cache <action>`
 
 The graphs `diff` keeps per commit, so comparing the same base twice reads it
@@ -2182,6 +2288,7 @@ worked example of a document that declares routes.
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |
 | `contracts.rules.disable` | string[] | `[]` | rules about the JSON wire this project's wire does not follow |
 | `contracts.ignoreEdges` | string[] | `[]` | boundaries whose drift is deliberate, as `from\|type\|to`, for code you cannot annotate |
+| `deployed.file` | string | `flowatlas.deployed.json` beside this file | the pins file `flowatlas check --env` reads and `flowatlas deployed set` writes: which ref of each service runs in each environment, relative to this file |
 | `doctor.baseline` | string | `flowatlas.baseline.json` beside this file | where the accepted numbers live, relative to this file |
 | `doctor.ignoreReasons` | string[] | `[]` | reasons left out of the growth check. Their rows are still printed; only the number `--strict` compares is quieter. A renamed reason's old spelling is still recognised |
 | `doctor.markers.warnAsError` | boolean | `false` | fail a strict run on a redundant annotation as well as a false one |

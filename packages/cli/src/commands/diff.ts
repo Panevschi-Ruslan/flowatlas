@@ -114,7 +114,7 @@ export interface DiffRun {
   failedOn?: Array<'contract' | 'rule'>;
 }
 
-const oneOf = <T extends string>(
+export const oneOf = <T extends string>(
   value: string | undefined,
   allowed: readonly T[],
   fallback: T,
@@ -128,7 +128,7 @@ const oneOf = <T extends string>(
   return found;
 };
 
-const whole = (value: string | undefined, fallback: number, flag: string): number => {
+export const whole = (value: string | undefined, fallback: number, flag: string): number => {
   if (value === undefined) return fallback;
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 1) {
@@ -138,7 +138,7 @@ const whole = (value: string | undefined, fallback: number, flag: string): numbe
 };
 
 /** A count that may be zero: `--context 0` folds every unchanged step. */
-const count = (value: string | undefined, fallback: number, flag: string): number => {
+export const count = (value: string | undefined, fallback: number, flag: string): number => {
   if (value === undefined) return fallback;
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 0) {
@@ -229,6 +229,107 @@ const withGraphs = <T>(built: { head: BuildAtRefResult; base: BuildAtRefResult }
   }
 };
 
+/** What `compareBuilt` reads: the two sides as built, and the bounds of the walking. */
+export interface CompareInput {
+  loaded: LoadedConfig;
+  base: BuildAtRefResult;
+  head: BuildAtRefResult;
+  /** How each side is named in the document: the ref, an environment, or null for the working tree. */
+  baseRef: string | null;
+  headRef: string | null;
+  limits: { maxEntries: number; maxNodes: number; maxFlows: number };
+  sequenceDetail: ReturnType<typeof sequenceDetailOf>;
+  generatedAt: string;
+  /** When the run started, for `timing.totalMs`. */
+  started: number;
+  /** Said beside the two sides' own warnings. */
+  warnings?: readonly DiffWarning[];
+}
+
+/**
+ * The whole comparison of two built sides, as the document `diff.json` is
+ * (P117 shares it with `check`): the node, edge and type diff, the lost joins,
+ * the blast radius, the changed flows, the contracts and the rules, each
+ * classified by what the head side did to the base side's.
+ */
+export const compareBuilt = (input: CompareInput): DiffReport => {
+  const { loaded, base: builtBase, head: builtHead, limits } = input;
+  const { maxEntries, maxNodes, maxFlows } = limits;
+  const diffStarted = Date.now();
+  const settings = loaded.config.contracts;
+  const check: CheckOptions = {
+    depth: settings.depth,
+    disableRules: settings.rules.disable,
+    ignoreEdges: settings.ignoreEdges,
+    generatedAt: input.generatedAt,
+  };
+  const diff = diffGraphs(builtBase.graph, builtHead.graph, {
+    depth: settings.depth,
+    disableRules: settings.rules.disable,
+  });
+  // The head's rules on both sides, excused by the head's accepted.json: the
+  // question is what this revision does to the rules the project has now.
+  const ruleSet = ruleSetOf(loaded.config);
+  const acceptedBeside = join(loaded.outputDir, 'graph.db');
+  const { impact, flows, rules } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
+    const rows = impactOf(dbs, diff, { maxEntries, maxNodes });
+    return {
+      rules: classifyRules(ruleReportOf(dbs.base, ruleSet, acceptedBeside), ruleReportOf(dbs.head, ruleSet, acceptedBeside)),
+      impact: rows,
+      flows: flowChanges({ impact: rows.rows, nodes: diff.nodes, types: diff.types }, dbs, {
+        maxFlows,
+        maxNodes: DEFAULT_WALK_NODES,
+        detail: input.sequenceDetail,
+      }),
+    };
+  });
+  const contracts = classifyContracts(checkContracts(builtBase.graph, check), checkContracts(builtHead.graph, check));
+  const diffMs = Date.now() - diffStarted;
+
+  const warnings: DiffWarning[] = [...builtHead.warnings, ...builtBase.warnings, ...(input.warnings ?? [])];
+  if (impact.skipped > 0) {
+    warnings.push({
+      reason: 'impact-truncated',
+      service: null,
+      message: `${impact.skipped} changed nodes were not walked backwards; the diff below them is complete, the impact table is not`,
+      hint: `Raise --max-nodes above ${maxNodes}, or narrow the run with --service.`,
+    });
+  }
+  if (flows.skipped > 0) {
+    warnings.push({
+      reason: 'flows-truncated',
+      service: null,
+      message: `${flows.skipped} ways in were not walked for their flows; the impact table lists them, Changed flows does not`,
+      hint: `Raise --max-flows above ${maxFlows}, or narrow the run with --service.`,
+    });
+  }
+
+  return {
+    diffFormatVersion: DIFF_FORMAT_VERSION,
+    schemaVersion: SCHEMA_VERSION,
+    generatedAt: input.generatedAt,
+    base: sideOf(input.baseRef, builtBase),
+    head: sideOf(input.headRef, builtHead),
+    nodes: diff.nodes,
+    edges: diff.edges,
+    types: diff.types,
+    counts: diff.counts,
+    unresolved: diff.unresolved,
+    joins: diff.joins,
+    impact: impact.rows,
+    flows: flows.flows,
+    contracts,
+    rules,
+    warnings,
+    timing: {
+      baseMs: builtBase.ms,
+      headMs: builtHead.ms,
+      diffMs,
+      totalMs: Date.now() - input.started,
+    },
+  };
+};
+
 /**
  * Runs the comparison and draws it.
  *
@@ -287,86 +388,20 @@ export const runDiff = async (
       inheritSources: builtHead.sources,
     });
 
-    const diffStarted = Date.now();
-    const settings = loaded.config.contracts;
-    const check: CheckOptions = {
-      depth: settings.depth,
-      disableRules: settings.rules.disable,
-      ignoreEdges: settings.ignoreEdges,
+    const report = compareBuilt({
+      loaded,
+      base: builtBase,
+      head: builtHead,
+      baseRef,
+      headRef: head,
+      limits: { maxEntries, maxNodes, maxFlows },
+      sequenceDetail,
       generatedAt: options.generatedAt ?? new Date().toISOString(),
-    };
-    const diff = diffGraphs(builtBase.graph, builtHead.graph, {
-      depth: settings.depth,
-      disableRules: settings.rules.disable,
+      started,
+      warnings: await dirtyWarnings(loaded, head),
     });
-    // The head's rules on both sides, excused by the head's accepted.json: the
-    // question is what this revision does to the rules the project has now.
+    const { contracts, rules } = report;
     const ruleSet = ruleSetOf(loaded.config);
-    const acceptedBeside = join(loaded.outputDir, 'graph.db');
-    const { impact, flows, rules } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
-      const rows = impactOf(dbs, diff, { maxEntries, maxNodes });
-      return {
-        rules: classifyRules(ruleReportOf(dbs.base, ruleSet, acceptedBeside), ruleReportOf(dbs.head, ruleSet, acceptedBeside)),
-        impact: rows,
-        flows: flowChanges({ impact: rows.rows, nodes: diff.nodes, types: diff.types }, dbs, {
-          maxFlows,
-          maxNodes: DEFAULT_WALK_NODES,
-          detail: sequenceDetail,
-        }),
-      };
-    });
-    const contracts = classifyContracts(
-      checkContracts(builtBase.graph, check),
-      checkContracts(builtHead.graph, check),
-    );
-    const diffMs = Date.now() - diffStarted;
-
-    const warnings: DiffWarning[] = [
-      ...builtHead.warnings,
-      ...builtBase.warnings,
-      ...(await dirtyWarnings(loaded, head)),
-    ];
-    if (impact.skipped > 0) {
-      warnings.push({
-        reason: 'impact-truncated',
-        service: null,
-        message: `${impact.skipped} changed nodes were not walked backwards; the diff below them is complete, the impact table is not`,
-        hint: `Raise --max-nodes above ${maxNodes}, or narrow the run with --service.`,
-      });
-    }
-    if (flows.skipped > 0) {
-      warnings.push({
-        reason: 'flows-truncated',
-        service: null,
-        message: `${flows.skipped} ways in were not walked for their flows; the impact table lists them, Changed flows does not`,
-        hint: `Raise --max-flows above ${maxFlows}, or narrow the run with --service.`,
-      });
-    }
-
-    const report: DiffReport = {
-      diffFormatVersion: DIFF_FORMAT_VERSION,
-      schemaVersion: SCHEMA_VERSION,
-      generatedAt: options.generatedAt ?? new Date().toISOString(),
-      base: sideOf(baseRef, builtBase),
-      head: sideOf(head, builtHead),
-      nodes: diff.nodes,
-      edges: diff.edges,
-      types: diff.types,
-      counts: diff.counts,
-      unresolved: diff.unresolved,
-      joins: diff.joins,
-      impact: impact.rows,
-      flows: flows.flows,
-      contracts,
-      rules,
-      warnings,
-      timing: {
-        baseMs: builtBase.ms,
-        headMs: builtHead.ms,
-        diffMs,
-        totalMs: Date.now() - started,
-      },
-    };
 
     // Read back through the schema before anything reads it from disk: a
     // document a consumer cannot parse is worse than one that was never written.
@@ -445,7 +480,7 @@ export const runDiff = async (
   }
 };
 
-const collect = (value: string, previous: string[]): string[] => [...previous, value];
+export const collect = (value: string, previous: string[]): string[] => [...previous, value];
 
 export const registerDiff = (program: Command): void => {
   const command = program

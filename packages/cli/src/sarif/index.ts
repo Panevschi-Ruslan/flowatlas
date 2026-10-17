@@ -5,6 +5,7 @@ export { sarifLevelOf, atLeast, levelRank, type LevelSource } from './levels.js'
 export { fingerprintOf, partialFingerprints, FINGERPRINT_VERSION, GITHUB_FINGERPRINT, KEYS } from './fingerprints.js';
 export {
   architectureRule,
+  joinRule,
   contractRule,
   cycleRule,
   deadRule,
@@ -23,5 +24,6 @@ export { doctorCut, doctorFindings, doctorNotes, type AcceptedRow, type DoctorSa
 export { deadFindings, type DeadRows } from './dead.js';
 export { cycleFinding, cycleFindings } from './cycles.js';
 export { diffFindings } from './diff.js';
+export { checkFindings, type CheckSarifInput } from './check.js';
 export { lookupOf, namedLines, nodePlace, repoDirsOf, sarifPathsOf, type NodeLookup } from './places.js';
 export { deliverSarif, sarifBound, sarifLevelFlag, sarifSaid, withSarifOptions, type SarifFlags } from './command.js';

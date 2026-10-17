@@ -149,7 +149,7 @@ all take the same optional `service` filter.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, a few entry ids to start from, and with rules configured `rules: { errors, warnings, unchecked }` (`next` then starts with `check_rules()`) | `service`, `perService` |
+| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, a few entry ids to start from, with rules configured `rules: { errors, warnings, unchecked }` (`next` then starts with `check_rules()`), and with a `check.<env>.json` beside the database `checks`, one line of each environment's verdict (`prod: not deployable · staging: deployable`; `next` then starts with `what_changed` on the first that is not deployable) | `service`, `perService` |
 | `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars` |
 
 `describe_for_prompt` and the page's *Copy as prompt* write the same text
@@ -539,7 +539,7 @@ types such a stand-in supplied says so on its edge in `get_flow`: `because:
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke; with `verdict`, whether it is safe to merge and why | `service`, `verdict`, `offset` |
+| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke; with `verdict`, whether it is safe to merge and why. `file: "check.prod.json"` reads what `flowatlas check --env prod` compared instead (the deployed side as base) and adds `check: { environment, verdict, because }` | `service`, `file`, `verdict`, `offset` |
 
 It reads the `diff.json` that `flowatlas diff <base-ref>` writes rather than
 building two revisions inside a tool call; run the command to refresh it. At

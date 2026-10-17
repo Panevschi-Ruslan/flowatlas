@@ -185,8 +185,9 @@ export interface UnresolvedDiff {
  *
  * `target-gone` a request that joined a route on the base side joins nothing
  * on the head side · `no-producer` a channel whose consumers are still there
- * lost the last thing that published it · `no-consumer` a channel still
- * published lost the last thing that handled it.
+ * lost the last thing that published it, or (`now` `never-produced`, P117) a
+ * consumer the head side added to a channel nothing publishes · `no-consumer`
+ * a channel still published lost the last thing that handled it.
  */
 export const LOST_JOIN_KINDS = ['target-gone', 'no-producer', 'no-consumer'] as const;
 export type LostJoinKind = (typeof LOST_JOIN_KINDS)[number];
@@ -209,8 +210,9 @@ export interface LostJoin {
   targetService: string | null;
   /**
    * What the head side says instead: the reason of the row it wrote on the
-   * caller (`target-route-not-found`), `no-edge` when it wrote none, or the
-   * kind for a channel.
+   * caller (`target-route-not-found`), `no-edge` when it wrote none, the
+   * kind for a channel, or `never-produced` for a consumer the head side added
+   * to a channel nothing publishes (P117).
    */
   now: string;
   /** True when the target is gone from the head graph, not only the join. */

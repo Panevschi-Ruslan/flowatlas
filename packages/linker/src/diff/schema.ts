@@ -8,9 +8,9 @@
  */
 import { contractFindingSchema } from '@flowatlas/contracts';
 import { z } from 'zod';
-import { DIFF_WARNINGS } from './report.js';
-import { CONFIDENCE_LEVELS } from '@flowatlas/core';
-import type { DiffReport } from './report.js';
+import { CHECK_FORMAT_VERSION, CHECK_REASON_KINDS, CHECK_REFUSALS, CHECK_VERDICTS, DIFF_WARNINGS } from './report.js';
+import { CONFIDENCE_LEVELS, PIN_SOURCES } from '@flowatlas/core';
+import type { CheckReport, DiffReport } from './report.js';
 import { ruleViolationSchema } from '../rules/schema.js';
 import { FLOW_SIDES, PARTICIPANT_KINDS, STEP_KINDS, STEP_STATUSES } from './sequence.js';
 import { DIFF_FORMAT_VERSION, GAP_REF_KINDS, LOST_JOIN_KINDS, TYPE_FIELD_CHANGES } from './types.js';
@@ -305,3 +305,83 @@ export const parseGraphDiff = (value: unknown): DiffReport => {
   }
   return doc as unknown as DiffReport;
 };
+
+/* ── `check.<env>.json` (P117) ── */
+
+const checkPlaceSchema = z.strictObject({
+  service: z.string(),
+  file: z.string(),
+  line: z.number().int().min(0).optional(),
+});
+
+const checkReasonSchema = z.strictObject({
+  kind: z.enum(CHECK_REASON_KINDS),
+  code: z.string().min(1),
+  message: z.string().min(1),
+  key: z.string().min(1),
+  service: z.string().nullable(),
+  at: checkPlaceSchema.optional(),
+  confidence: z.enum(CONFIDENCE_LEVELS),
+  heuristic: z.boolean(),
+});
+
+const pinFromSchema = z.enum(PIN_SOURCES);
+
+const checkShape = {
+  checkFormatVersion: z.literal(CHECK_FORMAT_VERSION),
+  generatedAt: z.string().min(1),
+  environment: z.string().min(1),
+  pinsFile: z.string().nullable(),
+  pins: z.array(
+    z.strictObject({
+      service: z.string().min(1),
+      ref: z.string().min(1),
+      from: pinFromSchema,
+      sha: z.string().nullable(),
+      replaced: z.strictObject({ ref: z.string().min(1), from: pinFromSchema }).optional(),
+    }),
+  ),
+  notDeployed: z.array(z.string()),
+  moved: z.array(
+    z.strictObject({
+      service: z.string().min(1),
+      from: z.strictObject({ ref: z.string().nullable(), sha: z.string().nullable() }),
+      to: z.strictObject({ ref: z.string().nullable(), sha: z.string().nullable(), dirty: z.boolean() }),
+    }),
+  ),
+  head: z.string().nullable(),
+  verdict: z.strictObject({
+    verdict: z.enum(CHECK_VERDICTS),
+    reasons: z.array(checkReasonSchema),
+    already: z.array(checkReasonSchema),
+    undecided: z.array(
+      z.strictObject({
+        reason: z.enum(CHECK_REFUSALS),
+        service: z.string().nullable(),
+        message: z.string().min(1),
+        hint: z.string(),
+      }),
+    ),
+    notes: z.array(z.string()),
+  }),
+};
+
+/** The whole check document as `flowatlas check` writes it: its `diff` in the current diff format. */
+export const checkReportSchema = z.strictObject({ ...checkShape, diff: graphDiffSchema.nullable() });
+
+/**
+ * Reads a check document; its `diff` is read like any `diff.json`, older
+ * formats lifted, so a reader of either sees one `DiffReport`.
+ */
+export const parseCheckReport = (value: unknown): CheckReport => {
+  const version = (value as { checkFormatVersion?: unknown } | null)?.checkFormatVersion;
+  if (typeof version === 'number' && version > CHECK_FORMAT_VERSION) {
+    throw new Error(`check document is format ${version}, written by a newer flowatlas; this one reads format ${CHECK_FORMAT_VERSION}`);
+  }
+  const outer = z.strictObject({ ...checkShape, diff: z.unknown() }).parse(value);
+  return { ...outer, diff: outer.diff === null || outer.diff === undefined ? null : parseGraphDiff(outer.diff) } as CheckReport;
+};
+
+/** Whether a document is a check document rather than a `diff.json`. */
+export const isCheckDocument = (value: unknown): boolean =>
+  typeof value === 'object' && value !== null && 'checkFormatVersion' in value;

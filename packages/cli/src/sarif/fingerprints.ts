@@ -42,6 +42,9 @@ export const KEYS = {
   marker: (issue: { service: string; file: string; symbol: string; code: string }): string =>
     `${issue.service}|${issue.file}|${issue.symbol}|${issue.code}`,
   node: (id: string, label?: string): string => stableNodeKey(id, label),
+  /** A join deploying would lose (P117): its kind and both ends, the caller without its line. */
+  join: (join: { kind: string; caller: string; target: string }): string =>
+    `${join.kind}|${stableNodeKey(join.caller)}|${stableNodeKey(join.target)}`,
   /** A cycle is its members, whichever one the walk started from. */
   cycle: (nodes: readonly string[]): string => [...new Set(nodes.map((id) => stableNodeKey(id)))].sort().join(' '),
 } as const;

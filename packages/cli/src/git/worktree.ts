@@ -60,6 +60,27 @@ export const isGitRepo = async (dir: string): Promise<boolean> => {
 export const resolveSha = async (repo: string, ref: string): Promise<string | null> =>
   quietly(repo, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]);
 
+/**
+ * What kind of name a ref is (P117): a sha names one commit for ever, a tag
+ * names one by agreement, a branch names whichever commit it points at now.
+ * A pins file naming a branch says what runs only until the branch moves.
+ */
+export type RefKind = 'sha' | 'tag' | 'branch' | 'other';
+
+export const refKindOf = async (repo: string, ref: string, sha: string): Promise<RefKind> => {
+  if (/^[0-9a-f]{7,64}$/i.test(ref) && sha.toLowerCase().startsWith(ref.toLowerCase())) return 'sha';
+  if ((await quietly(repo, ['show-ref', '--verify', '--quiet', `refs/tags/${ref}`])) !== null) return 'tag';
+  if ((await quietly(repo, ['show-ref', '--verify', '--quiet', `refs/heads/${ref}`])) !== null) return 'branch';
+  if ((await quietly(repo, ['show-ref', '--verify', '--quiet', `refs/remotes/${ref}`])) !== null) return 'branch';
+  return 'other';
+};
+
+/** When a commit was made, ISO-8601, or null when the repository cannot say. */
+export const commitDateOf = async (repo: string, sha: string): Promise<string | null> => {
+  const date = await quietly(repo, ['show', '-s', '--format=%cI', sha]);
+  return date === null || date === '' ? null : date;
+};
+
 /** True when the working tree has changes the ref-based read would not see. */
 export const isDirty = async (repo: string): Promise<boolean> => {
   const status = await quietly(repo, ['status', '--porcelain']);

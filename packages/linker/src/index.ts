@@ -49,8 +49,18 @@ export { compareDeclarations } from './diff/compare-declarations.js';
 export type { DeclarationCompareOptions } from './diff/compare-declarations.js';
 export { diffGraphs, impactedNodes } from './diff/diff-graphs.js';
 export { edgeFingerprint, nodeFingerprint, stableJson } from './diff/fingerprint.js';
-export { DIFF_WARNINGS } from './diff/report.js';
+export { CHECK_FORMAT_VERSION, CHECK_REASON_KINDS, CHECK_REFUSALS, CHECK_VERDICTS, DIFF_WARNINGS } from './diff/report.js';
 export type {
+  CheckMove,
+  CheckPin,
+  CheckPlace,
+  CheckReason,
+  CheckReasonKind,
+  CheckRefusal,
+  CheckRefusalReason,
+  CheckReport,
+  CheckVerdict,
+  CheckVerdictWord,
   DiffContracts,
   DiffReport,
   DiffRules,
@@ -60,7 +70,16 @@ export type {
   DiffWarning,
   DiffWarningReason,
 } from './diff/report.js';
-export { graphDiffSchema, graphDiffSchemaV1, graphDiffSchemaV2, graphDiffSchemaV3, parseGraphDiff } from './diff/schema.js';
+export {
+  checkReportSchema,
+  graphDiffSchema,
+  graphDiffSchemaV1,
+  graphDiffSchemaV2,
+  graphDiffSchemaV3,
+  isCheckDocument,
+  parseCheckReport,
+  parseGraphDiff,
+} from './diff/schema.js';
 export {
   DEFAULT_RULE_WALK,
   evaluateRules,
@@ -136,7 +155,7 @@ export {
 } from './diff/types.js';
 export { diffUnresolved, gapRefsOf } from './diff/gap-refs.js';
 export type { GapGraph } from './diff/gap-refs.js';
-export { lostJoins, NO_EDGE, REQUEST_JOIN_EDGES } from './diff/lost-joins.js';
+export { lostJoins, NEVER_PRODUCED, NO_EDGE, REQUEST_JOIN_EDGES } from './diff/lost-joins.js';
 export type { JoinGraph } from './diff/lost-joins.js';
 export type {
   BlastEntry,

@@ -6,7 +6,8 @@
  * read from the end that is left behind: a request that joined a route on the
  * base side and joins nothing on the head side, a channel whose consumers are
  * still listening after its last producer went, or one still published after
- * its last consumer went.
+ * its last consumer went - and a consumer the head side added to a channel
+ * nothing publishes (P117).
  *
  * Pure, two graphs in and a list out, so `flowatlas diff` stores it in
  * `diff.json` once and P117's check against a deployed graph calls the same
@@ -133,6 +134,47 @@ const lostChannelEnds = (base: JoinGraph, head: JoinGraph): LostJoin[] => {
   return lost;
 };
 
+/** What `now` says of a consumer the head side added to a channel nothing produces (P117). */
+export const NEVER_PRODUCED = 'never-produced';
+
+/**
+ * Consumers the head side added to a channel nothing on the head side
+ * publishes (P117): a join the base side never made, and one the head side
+ * cannot make. Written as `no-producer` with `now` `never-produced`, so a
+ * reader that knows the three kinds reads it. Shipping a handler for an event
+ * whose publisher runs nowhere yet is the case `check --env` exists for:
+ * against a staging that has the publisher it joins, against a production
+ * that has not, it waits for something that never comes.
+ *
+ * A channel that had both ends and lost its producer is `lostChannelEnds`'
+ * already, every consumer left listed there; a consumer the base side
+ * already had is no change.
+ */
+const unproducedConsumers = (base: JoinGraph, head: JoinGraph): LostJoin[] => {
+  const before = channelEnds(base);
+  const headNodes = new Map(head.nodes.map((node) => [node.id, node]));
+  const lost: LostJoin[] = [];
+  for (const [channel, now] of channelEnds(head)) {
+    if (now.producers.size > 0 || now.consumers.size === 0) continue;
+    const was = before.get(channel);
+    if (was !== undefined && was.producers.size > 0 && was.consumers.size > 0) continue;
+    for (const id of [...now.consumers].sort(byText)) {
+      if (was?.consumers.has(id) === true) continue;
+      lost.push({
+        kind: 'no-producer',
+        caller: id,
+        target: channel,
+        edge: 'consumes',
+        service: headNodes.get(id)?.repo ?? '',
+        targetService: null,
+        now: NEVER_PRODUCED,
+        targetRemoved: false,
+      });
+    }
+  }
+  return lost;
+};
+
 /** Every join the base side made that the head side does not, by kind, then caller, then target. */
 export const lostJoins = (base: JoinGraph, head: JoinGraph): LostJoin[] =>
-  [...lostRequests(base, head), ...lostChannelEnds(base, head)].sort(order);
+  [...lostRequests(base, head), ...lostChannelEnds(base, head), ...unproducedConsumers(base, head)].sort(order);

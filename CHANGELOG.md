@@ -483,6 +483,39 @@ only one of them moved.
   where the whole report was. The format changed no exit code. `docs/ci.md`
   gained a "Code scanning" workflow; `toSarif` and the adapters were exported
   from `@flowatlas/cli`.
+- **`flowatlas check --env <name>`: can this be deployed there (P117).** A
+  committed `flowatlas.deployed.json` (`deployedFormatVersion: 1`, path
+  `deployed.file` in the configuration or `--pins`) said which ref of each
+  service ran in each environment; `--pin <service>=<ref>` and
+  `FLOWATLAS_PIN_<SERVICE>` laid a pipeline's own versions over it. `check`
+  read every service at its pin (the deployed side), put the services being
+  shipped (`--service`, or every one whose head differed from its pin) at
+  `--head` or the working tree, ran what `diff` runs on the two and answered
+  `deployable` (exit 0) or `not deployable` (1) for what deploying introduced:
+  a new contract error, a new rule violation at `error`, a call a deployed
+  service makes to a route the candidate removes (with the caller's file and
+  line), a channel left with one end, a new handler of a channel nothing
+  deployed publishes, and a new request no deployed route serves. What already
+  ran wrong was listed under "already deployed" and never failed it. A pin that
+  did not resolve, an unknown environment and a service in a subdirectory of a
+  repository exited 2, naming `git fetch --tags` in which repository, and were
+  never read as the working tree in their place. `--env` was repeatable (one
+  section each, the worst exit); `--format text|markdown|json|sarif`; every
+  environment left `check.<env>.json` (`checkFormatVersion: 1`) holding the
+  whole `diff.json` of its two sides. The graph cache was `diff`'s.
+- **`flowatlas deployed set|show` (P117).** `set <env> <service> <ref>`
+  recorded a deployment in the pins file (`--resolve` recorded the commit the
+  ref named); `show [env]` printed each pin with its commit, kind and age, and
+  warned of a branch and of a ref the repository did not have.
+- **`what_changed({file: "check.prod.json"})` and `start_here`'s `checks` (P117).**
+  `what_changed` read a check document like a diff, with `check: { environment,
+  verdict, because }`; `start_here` said each environment's verdict in one line
+  and led `next` with the first one not deployable.
+- **A new handler of what nothing publishes is a lost join (P117).**
+  `lostJoins` also named a consumer the head side added to a channel nothing on
+  the head side publishes (`kind: 'no-producer'`, `now: 'never-produced'`), so
+  `diff`'s "Calls that stopped joining" and `what_changed`'s verdict say it too.
+  `buildAtRef` gained `refFor` (a ref per repository) and `fallback: false`.
 
 ### Changed
 

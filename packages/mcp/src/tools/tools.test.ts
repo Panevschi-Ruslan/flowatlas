@@ -114,6 +114,10 @@ describe('the tools a session is offered', () => {
    * and 28,200 after, from 9,659 and 27,446, ceilings set about a hundred over
    * as before. A tool cannot be added inside 41 characters, and nothing in
    * the others could give back 400 without losing a parameter's meaning.
+   * P117 fits inside them: `what_changed` took `file` (a check document) and
+   * said so in its description, and `start_here`'s output schema gained
+   * `checks`, one line rather than a record because a record does not fit:
+   * 10,092 and 28,256.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
