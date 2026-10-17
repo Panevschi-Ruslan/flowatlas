@@ -8,6 +8,15 @@ only one of them moved.
 
 ### Added
 
+- **`flowatlas doctor --reason <code>` (P141).** Lists the places of one
+  reason, or several (repeatable, or a comma list), under every level the
+  reason is at, so a reason with hundreds of places can be read on its own:
+  `flowatlas doctor --reason dynamic-http-url --max-nodes 500`. The rows are
+  narrowed as `--service` narrows them, the sections default to `unresolved`
+  and `desync`, and a reason neither the catalogue nor any row knows exits 2
+  with the nearest names. `--unresolved --reason` narrows the breakdown the
+  same way, and its JSON says so under `reasons`. `--accept` refuses it.
+
 - **Zipkin, Jaeger and HAR readers (P112).** `flowatlas observe` reads Zipkin
   v2 JSON (a list of spans or of traces) and Jaeger JSON (the UI's *Download
   JSON*, `{ data: [...] }`) into the same spans as OTLP: their tags go through
@@ -1024,6 +1033,31 @@ only one of them moved.
 - **The Crossings tab drew nothing (P140).** Its table reached for the Not
   joined tab's per-kind sections, which were not in its scope, and stopped on
   the error before drawing a row; it lists every crossing again.
+- **A new gap under a gap id the base already had (P194).** `flowatlas diff`
+  compared gaps by gap id (one reason in one file), so a second unjoined
+  request in a file that already had one, or any gap id whose rows grew, was
+  not new, and one whose rows shrank was not gone. The rows under an id both
+  sides hold are now matched one by one on what each says (symbol with
+  positions masked, and message), never on the line, and the sites left over
+  are listed under the same id at the first new or gone one, with the new
+  optional field `kept` (the sites both sides share) on the row in `diff.json`,
+  on `what_changed`'s `newGaps`, and in the Markdown (`gap, 1 more beside 1`).
+  A site replaced by another is listed under both. A row standing for several
+  sites is matched by its count. Same `diff.json` format: the field is optional
+  and every format reads with or without it.
+- **`doctor.json` holds every row (P192).** The file `doctor` writes was cut
+  like the terminal: six places per reason and 150 rows per section, with
+  `truncated` saying how many, although `--max-nodes` promised "the file is
+  always complete" and every `… N more rows` line sent the reader to it. The
+  check now builds the whole report, writes it, and cuts only what it prints:
+  text, `github` and `--format json` are unchanged, and the file has every
+  row and no `truncated` field (same `doctorFormatVersion: 2`; the field was
+  always optional). `runDoctorComplete` and `boundDoctorReport` are exported
+  beside `runDoctor`, which is the two together.
+- **Command and tool counts in the READMEs.** `packages/cli/README.md` said
+  `flowatlas --help` lists twenty-two commands; it lists twenty-five, and now
+  says "every command". `docs/mcp.md` said nineteen tools; there are
+  twenty-three, as the tool-list test holds.
 - **`impact` said only one of its notes (P132).** An answer whose walk stopped
   at its limit, asked at `detail: 3`, said only that the level was clamped: the
   second note overwrote the first. It now says both: the walk limit under

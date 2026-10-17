@@ -401,7 +401,11 @@ const joinLines = (report: DiffReport, options: DiffMarkdownOptions & { maxRows:
   ];
 };
 
-/** Gap ids the head has and the base does not (P96): places the reader can no longer see past. */
+/**
+ * Gap ids the head has and the base does not (P96): places the reader can no
+ * longer see past. A gap id the base had too is listed when it gained sites,
+ * at the first new one, with how many it had (P194).
+ */
 const gapLines = (report: DiffReport, options: DiffMarkdownOptions & { maxRows: number }): string[] => {
   const added = report.unresolved.added;
   const removed = report.unresolved.removed;
@@ -414,7 +418,7 @@ const gapLines = (report: DiffReport, options: DiffMarkdownOptions & { maxRows: 
       row(['---', '---', '---', '---']),
       ...shown.rows.map((ref) =>
         row([
-          ref.kind,
+          ref.kept === undefined ? ref.kind : `${ref.kind}, ${ref.sites} more beside ${ref.kept}`,
           code(ref.reason),
           code(`${ref.service} ${ref.file}${ref.line === undefined ? '' : `:${ref.line}`}`),
           ref.node === undefined ? '—' : code(ref.node),

@@ -5,7 +5,7 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Nineteen tools. Only one of them returns code.
+Twenty-three tools. Only one of them returns code.
 
 ---
 
@@ -638,7 +638,8 @@ with a score:
 
 Beside it: `newGaps` (gap ids the head has and the base does not, each with
 the method it is in, `onChangedPath: true` where it makes the verdict
-unknown, and `next`), `vanishedTargets` (`{ caller, target, now }`, `now` what
+unknown, and `next`; a gap id the base held too is listed when it gained
+sites, at the first new one, with `kept` the sites the base already had), `vanishedTargets` (`{ caller, target, now }`, `now` what
 the head side says instead, such as `target-route-not-found`), `retest` (the
 ways in that reach a change, ranked by how many changed nodes each reaches and
 then by `observed` traffic; it takes the place of `entries`) and `newFindings`

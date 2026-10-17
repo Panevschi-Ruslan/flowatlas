@@ -169,9 +169,20 @@ export interface GapRef {
   reason: string;
   node?: string;
   sites: number;
+  /**
+   * Set when both sides hold this gap id (P194): the sites the two share. The
+   * ref then lists only the sites this side has beyond the other (`sites`),
+   * and `line` and `node` are the first of those: a second unjoined request in
+   * a file that already had one, or the place a gap went away from. An id can
+   * then be in `added` and `removed` at once, when one site replaced another.
+   */
+  kept?: number;
 }
 
-/** Gap ids the head has and the base does not (`added`), and the other way round. */
+/**
+ * Gap ids the head has and the base does not (`added`), and the other way
+ * round; and the sites a gap id both sides hold gained or lost (P194).
+ */
 export interface UnresolvedDiff {
   added: GapRef[];
   removed: GapRef[];

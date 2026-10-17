@@ -124,7 +124,7 @@ lists them all, generated from their READMEs.
 | `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
-`flowatlas --help` lists all twenty-two.
+`flowatlas --help` lists every command, and `flowatlas help <command>` its options.
 
 ---
 

@@ -437,6 +437,13 @@ describe('what_changed', () => {
       expect((await withDiff({ unresolved: { added: [off], removed: [] } })).verdict).toBe('safe');
     });
 
+    it('weighs a site a gap id gained like a new gap id, and says how many the base had (P194)', async () => {
+      const grown = { id: 'gap:orders|src/orders.controller.ts|call-dynamic-receiver', kind: 'gap' as const, service: 'orders', file: 'src/orders.controller.ts', line: 4, reason: 'call-dynamic-receiver', node: HANDLER, sites: 1, kept: 2 };
+      const answer = await withDiff({ unresolved: { added: [grown], removed: [] } });
+      expect(answer.verdict).toBe('unknown');
+      expect(answer.newGaps).toEqual([expect.objectContaining({ id: grown.id, sites: 1, kept: 2, onChangedPath: true })]);
+    });
+
     it('reads a diff.json of format 1, and says it is too old to know the gaps', async () => {
       const { unresolved: _unresolved, joins: _joins, flows: _flows, ...old } = diff;
       writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...old, diffFormatVersion: 1 }));

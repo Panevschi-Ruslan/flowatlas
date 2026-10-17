@@ -277,11 +277,89 @@ describe('gaps by gap id (P96)', () => {
     expect(added.map((ref) => [ref.reason, ref.kind])).toEqual([['query-in-loop', 'finding']]);
   });
 
-  it('says nothing about a gap id both sides have, however its rows moved', () => {
-    const base = graphOf({ unresolved: [row({ line: 10 })] });
-    const head = graphOf({ unresolved: [row({ line: 90 }), row({ line: 91 })] });
+  it('says nothing about a gap id both sides have whose rows only moved', () => {
+    const base = graphOf({ unresolved: [row({ line: 10, symbol: 'issue -> this.steps[kind]' }), row({ line: 14, sites: 3 })] });
+    const head = graphOf({ unresolved: [row({ line: 90, symbol: 'issue -> this.steps[kind]' }), row({ line: 94, sites: 3 })] });
 
     expect(diffGraphs(base, head).unresolved).toEqual({ added: [], removed: [] });
+  });
+});
+
+describe('sites under a gap id both sides have (P194)', () => {
+  const FILE = 'src/clients/orders.client.ts';
+  const ID = `gap:gateway|${FILE}|target-route-not-found`;
+  const call = (line: number, route: string) => ({
+    service: 'gateway',
+    file: FILE,
+    line,
+    reason: 'target-route-not-found',
+    message: `no configured service serves ${route}`,
+    symbol: `http_out:gateway#${FILE}:${line}:12`,
+  });
+  const methodAt = (line: number) => node(`http_out:gateway#${FILE}:${line}:12`, 'http_out', { repo: 'gateway' });
+
+  it('names a second unjoined request in a file that already had one, at its own line', () => {
+    const base = graphOf({ nodes: [methodAt(20)], unresolved: [call(20, 'GET /refunds')] });
+    // An import above moved the first one; the second is new.
+    const head = graphOf({ nodes: [methodAt(22), methodAt(31)], unresolved: [call(22, 'GET /refunds'), call(31, 'POST /refunds')] });
+
+    expect(diffGraphs(base, head).unresolved).toEqual({
+      added: [
+        {
+          id: ID,
+          kind: 'gap',
+          service: 'gateway',
+          file: FILE,
+          line: 31,
+          reason: 'target-route-not-found',
+          node: `http_out:gateway#${FILE}:31:12`,
+          sites: 1,
+          kept: 1,
+        },
+      ],
+      removed: [],
+    });
+  });
+
+  it('names the site a gap id lost, read off the base side, and one that replaced another under both lists', () => {
+    const base = graphOf({ unresolved: [call(20, 'GET /refunds'), call(31, 'POST /refunds')] });
+    const shrunk = graphOf({ unresolved: [call(20, 'GET /refunds')] });
+    const swapped = graphOf({ unresolved: [call(20, 'GET /refunds'), call(31, 'PUT /refunds')] });
+
+    expect(diffGraphs(base, shrunk).unresolved).toEqual({
+      added: [],
+      removed: [expect.objectContaining({ id: ID, line: 31, sites: 1, kept: 1 })],
+    });
+    const both = diffGraphs(base, swapped).unresolved;
+    expect(both.added).toEqual([expect.objectContaining({ id: ID, line: 31, sites: 1, kept: 1 })]);
+    expect(both.removed).toEqual([expect.objectContaining({ id: ID, line: 31, sites: 1, kept: 1 })]);
+  });
+
+  it('counts two identical requests twice, and a site folded on one side and alone on the other once', () => {
+    const base = graphOf({ unresolved: [call(20, 'GET /refunds')] });
+    const twice = graphOf({ unresolved: [call(20, 'GET /refunds'), call(26, 'GET /refunds')] });
+    expect(diffGraphs(base, twice).unresolved.added).toEqual([expect.objectContaining({ line: 26, sites: 1, kept: 1 })]);
+
+    const alone = graphOf({ unresolved: [{ ...call(20, 'GET /refunds'), level: 'info' }] });
+    const folded = graphOf({ unresolved: [{ ...call(20, 'GET /refunds'), level: 'info', sites: 4 }] });
+    expect(diffGraphs(alone, folded).unresolved).toEqual({
+      added: [expect.objectContaining({ id: ID, line: 20, sites: 3, kept: 1 })],
+      removed: [],
+    });
+    expect(diffGraphs(folded, alone).unresolved).toEqual({
+      added: [],
+      removed: [expect.objectContaining({ id: ID, sites: 3, kept: 1 })],
+    });
+  });
+
+  it('writes kept into a diff.json every reader takes', () => {
+    const base = graphOf({ unresolved: [call(20, 'GET /refunds')] });
+    const head = graphOf({ unresolved: [call(20, 'GET /refunds'), call(31, 'POST /refunds')] });
+    const [ref] = diffGraphs(base, head).unresolved.added;
+
+    expect(ref?.kept).toBe(1);
+    expect(graphDiffSchema.shape.unresolved.parse({ added: [ref], removed: [] }).added[0]?.kept).toBe(1);
+    expect(graphDiffSchemaV2.shape.unresolved.parse({ added: [{ ...ref, kept: undefined }], removed: [] }).added).toHaveLength(1);
   });
 });
 

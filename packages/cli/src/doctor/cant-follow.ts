@@ -29,6 +29,8 @@ export interface CantFollowReport extends CantFollow {
   /** The cause or package it was narrowed to, when it was. */
   cause: string | null;
   package: string | null;
+  /** The reasons it was narrowed to (`--reason`, P141), as typed, or null for every one. */
+  reasons: string[] | null;
   /**
    * Gaps `accepted.json` names, left out of every count above. Absent when
    * none and the file read; `problem` says why nothing was left out (P80).
@@ -40,14 +42,20 @@ export interface CantFollowReport extends CantFollow {
 
 export const cantFollowReport = (
   rows: readonly CantFollowRow[],
-  options: CantFollowOptions & { accepted?: { rows: number; sites: number; problem?: AcceptedProblem }; note?: string } = {},
+  options: CantFollowOptions & {
+    accepted?: { rows: number; sites: number; problem?: AcceptedProblem };
+    note?: string;
+    /** Said in the report; the rows handed in are already narrowed to them. */
+    reasons?: readonly string[];
+  } = {},
 ): CantFollowReport => {
-  const { accepted, note, ...grouping } = options;
+  const { accepted, note, reasons, ...grouping } = options;
   return {
     cantFollowFormatVersion: CANT_FOLLOW_FORMAT_VERSION,
     service: grouping.service ?? null,
     cause: grouping.cause ?? null,
     package: grouping.package ?? null,
+    reasons: reasons === undefined ? null : [...reasons],
     note: note ?? null,
     ...groupCantFollow(rows, grouping),
     ...(accepted === undefined || (accepted.rows === 0 && accepted.problem === undefined) ? {} : { accepted }),
@@ -72,6 +80,7 @@ export const renderCantFollowText = (
     report.service === null ? undefined : `service ${report.service}`,
     report.cause === null ? undefined : `cause ${report.cause}`,
     report.package === null ? undefined : `package ${report.package}`,
+    report.reasons === null ? undefined : `reason ${report.reasons.join(', ')}`,
   ].filter((part): part is string => part !== undefined);
   const lines: string[] = [];
   if (report.note !== null) lines.push(`note: ${report.note}`, '');

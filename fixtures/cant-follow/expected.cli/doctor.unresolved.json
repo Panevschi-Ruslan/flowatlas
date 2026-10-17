@@ -3,6 +3,7 @@
   "service": null,
   "cause": null,
   "package": null,
+  "reasons": null,
   "note": null,
   "total": {
     "rows": 10,

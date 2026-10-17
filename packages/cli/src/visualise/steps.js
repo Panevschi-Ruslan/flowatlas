@@ -665,8 +665,9 @@ export const acceptCommandForPlace = (place) => {
 };
 
 /**
- * The `flowatlas doctor` line whose whole output is one reason's places
- * (P141): `--reason` keeps only that reason, `--max-nodes` lists `count` of
+ * The `flowatlas doctor` line that lists every place of one reason (P141):
+ * `--reason` keeps only that reason in the `unresolved` and `desync` sections
+ * it runs by default, `--max-nodes` lists `count` of
  * its places rather than the handful, and `--service` narrows it further when
  * every row of the reason is in that one service (`services`, each row's, ''
  * for a row that names none).

@@ -122,3 +122,25 @@ describe('Changed flows in the diff document (P116)', () => {
     expect(renderDiffMarkdown(report([]))).not.toContain('## Changed flows');
   });
 });
+
+describe('Gaps and findings in the diff document (P194)', () => {
+  const ref = { kind: 'gap' as const, service: 'gateway', file: 'src/clients/orders.client.ts', reason: 'target-route-not-found', sites: 1 };
+
+  it('says how many sites a gap id the base had already holds beside the new one', () => {
+    const grown = {
+      ...report([]),
+      unresolved: {
+        added: [
+          { ...ref, id: 'gap:gateway|src/clients/orders.client.ts|target-route-not-found', line: 31, kept: 1 },
+          { ...ref, id: 'gap:gateway|src/clients/refunds.client.ts|target-route-not-found', file: 'src/clients/refunds.client.ts', line: 8 },
+        ],
+        removed: [],
+      },
+    };
+    const text = renderDiffMarkdown(grown, { file: 'out/diff.json' });
+
+    expect(text).toContain('| gap, 1 more beside 1 | `target-route-not-found` | `gateway src/clients/orders.client.ts:31` |');
+    expect(text).toContain('| gap | `target-route-not-found` | `gateway src/clients/refunds.client.ts:8` |');
+    expect(summariseDiff(grown)).toContain('gaps +2/-0');
+  });
+});

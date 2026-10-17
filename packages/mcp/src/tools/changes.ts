@@ -153,6 +153,8 @@ export interface NewGap {
   /** The method the gap is in, when the graph draws it. */
   node?: string;
   sites: number;
+  /** Set when the base held this gap id too: the sites both have; `sites` are the new ones beside them (P194). */
+  kept?: number;
   /** Set when the gap sits on a path from a changed node to a way in: the change cannot be seen past. */
   onChangedPath?: true;
   next: string;
@@ -440,6 +442,7 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
         ...(ref.line === undefined ? {} : { line: ref.line }),
         ...(ref.node === undefined ? {} : { node: ref.node }),
         sites: ref.sites,
+        ...(ref.kept === undefined ? {} : { kept: ref.kept }),
         ...(path ? { onChangedPath: true as const } : {}),
         next:
           ref.node === undefined

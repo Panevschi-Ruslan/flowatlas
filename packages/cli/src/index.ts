@@ -209,7 +209,7 @@ export { explainPlaces, placesNamed, renderPatternsExplain, PATTERNS_EXPLAIN_FOR
 export type { PatternsExplainReport } from './patterns/explain.js';
 export { renderPatternsSuggest, suggestPatterns, writeStarters, PATTERNS_SUGGEST_FORMAT_VERSION } from './patterns/suggest.js';
 export type { PatternsSuggestReport, SuggestedRule } from './patterns/suggest.js';
-export { runDoctor } from './doctor/run.js';
+export { boundDoctorReport, runDoctor, runDoctorComplete } from './doctor/run.js';
 export type { DoctorInput, DoctorSettings } from './doctor/run.js';
 export {
   BASELINE_FORMAT_VERSION,

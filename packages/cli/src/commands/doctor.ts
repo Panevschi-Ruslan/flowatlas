@@ -22,7 +22,7 @@ import { openProjectDb } from '../analysis/open.js';
 import { dbPathFor } from '../db.js';
 import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
-import { expandReasons } from '../doctor/hints.js';
+import { expandReasons, isKnownReason, KNOWN_REASONS, nearestReasons } from '../doctor/hints.js';
 import { runtimeFailureRows } from '../doctor/runtime.js';
 import { readObservedBeside } from '../observe/store.js';
 import { processIo, type QueryIo } from '../query/answer.js';
@@ -43,7 +43,7 @@ import {
   renderCantFollowText,
   type CantFollowReport,
 } from '../doctor/cant-follow.js';
-import { runDoctor } from '../doctor/run.js';
+import { boundDoctorReport, runDoctorComplete } from '../doctor/run.js';
 import {
   BASELINE_FORMAT_VERSION,
   SECTIONS,
@@ -72,6 +72,8 @@ export interface DoctorOptions {
   baseline?: string | false;
   section?: string[];
   service?: string;
+  /** `--reason` (P141): only the rows of these reasons; repeatable, each a comma list. */
+  reason?: string[];
   /** `false` only when `--no-contracts` was passed. */
   contracts?: boolean;
   maxNodes?: string;
@@ -91,7 +93,10 @@ export interface DoctorOptions {
 }
 
 export interface DoctorRun {
+  /** The report as it was printed, each list cut by `--max-nodes`. */
   report: DoctorReport;
+  /** The same report with nothing cut: what `doctor.json` holds (P192). */
+  complete: DoctorReport;
   text: string;
   /** Where the complete report was written, or undefined when nowhere was known. */
   file?: string;
@@ -127,6 +132,59 @@ const whole = (value: string | undefined, fallback: number, flag: string): numbe
     );
   }
   return parsed;
+};
+
+/** `--reason` as typed, split on commas; undefined when it was not. */
+const reasonsTyped = (options: Pick<DoctorOptions, 'reason'>): string[] | undefined => {
+  const typed = (options.reason ?? []).flatMap((value) => value.split(',')).map((value) => value.trim());
+  const named = [...new Set(typed.filter((value) => value !== ''))];
+  return named.length === 0 ? undefined : named;
+};
+
+/**
+ * The reasons a run is narrowed to, in every spelling (P141).
+ *
+ * A reason is one the catalogue knows, or one a row of this graph carries: a
+ * reason with advice and no row here is an answer ("none"), and a reason
+ * nobody registered is still one a reader can ask for by the name the report
+ * printed. Anything else is a typo, and stops with the nearest names.
+ */
+export const reasonsFor = (
+  options: Pick<DoctorOptions, 'reason'>,
+  rows: readonly Unresolved[],
+): string[] | undefined => {
+  const typed = reasonsTyped(options);
+  if (typed === undefined) return undefined;
+  const carried = new Set(rows.map((row) => row.reason));
+  const unknown = typed.filter((reason) => !isKnownReason(reason) && !carried.has(reason));
+  if (unknown.length > 0) {
+    const pool = [...new Set([...KNOWN_REASONS, ...carried])].sort();
+    const near = unknown.flatMap((reason) => {
+      const found = nearestReasons(reason, pool);
+      return found.length === 0 ? [] : [`did you mean (for ${reason}): ${found.join(', ')}`];
+    });
+    // Nothing close: the reasons this graph does carry are the useful list.
+    const here = [...carried].sort();
+    const listed = here.length <= 10 ? here.join(', ') : `${here.slice(0, 10).join(', ')}, … ${here.length - 10} more`;
+    throw new CliError(
+      `no reason named ${unknown.map((reason) => JSON.stringify(reason)).join(', ')}`,
+      EXIT.cannotRun,
+      near.length > 0 || here.length === 0 ? near : [`reasons in this graph: ${listed}`],
+    );
+  }
+  return expandReasons(typed);
+};
+
+/**
+ * The sections `--section` named, or every one. Under `--reason`, the two made
+ * of rows that carry a reason: markers and contracts list no reason's places,
+ * and a baseline compared over some reasons would read as the rest gone.
+ */
+const sectionsFor = (options: DoctorOptions): Section[] => {
+  if (options.section !== undefined && options.section.length > 0) {
+    return options.section.map((name) => oneOf(name, SECTIONS, 'unresolved', '--section'));
+  }
+  return reasonsTyped(options) === undefined ? [...SECTIONS] : ['unresolved', 'desync'];
 };
 
 /** What the project asked for in `flowatlas.config.json`, when there is one. */
@@ -392,10 +450,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   // lines on a project whose commonest reason covered hundreds of places.
   const maxNodes =
     options.maxNodes === undefined ? undefined : whole(options.maxNodes, 150, '--max-nodes');
-  const sections: Section[] =
-    options.section === undefined || options.section.length === 0
-      ? [...SECTIONS]
-      : options.section.map((name) => oneOf(name, SECTIONS, 'unresolved', '--section'));
+  const sections = sectionsFor(options);
   const accept = options.accept === true;
   const strict = options.strict === true;
 
@@ -405,6 +460,11 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   if (accept && options.service !== undefined) {
     throw new CliError('--accept refuses --service: accept the whole project, or nothing', EXIT.cannotRun, [
       'A baseline over one service would be compared against every service on the next run.',
+    ]);
+  }
+  if (accept && reasonsTyped(options) !== undefined) {
+    throw new CliError('--accept refuses --reason: accept the whole project, or nothing', EXIT.cannotRun, [
+      'A baseline over some reasons would be compared against every reason on the next run.',
     ]);
   }
 
@@ -434,6 +494,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
     const runtime = runtimeFailureRows(db, readObservedBeside(dbPathFor(options)).observed);
     const split = acceptedSplitOf(db, [...raw, ...age, ...runtime], readAccepted(dbPathFor(options)));
     const rows = split.fresh;
+    const reasons = reasonsFor(options, rows);
     const path = baselinePathFor(options, settings);
 
     // Reading the baseline is separate from comparing it, so that "there is no
@@ -447,13 +508,13 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
           : readBaseline(path);
     }
 
-    const report = runDoctor(
+    // Every row kept, for the file (P192); the cut one below is what is printed.
+    const complete = runDoctorComplete(
       { db, unresolved: rows, ...(note === undefined ? {} : { note }) },
       {
         strict,
         ...(options.strictRuntime === true ? { strictRuntime: true } : {}),
         sections,
-        ...(maxNodes === undefined ? {} : { maxNodes }),
         contracts: options.contracts !== false,
         ...(read === undefined ? {} : { baseline: read }),
         baselinePath: wantsBaseline ? (path ?? null) : null,
@@ -464,13 +525,15 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         aliases: settings.aliases,
         flowatlasVersion: VERSION,
         ...(options.service === undefined ? {} : { service: options.service }),
+        ...(reasons === undefined ? {} : { reasons }),
         looksLike: describeRepository(settings),
         declared: settings.declared.map((document) => document.service),
       },
     );
 
     const accepted = acceptedCountOf(split);
-    if (accepted !== undefined) report.unresolved.accepted = accepted;
+    if (accepted !== undefined) complete.unresolved.accepted = accepted;
+    const report = boundDoctorReport(complete, maxNodes);
 
     const out = options.out ?? settings.outputDir;
     let file: string | undefined;
@@ -478,7 +541,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       const directory = isAbsolute(out) ? out : resolve(out);
       mkdirSync(directory, { recursive: true });
       file = join(directory, DOCTOR_FILE);
-      writeFileSync(file, renderDoctorJson(report), 'utf8');
+      writeFileSync(file, renderDoctorJson(complete), 'utf8');
     }
 
     // A missing baseline is an answer on an ordinary run and a stop on a strict
@@ -526,6 +589,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
     }
     return {
       report,
+      complete,
       text,
       ...(file === undefined ? {} : { file }),
       ...(baselineFile === undefined ? {} : { baselineFile }),
@@ -582,10 +646,15 @@ export const runCantFollowCommand = (options: DoctorOptions, io: QueryIo = proce
   const samples = options.samples === '0' ? 0 : whole(options.samples, 3, '--samples');
   const settings = fromConfig(options);
   const { fresh, accepted, note } = cantFollowRowsOf(options);
+  // Narrowed before grouping, as the report narrows its rows (P141), so the
+  // total here is still the report's under the same `--reason`.
+  const reasons = reasonsFor(options, fresh);
+  const kept = reasons === undefined ? fresh : fresh.filter((row) => reasons.includes(row.reason));
   {
-    const report = cantFollowReport(fresh, {
+    const report = cantFollowReport(kept, {
       top,
       samples,
+      ...(reasons === undefined ? {} : { reasons: reasonsTyped(options) ?? [] }),
       ...(options.service === undefined ? {} : { service: options.service }),
       ...(options.cause === undefined ? {} : { cause: options.cause }),
       ...(options.package === undefined ? {} : { package: options.package }),
@@ -640,6 +709,11 @@ export const registerDoctor = (program: Command): void => {
       (value: string, all: string[] = []) => [...all, value],
     )
     .option('--service <name>', 'narrow every section to one service')
+    .option(
+      '--reason <code>',
+      'only the places of this reason, e.g. dynamic-http-url (repeatable, or a comma list)',
+      (value: string, all: string[] = []) => [...all, value],
+    )
     .option('--no-contracts', 'do not run the contract check')
     .option('--max-nodes <n>', 'most places to print per reason; the file is always complete')
     .option('--out <dir>', 'where to write doctor.json (default: the configured output)')
