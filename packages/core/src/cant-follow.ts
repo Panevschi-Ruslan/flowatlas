@@ -16,6 +16,7 @@
 import { makeSymbolId } from './ids.js';
 import { wasMissed, type Unresolved, type UnresolvedLevel } from './model/graph.js';
 import type { FollowCause } from './follow-cause.js';
+import { SEEN_NOT_IN_CODE, type BlindSpot } from './blind-spots.js';
 
 /** The key on a row's `meta` naming why its step could not be followed. */
 export const CAUSE_META = 'cause';
@@ -191,6 +192,12 @@ export interface CantFollowCause {
   packages: CantFollowPackage[];
   /** Packages left out by `top`. */
   truncated?: number;
+  /**
+   * Under `seen-not-in-code` (P110): what traffic reached that no reader drew,
+   * one group per service and kind, most spans first. Its rows name no file,
+   * so the cause lists these in place of packages.
+   */
+  seen?: BlindSpot[];
 }
 
 /** One package, and the causes that point into it. */
@@ -268,6 +275,7 @@ const CAUSE_HINTS: ReadonlyMap<string, (pkg: string | undefined) => string> = ne
   ['container-lookup', () => 'Resolved through the container at run time; inject the class instead.'],
   ['token-not-provided', () => 'No module of this repository provides the token; register a provider for it.'],
   ['token-ambiguous', () => 'More than one class is registered for the token; which one is in effect depends on module order.'],
+  [SEEN_NOT_IN_CODE, () => 'Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it with the call beside it; a later build that reads it makes the row go away.'],
   ['data-layer-unnamed', () => 'Looks like a data layer of this repository by name; name its base under adapters.db.localBaseClasses. A call the graph already draws into a repository method of this repository is not listed.'],
 ]);
 
@@ -291,7 +299,14 @@ interface Acc {
   services: Set<string>;
   hint?: string;
   packages: Map<string, { package: string | null; sites: number; samples: CantFollowSample[] }>;
+  seen: BlindSpot[];
 }
+
+/** A blind-spot group a row carries (P110), when it is one. */
+const seenOf = (row: CantFollowRow): BlindSpot | undefined => {
+  const seen = row.reason === SEEN_NOT_IN_CODE ? row.meta?.['seen'] : undefined;
+  return typeof seen === 'object' && seen !== null && typeof (seen as BlindSpot).kind === 'string' ? (seen as BlindSpot) : undefined;
+};
 
 /**
  * Every row that says something was not read, by cause and then by package.
@@ -328,12 +343,20 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
         reasons: new Set<string>(),
         services: new Set<string>(),
         packages: new Map(),
+        seen: [],
       };
       causes.set(part.cause, acc);
       acc.sites += part.sites;
       acc.reasons.add(row.reason);
       if (row.service !== undefined && row.service !== null && row.service !== '') acc.services.add(row.service);
       if (acc.hint === undefined && row.hint !== undefined && row.hint !== null && row.hint !== '') acc.hint = row.hint;
+      // A blind spot is a place in traffic, not in a file: its group stands
+      // where a package would, and no place is listed for it.
+      const spot = seenOf(row);
+      if (spot !== undefined) {
+        acc.seen.push(spot);
+        continue;
+      }
       const pkgKey = part.package ?? '';
       const byPkg = acc.packages.get(pkgKey) ?? { package: part.package ?? null, sites: 0, samples: [] };
       acc.packages.set(pkgKey, byPkg);
@@ -371,6 +394,13 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
       services: [...acc.services].sort(cmp),
       packages: byPkg.slice(0, top),
       ...(byPkg.length > top ? { truncated: byPkg.length - top } : {}),
+      ...(acc.seen.length === 0
+        ? {}
+        : {
+            seen: [...acc.seen].sort(
+              (a, b) => b.count - a.count || cmp(a.service ?? '', b.service ?? '') || cmp(a.kind, b.kind),
+            ),
+          }),
     };
   });
 

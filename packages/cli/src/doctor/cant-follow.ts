@@ -92,6 +92,16 @@ export const renderCantFollowText = (
     lines.push('', `  ${cause.label}: ${plural(cause.sites, 'place')}${services}`, `    ${cause.hint}`);
     const reasons = cause.reasons.filter((reason) => reason !== cause.cause);
     if (reasons.length > 0) lines.push(`    rows: ${reasons.join(', ')}`);
+    // What traffic reached and no reader drew (P110): a group per service and
+    // kind, with the names the trace kept and the call that looks for them.
+    for (const spot of cause.seen ?? []) {
+      const names = spot.names.map((name) => `${name.name} (${name.count})`).join(', ');
+      lines.push(
+        `    ${spot.service ?? '(no service)'} ${spot.kind}: ${plural(spot.count, 'span')}, last ${spot.lastSeen ?? 'unknown'}: ${names}` +
+          (spot.more === undefined ? '' : `, and ${spot.more} more`),
+        ...spot.next.map((call) => `      next: ${call}`),
+      );
+    }
     for (const pkg of cause.packages) {
       const named = cause.packages.length > 1 || (pkg.package !== null && cause.label === cause.cause);
       if (named) lines.push(`    ${causeLabel(cause.cause, pkg.package)}: ${plural(pkg.sites, 'place')}`);

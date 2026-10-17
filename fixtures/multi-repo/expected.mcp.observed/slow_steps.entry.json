@@ -1,16 +1,6 @@
 {
   "steps": [
     {
-      "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
-      "label": "OrdersController.findOne",
-      "service": "gateway",
-      "count": 1,
-      "p50": 520,
-      "p95": 520,
-      "max": 520,
-      "errorRate": 0
-    },
-    {
       "id": "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param",
       "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
       "to": "entry:orders:http:GET:/orders/:param",
@@ -33,12 +23,22 @@
       "p95": 492,
       "max": 492,
       "errorRate": 0
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+      "label": "OrdersController.findOne",
+      "service": "gateway",
+      "count": 21,
+      "p50": 61.29,
+      "p95": 72.88,
+      "max": 520,
+      "errorRate": 0
     }
   ],
   "total": 3,
   "next": [
     "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
     "trace_for({entry: \"entry:gateway:http:GET:/orders/:param\"})",
-    "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})"
+    "get_source({symbol: \"http_out:gateway#src/clients/orders.client.ts:33:12\"})"
   ]
 }

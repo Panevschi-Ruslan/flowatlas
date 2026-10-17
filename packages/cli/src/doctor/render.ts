@@ -15,6 +15,7 @@ import type { MarkerIssue } from './markers.js';
 import type { DoctorReport, DoctorRow } from './schema.js';
 import { findingsSaid } from './hints.js';
 import { noWayInSentence } from './ways-in.js';
+import { confirmedLine } from './traffic.js';
 
 /** `… 12 more rows; the whole list is in <file>` — never a silent cut (I9). */
 const more = (dropped: number | undefined, file?: string): string[] =>
@@ -61,6 +62,8 @@ export const where = (
   line: number,
   repoDirs: ReadonlyMap<string, string>,
 ): string => {
+  // A row about traffic names no file (P110): its service is where it is.
+  if (file === '') return service === '' ? '(no file)' : service;
   const dir = repoDirs.get(service);
   if (dir !== undefined) return at(`${dir}/${file}`, line);
   return `${service === '' ? '' : `${service} `}${at(file, line)}`;
@@ -125,6 +128,8 @@ const isNodeId = (symbol: string): boolean => TYPED_ID.test(symbol) || SYMBOL_ID
  * than it should; the id stays in `doctor.json` and in the baseline key.
  */
 const shownAs = (row: DoctorRow, reason: string): string | undefined => {
+  // A row with no file is said by its message, which is all it has to point with.
+  if (row.file === '') return oneLine(row.message, Infinity);
   if (row.symbol === null) return undefined;
   if (isNodeId(row.symbol) && row.message !== reason) return oneLine(row.message, Infinity);
   return oneLine(row.symbol);
@@ -189,6 +194,7 @@ const unresolvedSection = (
       : [`  ${plural(findings, 'finding')}: ${findingsSaid(unresolved.byReason.filter((group) => group.kind === 'finding'))}`]),
     ...ways,
     ...acceptedLine,
+    ...[confirmedLine(report.traffic)].flatMap((line) => (line === undefined ? [] : [`  ${line}`])),
   ];
   // Said on a line of its own, in the words the build summary uses: these are
   // sites where nothing joins, not sites where something was missed.

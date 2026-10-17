@@ -116,7 +116,9 @@ export const OBSERVED_DROPPED: readonly string[] = [
  * `table` and `cloud` are a deployed function, workflow, workflow step or
  * table the map does not have, and a cloud SDK call of a service nothing here
  * reads, by `<service>/<method>` only (P107): a step is named `<workflow>/?`,
- * never by a name the map lacks.
+ * never by a name the map lacks. `join` is a send, an invoke or a start whose
+ * target the map has, from a place the map has, along a join the map does not
+ * draw (P110): named by the target only.
  */
 export type UnmatchedKind =
   | 'http'
@@ -129,7 +131,8 @@ export type UnmatchedKind =
   | 'workflow'
   | 'state'
   | 'table'
-  | 'cloud';
+  | 'cloud'
+  | 'join';
 
 /** The figures `summarise` gives, beside a roll-up row's count. Optional: a version-1 or 2 file has none. */
 export interface ObservedFigures {
@@ -609,6 +612,64 @@ export const mergeObserved = (previous: Observed | undefined, run: Observed, opt
     ...(since === undefined ? {} : { since }),
     samplesKept,
   });
+};
+
+/** The hours a read-time overlay (P110) is said over, and what to call them. */
+export interface ReadWindow {
+  /** The `since` asked for, when one was. */
+  since?: string;
+  /** Start of the first hour counted, or null when nothing is. */
+  from: string | null;
+  /** End of the last hour the file holds. */
+  to: string | null;
+  /** `7d`, or what the file really holds (`2h`) when that is less than asked. */
+  label: string;
+  /** The file holds less than `since` asked for: nothing said over it can be strong (P110 §10). */
+  short: boolean;
+}
+
+const DAY_MS = 24 * HOUR_MS;
+
+/** A span of time in the words `--since` takes: whole days from two days up, else hours. */
+export const durationLabel = (ms: number): string =>
+  ms >= 2 * DAY_MS ? `${Math.round(ms / DAY_MS)}d` : `${Math.max(1, Math.round(ms / HOUR_MS))}h`;
+
+/**
+ * The file's counts over the last `since` of what it holds (P110), cut at read
+ * time from the hours so `7d` and `30d` differ without the traces at hand.
+ * The window ends where the file's does, not at the clock: a file read a week
+ * after it was written still says what its last week held. Whole hours: an
+ * hour counts when it starts inside the window. Without `since`
+ * every hour counts; an unreadable `since` is the caller's to refuse
+ * (`parseDuration`), and reads as none here.
+ */
+export const observedOver = (
+  observed: Pick<Observed, 'buckets' | 'window'>,
+  since?: string,
+): { counts: ObservedRollUp; window: ReadWindow } => {
+  const { from, to } = observed.window;
+  const held = from === null || to === null ? 0 : new Date(to).getTime() - new Date(from).getTime();
+  const span = since === undefined ? undefined : parseDuration(since);
+  if (span === undefined || to === null) {
+    return {
+      counts: rollUp(observed.buckets),
+      window: { from, to, label: from === null ? '0h' : durationLabel(held), short: false },
+    };
+  }
+  // The last `since` of the hours held, whole hours only: `1h` is the last hour, not the last two.
+  const cutoff = new Date(to).getTime() - span;
+  const buckets = observed.buckets.filter((bucket) => new Date(bucket.hour).getTime() >= cutoff);
+  const short = held < span;
+  return {
+    counts: rollUp(buckets),
+    window: {
+      since: since!,
+      from: buckets[0]?.hour ?? null,
+      to,
+      label: short ? durationLabel(held) : since!,
+      short,
+    },
+  };
 };
 
 // --- reading -----------------------------------------------------------------

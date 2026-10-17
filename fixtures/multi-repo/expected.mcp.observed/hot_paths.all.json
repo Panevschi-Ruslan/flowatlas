@@ -11,22 +11,12 @@
       "errorRate": 0.0455
     },
     {
-      "id": "entry:billing:http:GET:/invoices/:param",
-      "label": "GET /invoices/:param",
-      "service": "billing",
-      "count": 3,
-      "p50": 2.95,
-      "p95": 3.2,
-      "max": 3.2,
-      "errorRate": 0
-    },
-    {
       "id": "entry:gateway:http:GET:/orders/:param",
       "label": "GET /orders/:param",
       "service": "gateway",
-      "count": 2,
-      "p50": 47.26,
-      "p95": 520,
+      "count": 22,
+      "p50": 61.29,
+      "p95": 72.88,
       "max": 520,
       "errorRate": 0,
       "joins": [
@@ -39,6 +29,16 @@
           "errorRate": 0
         }
       ]
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "label": "GET /invoices/:param",
+      "service": "billing",
+      "count": 3,
+      "p50": 2.95,
+      "p95": 3.2,
+      "max": 3.2,
+      "errorRate": 0
     },
     {
       "id": "entry:billing:event:order.created",

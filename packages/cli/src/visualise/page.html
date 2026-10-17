@@ -1644,6 +1644,9 @@
     border: 1px solid var(--rule); border-radius: 9px; padding: 0 6px;
   }
   .s-mark.is-guess { color: var(--warn); border-color: var(--warn); border-style: dashed; }
+  .s-mark.is-guess.is-confirmed { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, var(--rule)); border-style: solid; }
+  .s-mark.is-never { color: var(--muted); border-style: dotted; }
+  .s-mark.is-never.is-strong { color: var(--warn); border-color: var(--warn); }
   .s-mark.is-certain { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, var(--rule)); }
   .s-mark.is-failure { color: var(--bad); border-color: var(--bad); }
   .s-mark.is-together { color: var(--accent); border-color: var(--accent); }
@@ -1779,7 +1782,10 @@
   #g-steps { max-height: min(340px, 40vh); overflow: auto; }
   #g-steps .s-list { max-height: none; }
   .row-seen { color: var(--good); font-family: var(--f-mono); }
+  .row-never { color: var(--muted); font-family: var(--f-mono); }
+  .row-never.is-strong { color: var(--warn); }
   .m-link.is-guess { stroke-dasharray: 6 4; }
+  .m-link.is-confirmed { stroke-dasharray: none; }
   .m-link.is-seen { stroke-opacity: 0.9; }
   .m-more { cursor: pointer; }
   .m-more text { fill: var(--muted); font-family: var(--f-mono); font-size: 11px; }
@@ -2232,6 +2238,7 @@ __STEPS_LOGIC__
           `<span class="row-meta">${esc(repoName(i))} &middot; ${esc(kinds[nodes[i][KD]] || typeName(i))}` +
           (files[nodes[i][FL]] ? ' &middot; ' + esc(files[nodes[i][FL]].split('/').pop()) : '') +
           (seen.entry(i) ? ` &middot; <span class="row-seen" title="Hits seen at run time">seen &times;${seen.entry(i).toLocaleString()}</span>` : '') +
+          (seen.never(i) ? ` &middot; <span class="row-never${seen.never(i).strong ? ' is-strong' : ''}" title="${seen.never(i).strong ? 'Never seen while its neighbours were busy' : 'Never seen, and nothing beside it was busy either'}">not seen in ${esc(seen.never(i).window)}</span>` : '') +
           (scheduleOf(model, i) ? ` &middot; <span class="sched">${esc(scheduleSay(scheduleOf(model, i)))}</span>` : '') +
           '</span>' + (failChipsHtml(i) ? `<span class="row-meta">${failChipsHtml(i)}</span>` : '');
         b.addEventListener('click', () => {
@@ -2407,11 +2414,13 @@ __STEPS_LOGIC__
     const UNMATCHED_LIMIT = 100;
     const unmatchedHtml = () => {
       const list = seen.unmatched;
-      return `<h4>Seen at run time, not found in code &middot; ${list.length.toLocaleString()}</h4>` +
+      return `<h4>Seen at run time, not found in code &middot; ${list.length.toLocaleString()}${seen.window ? ' in ' + esc(seen.window) : ''}</h4>` +
         '<p class="hint">Calls a trace recorded that match no join here: a way in, a call or a channel the reading missed, ' +
-        'or code that is not in the repositories read.</p><ul class="s-unmatched">' +
+        'or code that is not in the repositories read. Traffic reached them and no reader drew them; the MCP tool ' +
+        '<code>cant_follow</code> lists them as <code>seen-not-in-code</code>, with the call that looks for each.</p><ul class="s-unmatched">' +
         list.slice(0, UNMATCHED_LIMIT).map((item) => `<li><span class="tag">${esc(item.kind)}</span> ${esc(item.name)}` +
-          (item.service ? ` <span class="hint">${esc(item.service)}</span>` : '') + '</li>').join('') +
+          (item.service ? ` <span class="hint">${esc(item.service)}</span>` : '') +
+          (item.next ? ` <span class="hint">&middot; next <code>${esc(item.next)}</code></span>` : '') + '</li>').join('') +
         (list.length > UNMATCHED_LIMIT ? `<li class="hint">${(list.length - UNMATCHED_LIMIT).toLocaleString()} more</li>` : '') +
         '</ul>';
     };
@@ -2468,8 +2477,25 @@ __STEPS_LOGIC__
             (busiest.ranked > busiest.rows.length
               ? `<p class="hint">${(busiest.ranked - busiest.rows.length).toLocaleString()} more methods have a caller; ` +
                 '<code>flowatlas hotspots --type method</code> lists them all.</p>' : '')) +
-        loopsHtml();
+        loopsHtml() + neverHtml();
       walkEl.replaceChildren(sheet);
+    }
+    /* What the code runs and traffic never touched in the window (P110), strong first, as never_seen lists them. */
+    const NEVER_LIMIT = 100;
+    function neverHtml() {
+      const list = seen.neverSeen;
+      if (!seen.any || list.length === 0) return '';
+      const strong = list.filter((item) => item.strong).length;
+      const items = list.slice(0, NEVER_LIMIT).map(({ node, strong: sure }) =>
+        `<tr><td class="mono"><span class="tag" style="color:${hueOf(nodes[node][RP])};border-color:${hueOf(nodes[node][RP])}">` +
+        `${esc(repoName(node))}</span> ${esc(nodes[node][LB])} ${graphLink(node)}</td>` +
+        `<td><span class="row-never${sure ? ' is-strong' : ''}">${sure ? 'strong' : 'weak'}</span></td></tr>`).join('');
+      return `<h4>Never seen in ${esc(seen.window)} &middot; ${list.length.toLocaleString()}</h4>` +
+        `<p class="hint">Ways in, channels and methods the code runs that traffic never touched. <b>Strong</b>: a neighbour ` +
+        `was busy, so the silence means something (${strong.toLocaleString()}); <b>weak</b>: nothing beside it was, so it may just ` +
+        'not have been exercised. Evidence, not a verdict: <code>flowatlas dead</code> weighs it.</p>' +
+        `<table class="busiest-table"><thead><tr><th>Never seen</th><th>Evidence</th></tr></thead><tbody>${items}</tbody></table>` +
+        (list.length > NEVER_LIMIT ? `<p class="hint">${(list.length - NEVER_LIMIT).toLocaleString()} more</p>` : '');
     }
     /* The likely N+1 loops, reached from the most ways in first, as doctor lists them (P89). */
     function loopsHtml() {
@@ -5461,15 +5487,19 @@ __STEPS_LOGIC__
         const conf = link.worst >= 0 ? confidences[link.worst] : '';
         const seenTimes = seen.any ? mapSeenCount(mapModel, link, seen.join) : 0;
         const width = Math.min(6, 1.2 + Math.log2(link.count)) + (seenTimes > 0 ? Math.min(4, 1.5 + Math.log10(seenTimes)) : 0);
-        const guessed = conf !== '' && conf !== 'static' && conf !== 'marker';
+        // Every best guess behind the link seen at run time (P110): drawn solid, with its seen mark.
+        const confirmedAll = conf === 'heuristic' && seen.any &&
+          mapGuessesConfirmed(mapModel, link, (e) => confidences[data.edges[e][3]] === 'heuristic', (e) => seen.confirmed(e) > 0);
+        const guessed = conf !== '' && conf !== 'static' && conf !== 'marker' && !confirmedAll;
         const cls = ['m-link', 'm-k-' + link.kind,
-          guessed ? 'is-guess' : '', conf === 'heuristic' ? 'is-heuristic' : '', seenTimes > 0 ? 'is-seen' : '',
+          guessed ? 'is-guess' : '', conf === 'heuristic' && !confirmedAll ? 'is-heuristic' : '', confirmedAll ? 'is-confirmed' : '', seenTimes > 0 ? 'is-seen' : '',
           link.kind === 'package' && link.dev ? 'is-dev' : '',
           mapState.mark === 'cycles' && cycles.links.has(link.id) ? 'is-cycle' : '',
           mapState.link === link.id ? 'is-open' : ''].filter(Boolean).join(' ');
         const say = `${unitName(shown.units.get(link.from))} → ${unitName(shown.units.get(link.to))}: ` +
           `${plural(link.count, KIND_SAYS[link.kind] === 'depends on' ? 'package' : 'edge', KIND_SAYS[link.kind] === 'depends on' ? 'packages' : 'edges')}, ${link.kind}` +
-          (conf ? `, ${conf} at worst` : '') + (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '');
+          (conf ? `, ${conf} at worst` : '') + (confirmedAll ? ', every best guess confirmed by traffic' : '') +
+          (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '');
         const hit = svgEl('path', { class: 'm-hit', d, 'data-link': link.id });
         hit.append(svgEl('title', {}, say));
         linkLayer.append(hit,
@@ -6043,7 +6073,11 @@ __STEPS_LOGIC__
     };
     const STEP_MARKS = [
       [(row) => row.kind !== 'answer' && row.edge >= 0 && row.certain, (row) => ['is-certain', 'certain', `joined ${row.confidence}: the code says so`]],
-      [(row) => row.edge >= 0 && !row.certain && row.confidence !== 'runtime', (row) => ['is-guess', 'best guess', `joined ${row.confidence}: inferred, may be wrong`]],
+      [(row) => row.edge >= 0 && !row.certain && row.confidence !== 'runtime', (row) => row.confirmed > 0
+        ? ['is-guess is-confirmed', 'best guess, seen ×' + row.confirmed.toLocaleString(), `joined ${row.confidence}: inferred, and traffic went through it ${row.confirmed.toLocaleString()} times in ${seen.window}`]
+        : ['is-guess', 'best guess', `joined ${row.confidence}: inferred, may be wrong`]],
+      [(row) => row.never !== null, (row) => [row.never.strong ? 'is-never is-strong' : 'is-never', 'not seen in ' + row.never.window,
+        row.never.strong ? 'Traffic never touched it while its neighbours were busy: likely unused' : 'Traffic never touched it, and nothing beside it was busy either: it may just not have been exercised']],
       [(row) => row.failure && row.kind !== 'break', () => ['is-failure', 'on failure', 'Runs only when what comes before it fails']],
       [(row) => row.kind === 'break' && row.reason, (row) => ['is-failure', row.reason, 'The check row that says why']],
       [(row) => row.together, () => ['is-together', 'side by side', 'Runs beside its siblings, not after them']],
@@ -6056,7 +6090,7 @@ __STEPS_LOGIC__
         return via === 'shape-file'
           ? ['is-standin', 'shape · ' + pkg, 'Typed by a shape file of the project\'s own, since ' + pkg + ' is not installed: it says what the project wrote, which may not be what runs']
           : ['is-standin', 'source · ' + pkg, 'Typed by the source of ' + pkg + ' in a repository read here, since it is not installed: the source may not be the version that runs']; }],
-      [(row) => row.seen > 0, (row) => ['is-seen', 'seen ×' + row.seen.toLocaleString(), 'Seen this many times at run time']],
+      [(row) => row.seen > 0 && row.confirmed === 0, (row) => ['is-seen', 'seen ×' + row.seen.toLocaleString(), 'Seen this many times at run time']],
       [(row) => row.crosses, (row) => ['', 'into ' + repoName(row.node), 'Leaves one service for another']],
       [(row) => row.again, () => ['', 'listed above', 'Reached again; its steps are listed where it first appears']],
       [(row) => row.loop, () => ['', 'loops back', 'Already on this path']],
@@ -6099,10 +6133,12 @@ __STEPS_LOGIC__
       };
     };
     const stepsSaid = (found) => {
-      const guesses = found.rows.filter((row) => row.edge >= 0 && !row.certain).length;
+      const guesses = found.rows.filter((row) => row.edge >= 0 && !row.certain && row.confirmed === 0).length;
+      const confirmed = found.rows.filter((row) => row.confirmed > 0).length;
       const failing = found.rows.filter((row) => row.failure && row.kind !== 'break').length;
       const breaks = found.rows.filter((row) => row.kind === 'break').length;
       return [plural(found.rows.length - breaks, 'step', 'steps'), guesses ? plural(guesses, 'best guess', 'best guesses') : '',
+        confirmed ? plural(confirmed, 'best guess', 'best guesses') + ' confirmed by traffic' : '',
         failing ? failing + ' on failure' : '', breaks ? plural(breaks, 'break', 'breaks') : '', seen.entry(found.rows[0].node) ? 'seen ×' + seen.entry(found.rows[0].node).toLocaleString() : '']
         .filter(Boolean).join(' · ');
     };

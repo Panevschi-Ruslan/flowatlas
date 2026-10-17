@@ -111,6 +111,9 @@ const FINDINGS: readonly string[] = [
 // default, so the read gate can tell a reason somebody classified as a gap from
 // one nobody looked at.
 const GAPS: readonly string[] = [
+  // What traffic reached and no reader drew (core/blind-spots.ts, P110): asked
+  // of the observed file at read time, at info, never stored in the graph.
+  'seen-not-in-code',
   // Reading and the build (core/project.ts, cli/commands/build.ts)
   'file-not-parsed',
   'service-read-nothing',

@@ -138,6 +138,8 @@ const GATED = {
       // What traffic answered beside what a route declares (P106), asked at doctor time.
       'failure-seen-undeclared',
       'failure-declared-unseen',
+      // What traffic reached and no reader drew (P110), asked at doctor time; it names no file.
+      'seen-not-in-code',
       'server-action-unread',
       // The application or module the routes hang from.
       'application-root-unread',

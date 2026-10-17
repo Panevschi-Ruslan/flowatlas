@@ -8,6 +8,36 @@ only one of them moved.
 
 ### Added
 
+- **Never seen, blind spots, and best guesses traffic confirmed (P110).** Three
+  read-time overlays of `.flowatlas/observed.json` on the static graph; the
+  graph on disk never changes and no edge becomes `runtime`. **Never seen**:
+  the MCP tool `never_seen({ since, service, kind, confidence, limit })` lists
+  the ways in, channels and methods the code runs that traffic never touched,
+  `strong` beside a sibling seen 20 times over a window the file holds in
+  full, `weak` otherwise, with one note per service the window holds nothing
+  of; `since` cuts the file's hours at read time. `flowatlas dead` and the MCP
+  `dead` read traffic as evidence (`evidence.seen`, `evidence.neverSeen`):
+  seen is `alive` whatever the code says, and an outside way in never seen
+  beside busy neighbours is `likely-dead`; the CLI gains a `seen` column and
+  `--since <dur>`. **Blind spots**: what `observe` matched to nothing becomes
+  one `seen-not-in-code` info row per service and kind in `doctor`, listed
+  under that cause by `doctor --unresolved` and the MCP `cant_follow` with the
+  names the trace kept and the call that looks for each (`seen` groups); the
+  page's "Seen at run time, not found in code" list says the same call and the
+  window. A send, invoke or start whose target the map has, along a join it
+  does not draw, is a new unmatched kind `join`. **Best guesses confirmed**: a
+  `heuristic` join traffic went through is counted apart (`1 of 4 best guesses
+  confirmed by traffic in 2h`, `doctor.json` `traffic`), the row explaining
+  the guess is withdrawn while it holds, MCP `get_flow` / `who_calls` rows say
+  `confirmedBy: "traffic"`, the Steps mark reads `best guess, seen ×n` (in the
+  copied prompt too), and the map draws such a link solid. The page marks a
+  never-seen way in `not seen in <window>` (strong in the warn tone) and the
+  Busiest tab lists them. Two matcher changes came with it: a client span that
+  names the method it ran in (`code.function`) singles out that method's call
+  site when two calls of one route fit, and a workflow step's task that names
+  no target in an execution history is credited to the one target of its kind
+  the step's task reaches on the map (P108's open item).
+
 - **`observe --listen`, a receiver on this machine (P109).** `flowatlas
   observe --listen [port]` takes OTLP/HTTP traces (JSON or protobuf, gzip) on
   `/v1/traces` and the @nestjs/observe agent's batches on

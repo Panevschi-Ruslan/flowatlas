@@ -543,6 +543,11 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'failure-declared-unseen': () =>
     'The code says the way in can fail with this and no request in the observed window answered it: an error path nothing exercised, or one that cannot happen any more. Traffic differs per environment and per week, so it is a question for a test, not proof the path is dead.',
 
+  // What traffic reached and no reader drew (doctor/traffic.ts, P110): the
+  // spans observe matched to nothing, one row per service and kind.
+  'seen-not-in-code': () =>
+    'Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it in the map (the MCP tool cant_follow names the call for each), add the service to the configuration if it is missing, and a later build that reads it makes the row go away. Nothing is drawn from it: a blind spot is a question, not an edge.',
+
   // Workflows written down as state machine definitions (stepfunctions)
   'workflow-definition-unreadable': () =>
     'The definition could not be read as a state machine, so no step of it is in the graph. Fix the syntax, or give the file another name if it is not a definition.',

@@ -86,6 +86,29 @@ describe('a request counts once', () => {
     expect(observed.ambiguous).toEqual([]);
   });
 
+  it('credits the join of the call site made by the method the client span names, when two of one route fit (P110)', () => {
+    const graph = indexGraph(
+      [
+        call(ONE, '/products/:id'),
+        call(TWO, '/products/:id'),
+        route(PRODUCT, '/products/:id'),
+        method('src/a.ts', 'ProductsApi.one'),
+        method('src/b.ts', 'ProductsApi.two'),
+      ],
+      [
+        joined(ONE, PRODUCT),
+        joined(TWO, PRODUCT),
+        { from: 'shop#src/a.ts:ProductsApi.one', to: ONE, type: 'calls', confidence: 'static' },
+        { from: 'shop#src/b.ts:ProductsApi.two', to: TWO, type: 'calls', confidence: 'static' },
+      ],
+    );
+    const named = matchSpans(graph, [{ ...caller('client', '/products/p1'), symbol: 'ProductsApi.two' }, server('/products/:value', 'caller')]);
+    expect(Object.keys(named.joins)).toEqual([edgeIdOf(joined(TWO, PRODUCT))]);
+    const unnamed = matchSpans(graph, [caller('client', '/products/p1'), server('/products/:value', 'caller')]);
+    expect(unnamed.joins).toEqual({});
+    expect(unnamed.ambiguous.map((row) => row.kind)).toContain('join');
+  });
+
   it('credits no route when two tie for a path', () => {
     const graph = indexGraph(
       [route('entry:catalog:http:GET:/items/:id', '/items/:id'), route('entry:catalog:http:GET:/items/:slug', '/items/:slug')],

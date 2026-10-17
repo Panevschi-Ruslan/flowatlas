@@ -147,7 +147,8 @@ export const nodeAmbiguous = (counts: ObservedCounts, id: string, join?: string)
  * counted on, because they fit other places as well.
  *
  * The edge into a row first, since that is the join the row stands for; the
- * row's own hits when the edge was not seen by name. A row nothing saw stays
+ * row's own hits when the edge was not seen by name. A row joined by a best
+ * guess whose join was seen says `confirmedBy: 'traffic'` (P110). A row nothing saw stays
  * without the field rather than saying 0: a trace covers what was exercised,
  * and silence is not evidence of nothing.
  */
@@ -161,6 +162,9 @@ export const markObserved = (
     if (item.node.ref !== true) {
       const seen = seenOn(counts, parent, item, direction);
       if (seen !== undefined) Object.assign(item, { observed: seen.count, ...figuresOf(seen.figures) });
+      // A best guess traffic went through (P110): the join itself was seen, not just the node.
+      const join = joinInto(parent, item, direction);
+      if (item.edge?.confidence === 'heuristic' && join !== undefined && (counts.joins[join]?.count ?? 0) >= 1) item.confirmedBy = 'traffic';
       const unsure = nodeAmbiguous(counts, item.node.id, joinInto(parent, item, direction));
       if (unsure !== undefined) item.seenAmbiguous = unsure;
     }

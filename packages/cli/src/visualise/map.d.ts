@@ -122,6 +122,13 @@ export declare const mapSeenCount: (
   seenJoin: (edge: number) => { count: number } | null,
 ) => number;
 
+export declare const mapGuessesConfirmed: (
+  map: MapModel,
+  link: MapViewLink,
+  isGuess: (edge: number) => boolean,
+  confirmed: (edge: number) => boolean,
+) => boolean;
+
 export declare const boxId: (box: MapBox) => string;
 export declare const clusterId: (box: MapBox) => string;
 export declare const createMap: (packed: PackedMap) => MapModel;

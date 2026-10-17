@@ -24,6 +24,7 @@ import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
 import { expandReasons } from '../doctor/hints.js';
 import { runtimeFailureRows } from '../doctor/runtime.js';
+import { blindSpotRows, withConfirmedGuesses } from '../doctor/traffic.js';
 import { readObservedBeside } from '../observe/store.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { looksLike } from '../stacks.js';
@@ -431,8 +432,13 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
     // observed file sits beside the database: asked now, like the ages above,
     // and at info, so it moves neither the exit code nor the baseline unless
     // --strict-runtime says it should.
-    const runtime = runtimeFailureRows(db, readObservedBeside(dbPathFor(options)).observed);
-    const split = acceptedSplitOf(db, [...raw, ...age, ...runtime], readAccepted(dbPathFor(options)));
+    // What traffic reached that no reader drew, one info row per service and
+    // kind, and the best guesses it went through (P110): the row explaining a
+    // guess is left out while traffic confirms it.
+    const observed = readObservedBeside(dbPathFor(options)).observed;
+    const runtime = [...runtimeFailureRows(db, observed), ...blindSpotRows(observed)];
+    const guesses = withConfirmedGuesses(db, observed, [...raw, ...age, ...runtime], options.service);
+    const split = acceptedSplitOf(db, guesses.rows, readAccepted(dbPathFor(options)));
     const rows = split.fresh;
     const path = baselinePathFor(options, settings);
 
@@ -471,6 +477,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
 
     const accepted = acceptedCountOf(split);
     if (accepted !== undefined) report.unresolved.accepted = accepted;
+    if (guesses.confirmed !== undefined) report.traffic = guesses.confirmed;
 
     const out = options.out ?? settings.outputDir;
     let file: string | undefined;
@@ -611,7 +618,9 @@ export const cantFollowRowsOf = (
   const { db, close } = openProjectDb(options);
   try {
     const { rows: raw, note } = rowsFor(db, settings.outputDir);
-    const split = acceptedSplitOf(db, raw, readAccepted(dbPathFor(options)));
+    // What traffic reached and no reader drew (P110), the same rows doctor counts.
+    const blind = blindSpotRows(readObservedBeside(dbPathFor(options)).observed);
+    const split = acceptedSplitOf(db, [...raw, ...blind], readAccepted(dbPathFor(options)));
     return {
       fresh: split.fresh,
       accepted: acceptedCountOf(split) ?? { rows: 0, sites: 0 },

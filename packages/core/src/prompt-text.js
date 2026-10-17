@@ -354,14 +354,18 @@ const promptVia = (step) => {
  * What a step's line is marked with, in this order: how sure the join is, when
  * it runs, how often, what it throws, and how often it was seen.
  */
+/** A best guess traffic went through (P110): the join was seen, so the line says both. */
+const promptConfirmed = (step) => step.via !== undefined && step.via.confidence === 'heuristic' && (step.marks?.seen ?? 0) > 0;
+
 const PROMPT_MARKS = Object.freeze([
-  [(step) => step.via !== undefined && !PROMPT_CERTAIN.has(step.via.confidence), () => 'best guess'],
+  [(step) => step.via !== undefined && !PROMPT_CERTAIN.has(step.via.confidence),
+    (step) => (promptConfirmed(step) ? `best guess, seen ×${step.marks.seen}` : 'best guess')],
   [(step) => step.marks?.failure === true, () => 'on failure'],
   [(step) => step.marks?.together === true, () => 'side by side'],
   [(step) => step.marks?.perItem !== undefined, (step) => `per item (${step.marks.perItem})`],
   [(step) => step.marks?.nPlusOne === true, () => 'likely N+1'],
   [(step, throws) => throws.length > 0, (step, throws) => `throws ${throws.map(promptFailSay).join(', ')}`],
-  [(step) => (step.marks?.seen ?? 0) > 0, (step) => `seen ×${step.marks.seen}`],
+  [(step) => (step.marks?.seen ?? 0) > 0 && !promptConfirmed(step), (step) => `seen ×${step.marks.seen}`],
 ]);
 
 /** The lines of one step: what it is, where it lives, how it was reached, its marks, and what it logs. */

@@ -51,7 +51,7 @@ a reader must not read planted in it:
 | File | What it is | What it gives |
 |---|---|---|
 | `xray.batch-get-traces.json` | `aws xray batch-get-traces`: the stage, each function's `AWS::Lambda` and `AWS::Lambda::Function` segments, the state machine with its steps, an inferred DynamoDB segment | everything the OTLP trace gives: nine entries, twelve joins, the steps, the table, the channels, the two planted unmatched calls |
-| `fulfil-order.history.json` | `aws stepfunctions get-execution-history`, with `describe-execution` merged in | the workflow's run, its four steps, and `ChargeCard`'s direct invoke of `charge-card` |
+| `fulfil-order.history.json` | `aws stepfunctions get-execution-history`, with `describe-execution` merged in | the workflow's run, its four steps, `ChargeCard`'s direct invoke of `charge-card`, and the three service integrations whose target the history does not name, each credited to the one target of its kind the step's task reaches on the map (P110): `ReserveStock`'s invoke, `MarkPaid`'s table and its stream, `SendReceipt`'s topic |
 | `checkout.access-log.jsonl` | the HTTP API's JSON access log: the checkout, and a `$default` request for `/favicon.ico` | `POST /checkout`'s hit, status and latency, and the favicon as unmatched |
 | `report-lines.insights.json`, `.csv` | a Logs Insights export of the functions' log groups: six `REPORT` lines, a `START` line and a log line | each function's run, `charge-card`'s as an error |
 

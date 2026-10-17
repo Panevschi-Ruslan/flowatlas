@@ -4,6 +4,7 @@ import type { LinkReport } from '../report.js';
 import { matchesRoutePattern } from '../route-audit.js';
 import { oneSegmentOff } from '../route-match.js';
 import { byId, methodsByOwner, ownerOf } from './graph.js';
+import { trafficOverlay, type NeverSeenConfidence, type ObservedInput, type TrafficOverlay } from './never-seen.js';
 
 /**
  * Entry kinds something outside the graph pulls.
@@ -100,7 +101,10 @@ export interface OneOff {
  * the first by id. `missing`: the end a channel lacks. `unresolvedInjects`:
  * the injects of the service that did not resolve, any of which may reach a
  * provider. `classReached`: a method nothing calls on a class that is used.
- * `via`: the way in a handler's verdict was read from.
+ * `via`: the way in a handler's verdict was read from. `seen` and
+ * `neverSeen` are what the observed file says (P110): how often traffic went
+ * through it in the window, or that it never did and how far that silence
+ * can be trusted.
  */
 export interface DeadEvidence {
   couldHit?: NearMiss[];
@@ -112,6 +116,8 @@ export interface DeadEvidence {
   unresolvedInjects?: number;
   classReached?: true;
   via?: string;
+  seen?: { count: number; lastSeen: string | null; window: string };
+  neverSeen?: { window: string; confidence: NeverSeenConfidence };
 }
 
 /** How many near misses and calls one segment off a row names. */
@@ -181,6 +187,10 @@ export interface DeadOptions {
   infrastructure?: InfrastructureRules;
   /** Only rows of this class. */
   class?: EntryClassName;
+  /** What `flowatlas observe` wrote beside the database (P110): traffic is evidence for each verdict. */
+  observed?: ObservedInput;
+  /** The window the evidence is read over (`7d`); absent, everything the file holds. */
+  since?: string;
 }
 
 /** `dead.infrastructure` as the configuration writes it. */
@@ -617,6 +627,55 @@ const silentHandlerRow = (node: GraphNode, entryId: string, channel: string): De
   evidence: { missing: 'producer', via: channel },
 });
 
+/** The traffic overlay the options ask for, or none without an observed file. */
+const trafficFor = (db: GraphDb, options: DeadOptions): TrafficOverlay | undefined =>
+  options.observed === undefined ? undefined : trafficOverlay(db, options.observed, options.since);
+
+const times = (n: number): string => `${n} time${n === 1 ? '' : 's'}`;
+
+/**
+ * A verdict with what traffic says of it (P110), the static answer kept
+ * otherwise. Seen in the window is `alive` whatever the static answer, and
+ * where that was `dead` the reason says static reach missed a caller. Never
+ * seen, with nothing in the code reaching it and busy neighbours, turns an
+ * `unknown` into `likely-dead`; every other never-seen row keeps its verdict
+ * and gains the silence as evidence. No observed file: exactly P95's answer.
+ */
+const withTraffic = <T extends { verdict: DeadVerdict; reason: string; evidence?: DeadEvidence }>(
+  row: T,
+  id: string,
+  traffic: TrafficOverlay | undefined,
+): T => {
+  if (traffic === undefined) return row;
+  const seen = traffic.seenOf(id);
+  if (seen !== undefined) {
+    const said = `seen ${times(seen.count)} in ${traffic.window.label} at run time`;
+    const reason =
+      row.verdict === 'alive'
+        ? row.reason
+        : `${row.reason}; ${said}${row.verdict === 'unknown' ? '' : ', so something static reach does not see calls it (a blind spot)'}`;
+    return {
+      ...row,
+      verdict: 'alive',
+      reason,
+      evidence: { ...row.evidence, seen: { count: seen.count, lastSeen: seen.lastSeen, window: traffic.window.label } },
+    };
+  }
+  const never = traffic.neverOf(id);
+  if (never === undefined) return row;
+  const evidence: DeadEvidence = { ...row.evidence, neverSeen: { window: never.window, confidence: never.confidence } };
+  if (row.verdict === 'unknown' && never.reachableFrom === 'outside' && never.confidence === 'strong') {
+    const { seen: busy, of, most } = never.neighbours;
+    return {
+      ...row,
+      verdict: 'likely-dead',
+      reason: `${row.reason}; never seen in ${never.window} while ${busy} of its ${of} neighbour${of === 1 ? '' : 's'} ${busy === 1 ? 'was' : 'were'}, the busiest ${times(most)}`,
+      evidence,
+    };
+  }
+  return { ...row, evidence };
+};
+
 /**
  * Routes nothing in the project calls, and handlers whose channel is silent.
  *
@@ -666,7 +725,9 @@ export const deadEntries = (
 
   // Rank first, then id. `--max` cuts from the bottom, so what it cuts is the
   // rows that say why they are here rather than the rows that do not.
-  const wanted = options.class === undefined ? rows : rows.filter((row) => row.class === options.class);
+  const traffic = trafficFor(db, options);
+  const read = traffic === undefined ? rows : rows.map((row) => withTraffic(row, row.id, traffic));
+  const wanted = options.class === undefined ? read : read.filter((row) => row.class === options.class);
   return wanted.sort((a, b) => rankOf(a) - rankOf(b) || byId(a.id, b.id));
 };
 
@@ -770,7 +831,10 @@ export const deadChannels = (
   }
   for (const id of report.channels.noProducers) record(id, 'producer', () => ({ said: 'no producer in any repo', streams: false }));
 
-  return [...rows.values()].sort((a, b) => byId(a.id, b.id));
+  const traffic = trafficFor(db, options);
+  return [...rows.values()]
+    .map((row) => withTraffic(row, row.id, traffic))
+    .sort((a, b) => byId(a.id, b.id));
 };
 
 /** What the providers are read against, gathered once per answer. */
@@ -916,13 +980,14 @@ const methodAnswer = (db: GraphDb, context: ProviderContext, method: GraphNode):
  */
 export const deadMethods = (db: GraphDb, options: DeadOptions = {}): DeadMethod[] => {
   const context = providerContext(db);
+  const traffic = trafficFor(db, options);
   const rows: DeadMethod[] = [];
   for (const method of db.nodesByType('method')) {
     if (!inService(method, options.service)) continue;
     const owner = ownerOf(method.id);
     const holder = owner === undefined ? undefined : db.node(owner);
     if (holder?.kind === 'external') continue;
-    const answered = methodAnswer(db, context, method);
+    const answered = withTraffic(methodAnswer(db, context, method), method.id, traffic);
     if (answered.verdict === 'alive') continue;
     rows.push({
       id: method.id,
@@ -1048,7 +1113,7 @@ export const deadVerdict = (
   if (node === undefined) return undefined;
   const context = routeContext(db, report, options);
   const providers = (): ProviderContext => providerContext(db);
-  const answered: Answered & Partial<Pick<DeadEntry, 'class' | 'role'>> =
+  const statically: Answered & Partial<Pick<DeadEntry, 'class' | 'role'>> =
     node.type === 'entry'
       ? entryAnswer(db, report, context, node)
       : node.type === 'channel'
@@ -1062,6 +1127,7 @@ export const deadVerdict = (
             : node.type === 'function'
               ? functionAnswer(db, node)
               : { verdict: 'unknown', reason: `dead judges ways in, channels, classes, methods and functions, not a ${node.type}`, evidence: {} };
+  const answered = withTraffic(statically, node.id, trafficFor(db, options));
   return {
     id: node.id,
     type: node.type,
@@ -1072,7 +1138,7 @@ export const deadVerdict = (
     reason: answered.reason,
     ...(answered.class === undefined ? {} : { class: answered.class }),
     ...(answered.role === undefined ? {} : { role: answered.role }),
-    evidence: answered.evidence,
+    evidence: answered.evidence ?? {},
   };
 };
 

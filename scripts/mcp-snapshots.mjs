@@ -194,6 +194,20 @@ const OBSERVED_CASES = [
   ['undeclared_failures.bounded', 'undeclared_failures', { service: 'billing', limit: 1, minHits: 2 }],
   ['get_flow.failures', 'get_flow', { entry: 'POST /invoices' }],
   ['describe_for_prompt.failures', 'describe_for_prompt', { id: 'entry:billing:http:POST:/invoices' }],
+  // What the code runs and traffic never touched, strong first (P110): every
+  // row, one service's strong ones, a window cut at read time, and one the
+  // file holds less of than asked; the blind spots under their own cause;
+  // `dead` with traffic as evidence; and a best guess twenty page loads went
+  // through, confirmed on the rows that show it.
+  ['never_seen.all', 'never_seen', {}],
+  ['never_seen.strong-gateway', 'never_seen', { service: 'gateway', confidence: 'strong', limit: 5 }],
+  ['never_seen.since-1h', 'never_seen', { since: '1h', kind: 'http' }],
+  ['never_seen.short', 'never_seen', { since: '7d', service: 'orders' }],
+  ['cant_follow.seen-not-in-code', 'cant_follow', { cause: 'seen-not-in-code' }],
+  ['dead.likely-by-traffic', 'dead', { id: 'entry:gateway:http:POST:/orders/:param/cancel' }],
+  ['dead.seen', 'dead', { id: 'entry:billing:http:GET:/invoices/:param' }],
+  ['dead.observed', 'dead', { service: 'gateway', kind: 'entries' }],
+  ['who_calls.confirmed', 'who_calls', { symbol: 'entry:gateway:http:GET:/orders/:param', depth: 1 }],
 ];
 
 /** A copy of the fixture's output with the observed file beside it, removed when the run ends. */

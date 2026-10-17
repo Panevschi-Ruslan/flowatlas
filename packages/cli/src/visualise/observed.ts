@@ -1,4 +1,5 @@
 import {
+  blindSpotNext,
   compareEntryFailures,
   comparisonSays,
   joinIdOf,
@@ -20,7 +21,9 @@ import { wordsOf, type Word } from './dictionary.js';
  *     entries: { [entryId]: { hits, ...stats } },   // entryId: entry node id, a key of `entryIds`
  *     window?: { since?, from, to },                // the hours the counts cover (P105)
  *     failures?: { [entryId]: FailureSeen },        // statuses answered against the failures declared (P106)
- *     unmatched: [[service, kind, name]],           // seen at run time, not found in code
+ *     unmatched: [[service, kind, name, next?]],    // seen at run time, not found in code; `next` looks for it (P110)
+ *     never?: { window, rows: [[node, strong]] },   // what the code runs and traffic never touched (P110)
+ *     confirmed?: [edge],                           // best guesses traffic went through (P110)
  *     ambiguous?: [[service, kind, name, count, places, unnamed?]],  // fit several places (P85)
  *     services?: [name], kinds?: [kind]             // what `service` and `kind` index (P84)
  *   }
@@ -44,6 +47,14 @@ import { wordsOf, type Word } from './dictionary.js';
  * is: the statuses it answered that no failure declares, the declared ones
  * seen and never seen, over `window`. The Steps failure chips and the copied
  * prompt read it; `failSeenOf` (steps.js) hands it out.
+ *
+ * `never` and `confirmed` (P110) are the linker's `neverSeen` and
+ * `confirmedJoins`, worked out by the command over the database and handed
+ * in as `traffic`: `never.rows` are node positions with `1` for a strong row
+ * (a busy neighbour) and `0` for a weak one, over `never.window` (`2h`);
+ * `confirmed` are positions in `edges` of `heuristic` joins the window holds.
+ * An unmatched row's `next` is the MCP call that looks for it in the map,
+ * the text `cant_follow` names.
  */
 export type PackedAmbiguous = [service: Word, kind: Word, name: string, count: number, places: number[], unnamed?: number];
 
@@ -63,10 +74,19 @@ export interface PackedObserved {
   entries: Record<string, { hits: number } & PackedStats>;
   window?: ObservedWindow;
   failures?: Record<string, PackedFailuresSeen>;
-  unmatched: Array<[service: Word, kind: Word, name: string]>;
+  unmatched: Array<[service: Word, kind: Word, name: string, next?: string]>;
+  never?: { window: string; rows: Array<[node: number, strong: 0 | 1]> };
+  confirmed?: number[];
   ambiguous?: PackedAmbiguous[];
   services?: string[];
   kinds?: string[];
+}
+
+/** What the command worked out of traffic over the graph (P110), by id: handed in, never computed here. */
+export interface PackTraffic {
+  never: { window: string; rows: ReadonlyArray<{ id: string; confidence: 'strong' | 'weak' }> };
+  /** Join ids of best guesses traffic went through. */
+  confirmed: readonly string[];
 }
 
 /** The figures a row measured, each only when it did. */
@@ -88,6 +108,7 @@ export const packObserved = (
   position: ReadonlyMap<string, number>,
   /** The nodes themselves, for what each way in declares it fails with (P106). */
   nodes: readonly GraphNode[] = [],
+  traffic?: PackTraffic,
 ): PackedObserved => {
   const at = new Map(packedEdges.map((edge, index) => [joinIdOf(edge.from, edge.type, edge.to), index]));
   const joins: PackedObserved['joins'] = {};
@@ -130,11 +151,19 @@ export const packObserved = (
   );
   const kinds = wordsOf(rows.map(({ kind }) => kind), 'kinds');
   const serviceWord = (service: string | undefined): Word => (service === undefined ? -1 : services.word(service));
-  const unmatched = observed.unmatched.map(({ service, kind, name }): PackedObserved['unmatched'][number] => [
-    serviceWord(service),
-    kinds.word(kind),
-    name,
-  ]);
+  const unmatched = observed.unmatched.map(({ service, kind, name }): PackedObserved['unmatched'][number] =>
+    traffic === undefined
+      ? [serviceWord(service), kinds.word(kind), name]
+      : [serviceWord(service), kinds.word(kind), name, blindSpotNext(kind, name, service)],
+  );
+  const neverRows = (traffic?.never.rows ?? []).flatMap((row): Array<[number, 0 | 1]> => {
+    const place = position.get(row.id);
+    return place === undefined ? [] : [[place, row.confidence === 'strong' ? 1 : 0]];
+  });
+  const confirmed = (traffic?.confirmed ?? []).flatMap((id) => {
+    const place = at.get(id);
+    return place === undefined ? [] : [place];
+  });
   const ambiguous = ambiguousIn.map(({ service, kind, name, count, candidates, more }): PackedAmbiguous => {
     const places = candidates.flatMap((id) => {
       const place = kind === 'join' ? at.get(id) : position.get(id);
@@ -151,6 +180,8 @@ export const packObserved = (
     ...(observed.window === undefined || observed.window.from === null ? {} : { window: observed.window }),
     ...(Object.keys(failures).length === 0 ? {} : { failures }),
     unmatched,
+    ...(traffic === undefined ? {} : { never: { window: traffic.never.window, rows: neverRows } }),
+    ...(confirmed.length === 0 ? {} : { confirmed }),
     ...(ambiguous.length === 0 ? {} : { ambiguous }),
     ...(services.list.length === 0 ? {} : { services: services.list }),
     ...(kinds.list.length === 0 ? {} : { kinds: kinds.list }),

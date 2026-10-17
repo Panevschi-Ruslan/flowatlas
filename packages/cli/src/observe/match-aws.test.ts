@@ -67,6 +67,16 @@ describe('a function', () => {
   });
 });
 
+describe('an invoke', () => {
+  it('of a function the map has, from code with no join into it, is a blind spot of kind join (P110)', () => {
+    const nodes = [invoke('shop', 'checkout'), invoke('shop', 'print-label'), handler('shop', 'src/checkout.ts')];
+    const edges = [edge('entry:shop:invoke:checkout', 'handles', 'shop#src/checkout.ts:handler')];
+    const observed = matchSpans(indexGraph(nodes, edges), [fn('checkout'), sdk('i', 'Lambda', 'Invoke', { invokes: 'print-label' })]);
+    expect(observed.joins).toEqual({});
+    expect(rows(observed)).toEqual([{ kind: 'join', name: 'invoke print-label', count: 1 }]);
+  });
+});
+
 describe('a table call', () => {
   const nodes = [invoke('shop', 'archive'), handler('shop', 'src/archive.ts'), table('orders'), table('audit')];
   const edges = [edge('entry:shop:invoke:archive', 'handles', 'shop#src/archive.ts:handler')];
@@ -145,6 +155,13 @@ describe('a send', () => {
         candidates: ['channel:eventbridge/shop/shop.orders/OrderPlaced', 'channel:eventbridge/shop/shop.orders/OrderRefunded'],
       }),
     ]);
+  });
+
+  it('onto a channel the map has, along a join it does not draw, is a blind spot of kind join (P110)', () => {
+    const observed = matchSpans(index, [fn('checkout'), sdk('e', 'EventBridge', 'PutEvents', { destination: 'default', transport: 'eventbridge' })]);
+    expect(observed.channels['channel:eventbridge/default/shop.orders/OrderPlaced']?.hits).toBe(1);
+    expect(observed.joins).toEqual({});
+    expect(rows(observed)).toEqual([{ kind: 'join', name: 'send eventbridge/default/shop.orders/OrderPlaced', count: 1 }]);
   });
 
   it('that only reads, receives or describes is credited to nothing and missed by nothing', () => {

@@ -23,7 +23,9 @@ import type { ObservedSpan } from './span.js';
  * call ran - two writes onto one table's stream, from two functions - the
  * caller's own scope settles it: the function the span ran in, read down
  * from its handler, or the step it is part of. A join the map does not draw
- * is never made up from a call that was seen (P110 says those).
+ * is never made up from a call that was seen: where the target is on the map
+ * and no join into it leaves the caller, the span is a blind spot of kind
+ * `join`, named by what it did and the target (P110).
  */
 
 /** What the matcher needs of the tally: `Tally` in `match.ts`. */
@@ -213,11 +215,25 @@ export const matchAws = (index: GraphIndex, tally: AwsTally, tree: SpanTree, cou
 
   // --- SDK calls ----------------------------------------------------------------
 
+  /**
+   * The join a call ran, or a blind spot when the target is on the map and no
+   * join into it leaves the caller: the map draws the target and not the way
+   * there (P110).
+   */
+  const joinFrom = (span: ObservedSpan, edges: readonly GraphEdge[], name: string, said: string): GraphEdge | undefined => {
+    const joins = fromCaller(span, edges).filter(isJoinEdge);
+    if (joins.length === 0) {
+      tally.miss(span, 'join', said);
+      return undefined;
+    }
+    return counting.countJoin(span, joins, name, 'caller');
+  };
+
   /** A send onto `channel`: its message, and the `emits` join from the caller. */
   const emitTo = (span: ObservedSpan, channel: GraphNode): void => {
     tally.hit('channels', channel.id, span);
     const emits = (index.to.get(channel.id) ?? []).filter((edge) => edge.type === 'emits');
-    counting.countJoin(span, fromCaller(span, emits), channel.label, 'caller');
+    joinFrom(span, emits, channel.label, `send ${channel.label}`);
   };
 
   const channelsOnBus = new Map<string, GraphNode[]>();
@@ -292,10 +308,69 @@ export const matchAws = (index: GraphIndex, tally: AwsTally, tree: SpanTree, cou
       return;
     }
     const into = entries.flatMap((entry) => (index.to.get(entry.id) ?? []).filter(isJoinEdge));
-    const joined = counting.countJoin(span, fromCaller(span, into), name, 'caller');
+    const joined = joinFrom(span, into, name, `${kind === 'workflow' ? 'start' : 'invoke'} ${name}`);
     // The call site the join leaves from, as an http call's is (a step invokes from itself).
     if (joined !== undefined && !isState(nodeOf(joined.from))) tally.hit('symbols', joined.from, span);
   };
+
+  // --- a step's call that names no target ------------------------------------
+
+  /** The step a span was made by, nearest first, when the map has it. */
+  const stepAbove = (span: ObservedSpan): GraphNode | undefined => {
+    let at = tree.parentOf(span);
+    for (let hops = 0; at !== undefined && hops < MAX_HOPS; hops += 1, at = tree.parentOf(at)) {
+      const state = stateOf(at);
+      if (state !== undefined) return state;
+    }
+    return undefined;
+  };
+
+  /** The nodes of one kind a step's own task reaches, each once. */
+  const reachedBy = (state: GraphNode, edgeType: string, wanted: (node: GraphNode) => boolean): GraphNode[] => {
+    const found = new Map<string, GraphNode>();
+    for (const id of stateScope(state)) {
+      for (const edge of index.from.get(id) ?? []) {
+        const node = edge.type === edgeType ? nodeOf(edge.to) : undefined;
+        if (node !== undefined && wanted(node)) found.set(node.id, node);
+      }
+    }
+    return [...found.values()];
+  };
+
+  /**
+   * A call a workflow's history records without its target (P108: a task's
+   * parameters are never read): the one target of its kind the step's own
+   * task reaches on the map, the way a step's scope settles any other call.
+   * None, or several, is credited to nothing (I3).
+   */
+  const STEP_TARGETS: Readonly<Record<'table' | 'channel' | 'invoke' | 'workflow', (span: ObservedSpan, state: GraphNode, sends: boolean) => void>> = {
+    invoke: (span, state) => {
+      const into = (index.from.get(state.id) ?? []).filter((edge) => edge.type === 'calls' && nodeOf(edge.to)?.kind === 'invoke');
+      if (into.length === 1) counting.countJoin(span, into, nodeOf(into[0]!.to)!.label, 'caller');
+    },
+    workflow: (span, state) => {
+      const into = (index.from.get(state.id) ?? []).filter((edge) => edge.type === 'calls' && nodeOf(edge.to)?.kind === 'workflow');
+      if (into.length === 1) counting.countJoin(span, into, nodeOf(into[0]!.to)!.label, 'caller');
+    },
+    channel: (span, state) => {
+      const channels = reachedBy(state, 'emits', (node) => node.type === 'channel');
+      if (channels.length === 1) emitTo(span, channels[0]!);
+    },
+    table: (span, state, sends) => {
+      const tables = reachedBy(state, 'queries', (node) => node.type === 'table');
+      if (tables.length === 1) tableCall(span, tables[0]!.label, sends);
+    },
+  };
+
+  /** Whether a call says what it was made on: a table, a destination, a function, a workflow. */
+  const namesTarget = (span: ObservedSpan, lookup: keyof typeof STEP_TARGETS): boolean =>
+    lookup === 'table'
+      ? (span.tables ?? []).length > 0
+      : lookup === 'channel'
+        ? channelLabelOf(span) !== undefined || eventBusPrefixOf(span) !== undefined
+        : lookup === 'invoke'
+          ? span.invokes !== undefined
+          : span.workflow !== undefined;
 
   const sdkCall = (span: ObservedSpan): void => {
     const call = awsCallOf(span);
@@ -304,6 +379,11 @@ export const matchAws = (index: GraphIndex, tally: AwsTally, tree: SpanTree, cou
       return;
     }
     const sends = sendsOf(span);
+    if (!namesTarget(span, call.lookup)) {
+      const state = (sends || call.lookup === 'table') ? stepAbove(span) : undefined;
+      if (state !== undefined) STEP_TARGETS[call.lookup](span, state, sends);
+      return;
+    }
     switch (call.lookup) {
       case 'table':
         for (const table of span.tables ?? []) tableCall(span, table, sends);
@@ -312,10 +392,10 @@ export const matchAws = (index: GraphIndex, tally: AwsTally, tree: SpanTree, cou
         if (sends) send(span);
         return;
       case 'invoke':
-        if (sends && span.invokes !== undefined) start(span, span.invokes, index.invokes.get(span.invokes) ?? [], 'function');
+        if (sends) start(span, span.invokes!, index.invokes.get(span.invokes!) ?? [], 'function');
         return;
       case 'workflow':
-        if (sends && span.workflow !== undefined) start(span, span.workflow, index.workflows.get(span.workflow) ?? [], 'workflow');
+        if (sends) start(span, span.workflow!, index.workflows.get(span.workflow!) ?? [], 'workflow');
         return;
     }
   };

@@ -99,6 +99,12 @@ export interface FlowNode {
   errorRate?: number;
   /** Requests that could have been this row and were counted on nothing, fitting other places too (P85). */
   seenAmbiguous?: number;
+  /**
+   * On a row joined by a best guess (`edge.confidence: 'heuristic'`) that
+   * traffic went through in the window (P110): the guess is confirmed. Read
+   * beside the confidence, never written into it.
+   */
+  confirmedBy?: 'traffic';
   /** What a way in can fail with, on an entry that says (P68). */
   fails?: FailRef[];
   /** On a way in seen at run time: the statuses it answered that nothing declares, and the declared ones never seen (P106). */

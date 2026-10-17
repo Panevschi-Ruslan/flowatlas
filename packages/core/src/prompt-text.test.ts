@@ -117,7 +117,7 @@ describe('a step and its marks', () => {
       }),
     );
     expect(text).toContain(
-      '— calls (heuristic, because prefix) [best guess, on failure, side by side, per item (for-of), likely N+1, throws 409 Conflict, seen ×4]',
+      '— calls (heuristic, because prefix) [best guess, seen ×4, on failure, side by side, per item (for-of), likely N+1, throws 409 Conflict]',
     );
     expect(text).toContain('  - logs warn `retrying {id}` at line 14\n  - logs error');
   });

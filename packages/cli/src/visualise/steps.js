@@ -320,12 +320,13 @@ const placeAmongSiblings = (model, order, k) => {
 const NO_SEEN = Object.freeze({
   any: false, most: 0, unmatched: Object.freeze([]), ambiguous: Object.freeze([]),
   join: () => null, entry: () => 0, failures: () => null,
+  window: '', neverSeen: Object.freeze([]), never: () => null, confirmed: () => 0,
 });
 
 /** What ran but is not in code, `{ service?, kind, name }`; a service of -1 is none. */
 export const unmatchedOf = ({ unmatched = [], services, kinds }) =>
-  unmatched.map(([s, kind, name]) =>
-    ({ ...(s === -1 ? {} : { service: stepWord(services, s) }), kind: stepWord(kinds, kind), name }));
+  unmatched.map(([s, kind, name, next]) =>
+    ({ ...(s === -1 ? {} : { service: stepWord(services, s) }), kind: stepWord(kinds, kind), name, ...(next ? { next } : {}) }));
 
 /** What fit several places and was counted on none (P85); `places` are edges for a join, nodes otherwise. */
 export const ambiguousOf = ({ ambiguous = [], services, kinds }) =>
@@ -336,6 +337,10 @@ export const ambiguousOf = ({ ambiguous = [], services, kinds }) =>
  * What was seen at run time, from the pack's `observed` (P65), or nothing.
  * A join is named by its edge's position, an entry by its id; `failures(i)`
  * is a way in's statuses against what it declares (P106), or null.
+ * `never(i)` is a node the code runs and traffic never touched, `{ window,
+ * strong }`, or null; `confirmed(k)` how often traffic went through a best
+ * guess, 0 when it is not one or was not seen (P110); `window` the hours
+ * the file holds, in words.
  */
 export const createSeen = (data) => {
   const observed = data.observed;
@@ -359,6 +364,9 @@ export const createSeen = (data) => {
     if (at !== undefined) failures.set(at, value);
   }
   const most = Math.max(0, ...[...joins.values()].map((join) => join.count));
+  const window = (observed.never && observed.never.window) || '';
+  const never = new Map((observed.never ? observed.never.rows : []).map(([i, strong]) => [i, { window, strong: strong === 1 }]));
+  const confirmed = new Set(observed.confirmed || []);
   return {
     any: true,
     most,
@@ -367,6 +375,10 @@ export const createSeen = (data) => {
     join: (k) => joins.get(k) || null,
     entry: (i) => hits.get(i) || 0,
     failures: (i) => failures.get(i) || null,
+    window,
+    neverSeen: Object.freeze([...never].map(([node, said]) => ({ node, strong: said.strong }))),
+    never: (i) => never.get(i) || null,
+    confirmed: (k) => (confirmed.has(k) && joins.has(k) ? joins.get(k).count : 0),
   };
 };
 
@@ -394,7 +406,7 @@ export const stepsOf = (model, entry, options = {}) => {
   const rows = [{
     node: entry, depth: 0, edge: -1, parent: -1, kind: stepKindOf(model, entry), inline: stepInline(model, entry),
     confidence: '', certain: true, failure: false, together: false, again: false, loop: false, crosses: false,
-    seen: seen.entry(entry), answer: null, perItem: '', nPlusOne: false,
+    seen: seen.entry(entry), confirmed: 0, never: seen.never(entry), answer: null, perItem: '', nPlusOne: false,
     throws: throwsAt.get(entry) || NO_FAILS, logs: logsOf(model, entry),
   }];
   for (const answer of answersOf(model, entry)) {
@@ -402,7 +414,7 @@ export const stepsOf = (model, entry, options = {}) => {
     rows.push({
       node: entry, depth: 1, edge: -1, parent: 0, kind: 'answer', inline: String(answer.status),
       confidence: '', certain: true, failure: true, together: false, again: false, loop: false, crosses: false,
-      seen: 0, answer, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS,
+      seen: 0, confirmed: 0, never: null, answer, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS,
     });
   }
   const opening = stepBreakOf(model, entry);
@@ -427,7 +439,7 @@ export const stepsOf = (model, entry, options = {}) => {
       node: to, depth: up.depth + 1, edge: k, parent, kind: stepKindOf(model, to), inline: stepInline(model, to),
       confidence, certain: STEP_CERTAIN.has(confidence), failure: up.failure || failure.has(k),
       together: concurrent.has(k), again, loop, crosses: model.nodes[to][2] !== model.nodes[up.node][2],
-      seen: join ? join.count : 0, answer: null,
+      seen: join ? join.count : 0, confirmed: seen.confirmed(k), never: seen.never(to), answer: null,
       perItem: loops.has(k) ? loops.get(k).kind : '', nPlusOne: isNPlusOne(model, k, loops.get(k)),
       throws: again || loop ? NO_FAILS : throwsAt.get(to) || NO_FAILS, logs: again || loop ? NO_LOGS : logsOf(model, to),
     };
@@ -486,7 +498,7 @@ export const stepBreakOf = (model, i) => {
 const breakRow = (row, at, broken) => ({
   node: row.node, depth: row.depth + 1, edge: -1, parent: at, kind: 'break', inline: broken.say,
   confidence: '', certain: true, failure: true, together: false, again: false, loop: false, crosses: false,
-  seen: 0, answer: null, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS,
+  seen: 0, confirmed: 0, never: null, answer: null, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS,
   reason: broken.reason, message: broken.message,
 });
 

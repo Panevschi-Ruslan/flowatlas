@@ -18,7 +18,7 @@ import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type MapInput, type PackedMap } from './map-pack.js';
 import type { Observed } from '../observe/match.js';
-import { packObserved, type PackedObserved } from './observed.js';
+import { packObserved, type PackedObserved, type PackTraffic } from './observed.js';
 
 export type { PackedObserved };
 import { packShapes, type PackedShapes } from './shapes.js';
@@ -413,6 +413,8 @@ export interface PackInput {
   typeOf?: (id: string) => TypeEntry | undefined;
   /** What `flowatlas observe` wrote, when it did. */
   observed?: Observed;
+  /** What traffic says over the graph (P110), worked out where the database is open. */
+  traffic?: PackTraffic;
   /**
    * What `flowatlas accept` wrote, as the one split worked it out over
    * `unresolved` (`acceptedSplitOf` in the linker, P80): the entry that took
@@ -635,7 +637,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     ...(fails === undefined ? {} : { fails: fails.fails }),
     ...withAccess(packAccess(input.nodes)),
     ...(logs === undefined ? {} : { logs }),
-    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds, position, input.nodes) }),
+    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds, position, input.nodes, input.traffic) }),
     ...(accepted.packed === undefined ? {} : { accepted: accepted.packed }),
     ...packCantFollow(accepted.fresh, position),
     ...packStandIns(packedEdges),

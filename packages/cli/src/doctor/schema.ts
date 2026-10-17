@@ -220,6 +220,14 @@ export interface DoctorReport {
   };
   baseline: BaselineDelta;
   verdict: DoctorVerdict;
+  /**
+   * What traffic said of the best guesses (P110), present only with an
+   * observed file beside the database: how many `heuristic` joins the graph
+   * has, how many of them the window went through, and how many rows
+   * explaining a guess were left out because of it. Read beside the graph,
+   * never written into it.
+   */
+  traffic?: { window: string; bestGuesses: number; confirmed: number; withdrawn: number };
 }
 
 const level = z.enum(['action', 'info', 'nothing']);
@@ -364,6 +372,14 @@ export const doctorReportSchema = z.object({
     goneKeys: z.array(z.string()),
     truncated,
   }),
+  traffic: z
+    .object({
+      window: z.string(),
+      bestGuesses: z.number().int().nonnegative(),
+      confirmed: z.number().int().nonnegative(),
+      withdrawn: z.number().int().nonnegative(),
+    })
+    .optional(),
   verdict: z.object({
     exitCode: z.union([z.literal(0), z.literal(1), z.literal(2)]),
     reasons: z.array(z.string()),

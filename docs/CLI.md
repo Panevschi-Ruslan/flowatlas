@@ -772,6 +772,7 @@ reading cannot see.
 | `--kind <kind>` | `all` | one of `entries`, `channels`, `providers`, `fields`, `all` |
 | `--class <class>` | every class | only entries of one class: `actionable`, `stream`, `infrastructure`, `declared` |
 | `--service <name>` | every service | narrow to one |
+| `--since <dur>` | all the file holds | with an observed file: read traffic over the last `2h`, `7d`, `2w` of it (`all` for everything) |
 
 A route nothing calls is put in a **class**, which is not the same question as
 whether it is dead, and every row says which rule put it there (`why`):
@@ -834,6 +835,33 @@ json` carries every row (to `--max`) with `class`, `why`, `role`, `confidence`,
 `verdict` and `evidence`. Rows are ordered by what they mean rather than by name — the
 ones nothing explains first — so `--max` cuts the rows that say why they are
 here before it cuts the rows that do not (`fixtures/multi-repo-dead-routes`).
+
+**Traffic as evidence (P110).** With an observed file beside the database
+(`flowatlas observe`), every verdict is read beside what traffic did, and the
+entry and channel tables gain a `seen` column: `seen ×n`, `never in 7d
+(strong)`, `never in 7d (weak)`, or `—` where traffic says nothing (a service
+with no span in the window, or a method of a service whose spans name no
+methods). Seen in the window is `alive`, whatever the static answer, under
+`evidence.seen` (`{ count, lastSeen, window }`); a route the build found nobody
+calls that traffic reached says so — static reach missed a caller, a blind
+spot. Never seen is `evidence.neverSeen` (`{ window, confidence }`): `strong`
+when the file holds the whole window asked for and a sibling (a way in of the
+same service and kind, a method of the same class, a channel of the same
+service) was seen at least 20 times, `weak` otherwise. A way in nothing in the
+code reaches, `unknown` by static reading, that was never seen beside a busy
+neighbour is `likely-dead`; a static `dead` stays `dead`, with the silence as
+corroboration. `--since` cuts the window at read time from the file's hours,
+ending where the file does, so `7d` and `30d` differ without the traces at
+hand; over a window longer than the file holds, every row is `weak` and the
+header says so. Without the file every table is exactly as before. Traffic is
+what was exercised, by whom, in which environment: it is evidence, never a
+reason to delete code.
+
+```
+traffic over 2h: seen is alive whatever the code says; never seen is strong only beside a busy neighbour
+  entry:gateway:http:POST:/orders/pay      src/orders/orders.controller.ts:45      dead   never in 2h (strong)  no http_calls/hits from any repo (may be a public API)
+  entry:billing:http:GET:/invoices/:param  src/invoices/invoices.controller.ts:26  alive  seen ×3               …; seen 3 times in 2h at run time, so something static reach does not see calls it (a blind spot)
+```
 
 `--kind fields` reports a field one side sends and the other does not declare.
 The rows are the ones something happens to: a field the receiver's whitelisting
@@ -1802,6 +1830,38 @@ Traffic differs per environment and per week, and a build should not fail
 because nobody hit a 409 on Sunday; `--strict-runtime` is there for a team that
 wants it, and exits 1 on any of these rows but an expected status. `flowatlas
 accept` takes one like any other row.
+
+**What traffic reached and no reader drew (P110).** Beside the same file,
+every span `observe` matched to nothing becomes a blind spot: one
+`seen-not-in-code` row per service and kind (`http`, `client`, `messaging`,
+`code`, `db`, `rpc`, `function`, `workflow`, `state`, `table`, `cloud`, `join`),
+not per span, at `info`, with no file, saying how many places and spans over
+which window and the names the trace kept (`traffic in billing reached 1 route
+no reader drew, 1 span in 2h: GET /healthz (1)`). A route registered at run
+time, a service not in the configuration, or a reader gap; nothing is drawn
+from one. It is a gap, so `doctor --unresolved` lists the same rows under the
+cause `seen-not-in-code`, each group with the call that looks for it in the map
+(`find_symbol` for a method, `list_entries` for a route, `search` for the rest):
+
+```
+  seen-not-in-code: 6 places  3 services
+    billing http: 1 span, last 2025-10-16T07:33:33.000Z: GET /healthz (1)
+      next: list_entries({service: "billing"})
+```
+
+`join` is a send, an invoke or a start the map has the target of, from code the
+map has, along a join it does not draw (`invoke print-label`).
+
+**Best guesses confirmed by traffic (P110).** A `heuristic` join the window
+went through at least once is counted apart from the best guesses, on its own
+line (`1 of 4 best guesses confirmed by traffic in 2h`, narrowed by `--service`
+to the guesses that service's code makes), and the row that explains the guess
+(`base-url-from-name`, `base-url-from-files`, `route-mount-assumed-empty`,
+`route-api-guessed`, `workflow-named-by-file`, `environment-from-files`, at the
+call the join leaves from) is left out while traffic confirms it; `doctor.json`
+says the counts under `traffic` (`{ window, bestGuesses, confirmed, withdrawn
+}`). The edge keeps its confidence: the graph on disk never depends on traffic,
+and a run without the file gives the static answer again.
 
 The exit code is decided by the first of these that applies: a graph that cannot
 be reported on, a baseline that cannot be read, or `--strict` with no baseline

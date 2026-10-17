@@ -1,5 +1,5 @@
 9 spans read from 1 file(s)
-1 joins seen, 1 entries hit, 0 seen at run time but not found in code, 0 that could be more than one place
+4 joins seen, 1 entries hit, 0 seen at run time but not found in code, 0 that could be more than one place
 slowest entries (p95):
   shop workflow fulfil-order  count 1  p50 825ms  p95 825ms  max 825ms  errors 0%
 window 2025-10-16T08:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read

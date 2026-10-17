@@ -335,11 +335,16 @@ describe('the AWS exports of the same traffic (P108)', () => {
     expect(Object.keys(xray.samples).sort()).toEqual(Object.keys(otlp.samples).sort());
   });
 
-  it("the execution history gives the workflow's run, its steps and the step that invoked a function by ARN", () => {
+  it("the execution history gives the workflow's run, its steps, and what each step's own task reaches", () => {
     const history = observedOf('exports/fulfil-order.history.json');
     expect(hits(history)).toEqual(otlpFor(['entry:shop:workflow:fulfil-order']));
-    expect(Object.keys(history.symbols).sort()).toEqual(Object.keys(otlp.symbols).filter((id) => id.includes('fulfil-order/')).sort());
-    expect(Object.keys(history.joins)).toEqual(['shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard -calls-> entry:shop:invoke:charge-card']);
+    // A task's parameters are never read, so a step's call names no target;
+    // the one target of its kind the step reaches on the map is credited (P110,
+    // P108's open item), which is exactly what the OTLP trace gives the steps.
+    const ofTheWorkflow = (id: string): boolean => id.includes('statemachine/fulfil-order.asl.json');
+    expect(Object.keys(history.symbols).sort()).toEqual(Object.keys(otlp.symbols).filter(ofTheWorkflow).concat('table:shop#orders').sort());
+    expect(Object.keys(history.joins).sort()).toEqual(Object.keys(otlp.joins).filter((id) => ofTheWorkflow(id.split(' ')[0]!)).sort());
+    expect(Object.keys(history.channels).sort()).toEqual(['channel:dynamodb/orders', 'channel:sns/receipts']);
     expect(history.samples['entry:shop:workflow:fulfil-order']?.slow[0]).toMatchObject({ traceId: 'run-0001', ms: 825 });
     expect(history.unmatched).toEqual([]);
   });
