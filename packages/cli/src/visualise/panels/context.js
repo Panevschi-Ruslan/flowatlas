@@ -98,6 +98,28 @@ export function createPageContext(data) {
     return nodes[a][LB] < nodes[b][LB] ? -1 : 1;
   });
 
+  /* The ways in that leave a service, computed from the graph in hand rather
+     than named: walk the forward edges backwards from every crossing, and
+     whatever the walk reaches gets there. The first view opens on one, and
+     Start here picks among them (P98). Naming a route would only fit one
+     project. */
+  const reachesCrossing = (() => {
+    const back = nodes.map(() => []);
+    const reached = new Uint8Array(nodes.length);
+    const queue = [];
+    for (const e of data.edges) {
+      const name = edgeTypes[e[2]];
+      if (FORWARD.has(name)) back[e[1]].push(e[0]);
+      if (CROSSES.has(name) && !reached[e[0]]) { reached[e[0]] = 1; queue.push(e[0]); }
+    }
+    for (let head = 0; head < queue.length; head += 1) {
+      for (const prev of back[queue[head]]) {
+        if (!reached[prev]) { reached[prev] = 1; queue.push(prev); }
+      }
+    }
+    return reached;
+  })();
+
   /* The graph as graph.js reads it: what the drawing, the details, search and
      the steps all ask. */
   const model = createModel(data);
@@ -178,6 +200,6 @@ export function createPageContext(data) {
 
   return { CROSSES, FL, FORWARD, GLYPH, KD, LB, LN, MT, RP, TY, acceptLikeHtml, accepted, acceptedNote,
     acceptedRows, acceptedRule, confidences, copyText, data, edgeTypes, entryHeadHtml, entryIx, esc, failChipsHtml,
-    files, flash, graphLink, guards, hueOf, keys, kinds, model, nodes, opener, out, plural, reasons, repoName,
-    repos, rowService, scheduleSay, seen, store, typeName, types };
+    files, flash, graphLink, guards, hueOf, keys, kinds, model, nodes, opener, out, plural, reachesCrossing, reasons,
+    repoName, repos, rowService, scheduleSay, seen, store, typeName, types };
 }

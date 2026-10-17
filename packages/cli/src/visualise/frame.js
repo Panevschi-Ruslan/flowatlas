@@ -8,6 +8,8 @@
  *   parseHash, formatHash   the view in the address - the focus, the hops,
  *                 what is expanded, a question asked, what the filters hide
  *                 and whose "who else" is drawn - old links included
+ *   VIEWS, parseViewHash, formatViewHash   the page's tabs, and the address
+ *                 of any of them that is not the graph's or the map's
  *   pinch         a two-finger move as a pan and a zoom
  *   drawerWidth   how wide the details panel may be dragged
  *   pictureScale, pictureName   what an export is drawn at and called
@@ -156,6 +158,54 @@ export const formatHash = (keys, focus, hops, expanded = [], more = {}) => {
     writeHidden(more.hidden), (more.also || []).map(keys.keyOf).join('.')];
   while (segments.length > 2 && segments[segments.length - 1] === '') segments.pop();
   return '#graph/' + segments.join('/');
+};
+
+/**
+ * The page's tabs, by the name the address and the markup give them, in the
+ * order they are drawn (P98). Every one opens from a link.
+ */
+export const VIEWS = Object.freeze(['map', 'walk', 'steps', 'crossings', 'missing', 'busiest', 'changes', 'graph']);
+
+/**
+ * `#<view>[/<way in>][/<name>=<value>&…]`: a tab, the way in it opens on, and
+ * where in it to go (`reason=<reason>` on Not joined), or null for an address
+ * this grammar leaves to another: `#map…` is the map's (`parseMapHash`) and
+ * `#graph/…` the graph's (`parseHash`); `#graph` alone is the Graph tab.
+ *
+ * The way in is a node's key, the one `#graph/` links carry; a key this page
+ * does not hold comes back as `entry: null` with the key, so the page can say
+ * so. A name that is no tab comes back as `view: null` with the name. A
+ * segment holding `=` is never a key, since keys are letters and digits, so
+ * the way in can be left out before it.
+ */
+export const parseViewHash = (hash, keys) => {
+  const found = /^#([a-z][a-z-]*)((?:\/[^/]*)*)$/.exec(hash || '');
+  if (found === null) return null;
+  const [, name, tail] = found;
+  if (name === 'map' || (name === 'graph' && tail !== '')) return null;
+  const parts = tail.split('/').slice(1);
+  const key = parts.length > 0 && !parts[0].includes('=') ? parts.shift() : '';
+  const rest = {};
+  for (const item of parts.join('/').split('&')) {
+    const at = item.indexOf('=');
+    if (at <= 0) continue;
+    try {
+      rest[item.slice(0, at)] = decodeURIComponent(item.slice(at + 1));
+    } catch {
+      // A value the address mangled is a place the page cannot go to.
+    }
+  }
+  const at = /^[a-z0-9]+$/.test(key) ? keys.find(key) : -1;
+  return { view: VIEWS.includes(name) ? name : null, name, entry: at >= 0 ? at : null, key, rest };
+};
+
+/** The address of a tab, with the way in it shows by key and where in it to go; empty parts are left out. */
+export const formatViewHash = (view, key = null, rest = {}) => {
+  const where = Object.entries(rest)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([name, value]) => name + '=' + encodeURIComponent(value))
+    .join('&');
+  return '#' + [view, key || '', where].filter(Boolean).join('/');
 };
 
 /**

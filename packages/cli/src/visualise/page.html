@@ -10,23 +10,22 @@
 __PAGE_CSS__</style>
 
 <div class="shell">
-  <header class="masthead">
-    <div>
-      <h1 class="wordmark">__TITLE__</h1>
-      <p class="standfirst" id="standfirst"></p>
-    </div>
+  <header class="strip" id="strip">
+    <h1 class="wordmark">__TITLE__</h1>
+    <dl class="pills" id="band"></dl>
     <div class="built" id="built"></div>
+    <p class="pill-note" id="pill-note" aria-live="polite" hidden></p>
   </header>
 
-  <dl class="band" id="band"></dl>
+  <div class="rail-row">
+    <div class="fleet" id="fleet"></div>
 
-  <div class="fleet" id="fleet"></div>
-
-  <div class="finder" role="search">
-    <input type="search" id="find" autocomplete="off" spellcheck="false"
-      placeholder="Find a route, channel, table, type, gap or class" aria-label="Find anything in the project"
-      aria-controls="find-out">
-    <div class="find-out" id="find-out" hidden></div>
+    <div class="finder" role="search">
+      <input type="search" id="find" autocomplete="off" spellcheck="false"
+        placeholder="Find a route, channel, table, type, gap or class" aria-label="Find anything in the project"
+        aria-controls="find-out">
+      <div class="find-out" id="find-out" hidden></div>
+    </div>
   </div>
 
   <div class="work">
@@ -58,6 +57,8 @@ __PAGE_CSS__</style>
           <button class="tab" role="tab" data-view="graph" aria-selected="false">Graph</button>
         </div>
       </div>
+      <aside class="start" id="start" aria-labelledby="start-title" hidden></aside>
+      <p class="v-notice" id="v-notice" role="status" hidden></p>
       <div class="filters" id="walk-controls">
         <label class="hint" style="display:flex;align-items:center;gap:6px">
           depth
@@ -72,6 +73,20 @@ __PAGE_CSS__</style>
             <option>40</option><option selected>90</option><option>200</option><option>500</option>
           </select>
         </label>
+        <button class="tool v-link" id="w-link" data-view-link title="Copy a link to this way in on this tab">
+          <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round"><path d="M6.6 9.4a2.6 2.6 0 0 0 3.7 0l2.5-2.5a2.6 2.6 0 0 0-3.7-3.7l-.9.9"/>
+            <path d="M9.4 6.6a2.6 2.6 0 0 0-3.7 0L3.2 9.1a2.6 2.6 0 0 0 3.7 3.7l.9-.9"/></svg>
+          <span>Copy link</span>
+        </button>
+      </div>
+      <div class="filters t-bar" id="table-bar" hidden>
+        <button class="tool v-link" id="t-link" data-view-link title="Copy a link to this tab">
+          <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round"><path d="M6.6 9.4a2.6 2.6 0 0 0 3.7 0l2.5-2.5a2.6 2.6 0 0 0-3.7-3.7l-.9.9"/>
+            <path d="M9.4 6.6a2.6 2.6 0 0 0-3.7 0L3.2 9.1a2.6 2.6 0 0 0 3.7 3.7l.9-.9"/></svg>
+          <span>Copy link</span>
+        </button>
       </div>
       <div class="walk" id="walk"></div>
       <div class="steps-view" id="steps-view" hidden>
@@ -81,6 +96,12 @@ __PAGE_CSS__</style>
           </label>
           <button class="tool" id="s-copy" title="Copy this way in as Markdown for an assistant: steps, places, shapes, gaps, ids">Copy as prompt</button>
           <span class="hint" id="s-note"></span>
+          <button class="tool v-link" id="s-link" data-view-link title="Copy a link to the steps of this way in">
+            <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round"><path d="M6.6 9.4a2.6 2.6 0 0 0 3.7 0l2.5-2.5a2.6 2.6 0 0 0-3.7-3.7l-.9.9"/>
+              <path d="M9.4 6.6a2.6 2.6 0 0 0-3.7 0L3.2 9.1a2.6 2.6 0 0 0 3.7 3.7l.9-.9"/></svg>
+            <span>Copy link</span>
+          </button>
         </div>
         <div class="s-head" id="s-head"></div>
         <ol class="s-list" id="s-list" aria-label="Steps, in call order"></ol>
@@ -253,7 +274,10 @@ __PAGE_CSS__</style>
     </section>
   </div>
 
-  <p class="colophon" id="colophon"></p>
+  <footer class="colophon">
+    <p id="standfirst"></p>
+    <p id="colophon"></p>
+  </footer>
 </div>
 
 <script type="application/json" id="graph">__DATA__</script>

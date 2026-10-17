@@ -882,10 +882,37 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
-reconciliation and the Map, lists every way in, follows any one of them across service
+Map with its tabs on screen, lists every way in, follows any one of them across service
 boundaries, and has a tab each for every crossing and for everything that did not
 join. The tabs are Map, Walk, Steps, Crossings, Not joined, Busiest, Changes (only
-with `--diff`) and Graph.
+with `--diff`) and Graph; their row stays at the top of the window while the tab
+scrolls, and on a narrow screen the tabs come before the ways in.
+
+**The strip** at the top is the project's name and a pill per figure: how many
+repositories were read, the graph's size, service calls and browser calls joined,
+routes reached, channels joined, *Missed*, and what was seen at run time once
+`flowatlas observe` has run. A pill's title says what it means, and so does the
+line under the strip while the pill is focused or clicked. A pill whose total is
+nought is not drawn (no "0 / 0 joined" on a project with no front end), except
+*Missed* and what was read, where nought is the news. Beside them, when the page was
+built, and *build · <total>ms · <n> services*, which folds out each service's time,
+slowest first. The sentence that once stood under the name is now at the foot of
+the page.
+
+**The service rail** under the strip hides a service everywhere: its ways in, and
+its nodes on the Graph tab. Up to twelve services it is a chip each; past twelve it
+is one *Services: all* button (*Services: 3 of 30* when some are hidden) opening a
+checklist with a search box, *All* and *None* (for the services the search lists),
+and each service's type, node count and colour.
+
+**Start here.** On a first visit - an address naming no tab - a card above the Map
+names three things worth opening, each worked out from the graph in hand and each a
+link: the *busiest way in* (the one that crosses into other services most often,
+then the one with the most steps; it opens in Steps), the *worst gap* (the gap with
+the most rows to act on; it opens Not joined on that row), and, with `--diff`, the
+*latest change* (a removed route still called, else the first route added). Its
+close button keeps it closed in this browser; *Start here* in the strip brings it
+back.
 
 The graph is packed into the page with every repeated string shipped once:
 node types, files and services, and also a failure that stands in front of many
@@ -894,7 +921,7 @@ record every route it guards points at, and a log line's level and template.
 The page is still one readable file; its data is plain JSON in a `<script>`
 block.
 
-**One search box** above the tabs finds a route or other way in, a channel, a
+**One search box**, beside the service rail, finds a route or other way in, a channel, a
 table, a type, a gap or a class by name, and under *Fails with* the ways in that
 can fail with an exception or a status (`NotFoundException`, `404`). A hit
 opens in the Graph tab, and a way in it opens becomes the one the list, Walk and
@@ -1159,8 +1186,8 @@ graph, which on a real project is far too many boxes to say anything:
   the page, at twice its size where the browser allows, so nothing is sent
   anywhere. Without the page's typefaces loaded, a picture falls back to the
   system's monospace.
-- **Filters.** The service rail at the top hides a service's nodes here as it
-  does its ways in; chips hide an edge type or a confidence, so the drawing can
+- **Filters.** The service rail at the top (or its checklist, past twelve
+  services) hides a service's nodes here as it does its ways in; chips hide an edge type or a confidence, so the drawing can
   show, for instance, only what was guessed. The line under the drawing says
   which filters are on.
 
@@ -1199,7 +1226,7 @@ the tables, addresses and channels they reach, and the next service's way in.
 
 The **Not joined** tab lists every row by reason, under its kind: *Missed*
 (gaps), *Notes* (how a join or a reading was made) and *Findings* (about the
-code). The stat row above the page says the same figures the build line does:
+code). The strip above the page says the same figures the build line does:
 *Missed*, with "joined from files" (notes) and "findings" under it, counted from
 the rows, so a database built by 0.5.x still shows them. Rows accepted with
 `flowatlas accept` are left out unless *show accepted* is on, then muted with
@@ -1225,6 +1252,25 @@ new contract findings, and the unresolved count on each side.
 
 What `flowatlas observe` saw is on the page too, when it has run: a seen count
 on each way in and each step, and thicker Map links where traffic went.
+
+**Every tab has an address.** `#map…` and `#graph/…` keep the grammars described
+above; every other tab is `#<tab>`, with the way in for the two that show one,
+and where in the tab to go after it:
+
+| Address | Opens |
+|---|---|
+| `#walk/<key>`, `#steps/<key>` | Walk or Steps on the way in whose node key is `<key>` |
+| `#crossings`, `#busiest`, `#changes` | that tab |
+| `#missing`, `#missing/reason=<reason>` | Not joined, at that reason's row |
+| `#graph` | the Graph tab, on the way in picked |
+
+Any of them takes a way in (`#crossings/<key>`), which becomes the one picked.
+Moving between tabs rewrites the address without adding to the browser's history;
+picking another way in adds to it, so *Back* returns to the way in before. *Copy
+link* on Walk, Steps and the table tabs copies the address of what is on screen. A
+link naming a tab this page does not have (`#changes` on a page written without
+`--diff`), a way in it does not hold, or a reason with no rows here opens what the
+page has and says so above the tab.
 
 A link carries the page's own address, which for a file on disk is that file's
 path: it opens on the machine that has the file, at that path.

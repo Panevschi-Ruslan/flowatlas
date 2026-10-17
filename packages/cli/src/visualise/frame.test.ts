@@ -4,11 +4,15 @@ import {
   DRAWER,
   drawerWidth,
   formatHash,
+  formatViewHash,
   parseHash,
+  parseViewHash,
   pictureName,
   pictureScale,
   pinch,
+  VIEWS,
 } from './frame.js';
+import { parseMapHash } from './map.js';
 import { stableKeys } from './keys.js';
 
 const IDS = ['entry:api:http:GET:/orders', 'method:api:OrdersService.list', 'table:orders', 'channel:orders.created'];
@@ -178,6 +182,53 @@ describe('the view in the address', () => {
     expect(parseHash('#graph/', keys)).toBeNull();
     expect(parseHash('#graph/Abc/2', keys)).toBeNull();
     expect(parseHash('', keys)).toBeNull();
+  });
+});
+
+describe('every tab in the address (P98)', () => {
+  it('round-trips every tab, with and without a way in', () => {
+    for (const view of VIEWS.filter((name) => name !== 'map' && name !== 'graph')) {
+      expect(formatViewHash(view)).toBe(`#${view}`);
+      expect(parseViewHash(formatViewHash(view), keys)).toEqual({ view, name: view, entry: null, key: '', rest: {} });
+      const link = formatViewHash(view, key(1));
+      expect(link).toBe(`#${view}/${key(1)}`);
+      expect(parseViewHash(link, keys)).toEqual({ view, name: view, entry: 1, key: key(1), rest: {} });
+    }
+  });
+
+  it('carries where in a tab to go, after the way in or in its place', () => {
+    const link = formatViewHash('missing', key(0), { reason: 'target-route-not-found' });
+    expect(link).toBe(`#missing/${key(0)}/reason=target-route-not-found`);
+    expect(parseViewHash(link, keys)).toMatchObject({ view: 'missing', entry: 0, rest: { reason: 'target-route-not-found' } });
+    const bare = formatViewHash('missing', null, { reason: 'a reason/with odd & signs' });
+    expect(bare).toBe('#missing/reason=a%20reason%2Fwith%20odd%20%26%20signs');
+    expect(parseViewHash(bare, keys)).toMatchObject({ entry: null, key: '', rest: { reason: 'a reason/with odd & signs' } });
+    expect(formatViewHash('steps', null, { reason: '' })).toBe('#steps');
+  });
+
+  it('names a tab the page does not have, and a way in it does not hold, rather than guessing', () => {
+    expect(parseViewHash('#nowhere', keys)).toMatchObject({ view: null, name: 'nowhere' });
+    expect(parseViewHash('#steps/qqqqqq', keys)).toMatchObject({ view: 'steps', entry: null, key: 'qqqqqq' });
+    expect(parseViewHash('#steps/NOT-A-KEY', keys)).toMatchObject({ view: 'steps', entry: null, key: 'NOT-A-KEY' });
+  });
+
+  it('opens the Graph tab from #graph alone, and leaves #graph/… and #map… to their own grammars', () => {
+    expect(parseViewHash('#graph', keys)).toMatchObject({ view: 'graph', entry: null });
+    const graphLink = formatHash(keys, 0, 2);
+    expect(parseViewHash(graphLink, keys)).toBeNull();
+    expect(parseHash(graphLink, keys)).toMatchObject({ focus: 0 });
+    for (const map of ['#map', '#map/s=service%3Aorders&m=dead']) {
+      expect(parseViewHash(map, keys)).toBeNull();
+      expect(parseMapHash(map)).not.toBeNull();
+    }
+    expect(parseViewHash('', keys)).toBeNull();
+    expect(parseViewHash('#', keys)).toBeNull();
+  });
+
+  it('lists each tab once, map first and graph last', () => {
+    expect(new Set(VIEWS).size).toBe(VIEWS.length);
+    expect(VIEWS[0]).toBe('map');
+    expect(VIEWS.at(-1)).toBe('graph');
   });
 });
 

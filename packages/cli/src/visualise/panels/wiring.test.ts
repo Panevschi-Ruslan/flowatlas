@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { FakeEvent } from './test-dom.js';
-import { mountPage, nodeAt, testPack } from './test-page.js';
+import { createKeys, VIEWS } from '../frame.js';
+import { FakeEvent, textOf } from './test-dom.js';
+import { mountPage, nodeAt, testPack, withServices } from './test-page.js';
 
-/** The tabs, links and first view (P103). */
+/** The tabs, links and first view (P103, P98). */
 describe('the wiring', () => {
   const data = testPack('wiring');
   const at = nodeAt(data);
+  const testKey = (v: number): string => createKeys(data.keys, data.nodes.length).keyOf(v);
 
   it('opens on the map with a way in that leaves a service picked', () => {
     const { page, document } = mountPage(data);
@@ -45,4 +47,115 @@ describe('the wiring', () => {
     const { document } = mountPage(data, { address: 'file:///project/graph.html#graph/zzzzzzzz' });
     expect(document.getElementById('g-notice')!.textContent).toContain('names a node this page does not hold');
   });
+
+  it('draws the tabs VIEWS names, in its order', () => {
+    const { document } = mountPage(data);
+    expect(document.querySelectorAll('.tab').map((tab: any) => tab.dataset.view)).toEqual([...VIEWS]);
+  });
+
+  it('writes each tab in the address as it opens, the way in on the two that show one', () => {
+    const { page, document, window } = mountPage(data);
+    const key = page.keys.keyOf(page.store.get('current'));
+    const written: Record<string, string> = {};
+    for (const tab of document.querySelectorAll('.tab')) {
+      if (tab.hidden) continue;
+      tab.click();
+      written[(tab as any).dataset.view] = window.location.hash;
+    }
+    expect(written).toEqual({
+      map: '#map', walk: `#walk/${key}`, steps: `#steps/${key}`, crossings: '#crossings', missing: '#missing',
+      busiest: '#busiest', graph: `#graph/${key}/2`,
+    });
+    // Moving between tabs adds nothing to the history.
+    expect(window.history.length).toBe(1);
+  });
+
+  it('opens Steps on the way in a link names', () => {
+    const v = at('entry:orders:http:POST:/orders');
+    const { page, document } = mountPage(data, { address: `file:///project/graph.html#steps/${testKey(v)}` });
+    expect(page.store.get('view')).toBe('steps');
+    expect(page.store.get('current')).toBe(v);
+    expect(document.getElementById('steps-view')!.hidden).toBe(false);
+    expect(document.getElementById('v-notice')!.hidden).toBe(true);
+    expect(document.getElementById('start')!.hidden).toBe(true);
+  });
+
+  it('opens a table tab from a link, and Not joined on the reason it names', () => {
+    for (const view of ['crossings', 'busiest', 'missing']) {
+      const { page } = mountPage(data, { address: `file:///project/graph.html#${view}` });
+      expect(page.store.get('view')).toBe(view);
+    }
+    const { document, window } = mountPage(data, { address: 'file:///project/graph.html#missing/reason=di-token-unknown' });
+    const row = document.querySelector('#walk tr.is-target') as any;
+    expect(row.dataset.reason).toBe('di-token-unknown');
+    expect(window.location.hash).toBe('#missing/reason=di-token-unknown');
+    expect(document.getElementById('table-bar')!.hidden).toBe(false);
+  });
+
+  it('says so, and opens the map, for a tab this page has not got', () => {
+    const unknown = mountPage(data, { address: 'file:///project/graph.html#timeline' });
+    expect(unknown.page.store.get('view')).toBe('map');
+    expect(textOf(unknown.document.getElementById('v-notice'))).toContain('opens a tab this page does not have, timeline');
+    const noDiff = mountPage(data, { address: 'file:///project/graph.html#changes' });
+    expect(noDiff.page.store.get('view')).toBe('map');
+    expect(textOf(noDiff.document.getElementById('v-notice'))).toContain('--diff');
+    // The notice is about the tab it was said over.
+    noDiff.document.querySelector('.tab[data-view="busiest"]')!.click();
+    expect(noDiff.document.getElementById('v-notice')!.hidden).toBe(true);
+  });
+
+  it('says so for a way in, or a reason, the page does not hold, and shows what it has', () => {
+    const stale = mountPage(data, { address: 'file:///project/graph.html#walk/zzzzzz' });
+    expect(stale.page.store.get('view')).toBe('walk');
+    expect(stale.page.entryIx).toContain(stale.page.store.get('current'));
+    expect(textOf(stale.document.getElementById('v-notice'))).toMatch(/names a way in this page does not hold, zzzzzz.*Shown instead: /);
+    const gone = mountPage(data, { address: 'file:///project/graph.html#missing/reason=no-such-reason' });
+    expect(textOf(gone.document.getElementById('v-notice'))).toContain('Not joined on no-such-reason, which has no rows here');
+  });
+
+  it('copies a link to the tab open from its Copy link', async () => {
+    const { page, document, window } = mountPage(data);
+    document.querySelector('.tab[data-view="steps"]')!.click();
+    document.getElementById('s-link')!.click();
+    await new Promise((done) => setTimeout(done, 0));
+    expect(window.clipboard.at(-1)).toBe(`file:///project/graph.html#steps/${page.keys.keyOf(page.store.get('current'))}`);
+    document.querySelector('.tab[data-view="crossings"]')!.click();
+    document.getElementById('t-link')!.click();
+    await new Promise((done) => setTimeout(done, 0));
+    expect(window.clipboard.at(-1)).toBe('file:///project/graph.html#crossings');
+  });
+
+  it('steps Back through the ways in picked, not through the tabs', () => {
+    const { page, document, window } = mountPage(data);
+    const first = page.store.get('current');
+    const rows = document.querySelectorAll('#entries button.row');
+    const other = rows.find((row) => row.getAttribute('aria-current') !== 'true')!;
+    document.querySelector('.tab[data-view="steps"]')!.click();
+    other.click();
+    const second = page.store.get('current');
+    expect(second).not.toBe(first);
+    expect(window.location.hash).toBe(`#steps/${page.keys.keyOf(second)}`);
+    document.querySelector('.tab[data-view="busiest"]')!.click();
+    window.history.back();
+    expect(page.store.get('current')).toBe(first);
+    expect(page.store.get('view')).toBe('steps');
+    expect(window.location.hash).toBe(`#steps/${page.keys.keyOf(first)}`);
+  });
+
+  it('keeps the old links: a node on the graph and a view of the map', () => {
+    const v = at('entry:orders:http:POST:/orders');
+    const graph = mountPage(data, { address: `file:///project/graph.html#graph/${testKey(v)}/3` });
+    expect(graph.page.store.get('view')).toBe('graph');
+    expect(graph.page.state.focus).toBe(v);
+    const map = mountPage(data, { address: 'file:///project/graph.html#map/m=dead' });
+    expect(map.page.store.get('view')).toBe('map');
+    expect((map.document.getElementById('m-mark') as any).value).toBe('dead');
+  });
+
+  it('boots a page of thirty services with the checklist in place of the chips', () => {
+    const { document } = mountPage(withServices(data, 30));
+    expect(document.querySelectorAll('#fleet .ship')).toHaveLength(0);
+    expect(textOf(document.getElementById('svc-button'))).toBe('Services: all ▾');
+  });
 });
+

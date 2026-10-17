@@ -1,18 +1,19 @@
-import { parseHash } from '../frame.js';
+import { formatViewHash, parseHash, parseViewHash } from '../frame.js';
 import { parseMapHash } from '../map.js';
 
 /* What ties the panels together: the tabs and their legends, `showView`,
-   following a link's hash, the controls every tab shares, the colophon, and
-   the first view. */
+   following a link's address, Copy link on the tabs without one of their
+   own, the controls every tab shares, the colophon, and the first view. */
 export function wirePage(page) {
-  const { CROSSES, FORWARD, LB, capSel, data, depthSel, drawBusiest, drawChanges, drawCrossings,
-    drawEntries, drawMissing, drawSteps, drawWalk, edgeTypes, entryIx, entrySearch, esc, fullScreen,
-    graph, graphView, keys, kindSelect, mapController, nodes, notice, reopen, repoName, root, setMapFull,
-    stepsView, store, walkEl } = page;
+  const { LB, MT, capSel, copyText, depthSel, drawBusiest, drawChanges, drawCrossings, drawEntries, drawMissing,
+    drawSteps, drawWalk, entryIx, entrySearch, esc, flash, fullScreen, graph, graphView, keys, kindSelect,
+    mapController, nodes, notice, reachesCrossing, reopen, repoName, root, setMapFull, startCard, stepsView, store,
+    walkEl } = page;
 
   /* ── wiring ──────────────────────────────────────────────────────── */
 
   const controls = document.getElementById('walk-controls');
+  const tableBar = document.getElementById('table-bar');
   const legendEl = document.getElementById('legend');
   const tabs = [...document.querySelectorAll('.tab')];
   const mapViewEl = document.getElementById('map-view');
@@ -66,13 +67,51 @@ export function wirePage(page) {
     '<span><b class="g-key-bad">&#x2715; chain breaks</b> where a call finds no route, a way in no handler, or an address was not read</span>' +
     '<span><b>hover</b> a row lights its node on the Graph tab&rsquo;s drawing</span>';
 
-  function showView(name, asked) {
+  /* The tab open is in the address, so every tab can be linked to (P98):
+     the map and the graph write their own, every other tab `#<tab>`, with
+     the way in for the two that show one. Moving between tabs replaces the
+     address rather than adding to the history; picking another way in adds
+     to it (ways.js), so Back steps through what a person looked at. */
+  const DEFAULT_VIEW = 'map';
+  const SHOWS_A_WAY_IN = new Set(['walk', 'steps']);
+  const TABLES = new Set(['crossings', 'missing', 'busiest', 'changes']);
+  const viewHashNow = (where) => {
+    const name = store.get('view');
+    const current = store.get('current');
+    return formatViewHash(name, SHOWS_A_WAY_IN.has(name) && current !== null ? keys.keyOf(current) : null, where);
+  };
+  const writeViewHash = (where) => {
+    const name = store.get('view');
+    if (name === 'map' || name === 'graph') return;
+    const next = viewHashNow(where);
+    if (location.hash !== next) history.replaceState(null, '', location.pathname + location.search + next);
+  };
+
+  /* What a link to a tab asked for and could not be given, said above the
+     tab until another is opened or it is dismissed. The graph says its own
+     over the drawing (`notice`). */
+  const viewNoticeEl = document.getElementById('v-notice');
+  const viewNotice = {
+    say(html) {
+      viewNoticeEl.innerHTML = `<span>${html}</span>` +
+        '<button class="g-close" aria-label="Dismiss" title="Dismiss">&times;</button>';
+      viewNoticeEl.hidden = false;
+    },
+    clear() { viewNoticeEl.hidden = true; viewNoticeEl.replaceChildren(); },
+  };
+  viewNoticeEl.addEventListener('click', (event) => { if (event.target.closest('button')) viewNotice.clear(); });
+
+  /* `where` is where in the tab a link asked to go (`reason` on Not joined),
+     kept in the address while the tab is open. */
+  function showView(name, asked, where) {
     if (name !== 'graph') fullScreen.set(false);
     if (name !== 'map') setMapFull(false);
+    viewNotice.clear();
     store.set('view', name);
     root.classList.toggle('is-map', name === 'map');
     for (const tab of tabs) tab.setAttribute('aria-selected', String(tab.dataset.view === name));
     controls.hidden = name !== 'walk';
+    tableBar.hidden = !TABLES.has(name);
     walkEl.hidden = name === 'graph' || name === 'map' || name === 'steps';
     stepsView.hidden = name !== 'steps';
     graphView.hidden = name !== 'graph';
@@ -80,9 +119,7 @@ export function wirePage(page) {
     // Busiest and Changes draw none of the marks a legend explains.
     legendEl.hidden = name === 'busiest' || name === 'changes';
     legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : name === 'map' ? MAP_LEGEND : name === 'steps' ? STEPS_LEGEND : WALK_LEGEND;
-    if ((name !== 'graph' && location.hash.startsWith('#graph')) || (name !== 'map' && location.hash.startsWith('#map'))) {
-      history.replaceState(null, '', location.pathname + location.search);
-    }
+    writeViewHash(where);
     if (name === 'walk') drawWalk();
     else if (name === 'steps') drawSteps();
     else if (name === 'crossings') drawCrossings();
@@ -95,9 +132,62 @@ export function wirePage(page) {
 
   for (const tab of tabs) tab.addEventListener('click', () => showView(tab.dataset.view));
 
+  /* Copy link on the tabs that have no address of their own to build: Walk,
+     Steps and the tables. The map and the graph copy theirs. */
+  document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-view-link]');
+    if (!button) return;
+    const link = location.href.split('#')[0] + viewHashNow();
+    if (await copyText(link)) flash(button, 'Copied');
+    else window.prompt('Copy this link', link);
+  });
+
+  const wayInSay = (i) => {
+    const meta = nodes[i][MT] || {};
+    return esc(meta.m ? `${meta.m} ${meta.p || ''}`.trim() : nodes[i][LB]) + ` (${esc(repoName(i))})`;
+  };
+
+  /* A link to a tab: the way in it names becomes the one picked everywhere;
+     a tab this page has not got opens the first view instead, and a way in
+     or a place in the tab it does not hold is said, not guessed at. */
+  const openTab = (asked) => {
+    const tab = tabs.find((t) => t.dataset.view === asked.view);
+    if (asked.view === null || tab === undefined || tab.hidden) {
+      showView(DEFAULT_VIEW);
+      viewNotice.say(asked.view === 'changes'
+        ? 'This link opens the Changes tab, which a page has only when it was written with <code>--diff</code>. The map is shown.'
+        : `This link opens a tab this page does not have, <code>${esc(asked.name)}</code>. The map is shown.`);
+      return true;
+    }
+    const held = asked.entry !== null && entryIx.includes(asked.entry);
+    if (held && asked.entry !== store.get('current')) {
+      store.set('current', asked.entry);
+      drawEntries();
+    }
+    showView(asked.view, undefined, asked.rest);
+    const said = [];
+    if (asked.key !== '' && !held) {
+      said.push(`This link names a way in this page does not hold, <code>${esc(asked.key)}</code>: it was removed or ` +
+        'renamed after the link was made.' + (store.get('current') === null ? '' : ` Shown instead: ${wayInSay(store.get('current'))}.`));
+    }
+    if (asked.view === 'missing' && asked.rest.reason) {
+      const row = walkEl.querySelector(`tr[data-reason="${CSS.escape(asked.rest.reason)}"]`);
+      if (row === null) {
+        said.push(`This link opens Not joined on <code>${esc(asked.rest.reason)}</code>, which has no rows here ` +
+          '(or only accepted ones): it was fixed, or accepted, after the link was made.');
+      } else {
+        row.classList.add('is-target');
+        row.scrollIntoView({ block: 'center' });
+      }
+    }
+    if (said.length > 0) viewNotice.say(said.join(' '));
+    return true;
+  };
+
   /* A link to a node is a hash; following one opens the graph there. A link
      made before nodes had keys names a position, and still opens whatever
-     sits there; a key this page does not hold is said, not guessed at. */
+     sits there; a key this page does not hold is said, not guessed at. Any
+     other tab is `#<tab>[/<way in>]` (openTab). */
   const followHash = () => {
     const mapAsked = parseMapHash(location.hash);
     if (mapAsked !== null) {
@@ -105,6 +195,8 @@ export function wirePage(page) {
       if (store.get('view') === 'map') mapController.show(); else showView('map');
       return true;
     }
+    const tabAsked = parseViewHash(location.hash, keys);
+    if (tabAsked !== null) return openTab(tabAsked);
     const asked = parseHash(location.hash, keys);
     if (asked === null) return false;
     notice.clear();
@@ -141,7 +233,16 @@ export function wirePage(page) {
     }
     return true;
   };
-  window.addEventListener('hashchange', followHash);
+  /* A link followed, a hash typed, and Back and Forward all end here. A
+     browser that says so twice - popstate, then hashchange for the address
+     the first left - is heard once. */
+  let followed = null;
+  window.addEventListener('popstate', () => { followHash(); followed = location.hash; });
+  window.addEventListener('hashchange', () => {
+    const twice = followed === location.hash;
+    followed = null;
+    if (!twice) followHash();
+  });
 
   entrySearch.addEventListener('input', drawEntries);
   kindSelect.addEventListener('change', drawEntries);
@@ -154,32 +255,17 @@ export function wirePage(page) {
     'followed, it appears under <b>Not joined</b> with the reason rather than being dropped, which is the ' +
     'difference between a map and a guess.';
 
-  /* Open on a way in that actually leaves a service rather than on an empty
-     shell. Which one that is gets computed from the graph in hand: walk the
-     forward edges backwards from every crossing, and take the first way in
-     the walk reached. Naming a route here would only ever fit one project. */
-  const reachesCrossing = (() => {
-    const back = nodes.map(() => []);
-    const seen = new Uint8Array(nodes.length);
-    const queue = [];
-    for (const e of data.edges) {
-      const name = edgeTypes[e[2]];
-      if (FORWARD.has(name)) back[e[1]].push(e[0]);
-      if (CROSSES.has(name) && !seen[e[0]]) { seen[e[0]] = 1; queue.push(e[0]); }
-    }
-    for (let head = 0; head < queue.length; head += 1) {
-      for (const prev of back[queue[head]]) {
-        if (!seen[prev]) { seen[prev] = 1; queue.push(prev); }
-      }
-    }
-    return seen;
-  })();
-
-  /* The first view, once every panel is in place: boot.js calls it last. */
+  /* The first view, once every panel is in place: boot.js calls it last. It
+     opens on a way in that actually leaves a service rather than on an empty
+     shell (`reachesCrossing`, worked out from the graph), on what the address
+     names, and on a first visit - an address naming nothing - offers Start
+     here above the map. */
   const start = () => {
-    store.set('current', entryIx.find((i) => reachesCrossing[i]) ?? entryIx[0]);
+    store.set('current', entryIx.find((i) => reachesCrossing[i]) ?? entryIx[0] ?? null);
     drawEntries();
-    if (!followHash()) showView('map');
+    const first = location.hash === '';
+    if (!followHash()) showView(DEFAULT_VIEW);
+    if (first) startCard.offer();
   };
 
   return { showView, start };

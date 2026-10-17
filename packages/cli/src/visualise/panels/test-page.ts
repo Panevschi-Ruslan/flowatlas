@@ -77,3 +77,17 @@ export const mountPage = (data: PackedGraph, options: MountOptions = {}): Mounte
   page.start();
   return { page, window, document: window.document };
 };
+
+/**
+ * `data` with `count` services (P98): its own, then `svc-04`, `svc-05`… -
+ * tiny ones the report names and no node is in - so a test can see the rail
+ * past a dozen services without building thirty repositories.
+ */
+export const withServices = (data: PackedGraph, count: number): PackedGraph => {
+  const names = [...data.dicts.repos];
+  while (names.length < count) names.push('svc-' + String(names.length + 1).padStart(2, '0'));
+  const report = data.report as { services: Array<{ name: string }> };
+  const services = names.map((name, i) => report.services.find((service) => service.name === name) ??
+    { name, type: i % 3 === 0 ? 'express' : 'nestjs', nodes: 3 + i, edges: 2, unresolved: 0, durationMs: 10 + i, skipped: null });
+  return { ...data, dicts: { ...data.dicts, repos: names }, report: { ...report, services } };
+};

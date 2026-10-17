@@ -7,7 +7,7 @@ import { formatHash, pinch } from '../frame.js';
 export function createGraphUi(page) {
   const { BOX, KD, LB, RP, askImpact, askPath, asked, at, backBtn, camera, card, cardNode, cardSeenNow,
     chooseEnd, confidences, drawDetails, drawDrawing, drawEntries, drawStatus, edgeTypes, esc, faceRows,
-    fleet, forwardBtn, gCapSel, glyphOf, hopsSel, hueOf, isGroup, keys, kinds, model, nodeCardHtml, nodes,
+    forwardBtn, gCapSel, glyphOf, hopsSel, hueOf, isGroup, keys, kinds, model, nodeCardHtml, nodes,
     paintSelection, panel, placeOf, repoName, repos, state, statusEl, stopPicking, store, svg, titleEl,
     traceTo, trail, typeCardHtml, typeOf, unitOf, visibleFocus, wideFor, wrap } = page;
   const shown = store.get('shown');
@@ -530,8 +530,8 @@ export function createGraphUi(page) {
       const services = new Set(hidden.services);
       shown.clear();
       for (const name of repos) if (!services.has(name)) shown.add(name);
+      // The rail hears this and redraws itself.
       store.set('shown', shown);
-      for (const b of fleet.querySelectorAll('.ship')) b.setAttribute('aria-pressed', String(shown.has(b.dataset.repo)));
       state.hiddenEdgeTypes.clear();
       for (const i of pick(hidden.edgeTypes, edgeTypes)) state.hiddenEdgeTypes.add(i);
       state.hiddenConfidences.clear();

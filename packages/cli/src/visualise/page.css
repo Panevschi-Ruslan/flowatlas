@@ -112,92 +112,144 @@ a { color: var(--accent); }
   .shell { padding: 18px 16px 40px; }
 }
 
-/* ── masthead ───────────────────────────────────────────────────────── */
+/* ── the strip: the title and a pill per figure (P98) ───────────────── */
 
-.masthead {
+.strip {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 16px;
+  align-items: center;
+  gap: 10px 18px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--rule);
 }
 
 .wordmark {
   font-family: var(--f-display);
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.015em;
+  line-height: 1.15;
   margin: 0;
   text-wrap: balance;
 }
 
-.standfirst {
-  margin: 4px 0 0;
-  color: var(--muted);
-  max-width: 62ch;
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.built {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  color: var(--faint);
-  text-align: right;
-  line-height: 1.7;
-}
-
-/* ── the reconciliation band ────────────────────────────────────────── */
-
-.band {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
-  gap: 1px;
-  background: var(--rule-soft);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.stat {
-  background: var(--paper);
-  padding: 12px 14px 13px;
+.pill {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  padding: 3px 10px 4px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  cursor: default;
+  flex: none;
 }
 
-.stat dt {
-  font-size: 10.5px;
+.pill:hover, .pill.is-open { background: var(--raise); border-color: var(--faint); }
+
+.pill dt {
+  font-size: 9.5px;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   color: var(--faint);
   font-weight: 500;
+  white-space: nowrap;
 }
 
-.stat dd {
+.pill dd {
   margin: 0;
   font-family: var(--f-mono);
-  font-size: 21px;
+  font-size: 13.5px;
   font-variant-numeric: tabular-nums;
-  line-height: 1.15;
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
-.stat small {
+.pill.is-good dd { color: var(--good); }
+.pill.is-warn dd { color: var(--warn); }
+
+/* What the open pill means, under the strip and over what follows it, so
+   opening one moves nothing. */
+.pill-note {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  max-width: min(560px, 100%);
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 12px;
   color: var(--muted);
-  font-size: 11.5px;
-  font-family: var(--f-ui);
+  background: var(--raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.4);
 }
 
-.stat.is-good dd { color: var(--good); }
-.stat.is-warn dd { color: var(--warn); }
+.built {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 12px;
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.build-times summary { cursor: pointer; white-space: nowrap; }
+.build-times summary:hover { color: var(--ink); }
+.build-times[open] summary { color: var(--ink); }
+
+/* The timings fold out over the page, slowest first. */
+.build-times table {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  max-height: min(420px, 60vh);
+  overflow-y: auto;
+  display: block;
+  border-collapse: collapse;
+  background: var(--raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.4);
+  color: var(--ink);
+}
+
+.build-times th, .build-times td { padding: 3px 10px; text-align: left; white-space: nowrap; }
+.build-times th { font-weight: 500; color: var(--faint); border-bottom: 1px solid var(--rule-soft); }
+.build-times .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.start-again { font-size: 11.5px; padding: 3px 9px; }
 
 /* ── service rail ───────────────────────────────────────────────────── */
+
+.rail-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
 
 .fleet {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
 }
 
 .ship {
@@ -213,6 +265,7 @@ a { color: var(--accent); }
   cursor: pointer;
   color: inherit;
   font-family: inherit;
+  flex: none;
 }
 
 .ship[aria-pressed='true'] {
@@ -237,6 +290,78 @@ a { color: var(--accent); }
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--faint);
+}
+
+/* Past a dozen services: one button, and a checklist under it. */
+.svc-pick { position: relative; }
+.svc-button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; font-size: 12.5px; }
+.svc-button[aria-expanded='true'] { border-color: var(--accent); background: var(--raise); }
+
+.svc-pop {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  width: min(380px, calc(100vw - 32px));
+  background: var(--raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.45);
+}
+
+.svc-head {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.svc-head input { flex: 1; min-width: 0; }
+
+.svc-list { list-style: none; margin: 0; padding: 4px 0; max-height: min(360px, 55vh); overflow-y: auto; }
+
+.svc-list label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.svc-list label:hover { background: var(--paper); }
+.svc-list b { font-weight: 600; overflow-wrap: anywhere; }
+
+.svc-list em {
+  font-style: normal;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--faint);
+}
+
+.svc-list .hint { margin-left: auto; white-space: nowrap; }
+
+.svc-swatch {
+  flex: none;
+  align-self: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--hue);
+}
+
+.rail-row .finder { flex: 1 1 280px; margin: 0; min-width: 0; }
+
+@media (max-width: 640px) {
+  .shell { gap: 12px; }
+  .strip { gap: 8px 12px; padding-bottom: 10px; }
+  .wordmark { font-size: 21px; }
+  /* One row each on a phone, scrolled sideways, so the tabs stay near the top. */
+  .pills { flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .built { margin-left: 0; justify-content: flex-start; }
+  .fleet.is-chips { flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .rail-row .finder { flex-basis: 100%; }
 }
 
 /* ── working area ───────────────────────────────────────────────────── */
@@ -1492,9 +1617,10 @@ kbd {
 :root.is-full,
 :root.is-full body { overflow: hidden; }
 
-:root.is-full .masthead,
-:root.is-full .band,
-:root.is-full .fleet,
+:root.is-full .strip,
+:root.is-full .rail-row,
+:root.is-full #start,
+:root.is-full #v-notice,
 :root.is-full #ways,
 :root.is-full .colophon,
 :root.is-full #views > .panel-head { display: none; }
@@ -1757,8 +1883,8 @@ kbd {
   .cf-bar { width: 60px; }
   .cf-body { margin-left: 10px; }
 }
-.stat.is-link { cursor: pointer; }
-.stat.is-link:hover, .stat.is-link:focus-visible { background: var(--raise); }
+.pill.is-link { cursor: pointer; }
+.pill.is-link:hover, .pill.is-link:focus-visible { background: var(--raise); border-color: var(--accent); }
 .s-unmatched li.is-bad { color: var(--bad); }
 .s-unmatched li { padding: 2px 0; font-family: var(--f-mono); font-size: 12px; overflow-wrap: anywhere; }
 .g-node.is-hover .g-box { stroke: var(--accent); stroke-width: 2.6; }
@@ -1776,3 +1902,84 @@ kbd {
   .s-row[data-depth]:not([data-depth='0'])::before { left: calc(var(--depth) * 10px + 2px); }
   .s-where { margin-left: 0; flex-basis: 100%; }
 }
+
+/* ── the page opens on the product (P98) ──────────────────────────── */
+
+/* The tabs stay on screen while their panel scrolls past; so does the head
+   of the ways in, on a phone where the list runs long. */
+#views > .panel-head,
+#ways > .panel-head {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: var(--paper);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* On one column the tabs come first; the ways in follow them. */
+@media (max-width: 900px) {
+  .work > #views { order: -1; }
+}
+
+/* Start here: a card above the tab, not over it. */
+.start {
+  margin: 10px 12px 0;
+  padding: 8px 12px 10px;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--raise);
+}
+
+.start-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+.start-head h3 {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.start-picks { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; }
+
+.start-picks li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-width: 0; }
+
+.start-what {
+  flex: none;
+  min-width: 112px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+
+.start-picks a { font-family: var(--f-mono); font-size: 12.5px; overflow-wrap: anywhere; }
+
+/* What a link to a tab asked for and could not be given. */
+.v-notice {
+  margin: 10px 12px 0;
+  padding: 7px 10px 7px 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  background: var(--raise);
+  border: 1px solid var(--warn);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+}
+
+.v-notice code { font-family: var(--f-mono); font-size: 11px; }
+
+/* Copy link on Walk, Steps and the tables, at the end of their bars. */
+.v-link { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.v-link svg { width: 13px; height: 13px; flex: none; }
+.v-link.is-done { color: var(--good); border-color: var(--good); }
+.t-bar { justify-content: flex-end; padding-top: 8px; padding-bottom: 8px; }
+
+/* The row a link opened Not joined on. */
+tr.is-target > td { background: var(--accent-soft); }
+
+.colophon p { margin: 0; }
+.colophon p + p { margin-top: 8px; }

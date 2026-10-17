@@ -104,7 +104,7 @@ describe('the page made of its parts (P103)', () => {
     writeFileSync(file, scriptOf(page));
     await import(pathToFileURL(file).href);
     const doc = window.document;
-    expect(doc.querySelectorAll('#band .stat dt').map(textOf)[0]).toBe('Graph');
+    expect(doc.querySelectorAll('#band .pill dt').map(textOf)[0]).toBe('Read');
     const rows = doc.querySelectorAll('#entries button.row').length;
     expect(rows).toBeGreaterThan(0);
     expect(textOf(doc.getElementById('entry-count'))).toBe(`${rows} of ${rows}`);

@@ -383,6 +383,21 @@ only one of them moved.
 
 ### Changed
 
+- **The page opened on the product (P98).** The masthead and the band became
+  one strip: the name, then a pill per figure, whose meaning was its title and
+  the line under the strip while it was open; a pill whose total was nought
+  was not drawn, except *Missed* and how many repositories were read. The
+  build's timings folded into *build · <total>ms · <n> services*, slowest
+  first; the sentence under the name moved to the foot of the page. Past
+  twelve services the rail became one *Services* button and a checklist with
+  a search, *All* and *None*. The tabs' row stuck to the top while a tab
+  scrolled, and on a narrow screen the tabs came before the ways in. Every
+  tab gained an address, `#<tab>[/<way in>][/reason=<reason>]` beside the
+  map's and the graph's, which were kept; moving between tabs rewrote it,
+  picking another way in added to the history, and Walk, Steps and the table
+  tabs gained *Copy link*. A first visit offered a *Start here* card naming
+  the busiest way in, the worst gap and, with `--diff`, the latest change,
+  each worked out from the graph and each a link.
 - **The page's source in modules (P103).** `page.html` kept only its markup:
   its styles moved to `page.css` and its script to one module per panel under
   `src/visualise/panels/`, each a factory handed the page so far, written in

@@ -119,6 +119,8 @@ export function createMissing(page) {
       if (!showAccepted && taken >= u.count) continue;
       const body = bodies.get(u.kind) || bodies.get('gap');
       const tr = document.createElement('tr');
+      // A link names a reason to open on (`#missing/reason=…`, P98).
+      tr.dataset.reason = u.reason;
       const tone = u.reason.includes('not-found') ? 'bad' : u.reason.includes('dynamic') ? 'warn' : '';
       // The example is the first row of its reason, in the order both lists
       // are written; when that row names a node, the node is one click away.

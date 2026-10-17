@@ -37,6 +37,20 @@ export interface AskedView {
   also: number[];
 }
 
+/** A tab the address opens, as `parseViewHash` reads it. */
+export interface AskedTab {
+  /** The tab, or null when the address names one the page does not have. */
+  view: string | null;
+  /** The name as the address wrote it. */
+  name: string;
+  /** The way in, by node position, or null when none is named or the key is not held. */
+  entry: number | null;
+  /** The way in's key as written, '' when none. */
+  key: string;
+  /** Where in the tab to go, by name: `reason` on Not joined. */
+  rest: Record<string, string>;
+}
+
 export interface Point {
   x: number;
   y: number;
@@ -52,6 +66,9 @@ export declare const formatHash: (
   expanded?: readonly number[],
   more?: { ask?: Ask | null; hidden?: Partial<HiddenNames> | null; also?: readonly number[] },
 ) => string;
+export declare const VIEWS: readonly string[];
+export declare const parseViewHash: (hash: string, keys: Keys) => AskedTab | null;
+export declare const formatViewHash: (view: string, key?: string | null, rest?: Record<string, string | null | undefined>) => string;
 export declare const pinch: (
   before: readonly [Point, Point],
   after: readonly [Point, Point],

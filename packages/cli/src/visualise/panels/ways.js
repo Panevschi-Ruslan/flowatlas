@@ -54,6 +54,10 @@ export function createWays(page) {
         (scheduleOf(model, i) ? ` &middot; <span class="sched">${esc(scheduleSay(scheduleOf(model, i)))}</span>` : '') +
         '</span>' + (failsOf(model, i).length ? `<span class="row-meta">${failChipsHtml(i)}</span>` : '');
       b.addEventListener('click', () => {
+        // Another way in is a step Back returns from (P98): the address as it
+        // was is kept as an entry of its own, and the tab writes the new one
+        // over the copy. Moving between tabs replaces it instead.
+        if (i !== store.get('current')) history.pushState(null, '', location.href);
         store.set('current', i);
         drawEntries();
         // On the graph a way in is a focus; on Steps its steps; anywhere else a walk.

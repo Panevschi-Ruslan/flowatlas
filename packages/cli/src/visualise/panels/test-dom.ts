@@ -595,11 +595,35 @@ export const installDocument = (markup: string, address = 'file:///project/graph
     location.hash = at < 0 ? '' : url.slice(at);
     location.href = base + location.hash;
   };
+  /* The session history as addresses: `replaceState` rewrites the one the
+     page is at, `pushState` adds one after it, and `back` steps to the one
+     before, saying so the way a browser does - popstate, then hashchange
+     when the hash moved. */
+  const entries = [location.hash];
+  let now = 0;
+  const history = {
+    get length() { return entries.length; },
+    entries,
+    replaceState: (_: unknown, __: unknown, url: string) => { setHash(url); entries[now] = location.hash; },
+    pushState: (_: unknown, __: unknown, url: string) => {
+      setHash(url);
+      entries.splice(now + 1, entries.length, location.hash);
+      now += 1;
+    },
+    back: () => {
+      if (now === 0) return;
+      const was = location.hash;
+      now -= 1;
+      setHash(entries[now] || '');
+      win.dispatchEvent(new FakeEvent('popstate'));
+      if (location.hash !== was) win.dispatchEvent(new FakeEvent('hashchange'));
+    },
+  };
   const globals: Record<string, unknown> = {
     window: win,
     document: doc,
     location,
-    history: { replaceState: (_: unknown, __: unknown, url: string) => setHash(url), pushState: (_: unknown, __: unknown, url: string) => setHash(url) },
+    history,
     localStorage: {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, String(value)),

@@ -1,6 +1,6 @@
 import { findEverything } from '../graph.js';
 
-/* The one search over everything in the masthead (P73): names of nodes, files,
+/* The one search over everything, beside the rail (P73): names of nodes, files,
    rows and types, grouped, each opening where it is. */
 export function createFind(page) {
   const { esc, keys, model } = page;
