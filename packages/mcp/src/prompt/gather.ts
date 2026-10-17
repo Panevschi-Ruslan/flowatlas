@@ -32,6 +32,9 @@ import {
   type PromptSubject,
 } from '@flowatlas/core';
 import {
+  missingByGap,
+  missingGroupsOf,
+  missingTokenOfGap,
   methodsOf,
   ownerOf,
   withAnsweredDemoted,
@@ -360,6 +363,8 @@ export const gatherCheckSubject = (db: GraphDb, gapId: string, rows: readonly An
   });
   const firstOn = rows.map((row) => (row.node === null ? undefined : db.node(row.node))).find((node) => node !== undefined);
   const reachedFrom = firstOn === undefined ? undefined : reachedFromOf(db, firstOn);
+  // The repository this gap is evidence for, as the page names it from its pack (P122).
+  const missing = missingTokenOfGap(missingByGap(missingGroupsOf(db, db.allUnresolved())), gapId);
   return {
     id: gapId,
     label: gap.reason,
@@ -368,7 +373,7 @@ export const gatherCheckSubject = (db: GraphDb, gapId: string, rows: readonly An
     kind: [...new Set(rows.map((row) => row.level))].join(', '),
     ...(gap.service === undefined || gap.service === null ? {} : { service: gap.service }),
     ...(gap.file === undefined || gap.file === null ? {} : { loc: gap.file }),
-    check: { places },
+    check: { places, ...(missing === undefined ? {} : { missing }) },
     steps: [],
     stepsCut: 0,
     ...(reachedFrom === undefined ? {} : { reachedFrom }),

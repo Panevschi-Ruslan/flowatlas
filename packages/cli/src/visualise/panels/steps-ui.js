@@ -331,6 +331,11 @@ export function createStepsUi(page) {
      and `service:<name>` write the scopes the server writes (P134). */
   const promptKit = { seen, walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
   const promptOf = (asked) => {
+    // `agent:<row>` is the row's check as a task for an agent (P122).
+    if (asked.startsWith('agent:')) {
+      const row = promptTargetOf('row:' + asked.slice('agent:'.length));
+      return row === null ? '' : promptFor(model, row, { ...promptKit, task: 'close' });
+    }
     const target = promptTargetOf(asked);
     return target === null ? '' : promptFor(model, target, promptKit);
   };

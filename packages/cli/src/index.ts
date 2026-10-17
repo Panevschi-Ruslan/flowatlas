@@ -105,7 +105,8 @@ export { watchProject } from './build/watch.js';
 export type { WatchHandle, WatchOptions } from './build/watch.js';
 export { runExtract, summarise } from './commands/extract.js';
 export { runInit, scanCandidates } from './commands/init.js';
-export { linkRepos, unlinkRepos } from './commands/link.js';
+export { linkRepos, linkSuggested, unlinkRepos } from './commands/link.js';
+export type { SuggestedOptions, SuggestedResult } from './commands/link.js';
 export type { LinkOptions, LinkResult, UnlinkResult } from './commands/link.js';
 export { installMcp, reasonCatalog, serverEntry, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
 export { runChannel } from './commands/channel.js';
@@ -218,10 +219,13 @@ export {
   registerDoctor,
   runCantFollowCommand,
   runDoctorCommand,
+  runMissingCommand,
   BASELINE_FILE,
   DOCTOR_FILE,
 } from './commands/doctor.js';
-export type { CantFollowRun, DoctorFormat, DoctorOptions, DoctorRun } from './commands/doctor.js';
+export type { CantFollowRun, DoctorFormat, DoctorOptions, DoctorRun, MissingRun } from './commands/doctor.js';
+export { candidatesFor, missingCandidatesFor, missingEntryOf, sayMissing, MATCHED_BY, NOTHING_MISSING } from './doctor/missing.js';
+export type { CandidateOptions, MatchedBy, MissingCandidate, MissingRepoEntry } from './doctor/missing.js';
 export { CANT_FOLLOW_FORMAT_VERSION, cantFollowReport, renderCantFollowJson, renderCantFollowText } from './doctor/cant-follow.js';
 export type { CantFollowReport } from './doctor/cant-follow.js';
 export {
@@ -252,7 +256,7 @@ export { explainPlaces, placesNamed, renderPatternsExplain, PATTERNS_EXPLAIN_FOR
 export type { PatternsExplainReport } from './patterns/explain.js';
 export { renderPatternsSuggest, suggestPatterns, writeStarters, PATTERNS_SUGGEST_FORMAT_VERSION } from './patterns/suggest.js';
 export type { PatternsSuggestReport, SuggestedRule } from './patterns/suggest.js';
-export { boundDoctorReport, runDoctor, runDoctorComplete } from './doctor/run.js';
+export { boundDoctorReport, missingReposOf, runDoctor, runDoctorComplete } from './doctor/run.js';
 export type { DoctorInput, DoctorSettings } from './doctor/run.js';
 export {
   BASELINE_FORMAT_VERSION,

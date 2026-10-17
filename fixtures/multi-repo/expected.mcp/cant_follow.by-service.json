@@ -80,6 +80,7 @@
   ],
   "packages": [],
   "next": [
+    "describe_for_prompt({id: \"gap:gateway|src/clients/billing.client.ts|dynamic-http-url\"})",
     "cant_follow({cause: \"dynamic-http-url\"})"
   ]
 }

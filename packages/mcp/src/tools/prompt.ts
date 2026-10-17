@@ -1,4 +1,4 @@
-import { askNextOf, isGapId, readAccepted, type GraphNode, type PromptSubject } from '@flowatlas/core';
+import { askNextOf, gapIdOf, isGapId, readAccepted, type GraphNode, type PromptSubject } from '@flowatlas/core';
 import { acceptedSplitOf, type AnchoredUnresolvedRow, type FindingRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -53,6 +53,21 @@ const checkOf = (db: GraphDb, ctx: ToolContext, gapId: string): PromptSubject | 
   if (rows.length === 0) return undefined;
   const split = acceptedSplitOf(db, rows, readAccepted(ctx.handle.path));
   return gatherCheckSubject(db, gapId, rowsOfGap(split.rows, gapId));
+};
+
+/** `file:line`, with `service#` in front or not. */
+const PLACE = /^(?:([^#\s]+)#)?([^\s#]+):(\d+)$/;
+
+/** The gap ids of the rows written at a place, sorted; none for an id that is no place. */
+const gapsAtPlace = (db: GraphDb, ref: string): string[] => {
+  const found = PLACE.exec(ref);
+  if (found === null) return [];
+  const [, service, file, line] = found;
+  const ids = db
+    .allUnresolved()
+    .filter((row) => row.file === file && row.line === Number(line) && (service === undefined || row.service === service))
+    .map((row) => gapIdOf({ reason: row.reason, ...(row.service === null ? {} : { service: row.service }), ...(row.file === null ? {} : { file: row.file }) }));
+  return [...new Set(ids)].sort();
 };
 
 /**
@@ -150,7 +165,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
       title: 'Describe for a prompt',
       description: 'An entry, channel, symbol, gap, class, file or service as Markdown to hand on; no code.',
       inputSchema: {
-        id: z.string().describe('any id, gap id, channel or "POST /orders"'),
+        id: z.string().describe('any id, gap id, file:line, channel or "POST /orders"'),
         scope: z.enum(PROMPT_SCOPES).optional(),
         maxSteps: z.number().int().min(1).max(200).default(PROMPT_LIMITS.maxSteps).describe('chain steps'),
         maxChars: z.number().int().min(500).max(40000).default(PROMPT_LIMITS.maxChars),
@@ -163,6 +178,15 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
         if (isGapId(trimmed)) {
           const check = checkOf(db, ctx, trimmed);
           return check === undefined ? { error: `no rows answer to ${JSON.stringify(trimmed)}` } : answer(trimmed, check, input);
+        }
+        // A place as cant_follow and search name one, `file:line` or `service#file:line` (P122): the gap written there.
+        const place = db.node(trimmed) === undefined ? gapsAtPlace(db, trimmed) : [];
+        if (place.length === 1) {
+          const check = checkOf(db, ctx, place[0] as string);
+          if (check !== undefined) return answer(place[0] as string, check, input);
+        }
+        if (place.length > 1) {
+          return withNext({ candidates: place }, place.slice(0, MAX_NEXT).map((id) => `describe_for_prompt({id: ${JSON.stringify(id)}})`));
         }
         if (input.scope !== undefined && input.scope !== 'node') {
           const scoped = scopedSubject(db, ctx, trimmed, input.scope);

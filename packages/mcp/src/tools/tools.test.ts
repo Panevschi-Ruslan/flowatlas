@@ -153,12 +153,23 @@ describe('the tools a session is offered', () => {
    * The two lines met again (P110 with P109 and P108 on one side; P141, P112
    * and the docs and page tickets on the other): twenty-four tools, 12,201
    * and 30,959, each ceiling the measured size rounded up to the next 50.
+   *
+   * Raised by P122, the full list only: `start_here`'s output schema gained
+   * `missingRepos` (the repositories probably missing, by name, with the
+   * directories that look like each), about 200 characters a client checks
+   * answers against and no model reads, and `describe_for_prompt`'s `id`
+   * says it takes `file:line` (11 characters read). 11,775 and 30,550: the
+   * read ceiling holds, the full one moves to the next 50 above.
+   *
+   * The two lines met once more (P122 on one side; P108 to P110, P134, P142 and
+   * P143 on the other): twenty-four tools, 12,212 and 31,175, each ceiling
+   * the measured size rounded up to the next 50.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
     expect(read.length).toBeLessThan(12250);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(31000);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(31200);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {
@@ -762,6 +773,31 @@ describe('answers that hand on the id the next question needs', () => {
     expect(answer.markdown).toContain('## Where · 3');
     expect(answer.next).toEqual(['search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})']);
     expect((await call('describe_for_prompt', { id: 'gap:web|src/nowhere.ts|api-path-dynamic' })).error).toMatch(/no rows answer to/);
+  });
+
+  it('says how to close a check, from the one table every surface reads (P122)', async () => {
+    const id = 'gap:web|src/app/orders-api.service.ts|api-path-dynamic';
+    const { markdown } = await call('describe_for_prompt', { id });
+    expect(markdown).toContain('## How to close it');
+    expect(markdown).toContain('@flowatlas-calls METHOD /path');
+    expect(markdown).toContain("`flowatlas accept api-path-dynamic --service web --file src/app/orders-api.service.ts --note '<why this one is fine>'`");
+    // A setting nobody claims is evidence of a repository that is not here, and the text names it.
+    const unclaimed = await call('search', { query: 'PAYMENTS_URL', kinds: ['gaps'] });
+    const gap = unclaimed.results.gaps[0].gapId as string;
+    expect(unclaimed.next[0]).toBe(`describe_for_prompt({id: ${JSON.stringify(gap)}})`);
+    expect((await call('describe_for_prompt', { id: gap })).markdown).toContain('one for "payments" looks missing here');
+  });
+
+  it('writes a check from a place, as cant_follow and search name one (P122)', async () => {
+    const byPlace = await call('describe_for_prompt', { id: 'src/app/orders-api.service.ts:139' });
+    expect(byPlace.id).toBe('gap:web|src/app/orders-api.service.ts|api-path-dynamic');
+    const byService = await call('describe_for_prompt', { id: 'web#src/app/orders-api.service.ts:139' });
+    expect(byService.markdown).toBe(byPlace.markdown);
+  });
+
+  it('names the repositories probably missing in start_here (P122)', async () => {
+    expect((await call('start_here')).missingRepos).toEqual([{ token: 'payments' }]);
+    expect((await call('start_here', { service: 'billing' })).missingRepos).toBeUndefined();
   });
 
   it('writes the text the shared prompt snapshots hold, which the page writes too (P97)', async () => {

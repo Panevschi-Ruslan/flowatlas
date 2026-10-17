@@ -225,6 +225,8 @@ export const registerMcp = (program: Command): void => {
         }
 
         const { DbHandle, startStdioServer } = await import('@flowatlas/mcp');
+        // Loaded here, not at the top: the finder reaches `init`, which reaches this file.
+        const { missingCandidatesFor } = await import('../doctor/missing.js');
         const where = {
           ...(options.config === undefined ? {} : { configPath: options.config }),
           ...(options.db === undefined ? {} : { dbPath: options.db }),
@@ -243,6 +245,7 @@ export const registerMcp = (program: Command): void => {
             return 'error' in opened ? undefined : opened.db;
           }),
           patternTester: patternTesterFor(options.config),
+          ...missingCandidatesFor(options.config),
         });
       },
     );

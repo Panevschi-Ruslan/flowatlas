@@ -14,6 +14,7 @@ import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
 import type { DoctorReport, DoctorRow } from './schema.js';
 import { findingsSaid } from './hints.js';
+import { sayMissing, type MissingSayOptions } from './missing.js';
 import { noWayInSentence } from './ways-in.js';
 import { confirmedLine } from './traffic.js';
 
@@ -154,13 +155,31 @@ const KIND_TAG = {
 
 const plural = (count: number, one: string, many = `${one}s`): string => `${count} ${count === 1 ? one : many}`;
 
+/** How many groups the report's head names before pointing at `doctor --missing` for the rest. */
+const MISSING_SAID = 3;
+
+/**
+ * The repositories probably missing (P122), where the evidence is worth
+ * saying: an address or a deployment nobody answers, two kinds that agree, or
+ * a directory that looks like it. A lone package or channel waits for
+ * `doctor --missing`, which lists every group with every place.
+ */
+const missingLines = (report: DoctorReport, options: MissingSayOptions): string[] => {
+  const said = (report.unresolved.missingRepos ?? []).filter((entry) => !entry.weak);
+  const lines = said.slice(0, MISSING_SAID).flatMap((entry) => sayMissing(entry, { ...options, indent: '  ' }));
+  if (said.length > MISSING_SAID) lines.push(`  … ${said.length - MISSING_SAID} more: flowatlas doctor --missing`);
+  return lines;
+};
+
 const unresolvedSection = (
   report: DoctorReport,
   repoDirs: ReadonlyMap<string, string>,
   file?: string,
+  missing: MissingSayOptions = {},
 ): string[] => {
   const { unresolved } = report;
   if (unresolved.status === 'skipped') return [];
+  const probably = missingLines(report, missing);
   // In the words the build summary uses, and only where it says something: a
   // project whose every body was read has no gap to size.
   const { found, read } = unresolved.waysIn;
@@ -176,7 +195,7 @@ const unresolvedSection = (
         : [
             `  ${unresolved.accepted.rows} accepted gap${unresolved.accepted.rows === 1 ? '' : 's'} left out (accepted.json; flowatlas accept --list)`,
           ];
-  if (unresolved.byReason.length === 0) return ['unresolved: none', ...ways, ...acceptedLine];
+  if (unresolved.byReason.length === 0) return ['unresolved: none', ...probably, ...ways, ...acceptedLine];
 
   // The build summary's three figures (P81), after the one `--strict` compares:
   // what was missed, how joins were made, and what the code does.
@@ -192,6 +211,8 @@ const unresolvedSection = (
     ...(findings === 0
       ? []
       : [`  ${plural(findings, 'finding')}: ${findingsSaid(unresolved.byReason.filter((group) => group.kind === 'finding'))}`]),
+    // Before the rows (P122): the one fix that may close several of them.
+    ...probably,
     ...ways,
     ...acceptedLine,
     ...[confirmedLine(report.traffic)].flatMap((line) => (line === undefined ? [] : [`  ${line}`])),
@@ -413,12 +434,27 @@ const headOf = (
   return said.flatMap((paragraph) => [paragraph, '']);
 };
 
-export const renderDoctorText = (
-  report: DoctorReport,
-  options: { file?: string; repoDirs?: ReadonlyMap<string, string>; rootDir?: string } = {},
-): string => {
+export interface DoctorTextOptions {
+  file?: string;
+  repoDirs?: ReadonlyMap<string, string>;
+  rootDir?: string;
+  /** The configuration file, for the `flowatlas link` command a missing repository is added with (P122). */
+  configPath?: string;
+  /** Where the command runs, which that command's path is written relative to. */
+  cwd?: string;
+}
+
+/** What a missing repository's lines need to write a command that works from here. */
+export const missingSayOf = (options: DoctorTextOptions): MissingSayOptions => ({
+  ...(options.rootDir === undefined ? {} : { configDir: options.rootDir }),
+  ...(options.configPath === undefined ? {} : { configPath: options.configPath }),
+  ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
+  placeSaid: (place) => where(place.service ?? '', place.file ?? '', place.line ?? 0, options.repoDirs ?? NO_REPOS),
+});
+
+export const renderDoctorText = (report: DoctorReport, options: DoctorTextOptions = {}): string => {
   const blocks = [
-    unresolvedSection(report, options.repoDirs ?? NO_REPOS, options.file),
+    unresolvedSection(report, options.repoDirs ?? NO_REPOS, options.file, missingSayOf(options)),
     markerSection(report, options.file),
     desyncSection(report, options.file),
     contractSection(report, options.file),
@@ -478,10 +514,12 @@ export interface GithubOptions {
    * in (R173).
    */
   serviceAt?: (service: string) => { file: string; line: number } | undefined;
+  /** The configuration file, relative to the checkout: where a probably missing repository is noted (P122). */
+  configAt?: { file: string; line: number };
 }
 
 const annotation = (
-  level: 'error' | 'warning',
+  level: 'error' | 'warning' | 'notice',
   place: { file: string; line: number } | undefined,
   title: string,
   message: string,
@@ -522,6 +560,25 @@ export const renderDoctorGithub = (report: DoctorReport, options: GithubOptions 
   for (const service of report.unresolved.withoutWaysIn ?? []) {
     lines.push(
       annotation('warning', options.serviceAt?.(service.service), `${service.service}: no way in`, `${noWayInSentence(service)}.`),
+    );
+  }
+  // A repository probably missing is a notice at the configuration (P122): a
+  // guess, said as one, which the configuration is where to act on.
+  for (const entry of (report.unresolved.missingRepos ?? []).filter((each) => !each.weak)) {
+    const [first, ...others] = entry.candidates;
+    const where =
+      first === undefined
+        ? 'Nothing next to the configured repositories looks like it.'
+        : others.length === 0
+          ? `${first.path} looks like it: flowatlas link ${first.path}`
+          : `${entry.candidates.map((candidate) => candidate.path).join(', ')} look like it; link the one it is.`;
+    lines.push(
+      annotation(
+        'notice',
+        options.configAt,
+        `Probably missing: a repository for ${entry.token}`,
+        `${entry.signals.map((signal) => signal.says).join('; ')}. ${where}`,
+      ),
     );
   }
   // A file of accepted gaps that could not be read decides no exit either, and

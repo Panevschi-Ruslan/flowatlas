@@ -79,6 +79,8 @@ export function createMenu(page) {
       text: (r) => acceptCommandForLike(rowPlace(r)),
     },
   ];
+  // The row as a task an agent can act on (P122): its check, how to close it, and to look again after.
+  ROW_MENU_ITEMS.push({ id: 'agent', say: 'Copy for agent', copied: 'Copied as a task for an agent.', text: (r) => page.promptOf('agent:' + r) });
 
   /* The `⋯` button of a row, by its position in `data.rows`. */
   const rowMenu = (r, label = 'this row') =>

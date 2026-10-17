@@ -17,7 +17,14 @@ import {
   type TypeEntry,
   waysInOf,
 } from '@flowatlas/core';
-import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
+import {
+  missingByGap,
+  missingRepoSignals,
+  rankMissing,
+  servicesOfReport,
+  type AnchoredUnresolvedRow,
+  type LinkReport,
+} from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type MapInput, type PackedMap } from './map-pack.js';
 import type { Observed } from '../observe/match.js';
@@ -218,6 +225,12 @@ export interface PackedGraph {
    * Absent when there are none.
    */
   dangling?: Array<[from: number, to: string, type: number, confidence: number, line: number]>;
+  /**
+   * The repositories probably missing (P122), likeliest first, each by its
+   * name with the gap ids its evidence came from: a check's prompt names the
+   * one it is evidence for, as `describe_for_prompt` does. Absent when none.
+   */
+  missing?: Array<[token: string, gapIds: string[]]>;
   /** Ids of the ways in, so a link can name one. */
   entryIds: Record<string, number>;
   /**
@@ -581,6 +594,14 @@ const totalsOf = (
 
 const withDocs = (docs: PackedDocs | undefined): Pick<PackedGraph, 'docs'> => (docs === undefined ? {} : { docs });
 
+/** The repositories probably missing, from what the page is packed from: the server's `missingGroupsOf` over the same graph. */
+const withMissing = (input: PackInput): Pick<PackedGraph, 'missing'> => {
+  const services = servicesOfReport(input.report);
+  const groups = rankMissing(missingRepoSignals({ nodes: input.nodes, edges: input.edges, unresolved: input.unresolved, services }, input.report), services);
+  const missing = missingByGap(groups);
+  return missing.length === 0 ? {} : { missing };
+};
+
 export const packGraph = (input: PackInput): PackedGraph => {
   const rowsIn = input.unresolved;
   const accepted = packAccepted(input.accepted, rowsIn);
@@ -699,6 +720,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     entryIds,
     ids: packIds(input.nodes),
     ...(dangling.length === 0 ? {} : { dangling }),
+    ...withMissing(input),
     keys: stableKeys(input.nodes.map((node) => node.id)),
     steps,
     map: packMap({

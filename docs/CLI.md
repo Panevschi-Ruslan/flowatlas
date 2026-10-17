@@ -42,11 +42,22 @@ project is reported, never duplicated.
 | `--config <path>` | `./flowatlas.config.json` | where to write the configuration |
 | `--no-mcp` | off | skip registering the graph server in each repository |
 | `--dry-run` | off | say what would change and change nothing |
+| `--suggested` | off | instead of paths, link the directory that fits each repository `doctor --missing` names (below); prints what it found first |
+| `--scan <dir>` | none | with `--suggested`: also look in this directory, one level down; repeatable |
+| `--db <path>` | the configured one | with `--suggested`: the graph the suggestion is read from |
 
 ```sh
 flowatlas link ../admin-api ../bot ../web
 flowatlas link ../new-service --dry-run
+flowatlas link --suggested --dry-run
 ```
+
+**`--suggested`.** Runs `doctor --missing` over the built graph, prints it, and
+links the one directory that fits each repository it names, as `link <path>`
+would. Where two directories fit one name, neither is linked: the line says so,
+and the person names the path or narrows the search with `--scan`. With
+`--dry-run` nothing is written. Rebuild afterwards: the joins are made by the
+next `build`, never by the suggestion.
 
 ### `flowatlas unlink <name...>`
 
@@ -1951,7 +1962,9 @@ installed, and what a service with no way in looks like.
 | `--format <name>` | `text` | `text`, `json`, `github` |
 | `--out <dir>` | configured output | where `doctor.json` goes |
 | `--unresolved` | off | instead of the report, what the reader could not follow, grouped by cause and by package |
-| `--top <n>` | 10 | with `--unresolved`: most causes, and packages per cause, to list |
+| `--missing` | off | instead of the report, only the repositories probably missing from the project, each with every place that points at it (below); `--json` as data |
+| `--scan <dir>` | none | also look for a missing repository in this directory, one level down; repeatable |
+| `--top <n>` | 10, or 5 with `--missing` | with `--unresolved`: most causes, and packages per cause, to list; with `--missing`: most repositories |
 | `--samples <n>` | 3 | with `--unresolved`: places listed per package under a cause |
 | `--cause <code>` | every one | with `--unresolved`: only this cause, e.g. `module-not-installed` |
 | `--package <name>` | every one | with `--unresolved`: only what points into this package or module |
@@ -1976,6 +1989,69 @@ report's `sites`. Most places first, each cause with what to do and a few
 question about a package. Accepted gaps are left out and counted apart, as in
 the report. `--json` prints the same as data (`cantFollowFormatVersion: 1`;
 `reasons` is the `--reason` list it was narrowed to, or `null`).
+
+**The repository that is probably missing.** The commonest reason for a request
+no service claims, a package nobody installed and a channel with one end is one
+repository nobody added to the configuration. Each of those is read from the
+graph as evidence, with the name it points at:
+
+| Evidence | From | Name |
+|---|---|---|
+| a setting | an `unknown-base-url-env` row no service claims (`PAYMENTS_URL`, `paymentsApi`) | its words less `_URL`, `_HOST`, `_BASE`, `Api`, `Service`: `payments` |
+| a host | a third party written in the call, or a value of such a setting, whose host is the project's own: no dot, `localhost:<port>`, a private address, `*.internal`, `*.local`, `*.svc`, `*.cluster.local`, or a name under a domain a service's `hosts` uses | its first label, a cluster's service name, or the host itself for `localhost:<port>` |
+| a package | `module-not-installed:<package>`, under the scope of a configured service's own `package.json` name, that no read repository is | without its scope and its `-client`, `-sdk`, `-types` |
+| a channel | `channels.noConsumers` / `noProducers` | its first segment (`payment.captured` → `payment`), its transport's word left off (`sqs/…`) |
+| a deployment | `invoke-target-not-found`, `route-root-not-found`, `function-handler-not-found` | the deployed name's service part, its stage word and its own last word left off |
+
+`target-route-not-found` is not evidence: its service is configured, and what is
+missing is a route. Names are put together once the separators, the generic
+words and a plural are taken off (`payments`, `payment`, `payments-api` are one),
+ranked by how many kinds of evidence agree and then by places, and a name that
+is a configured service's - its name, an alias, a host, its package - is left
+out: that is a join to fix, not a repository to add. Then the directories beside
+the configured repositories (their parents, one level down) and in each `--scan`
+directory are matched by their `package.json` `name` (with or without scope),
+their directory name, a compose service built from them in the files beside the
+configuration, and the hosts their own setting files say they are reached at.
+Only a candidate's manifest and the setting files at its top are read - never
+its source - and a directory already configured is never offered.
+
+The report opens its unresolved section with the likeliest few, where the
+evidence is worth saying on its own (an address or a deployment nobody answers,
+two kinds that agree, or a directory that fits):
+
+```
+Probably missing: a repository for "payments" — 3 kinds of evidence, 4 places
+  PAYMENTS_URL is used by gateway (2 requests) and no service claims it
+  @acme/payments-client is imported by orders and is not installed
+  channel payment.requested is published by orders and nobody here consumes it
+  ./payments-api looks like it (package @acme/payments-api, its directory name, a compose service built from it): flowatlas link ./payments-api
+```
+
+or "nothing next to the configured repositories looks like it; if it exists
+elsewhere, `flowatlas link <path>`". The command is written for the directory
+`doctor` runs in. `--missing` prints every group, with every place under each
+line, or "nothing points at a repository that is not here". `doctor.json` holds
+them all under `unresolved.missingRepos: [{ token, score, places, kinds, weak,
+signals: [{ kind, name, says, places: [{ service, file, line, gapId }] }],
+candidates: [{ path, name, matchedBy }] }]` (`path` relative to the
+configuration; `weak` for a lone package or channel with nothing on disk);
+`--format github` adds one `::notice` per group at the configuration file. A
+guess, said as one: it decides no exit code, draws no edge and changes no
+configuration. `flowatlas link --suggested` is the one command that acts on it.
+
+**Every gap says how to close it.** The check a gap id names - on the page's row
+menu (*Copy as prompt*, and *Copy for agent*, the same text as a task: make the
+first change that fits, then `flowatlas build` and `flowatlas doctor --reason
+<reason>`), and from `describe_for_prompt` - ends with *How to close it*: one
+line per way that applies to its reason, from one table (`REMEDIES` in
+`@flowatlas/core`): link the repository that answers it (naming the one probably
+missing, when the gap is its evidence), name the setting under `baseUrlEnv` or
+the host under `hosts`, an alias, `apiBaseEnv` and `apiTarget`, a pattern
+(`flowatlas patterns suggest --cause <reason>`), a shape file (`shapes
+--suggest`), the annotation meant for it (`@CallsService`, `@flowatlas-calls`,
+`@Emits` / `@Consumes`, `@FlowEntry`), or the advice on its places; and last,
+the `flowatlas accept` line that takes it.
 
 **What stands in for a package nobody installed.** A clone with nothing
 installed still has, one directory over, the source of the internal packages it

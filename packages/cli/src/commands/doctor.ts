@@ -16,7 +16,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { loadConfig, readAccepted, type AcceptedProblem, type Unresolved } from '@flowatlas/core';
 import type { CheckOptions } from '@flowatlas/contracts';
-import { acceptedSplitOf, type GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, withAnsweredDemoted, type GraphDb, type MissingService } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { openProjectDb } from '../analysis/open.js';
 import { dbPathFor } from '../db.js';
@@ -37,14 +37,15 @@ import {
   type Baseline,
   type BaselineRead,
 } from '../doctor/baseline.js';
-import { renderDoctorGithub, renderDoctorJson, renderDoctorText, summaryLine } from '../doctor/render.js';
+import { missingSayOf, renderDoctorGithub, renderDoctorJson, renderDoctorText, summaryLine } from '../doctor/render.js';
+import { candidatesFor, NOTHING_MISSING, sayMissing, type MissingRepoEntry } from '../doctor/missing.js';
 import {
   cantFollowReport,
   renderCantFollowJson,
   renderCantFollowText,
   type CantFollowReport,
 } from '../doctor/cant-follow.js';
-import { boundDoctorReport, runDoctorComplete } from '../doctor/run.js';
+import { boundDoctorReport, missingReposOf, runDoctorComplete, type DoctorSettings } from '../doctor/run.js';
 import {
   BASELINE_FORMAT_VERSION,
   SECTIONS,
@@ -91,6 +92,10 @@ export interface DoctorOptions {
   package?: string;
   /** Shorthand for `--format json`. */
   json?: boolean;
+  /** `--missing`: only the repositories probably missing, with every place (P122). */
+  missing?: boolean;
+  /** More directories to look for a missing repository in, one level down (repeatable). */
+  scan?: string[];
 }
 
 export interface DoctorRun {
@@ -213,6 +218,10 @@ interface FromConfig {
    * as every annotation's file is relative to where it was read (R173).
    */
   serviceAt: Map<string, { file: string; line: number }>;
+  /** The configuration file, absolute. */
+  configPath?: string;
+  /** Each service's aliases and hosts, so a name that is one is never taken for a missing repository (P122). */
+  missingServices: MissingService[];
 }
 
 /** A service's own `name`, as one line of a configuration writes it. */
@@ -261,6 +270,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     readableDirs: [],
     serviceDirs: new Map(),
     serviceAt: new Map(),
+    missingServices: [],
   };
   try {
     const loaded = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
@@ -319,6 +329,12 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       readableDirs,
       serviceDirs,
       serviceAt,
+      configPath: loaded.configPath,
+      missingServices: services.map((service) => ({
+        name: service.name,
+        ...(service.aliases === undefined ? {} : { aliases: service.aliases }),
+        ...(service.hosts === undefined ? {} : { hosts: service.hosts }),
+      })),
     };
   } catch {
     // Pointed at a bare database with no configuration beside it there is
@@ -328,6 +344,40 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       : { ...empty, outputDir: dirname(resolve(options.db)) };
   }
 };
+
+/**
+ * What the check is handed to say which repository is probably missing
+ * (P122): the services as configured, and where on disk to look - beside the
+ * configured repositories and in every `--scan` directory.
+ */
+const missingSettingsOf = (
+  options: Pick<DoctorOptions, 'scan'>,
+  settings: FromConfig,
+): Pick<DoctorSettings, 'missingServices' | 'candidatesOf' | 'configDir'> => {
+  const root = settings.rootDir;
+  return {
+    missingServices: settings.missingServices,
+    ...(root === undefined
+      ? {}
+      : {
+          configDir: root,
+          candidatesOf: (groups) =>
+            candidatesFor(groups, {
+              configured: settings.readableDirs,
+              configDir: root,
+              scan: (options.scan ?? []).map((dir) => resolve(dir)),
+            }),
+        }),
+  };
+};
+
+/** How a text report spells places and the command that links a candidate. */
+const textOptionsOf = (settings: FromConfig) => ({
+  repoDirs: settings.repoDirs,
+  ...(settings.rootDir === undefined ? {} : { rootDir: settings.rootDir }),
+  ...(settings.configPath === undefined ? {} : { configPath: settings.configPath }),
+  cwd: process.cwd(),
+});
 
 /**
  * The rows as the graph wrote them, which is not what the database holds.
@@ -534,6 +584,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         ...(reasons === undefined ? {} : { reasons }),
         looksLike: describeRepository(settings),
         declared: settings.declared.map((document) => document.service),
+        ...missingSettingsOf(options, settings),
       },
     );
 
@@ -581,13 +632,16 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
           ? renderDoctorGithub(report, {
               ...(file === undefined ? {} : { file }),
               serviceAt: (service) => settings.serviceAt.get(service),
+              ...(settings.rootDir === undefined || settings.configPath === undefined
+                ? {}
+                : { configAt: { file: relative(settings.rootDir, settings.configPath).replace(/\\/g, '/'), line: 0 } }),
             })
           : renderDoctorText(report, {
               ...(file === undefined ? {} : { file }),
-              repoDirs: settings.repoDirs,
-              // Only so the head of the report can establish, rather than
-              // assume, whether a repository has ever been installed (R129).
-              ...(settings.rootDir === undefined ? {} : { rootDir: settings.rootDir }),
+              // The root is there so the head of the report can establish,
+              // rather than assume, whether a repository has ever been
+              // installed (R129), and to write a link command (P122).
+              ...textOptionsOf(settings),
             });
 
     io.out(text);
@@ -630,6 +684,48 @@ export const acceptedCountOf = (split: {
     sites: split.accepted.reduce((sum, row) => sum + (row.sites ?? 1), 0),
     ...(split.problem === undefined ? {} : { problem: split.problem }),
   };
+};
+
+export interface MissingRun {
+  missing: MissingRepoEntry[];
+  text: string;
+  exitCode: number;
+}
+
+/**
+ * `doctor --missing` (P122): only the repositories probably missing, every
+ * group with every place, likeliest first and at most `--top` (default 5);
+ * `--json` prints them as `doctor.json` holds them. A guess, so it decides no
+ * exit code.
+ */
+export const runMissingCommand = (options: DoctorOptions, io: QueryIo = processIo): MissingRun => {
+  const format = options.json === true ? 'json' : oneOf(options.format, ['text', 'json'] as const, 'text', '--format');
+  const top = whole(options.top, 5, '--top');
+  const settings = fromConfig(options);
+  const { fresh } = cantFollowRowsOf(options);
+  const { db, close } = openProjectDb(options);
+  try {
+    const all = missingReposOf(db, withAnsweredDemoted(fresh, db), {
+      ...(options.service === undefined ? {} : { service: options.service }),
+      ...missingSettingsOf(options, settings),
+    });
+    const missing = all.slice(0, top);
+    const say = missingSayOf(textOptionsOf(settings));
+    const more = all.length - missing.length;
+    const text =
+      format === 'json'
+        ? `${JSON.stringify({ missingRepos: missing, ...(more > 0 ? { truncated: more } : {}) }, null, 2)}\n`
+        : missing.length === 0
+          ? `${NOTHING_MISSING}.\n`
+          : `${[
+              ...missing.flatMap((entry, index) => [...(index === 0 ? [] : ['']), ...sayMissing(entry, { ...say, everyPlace: true })]),
+              ...(more > 0 ? ['', `… ${more} more; raise --top`] : []),
+            ].join('\n')}\n`;
+    io.out(text);
+    return { missing, text, exitCode: EXIT.ok };
+  } finally {
+    close();
+  }
 };
 
 export interface CantFollowRun {
@@ -727,12 +823,22 @@ export const registerDoctor = (program: Command): void => {
     .option('--max-nodes <n>', 'most places to print per reason; the file is always complete')
     .option('--out <dir>', 'where to write doctor.json (default: the configured output)')
     .option('--unresolved', "what the reader could not follow, grouped by cause and by package, instead of the report")
-    .option('--top <n>', 'with --unresolved: most causes and packages to list (default 10)')
+    .option('--top <n>', 'with --unresolved: most causes and packages to list (default 10); with --missing, most repositories (default 5)')
     .option('--samples <n>', 'with --unresolved: places to list per package under a cause (default 3)')
     .option('--cause <code>', 'with --unresolved: only this cause, e.g. module-not-installed')
     .option('--package <name>', 'with --unresolved: only what points into this package')
     .option('--json', 'shorthand for --format json')
+    .option('--missing', 'only the repositories that are probably missing from the project, with every place that points at them')
+    .option(
+      '--scan <dir>',
+      'also look for a missing repository in this directory, one level down (repeatable)',
+      (value: string, all: string[] = []) => [...all, value],
+    )
     .action((options: DoctorOptions) => {
+      if (options.missing === true) {
+        runMissingCommand(options);
+        return;
+      }
       if (options.unresolved === true) {
         runCantFollowCommand(options);
         return;

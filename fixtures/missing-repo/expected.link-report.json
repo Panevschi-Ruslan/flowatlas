@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T18:06:55.744Z",
+  "configHash": "0eaa62de72cd",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 3579,
+      "packages": {
+        "name": "@acme/gateway",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 3695,
+      "packages": {
+        "name": "@acme/orders",
+        "runtime": [
+          "@acme/payments-client",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 2,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 0,
+    "noConsumers": [
+      "channel:payment.requested"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 0,
+    "uncalled": [
+      "entry:gateway:http:POST:/checkout/:param/pay",
+      "entry:gateway:http:POST:/checkout/:param/refund",
+      "entry:orders:http:POST:/orders/:param/confirm"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "src/checkout.controller.ts",
+      "line": 12,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares PAYMENTS_URL",
+      "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:gateway#src/checkout.controller.ts:12:26"
+    },
+    {
+      "service": "gateway",
+      "file": "src/checkout.controller.ts",
+      "line": 21,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares PAYMENTS_URL",
+      "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:gateway#src/checkout.controller.ts:21:26"
+    }
+  ],
+  "totals": {
+    "nodes": 21,
+    "edges": 13,
+    "types": 0,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

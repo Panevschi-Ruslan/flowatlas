@@ -30,6 +30,8 @@ import {
   runDiff,
   runDocs,
   runDoctorCommand,
+  runMissingCommand,
+  linkSuggested,
   runFlow,
   runImpact,
   runObserve,
@@ -722,6 +724,32 @@ const HOUSE_CASES = [
 ];
 
 /**
+ * The repository nobody added to the configuration (P122): the group the
+ * health check opens its unresolved section with, as text, as workflow
+ * commands, and alone with every place; what `link --suggested` would add,
+ * changing nothing; and the variant that configures it, built into its own
+ * output, where the joins are made and no group is left.
+ */
+const missingRepoPlain = plainFor('missing-repo');
+const missingRepoLinked = join(root, 'fixtures', 'missing-repo', 'variants', 'linked', 'flowatlas.config.json');
+let missingRepoLinkedBuilt;
+const missingRepoLinkedOnce = async () => {
+  missingRepoLinkedBuilt ??= buildProject({ config: missingRepoLinked, builtAt: '1970-01-01T00:00:00.000Z', cache: false });
+  await missingRepoLinkedBuilt;
+  return missingRepoLinked;
+};
+
+const MISSING_REPO_CASES = [
+  ['doctor.txt', (io) => runDoctorCommand({ config: missingRepoPlain.config }, io)],
+  ['doctor.github.txt', (io) => runDoctorCommand({ config: missingRepoPlain.config, format: 'github' }, io)],
+  ['doctor.missing.txt', (io) => runMissingCommand({ config: missingRepoPlain.config }, io)],
+  ['doctor.missing.json', (io) => runMissingCommand({ config: missingRepoPlain.config, json: true }, io)],
+  ['link.suggested.txt', (io) => linkSuggested({ config: missingRepoPlain.config, dryRun: true, print: (line) => io.out(`${line}\n`) })],
+  ['doctor.linked.txt', async (io) => runDoctorCommand({ config: await missingRepoLinkedOnce() }, io)],
+  ['doctor.missing.linked.txt', async (io) => runMissingCommand({ config: await missingRepoLinkedOnce() }, io)],
+];
+
+/**
  * The pull-request document `flowatlas diff` writes for `fixtures/multi-repo-diff`
  * (P116), with its changed flows drawn, and the `diff.json` beside it. The
  * project's history is made once, the same commits on every machine
@@ -827,6 +855,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
   { dir: join(root, 'fixtures', 'house-patterns', 'expected.cli'), owned: true, cases: HOUSE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
+  { dir: join(root, 'fixtures', 'missing-repo', 'expected.cli'), owned: true, cases: MISSING_REPO_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

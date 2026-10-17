@@ -1,5 +1,5 @@
 import type { DetailLevel } from '@flowatlas/core';
-import type { GraphDb } from '@flowatlas/linker';
+import type { MissingGroup, GraphDb } from '@flowatlas/linker';
 import { z } from 'zod';
 import { CLAMP_NOTE, clampDetail } from '../query/detail.js';
 import type { DbHandle } from '../query/db.js';
@@ -47,7 +47,16 @@ export interface ToolContext {
   contractChecker?: ContractChecker;
   /** Filled by the command line, which runs the readers a pattern is tested with (P121). */
   patternTester?: PatternTester;
+  /**
+   * Filled by the command line (P122): the directories on disk that look like
+   * each repository probably missing, by path, aligned with the groups. This
+   * package reads no directory, so without it no group has a candidate.
+   */
+  missingCandidates?: MissingCandidates;
 }
+
+/** The directories that look like each group's repository, by path, aligned with `groups`. */
+export type MissingCandidates = (groups: readonly MissingGroup[]) => string[][];
 
 /** What `test_pattern` is asked: rules as YAML, code to run them over, a service to type it in. */
 export interface PatternTesterInput {

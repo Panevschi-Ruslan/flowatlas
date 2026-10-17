@@ -160,7 +160,7 @@ describe('what did not join, split by what it is (P100)', () => {
     expect(button.getAttribute('aria-expanded')).toBe('true');
     const items = menu.querySelectorAll('[role="menuitem"]');
     expect(items.map((item) => textOf(item.querySelector('span')))).toEqual([
-      'Copy as prompt', 'Copy accept command', 'Copy accept command for every row like this',
+      'Copy as prompt', 'Copy accept command', 'Copy accept command for every row like this', 'Copy for agent',
     ]);
     expect(textOf(document.getElementById('row-menu-foot'))).toContain('Copies a command; run it in the project.');
     expect(document.activeElement).toBe(items[0]);
@@ -168,7 +168,7 @@ describe('what did not join, split by what it is (P100)', () => {
     expect(document.activeElement).toBe(items[1]);
     menu.dispatchEvent(key('ArrowUp'));
     menu.dispatchEvent(key('ArrowUp'));
-    expect(document.activeElement).toBe(items[2]);
+    expect(document.activeElement).toBe(items[3]);
     menu.dispatchEvent(key('Escape'));
     expect(menu.hidden).toBe(true);
     expect(document.activeElement).toBe(button);
@@ -187,10 +187,30 @@ describe('what did not join, split by what it is (P100)', () => {
 
     button.click();
     menu.dispatchEvent(key('ArrowUp'));
+    menu.dispatchEvent(key('ArrowUp'));
     menu.dispatchEvent(key('Enter'));
     await new Promise((done) => setTimeout(done, 0));
     expect(window.clipboard.at(-1)).toBe(
       "flowatlas accept route-unguarded --service orders --path 'GET /orders/:param/*' --note '<why these are fine>' --dry-run");
+  });
+
+  it('copies the row as a task for an agent: the check, how to close it, and how to see it gone (P122)', async () => {
+    const { document, window, page } = mount();
+    const menu = document.getElementById('row-menu')!;
+    const button = document.querySelector('.nj-row[data-reason="di-token-unknown"] [data-row-menu]') as any;
+    button.click();
+    const items = menu.querySelectorAll('[role="menuitem"]');
+    (items.find((item) => textOf(item.querySelector('span')) === 'Copy for agent') as any).click();
+    await new Promise((done) => setTimeout(done, 0));
+    const r = Number(button.dataset.rowMenu);
+    const copied = window.clipboard.at(-1) as string;
+    expect(copied).toBe(page.promptOf(`agent:${r}`));
+    expect(copied).toContain('## Task');
+    expect(copied).toContain('## How to close it');
+    expect(copied).toContain('flowatlas accept di-token-unknown');
+    // The same check as Copy as prompt, with the task said first.
+    expect(page.promptOf(`row:${r}`)).not.toContain('## Task');
+    expect(textOf(document.getElementById('toast'))).toBe('Copied as a task for an agent.');
   });
 
   it('copies the row as a prompt from its menu, and warns where a row has no single place', async () => {
@@ -206,7 +226,7 @@ describe('what did not join, split by what it is (P100)', () => {
 
     (document.querySelector('.nj-row[data-reason="service-read-nothing"] [data-row-menu]') as any).click();
     expect(menu.querySelectorAll('[role="menuitem"]').map((item) => textOf(item.querySelector('span'))))
-      .toEqual(['Copy as prompt', 'Copy accept command']);
+      .toEqual(['Copy as prompt', 'Copy accept command', 'Copy for agent']);
     expect(textOf(document.getElementById('row-menu-foot'))).toContain('No single place: it accepts service-read-nothing across gateway.');
     // A click away closes it, and leaves the keyboard where it went.
     document.body.dispatchEvent(new FakeEvent('pointerdown'));

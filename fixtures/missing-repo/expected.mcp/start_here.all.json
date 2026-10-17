@@ -1,0 +1,102 @@
+{
+  "services": [
+    {
+      "service": "gateway",
+      "nodes": 10,
+      "entries": 2,
+      "entriesByKind": {
+        "http": 2
+      },
+      "gaps": 2
+    },
+    {
+      "service": "orders",
+      "nodes": 11,
+      "entries": 1,
+      "entriesByKind": {
+        "http": 1
+      },
+      "gaps": 1
+    }
+  ],
+  "counts": {
+    "gaps": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
+    "nothing": 0
+  },
+  "topGaps": [
+    {
+      "reason": "unknown-base-url-env",
+      "count": 2,
+      "services": [
+        "gateway"
+      ],
+      "example": {
+        "message": "no service declares PAYMENTS_URL",
+        "service": "gateway",
+        "loc": "src/checkout.controller.ts:12",
+        "id": "http_out:gateway#src/checkout.controller.ts:12:26"
+      }
+    },
+    {
+      "reason": "type-unresolved",
+      "count": 1,
+      "services": [
+        "orders"
+      ],
+      "example": {
+        "message": "any",
+        "service": "orders",
+        "loc": "src/orders.service.ts:18"
+      }
+    }
+  ],
+  "topFindings": [],
+  "channels": {
+    "noConsumers": [
+      "channel:payment.requested"
+    ],
+    "noProducers": []
+  },
+  "startFrom": [
+    {
+      "id": "entry:gateway:http:POST:/checkout/:param/pay",
+      "type": "entry",
+      "label": "POST /checkout/:param/pay",
+      "loc": "src/checkout.controller.ts:10",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/checkout/:param/refund",
+      "type": "entry",
+      "label": "POST /checkout/:param/refund",
+      "loc": "src/checkout.controller.ts:19",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/:param/confirm",
+      "type": "entry",
+      "label": "POST /orders/:param/confirm",
+      "loc": "src/orders.controller.ts:9",
+      "service": "orders",
+      "kind": "http"
+    }
+  ],
+  "missingRepos": [
+    {
+      "token": "payments",
+      "candidates": [
+        "./payments-api"
+      ]
+    }
+  ],
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:POST:/checkout/:param/pay\"})",
+    "describe_for_prompt({id: \"entry:gateway:http:POST:/checkout/:param/pay\"})",
+    "impact({symbol: \"entry:gateway:http:POST:/checkout/:param/pay\"})"
+  ]
+}

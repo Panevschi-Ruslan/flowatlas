@@ -4,6 +4,7 @@ import {
   causePartsOf,
   countsOf,
   describeAcceptedProblem,
+  gapIdOf,
   groupCantFollow,
   guessPatternKind,
   kindOfRow,
@@ -240,6 +241,9 @@ const nextOf = (answer: CantFollowWire, asked: { cause?: string; package?: strin
   const first = answer.causes[0];
   const place = first?.packages.flatMap((pkg) => pkg.samples).find((sample) => sample.id !== undefined);
   if (place?.id !== undefined) hints.push(`get_source({symbol: ${JSON.stringify(place.id)}})`);
+  // The first place's gap as a prompt with how to close it (P122), where one reason names it.
+  const gapId = first === undefined ? undefined : gapOfPlace(first);
+  if (gapId !== undefined) hints.push(`describe_for_prompt({id: ${JSON.stringify(gapId)}})`);
   // A call on a wrapper of the project's own is what a pattern describes
   // (P121): a draft rule for the first such place, to check with test_pattern.
   const drafted = first === undefined || !first.reasons.some((reason) => PATTERN_CAUSES.includes(reason)) ? undefined : draftFor(first);
@@ -260,6 +264,20 @@ const nextOf = (answer: CantFollowWire, asked: { cause?: string; package?: strin
     hints.push(`cant_follow({package: ${JSON.stringify(pkg)}})`, `search({query: ${JSON.stringify(pkg)}})`);
   }
   return hints.slice(0, MAX_NEXT);
+};
+
+/**
+ * The gap id of a cause's first place, where the cause stands for one reason:
+ * the id `describe_for_prompt` writes as a prompt, `flowatlas accept` takes.
+ */
+const gapOfPlace = (cause: CantFollowWire['causes'][number]): string | undefined => {
+  const [reason, ...others] = cause.reasons;
+  const place = cause.packages.flatMap((pkg) => pkg.samples)[0];
+  if (reason === undefined || others.length > 0 || place === undefined) return undefined;
+  const cut = place.loc.lastIndexOf(':');
+  const file = cut < 0 ? place.loc : place.loc.slice(0, cut);
+  const service = place.service ?? (cause.services.length === 1 ? cause.services[0] : undefined);
+  return gapIdOf({ reason, ...(service === undefined ? {} : { service }), ...(file === '' ? {} : { file }) });
 };
 
 /**

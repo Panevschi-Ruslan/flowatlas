@@ -821,12 +821,16 @@ export {
   PROMPT_FAIL_SOURCES,
   PROMPT_LIMITS,
   PROMPT_MAX_NEXT,
+  PROMPT_REMEDY_REASONS,
   PROMPT_WALK,
   promptFit,
   promptHintsFor,
   promptNextFor,
+  promptRemediesOf,
+  promptRemedyLines,
   renderPrompt,
 } from './prompt-text.js';
+export { REMEDIES, remediesOf, remedyLinesOf } from './remedies.js';
 export type {
   PromptAccess,
   PromptCheckPlace,
@@ -842,6 +846,7 @@ export type {
   PromptMarks,
   PromptMember,
   PromptOverview,
+  PromptRemedy,
   PromptScope,
   PromptStep,
   PromptSubject,

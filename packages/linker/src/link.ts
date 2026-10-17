@@ -694,6 +694,12 @@ export const linkGraphs = (
 
     const { outcome, notes, alsoLinked, baseUrl } = resolveCall(call, index);
     for (const note of notes) record(call, note);
+    // The values a setting nobody claims was found with, where they named no
+    // service: the hosts they name are evidence of the repository that is not
+    // here (P122). Addresses only, as the files were read (P77).
+    if (outcome.kind === 'unknownEnv' && outcome.values !== undefined && outcome.values.values.length > 0) {
+      call.meta = { ...call.meta, baseUrlValues: [...new Set(outcome.values.values.map((found) => found.value))].sort() };
+    }
     if (baseUrl !== undefined) {
       call.meta = { ...call.meta, ...takenMeta(baseUrl) };
       const target = outcome.kind === 'external' ? (outcome.host ?? 'a third party') : (aimOf(outcome) ?? '?');

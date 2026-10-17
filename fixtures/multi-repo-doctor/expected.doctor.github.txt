@@ -1,4 +1,5 @@
 ::warning file=flowatlas.config.json,line=4,title=gateway%3A no way in::gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there.
+::notice file=flowatlas.config.json,title=Probably missing%3A a repository for legacy::LEGACY_URL is used by gateway (1 request) and no service claims it. Nothing next to the configured repositories looks like it.
 ::warning file=src/invoices/invoices.consumer.ts,line=18,title=billing%3A marker-consumes-shadowed::@Consumes("order.created") on InvoicesConsumer.onOrderCreated says what the code already says. Static reading finds this subscription on its own, so the annotation adds nothing. Remove it.
 ::error file=src/invoices/invoices.service.ts,line=18,title=billing%3A marker-consumes-without-consumer::@Consumes("order.refunded") on InvoicesService.onOrderRefunded, which nothing subscribes and nothing calls. Remove the annotation, or register the method as a handler. Nothing in the repository connects it to a message.
 ::error file=src/clients/orders.client.ts,line=38,title=gateway%3A marker-callsservice-route-missing::@CallsService points at DELETE /orders/:id/void, which orders does not serve. Did you mean POST /orders? Otherwise check orders's controllers.
@@ -23,6 +24,9 @@ unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync
 unresolved: 26 to act on · missed: 28 · notes: 0 · findings: 3
   5 missed places static reading cannot see, folded into 5 rows
   3 findings: 3 routes with no guard
+  Probably missing: a repository for "legacy" — 1 kind of evidence, 1 place
+    LEGACY_URL is used by gateway (1 request) and no service claims it
+    nothing next to the configured repositories looks like it; if it exists elsewhere, `flowatlas link <path>`
   unknown-db-package: 9 rows
     Add a descriptor for fake-orm to record which of its methods read and which write.
       orders src/orders/orders.service.ts:46  this.rows.persist

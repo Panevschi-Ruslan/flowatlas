@@ -1,0 +1,175 @@
+import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import { describe, expect, it } from 'vitest';
+import {
+  channelToken,
+  missingKeyOf,
+  missingRepoSignals,
+  rankMissing,
+  saySignal,
+  worthSaying,
+  type MissingRow,
+} from './missing-repo.js';
+
+const call = (id: string, repo: string, meta: Record<string, unknown>, line = 10): GraphNode => ({
+  id,
+  type: 'http_out',
+  label: 'POST /charges',
+  repo,
+  file: 'src/pay.ts',
+  line,
+  meta,
+});
+
+const unclaimed = (symbol: string, env: string, line = 10, service = 'gateway'): MissingRow => ({
+  reason: 'unknown-base-url-env',
+  service,
+  file: 'src/pay.ts',
+  line,
+  symbol,
+  message: `no service declares ${env}`,
+});
+
+const SERVICES = [
+  { name: 'gateway', packageName: '@acme/gateway' },
+  { name: 'orders', packageName: '@acme/orders' },
+];
+const REPORT = {
+  channels: { noConsumers: [] as string[], noProducers: [] as string[] },
+  services: [
+    { name: 'gateway', packages: { name: '@acme/gateway', runtime: [], dev: [] } },
+    { name: 'orders', packages: { name: '@acme/orders', runtime: [], dev: [] } },
+  ],
+} as never;
+
+describe('missingKeyOf', () => {
+  it('reads one name out of every way it is written', () => {
+    for (const name of ['PAYMENTS_URL', 'paymentsApi', 'payments-api', 'payment', 'payments-client', 'PAYMENTS_SERVICE_BASE_URL']) {
+      expect(missingKeyOf(name), name).toBe('payment');
+    }
+    expect(missingKeyOf('libraries')).toBe('library');
+    expect(missingKeyOf('API_URL')).toBe('');
+    expect(missingKeyOf('localhost:4000')).toBe('localhost:4000');
+  });
+});
+
+describe('missingRepoSignals', () => {
+  it('reads a setting nobody claims, and the inner hosts of its values', () => {
+    const node = call('http_out:gateway#a', 'gateway', { baseUrlEnv: 'PAYMENTS_URL', baseUrlValues: ['http://payments:4000', 'https://api.example-pay.com'] });
+    const signals = missingRepoSignals({ nodes: [node], unresolved: [unclaimed(node.id, 'PAYMENTS_URL')] }, REPORT);
+    expect(signals.map((signal) => [signal.kind, signal.name, signal.token])).toEqual([
+      ['host', 'payments:4000', 'payments'],
+      ['setting', 'PAYMENTS_URL', 'payments'],
+    ]);
+    expect(signals[1]?.places).toEqual([{ service: 'gateway', file: 'src/pay.ts', line: 10, gapId: 'gap:gateway|src/pay.ts|unknown-base-url-env' }]);
+  });
+
+  it('leaves a setting two services claim alone', () => {
+    const row = { ...unclaimed('x', 'PAYMENTS_URL'), message: 'PAYMENTS_URL is declared on services a and b' };
+    expect(missingRepoSignals({ nodes: [], unresolved: [row] }, REPORT)).toEqual([]);
+  });
+
+  it('takes an inner host for one, and a third party for none', () => {
+    const nodes: GraphNode[] = [
+      { id: 'external_api:payments.internal', type: 'external_api', label: 'payments.internal', repo: 'gateway', meta: { host: 'payments.internal' } },
+      { id: 'external_api:api.stripe.com', type: 'external_api', label: 'api.stripe.com', repo: 'gateway', meta: { host: 'api.stripe.com' } },
+      { id: 'external_api:ledger.shop.example.com', type: 'external_api', label: 'ledger.shop.example.com', repo: 'gateway', meta: { host: 'ledger.shop.example.com' } },
+      call('http_out:gateway#b', 'gateway', { host: 'payments.internal' }, 12),
+    ];
+    const tokens = (services: Parameters<typeof missingRepoSignals>[0]['services']) =>
+      missingRepoSignals({ nodes, unresolved: [], ...(services === undefined ? {} : { services }) }, REPORT).map((signal) => signal.token);
+    expect(tokens(undefined)).toEqual(['payments']);
+    // A domain a configured service is reached under is the project's own.
+    expect(tokens([{ name: 'orders', hosts: ['orders.shop.example.com'] }])).toEqual(['ledger', 'payments']);
+  });
+
+  it('reads a package under the project scope that nobody installed, and not a public one', () => {
+    const row: MissingRow = {
+      reason: 'type-unresolved',
+      service: 'orders',
+      file: 'src/o.ts',
+      line: 3,
+      meta: {
+        causes: [
+          { cause: 'module-not-installed', package: '@acme/payments-client', sites: 2, samples: [{ file: 'src/o.ts', line: 3 }, { file: 'src/p.ts', line: 9 }] },
+          { cause: 'module-not-installed', package: '@nestjs/common', sites: 1, samples: [{ file: 'src/o.ts', line: 1 }] },
+          { cause: 'module-not-installed', package: '@acme/orders', sites: 1, samples: [{ file: 'src/o.ts', line: 2 }] },
+        ],
+      },
+    };
+    const signals = missingRepoSignals({ nodes: [], unresolved: [row] }, REPORT);
+    expect(signals.map((signal) => [signal.kind, signal.name, signal.token, signal.places.length])).toEqual([
+      ['package', '@acme/payments-client', 'payments', 2],
+    ]);
+  });
+
+  it('reads a channel with one end by its first segment, its transport left off', () => {
+    const channel: GraphNode = { id: 'channel:payment.requested', type: 'channel', label: 'payment.requested', repo: 'orders', meta: {} };
+    const queue: GraphNode = { id: 'channel:sqs/ledger-audit', type: 'channel', label: 'sqs/ledger-audit', repo: 'orders', meta: { adapters: ['aws-sqs'] } };
+    const producer: GraphNode = { id: 'producer:orders#x', type: 'producer', label: 'emit', repo: 'orders', file: 'src/o.ts', line: 7 };
+    const edges: GraphEdge[] = [{ from: producer.id, to: channel.id, type: 'emits', confidence: 'static' }];
+    const report = { ...(REPORT as object), channels: { noConsumers: [channel.id], noProducers: [queue.id] } } as never;
+    const signals = missingRepoSignals({ nodes: [channel, queue, producer], edges, unresolved: [] }, report);
+    expect(signals.map((signal) => [signal.name, signal.token, signal.lacks])).toEqual([
+      ['payment.requested', 'payment', 'consumer'],
+      ['sqs/ledger-audit', 'ledger-audit', 'producer'],
+    ]);
+    expect(signals[0]?.places).toEqual([{ service: 'orders', file: 'src/o.ts', line: 7 }]);
+    expect(saySignal(signals[0] as never)).toBe('channel payment.requested is published by orders and nobody here consumes it');
+    expect(channelToken({ label: 'eventbridge/shop/orders.placed', meta: { adapters: ['aws-eventbridge'] } })).toBe('shop');
+  });
+
+  it('reads a deployment that starts something nobody deploys, by its service part', () => {
+    const entry: GraphNode = { id: 'entry:infra:http:POST:/charges', type: 'entry', label: 'POST /charges', repo: 'infra', meta: { invokes: 'payments-charge-prod' } };
+    const row: MissingRow = {
+      reason: 'invoke-target-not-found',
+      service: 'infra',
+      file: 'api.tf',
+      line: 4,
+      symbol: entry.id,
+      message: 'POST /charges is answered by the function payments-charge-prod, which no configured service deploys',
+    };
+    const signals = missingRepoSignals({ nodes: [entry], unresolved: [row] }, REPORT);
+    expect(signals.map((signal) => [signal.kind, signal.token])).toEqual([['deployment', 'payments']]);
+  });
+
+  it('never reads a route missing from a configured service as a repository', () => {
+    const row: MissingRow = { reason: 'target-route-not-found', service: 'gateway', file: 'a.ts', line: 1, message: 'target service orders has no route' };
+    expect(missingRepoSignals({ nodes: [], unresolved: [row] }, REPORT)).toEqual([]);
+  });
+});
+
+describe('rankMissing', () => {
+  const node = call('http_out:gateway#a', 'gateway', { baseUrlEnv: 'PAYMENTS_URL' });
+  const other = call('http_out:gateway#c', 'gateway', { baseUrlEnv: 'SEARCH_URL' }, 20);
+  const second = call('http_out:gateway#d', 'gateway', { baseUrlEnv: 'SEARCH_URL' }, 30);
+  const channel: GraphNode = { id: 'channel:payment.requested', type: 'channel', label: 'payment.requested', repo: 'orders', file: 'src/o.ts', line: 7 };
+  const signals = missingRepoSignals(
+    {
+      nodes: [node, other, second, channel],
+      unresolved: [unclaimed(node.id, 'PAYMENTS_URL'), unclaimed(other.id, 'SEARCH_URL', 20), unclaimed(second.id, 'SEARCH_URL', 30)],
+    },
+    { ...(REPORT as object), channels: { noConsumers: [channel.id], noProducers: [] } } as never,
+  );
+
+  it('ranks kinds of evidence above places', () => {
+    const groups = rankMissing(signals, SERVICES);
+    expect(groups.map((group) => [group.token, group.score, group.places, group.kinds])).toEqual([
+      ['payments', 2, 2, ['setting', 'channel']],
+      ['search', 1, 2, ['setting']],
+    ]);
+    expect(rankMissing(signals, SERVICES, { top: 1 })).toHaveLength(1);
+  });
+
+  it('drops a name that is a configured service, by name, alias, host or package', () => {
+    for (const service of [{ name: 'payments' }, { name: 'billing', aliases: ['payments-api'] }, { name: 'billing', hosts: ['payments.internal:80'] }, { name: 'billing', packageName: '@acme/payment' }]) {
+      expect(rankMissing(signals, [service]).map((group) => group.token), JSON.stringify(service)).toEqual(['search']);
+    }
+  });
+
+  it('says a lone channel or package only when asked for everything', () => {
+    expect(worthSaying({ kinds: ['channel'] })).toBe(false);
+    expect(worthSaying({ kinds: ['package'] }, 1)).toBe(true);
+    expect(worthSaying({ kinds: ['package', 'channel'] })).toBe(true);
+    expect(worthSaying({ kinds: ['setting'] })).toBe(true);
+  });
+});

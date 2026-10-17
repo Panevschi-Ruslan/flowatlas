@@ -21,6 +21,42 @@ only one of them moved.
   the contract verdict of each crossing that is not unchecked (about 2% of the
   pack over the fixtures).
 
+- **The repository that is probably missing (P122).** `doctor` names the
+  repository the project most likely lacks, from evidence the graph already
+  holds: a setting no service claims (`PAYMENTS_URL`), a host of the project's
+  own network nothing answers, a package under the project's scope that is not
+  installed and no read repository is, a channel with one end, and a deployment
+  that starts or roots something nobody deploys. Names that agree once their
+  separators, generic words and plural are taken off are one group, ranked by
+  kinds of evidence, then places; a configured service's name is never one.
+  Directories beside the configured repositories (and `--scan <dir>`) are
+  matched by manifest name, directory name, a compose service built from them
+  and the hosts their own setting files name - manifests and root-level
+  setting files only, never source - and the line ends with the `flowatlas
+  link` command that adds the one that fits. The report opens its unresolved
+  section with "Probably missing"; `doctor --missing` lists every group with
+  every place (`--json`, `--top`); `doctor.json` gains the optional
+  `unresolved.missingRepos` (`DOCTOR_FORMAT_VERSION` unchanged); `--format
+  github` adds a `::notice` at the configuration. It decides no exit code.
+  `flowatlas link --suggested` (with `--dry-run`, `--scan`) links the one
+  directory that fits each group, and none where two do. Requests rooted at a
+  setting whose values name no service now keep those values on the call as
+  `meta.baseUrlValues`.
+- **Every gap says how to close it (P122).** A check's prompt - the page's
+  *Copy as prompt* and `describe_for_prompt` on a gap id - ends with *How to
+  close it*, one line per way that applies to its reason from one table
+  (`REMEDIES`, `remediesOf`, `remedyLinesOf` in `@flowatlas/core`): link the
+  repository (by name when the gap is its evidence), a setting, an alias,
+  `apiTarget`, a pattern, a shape file, the annotation meant for it, or the
+  advice on its places, then the `flowatlas accept` line. The page's row menu
+  gains *Copy for agent*: the same text as a task, with how to see it gone.
+  `describe_for_prompt` also takes a place (`file:line`, `service#file:line`);
+  `cant_follow` and `search` gap hits hand on to `describe_for_prompt({id:
+  <gap id>})`; `start_here` lists `missingRepos` (at most three, by name, with
+  the directories `flowatlas mcp` found for each). The full tool list's
+  ceiling moves from 31,000 to 31,200 characters for `missingRepos` in
+  `start_here`'s output schema; the part a model reads stays under 12,250.
+
 - **`flowatlas doctor --reason <code>` (P141).** Lists the places of one
   reason, or several (repeatable, or a comma list), under every level the
   reason is at, so a reason with hundreds of places can be read on its own:

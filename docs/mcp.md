@@ -150,8 +150,8 @@ all take the same optional `service` filter.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
-| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service (a service's gaps are the rows nobody accepted; the page's *Copy as prompt* writes every scope the same). No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars` |
+| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, a few entry ids to start from, and `missingRepos`: the repositories probably missing from the project, at most three, by name with the directories that look like each | `service`, `perService` |
+| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service (a service's gaps are the rows nobody accepted; the page's *Copy as prompt* writes every scope the same). No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a place as `file:line` or `service#file:line` - the gap written there - a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars` |
 
 `describe_for_prompt` and the page's *Copy as prompt* write the same text
 (P97): each gathers one subject - the server from the database, the page from
@@ -174,8 +174,13 @@ same for every subject:
   few to say so.
 - For a channel, *Published by · n* and *Consumed by · n*, each consumer with
   the steps under it; for a check, *Where · n*, every row of the gap id at its
-  line with the node it is on; for a symbol or a check, *Reached from*, the
-  ways in that reach it.
+  line with the node it is on, then *How to close it*: one line per way that
+  applies to its reason - link the repository that answers it (naming the one
+  probably missing, when the gap is its evidence), a setting, an alias, a
+  pattern, a shape file, the annotation meant for it, or the advice on its
+  places - from the one table `doctor` and the page read too, and last the
+  `flowatlas accept` line that takes it; for a symbol or a check, *Reached
+  from*, the ways in that reach it.
 - **Steps**: the walk `get_flow` takes, in call order, each step with how it
   was reached and how sure the join is, what it takes and returns, and its
   marks in brackets - `best guess`, `on failure`, `side by side`, `per item
@@ -236,7 +241,9 @@ listed under `search({kinds: ["gaps"]})`, each hit with its `kind`.
 
 A gap hit's `id` is the method or function its first place is written in, when
 the graph draws one, so `next` is `get_source` and `who_calls` on it; its
-`gapId` (`gap:<service>|<file>|<reason>`) is the one `flowatlas accept` takes.
+`gapId` (`gap:<service>|<file>|<reason>`) is the one `flowatlas accept` takes,
+and `next` starts with `describe_for_prompt({id: <gapId>})`, the gap with how to
+close it. `cant_follow` hands on to the same prompt for its first place.
 One hit stands for every row of its reason in its file: `sites` counts the
 places and `places` lists them as `file:line`, at most ten. A hit the graph
 draws nothing around has no `id`, and `next` searches the gaps of its file.
