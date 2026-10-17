@@ -8,6 +8,29 @@ only one of them moved.
 
 ### Added
 
+- **`observe --listen`, a receiver on this machine (P109).** `flowatlas
+  observe --listen [port]` takes OTLP/HTTP traces (JSON or protobuf, gzip) on
+  `/v1/traces` and the @nestjs/observe agent's batches on
+  `/applications/telemetry`, on `127.0.0.1:4318`, so a service run locally
+  with `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318` fills
+  `.flowatlas/observed.json` as requests happen. Posts are read by the same
+  readers and allow-lists as files, inside the request; a trace's spans wait
+  in a bounded buffer (10,000 spans, 2,000 traces, `--trace-wait`) for the
+  rest of the trace; every `--flush` and on exit the matches are merged with
+  the merge a file run uses, so the same traffic gives the same file, with one
+  `sources` entry of format `listen` a flush. Metrics and logs are answered
+  and dropped unparsed; nothing is forwarded. It binds loopback unless
+  `--host` and `--allow-remote` are both given, refuses a `Host` that is not
+  its own loopback name (421), any request with an `Origin` (403), `OPTIONS`
+  (405, no CORS header ever), `text/plain` (415) and a body over `--max-body`
+  before or after inflating (413, connection cut), and reads no request
+  header but `Host`, `Content-Type`, `Content-Encoding` and `Content-Length`.
+  While it runs it holds `.flowatlas/observed.lock`; `observe <files>` waits
+  five seconds for it, then says a listener is running, and a lock whose
+  process is gone is taken over. The observed file is now written to a
+  temporary file and renamed over the old one. `scripts/observe-send.mjs`
+  posts the fixtures' traces to it (dev only, not packaged).
+
 - **AWS exports read without a collector (P108).** `flowatlas observe` reads
   four files a Lambda team can export with the AWS CLI or the console, picked
   by looking at them, and calls no AWS API: X-Ray `batch-get-traces` output

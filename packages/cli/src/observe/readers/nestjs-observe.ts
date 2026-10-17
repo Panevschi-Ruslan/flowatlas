@@ -194,13 +194,16 @@ const batchesOf = (document: unknown, dropped: Dropped): Json[] => {
 export const nestjsObserveReader: TraceReader = {
   name: 'nestjs-observe',
   sniff: (document) => isBatchSeries(document) || isBatch(document) || isSnapshotArray(document),
-  read: (document, fallbackService) => {
+  read: (document, fallbackService, options) => {
     const skips = new Skips();
     const dropped = new Dropped();
+    // A document after the first of a file, or a post after the first a listener took (P109), says which,
+    // so two posts' jobs, which have no trace id of their own, stay two traces.
+    const part = options?.part === undefined || options.part === 0 ? '' : `${options.part}/`;
     const spans = batchesOf(document, dropped).flatMap((batch, at) => {
       const context = { service: text(batch['serviceId']) ?? fallbackService, skips, dropped };
       // The first batch's spans keep the ids they always had; a later batch's say which batch.
-      const key = (index: number): string => (at === 0 ? String(index) : `${at}.${index}`);
+      const key = (index: number): string => `${part}${at === 0 ? String(index) : `${at}.${index}`}`;
       return [
         ...list(batch['snapshots']).flatMap((snapshot, index) => snapshotSpans(snapshot, key(index), context)),
         ...list(batch['jobs']).flatMap((job, index) => jobSpans(job, key(index), context)),

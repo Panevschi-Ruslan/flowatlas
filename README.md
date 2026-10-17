@@ -267,7 +267,7 @@ read again and the others come from the cache.
 | `flowatlas config <selector>` | the settings one flow depends on |
 | `flowatlas hotspots` | what the most things point at |
 | `flowatlas visualise` | the whole graph as one page you can open |
-| `flowatlas observe <file...>` | which joins real traffic went through, how long each step took and how it answered, from trace files you already have (OTLP JSON or protobuf, @nestjs/observe); runs add up over a window |
+| `flowatlas observe <file...>` | which joins real traffic went through, how long each step took and how it answered, from trace files you already have (OTLP JSON or protobuf, @nestjs/observe); runs add up over a window. `--listen` takes the same from exporters posting to `127.0.0.1:4318` while the service runs |
 
 ### Checking
 

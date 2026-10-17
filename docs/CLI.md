@@ -1446,6 +1446,91 @@ Each of the last three applies only to the format that needs it: given for any
 other file, it is an error (`--workflow applies to sfn-history files only;
 traces/a.json is otlp`), never a flag quietly unused.
 
+#### `observe --listen`: a receiver on this machine
+
+Files are the default, but the shortest loop is *run the service, click
+through, look*. `flowatlas observe --listen` takes what an OpenTelemetry SDK
+and the @nestjs/observe agent post, on `127.0.0.1:4318`, and fills
+`.flowatlas/observed.json` as requests happen: no collector, no file exporter,
+no backend.
+
+```
+$ flowatlas observe --listen
+listening on http://127.0.0.1:4318: OTLP/HTTP traces at http://127.0.0.1:4318/v1/traces (JSON or protobuf, gzip), @nestjs/observe batches at http://127.0.0.1:4318/applications/telemetry; metrics and logs are dropped; nothing is forwarded. Writing .flowatlas/observed.json; Ctrl-C to stop
+70 spans, 3 joins, 6 unmatched since start; dropped: 1 metric post, 1 log post
+^C
+stopped: 70 spans, 3 joins, 6 unmatched since start; dropped: 1 metric post, 1 log post
+```
+
+Point the service's exporter at it, unchanged:
+
+```
+OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf     # or http/json; grpc is not taken
+OTEL_TRACES_EXPORTER=otlp
+```
+
+and the @nestjs/observe agent's endpoint setting at `http://127.0.0.1:4318`
+(it posts its batches to `/applications/telemetry`). What it answers is what
+each sender's own server answers: `200` with an empty
+`ExportTraceServiceResponse` (`{}`, or no bytes for protobuf) on
+`/v1/traces`, `/v1/metrics` and `/v1/logs`, `202` with no body for a batch.
+Metrics and logs are read to their end and dropped unparsed, so an SDK set to
+export everything does not see errors.
+
+Every post is read as `observe` reads a file — the same readers, the same
+allow-lists — inside the request: the body is inflated, decoded and read, and
+only the reduced spans outlive it. A trace's spans are held together, by trace
+id, until nothing was added to it for `--trace-wait`, so a server span meets
+its caller's client span that came in another service's post; the buffer
+holds at most 10,000 spans and 2,000 traces, and a trace pushed out early is
+matched as it is and counted (`1 trace cut short`). Every `--flush` and on
+Ctrl-C, what was matched is merged into the file with the merge a file run
+uses (written to a temporary file and renamed, so the page and the graph
+server never read half a file), so the same traffic gives the same file
+either way. Each flush adds one `sources` entry, `{ format: 'listen', spans,
+readAt }`, known by a hash of the bodies first read in it; a body already
+read (an exporter's retry, or a file read before) is answered and not counted
+again. The graph is read at start and again when `graph.db` changes.
+
+While it runs it holds `.flowatlas/observed.lock` (its pid inside); an
+`observe <files>` run at the same time waits five seconds for it, then says a
+listener is running. A lock whose process is gone is taken over.
+
+**What it will not do.** It binds `127.0.0.1` (or `::1`, `--host ::1`); any
+other address needs `--allow-remote` as well and prints a warning naming it
+(`--host 0.0.0.0` alone is refused). A browser page cannot use it: a request
+whose `Host` is not `127.0.0.1:<port>`, `localhost:<port>` or `[::1]:<port>`
+is `421`, so a site that rebinds its name to this machine cannot post; a
+request with an `Origin` header is `403`; `OPTIONS` is `405` and no CORS
+header is ever sent; `text/plain`, the type a page may post without asking,
+is `415`. A body over `--max-body` is `413` and the connection is cut —
+before inflating and after, so a small gzip body cannot unpack past it.
+Other paths are `404`, other methods `405`, an encoding other than gzip
+`415`, and a body that does not decode `400`. Of the request's headers only
+`Host`, `Content-Type`, `Content-Encoding` and `Content-Length` are read, and
+whether an `Origin` is there: an exporter's credentials (an `Authorization`
+or API key header) are never looked at. It forwards nothing and opens no
+connection. To keep a backend as well, give the service two exporters (the
+SDK's multi-span-processor setup) or run a collector with two.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--listen [port]` | `4318` | take posts instead of files (files and `--listen` are exclusive) |
+| `--host <addr>` | `127.0.0.1` | the address to bind; not loopback needs `--allow-remote` |
+| `--allow-remote` | off | let `--host` be an address other machines can reach |
+| `--flush <dur>` | `30s` | how often the file is written (`500ms`, `30s`, `5m`) |
+| `--trace-wait <dur>` | `30s` | how long a trace is held for more of its spans after its last one |
+| `--max-body <size>` | `8mb` | the largest body taken, before and after gzip |
+| `--quiet` | off | no line per flush |
+| `--service`, `--since`, `--reset`, `--no-samples` | | as for files; `--reset` starts the file again at the first flush; with `--no-samples` a trace id lives only in the buffer, for at most `--trace-wait`, and is never written |
+
+`--workflow`, `--function`, `--access-log-keys` and `--format` name things
+about files and are refused with `--listen`. To try it without a service,
+`node scripts/observe-send.mjs` (in a checkout of this repository) posts
+`fixtures/multi-repo/traces` to it as JSON, protobuf, gzip and
+@nestjs/observe batches.
+
 #### AWS exports, without a collector
 
 A Lambda project often has no OpenTelemetry collector, but it has X-Ray, the

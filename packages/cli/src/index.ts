@@ -105,8 +105,31 @@ export { linkRepos, unlinkRepos } from './commands/link.js';
 export type { LinkOptions, LinkResult, UnlinkResult } from './commands/link.js';
 export { installMcp, serverEntry, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
 export { runChannel } from './commands/channel.js';
-export { documentsOf, parseAccessLogKeys, runObserve, readTraceFiles } from './commands/observe.js';
-export type { ObserveOptions, ObserveRun, TraceFileOptions, TraceFiles } from './commands/observe.js';
+export { documentsOf, parseAccessLogKeys, runListen, runObserve, readTraceFiles } from './commands/observe.js';
+export type { ListenCliOptions, ObserveOptions, ObserveRun, TraceFileOptions, TraceFiles } from './commands/observe.js';
+export {
+  describeListenStats,
+  LISTEN_FLUSH_MS,
+  LISTEN_HOST,
+  LISTEN_MAX_BODY,
+  LISTEN_PORT,
+  LISTEN_TRACE_WAIT_MS,
+  parseInterval,
+  parseSize,
+  startListener,
+} from './observe/listen.js';
+export type { Listener, ListenOptions, ListenStats } from './observe/listen.js';
+export { TraceBuffer, TRACE_BUFFER_SPANS, TRACE_BUFFER_TRACES } from './observe/trace-buffer.js';
+export type { TraceBufferOptions } from './observe/trace-buffer.js';
+export {
+  acquireObservedLock,
+  LOCK_WAIT_MS,
+  OBSERVED_LOCK,
+  ObservedLocked,
+  saveObserved,
+  withObservedLock,
+} from './observe/store.js';
+export type { LockOptions } from './observe/store.js';
 export { indexGraph, matchSpans, edgeIdOf, OBSERVED_FORMAT_VERSION } from './observe/match.js';
 export type { MatchOptions, Observed } from './observe/match.js';
 export { decodeTraceRequest, ProtobufError } from './observe/otlp-protobuf.js';
