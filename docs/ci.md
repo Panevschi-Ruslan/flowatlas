@@ -144,6 +144,82 @@ jobs:
 `--format github` prints one `::error file=…,line=…::` per finding, so they
 appear against the lines that caused them rather than only in the log.
 
+## Code scanning
+
+Workflow annotations vanish with the job and cannot be dismissed. A SARIF log
+is the same findings in the format code scanning keeps: each result on the line
+it is about in the pull request, an alert that stays open while the finding is
+there, closes when it is fixed, and can be dismissed with a reason.
+
+```yaml
+name: flowatlas code scanning
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write    # what the upload needs
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+
+      - run: npx @flowatlas/cli build
+      - run: npx @flowatlas/cli contracts --format sarif --output contracts.sarif
+      # Last, because --strict is the step that fails the job.
+      - run: npx @flowatlas/cli doctor --strict --format sarif --output doctor.sarif
+
+      # always(): a failing gate still uploads what it found.
+      - if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: doctor.sarif
+          category: flowatlas/doctor/
+      - if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: contracts.sarif
+          category: flowatlas/contracts/
+```
+
+One file and one `category` per command. Each log already carries its
+category (`automationDetails.id`, `flowatlas/<command>/`); the step names the
+same one. Code scanning replaces a category's alerts on each upload, so one
+category per command is what keeps the doctor's alerts open on a run that
+uploaded only contracts. `rules`, `dead`, `cycles` and `diff` take
+`--format sarif --output <file>` the same way; `dead` is notes only, worth
+uploading once its rows have been read.
+
+The format decides no exit code: `doctor --strict` fails on what it always
+failed on, and `contracts` only with `--fail-on`. Each result's fingerprint is
+made of the key the baseline already uses, never a line, so a reformat keeps an
+alert open; a row the baseline holds is marked `unchanged`, and a gap or rule
+violation `accepted.json` names, or a contract finding `@ContractIgnore`
+excuses, is written suppressed with the note it was accepted with, so it shows
+as dismissed rather than new.
+
+**A project in several repositories.** Paths are written as the
+configuration's directory sees them (`billing/src/invoices/x.ts`), which is
+right when the configuration sits at the root of one checkout holding every
+service. When each repository uploads to itself, run the command once per
+repository with `--sarif-root <that checkout>`: paths are then relative to it,
+and a result whose place is in another repository is left out of that log and
+counted in a notification, to be uploaded by the job of the repository it
+belongs to.
+
+The upload is GitHub's feature, not a flowatlas service: the tool writes a
+file, and the workflow decides where it goes. Any code host that reads SARIF
+2.1.0 reads the same file.
+
 ## On a pull request
 
 `flowatlas diff` answers the question a reviewer has, which is not which lines

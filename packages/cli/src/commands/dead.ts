@@ -16,11 +16,24 @@ import { deadFields } from '../analysis/dead.js';
 import { maxRows, openProjectDb, print, wantsJson, type ReadOptions } from '../analysis/open.js';
 import { ANALYTICS_FORMAT_VERSION, type DeadResult } from '../analysis/shapes.js';
 import { moreRows, renderTable, section } from '../format/table.js';
+import { processIo } from '../query/answer.js';
+import {
+  deadFindings,
+  deliverSarif,
+  sarifBound,
+  sarifLevelFlag,
+  sarifPathsOf,
+  toSarif,
+  withSarifOptions,
+  type SarifFlags,
+  type SarifLog,
+} from '../sarif/index.js';
+import { VERSION } from '../version.js';
 
 const KINDS = ['entries', 'channels', 'providers', 'fields', 'all'] as const;
 type Kind = (typeof KINDS)[number];
 
-export interface DeadCommandOptions extends ReadOptions {
+export interface DeadCommandOptions extends ReadOptions, SarifFlags {
   kind?: string;
   service?: string;
   /** Only entries of this class: `actionable`, `stream`, `infrastructure` or `declared` (P91). */
@@ -30,6 +43,8 @@ export interface DeadCommandOptions extends ReadOptions {
 export interface DeadRun {
   result: DeadResult;
   lines: string[];
+  /** With `--format sarif`: the alerts among the rows, bounded by `--max` (P115). */
+  sarif?: SarifLog;
 }
 
 /** Keeps the first `max` rows and says how many it dropped. */
@@ -117,6 +132,7 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
     throw new FlowatlasError('bad-argument', `--kind must be one of ${KINDS.join(', ')}, not ${kind}`);
   }
 
+  const sarifLevel = sarifLevelFlag(options.sarifLevel);
   const only = options.class as EntryClassName | undefined;
   if (only !== undefined && !ENTRY_CLASS_NAMES.includes(only)) {
     throw new FlowatlasError('bad-argument', `--class must be one of ${ENTRY_CLASS_NAMES.join(', ')}, not ${only}`);
@@ -141,8 +157,10 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
     const listedEntries =
       allEntries === undefined ? undefined : only === undefined ? allEntries : allEntries.filter((row) => row.class === only);
     const entries = listedEntries === undefined ? undefined : cut(listedEntries, max);
-    const channels = wanted('channels') ? cut(deadChannels(db, report, scope), max) : undefined;
-    const providers = wanted('providers') ? cut(deadProviders(db, scope), max) : undefined;
+    const allChannels = wanted('channels') ? deadChannels(db, report, scope) : undefined;
+    const allProviders = wanted('providers') ? deadProviders(db, scope) : undefined;
+    const channels = allChannels === undefined ? undefined : cut(allChannels, max);
+    const providers = allProviders === undefined ? undefined : cut(allProviders, max);
     const fields = wanted('fields') ? await deadFields(db, scope) : undefined;
     // Every row of this section is kept in the answer: the whole point of it is
     // that a reader is spared the carried ones, not that they are thrown away.
@@ -268,14 +286,37 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
     }
     for (const warning of warnings) lines.push(`warning: ${warning.reason} — ${warning.hint ?? ''}`);
 
-    return { result, lines };
+    // The alerts among every row rather than among the rows `--max` left, so
+    // the log's own bound is the only cut, and it is said (P115).
+    const sarif =
+      options.format === 'sarif'
+        ? toSarif({
+            command: 'dead',
+            version: VERSION,
+            findings: deadFindings(
+              {
+                ...(listedEntries === undefined ? {} : { entries: listedEntries }),
+                ...(allChannels === undefined ? {} : { channels: allChannels }),
+                ...(allProviders === undefined ? {} : { providers: allProviders }),
+                ...(fields === undefined ? {} : { fields: fields.fields }),
+              },
+              db,
+            ),
+            paths: sarifPathsOf(options, options.sarifRoot),
+            maxResults: sarifBound(options.max === undefined ? undefined : max),
+            ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
+            notes: warnings.map((warning) => ({ level: 'warning' as const, text: `${warning.reason}: ${warning.hint ?? ''}` })),
+          })
+        : undefined;
+
+    return { result, lines, ...(sarif === undefined ? {} : { sarif }) };
   } finally {
     close();
   }
 };
 
 export const registerDead = (program: Command): void => {
-  program
+  const command = program
     .command('dead')
     .description('entries, channels, providers and fields nothing appears to reach')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
@@ -283,10 +324,11 @@ export const registerDead = (program: Command): void => {
     .option('--kind <kind>', `one of ${KINDS.join(', ')}`, 'all')
     .option('--class <class>', `only entries of one class: ${ENTRY_CLASS_NAMES.join(', ')}`)
     .option('--service <name>', 'only this service')
-    .option('--max <n>', 'most rows per section', '150')
-    .option('--format <kind>', 'json or table (default: table)')
-    .action(async (options: DeadCommandOptions) => {
-      const { result, lines } = await runDead(options);
-      print(result, lines, wantsJson(options));
-    });
+    .option('--max <n>', 'most rows per section (default 150; with --format sarif, most results, default 5000)')
+    .option('--format <kind>', 'json, table or sarif (default: table)');
+  withSarifOptions(command).action(async (options: DeadCommandOptions) => {
+    const { result, lines, sarif } = await runDead(options);
+    if (sarif !== undefined) deliverSarif(sarif, options, processIo);
+    else print(result, lines, wantsJson(options));
+  });
 };

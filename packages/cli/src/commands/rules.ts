@@ -36,10 +36,21 @@ import {
   renderRulesMarkdown,
   renderRulesText,
 } from '../render/rules.js';
+import {
+  deliverSarif,
+  ruleFindings,
+  sarifBound,
+  sarifLevelFlag,
+  sarifPathsOf,
+  toSarif,
+  withSarifOptions,
+  type SarifFlags,
+} from '../sarif/index.js';
+import { VERSION } from '../version.js';
 
-export const RULES_FORMATS = ['text', 'json', 'markdown', 'github'] as const;
+export const RULES_FORMATS = ['text', 'json', 'markdown', 'github', 'sarif'] as const;
 
-export interface RulesOptions {
+export interface RulesOptions extends SarifFlags {
   config?: string;
   db?: string;
   format?: string;
@@ -170,6 +181,7 @@ export const runRules = (options: RulesOptions, io: QueryIo = processIo): RulesR
   const format = oneOf(options.format, RULES_FORMATS, 'text', '--format');
   const failOn = oneOf(options.failOn, RULE_FAIL_LEVELS, 'none', '--fail-on') as RuleFailLevel;
   const maxNodes = whole(options.maxNodes, 150, '--max-nodes');
+  const sarifLevel = sarifLevelFlag(options.sarifLevel);
   const context = rulesContextOf(options);
   if (context.ruleSet.rules.length === 0) {
     throw cannotRun('no rules are configured, so there is nothing to check', [
@@ -198,17 +210,34 @@ export const runRules = (options: RulesOptions, io: QueryIo = processIo): RulesR
       ...(options.service === undefined ? {} : { service: options.service }),
     });
     const drawing = { maxNodes, repoDirs: context.repoDirs, ...(file === undefined ? {} : { file }) };
-    const text =
-      options.list === true
-        ? renderRulesList(shown)
-        : format === 'json'
-          ? renderRulesJson(shown)
-          : format === 'markdown'
-            ? renderRulesMarkdown(shown, drawing)
-            : format === 'github'
-              ? renderRulesGithub(shown, drawing)
-              : renderRulesText(shown, drawing);
-    io.out(text);
+    let text: string;
+    if (options.list !== true && format === 'sarif') {
+      // Each violation at its crossing hop with its path as a code flow, the
+      // excused ones suppressed, an unchecked rule at the line naming it (P115).
+      const log = toSarif({
+        command: 'rules',
+        version: VERSION,
+        findings: ruleFindings(shown, { lookup: db }),
+        paths: sarifPathsOf(options, options.sarifRoot),
+        maxResults: sarifBound(options.maxNodes === undefined ? undefined : maxNodes),
+        ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
+        ...(file === undefined ? {} : { completeFile: file }),
+        notes: shown.notes.map((note) => ({ level: 'note' as const, text: `${note.rule}: ${note.message} (${note.reason})` })),
+      });
+      text = deliverSarif(log, options, io);
+    } else {
+      text =
+        options.list === true
+          ? renderRulesList(shown)
+          : format === 'json'
+            ? renderRulesJson(shown)
+            : format === 'markdown'
+              ? renderRulesMarkdown(shown, drawing)
+              : format === 'github'
+                ? renderRulesGithub(shown, drawing)
+                : renderRulesText(shown, drawing);
+      io.out(text);
+    }
     const failing = ruleFailures(shown, failOn, context.ruleSet.failOnHeuristic);
     const fails = options.list !== true && (failing.violations.length > 0 || failing.unchecked.length > 0);
     return { report, shown, text, ...(file === undefined ? {} : { file }), exitCode: fails ? EXIT.failed : EXIT.ok };
@@ -220,7 +249,7 @@ export const runRules = (options: RulesOptions, io: QueryIo = processIo): RulesR
 const collect = (value: string, previous: string[] = []): string[] => [...previous, value];
 
 export const registerRules = (program: Command): void => {
-  program
+  const command = program
     .command('rules')
     .description('check the architecture rules in the configuration: who may call, write, publish to or consume what')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
@@ -231,8 +260,8 @@ export const registerRules = (program: Command): void => {
     .option('--fail-on <level>', `exit 1 on a violation, or an unchecked rule, at this level or worse: ${RULE_FAIL_LEVELS.join(', ')}`)
     .option('--max-nodes <n>', 'most violations to print; the file is always complete')
     .option('--out <dir>', `where to write ${RULES_FILE} (default: the configured output)`)
-    .option('--list', 'print the configured rules with how many nodes each side selects')
-    .action((options: RulesOptions) => {
+    .option('--list', 'print the configured rules with how many nodes each side selects');
+  withSarifOptions(command).action((options: RulesOptions) => {
       const { exitCode } = runRules(options);
       if (exitCode !== EXIT.ok) throw new CliError('rule violations at or above --fail-on', EXIT.failed);
     });

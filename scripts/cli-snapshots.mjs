@@ -18,10 +18,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  renderSarif,
   runAccept,
   runCantFollowCommand,
   runChannel,
   runContracts,
+  runCycles,
   runDead,
   runDiff,
   runDoctorCommand,
@@ -103,6 +105,10 @@ const CASES = [
   ['types.list.json.l2.json', (io) => runTypes({ ...plain, format: 'json', detail: '2' }, io)],
   ['stats.tree.txt', (io) => runStats({ ...plain, format: 'tree' }, io)],
   ['stats.json', (io) => runStats({ ...plain, format: 'json' }, io)],
+  // The SARIF logs (P115): what nothing reaches, and the cycles (none here, so
+  // the empty run a project without one uploads).
+  ['dead.sarif.json', async (io) => io.out(renderSarif((await runDead({ config, format: 'sarif' })).sarif))],
+  ['cycles.sarif.json', (io) => io.out(renderSarif(runCycles({ config, format: 'sarif' }).sarif))],
 ];
 
 /**
@@ -121,6 +127,7 @@ const CONTRACT_CASES = [
     (io) => runContracts({ config: contractsConfig, format: 'markdown' }, io),
   ],
   ['expected.contracts.json', (io) => runContracts({ config: contractsConfig, format: 'json' }, io)],
+  ['expected.contracts.sarif.json', (io) => runContracts({ config: contractsConfig, format: 'sarif' }, io)],
 ];
 
 const doctorFixture = join(root, 'fixtures', 'multi-repo-doctor');
@@ -148,6 +155,10 @@ const DOCTOR_CASES = [
     'expected.doctor.github.txt',
     (io) =>
       runDoctorCommand({ config: doctorConfig, baseline: doctorBaseline, format: 'github' }, io),
+  ],
+  [
+    'expected.doctor.sarif.json',
+    (io) => runDoctorCommand({ config: doctorConfig, baseline: doctorBaseline, format: 'sarif' }, io),
   ],
 ];
 
@@ -538,6 +549,8 @@ const DIFF_CASES = [
       io.out(placed(`${JSON.stringify(report, null, 2)}\n`));
     },
   ],
+  // The new and fixed contract findings and rule violations as SARIF (P115).
+  ['diff.sarif.json', diffMarkdown({ format: 'sarif' })],
 ];
 
 const TERRAFORM_SHAPE_SUITES = [
@@ -585,6 +598,7 @@ const RULES_CASES = [
   ['rules.json', (io) => runRules({ config: rulesConfig, format: 'json' }, io)],
   ['rules.md', (io) => runRules({ config: rulesConfig, format: 'markdown' }, io)],
   ['rules.github.txt', (io) => runRules({ config: rulesConfig, format: 'github' }, io)],
+  ['rules.sarif.json', (io) => runRules({ config: rulesConfig, format: 'sarif' }, io)],
   ['rules.list.txt', (io) => runRules({ config: rulesConfig, list: true }, io)],
   ['doctor.txt', (io) => runDoctorCommand({ config: rulesConfig, baseline: false }, io)],
 ];

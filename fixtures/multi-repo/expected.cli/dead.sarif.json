@@ -1,0 +1,379 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.5.1",
+          "semanticVersion": "0.5.1",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "dead-channel",
+              "name": "dead-channel",
+              "shortDescription": {
+                "text": "channel with one end only"
+              },
+              "help": {
+                "text": "Nothing publishes to it, or nothing consumes it, in any configured repository. Add the missing end, or remove the one that is there.",
+                "markdown": "Nothing publishes to it, or nothing consumes it, in any configured repository. Add the missing end, or remove the one that is there."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "precision": "low"
+              }
+            },
+            {
+              "id": "dead-entry",
+              "name": "dead-entry",
+              "shortDescription": {
+                "text": "way in nothing in the project reaches"
+              },
+              "help": {
+                "text": "Nothing in any configured repository calls it. A heuristic: it may be a public API, or called from a repository the configuration does not list; declare it in doctor.publicRoutes or dead.infrastructure, or remove it.",
+                "markdown": "Nothing in any configured repository calls it. A heuristic: it may be a public API, or called from a repository the configuration does not list; declare it in doctor.publicRoutes or dead.infrastructure, or remove it."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "precision": "low"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/dead/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "billing": {
+          "uri": "billing/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "gateway": {
+          "uri": "gateway/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "orders": {
+          "uri": "orders/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "web": {
+          "uri": "web/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "dead-channel",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "channel:invoice.requested is dead: no producer in any repo"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "b2fc506d715085a07ba657da6cbe0ce7",
+            "primaryLocationLineHash": "b2fc506d715085a0:1"
+          },
+          "properties": {
+            "service": "billing",
+            "verdict": "dead",
+            "missing": "producer"
+          }
+        },
+        {
+          "ruleId": "dead-entry",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "billing invoice.requested is dead: channel:invoice.requested has no publisher in any repo"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "67620ba4e7e8979f7699dabc4190d880",
+            "primaryLocationLineHash": "67620ba4e7e8979f:1"
+          },
+          "properties": {
+            "service": "billing",
+            "verdict": "dead",
+            "entryKind": "event",
+            "confidence": "dead"
+          }
+        },
+        {
+          "ruleId": "dead-entry",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "billing GET:/invoices/:param is dead: no http_calls/hits from any repo (may be a public API)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 26
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "c334bd913e62a9fba9e68348cb9c322e",
+            "primaryLocationLineHash": "c334bd913e62a9fb:1"
+          },
+          "properties": {
+            "service": "billing",
+            "verdict": "dead",
+            "entryKind": "http",
+            "confidence": "dead"
+          }
+        },
+        {
+          "ruleId": "dead-entry",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "gateway POST:/orders/pay is dead: no http_calls/hits from any repo (may be a public API)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 45
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "92ec6a996a3e125830b58bfecd98b85d",
+            "primaryLocationLineHash": "92ec6a996a3e1258:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "verdict": "dead",
+            "entryKind": "http",
+            "confidence": "dead"
+          }
+        },
+        {
+          "ruleId": "dead-entry",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "gateway POST:/orders/charge is dead: no http_calls/hits from any repo (may be a public API)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 50
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "cbfaf87dca4d93e4dddaeb9942928aa1",
+            "primaryLocationLineHash": "cbfaf87dca4d93e4:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "verdict": "dead",
+            "entryKind": "http",
+            "confidence": "dead"
+          }
+        },
+        {
+          "ruleId": "dead-entry",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "orders GET:/a/:param is dead: no http_calls/hits from any repo (may be a public API)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/aliases/current-aliases.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 11
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "da3c6766de6d5441cdbdbc70c8e1d557",
+            "primaryLocationLineHash": "da3c6766de6d5441:1"
+          },
+          "properties": {
+            "service": "orders",
+            "verdict": "dead",
+            "entryKind": "http",
+            "confidence": "dead"
+          }
+        },
+        {
+          "ruleId": "dead-entry",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "orders GET:/orders/latest is likely-dead: no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it ([could be reached by /orders/${…}${…}](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 59
+                }
+              },
+              "message": {
+                "text": "could be reached by /orders/${…}${…}"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "ae9b50a81f8ecc210d6499be230e1a19",
+            "primaryLocationLineHash": "ae9b50a81f8ecc21:1"
+          },
+          "properties": {
+            "service": "orders",
+            "verdict": "likely-dead",
+            "entryKind": "http",
+            "confidence": "likely-dead"
+          }
+        },
+        {
+          "ruleId": "dead-entry",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "orders POST:/orders is dead: no http_calls/hits from any repo (may be a public API)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 31
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "31308c3c73178aabd0bd529c23e8dc70",
+            "primaryLocationLineHash": "31308c3c73178aab:1"
+          },
+          "properties": {
+            "service": "orders",
+            "verdict": "dead",
+            "entryKind": "http",
+            "confidence": "dead"
+          }
+        },
+        {
+          "ruleId": "dead-channel",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "channel:order.archived is dead: no consumer in any repo"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 61
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d7b80ee664416e72b90d9353a0cc996e",
+            "primaryLocationLineHash": "d7b80ee664416e72:1"
+          },
+          "properties": {
+            "service": "orders",
+            "verdict": "dead",
+            "missing": "consumer"
+          }
+        }
+      ]
+    }
+  ]
+}

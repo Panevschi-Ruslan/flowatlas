@@ -451,6 +451,38 @@ only one of them moved.
   under `entries` or `retest` whose flow changed gained `flow: { side, added,
   removed, changed, steps }`, `steps` the changed steps as text from detail 1
   (`+ orders → billing POST /invoices`), and `counts` gained `flows`.
+- **SARIF output for code scanning (P115).** `contracts`, `dead`, `cycles`,
+  `rules`, `doctor` and `diff` gained `--format sarif`: one SARIF 2.1.0 run per
+  command, under the category `flowatlas/<command>/`, which GitHub code
+  scanning shows on the lines of a pull request, keeps open while the finding
+  is there and closes when it is fixed. Every `ruleId` is a code already in use
+  (a doctor reason, a marker code, a contract finding kind, `dead-entry`,
+  `dead-channel`, `dead-provider`, `dead-field`, `cycle`, `no-way-in`, and
+  `rule/<name>` for an architecture rule), described from the hint catalogue.
+  One level map: contract and rule severities as they are (`info` → `note`),
+  a gap or finding row at `action` a warning and at `info` a note, a call that
+  lands nowhere and a wrong annotation errors, a dead row a note, a cycle a
+  warning; a note row (P81) and a place with nothing to join were never
+  written. Paths were the ones the configuration's directory sees (as
+  `doctor --format github` writes them since P191); a contract finding sat at
+  the sender's line with the receiver as a related location, a rule violation
+  at its crossing hop with its path, and a cycle with its hops, as a code
+  flow; a finding with no file sat at the line of `flowatlas.config.json`
+  naming its service or rule. `partialFingerprints` (`flowatlas/v1`, and
+  `primaryLocationLineHash` from the same key) came from the keys the baseline
+  already used, so moving a line kept an alert open. A row the baseline held
+  was `unchanged` and one it did not `new`; a row `accepted.json` names, a
+  violation it excused and a contract finding `@ContractIgnore` or
+  `contracts.ignoreEdges` excused were written suppressed with why; `diff`
+  wrote the new (`new`) and fixed (`absent`) contract findings and rule
+  violations. `--output <file>` wrote the log there and printed one line
+  about it, `--sarif-root <dir>` wrote paths relative to one checkout (and
+  left a result in another out, counted), `--sarif-level` left quieter
+  results out, and a log held at most 5,000 results unless `--max-nodes`
+  (`--max` on `dead` and `cycles`) said otherwise, saying how many were cut and
+  where the whole report was. The format changed no exit code. `docs/ci.md`
+  gained a "Code scanning" workflow; `toSarif` and the adapters were exported
+  from `@flowatlas/cli`.
 
 ### Changed
 

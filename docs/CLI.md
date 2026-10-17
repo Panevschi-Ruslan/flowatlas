@@ -683,7 +683,7 @@ them the check would report most of a real project as broken on its first run.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--format <name>` | `text` | `text`, `json` or `markdown` |
+| `--format <name>` | `text` | `text`, `json`, `markdown` or `sarif` ([SARIF](#--format-sarif-findings-for-code-scanning); `--severity` is then the least level written) |
 | `--severity <level>` | `info` | least severe finding to show: `error`, `warning` or `info` |
 | `--fail-on <level>` | `none` | exit 1 on a finding at this level or worse: `none`, `error`, `warning` |
 | `--edge <key>` | every boundary | only this one, as `from\|type\|to` |
@@ -693,6 +693,9 @@ them the check would report most of a real project as broken on its first run.
 | `--max-nodes <n>` | `150` | most findings to print; the file is always complete |
 | `--out <dir>` | the configured output | where to write `contracts.json` |
 | `--no-ignore` | off | report what `@ContractIgnore` excuses as ordinary findings |
+| `--output <file>` | stdout | with `--format sarif`: write the log here and print one line about it |
+| `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout ([SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 
 Every run writes the whole report to `<output>/contracts.json`, whatever it
 printed and whatever it exited with. Exit `0` means it ran and found nothing at
@@ -765,8 +768,11 @@ query per item and are bounded on purpose, by why (P89).
 
 | Flag | Default | Does |
 |---|---|---|
-| `--format <kind>` | `table` | `json` or `table` |
-| `--max <n>` | `150` | most rows, after which it says how many it cut |
+| `--format <kind>` | `table` | `json` or `table`; `cycles` and `dead` also `sarif` |
+| `--max <n>` | `150` | most rows, after which it says how many it cut; with `--format sarif`, most results (5,000) |
+
+`cycles` and `dead` also take `--output`, `--sarif-root` and `--sarif-level`
+with `--format sarif` ([SARIF](#--format-sarif-findings-for-code-scanning)).
 
 These say `table` where the walking commands say `tree`, because the output is
 rows rather than a shape.
@@ -1363,7 +1369,7 @@ installed, and what a service with no way in looks like.
 | `--no-contracts` | off | do not run the contract check |
 | `--no-rules` | off | do not check the architecture rules |
 | `--max-nodes <n>` | 6 per reason | most places named under one reason; the written file is always complete |
-| `--format <name>` | `text` | `text`, `json`, `github` |
+| `--format <name>` | `text` | `text`, `json`, `github`, `sarif` ([SARIF](#--format-sarif-findings-for-code-scanning); every place up to 5,000 unless `--max-nodes` says) |
 | `--out <dir>` | configured output | where `doctor.json` goes |
 | `--unresolved` | off | instead of the report, what the reader could not follow, grouped by cause and by package |
 | `--top <n>` | 10 | with `--unresolved`: most causes, and packages per cause, to list |
@@ -1371,6 +1377,9 @@ installed, and what a service with no way in looks like.
 | `--cause <code>` | every one | with `--unresolved`: only this cause, e.g. `module-not-installed` |
 | `--package <name>` | every one | with `--unresolved`: only what points into this package or module |
 | `--json` | off | shorthand for `--format json` |
+| `--output <file>` | stdout | with `--format sarif`: write the log here and print one line about it |
+| `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout ([SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 
 **`--unresolved`: why the reader stopped.** The report lists rows by reason,
 and a reason says what was not read - a call, a type, an injection. A row about
@@ -1643,13 +1652,16 @@ violation is only drawn along an edge the graph holds.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--format <name>` | `text` | `text`, `json`, `markdown` or `github` (an annotation per violation at the crossing hop) |
+| `--format <name>` | `text` | `text`, `json`, `markdown`, `github` (an annotation per violation at the crossing hop) or `sarif` ([SARIF](#--format-sarif-findings-for-code-scanning)) |
 | `--rule <name>` | every rule | only this rule; repeatable |
 | `--service <name>` | every service | only violations this service is on either end of |
 | `--fail-on <level>` | `none` | exit 1 on a violation, or a rule that could not be checked, at this level or worse: `none`, `error`, `warning` |
 | `--max-nodes <n>` | `150` | most violations to print; the file is always complete |
 | `--out <dir>` | the configured output | where to write `rules.json` |
 | `--list` | off | print the configured rules with how many nodes each side selects |
+| `--output <file>` | stdout | with `--format sarif`: write the log here and print one line about it |
+| `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout ([SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 
 Every run writes the whole report to `<output>/rules.json`
 (`rulesFormatVersion: 1`): each rule with its status (`held`, `broken`,
@@ -1783,8 +1795,10 @@ are new. Markdown by default, because its destination is a pull request comment.
 | Flag | Default | Does |
 |---|---|---|
 | `--service <name>` | every one | compare only this repository, repeatable |
-| `--format <name>` | `markdown` | `markdown` or `json` |
-| `--output <file>` | none | write what was printed here as well |
+| `--format <name>` | `markdown` | `markdown`, `json` or `sarif` (the new and fixed contract findings and rule violations, [SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead of stdout |
+| `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout |
+| `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |
 | `--fail-on-contract-break` | off | exit 1 on a new contract error, or on a service neither ref could be read for |
 | `--max-entries <n>` | 150 | ways in listed per changed node |
 | `--max-nodes <n>` | 100 | changed nodes walked backwards from |
@@ -1872,6 +1886,80 @@ once. `ls`, `prune` or `clear`.
 | `--json` | off | print the answer as JSON |
 
 ---
+
+### `--format sarif`: findings for code scanning
+
+`contracts`, `dead`, `cycles`, `rules`, `doctor` and `diff` write their
+findings as one SARIF 2.1.0 log, the format GitHub code scanning (and most
+other code hosts) reads: each result is shown on the line it is about in a
+pull request, stays open while the finding is there, and closes when it is
+fixed. The log goes to stdout, or with `--output <file>` to the file, with one
+line on stdout saying how many results of each level it holds. Uploading it is
+the CI's job (`docs/ci.md`, "Code scanning"); flowatlas sends nothing anywhere,
+and the format never changes an exit code.
+
+Each command is one run under its own category, `automationDetails.id`
+`flowatlas/<command>/`, so a job that uploads `doctor` and `contracts` keeps
+two lists of alerts and neither upload closes the other's.
+
+**Rules.** Every `ruleId` is a code flowatlas already uses, and the log lists
+only the rules its results use, described from the same catalogue as the text
+report's hints:
+
+| `ruleId` | From | Level |
+|---|---|---|
+| a doctor reason (`dynamic-http-url`, `route-unguarded`, …) | `doctor`'s unresolved rows | gap or finding at `action` → `warning`, at `info` → `note`; a note row (P81) and a place with nothing to join are never written |
+| `target-route-not-found`, `unknown-base-url-env`, … | `doctor`'s desync rows | `error` (said once, not again under its reason) |
+| a marker code (`marker-emits-without-emit`, …) | `doctor`'s annotations | the marker's own: `error` or `warning` |
+| `no-way-in` | `doctor`: a service nothing enters | `warning`, at the configuration line naming it |
+| `missing_required`, `type_mismatch`, `optionality_mismatch`, `extra_field` | `contracts`, `doctor`, `diff` | the finding's severity, `info` → `note` |
+| `rule/<name>` | `rules`, `doctor`, `diff` | the rule's severity, `info` → `note` |
+| `dead-entry`, `dead-channel`, `dead-provider`, `dead-field` | `dead` | `note`; only actionable entries and `dead` / `likely-dead` verdicts |
+| `cycle` | `cycles` | `warning` |
+
+**Where.** A path is written as the configuration's directory sees it: a row's
+file under the directory its service's repository is in (`billing/src/x.ts`),
+which is the path in a checkout of the whole project and the one
+`doctor --format github` annotates. `originalUriBaseIds` names the root
+(`%SRCROOT%`) and each service's directory under it. A contract finding is at
+the sender's line with the receiver as a related location, linked from the
+message; a rule violation is at its crossing hop with the target related and
+its path as a code flow; a cycle is at the node it starts from with its hops as
+a code flow; a route `dead` reports keeps the requests that could still reach
+it as related locations. A row with no line is placed at its file with no
+region, never at a guessed line; one with no file at the line of
+`flowatlas.config.json` naming its service, or its rule.
+
+For a project of several repositories uploaded one repository at a time,
+`--sarif-root <dir>` writes every path relative to that checkout, and leaves out
+a result whose place is in another one, counted in a notification
+(`results-elsewhere`); run once per repository with its own directory.
+
+**Fingerprints.** `partialFingerprints["flowatlas/v1"]` is a hash of the key
+the baseline already uses for that kind of finding - `unresolvedKey` for a
+doctor row, `findingKey` for a contract finding, a rule violation's key, a
+node id without its line for a dead row, a cycle's members - and
+`primaryLocationLineHash`, the one GitHub matches alerts on, is written from
+the same key with `:<n>` counting results that share it. None carries a line,
+so moving a finding keeps its alert; changing what it is about makes a new one.
+
+**Baseline and excuses.** `doctor` marks a row or rule violation the baseline
+holds `baselineState: "unchanged"` and one it does not `"new"`. A row
+`accepted.json` names, a violation it excused (`accept rule:<name>`) and a
+contract finding `@ContractIgnore` or `contracts.ignoreEdges` excused are
+written with `suppressions` (`external`, or `inSource` for the annotation) and
+the note, so code scanning shows them dismissed rather than new. `diff` writes
+only what the revision did: the contract findings and rule violations it
+introduced (`new`, on the head side) and the ones it fixed (`absent`, where
+they were on the base side).
+
+**Size.** A log holds at most 5,000 results, the most severe first (what code
+scanning shows of a run), unless `--max-nodes` (`--max` on `dead` and
+`cycles`) says otherwise, and never more than 25,000 (what it accepts); with
+`--format sarif`, `doctor` names every place up to that bound rather than six
+per reason. A cut is said in `invocations[0].toolExecutionNotifications`
+(`results-cut`) with how many were left out and the JSON file that has them
+all. `--sarif-level warning` leaves the notes out.
 
 ## Configuration
 

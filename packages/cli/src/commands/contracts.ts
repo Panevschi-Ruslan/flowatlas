@@ -28,8 +28,20 @@ import {
   renderContractsMarkdown,
   renderContractsText,
 } from '../render/contracts.js';
+import {
+  contractFindings,
+  deliverSarif,
+  sarifBound,
+  sarifLevelFlag,
+  sarifPathsOf,
+  toSarif,
+  withSarifOptions,
+  type SarifFlags,
+  type SarifLevel,
+} from '../sarif/index.js';
+import { VERSION } from '../version.js';
 
-export const FORMATS = ['text', 'json', 'markdown'] as const;
+export const FORMATS = ['text', 'json', 'markdown', 'sarif'] as const;
 export type ContractsFormat = (typeof FORMATS)[number];
 
 export const FAIL_LEVELS = ['none', 'error', 'warning'] as const;
@@ -38,7 +50,7 @@ export type FailLevel = (typeof FAIL_LEVELS)[number];
 /** The file every run leaves behind, whatever it printed. */
 export const CONTRACTS_FILE = 'contracts.json';
 
-export interface ContractsOptions extends ReadOptions {
+export interface ContractsOptions extends ReadOptions, SarifFlags {
   severity?: string;
   failOn?: string;
   edge?: string;
@@ -162,6 +174,9 @@ const narrow = (
   };
 };
 
+/** `--severity` as the least SARIF level written. */
+const SEVERITY_LEVEL: Readonly<Record<Severity, SarifLevel>> = { error: 'error', warning: 'warning', info: 'note' };
+
 /** Whether anything found is at or above the level that fails the command. */
 const fails = (report: ContractReport, failOn: FailLevel): boolean =>
   failOn !== 'none' &&
@@ -181,6 +196,7 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
     ? undefined
     : oneOf(options.direction, ['request', 'response', 'payload'] as const, 'request', '--direction');
   const maxNodes = whole(options.maxNodes, 150, '--max-nodes');
+  const sarifLevel = sarifLevelFlag(options.sarifLevel);
 
   const settings = fromConfig(options);
   const { db, close } = openProjectDb(options);
@@ -216,14 +232,30 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
       ...(direction === undefined ? {} : { direction }),
     });
     const drawn = { severity, maxNodes, ...(file === undefined ? {} : { file }) };
-    const text =
-      format === 'json'
-        ? renderContractsJson(view, drawn)
-        : format === 'markdown'
-          ? renderContractsMarkdown(view, drawn)
-          : renderContractsText(view, drawn);
-
-    io.out(text);
+    let text: string;
+    if (format === 'sarif') {
+      // Every finding of the view and every one excused, the sender's line
+      // first (P115); `--severity` is the least level written unless
+      // `--sarif-level` says otherwise.
+      const log = toSarif({
+        command: 'contracts',
+        version: VERSION,
+        findings: contractFindings(view, { lookup: db }),
+        paths: sarifPathsOf(options, options.sarifRoot),
+        maxResults: sarifBound(options.maxNodes === undefined ? undefined : maxNodes),
+        minLevel: sarifLevel ?? SEVERITY_LEVEL[severity],
+        ...(file === undefined ? {} : { completeFile: file }),
+      });
+      text = deliverSarif(log, options, io);
+    } else {
+      text =
+        format === 'json'
+          ? renderContractsJson(view, drawn)
+          : format === 'markdown'
+            ? renderContractsMarkdown(view, drawn)
+            : renderContractsText(view, drawn);
+      io.out(text);
+    }
     return {
       report,
       shown: view,
@@ -237,7 +269,7 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
 };
 
 export const registerContracts = (program: Command): void => {
-  program
+  const command = program
     .command('contracts')
     .description('compare what each service sends against what the other declares')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
@@ -251,8 +283,8 @@ export const registerContracts = (program: Command): void => {
     .option('--depth <n>', 'how far into nested shapes to compare')
     .option('--max-nodes <n>', 'most findings to print; the file is always complete')
     .option('--out <dir>', 'where to write contracts.json (default: the configured output)')
-    .option('--no-ignore', 'report the findings @ContractIgnore excuses as ordinary ones')
-    .action((options: ContractsOptions) => {
+    .option('--no-ignore', 'report the findings @ContractIgnore excuses as ordinary ones');
+  withSarifOptions(command).action((options: ContractsOptions) => {
       const { exitCode } = runContracts(options);
       if (exitCode !== EXIT.ok) {
         throw new CliError('contract findings at or above --fail-on', EXIT.failed);

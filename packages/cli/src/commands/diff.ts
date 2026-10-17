@@ -41,9 +41,20 @@ import { flowChanges } from '../report/flow-changes.js';
 import { classifyRules, ruleBreaks } from '../report/rule-delta.js';
 import { ruleReportOf } from './rules.js';
 import { sequenceDetailOf } from './flow.js';
+import {
+  deliverSarif,
+  diffFindings,
+  lookupOf,
+  sarifBound,
+  sarifLevelFlag,
+  sarifPathsOf,
+  toSarif,
+  withSarifOptions,
+} from '../sarif/index.js';
+import { VERSION } from '../version.js';
 import { registerCache } from './cache.js';
 
-export const FORMATS = ['markdown', 'json'] as const;
+export const FORMATS = ['markdown', 'json', 'sarif'] as const;
 export type DiffFormat = (typeof FORMATS)[number];
 
 /** The file every run leaves behind, whatever it printed. */
@@ -54,8 +65,15 @@ export interface DiffOptions {
   /** Repositories to compare. Every other one is the same on both sides. */
   service?: string[];
   format?: string;
-  /** Where to write what was printed. The JSON document is always written too. */
+  /**
+   * Where to write what was printed. The JSON document is always written too.
+   * With `--format sarif`, the log goes there instead of stdout (P115).
+   */
   output?: string;
+  /** With `--format sarif`: paths relative to this checkout. */
+  sarifRoot?: string;
+  /** With `--format sarif`: the least level written. */
+  sarifLevel?: string;
   failOnContractBreak?: boolean;
   /** Exit 1 when this revision introduces a violation of an architecture rule at `error` (P114). */
   failOnRuleBreak?: boolean;
@@ -236,6 +254,7 @@ export const runDiff = async (
     diagrams: options.diagrams !== false,
   };
   const sequenceDetail = sequenceDetailOf(options.sequenceDetail);
+  const sarifLevel = sarifLevelFlag(options.sarifLevel);
 
   const loaded = loadConfig(options.config ?? process.cwd());
   const services = wantedServices(loaded, options.service);
@@ -356,17 +375,33 @@ export const runDiff = async (
     const file = join(outputDir, DIFF_FILE);
     writeFileSync(file, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
+    // The new and fixed contract findings and rule violations (P115): a new
+    // one placed on the head side, a fixed one where it was on the base side.
     const text =
-      format === 'json'
-        ? `${JSON.stringify(report, null, 2)}\n`
-        : renderDiffMarkdown(report, { file, ...markdown });
-    io.out(text);
+      format === 'sarif'
+        ? deliverSarif(
+            toSarif({
+              command: 'diff',
+              version: VERSION,
+              findings: diffFindings(report, { head: lookupOf(builtHead.graph), base: lookupOf(builtBase.graph) }),
+              paths: sarifPathsOf({ config: loaded.configPath }, options.sarifRoot),
+              maxResults: sarifBound(undefined),
+              ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
+              completeFile: file,
+            }),
+            options.output === undefined ? {} : { output: options.output },
+            io,
+          )
+        : format === 'json'
+          ? `${JSON.stringify(report, null, 2)}\n`
+          : renderDiffMarkdown(report, { file, ...markdown });
+    if (format !== 'sarif') io.out(text);
     io.err(`${summariseDiff(report)}\n`);
     for (const kept of [...builtHead.worktrees, ...builtBase.worktrees]) {
       io.err(`worktree kept: ${kept}\n`);
     }
 
-    if (options.output !== undefined) {
+    if (options.output !== undefined && format !== 'sarif') {
       const target = isAbsolute(options.output) ? options.output : resolve(options.output);
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, text, 'utf8');
@@ -413,7 +448,7 @@ export const runDiff = async (
 const collect = (value: string, previous: string[]): string[] => [...previous, value];
 
 export const registerDiff = (program: Command): void => {
-  program
+  const command = program
     .command('diff')
     .description('what a branch changes, who would notice, and what it breaks')
     .argument('<base-ref>', 'the ref to compare against, e.g. main')
@@ -421,7 +456,7 @@ export const registerDiff = (program: Command): void => {
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--service <name>', 'compare only this repository, repeatable', collect, [])
     .option('--format <name>', `one of ${FORMATS.join(', ')}`)
-    .option('--output <file>', 'write what was printed to this file as well')
+    .option('--output <file>', 'write what was printed to this file as well; with --format sarif, the log goes there instead of stdout')
     .option('--fail-on-contract-break', 'exit 1 when this revision introduces a contract error')
     .option('--fail-on-rule-break', 'exit 1 when this revision introduces a violation of an architecture rule at error')
     .option('--max-entries <n>', 'most ways in to list per changed node')
@@ -435,8 +470,8 @@ export const registerDiff = (program: Command): void => {
     .option('--concurrency <n>', 'how many repositories to read at once')
     .option('--out <dir>', 'where to write diff.json (default: the configured output)')
     .option('--no-cache', 'read every commit again rather than believing the cache')
-    .option('--keep-worktrees', 'leave the detached checkouts on disk, for debugging')
-    .action(async (baseRef: string, headRef: string | undefined, options: DiffOptions) => {
+    .option('--keep-worktrees', 'leave the detached checkouts on disk, for debugging');
+  withSarifOptions(command, { output: false }).action(async (baseRef: string, headRef: string | undefined, options: DiffOptions) => {
       const { exitCode, unread, failedOn } = await runDiff(baseRef, headRef, options);
       if (exitCode !== EXIT.ok) {
         const said = { contract: 'a contract error', rule: 'a violation of an architecture rule' } as const;

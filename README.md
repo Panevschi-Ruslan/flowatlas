@@ -343,7 +343,10 @@ a decorator that cannot be followed goes in `doctor.skipGuardDecorators`; all of
 it is in [the command reference](docs/CLI.md). `diff` answers the other question a build
 asks: given this branch, which entry points in which repositories would notice.
 Its output is markdown because it is meant for a pull request comment, and
-`--fail-on-contract-break` turns a new disagreement into a failure.
+`--fail-on-contract-break` turns a new disagreement into a failure. `doctor`,
+`contracts`, `rules`, `dead`, `cycles` and `diff` also write `--format sarif`, a
+SARIF 2.1.0 log GitHub code scanning shows on the lines of a pull request and
+keeps open until the finding is fixed.
 [docs/ci.md](docs/ci.md) is the whole recipe.
 
 An entry can be named the way you would say it out loud. All three of these mean

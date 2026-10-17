@@ -290,3 +290,23 @@ export { moreRows, renderTable, section } from './format/table.js';
 export type { Column } from './format/table.js';
 
 export { VERSION } from './version.js';
+export {
+  toSarif,
+  renderSarif,
+  sarifCounts,
+  sarifLevelOf,
+  fingerprintOf,
+  contractFindings,
+  cycleFindings,
+  deadFindings,
+  diffFindings,
+  doctorFindings,
+  ruleFindings,
+  sarifPathsOf,
+  SARIF_LEVELS,
+  SARIF_COMMANDS,
+  FINGERPRINT_VERSION,
+  DEFAULT_SARIF_RESULTS,
+  SARIF_RESULT_LIMIT,
+} from './sarif/index.js';
+export type { SarifFinding, SarifInput, SarifLevel, SarifLog, SarifPaths, SarifPlace, SarifRuleInfo } from './sarif/index.js';

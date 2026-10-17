@@ -44,6 +44,20 @@ import {
   type CantFollowReport,
 } from '../doctor/cant-follow.js';
 import { runDoctor } from '../doctor/run.js';
+import {
+  deliverSarif,
+  doctorCut,
+  doctorFindings,
+  doctorNotes,
+  namedLines,
+  sarifBound,
+  sarifLevelFlag,
+  sarifPathsOf,
+  toSarif,
+  withSarifOptions,
+  type AcceptedRow,
+  type SarifFlags,
+} from '../sarif/index.js';
 import { ruleReportOf, rulesContextOf, type RulesContext } from './rules.js';
 import {
   BASELINE_FORMAT_VERSION,
@@ -52,7 +66,7 @@ import {
   type Section,
 } from '../doctor/schema.js';
 
-export const FORMATS = ['text', 'json', 'github'] as const;
+export const FORMATS = ['text', 'json', 'github', 'sarif'] as const;
 export type DoctorFormat = (typeof FORMATS)[number];
 
 /** The file every run leaves behind, whatever it printed. */
@@ -61,7 +75,7 @@ export const DOCTOR_FILE = 'doctor.json';
 /** What `--accept` writes, and where `--strict` looks for it. */
 export const BASELINE_FILE = 'flowatlas.baseline.json';
 
-export interface DoctorOptions {
+export interface DoctorOptions extends SarifFlags {
   config?: string;
   db?: string;
   format?: string;
@@ -157,27 +171,6 @@ interface FromConfig {
   serviceAt: Map<string, { file: string; line: number }>;
 }
 
-/** A service's own `name`, as one line of a configuration writes it. */
-const NAMED = /"name"\s*:\s*("(?:[^"\\]|\\.)*")/;
-
-/**
- * The line each service is named on: the first line that names it.
- *
- * Read from the text, because the parsed configuration keeps no lines; a
- * service whose name is not written as `"name": "…"` on one line has none, and
- * its annotation names the file alone.
- */
-const serviceLines = (text: string, names: readonly string[]): Map<string, number> => {
-  const wanted = new Set(names);
-  const lines = new Map<string, number>();
-  text.split('\n').forEach((line, index) => {
-    const written = NAMED.exec(line)?.[1];
-    const name = written === undefined ? undefined : (JSON.parse(written) as string);
-    if (name !== undefined && wanted.has(name) && !lines.has(name)) lines.set(name, index + 1);
-  });
-  return lines;
-};
-
 /**
  * What a service's repository looks like, read from its directory, for the
  * verdict on a service with no way in (R170). The one place `doctor` opens a
@@ -239,7 +232,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       if (dir !== '' && dir !== '.') repoDirs.set(service.name, dir);
     }
     const file = relative(loaded.rootDir, loaded.configPath).replace(/\\/g, '/');
-    const lines = serviceLines(readFileSync(loaded.configPath, 'utf8'), services.map((service) => service.name));
+    const lines = namedLines(readFileSync(loaded.configPath, 'utf8'), services.map((service) => service.name));
     const serviceAt = new Map(services.map((service) => [service.name, { file, line: lines.get(service.name) ?? 0 }]));
     return {
       outputDir: loaded.outputDir,
@@ -410,8 +403,16 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   // section of rows is bounded at 150, and the places listed under one
   // reason at a handful. One number for both made `doctor` hundreds of
   // lines on a project whose commonest reason covered hundreds of places.
+  //
+  // A SARIF log is read by a code host that keeps its own list, so every
+  // place is written up to the bound code scanning shows (P115).
   const maxNodes =
-    options.maxNodes === undefined ? undefined : whole(options.maxNodes, 150, '--max-nodes');
+    options.maxNodes === undefined
+      ? format === 'sarif'
+        ? sarifBound(undefined)
+        : undefined
+      : whole(options.maxNodes, 150, '--max-nodes');
+  const sarifLevel = sarifLevelFlag(options.sarifLevel);
   const sections: Section[] =
     options.section === undefined || options.section.length === 0
       ? [...SECTIONS]
@@ -523,8 +524,31 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       report.verdict.exitCode = EXIT.ok;
     }
 
+    // The rows accepted.json took out of the report, written to the log
+    // suppressed with their note rather than left out (P115).
+    const acceptedRows: AcceptedRow[] = split.rows.flatMap((row, index) => {
+      const entry = split.byEntry[index];
+      return entry === undefined || (options.service !== undefined && row.service !== options.service) ? [] : [{ row, entry }];
+    });
     const text =
-      format === 'json'
+      format === 'sarif'
+        ? deliverSarif(
+            toSarif({
+              command: 'doctor',
+              version: VERSION,
+              findings: doctorFindings(report, { lookup: db, accepted: acceptedRows }),
+              paths: sarifPathsOf(options, options.sarifRoot),
+              maxResults: sarifBound(maxNodes),
+              ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
+              // No complete file is named under a cut: doctor.json is cut
+              // per reason as well (P192).
+              cutBefore: doctorCut(report),
+              notes: doctorNotes(report),
+            }),
+            options,
+            io,
+          )
+        : format === 'json'
         ? renderDoctorJson(report)
         : format === 'github'
           ? renderDoctorGithub(report, {
@@ -544,7 +568,9 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
               ...(settings.rootDir === undefined ? {} : { rootDir: settings.rootDir }),
             });
 
-    io.out(text);
+    if (format !== 'sarif') {
+      io.out(text);
+    }
     if (baselineFile !== undefined) {
       const ruleKeys = rulesReport === undefined ? 0 : Object.keys(rulesSnapshotOf(rulesReport)).length;
       io.err(`baseline written to ${baselineFile}: ${report.unresolved.total} places accepted${ruleKeys === 0 ? '' : `, ${ruleKeys} rule violation${ruleKeys === 1 ? '' : 's'}`}\n`);
@@ -648,7 +674,7 @@ export const cantFollowRowsOf = (
 };
 
 export const registerDoctor = (program: Command): void => {
-  program
+  const command = program
     .command('doctor')
     .description('what the map could not read, what the annotations get wrong, and what has drifted')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
@@ -673,8 +699,8 @@ export const registerDoctor = (program: Command): void => {
     .option('--samples <n>', 'with --unresolved: places to list per package under a cause (default 3)')
     .option('--cause <code>', 'with --unresolved: only this cause, e.g. module-not-installed')
     .option('--package <name>', 'with --unresolved: only what points into this package')
-    .option('--json', 'shorthand for --format json')
-    .action((options: DoctorOptions) => {
+    .option('--json', 'shorthand for --format json');
+  withSarifOptions(command).action((options: DoctorOptions) => {
       if (options.unresolved === true) {
         runCantFollowCommand(options);
         return;
