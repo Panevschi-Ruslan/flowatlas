@@ -1,4 +1,19 @@
+import { readFileSync } from 'node:fs';
 import { startStdioServer } from './server.js';
+
+/**
+ * This package's own version, for `initialize` (P86). `flowatlas mcp` passes the
+ * command's instead, which is what a user installed; this bin is only run from
+ * a checkout, where the manifest sits one folder above `dist/`.
+ */
+const manifestVersion = (): string | undefined => {
+  try {
+    const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version?: unknown };
+    return typeof manifest.version === 'string' ? manifest.version : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 /** `--config <path>` and `--db <path>`, kept deliberately small. */
 const readArgs = (argv: readonly string[]): { configPath?: string; dbPath?: string } => {
@@ -29,4 +44,5 @@ const options = {
   ...(args.dbPath ?? fromEnv ? { dbPath: args.dbPath ?? fromEnv } : {}),
 };
 
-await startStdioServer(options);
+const version = manifestVersion();
+await startStdioServer({ ...options, ...(version === undefined ? {} : { version }) });

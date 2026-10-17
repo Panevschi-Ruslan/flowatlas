@@ -15,7 +15,7 @@
  * native module cannot be bundled at all, and the rest are ordinary
  * dependencies that npm should deduplicate against whatever else is installed.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -26,6 +26,13 @@ const manifest = JSON.parse(readFileSync(join(cli, 'package.json'), 'utf8'));
 
 /** Dependencies the command declares, which npm installs beside it. */
 const external = Object.keys(manifest.dependencies ?? {});
+
+// The chunks are named by their hash, so a build over an earlier one leaves the
+// earlier chunks beside the new ones, and `files: ["dist"]` would ship them all
+// (P198): a release packed after an incremental build carried every chunk of
+// the build before it. The output starts empty; `page-parts.mjs` refills
+// `dist/visualise/` after this.
+rmSync(join(cli, 'dist'), { recursive: true, force: true });
 
 const result = await build({
   entryPoints: [join(cli, 'src', 'index.ts')],

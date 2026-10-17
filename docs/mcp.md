@@ -5,7 +5,8 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Twenty-six tools. Only one of them returns code.
+Twenty-six tools, three prompts and three resources. Only one of the tools
+returns code.
 
 ---
 
@@ -65,6 +66,19 @@ are in, so the absolute `--config` path matters there.
 **Anything else** that speaks MCP over stdio: run `flowatlas mcp --config <path>`
 and let it talk on stdin and stdout.
 
+### The command
+
+| Flag | Does |
+|---|---|
+| `--config <path>` | the configuration whose database to serve (default: found from the working directory) |
+| `--db <path>` | a database to read directly, instead of the configured one |
+| `--install` | write `.mcp.json` into every repository of the project, and serve nothing |
+| `--repo <name>` | with `--install`, only this service |
+| `--dry-run` | with `--install`, say what would change and write nothing |
+
+The server answers `initialize` as `flowatlas`, with the version of the command
+you installed as `serverInfo.version` (`flowatlas --version` prints the same).
+
 ---
 
 ## The tools
@@ -79,9 +93,10 @@ row, and 3 is answered at 2 and says so. Those tools, `check_contract`, `dead`,
 which also stops at about `maxChars` characters (12,000). `start_here`, `cant_follow`,
 `describe_for_prompt` and `get_source` take neither: they are bounded by their
 own limits (`perService`; `top` and `samples`; `maxSteps` and `maxChars`;
-`maxLines`), as are `hot_paths`, `slow_steps` and `undeclared_failures`
-(`limit`) and `trace_for` (`maxNodes` per tree). Answers are bounded and say when they were cut, rather than
-filling a context window.
+`maxLines`), as are `hot_paths`, `slow_steps`, `undeclared_failures` and
+`never_seen` (`limit`), `trace_for` (`maxNodes` per tree), `get_spec`
+(`maxChars`) and `test_pattern` (ten rules, ten tests a rule). Answers are
+bounded and say when they were cut, rather than filling a context window.
 
 ### Answers
 
@@ -145,8 +160,10 @@ cant_follow → get_source on a place it names
 
 The server's instructions describe the same chains. `list_entries`,
 `find_symbol`, `search`, `who_calls`, `impact`, `who_emits`, `who_consumes`,
-`start_here`, `what_changed`, `cant_follow`, `dead`, `findings` and `type_usage`
-all take the same optional `service` filter.
+`start_here`, `what_changed`, `cant_follow`, `dead`, `findings`, `type_usage`,
+`check_rules`, `test_pattern` and the traffic tools `hot_paths`, `slow_steps`,
+`undeclared_failures` and `never_seen` all take the same optional `service`
+filter; `get_spec` requires one.
 
 | Tool | Answers | Takes |
 |---|---|---|
@@ -218,10 +235,10 @@ answer naming the ones it does (`scopes`), with a `next` per scope.
   *Findings · n* by kind with the top three of each as `findings` ranks them,
   and its most common gaps. No *Steps*.
 
-The page gathers a class and a file the same way (`subjectOf` in its
-`steps.js` takes them as targets, and the parity test compares both sides on
-every class and file of every built fixture); no control on the page asks for
-them yet, and the page's side of a service is P134.
+The page gathers a class, a file and a service the same way (`subjectOf` in
+its `steps.js` takes them as targets, and the parity test compares both sides
+on every class, file and service of every built fixture), and its *Copy as
+prompt* offers each scope a node has (P134).
 
 `describeForPrompt` and `PROMPT_LIMITS` are still exported from
 `@flowatlas/mcp`; they are core's `renderPrompt` and limits.
@@ -270,8 +287,8 @@ pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `dead` | whether one node is dead, with what could make that wrong; or, without `id`, every row `flowatlas dead` lists, verdict first | `id`, or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `offset` |
-| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `offset` |
+| `dead` | whether one node is dead, with what could make that wrong; or, without `id`, every row `flowatlas dead` lists, verdict first | `id`, or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `maxNodes`, `offset` |
+| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
 | `check_rules` | the architecture rules of the configuration (P114), checked over the graph: each rule's status (`held`, `broken`, `unchecked`), each violation with its two ends, where it crosses (`loc`), the edge kind, the weakest confidence, `heuristic` for a guess, the rule's note and `next` (`get_flow` on the way in it starts behind, `get_source` on the crossing), the rules that could not be checked (`rule-matches-nothing`) and how many an accept excused | `rule`, `service`, `maxNodes`, `offset` |
 
 `check_rules` calls the function `flowatlas rules` calls (the linker's
@@ -338,10 +355,12 @@ accepted with `flowatlas accept` under `accepted`.
 |---|---|---|
 | `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `offset` |
 | `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service`, `offset` |
-| `search` | one query over routes and other ways in, channels, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit`, `service`, `offset` |
+| `search` | one query over routes and other ways in, channels, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
 
-`kind` is one of `http`, `rpc`, `event`, `cron`, `workflow`, `bot_command`,
-`bot_callback`, `bot_event` and `scene_step`. A `workflow` is a state machine,
+`kind` is one of `http`, `rpc`, `event`, `cron`, `invoke`, `workflow`,
+`bot_command`, `bot_callback`, `bot_event` and `scene_step`. An `invoke` is a
+deployed function called by name rather than by an address (a Lambda function,
+say, as its infrastructure declares it). A `workflow` is a state machine,
 reached by the name it is deployed under; its steps are `function` nodes of
 kind `state`. `rpc` is a procedure — a tRPC one, say — whose
 address is the dotted path its callers write, `orders.list`, rather than a verb
@@ -369,9 +388,9 @@ route matched too. A helper's choices count: `423` finds the routes whose
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth`, `maxChars` |
-| `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` |
-| `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `offset` |
+| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth` (8, one more per workflow step), `maxChars` |
+| `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` (3; 16 at most), `service` |
+| `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `service`, `offset` |
 
 Asked about a class, `who_calls` and `impact` answer for every method of it
 something calls (P95): calls point at methods, never at the class. Each
@@ -551,10 +570,10 @@ window longer than the file holds says `short: true` and every row is `weak`.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `who_emits` | everything that publishes on a channel, across every repository | `channel` (required), `offset` |
-| `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required), `offset` |
+| `who_emits` | everything that publishes on a channel, across every repository | `channel` (required), `service`, `offset` |
+| `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required), `service`, `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
-| `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `offset` |
+| `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `service`, `offset` |
 | `check_contract` | what one side of a crossing sends against what the other expects; on an entry, what traffic carried into it against its code | `edge` (a crossing or an entry id), or `from` and `to` |
 | `get_spec` | a service's routes as the OpenAPI 3.1 document `flowatlas spec` writes, or its channel ends as AsyncAPI 3.0, as JSON text; with `path`, one operation and only the schemas it uses (P118) | `service` (required), `kind`, `path`, `maxChars` |
 
@@ -621,7 +640,7 @@ section in a fenced JSON block.
 | Tool | Answers | Takes |
 |---|---|---|
 | `cant_follow` | every step the reading could not follow, grouped by cause and then by the package it points into, with a few places each and the id of the method each is written in | `service`, `cause`, `package`, `top`, `samples`, `offset` |
-| `test_pattern` | a draft extraction pattern checked before it is suggested: each rule refused with the part named, or its own tests run, and what it draws from the code with the holes it filled | `yaml`, `code`, `service` |
+| `test_pattern` | a draft extraction pattern checked before it is suggested: each rule refused with the part named, or its own tests run, and what it draws from the code with the holes it filled | `yaml` (required), `code`, `service` |
 
 With an observed file beside the graph (P110), what traffic reached and no
 reader drew stands under its own cause, `seen-not-in-code`: one row per

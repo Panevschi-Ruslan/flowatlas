@@ -9,6 +9,7 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { KNOWN_REASONS, kindHint } from '../doctor/hints.js';
 import { ownBin } from '../own-path.js';
+import { VERSION } from '../version.js';
 
 export const MCP_FILE = '.mcp.json';
 
@@ -253,6 +254,9 @@ export const registerMcp = (program: Command): void => {
         const handle = new DbHandle(where);
         await startStdioServer({
           ...where,
+          // What `initialize` answers as serverInfo.version: the command a user
+          // installed, not the private package the server is compiled from (P86 D3).
+          version: VERSION,
           reasonCatalog: reasonCatalog(),
           contractChecker: contractsHook(() => {
             const opened = handle.open();

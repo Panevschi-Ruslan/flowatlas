@@ -21,7 +21,7 @@ made again with `scripts/demo/record.sh`.
 
 ## 1. Install
 
-Node 20 or newer, and the repositories of one project checked out beside each
+Node 22.12 or newer, and the repositories of one project checked out beside each
 other. That is the whole list.
 
 ```sh
@@ -149,10 +149,10 @@ The summary is the part to read (each service's line also says how long it
 took, left out here):
 
 ```
-built 125 nodes, 108 edges from 4 service(s)
+built 126 nodes, 109 edges from 4 service(s)
   billing        19 nodes, 0 unresolved
   gateway        43 nodes, 1 unresolved
-  orders         32 nodes, 1 unresolved
+  orders         33 nodes, 0 unresolved
   web            32 nodes, 3 unresolved
 calls out: 6 total, 2 linked, 1 by annotation, 1 no route, 1 unknown setting, 0 ambiguous, 1 third party, 1 dynamic
 ui calls: 13 total, 6 joined to a route, 7 not (ambiguous-route-target 1, api-path-dynamic 3, api-path-partly-read 1, target-route-not-found 2)
@@ -183,7 +183,7 @@ Three lines are worth knowing about before they surprise you:
 `build` writes three files under `.flowatlas`: `project-graph.json`, the graph
 itself; `link-report.json`, what joined and why not; and `graph.db`, the same
 graph as SQLite, which every question below reads. What it keeps between builds
-is there too, under `services/`; it writes nothing into the repositories it
+is there too, in `cache.json`, `stand-ins.json` and under `services/`; it writes nothing into the repositories it
 reads. A second build of unchanged
 sources reads nothing again, and `build --watch` keeps the project open and
 rebuilds on every save.
@@ -202,10 +202,10 @@ pnpm flowatlas doctor --config fixtures/multi-repo/flowatlas.config.json
 The first line is the verdict:
 
 ```
-unresolved: total=12 (missing) · markers: errors=0 warnings=0 · desync=5 · contracts: errors=0 ignored=0 · exit=0
+unresolved: total=11 (missing) · markers: errors=0 warnings=0 · desync=5 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 ```
 
-`total=12` is the rows somebody could act on. The places static reading cannot
+`total=11` is the rows somebody could act on. The places static reading cannot
 see at all are counted beside them and never added in, and neither are the
 places where nothing joins because there is nothing to join. `(missing)` says
 there is no baseline yet; `flowatlas doctor --accept` writes one, to commit like
@@ -265,13 +265,13 @@ pnpm flowatlas flow "POST /orders" --config fixtures/multi-repo/flowatlas.config
 ◆  POST /orders                                        orders/src/orders/orders.controller.ts:31
   →  OrdersController.create                           orders/src/orders/orders.controller.ts:31
     →  OrdersService.create                            orders/src/orders/orders.service.ts:40
-      ▣  write Order                                   orders/src/orders/orders.service.ts:41
-        ▤  Order
+      ▣  write orders                                  orders/src/orders/orders.service.ts:41
+        ▤  orders
       ⚡ event order.created                            orders/src/orders/orders.service.ts:49
         ⚡ order.created                                src/orders/orders.service.ts:49
           ⇢ billing ⚡ InvoicesConsumer.onOrderCreated  billing/src/invoices/invoices.consumer.ts:17
             →  InvoicesConsumer.onOrderCreated         billing/src/invoices/invoices.consumer.ts:17
-              →  InvoicesService.create                billing/src/invoices/invoices.service.ts:10
+              →  InvoicesService.create                billing/src/invoices/invoices.service.ts:14
 unresolved on this path: 0
 ```
 
@@ -327,9 +327,9 @@ pnpm flowatlas dead --kind entries --config fixtures/multi-repo/flowatlas.config
 nothing here is proof: every row is a heuristic with the reason it fired
 …
 entries:
-  id                                       where                                 why
-  entry:billing:event:invoice.requested    src/invoices/invoices.consumer.ts:28  channel:invoice.requested has no publisher in any repo
-  entry:billing:http:GET:/invoices/:param  src/invoices/invoices.controller.ts:26  no http_calls/hits from any repo (may be a public API)
+  id                                       where                                   verdict  why
+  entry:billing:event:invoice.requested    src/invoices/invoices.consumer.ts:28    dead     channel:invoice.requested has no publisher in any repo
+  entry:billing:http:GET:/invoices/:param  src/invoices/invoices.controller.ts:26  dead     no http_calls/hits from any repo (may be a public API)
   …
 ```
 
@@ -350,7 +350,7 @@ pnpm flowatlas channel order.created --config fixtures/multi-repo/flowatlas.conf
   ·  consumers (1)
     ⚡ InvoicesConsumer.onOrderCreated     billing/src/invoices/invoices.consumer.ts:17
       →  InvoicesConsumer.onOrderCreated  billing/src/invoices/invoices.consumer.ts:17
-        →  InvoicesService.create         billing/src/invoices/invoices.service.ts:10
+        →  InvoicesService.create         billing/src/invoices/invoices.service.ts:14
 ```
 
 A channel with nothing at one end comes back with an empty list, which is an
@@ -415,12 +415,14 @@ flowatlas visualise             # the whole graph as one self-contained page
 `visualise` writes one page with the graph inside it: no server and nothing to
 install. It asks Google Fonts for two typefaces and falls back to yours if it
 cannot reach them, so it reads offline but is not yet free of a third party. It
-opens on the reconciliation, lists every way in, and follows any one of them
-across service boundaries, marking each crossing with what it was joined by and
-how much to trust it. *Steps* shows one way in as a list in call order, with
+opens on a *Map* of the services and what passes between them, lists every way
+in, and follows any one of them across service boundaries, marking each crossing
+with what it was joined by and how much to trust it. *Steps* shows one way in as a list in call order, with
 what it can fail with and a *Copy as prompt* button; *Not joined* groups what
 could not be followed by cause; *Busiest* ranks the methods most things lean
-on; and `flowatlas visualise --diff main` adds a *Changes* tab for a branch. One
+on; *Crossings* lists every join between repositories; *Graph* draws the
+neighbourhood of any node, every type on hover; and `flowatlas visualise --diff
+main` adds a *Changes* tab for a branch. One
 search box, reached with `/`, finds a route, channel, table, type, gap, class or
 node and goes to it; `?` lists the keys and ⌘K the commands.
 
@@ -445,7 +447,7 @@ them gets the whole project.
 
 ![flowatlas mcp](media/09-mcp.gif)
 
-Nineteen tools, and only one of them returns source code. A trace never drags in the
+Twenty-six tools, and only one of them returns source code. A trace never drags in the
 body of every method along it; the agent asks the graph which name to look at,
 then asks for that one name.
 
@@ -461,7 +463,7 @@ After that, `claude mcp list` shows `flowatlas`.
 ## Where to go next
 
 - [The graph server](mcp.md) — setup for Claude Code, Cursor, VS Code and Claude
-  Desktop, what each of the twenty-three tools takes, and the order to call them in.
+  Desktop, what each of the twenty-six tools takes, and the order to call them in.
 - [The command reference](CLI.md) — every command, every flag, every
   configuration key, and every reason a row can carry.
 - [Running it in CI](ci.md) — the staged adoption that does not fail the build on

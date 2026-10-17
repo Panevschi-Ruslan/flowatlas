@@ -331,7 +331,7 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     rebuild them from a checkout; the README has the commands.</p>
 
   <div class="tiles">
-    <div><b>927</b><span>lines of TypeScript, over 27 files</span></div>
+    <div><b>934</b><span>lines of TypeScript, over 27 files</span></div>
     <div><b>126</b><span>nodes, joined by 109 edges</span></div>
     <div class="lead"><b>11</b><span>of those edges cross a repository boundary</span></div>
     <div><b>1.2s</b><span>to read all four; 0.3s when nothing changed</span></div>
@@ -342,7 +342,7 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     because each one only ever reads its own. 99 of the edges were read from
     the code, 5 were inferred and marked <code>heuristic</code>, and 5 were
     declared by an annotation. Every edge says which of the three it is.
-    Measured with 0.5.1.</p>
+    Measured with 0.6.0.</p>
 
   <div class="pair">
     <div>
@@ -568,9 +568,10 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
       in it is proof, every row is a heuristic with the reason it fired
       attached.</p>
     <p><code>visualise</code> writes one self-contained page: no server, nothing
-      to fetch, nothing to install. It opens on the reconciliation, lists every
-      way in, and follows any one of them across service boundaries, marking
-      each crossing with what it was joined by and how much to trust it.</p>
+      to fetch, nothing to install. It opens on a Map of the services, lists
+      every way in, and follows any one of them across service boundaries,
+      marking each crossing with what it was joined by and how much to trust
+      it.</p>
   </div>
   <figure class="rec">
     <div class="rec-bar"><span>flowatlas visualise --title "flowatlas demo"</span></div>
@@ -611,7 +612,7 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
         ['cat orders/.mcp.json', 'tools/list', 'find_symbol', 'impact'],
         'the registered server, its tools listed, and two of them answering')}
   <div class="col">
-    <p>Fifteen tools, and only one of them returns source code. A trace never drags
+    <p>Twenty-six tools, and only one of them returns source code. A trace never drags
       in the body of every method along it; the agent asks the graph which name
       to look at, then asks for that one name.</p>
     <pre><code>flowatlas mcp --install   <span class="c"># register everywhere, merging</span>

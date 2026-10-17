@@ -401,6 +401,33 @@ git commit -m "deployed orders to prod" flowatlas.deployed.json
 `flowatlas deployed show` prints each environment's pins with their commits and
 ages, and warns of a pin that names a branch, which moves.
 
+## What traffic says
+
+Everything above reads code. When a pipeline also has trace files of the service
+running - an OTLP export from a test environment, a HAR from a browser run, an
+X-Ray or Lambda export on AWS - `flowatlas observe` lays them over the graph and
+adds them to `observed.json` beside `graph.db`. Nothing is sent anywhere.
+
+```sh
+flowatlas build
+flowatlas observe traces/*.json --since 7d     # add a week of traffic, cut older hours
+flowatlas doctor --strict-runtime              # fail on a failure the code does not declare
+```
+
+The rows it adds are `info` and move neither the exit code nor the baseline,
+since traffic differs per environment and per week: `--strict-runtime` is the
+switch for a team that wants the job to fail on a failure traffic answered that
+the code does not declare, or one it declares that no request answered.
+Two observed files, from before and after a deploy, compare without a build:
+
+```sh
+flowatlas observe --diff before/observed.json after/observed.json
+```
+
+which lists the ways in that got slower, fail more, are newly seen or no longer
+seen. `flowatlas visualise --observed-diff before.json after.json` puts the same
+on the page as a tab.
+
 ## Three things that will bite you otherwise
 
 **Every repository needs its dependencies installed.** flowatlas reads types, and

@@ -6,8 +6,8 @@
       "tool": {
         "driver": {
           "name": "flowatlas",
-          "version": "0.5.1",
-          "semanticVersion": "0.5.1",
+          "version": "0.6.0",
+          "semanticVersion": "0.6.0",
           "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
           "rules": []
         }

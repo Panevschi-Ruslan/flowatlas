@@ -1,6 +1,6 @@
 {
   "name": "@flowatlas/cli",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "One map of a project that lives in several repositories: read them, join them, ask questions.",
   "license": "MIT",
   "author": {
@@ -48,10 +48,8 @@
   ],
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
@@ -64,7 +62,7 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "publishConfig": {
     "access": "public"

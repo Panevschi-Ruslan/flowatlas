@@ -103,7 +103,7 @@ steps with a recording of each.
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 152 of them, and
+compared on every push. There are 167 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 
@@ -118,21 +118,25 @@ lists them all, generated from their READMEs.
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
 | `flowatlas contracts` | what each service sends against what the other declares |
 | `flowatlas doctor` | what could not be read, and what has drifted; `--unresolved` groups it by cause and package |
+| `flowatlas shapes --suggest` | which packages that are not installed to describe in a shape file, with the names used of each; `--out` writes starters |
+| `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
 | `flowatlas accept` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base>` | what a branch changes and who would notice |
+| `flowatlas check --env <name>` | can this be deployed: what shipping it would break against what an environment runs, from the pins `flowatlas deployed` records |
+| `flowatlas spec` | an OpenAPI and an AsyncAPI document of each service, written from the graph; `spec diff` and `spec --against` compare them |
 | `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue or a Structurizr workspace, relations from the joins; `--check` keeps a committed copy true |
-| `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a way in step by step, a graph to walk, every type on hover |
+| `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a way in step by step, the crossings, what did not join, the busiest nodes, and the graph with every type |
 | `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have, or `--listen` for exporters posting to `127.0.0.1:4318` |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
-`flowatlas --help` lists every command, and `flowatlas help <command>` its options.
+`flowatlas --help` lists all thirty commands, and `flowatlas help <command>` the options of one.
 
 ---
 
 ## What to expect on a first build
 
 Not everything joins, and the tool says so rather than guessing. Measured with
-0.5.1 on the demo project,
+0.6.0 on the demo project,
 [`fixtures/multi-repo`](https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo):
 three NestJS services and an Angular frontend in four repositories, with a
 shared package of types between them. It is synthetic, and holds every kind of
@@ -171,5 +175,5 @@ and it is optional.
 
 ---
 
-Node 20 or newer. MIT.
+Node 22.12 or newer. MIT.
 [Source, docs and issues](https://github.com/Panevschi-Ruslan/flowatlas).

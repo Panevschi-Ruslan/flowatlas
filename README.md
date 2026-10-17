@@ -70,11 +70,11 @@ is recorded against. It is synthetic: four repositories, three NestJS services
 package of types between them, written for the test suite. It holds every kind
 of join the linker makes exactly once, including the ones that fail, so the
 figures are small and the rows that did not join are there on purpose. Anyone
-can rebuild them from a checkout. Measured with 0.5.1.
+can rebuild them from a checkout. Measured with 0.6.0.
 
 | | |
 |---|---|
-| Source read | 27 files, 927 lines of TypeScript |
+| Source read | 27 files, 934 lines of TypeScript |
 | Cold build | 1.2 s |
 | Rebuild with nothing changed | 0.3 s |
 | Graph | 126 nodes, 109 edges |
@@ -153,7 +153,7 @@ project.
 
 ## Install
 
-Node 20 or newer.
+Node 22.12 or newer.
 
 ```sh
 npm install -g @flowatlas/cli
@@ -219,6 +219,12 @@ place. Adding a sixth later is one more `link`.
 | `link-report.json` | what joined, what did not, and why |
 | `graph.db` | the same graph as SQLite, which every query reads |
 
+Beside them it keeps `cache.json` (what the next build may reuse) and
+`stand-ins.json` (what was read in place of packages that are not installed:
+their source in another repository, or a shape file), and the commands that answer add their own: `doctor.json`,
+`observed.json` after `flowatlas observe`, `accepted.json` after
+`flowatlas accept`, and `diff.json` or `check.<env>.json` after a comparison.
+
 What it keeps between builds, each service's own graph and file hashes, is in the
 same directory under `services/`. Nothing is written into the repositories it
 reads.
@@ -267,7 +273,9 @@ read again and the others come from the cache.
 | `flowatlas config <selector>` | the settings one flow depends on |
 | `flowatlas hotspots` | what the most things point at |
 | `flowatlas visualise` | the whole graph as one page you can open |
-| `flowatlas observe <file...>` | which joins real traffic went through, how long each step took and how it answered, from trace files you already have (OTLP JSON or protobuf, @nestjs/observe); runs add up over a window. `--listen` takes the same from exporters posting to `127.0.0.1:4318` while the service runs |
+| `flowatlas observe <file...>` | which joins real traffic went through, how long each step took and how it answered, from trace files you already have (OTLP JSON or protobuf, @nestjs/observe, Zipkin, Jaeger, a browser HAR, AWS exports); runs add up over a window. `--listen` takes the same from exporters posting to `127.0.0.1:4318` while the service runs, and `--diff` compares two observed files |
+| `flowatlas shapes --suggest` | which packages that are not installed are used the most, with the names used of each; `--out` writes a starter shape file per package |
+| `flowatlas patterns test\|explain\|suggest` | the project's own extraction patterns: run their tests, explain a near miss part by part, write starters |
 
 ### Checking
 
@@ -277,6 +285,8 @@ read again and the others come from the cache.
 | `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
 | `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks; `--env prod` compares with what an environment runs |
+| `flowatlas check --env <name>` | can this be deployed: every service read at the ref the environment runs, the one being shipped in its place, and what that would break |
+| `flowatlas deployed set\|show` | the pins file `check` reads: which ref of each service runs in each environment |
 | `flowatlas spec` | an OpenAPI document of each service's routes and an AsyncAPI document of its channels, written from the graph; `spec diff <base>` sorts an API change into breaking kinds with the callers each breaks; `spec --against <service>=<file>` says where a committed document no longer describes the code |
 | `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue (`consumesApis` and `dependsOn` from the joins) or a Structurizr workspace (containers and one dynamic view per flow); `--check` fails when a committed copy is out of date |
 | `flowatlas cache <action>` | list, prune or clear the graphs `diff` keeps per commit |
@@ -415,6 +425,7 @@ at a pull request.
 flowatlas visualise                     # writes graph.html next to the configuration
 flowatlas visualise --out map.html --title "Ledger"
 flowatlas visualise --diff main         # add a Changes tab against a ref
+flowatlas visualise --observed-diff before.json after.json   # add a Run time changes tab
 ```
 
 One file with the graph inside it: no server and nothing to install. It asks
@@ -442,7 +453,11 @@ assistant. **Not joined** lists everything that did not join, with a *Can't
 follow* sheet that groups it by cause and package, accepted gaps muted.
 **Busiest** ranks the methods most things lean on, with the ways in that reach
 each. **Changes**, with `--diff`, lists what a branch adds and removes, the
-removed routes something still calls, and shapes that moved. One search box
+removed routes something still calls, and shapes that moved. **Traces**, once
+`flowatlas observe` kept samples, opens the slowest and the latest failing
+request of each way in as a tree on its own time axis, and **Run time changes**,
+with `--observed-diff`, compares two observed files from before and after a
+deploy. One search box
 above the tabs (`/`) finds a route, channel, table, type, gap, class, exception or
 node and goes to it, marked; `?` lists every key and ⌘K the commands; see
 [`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
@@ -461,7 +476,8 @@ flowatlas mcp                 # serve over stdio, which the editor does for you
 
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`
-shows `flowatlas`, and a session has these tools, among others:
+shows `flowatlas`, and a session has these twenty-six tools, beside three
+prompts and the `flowatlas://` resources:
 
 | Tool | Answers |
 |---|---|
@@ -483,7 +499,10 @@ shows `flowatlas`, and a session has these tools, among others:
 | `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |
 | `dead` | whether a node is dead, with what could make that wrong, or a service's dead rows, verdict first |
 | `findings` | likely N+1 loops, unguarded routes, contract breaks and one-ended channels, ranked by reach |
+| `check_rules` | the architecture rules in the configuration: each violation and where it crosses |
+| `test_pattern` | a draft extraction pattern run over code by the build's own reader: what it draws, or why it is refused |
 | `hot_paths` / `slow_steps` / `trace_for` | after `flowatlas observe`: the ways in traffic used most, the steps it was slowest on, and one slow and one failing request step by step |
+| `undeclared_failures` / `never_seen` | after `flowatlas observe`: statuses traffic got that the code never declares, and what the code runs that traffic never touched |
 
 Every row carries an `id` the next tool takes as it is, and every answer ends
 with `next`: the calls that take the ids it returned.
@@ -577,7 +596,11 @@ such directory is left out and reported with a row, so you see what to name.
 still read the packages it is written against: where `rxjs`, the NestJS
 packages, `@nestjs/passport`, `@angular/core` or `@angular/common/http` do not
 resolve, a few hand-written declarations stand in, and an installed package
-always wins. **`settingFiles`** turns reading base addresses from the
+always wins. **`packageSources`** (default `true`) reads a package that is not
+installed from its source, when a repository the project reads is that package,
+and **`shapes`** names `.d.ts` shape files of the project's own for the rest;
+`flowatlas shapes --suggest --out <dir>` writes starters for the packages most
+places need. **`settingFiles`** turns reading base addresses from the
 repositories' own files off (`read: false`) or picks one environment
 (`environment`). Every key is in [the command reference](docs/CLI.md#configuration).
 
@@ -984,14 +1007,14 @@ Or one at a time:
 pnpm -r build
 pnpm -r typecheck
 pnpm fixtures:run     # run the tool over every fixture
-pnpm -r test          # 2,480 tests
+pnpm -r test          # 5,271 tests
 pnpm invariants       # rules no test can express
 pnpm fixtures:check   # extraction, server and terminal snapshots, and the read gate
 ```
 
 `fixtures:check` compares against recorded output, so the fixtures have to be run
 first, and a snapshot nobody compares is not a gate. It therefore prints two
-counts — `161 compared, 162 validated` — and every snapshot in the gap between
+counts — `340 compared, 341 validated` — and every snapshot in the gap between
 them has to be accounted for: either the fixture has not been run, which fails and
 says so, or the fixture is named in `VALIDATE_ONLY` in `scripts/fixtures-check.mjs`
 with the reason, which the gate then prints on every run. One fixture is,
@@ -1094,11 +1117,12 @@ in `packages/cli/src/visualise/`: `page.html` is the markup and a placeholder
 per part, `page.css` its styles, `graph.js`, `frame.js`, `map.js` and
 `steps.js` the logic (with core's `prompt-text.js`), and `panels/` the page
 itself, one module per panel - `context.js` for what every panel reads and the
-state the tabs share, then `band.js`, `ways.js`, `sheet.js` (the title and
-the sheet the table tabs draw into), `tables.js`,
-`find.js`, `missing.js`, the Graph tab's `graph-draw.js`, `details.js`,
+state the tabs share, then `band.js`, `virtual-list.js`, `ways.js`, `sheet.js`
+(the title and the sheet the table tabs draw into), `tables.js`, `find.js`,
+`menu.js`, `missing.js`, the Graph tab's `graph-draw.js`, `details.js`,
 `checking.js`, `graph-ui.js` and `frame-ui.js`, then `map-ui.js`,
-`steps-ui.js` and `wiring.js`, and `boot.js`, which sets them up in that order.
+`steps-ui.js`, `traces.js`, `palette.js` and `wiring.js`, and `boot.js`, which
+sets them up in that order.
 `PAGE_PARTS` in `packages/cli/src/commands/visualise.ts` lists every part in
 the order it is written in; the build copies the folder beside the command. A
 panel is a factory handed the page so far and returning what the panels after

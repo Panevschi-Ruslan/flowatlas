@@ -297,6 +297,10 @@ runs; you rarely type it yourself.
 survive. It writes the bare `flowatlas` command when one is on your path and an
 absolute path when none is, so it works with nothing installed.
 
+The server answers `initialize` with the command's own version as
+`serverInfo.version` (what `flowatlas --version` prints). The tools, prompts
+and resources it serves are in the [MCP guide](mcp.md).
+
 ---
 
 ## Building
@@ -538,7 +542,7 @@ names `functions`, so both are read.
 
 ## Asking
 
-Five of these follow the graph and share one set of flags. Four report on it and
+Three of these follow the graph and share one set of flags. Four report on it and
 share a different, smaller set. The difference is real: a command that reports on
 the whole graph has no walk to bound, so it is not offered `--depth`.
 
@@ -722,7 +726,15 @@ is information. A named rule may soften a verdict and never sharpen one.
 
 A boundary that could not be compared is not left out: it is listed under
 `unchecked` with the reason and the thing to do about it, so "no errors" can be
-read as "nothing broken" rather than "nothing looked at".
+read as "nothing broken" rather than "nothing looked at". The reasons:
+`no-type-on-sender` and `no-type-on-receiver` (one end declares no type),
+`body-already-serialised` (text where a shape should be), `type-missing` (a
+type named that is not in the registry), `type-kind-unsupported` (a type from a
+package that was not read), `ambiguous-handler` (two handlers declare the
+route), `channel-without-producer` and `channel-without-consumer`,
+`procedure-input-by-name` and `procedure-output-inferred` (see *What is not
+compared, and says so* under [Top level](#top-level)), and the
+delivered-message reasons in the table further down.
 
 **Traffic as a third side (P113).** Beside an observed file `observe --shapes`
 wrote, the report gains a `traffic` section: for each route traffic carried
@@ -804,7 +816,10 @@ query per item and are bounded on purpose, by why (P89).
 with `--format sarif` ([SARIF](#--format-sarif-findings-for-code-scanning)).
 
 These say `table` where the walking commands say `tree`, because the output is
-rows rather than a shape.
+rows rather than a shape. Their `--format json` documents carry one version,
+`analyticsFormatVersion: 2`, shared by all four so they move together (version
+2: a `fields` row says which way the field was travelling and whether the
+receiver removes it).
 
 ### `flowatlas cycles`
 
@@ -970,8 +985,9 @@ No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
 Map with its tabs on screen, lists every way in, follows any one of them across service
 boundaries, and has a tab each for every crossing and for everything that did not
-join. The tabs are Map, Steps, Crossings, Not joined, Busiest, Changes (only
-with `--diff`) and Graph; their row stays at the top of the window while the tab
+join. The tabs are Map, Steps, Crossings, Not joined, Busiest, Traces (only
+when the observed file kept sample requests), Changes (only with `--diff`), Run
+time changes (only with `--observed-diff`) and Graph; their row stays at the top of the window while the tab
 scrolls, and on a narrow screen the tabs come before the ways in.
 
 **The strip** at the top is the project's name and a pill per figure: how many
@@ -1763,7 +1779,7 @@ The file is `observedFormatVersion: 3`:
 ```
 {
   observedFormatVersion: 3, spans,
-  privacy:   { kept, dropped, droppedAttributes, samples: { kept, perEntry: 3, spansPerSample: 200 } },
+  privacy:   { kept, dropped, droppedAttributes, bodies?, samples: { kept, perEntry: 3, spansPerSample: 200 } },
   window:    { since?, from, to },
   sources:   [{ sha256, format, spans, readAt }],
   joins:     { [joinId]:    { count, lastSeen, firstSeen, p50?, p95?, max?, statuses?, errors, errorRate, measuredAt } },
@@ -1772,13 +1788,16 @@ The file is `observedFormatVersion: 3`:
   unmatched: [{ service?, kind, name, count, ... }],
   ambiguous: [{ service?, kind, name, candidates, more?, count }],
   samples:   { [entryId]: { slow: [sample], failing: [sample] } },
-  buckets:   [{ hour, spans, joins, entries, symbols, channels, unmatched, ambiguous }]
+  shapes?:   { [entryId]: { request?, responses?: { [status]: shape }, samples, lastSeen } },
+  buckets:   [{ hour, spans, joins, entries, symbols, channels, unmatched, ambiguous, shapes? }]
 }
 ```
 
 The top level is the window rolled up, under the names version 1 used, so a
 reader of version 1 or 2 finds its fields meaning the same thing; `buckets`
-hold the hours it is made of. Times are milliseconds. The page and the graph
+hold the hours it is made of. `shapes` and `privacy.bodies` (`not read` or
+`read for shape only`) are there only once a run read bodies with `--shapes`
+(below); a file without them is the same version. Times are milliseconds. The page and the graph
 server read versions 1, 2 and 3; a file that cannot be read makes `visualise`
 say so and show nothing seen at run time, and makes `observe` refuse to write
 over it unless told `--reset`.
@@ -2386,7 +2405,9 @@ unresolved: 26 to act on · missed: 28 · notes: 0 · findings: 3
 A group of notes or findings is marked `(note)` or `(finding)` instead of
 `(info)`, and `doctor.json` carries `unresolved.notes`, `unresolved.findings`
 and a `kind` on every group. `unresolved.info` and `unresolved.nothing` count
-gap rows only. The baseline is untouched by kinds: its `total` and keys still
+gap rows only. The file is `doctorFormatVersion: 2`: version 2 gave a row the
+level `nothing` and `unresolved` a count of the places at it, and took those
+out of `rows` and `sites`. The baseline is untouched by kinds: its `total` and keys still
 count every actionable row, findings included (`route-unguarded` where a guard is
 expected), so a baseline accepted before kinds existed gives the same verdict
 after. `build` says the same thing in its last line: what was missed, the notes,
@@ -2915,7 +2936,9 @@ document from the graph, and compares the two with
 document as the base side, the code as the head. `--against shop` alone takes
 the documents `services[].apiDocuments` lists; `shop@admin=<file>` compares
 with the code of one application. Nothing is written into a repository; the
-report is `spec-against.json` (`specAgainstFormatVersion: 1`) under the output.
+report is `spec-against.json` (`specAgainstFormatVersion: 1`) under the output:
+`{ documents, changes, summary }`, `changes` and `summary` as `spec-diff.json`
+holds them.
 
 | Flag | Default | Does |
 |---|---|---|
@@ -3270,9 +3293,10 @@ code span are text about markers and are ignored.
 **What it writes.** Only `--write` writes, only between flowatlas markers, only
 in the files named or configured, and nothing when the content is already what
 it would write. Every run writes `docs.json` beside the graph
-(`docsFormatVersion: 1`: `files` read, and per block `file`, `line`, `kind`,
-`id`, `node`, `view`, `options`, `state`, `fingerprint`, `near`,
-`candidates`), which the MCP server and `flowatlas visualise` read to say which
+(`docsFormatVersion: 1`: `files` read; `blocks`, each with `file`, `line`,
+`kind`, `id`, `node`, `view`, `options`, `state`, `fingerprint`, `near`,
+`candidates`; and `problems`, the markers that could not be read, each `{ file,
+line, message }`), which the MCP server and `flowatlas visualise` read to say which
 documents describe a node.
 
 ---
@@ -3762,11 +3786,17 @@ the wire and stays one. Where there is no such object, the declared type is all
 there is, and the sentence says "permits" rather than "sends". The party in
 `contracts.json` carries `writes` when the keys were read.
 
-`contracts.json` is at format version 4: a party may carry `writes`, a finding
-may carry `impact`, a request-direction message distinguishes what a call sends
-from what its type permits, an `impact` may read `unread` as well as the three
-words version 2 knew, and a party may carry `declaredBy`, naming the document an
-end nobody here could read was taken from.
+`contracts.json` is at format version 5 (`contractsFormatVersion`): a party may
+carry `writes`, a finding may carry `impact`, a request-direction message
+distinguishes what a call sends from what its type permits, an `impact` may read
+`unread` as well as the three words version 2 knew, a party may carry
+`declaredBy`, naming the document an end nobody here could read was taken from
+(version 4), and `claimed`, when the type at that end is only what a cast in the
+handler says, so a finding against it is never more than a warning (version 5).
+With `observe --shapes` beside the graph, a finding may carry `seenIn` and `of`
+(the bodies that carried the field, of those that could have) and the file a
+`traffic` section, without a version of their own: traffic alone
+never fails a contract.
 
 **What is not compared, and says so.** A boundary nothing can compare is listed
 under `unchecked` with the reason, never counted as agreeing. A procedure is one:
