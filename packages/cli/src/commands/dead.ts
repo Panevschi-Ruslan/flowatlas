@@ -5,14 +5,14 @@ import {
   EXTERNALLY_TRIGGERED,
   deadChannels,
   deadEntries,
-  deadFields,
   deadProviders,
   unresolvedInjectCount,
   type DeadEntry,
   type DeadOptions,
   type EntryClassName,
   type InfrastructureRole,
-} from '../analysis/dead.js';
+} from '@flowatlas/linker';
+import { deadFields } from '../analysis/dead.js';
 import { maxRows, openProjectDb, print, wantsJson, type ReadOptions } from '../analysis/open.js';
 import { ANALYTICS_FORMAT_VERSION, type DeadResult } from '../analysis/shapes.js';
 import { moreRows, renderTable, section } from '../format/table.js';
@@ -44,13 +44,20 @@ const where = (row: { file?: string; line?: number }): string =>
 /** What a row says about itself: the rule that put it in its class, and the sentence. */
 const entryWhy = (row: DeadEntry): string => (row.class === 'actionable' ? row.reason : `${row.why}: ${row.reason}`);
 
-/** A `likely-dead` row's near misses, one line each, under the table. */
-const nearMissLines = (rows: readonly DeadEntry[]): string[] =>
-  rows.flatMap((row) =>
-    (row.nearMiss ?? []).map(
+/**
+ * What a row's verdict rests on, one line each under the table (P95): the
+ * requests read in part that could reach it (`likely-dead`), and the requests
+ * that found no route one segment off it (`unknown`).
+ */
+const evidenceLines = (rows: readonly DeadEntry[]): string[] =>
+  rows.flatMap((row) => [
+    ...(row.evidence?.couldHit ?? []).map(
       (miss) => `  ${row.key} could be reached by ${miss.path} at ${where(miss) || miss.call}`,
     ),
-  );
+    ...(row.evidence?.oneOff ?? []).map(
+      (off) => `  ${row.key} is one segment off ${off.asks} at ${where(off) || off.call} (${off.differs})`,
+    ),
+  ]);
 
 /** How a role is counted on the folded line, singular and plural. */
 const ROLE_WORDS: Readonly<Record<InfrastructureRole, [string, string]>> = {
@@ -95,11 +102,14 @@ const foldedLines = (rows: readonly DeadEntry[]): string[] => {
 /**
  * Everything nothing appears to reach, with the reason it looked that way.
  *
- * Nothing here is a verdict. Four narrow predicates, each of which can be wrong
- * for a reason the graph cannot see — a public API, a handler in a repository
- * the configuration does not list, a provider injected through a token that did
- * not resolve — so the answer is `heuristic` at the top and every row says what
- * was actually checked.
+ * Four narrow predicates, each of which can be wrong for a reason the graph
+ * cannot see — a public API, a handler in a repository the configuration does
+ * not list, a provider injected through a token that did not resolve — so the
+ * answer is `heuristic` at the top, and every row says what was checked and
+ * the verdict it comes to (P95): `dead`, `likely-dead` with the request read in
+ * part that could reach it, or `unknown` with what is outside or the request
+ * one segment off it. The predicates are the linker's, which the MCP server's
+ * `dead` tool reads too.
  */
 export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => {
   const kind = (options.kind ?? 'all') as Kind;
@@ -186,12 +196,12 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
           renderTable(shown, [
             { header: 'id', value: (row) => row.id },
             { header: 'where', value: where },
-            { header: 'confidence', value: (row) => row.confidence },
+            { header: 'verdict', value: (row) => row.verdict },
             { header: 'why', value: entryWhy },
           ]),
         ),
         ...(listed.length > shown.length ? [`  ${moreRows(listed.length - shown.length)}`] : []),
-        ...nearMissLines(shown),
+        ...evidenceLines(shown),
         ...(only === undefined ? foldedLines(allEntries) : []),
       );
     }
@@ -203,6 +213,7 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
             { header: 'channel', value: (row) => row.id },
             { header: 'publishes', value: (row) => row.producers.join(',') || '—' },
             { header: 'handles', value: (row) => row.consumers.join(',') || '—' },
+            { header: 'verdict', value: (row) => row.verdict },
             { header: 'why', value: (row) => row.reason },
           ]),
         ),
@@ -216,6 +227,7 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
           renderTable(providers.rows, [
             { header: 'id', value: (row) => row.id },
             { header: 'where', value: where },
+            { header: 'verdict', value: (row) => row.verdict },
             { header: 'why', value: (row) => row.reason },
           ]),
         ),

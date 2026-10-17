@@ -753,6 +753,8 @@ export {
 export type {
   PromptAccess,
   PromptCheckPlace,
+  PromptCount,
+  PromptCrossing,
   PromptFailChoice,
   PromptFailGroup,
   PromptFailure,
@@ -760,6 +762,9 @@ export type {
   PromptLimits,
   PromptLog,
   PromptMarks,
+  PromptMember,
+  PromptOverview,
+  PromptScope,
   PromptStep,
   PromptSubject,
 } from './prompt-text.js';

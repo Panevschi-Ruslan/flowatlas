@@ -6,6 +6,7 @@ import {
   couldReach,
   isMatch,
   matchRoute,
+  oneSegmentOff,
   pathAnswers,
   verbsAnswering,
 } from './route-match.js';
@@ -493,5 +494,28 @@ describe('couldReach', () => {
   it('reaches a route at an address read in full when only the verb was not read', () => {
     expect(couldReach(null, '/items/42/price', price)).toBe(true);
     expect(couldReach(null, '/items/42', price)).toBe(false);
+  });
+});
+
+/** A call that found no route, one segment off a route (P95): evidence for `dead`, never a join. */
+describe('oneSegmentOff', () => {
+  const ship = route('POST', '/orders/:param/ship');
+
+  it('names one literal for another, a value left out and a segment added', () => {
+    expect(oneSegmentOff('POST', '/orders/:param/cancel', ship)).toBe('cancel for ship');
+    expect(oneSegmentOff('POST', '/orders/ship', ship)).toBe(':param left out');
+    expect(oneSegmentOff('POST', '/orders/:param/now/ship', ship)).toBe('now added');
+  });
+
+  it('says nothing for a request the route answers, another verb, an unread address or two segments off', () => {
+    expect(oneSegmentOff('POST', '/orders/:param/ship', ship)).toBeUndefined();
+    expect(oneSegmentOff('GET', '/orders/:param/cancel', ship)).toBeUndefined();
+    expect(oneSegmentOff('POST', '/orders/${…}/cancel', ship)).toBeUndefined();
+    expect(oneSegmentOff('POST', '/carts/:param/cancel', ship)).toBeUndefined();
+  });
+
+  it('never lets a value the route takes swallow a literal the request names', () => {
+    // `/orders/ship` is one off `/orders/:param/ship`, not `/orders/:param/archive`.
+    expect(oneSegmentOff('POST', '/orders/ship', route('POST', '/orders/:param/archive'))).toBeUndefined();
   });
 });

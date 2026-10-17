@@ -12,7 +12,12 @@
       "reason": "channel:orphan.in has no publisher in any repo",
       "class": "actionable",
       "why": "no publisher read",
-      "confidence": "dead"
+      "confidence": "dead",
+      "verdict": "dead",
+      "evidence": {
+        "missing": "producer",
+        "via": "channel:orphan.in"
+      }
     },
     {
       "id": "entry:gateway:http:GET:/internal/legacy",
@@ -24,7 +29,8 @@
       "reason": "no http_calls/hits from any repo (may be a public API)",
       "class": "actionable",
       "why": "no caller read",
-      "confidence": "dead"
+      "confidence": "dead",
+      "verdict": "dead"
     }
   ],
   "channels": [
@@ -34,7 +40,11 @@
         "orders"
       ],
       "consumers": [],
-      "reason": "no consumer in any repo"
+      "reason": "no consumer in any repo",
+      "verdict": "dead",
+      "evidence": {
+        "missing": "consumer"
+      }
     },
     {
       "id": "channel:orphan.in",
@@ -42,7 +52,11 @@
       "consumers": [
         "billing"
       ],
-      "reason": "no producer in any repo"
+      "reason": "no producer in any repo",
+      "verdict": "dead",
+      "evidence": {
+        "missing": "producer"
+      }
     }
   ],
   "providers": [
@@ -51,14 +65,19 @@
       "service": "orders",
       "file": "src/orders/unused.service.ts",
       "line": 9,
-      "reason": "nothing injects it and nothing reaches its methods; orders has 1 unresolved injects — verify"
+      "reason": "nothing injects it and nothing reaches its methods; orders has 1 unresolved injects — verify",
+      "verdict": "likely-dead",
+      "evidence": {
+        "unresolvedInjects": 1
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService",
       "service": "web",
       "file": "src/app/orders-api.service.ts",
       "line": 9,
-      "reason": "nothing injects it and nothing reaches its methods; no module registers it either — check the bootstrap file"
+      "reason": "nothing injects it and nothing reaches its methods; no module registers it either — check the bootstrap file",
+      "verdict": "dead"
     }
   ],
   "fields": [

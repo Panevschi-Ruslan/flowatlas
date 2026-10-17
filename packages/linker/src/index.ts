@@ -38,7 +38,7 @@ export { readAsyncapiDocument } from './asyncapi/index.js';
 export { surveyChannels, surveyRoutes } from './survey.js';
 export type { ChannelSurvey, RouteSurvey } from './survey.js';
 export { matchesRoutePattern } from './route-audit.js';
-export { answeringAt, isMatch, matchRoute, pathAnswers } from './route-match.js';
+export { answeringAt, couldReach, isMatch, matchRoute, oneSegmentOff, pathAnswers } from './route-match.js';
 export type { RouteMatch, RouteMiss, RouteResult } from './route-match.js';
 export { missedOf } from './report.js';
 export type { LinkReport, LinkTotals, ServicePackages, ServiceReport } from './report.js';
@@ -102,3 +102,45 @@ export type {
   TraverseRow,
   UnresolvedRow,
 } from './db/reader.js';
+export {
+  classifyRoute,
+  DEAD_VERDICTS,
+  deadChannels,
+  deadEntries,
+  deadMethods,
+  deadProviders,
+  deadVerdict,
+  ENTRY_CLASS_NAMES,
+  EXTERNALLY_TRIGGERED,
+  routeFactsOf,
+  unresolvedInjectCount,
+  VERDICT_ORDER,
+} from './analysis/dead.js';
+export type {
+  DeadAnswer,
+  DeadChannel,
+  DeadConfidence,
+  DeadEntry,
+  DeadEvidence,
+  DeadMethod,
+  DeadOptions,
+  DeadProvider,
+  DeadVerdict,
+  EntryClassName,
+  InfrastructureRole,
+  InfrastructureRules,
+  NearMiss,
+  OneOff,
+  RouteClass,
+  RouteFacts,
+} from './analysis/dead.js';
+export { methodsByOwner, methodsOf, ownerOf } from './analysis/graph.js';
+export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, rankFindings } from './analysis/findings.js';
+export type {
+  CollectedFindings,
+  ContractBreak,
+  FindingKindName,
+  FindingReach,
+  FindingRow,
+  FindingSources,
+} from './analysis/findings.js';

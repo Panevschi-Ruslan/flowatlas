@@ -1,0 +1,15 @@
+{
+  "id": "storefront#src/jobs/reminder.job.ts:ReminderJob.start",
+  "type": "method",
+  "service": "storefront",
+  "loc": "src/jobs/reminder.job.ts:10",
+  "verdict": "likely-dead",
+  "reason": "nothing calls it and its class is not reached (nothing injects it and nothing reaches its methods; storefront has 1 unresolved injects — verify)",
+  "evidence": {
+    "unresolvedInjects": 1
+  },
+  "next": [
+    "get_source({symbol: \"storefront#src/jobs/reminder.job.ts:ReminderJob.start\"})",
+    "cant_follow({service: \"storefront\"})"
+  ]
+}

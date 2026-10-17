@@ -796,11 +796,11 @@ const promptGapOf = (model, r, id) => {
   };
 };
 
-/** The ways in that reach a node, within `reachDepth` hops back, by id, a handful. */
-const promptReachedFrom = (model, i, walk) => {
+/** The ways in that reach any of these nodes, but none of them, within `reachDepth` hops back, by id, a handful. */
+const promptReachedFromAny = (model, starts, walk) => {
   const { edgeTypes, types } = model.data.dicts;
-  const seen = new Set([i]);
-  let layer = [i];
+  const seen = new Set(starts);
+  let layer = [...starts];
   const found = [];
   for (let hop = 0; hop < walk.reachDepth && layer.length > 0 && seen.size < walk.reachNodes; hop += 1) {
     const next = [];
@@ -820,6 +820,9 @@ const promptReachedFrom = (model, i, walk) => {
     .sort((a, b) => stepCmp(a.id, b.id))
     .slice(0, walk.reachedFrom);
 };
+
+/** The ways in that reach a node, within `reachDepth` hops back, by id, a handful. */
+const promptReachedFrom = (model, i, walk) => promptReachedFromAny(model, [i], walk);
 
 /** A way in's failures, as it stores them: what the renderer groups and marks steps with. */
 const promptFailsOf = (model, i) => failsOf(model, i).map((fail) => ({
@@ -914,10 +917,105 @@ const promptCheckSubject = (model, r, walk) => {
   };
 };
 
+/* ── Scoped subjects (P95): a class, a file, as the server's `gatherClassSubject` and `gatherFileSubject` ── */
+
+/** The class a method id belongs to: its id up to the last `.`. */
+const promptOwnerOf = (id) => {
+  const cut = id === null ? -1 : id.lastIndexOf('.');
+  return cut <= 0 ? null : id.slice(0, cut);
+};
+
+/** The same gap once, whichever method's chain reached it first. */
+const promptUniqueGaps = (gaps) => {
+  const seen = new Set();
+  return gaps.filter((gap) => {
+    const key = [gap.id ?? '', gap.reason, gap.loc ?? '', gap.message].join('\u0000');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+/** A class and its methods, each with its ways in and its own chain; the gaps of every chain once. */
+const promptClassSubject = (model, i, walk, seen) => {
+  const id = stepIdOf(model, i);
+  const methods = model.nodes
+    .map((_, j) => j)
+    .filter((j) => stepTypeOf(model, j) === 'method' && promptOwnerOf(stepIdOf(model, j)) === id)
+    .sort((a, b) => stepCmp(stepIdOf(model, a), stepIdOf(model, b)));
+  const subjects = methods.map((j) => promptNodeSubject(model, j, walk, seen));
+  const members = subjects.map((subject) => ({
+    id: subject.id, label: subject.label, type: subject.type,
+    ...(subject.kind === undefined ? {} : { kind: subject.kind }), ...(subject.loc === undefined ? {} : { loc: subject.loc }),
+    reachedFrom: subject.reachedFrom ?? [], steps: subject.steps, stepsCut: subject.stepsCut,
+    ...(subject.stepsCutBy === undefined ? {} : { stepsCutBy: subject.stepsCutBy }),
+  }));
+  const own = (model.rowsOn.get(i) || []).map((r) => promptGapOf(model, r, id));
+  const { depth: _depth, ...head } = promptPlaceOf(model, i, 0);
+  return {
+    ...head, scope: 'class', steps: [], stepsCut: 0,
+    reachedFrom: methods.length === 0 ? [] : promptReachedFromAny(model, methods, walk),
+    members,
+    gaps: promptUniqueGaps([...own, ...subjects.flatMap((subject) => subject.gaps)]),
+  };
+};
+
+/** The class a node of a file belongs to: a method's owner, a class itself, a route's handler's, else its first caller's in the file. */
+const promptGroupOf = (model, j, inFile) => {
+  const { edgeTypes } = model.data.dicts;
+  const classOf = (at) => {
+    const type = stepTypeOf(model, at);
+    if (type === 'provider') return stepIdOf(model, at);
+    if (type !== 'method') return null;
+    const owner = promptOwnerOf(stepIdOf(model, at));
+    return owner !== null && inFile.has(owner) ? owner : null;
+  };
+  const type = stepTypeOf(model, j);
+  if (type === 'provider' || type === 'method') return classOf(j);
+  const ends = (list, end, keep) => list
+    .filter((k) => keep(edgeTypes[model.edges[k][2]]))
+    .map((k) => model.edges[k][end])
+    .sort((a, b) => stepCmp(stepIdOf(model, a), stepIdOf(model, b)));
+  if (type === 'entry') {
+    const [handler] = ends(model.outgoing[j], 1, (edge) => edge === 'handles');
+    return handler === undefined ? null : classOf(handler);
+  }
+  const [caller] = ends(model.incoming[j], 0, (edge) => PROMPT_FOLLOWS.has(edge)).filter((at) => inFile.has(stepIdOf(model, at)));
+  return caller === undefined ? null : classOf(caller);
+};
+
+/** A file and every node in it, by class and line; the gaps recorded in it; the ways in that reach any of them. */
+const promptFileSubject = (model, service, file, walk) => {
+  const { repos, files } = model.data.dicts;
+  const nodes = model.nodes
+    .map((_, j) => j)
+    .filter((j) => repos[model.nodes[j][2]] === service && files[model.nodes[j][4]] === file)
+    .sort((a, b) => (model.nodes[a][5] || 0) - (model.nodes[b][5] || 0) || stepCmp(stepIdOf(model, a), stepIdOf(model, b)));
+  const inFile = new Set(nodes.map((j) => stepIdOf(model, j)));
+  const members = nodes.map((j) => {
+    const { depth: _depth, service: _service, ...head } = promptPlaceOf(model, j, 0);
+    const group = promptGroupOf(model, j, inFile);
+    return { ...head, ...(group === null ? {} : { group }), reachedFrom: [] };
+  });
+  const gaps = [];
+  (model.data.rows || []).forEach((row, r) => {
+    if (promptRowService(model, row) !== service || (row[2] >= 0 ? files[row[2]] : '') !== file) return;
+    const gap = promptGapOf(model, r, row[0] >= 0 ? stepIdOf(model, row[0]) : undefined);
+    if (gap.id === undefined) delete gap.id;
+    gaps.push(gap);
+  });
+  return {
+    id: `${service}#${file}`, label: file, type: 'file', service, scope: 'file', steps: [], stepsCut: 0,
+    reachedFrom: nodes.length === 0 ? [] : promptReachedFromAny(model, nodes, walk),
+    members, gaps,
+  };
+};
+
 /**
  * What a copied prompt says about a way in, a channel or any node
- * (`{ entry }`, `{ channel }`, `{ node }`: a position) or a check row
- * (`{ row }`), gathered from the packed model into the subject core's
+ * (`{ entry }`, `{ channel }`, `{ node }`: a position), a check row
+ * (`{ row }`), a class (`{ class }`: the class's position) or a file
+ * (`{ file: [service, path] }`, P95), gathered from the packed model into the subject core's
  * `renderPrompt` writes; null for a target that names nothing. `kit`:
  * `{ walk, seen? }`, `walk` the bounds of the walk (core's `PROMPT_WALK`).
  */
@@ -926,6 +1024,10 @@ export const subjectOf = (model, target, kit) => {
   const at = target[kind];
   const seen = kit.seen || NO_SEEN;
   if (kind === 'row') return model.data.rows && model.data.rows[at] ? promptCheckSubject(model, at, kit.walk) : null;
+  if (kind === 'file') return Array.isArray(at) && at.length === 2 ? promptFileSubject(model, at[0], at[1], kit.walk) : null;
+  if (kind === 'class') {
+    return at >= 0 && at < model.nodes.length && stepTypeOf(model, at) === 'provider' ? promptClassSubject(model, at, kit.walk, seen) : null;
+  }
   if (kind !== 'entry' && kind !== 'channel' && kind !== 'node') return null;
   return at >= 0 && at < model.nodes.length ? promptNodeSubject(model, at, kit.walk, seen) : null;
 };

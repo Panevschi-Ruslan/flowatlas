@@ -1,0 +1,49 @@
+{
+  "kind": "n-plus-one",
+  "rows": [
+    {
+      "kind": "n-plus-one",
+      "id": "parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor",
+      "service": "parcels",
+      "loc": "src/parcels/parcels.service.ts:18",
+      "message": "A `for-of` loop runs 2 database queries once per item: likely N+1.",
+      "rank": 1,
+      "reach": {
+        "waysIn": 3
+      },
+      "next": "get_source({symbol: \"parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor\", fromLine: 18})"
+    },
+    {
+      "kind": "n-plus-one",
+      "id": "parcels#src/parcels/handover.ts:ParcelHandover.withCarriers",
+      "service": "parcels",
+      "loc": "src/parcels/handover.ts:43",
+      "message": "A `for-of` loop runs 1 database query once per item: likely N+1.",
+      "rank": 2,
+      "reach": {
+        "waysIn": 1
+      },
+      "next": "get_source({symbol: \"parcels#src/parcels/handover.ts:ParcelHandover.withCarriers\", fromLine: 43})"
+    },
+    {
+      "kind": "n-plus-one",
+      "id": "parcels#src/parcels/parcels.service.ts:ParcelsService.statuses",
+      "service": "parcels",
+      "loc": "src/parcels/parcels.service.ts:28",
+      "message": "A `map` loop runs 1 database query once per item: likely N+1.",
+      "rank": 3,
+      "reach": {
+        "waysIn": 1
+      },
+      "next": "get_source({symbol: \"parcels#src/parcels/parcels.service.ts:ParcelsService.statuses\", fromLine: 28})"
+    }
+  ],
+  "total": 3,
+  "notes": {
+    "n-plus-one": 4
+  },
+  "next": [
+    "get_source({symbol: \"parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor\", fromLine: 18})",
+    "get_source({symbol: \"parcels#src/parcels/handover.ts:ParcelHandover.withCarriers\", fromLine: 43})"
+  ]
+}

@@ -54,13 +54,15 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the fifteen the project promises', async () => {
+  it('are exactly the eighteen the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
       'check_contract',
+      'dead',
       'describe_for_prompt',
       'find_symbol',
+      'findings',
       'get_flow',
       'get_source',
       'get_type',
@@ -68,6 +70,7 @@ describe('the tools a session is offered', () => {
       'list_entries',
       'search',
       'start_here',
+      'type_usage',
       'what_changed',
       'who_calls',
       'who_consumes',
@@ -93,24 +96,33 @@ describe('the tools a session is offered', () => {
    * description and input schema, which is what a client hands the model.
    * Output schemas, titles and annotations are for the client and go in the
    * second, wider ceiling, so neither part can creep back unnoticed.
+   *
+   * Raised by P95, which added three tools (`dead`, `findings`,
+   * `type_usage`) and a `scope`: 7,977 and 20,900 before, 9,595 and 27,382
+   * after, with the text of the new tools cut first. The part a model reads
+   * grew by what the three tools say and the inputs they take; the rest is
+   * their output schemas, which the client checks every answer against.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(8000);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(21000);
+    expect(read.length).toBeLessThan(9700);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(27500);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {
     const { tools } = await client.listTools();
     expect(tools.filter((tool) => tool.outputSchema !== undefined).map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
+      'dead',
       'find_symbol',
+      'findings',
       'get_source',
       'get_type',
       'list_entries',
       'search',
       'start_here',
+      'type_usage',
       'who_consumes',
       'who_emits',
     ]);
@@ -122,7 +134,7 @@ describe('the tools a session is offered', () => {
     const validator = new AjvJsonSchemaValidator();
     const schemas = new Map(tools.flatMap((tool) => (tool.outputSchema === undefined ? [] : [[tool.name, validator.getValidator(tool.outputSchema)] as const])));
     let checked = 0;
-    for (const suite of ['multi-repo', 'nest-check-through-helper', 'loops-worth-fixing', 'multi-repo-plumbing']) {
+    for (const suite of ['multi-repo', 'nest-check-through-helper', 'loops-worth-fixing', 'cant-follow', 'multi-repo-plumbing']) {
       const dir = join(ROOT, 'fixtures', suite, 'expected.mcp');
       for (const file of readdirSync(dir)) {
         const validate = schemas.get(file.split('.')[0]!);
@@ -608,7 +620,8 @@ describe('an answer that could not be given (P94)', () => {
     expect(answer.error).toBeUndefined();
     expect(answer.causes).toEqual([]);
     expect(answer.note).toBe('route-unguarded is a finding, not a step the reader missed: 4 rows');
-    expect(answer.next).toEqual(['search({query: "route-unguarded", kinds: ["gaps"]})']);
+    // Findings have a tool of their own (P95).
+    expect(answer.next).toEqual(['findings({kind: "unguarded"})']);
   });
 
   it('says a known cause has no rows in the service asked about', async () => {
@@ -716,5 +729,115 @@ describe('answers that hand on the id the next question needs', () => {
     const answer = await call('describe_for_prompt', { id: 'entry:gateway:http:GET:/orders/:param', maxChars: 500 });
     expect(answer.markdown.length).toBeLessThanOrEqual(500);
     expect(answer.markdown).toContain('cut to stay under 500 characters');
+  });
+});
+
+/** Is it dead, what to look at, who uses a type, and a whole class, file or service (P95). */
+describe('dead, findings, type_usage and scoped prompts', () => {
+  it('says a route nothing calls is dead, with nothing that could make it wrong', async () => {
+    const answer = await call('dead', { id: 'entry:billing:http:GET:/invoices/:param' });
+    expect(answer).toMatchObject({ verdict: 'dead', class: 'actionable', evidence: {} });
+  });
+
+  it('says likely-dead with the call that could hit it, and unknown with the call one segment off', async () => {
+    const likely = await call('dead', { id: 'entry:orders:http:GET:/orders/latest' });
+    expect(likely.verdict).toBe('likely-dead');
+    expect(likely.evidence.couldHit[0].call).toBe(requestIn('gateway#src/clients/orders.client.ts:OrdersClient.variant'));
+    const off = await call('dead', { id: 'entry:orders:http:POST:/orders/:param/archive' });
+    expect(off.verdict).toBe('unknown');
+    expect(off.evidence.oneOff[0]).toMatchObject({ asks: 'POST /orders/:param/cancel', differs: 'cancel for archive' });
+    expect(off.next[0]).toBe(`get_source({symbol: ${JSON.stringify(off.evidence.oneOff[0].call)}})`);
+  });
+
+  it('says alive with one caller for a class something injects', async () => {
+    const answer = await call('dead', { id: 'OrdersService' });
+    expect(answer).toMatchObject({ verdict: 'alive', evidence: { callers: 1 } });
+  });
+
+  it("lists a service's rows verdict first, counted, and pages them", async () => {
+    const answer = await call('dead', { service: 'orders' });
+    const order = ['dead', 'likely-dead', 'unknown'];
+    const verdicts = answer.rows.map((row: { verdict: string }) => order.indexOf(row.verdict));
+    expect(verdicts).toEqual([...verdicts].sort((a: number, b: number) => a - b));
+    expect(answer.counts).toEqual({ dead: 3, 'likely-dead': 1, unknown: 1 });
+    expect(answer.rows.every((row: { service?: string }) => row.service === 'orders')).toBe(true);
+    const page = await call('dead', { service: 'orders', maxNodes: 2 });
+    expect(page).toMatchObject({ total: 5, nextOffset: 2 });
+    expect(page.next[0]).toBe('dead({service: "orders", maxNodes: 2, offset: 2})');
+  });
+
+  it('counts every kind of finding with its top rows, each with the call that shows it', async () => {
+    const answer = await call('findings');
+    expect(answer.counts).toEqual({ unguarded: 4, 'one-ended-channel': 2 });
+    const [first] = answer.top.unguarded;
+    expect(first).toMatchObject({ id: 'entry:orders:http:POST:/orders', rank: 1, reach: { writes: 1 } });
+    expect(first.next).toBe('get_flow({entry: "entry:orders:http:POST:/orders"})');
+    expect(answer.top['one-ended-channel'].map((row: { next: string }) => row.next)).toEqual([
+      'who_consumes({channel: "channel:invoice.requested"})',
+      'who_emits({channel: "channel:order.archived"})',
+    ]);
+    const none = await call('findings', { kind: 'n-plus-one' });
+    expect(none).toMatchObject({ rows: [], total: 0 });
+    expect(none.note).toContain('the kinds found are unguarded, one-ended-channel');
+  });
+
+  it('lists the ways in and the crossing that carry a shared type, and the types that hold one', async () => {
+    const answer = await call('type_usage', { type: 'type:@fx/contracts#OrderDto' });
+    expect(answer.taking.map((use: { id: string }) => use.id)).toContain('entry:gateway:http:POST:/orders/:param/invoice');
+    expect(answer.returning.map((use: { id: string }) => use.id)).toContain('entry:orders:http:GET:/orders/:param');
+    expect(answer.crossings).toEqual([
+      expect.objectContaining({ to: 'entry:orders:http:GET:/orders/:param', type: 'http_calls', carries: 'returns' }),
+    ]);
+    expect(answer.channels).toEqual([expect.objectContaining({ to: 'channel:order.created', type: 'emits', carries: 'params' })]);
+    const named = await call('type_usage', { type: 'OrderDto' });
+    expect(named.candidates).toEqual(['type:@fx/contracts#OrderDto', 'type:web#OrderDto']);
+    const money = await call('type_usage', { type: 'Money' });
+    expect(money.nested).toContain('type:@fx/contracts#OrderDto');
+    expect(money.note).toContain('no edge names type:@fx/contracts#Money');
+    // get_type points at it first.
+    expect((await call('get_type', { type: 'type:@fx/contracts#OrderDto' })).next[0]).toBe('type_usage({type: "type:@fx/contracts#OrderDto"})');
+  });
+
+  it('writes a class with a chain per method, a file by class, and a service from its ways in to its findings', async () => {
+    const holder = 'orders#src/orders/orders.service.ts:OrdersService';
+    const klass = (await call('describe_for_prompt', { id: holder, scope: 'class' })).markdown;
+    expect(klass).toMatch(/^# Class: OrdersService/);
+    expect(klass).toContain('## Methods · 4');
+    for (const method of ['archive', 'create', 'findOne', 'latest']) expect(klass).toContain(`- **OrdersService.${method}** \`${holder}.${method}\``);
+    // A method asks for its class, as the class it belongs to.
+    expect((await call('describe_for_prompt', { id: `${holder}.findOne`, scope: 'class' })).markdown).toBe(klass);
+    const file = (await call('describe_for_prompt', { id: 'orders#src/orders/orders.service.ts', scope: 'file' })).markdown;
+    expect(file).toMatch(/^# File: src\/orders\/orders.service.ts/);
+    expect(file).toContain(`  - **OrdersService.findOne** \`${holder}.findOne\``);
+    const service = (await call('describe_for_prompt', { id: 'orders', scope: 'service' })).markdown;
+    expect(service).toMatch(/^# Service: orders/);
+    expect(service).toContain('## Ways in · 5');
+    expect(service).toContain('## Findings · 5');
+    expect(service).toContain('- gateway · 1: ');
+  });
+
+  it('refuses a scope the node has not, naming the ones it has', async () => {
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+    const server = createFlowatlasServer({ configPath: CONFIG });
+    await server.connect(serverSide);
+    const own = new Client({ name: 'scope', version: '0' });
+    await own.connect(clientSide);
+    const response = (await own.callTool({ name: 'describe_for_prompt', arguments: { id: 'POST /orders', scope: 'class' } })) as {
+      isError?: boolean;
+      content: Array<{ text: string }>;
+    };
+    await own.close();
+    expect(response.isError).toBe(true);
+    expect(JSON.parse(response.content[0]!.text).scopes).toEqual(['node', 'file', 'service']);
+  });
+
+  it('answers who_calls and impact on a class for the union of its methods', async () => {
+    const holder = 'orders#src/orders/orders.service.ts:OrdersService';
+    const callers = await call('who_calls', { symbol: holder, depth: 1 });
+    expect(callers.callers.length).toBeGreaterThan(0);
+    expect(callers.callers.every((row: { calls?: string }) => row.calls?.startsWith(`${holder}.`))).toBe(true);
+    const impact = await call('impact', { symbol: holder });
+    expect(impact.forMethods).toBe(4);
+    expect(impact.entries.map((entry: { id: string }) => entry.id)).toContain('entry:gateway:http:GET:/orders/:param');
   });
 });

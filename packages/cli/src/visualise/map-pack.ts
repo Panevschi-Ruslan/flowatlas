@@ -1,6 +1,11 @@
 import type { GraphNode } from '@flowatlas/core';
-import type { AnchoredUnresolvedRow, ServiceReport } from '@flowatlas/linker';
-import { classifyRoute, routeFactsOf, type InfrastructureRules } from '../analysis/dead.js';
+import {
+  classifyRoute,
+  routeFactsOf,
+  type AnchoredUnresolvedRow,
+  type InfrastructureRules,
+  type ServiceReport,
+} from '@flowatlas/linker';
 
 /**
  * The whole project at the size of its services, for the Map tab.

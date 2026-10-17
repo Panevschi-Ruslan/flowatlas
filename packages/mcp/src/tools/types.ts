@@ -5,16 +5,28 @@ import { z } from 'zod';
 import { withNext } from '../query/next.js';
 import { bound, commonInput, nextOutput, READ_ONLY, withDb, type ToolContext } from './common.js';
 
+/** The type ids a written type names: `type:a#B` and, in `type:x#Page<type:a#B>`, both. */
+export const typeIdsIn = (written: string): string[] => [...written.matchAll(/type:[^\s,;()[\]{}<>|&]+/g)].map((match) => match[0]);
+
 /** Type ids mentioned by a type's fields, so nesting can be followed. */
-const referencedIds = (entry: TypeEntry): string[] => {
+export const referencedIds = (entry: TypeEntry): string[] => {
   const found = new Set<string>();
-  for (const field of entry.fields ?? []) {
-    for (const match of field.type.matchAll(/type:[^\s,;()[\]{}<>|&]+/g)) found.add(match[0]);
-  }
-  for (const member of entry.members ?? []) {
-    for (const match of member.matchAll(/type:[^\s,;()[\]{}<>|&]+/g)) found.add(match[0]);
-  }
+  for (const field of entry.fields ?? []) for (const id of typeIdsIn(field.type)) found.add(id);
+  for (const member of entry.members ?? []) for (const id of typeIdsIn(member)) found.add(id);
   return [...found];
+};
+
+/**
+ * The type a reference means: an id as it is, or a bare name that one type
+ * has; several types of that name are the candidates, never a guess.
+ */
+export const resolveTypeRef = (db: GraphDb, asked: string): { id: string } | { candidates: string[] } | { error: string } => {
+  const trimmed = asked.trim();
+  if (trimmed.startsWith('type:')) return db.type(trimmed) === undefined ? { error: `no type with id ${JSON.stringify(trimmed)}` } : { id: trimmed };
+  const named = db.typesByName(trimmed);
+  if (named.length === 0) return { error: `no type named ${JSON.stringify(trimmed)}` };
+  if (named.length > 1) return { candidates: named.map((entry) => entry.id) };
+  return { id: named[0]!.id };
 };
 
 /**
@@ -159,23 +171,16 @@ export const registerTypes = (server: McpServer, ctx: ToolContext): void => {
     (input) =>
       withDb(ctx.handle, (db) => {
         const { detail, maxNodes, note } = bound(input);
-        const asked = input.type.trim();
-
-        let id = asked;
-        if (!asked.startsWith('type:')) {
-          const named = db.typesByName(asked);
-          if (named.length === 0) return { error: `no type named ${JSON.stringify(asked)}` };
-          if (named.length > 1) {
-            return withNext(
-              { candidates: named.map((entry) => entry.id) },
-              named.slice(0, 2).map((entry) => `get_type({type: ${JSON.stringify(entry.id)}})`),
-            );
-          }
-          id = named[0]!.id;
+        const resolved = resolveTypeRef(db, input.type);
+        if ('error' in resolved) return resolved;
+        if ('candidates' in resolved) {
+          return withNext(
+            { candidates: resolved.candidates },
+            resolved.candidates.slice(0, 2).map((candidate) => `get_type({type: ${JSON.stringify(candidate)}})`),
+          );
         }
-
-        const entry = db.type(id);
-        if (entry === undefined) return { error: `no type with id ${JSON.stringify(id)}` };
+        const id = resolved.id;
+        const entry = db.type(id)!;
         // At 0 the names are the answer; what they refer to is the next question.
         const expanded = detail === 0 ? { nested: {}, cut: 0 } : expandType(db, id, input.depth, maxNodes);
         // A nested type at 1 is its name and its fields' names, enough to decide
@@ -193,7 +198,8 @@ export const registerTypes = (server: McpServer, ctx: ToolContext): void => {
               : { cut: `${expanded.cut} more referenced type(s); raise maxNodes` }),
             ...(note === undefined ? {} : { note }),
           },
-          [`find_symbol({query: ${JSON.stringify(entry.name)}})`],
+          // Who uses it first (P95): `find_symbol` searches names, not uses.
+          [`type_usage({type: ${JSON.stringify(id)}})`, `find_symbol({query: ${JSON.stringify(entry.name)}})`],
         );
       }),
   );

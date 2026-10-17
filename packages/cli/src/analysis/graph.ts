@@ -158,24 +158,5 @@ export const loadGraph = (db: GraphDb, options: LoadOptions): AnalysisGraph => {
   return buildGraph(nodes, edges);
 };
 
-/**
- * Which class each method belongs to.
- *
- * A method id is its class id plus `.name`, and nothing else in the grammar
- * ends that way, so the owner is recoverable without another table. Needed
- * because the graph has no edge from a class to its own methods: a guard is
- * reached as a class and reads its settings inside a method.
- */
-export const methodsByOwner = (db: GraphDb): Map<string, string[]> => {
-  const owners = new Map<string, string[]>();
-  for (const method of db.nodesByType('method')) {
-    const cut = method.id.lastIndexOf('.');
-    if (cut <= 0) continue;
-    const owner = method.id.slice(0, cut);
-    const list = owners.get(owner);
-    if (list === undefined) owners.set(owner, [method.id]);
-    else list.push(method.id);
-  }
-  for (const list of owners.values()) list.sort(byId);
-  return owners;
-};
+/** Which class each method belongs to: moved to the linker beside the dead analysis (P95). */
+export { methodsByOwner } from '@flowatlas/linker';

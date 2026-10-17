@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROMPT_LIMITS, PROMPT_WALK, readAccepted, renderPrompt, type GraphNode, type PromptSubject } from '@flowatlas/core';
 import { acceptedSplitOf, openGraphDb, type GraphDb } from '@flowatlas/linker';
-import { gatherCheckSubject, gatherPromptSubject, rowsOfGap } from '@flowatlas/mcp';
+import { gatherCheckSubject, gatherClassSubject, gatherFileSubject, gatherPromptSubject, rowsOfGap } from '@flowatlas/mcp';
 import { describe, expect, it } from 'vitest';
 import { packDatabase } from '../commands/visualise.js';
 import { createModel, type GraphModel } from './graph.js';
@@ -15,7 +15,8 @@ import { promptFor, stepIdOf, subjectOf } from './steps.js';
  * as "Copy as prompt" does, and written by the one renderer, is the same
  * characters. The three subjects of `fixtures/multi-repo` - a way in, a
  * channel, a check - are snapshots both packages' tests read; every other
- * subject of every fixture whose graph is built is checked for parity alone.
+ * subject of every fixture whose graph is built is checked for parity alone,
+ * and so is every class and every file written whole (P95).
  */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -129,6 +130,49 @@ describe('one prompt text for the page and the MCP server (P97)', () => {
   });
 });
 
+/**
+ * Every class and every file of a fixture, as the server's class and file
+ * scopes write them and as the page gathers them (P95): `[server, page]`.
+ */
+const scopedOf = (sides: Sides, walk = PROMPT_WALK): Array<{ id: string; server: string; page: string }> => {
+  const { db, model } = sides;
+  const position = new Map(model.nodes.map((_, i) => [stepIdOf(model, i), i]));
+  const classes = db.nodesByType('provider').map((node) => ({
+    id: `class ${node.id}`,
+    server: renderPrompt(gatherClassSubject(db, node, undefined, walk), PROMPT_LIMITS),
+    page: promptFor(model, { class: position.get(node.id) ?? -1 }, { ...kit, walk }),
+  }));
+  const files = [...new Set(db.allNodes().flatMap((node) => (node.file === undefined || node.repo === '' ? [] : [`${node.repo}\u0000${node.file}`])))]
+    .sort()
+    .map((key) => {
+      const [service = '', file = ''] = key.split('\u0000');
+      return {
+        id: `file ${service}#${file}`,
+        server: renderPrompt(gatherFileSubject(db, service, file), PROMPT_LIMITS),
+        page: promptFor(model, { file: [service, file] }, { ...kit, walk }),
+      };
+    });
+  return [...classes, ...files];
+};
+
+describe('a class and a file written whole, the same from both sides (P95)', () => {
+  it('writes every class and every file of the fixture the same, walked in full and cut short', () => {
+    const sides = open(MULTI_REPO);
+    try {
+      let compared = 0;
+      for (const walk of [PROMPT_WALK, SHORT]) {
+        for (const { id, server, page } of scopedOf(sides, walk)) {
+          expect({ id, page }).toEqual({ id, page: server });
+          compared += 1;
+        }
+      }
+      expect(compared).toBeGreaterThan(20);
+    } finally {
+      sides.db.close();
+    }
+  });
+});
+
 describe('the same text on every fixture whose graph is built', () => {
   const built = readdirSync(FIXTURES)
     .map((name) => join(FIXTURES, name))
@@ -150,6 +194,7 @@ describe('the same text on every fixture whose graph is built', () => {
             expect({ fixture, id, page }).toEqual({ fixture, id, page: server });
           }
         }
+        for (const { id, server, page } of scopedOf(sides)) expect({ fixture, id, page }).toEqual({ fixture, id, page: server });
       } finally {
         sides.db.close();
       }

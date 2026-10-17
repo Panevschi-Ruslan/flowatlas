@@ -1,5 +1,5 @@
 import { wasMissed, type GraphNode } from '@flowatlas/core';
-import type { GraphDb } from '@flowatlas/linker';
+import { methodsOf, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, projectEdge, truncate } from '../query/detail.js';
@@ -95,6 +95,20 @@ interface Callers {
 }
 
 /**
+ * Where a caller walk starts (P95): the node itself, or, for a class, each of
+ * its methods something calls. Calls point at methods, never at the class, so
+ * a class asked about as itself answered nothing; it answers for the union of
+ * its methods, each caller naming the method it calls.
+ */
+const startsOf = (db: GraphDb, target: GraphNode): { starts: GraphNode[]; forClass: boolean } => {
+  if (target.type !== 'provider') return { starts: [target], forClass: false };
+  const called = methodsOf(db, target.id)
+    .map((id) => db.node(id))
+    .filter((node): node is GraphNode => node !== undefined && db.edgesTo(node.id, REVERSE_EDGES).length > 0);
+  return called.length === 0 ? { starts: [target], forClass: false } : { starts: called, forClass: true };
+};
+
+/**
  * Walks inward from a node and builds the tree of what reaches it.
  *
  * The same shape as a forward walk, read the other way round: each child is
@@ -112,9 +126,15 @@ const callersOf = (
 ): Callers => {
   const gapsIn = gapsByFile(db);
   const roots: FlowNode[] = [];
-  const queue: Array<{ node: GraphNode; level: number; into: FlowNode[]; row?: FlowNode; path: ReadonlySet<string> }> = [
-    { node: target, level: 0, into: roots, path: new Set([target.id]) },
-  ];
+  const { starts, forClass } = startsOf(db, target);
+  const queue: Array<{ node: GraphNode; level: number; into: FlowNode[]; row?: FlowNode; path: ReadonlySet<string>; calls?: string }> =
+    starts.map((start) => ({
+      node: start,
+      level: 0,
+      into: roots,
+      path: new Set([target.id, start.id]),
+      ...(forClass ? { calls: start.id } : {}),
+    }));
   const cut = { depth: 0, maxNodes: 0 };
   const frontier: string[] = [];
   let targetTop: number | undefined;
@@ -151,6 +171,7 @@ const callersOf = (
       const flow: FlowNode = {
         node: source === undefined ? missingNode(edge.from) : projectDetail(source, detail),
         edge: projectEdge(edge, detail),
+        ...(item.calls === undefined ? {} : { calls: item.calls }),
         children: [],
       };
       used += 1;
@@ -312,9 +333,13 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         }
         const target = found.node;
 
+        // A class answers for its methods (P95): calls point at them, never at it.
+        const { starts, forClass } = startsOf(db, target);
+        const from = forClass ? [target.id, ...starts.map((start) => start.id)] : target.id;
+        const ownIds = new Set(typeof from === 'string' ? [from] : from);
         // Twelve hops back, and one more per step of every workflow the walk climbs through.
         const reach = walkBack(12, (maxDepth) =>
-          db.reverseReach(target.id, { edgeTypes: REVERSE_EDGES, maxDepth, maxNodes: IMPACT_WALK_NODES }),
+          db.reverseReach(from, { edgeTypes: REVERSE_EDGES, maxDepth, maxNodes: IMPACT_WALK_NODES }),
         );
         const entries: GraphNode[] = [];
         const channels = new Set<string>();
@@ -324,7 +349,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         let elsewhere = 0;
 
         for (const row of reach.rows) {
-          if (row.id === target.id) continue;
+          if (ownIds.has(row.id)) continue;
           reached += 1;
           const node = db.node(row.id);
           if (node !== undefined) {
@@ -378,6 +403,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         return withNext({
           target: projectDetail(target, detail),
           ...(found.alsoAnswers === undefined ? {} : { alsoAnswers: found.alsoAnswers }),
+          ...(forClass ? { forMethods: starts.length } : {}),
           entries: items.map((entry) => projectDetail(entry, detail)),
           total,
           ...(cuts.length === 0 ? {} : { truncated: cuts.join('; ') }),

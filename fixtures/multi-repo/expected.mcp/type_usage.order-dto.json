@@ -1,0 +1,199 @@
+{
+  "type": "type:@fx/contracts#OrderDto",
+  "taking": [
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "handler": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:40"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/charge",
+      "handler": "gateway#src/orders/orders.controller.ts:OrdersController.charge",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:50"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/pay",
+      "handler": "gateway#src/orders/orders.controller.ts:OrdersController.pay",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:45"
+    }
+  ],
+  "returning": [
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "handler": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:30"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "handler": "gateway#src/orders/orders.controller.ts:OrdersController.cancel",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:35"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/refund",
+      "handler": "gateway#src/orders/orders.controller.ts:OrdersController.refund",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:65"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/resume",
+      "handler": "gateway#src/orders/orders.controller.ts:OrdersController.resume",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:71"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/ship",
+      "handler": "gateway#src/orders/orders.controller.ts:OrdersController.ship",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:60"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "handler": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:25"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "handler": "orders#src/orders/orders.controller.ts:OrdersController.latest",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:19"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "handler": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:31"
+    }
+  ],
+  "crossings": [
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "carries": "returns",
+      "service": "gateway",
+      "loc": "src/clients/orders.client.ts:33"
+    }
+  ],
+  "channels": [
+    {
+      "from": "producer:orders#src/orders/orders.service.ts:49:5",
+      "to": "channel:order.created",
+      "type": "emits",
+      "carries": "params",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:49"
+    }
+  ],
+  "calls": [
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.cancel",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+      "type": "calls",
+      "carries": "returns",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:35"
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.charge",
+      "to": "gateway#src/clients/payments.client.ts:PaymentsClient.charge",
+      "type": "calls",
+      "carries": "params",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:50"
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+      "type": "calls",
+      "carries": "returns",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:30"
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
+      "to": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+      "type": "calls",
+      "carries": "params",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:40"
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.pay",
+      "to": "gateway#src/clients/payments.client.ts:PaymentsClient.pay",
+      "type": "calls",
+      "carries": "params",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:45"
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.refund",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+      "type": "calls",
+      "carries": "returns",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:65"
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.resume",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+      "type": "calls",
+      "carries": "returns",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:71"
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.ship",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+      "type": "calls",
+      "carries": "returns",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:60"
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "carries": "returns",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:31"
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "carries": "returns",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:25"
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.latest",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.latest",
+      "type": "calls",
+      "carries": "returns",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:19"
+    }
+  ],
+  "nested": [
+    "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+  ],
+  "counts": {
+    "taking": 3,
+    "returning": 8,
+    "crossings": 1,
+    "channels": 1,
+    "calls": 11
+  },
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
+    "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:33:12\", to: \"entry:orders:http:GET:/orders/:param\"})",
+    "who_consumes({channel: \"channel:order.created\"})",
+    "type_usage({type: \"type:axios#AxiosResponse<type:@fx/contracts#OrderDto>\"})"
+  ]
+}

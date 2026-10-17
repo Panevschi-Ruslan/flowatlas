@@ -1,0 +1,16 @@
+{
+  "id": "orders#src/orders/orders.service.ts:OrdersService",
+  "type": "provider",
+  "kind": "injectable",
+  "service": "orders",
+  "loc": "src/orders/orders.service.ts:11",
+  "verdict": "alive",
+  "reason": "injected",
+  "evidence": {
+    "callers": 1,
+    "caller": "orders#src/orders/orders.controller.ts:OrdersController"
+  },
+  "next": [
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService\"})"
+  ]
+}

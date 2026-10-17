@@ -444,7 +444,7 @@ them gets the whole project.
 
 ![flowatlas mcp](media/09-mcp.gif)
 
-Fifteen tools, and only one of them returns source code. A trace never drags in the
+Eighteen tools, and only one of them returns source code. A trace never drags in the
 body of every method along it; the agent asks the graph which name to look at,
 then asks for that one name.
 
@@ -460,7 +460,7 @@ After that, `claude mcp list` shows `flowatlas`.
 ## Where to go next
 
 - [The graph server](mcp.md) — setup for Claude Code, Cursor, VS Code and Claude
-  Desktop, what each of the fifteen tools takes, and the order to call them in.
+  Desktop, what each of the eighteen tools takes, and the order to call them in.
 - [The command reference](CLI.md) — every command, every flag, every
   configuration key, and every reason a row can carry.
 - [Running it in CI](ci.md) — the staged adoption that does not fail the build on

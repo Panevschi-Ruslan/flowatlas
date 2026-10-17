@@ -1,0 +1,10 @@
+{
+  "candidates": [
+    "type:@fx/contracts#OrderDto",
+    "type:web#OrderDto"
+  ],
+  "next": [
+    "type_usage({type: \"type:@fx/contracts#OrderDto\"})",
+    "type_usage({type: \"type:web#OrderDto\"})"
+  ]
+}

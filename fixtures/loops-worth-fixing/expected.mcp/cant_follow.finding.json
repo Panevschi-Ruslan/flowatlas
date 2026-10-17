@@ -12,6 +12,6 @@
   },
   "note": "query-in-loop rows are not steps the reader missed: 3 findings, 4 notes",
   "next": [
-    "search({query: \"query-in-loop\", kinds: [\"gaps\"]})"
+    "findings({kind: \"n-plus-one\"})"
   ]
 }

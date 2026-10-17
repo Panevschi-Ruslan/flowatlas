@@ -79,6 +79,27 @@ const CASES = [
   ['get_flow.literal-route', 'get_flow', { entry: 'GET /orders/latest', maxNodes: 8 }],
   ['check_contract.between-services', 'check_contract', { from: 'gateway', to: 'billing' }],
   ['who_emits.unknown-channel', 'who_emits', { channel: 'order.create' }],
+  // Is it dead, what to look at, who uses a type, and a whole class, file or
+  // service as one text (P95): a route nothing calls, one a call read in part
+  // could reach, one a call one segment off names, a service's rows; every
+  // finding counted; a shared type, a name two types have, a type only other
+  // types hold; and a class answered for by its methods.
+  ['dead.route', 'dead', { id: 'entry:billing:http:GET:/invoices/:param' }],
+  ['dead.likely', 'dead', { id: 'GET /orders/latest' }],
+  ['dead.one-off', 'dead', { id: 'entry:orders:http:POST:/orders/:param/archive' }],
+  ['dead.alive', 'dead', { id: 'orders#src/orders/orders.service.ts:OrdersService' }],
+  ['dead.by-service', 'dead', { service: 'orders' }],
+  ['findings.all', 'findings', {}],
+  ['findings.unguarded', 'findings', { kind: 'unguarded', maxNodes: 2 }],
+  ['type_usage.order-dto', 'type_usage', { type: 'type:@fx/contracts#OrderDto' }],
+  ['type_usage.ambiguous', 'type_usage', { type: 'OrderDto' }],
+  ['type_usage.nested', 'type_usage', { type: 'Money' }],
+  ['describe_for_prompt.class', 'describe_for_prompt', { id: 'orders#src/orders/orders.service.ts:OrdersService', scope: 'class' }],
+  ['describe_for_prompt.file', 'describe_for_prompt', { id: 'orders#src/orders/orders.service.ts', scope: 'file' }],
+  ['describe_for_prompt.service', 'describe_for_prompt', { id: 'orders', scope: 'service' }],
+  ['describe_for_prompt.wrong-scope', 'describe_for_prompt', { id: 'POST /orders', scope: 'class' }],
+  ['who_calls.class', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService', depth: 1 }],
+  ['impact.class', 'impact', { symbol: 'OrdersService' }],
 ];
 
 /**
@@ -102,6 +123,8 @@ const LOOPS_CASES = [
   ['describe_for_prompt.labels', 'describe_for_prompt', { id: 'GET /parcels/labels' }],
   // A finding asked for as a cause (P94): empty, and saying why.
   ['cant_follow.finding', 'cant_follow', { cause: 'query-in-loop' }],
+  // The likely loops ranked by the ways in that reach them, the per-item ones counted (P95).
+  ['findings.n-plus-one', 'findings', { kind: 'n-plus-one' }],
 ];
 
 /**
@@ -113,6 +136,8 @@ const CANT_FOLLOW_CASES = [
   ['who_calls.top-of-chain', 'who_calls', { symbol: 'storefront#src/jobs/reminder.job.ts:ReminderJob.start' }],
   ['impact.no-entries', 'impact', { symbol: 'storefront#src/jobs/reminder.job.ts:ReminderJob.start' }],
   ['cant_follow.unknown-cause', 'cant_follow', { cause: 'dynamic-membr' }],
+  // The same method asked whether it is dead (P95): nothing calls it, and its class is not reached either.
+  ['dead.top-of-chain', 'dead', { id: 'storefront#src/jobs/reminder.job.ts:ReminderJob.start' }],
 ];
 
 /**

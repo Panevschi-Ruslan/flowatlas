@@ -23,8 +23,11 @@
  *   compareFailChoices  the order a helper's choices are written in (P90)
  */
 
-/** How much one text may say: chain steps, gaps, failure lines, a channel's consumers, characters. */
-export const PROMPT_LIMITS = Object.freeze({ maxSteps: 40, maxGaps: 10, maxFails: 12, maxConsumers: 4, maxChars: 8000 });
+/**
+ * How much one text may say: chain steps, gaps, failure lines, a channel's
+ * consumers, the members of a class or a file (P95), characters.
+ */
+export const PROMPT_LIMITS = Object.freeze({ maxSteps: 40, maxGaps: 10, maxFails: 12, maxConsumers: 4, maxMembers: 40, maxChars: 8000 });
 
 /**
  * The walk under a text, the same on both sides: `get_flow`'s, at most
@@ -48,8 +51,19 @@ export const PROMPT_MAX_NEXT = 4;
 /** Where a failure comes from, in the order a group lists them. */
 export const PROMPT_FAIL_SOURCES = Object.freeze(['throw', 'guard', 'pipe']);
 
-/** What each kind of subject is called in its heading; anything else is a symbol. */
-const PROMPT_HEADINGS = Object.freeze({ entry: 'Way in', channel: 'Channel', check: 'Check', table: 'Table' });
+/**
+ * What each kind of subject is called in its heading, by scope (P95) and then
+ * by type; anything else is a symbol.
+ */
+const PROMPT_HEADINGS = Object.freeze({
+  entry: 'Way in',
+  channel: 'Channel',
+  check: 'Check',
+  table: 'Table',
+  class: 'Class',
+  file: 'File',
+  service: 'Service',
+});
 
 /** Said once under the heading, so a reader knows what kind of reading this is. */
 const PROMPT_HEAD =
@@ -94,7 +108,19 @@ const PROMPT_HINTS = Object.freeze({
     `describe_for_prompt({id: ${promptQuote(id)}})`,
   ],
   table: (id) => [`impact({symbol: ${promptQuote(id)}})`, `who_calls({symbol: ${promptQuote(id)}})`],
-  type: (id) => [`get_type({type: ${promptQuote(id)}})`],
+  type: (id) => [`get_type({type: ${promptQuote(id)}})`, `type_usage({type: ${promptQuote(id)}})`],
+  // A class answers for its methods (P95): who calls any of them, and all of it as one text.
+  provider: (id) => [
+    `who_calls({symbol: ${promptQuote(id)}})`,
+    `impact({symbol: ${promptQuote(id)}})`,
+    `describe_for_prompt({id: ${promptQuote(id)}, scope: "class"})`,
+  ],
+  // A file is `service#path`: the gaps beside its code, and what is dead in its service.
+  file: (id) => [
+    `search({query: ${promptQuote(id.slice(id.indexOf('#') + 1))}, kinds: ["gaps"]})`,
+    `cant_follow({service: ${promptQuote(id.slice(0, Math.max(id.indexOf('#'), 0)))}})`,
+  ],
+  service: (id) => [`findings({service: ${promptQuote(id)}})`, `dead({service: ${promptQuote(id)}})`, `list_entries({service: ${promptQuote(id)}})`],
   missing: () => [],
   ref: () => [],
   check: () => [],
@@ -126,6 +152,14 @@ export const promptNextFor = (...nodes) => {
  * and a search of its file for the gaps beside it.
  */
 export const askNextOf = (subject) => {
+  if (subject.scope !== undefined) {
+    const members = subject.members ?? [];
+    // Not the text being written: the class hint offers it, and it is this answer.
+    const self = `describe_for_prompt({id: ${promptQuote(subject.id)}, scope: ${promptQuote(subject.scope)}})`;
+    const own = promptHintsFor({ id: subject.id, type: subject.scope === 'class' ? subject.type : subject.scope }).filter((hint) => hint !== self);
+    const first = members[0];
+    return [...new Set([...own, ...promptNextFor(subject.reachedFrom?.[0], first)])].slice(0, PROMPT_MAX_NEXT);
+  }
   if (subject.type === 'check') {
     const on = (subject.check?.places ?? []).find((place) => place.on !== undefined)?.on;
     const file = subject.loc;
@@ -452,6 +486,113 @@ const promptFacts = (subject) => [
   ...((subject.hits ?? 0) > 0 ? [`- seen at run time: ${subject.hits} hits`] : []),
 ];
 
+/* ── Scoped subjects: a class, a file, a service (P95) ── */
+
+/** A list of ids, a handful written and the rest counted. */
+const promptIds = (steps, shown = 3) =>
+  steps.slice(0, shown).map((step) => promptCode(step.id)).join(', ') + (steps.length > shown ? ` and ${steps.length - shown} more` : '');
+
+const promptReachSay = (member) =>
+  member.reachedFrom.length === 0 ? 'reached from no way in' : `reached from ${promptIds(member.reachedFrom)}`;
+
+/**
+ * A class's methods, each with the ways in that reach it and its own chain,
+ * one under the other: `maxSteps` is the room for every chain together, given
+ * to the methods in order, so a long first chain is cut rather than the rest
+ * left out.
+ */
+const promptClassLines = (subject, bounds, throwsOf) => {
+  const members = subject.members ?? [];
+  let room = bounds.maxSteps;
+  const lines = [];
+  for (const member of members.slice(0, bounds.maxMembers)) {
+    lines.push(`- **${member.label}** ${promptCode(member.id)}${member.loc === undefined ? '' : ` — ${promptCode(member.loc)}`} — ${promptReachSay(member)}`);
+    const steps = member.steps ?? [];
+    const kept = steps.slice(0, Math.max(room, 0));
+    room -= kept.length;
+    lines.push(...kept.flatMap((step) => promptStepLines({ ...step, depth: step.depth + 1 }, throwsOf)));
+    const cut = (member.stepsCut ?? 0) + steps.length - kept.length;
+    if (cut > 0) lines.push(`  - … ${cut} more step(s) not shown; ask describe_for_prompt({id: ${promptQuote(member.id)}})`);
+  }
+  if (members.length > bounds.maxMembers) lines.push(`- … ${members.length - bounds.maxMembers} more method(s)`);
+  return lines.length === 0 ? ['- no methods recorded'] : lines;
+};
+
+/** A file's nodes by the class they belong to, each class once, then the ones that belong to none. */
+const promptFileLines = (subject, bounds) => {
+  const members = (subject.members ?? []).slice(0, bounds.maxMembers);
+  const groups = new Map();
+  for (const member of members) {
+    const key = member.group ?? '';
+    groups.set(key, [...(groups.get(key) ?? []), member]);
+  }
+  const memberLine = (member, indent) =>
+    `${indent}- **${member.label}** ${promptCode(member.id)} — ${member.type}${member.kind ? ` / ${member.kind}` : ''}` +
+    (member.loc === undefined ? '' : ` at ${promptCode(member.loc)}`);
+  const lines = [];
+  for (const [group, list] of [...groups].sort((a, b) => Number(a[0] === '') - Number(b[0] === '') || promptCmp(a[0], b[0]))) {
+    if (group === '') {
+      lines.push(...list.map((member) => memberLine(member, '')));
+      continue;
+    }
+    // The class heads its own group; a class from another file is named by its id.
+    const head = list.find((member) => member.id === group);
+    lines.push(head === undefined ? `- ${promptCode(group)}` : memberLine(head, ''), ...list.filter((member) => member !== head).map((member) => memberLine(member, '  ')));
+  }
+  const more = (subject.members ?? []).length - members.length;
+  if (more > 0) lines.push(`- … ${more} more node(s)`);
+  return lines.length === 0 ? ['- nothing recorded in this file'] : lines;
+};
+
+/** One count line of a service's overview: `- http · 9: `a`, `b`, `c` and 6 more`. */
+const promptCountLine = (item) => `- ${item.kind} · ${item.count}${item.first.length === 0 ? '' : `: ${promptIds(item.first, item.first.length)}${item.count > item.first.length ? ' …' : ''}`}`;
+
+const promptCrossingLines = (crossings) =>
+  crossings.map(
+    (item) =>
+      `- ${item.service} · ${item.count}: ` +
+      item.first.map((hop) => `${promptCode(hop.from.id)} ${hop.type} ${promptCode(hop.to.id)}`).join('; ') +
+      (item.count > item.first.length ? ' …' : ''),
+  );
+
+/** A service's front: its ways in, what it calls and what calls it, its channels, findings and gaps. */
+const promptServiceSections = (subject) => {
+  const view = subject.overview;
+  if (view === undefined) return [];
+  const total = (list) => list.reduce((sum, item) => sum + item.count, 0);
+  return [
+    ...promptSection(`Ways in · ${total(view.waysIn)}`, view.waysIn.length === 0 ? ['- none recorded'] : view.waysIn.map(promptCountLine)),
+    ...promptSection(`Calls into other services · ${total(view.crossingsOut)}`, promptCrossingLines(view.crossingsOut)),
+    ...promptSection(`Called from other services · ${total(view.crossingsIn)}`, promptCrossingLines(view.crossingsIn)),
+    ...promptSection('Channels', [
+      ...(view.publishes.length === 0 ? [] : [`- publishes ${promptIds(view.publishes, 8)}`]),
+      ...(view.consumes.length === 0 ? [] : [`- consumes ${promptIds(view.consumes, 8)}`]),
+    ]),
+    ...promptSection(
+      `Findings · ${total(view.findings)}`,
+      view.findings.flatMap((item) => [
+        `- ${item.kind} · ${item.count}`,
+        ...item.top.map(
+          (gap) => `  - ${gap.loc === undefined ? '' : `${promptCode(gap.loc)}: `}${gap.message}${gap.id === undefined ? '' : ` — ${promptCode(gap.id)}`}`,
+        ),
+      ]),
+    ),
+    ...promptSection(
+      'Most common gaps',
+      view.gaps.map(
+        (item) => `- ${promptCode(item.reason)} ×${item.count}${item.first.loc === undefined ? '' : `, first at ${promptCode(item.first.loc)}`}: ${item.first.message}`,
+      ),
+    ),
+  ];
+};
+
+/** What a scoped subject says under its heading, by scope: a Strategy, so a scope is one entry. */
+const PROMPT_SCOPED = Object.freeze({
+  class: (subject, bounds, throwsOf) => promptSection(`Methods · ${(subject.members ?? []).length}`, promptClassLines(subject, bounds, throwsOf)),
+  file: (subject, bounds) => promptSection(`In this file · ${(subject.members ?? []).length}`, promptFileLines(subject, bounds)),
+  service: (subject) => promptServiceSections(subject),
+});
+
 /**
  * The Markdown for one subject, bounded.
  *
@@ -470,7 +611,7 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
 
   const facts = promptFacts(subject);
   const head = [
-    `# ${PROMPT_HEADINGS[subject.type] ?? 'Symbol'}: ${subject.label}`,
+    `# ${PROMPT_HEADINGS[subject.scope ?? subject.type] ?? 'Symbol'}: ${subject.label}`,
     '',
     promptIdLine(subject),
     '',
@@ -484,9 +625,10 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
 
   const isCheck = subject.type === 'check';
   const isChannel = subject.type === 'channel';
+  const scoped = subject.scope === undefined ? undefined : PROMPT_SCOPED[subject.scope];
   const producers = subject.producers ?? [];
   const consumers = isChannel ? promptConsumers(subject, bounds, throwsOf) : undefined;
-  const chain = isChannel || isCheck ? [] : promptChain(subject, subject.steps, bounds, throwsOf);
+  const chain = isChannel || isCheck || scoped !== undefined ? [] : promptChain(subject, subject.steps, bounds, throwsOf);
 
   const body = [
     ...head,
@@ -501,9 +643,12 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
     ...(consumers === undefined ? [] : promptSection(`Consumed by · ${consumers.count}`, consumers.lines)),
     ...(isCheck ? promptSection(`Where · ${subject.check.places.length}`, promptPlaceLines(subject.check)) : []),
     ...promptSection('Reached from', stepLines(subject.reachedFrom ?? [])),
-    ...(isChannel || isCheck ? [] : promptSection('Steps', chain.length === 0 ? ['- nothing further is recorded from here'] : chain)),
+    ...(scoped === undefined ? [] : scoped(subject, bounds, throwsOf)),
+    ...(isChannel || isCheck || scoped !== undefined ? [] : promptSection('Steps', chain.length === 0 ? ['- nothing further is recorded from here'] : chain)),
     ...promptSection('Shapes', promptShapes(subject.steps)),
-    ...(isCheck ? [] : promptSection('Gaps', gapLines.length === 0 ? ['- none recorded on this chain'] : gapLines)),
+    ...(isCheck || subject.scope === 'service'
+      ? []
+      : promptSection('Gaps', gapLines.length === 0 ? [subject.scope === undefined ? '- none recorded on this chain' : `- none recorded in this ${subject.scope}`] : gapLines)),
     ...promptSection('Ask next', askNextOf(subject).map((call) => `- ${promptCode(call)}`)),
   ];
   return promptFit(body, bounds.maxChars);

@@ -800,20 +800,38 @@ in part, and what was read matches the route when each unread piece stands for
 the rest of its segment and any segments after it, or its address was read in
 full and only its verb was not. Such a request is aimed at the route's service
 (its setting names that service, or, for a browser, its `apiTarget` does). The
-row names it under `nearMiss` (up to three, `{ call, path, file, line }`) and no
+row names it under `evidence.couldHit` (up to three, `{ call, path, file, line }`) and no
 edge is drawn: a hole may be the caller and may not. The build lists them in the
 link report as `routes.nearMissed`, by route id.
 
-The table lists the actionable rows, `dead` before `likely-dead`, with each near
-miss on a line of its own beneath; every other class is folded into one line:
+**Verdicts (P95).** Every row also says what it claims, under `verdict`, with
+what could make it wrong under `evidence`: `dead` (nothing reaches it and
+nothing that could is unread), `likely-dead` (a request read in part could:
+`couldHit`) or `unknown` (the graph's silence says nothing). A route of any
+class but `actionable` is `unknown`, with `outside` naming why (`probe`,
+`webhook`, `stream`, `declared`, …). An actionable route that a request which
+found no route is one segment off is `unknown` too, with the request under
+`oneOff` (`{ call, asks, differs, file, line }`): one literal for another
+(`cancel for archive`), a value left out (`POST /orders/ship` for `POST
+/orders/:param/ship`), or a segment added. Renamed, or a typo: only a person
+can tell. A channel missing an end is `dead` with `missing` (`unknown`, with
+`outside: stream`, when its publisher serves event streams); a class is
+`likely-dead` with `unresolvedInjects` when its service has injects that did
+not resolve. The MCP server's `dead` tool reads the same functions.
+
+The table lists the actionable rows, `dead`, then `likely-dead`, then `unknown`, with each near
+miss and each request one segment off on a line of its own beneath; every other class is folded into one line:
 
 ```
+  GET:/items/:param/price could be reached by /items/:param/${…}${…} at src/app/items.client.ts:59
+  POST:/orders/:param/archive is one segment off POST /orders/:param/cancel at src/clients/orders.client.ts:44 (cancel for archive)
   4 infrastructure routes: 2 probes, 1 callback, 1 webhook — --class infrastructure to list
 ```
 
-`--class <class>` lists that class instead, each row with its rule. `--format
-json` carries every row (to `--max`) with `class`, `why`, `role`, `confidence`
-and `nearMiss`. Rows are ordered by what they mean rather than by name — the
+`--class <class>` lists that class instead, each row with its rule. The channel
+and provider tables have a `verdict` column too. `--format
+json` carries every row (to `--max`) with `class`, `why`, `role`, `confidence`,
+`verdict` and `evidence`. Rows are ordered by what they mean rather than by name — the
 ones nothing explains first — so `--max` cuts the rows that say why they are
 here before it cuts the rows that do not (`fixtures/multi-repo-dead-routes`).
 

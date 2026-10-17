@@ -1,0 +1,81 @@
+{
+  "counts": {
+    "unguarded": 4,
+    "one-ended-channel": 2
+  },
+  "top": {
+    "unguarded": [
+      {
+        "kind": "unguarded",
+        "id": "entry:orders:http:POST:/orders",
+        "method": "orders#src/orders/orders.controller.ts:OrdersController.create",
+        "service": "orders",
+        "loc": "src/orders/orders.controller.ts:31",
+        "message": "POST /orders has no guard in front of it and reaches orders.",
+        "rank": 1,
+        "reach": {
+          "writes": 1,
+          "reads": 0
+        },
+        "next": "get_flow({entry: \"entry:orders:http:POST:/orders\"})"
+      },
+      {
+        "kind": "unguarded",
+        "id": "entry:orders:http:GET:/orders/:param",
+        "method": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+        "service": "orders",
+        "loc": "src/orders/orders.controller.ts:25",
+        "message": "GET /orders/:param has no guard in front of it and reaches orders.",
+        "rank": 2,
+        "reach": {
+          "writes": 0,
+          "reads": 1
+        },
+        "next": "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
+      },
+      {
+        "kind": "unguarded",
+        "id": "entry:orders:http:GET:/orders/latest",
+        "method": "orders#src/orders/orders.controller.ts:OrdersController.latest",
+        "service": "orders",
+        "loc": "src/orders/orders.controller.ts:19",
+        "message": "GET /orders/latest has no guard in front of it and reaches orders.",
+        "rank": 3,
+        "reach": {
+          "writes": 0,
+          "reads": 1
+        },
+        "next": "get_flow({entry: \"entry:orders:http:GET:/orders/latest\"})"
+      }
+    ],
+    "one-ended-channel": [
+      {
+        "kind": "one-ended-channel",
+        "id": "channel:invoice.requested",
+        "service": "billing",
+        "loc": "src/invoices/invoices.consumer.ts:28",
+        "message": "no producer in any repo",
+        "rank": 1,
+        "reach": {
+          "ends": 1
+        },
+        "next": "who_consumes({channel: \"channel:invoice.requested\"})"
+      },
+      {
+        "kind": "one-ended-channel",
+        "id": "channel:order.archived",
+        "service": "orders",
+        "loc": "src/orders/orders.service.ts:61",
+        "message": "no consumer in any repo",
+        "rank": 2,
+        "reach": {
+          "ends": 1
+        },
+        "next": "who_emits({channel: \"channel:order.archived\"})"
+      }
+    ]
+  },
+  "next": [
+    "findings({kind: \"unguarded\"})"
+  ]
+}

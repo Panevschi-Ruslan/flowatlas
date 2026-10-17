@@ -53,7 +53,25 @@ export { summariseProject, START_LIMITS } from './query/start.js';
 export type { GapReason, ServiceCount, StartCounts, StartInput, StartLimits, StartSummary } from './query/start.js';
 export { describeForPrompt, PROMPT_LIMITS } from './prompt/describe.js';
 export type { PromptGap, PromptLimits, PromptStep, PromptSubject } from './prompt/describe.js';
-export { gatherCheckSubject, gatherPromptSubject, rowsOfGap } from './prompt/gather.js';
+export {
+  fileIdOf,
+  gatherCheckSubject,
+  gatherClassSubject,
+  gatherFileSubject,
+  gatherPromptSubject,
+  gatherScopedSubject,
+  gatherServiceSubject,
+  PROMPT_SCOPES,
+  rowsOfGap,
+  scopesFor,
+} from './prompt/gather.js';
+export type { PromptScopeName, ScopeContext, ServiceCrossing } from './prompt/gather.js';
+export { deadOptionsOf, deadRows, DEAD_KINDS } from './tools/dead.js';
+export type { DeadKind } from './tools/dead.js';
+export { findingsOf, FINDINGS_TOP } from './tools/findings.js';
+export { usesOfType, TYPE_USE_GROUPS } from './tools/type-usage.js';
+export type { Carries, EdgeUse, EntryUse, TypeUses } from './tools/type-usage.js';
+export { crossingsBetween } from './tools/contract.js';
 export { runSearch, SEARCH_KINDS } from './tools/search.js';
 export type { GapHit, SearchKind, TypeHit } from './tools/search.js';
 export { summariseChanges, readDiff } from './tools/changes.js';

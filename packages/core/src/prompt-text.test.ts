@@ -204,3 +204,55 @@ describe('failures grouped once, for core and the page alike', () => {
     expect(groupFails(fails)[1]?.chosenFrom?.map((choice) => choice.status)).toEqual([401, 403]);
   });
 });
+
+/** A class, a file and a service written whole (P95). */
+describe('scoped subjects', () => {
+  const method = (name: string, steps: PromptStep[]) => ({
+    id: `shop#src/carts.service.ts:Carts.${name}`,
+    label: `Carts.${name}`,
+    type: 'method',
+    loc: 'src/carts.service.ts:5',
+    reachedFrom: [step(1, 'POST /carts', { id: 'entry:shop:http:POST:/carts', type: 'entry' })],
+    steps,
+    stepsCut: 0,
+  });
+  const klass = (members: ReturnType<typeof method>[]): PromptSubject => ({
+    id: 'shop#src/carts.service.ts:Carts',
+    label: 'Carts',
+    type: 'provider',
+    kind: 'injectable',
+    service: 'shop',
+    scope: 'class',
+    steps: [],
+    stepsCut: 0,
+    members,
+    gaps: [],
+  });
+
+  it('heads a class, a file and a service by the scope, and ends with the calls that take it', () => {
+    const text = renderPrompt(klass([method('add', [step(1, 'Store.save')])]));
+    expect(text.split('\n')[0]).toBe('# Class: Carts');
+    expect(text).toContain('## Methods · 1');
+    expect(text).toContain('- **Carts.add** `shop#src/carts.service.ts:Carts.add` — `src/carts.service.ts:5` — reached from `entry:shop:http:POST:/carts`');
+    expect(text).toContain('  - **Store.save**');
+    // Not the text being written.
+    expect(askNextOf(klass([]))).toEqual([
+      'who_calls({symbol: "shop#src/carts.service.ts:Carts"})',
+      'impact({symbol: "shop#src/carts.service.ts:Carts"})',
+    ]);
+    const file: PromptSubject = { id: 'shop#src/carts.service.ts', label: 'src/carts.service.ts', type: 'file', service: 'shop', scope: 'file', steps: [], stepsCut: 0, members: [], gaps: [] };
+    expect(renderPrompt(file).split('\n')[0]).toBe('# File: src/carts.service.ts');
+    expect(askNextOf(file)).toEqual(['search({query: "src/carts.service.ts", kinds: ["gaps"]})', 'cant_follow({service: "shop"})']);
+    const service: PromptSubject = { id: 'shop', label: 'shop', type: 'service', scope: 'service', steps: [], stepsCut: 0, gaps: [] };
+    expect(renderPrompt(service).split('\n')[0]).toBe('# Service: shop');
+    expect(askNextOf(service)[0]).toBe('findings({service: "shop"})');
+  });
+
+  it('shares maxSteps among the methods in order, saying what each one left out', () => {
+    const long = [1, 2, 3].map((n) => step(1, `S${n}`));
+    const text = renderPrompt(klass([method('add', long), method('drop', long)]), { ...PROMPT_LIMITS, maxSteps: 4 });
+    expect(text).toContain('  - **S3**');
+    expect(text.match(/\*\*S\d\*\*/g)).toHaveLength(4);
+    expect(text).toContain('  - … 2 more step(s) not shown; ask describe_for_prompt({id: "shop#src/carts.service.ts:Carts.drop"})');
+  });
+});

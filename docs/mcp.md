@@ -5,7 +5,7 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Fifteen tools. Only one of them returns code.
+Eighteen tools. Only one of them returns code.
 
 ---
 
@@ -71,9 +71,10 @@ and let it talk on stdin and stdout.
 
 `detail` (0 to 3, how much of each row comes back) is taken by `list_entries`,
 `find_symbol`, `search`, `get_flow`, `who_calls`, `impact`, `who_emits`,
-`who_consumes`, `get_type` and `what_changed`: 0 is ids only, 1 (the default)
+`who_consumes`, `get_type`, `type_usage` and `what_changed`: 0 is ids only, 1 (the default)
 adds `file:line`, service and kind, 2 adds what the reader knows about each
-row, and 3 is answered at 2 and says so. Those tools and `check_contract` take
+row, and 3 is answered at 2 and says so. Those tools, `check_contract`, `dead`
+and `findings` take
 `maxNodes`, the most rows an answer holds: 150 by default, 60 for `get_flow`,
 which also stops at about `maxChars` characters (12,000). `start_here`, `cant_follow`,
 `describe_for_prompt` and `get_source` take neither: they are bounded by their
@@ -86,7 +87,7 @@ filling a context window.
 Every answer is one compact JSON document, in the text content and again as
 `structuredContent`, so a client reads whichever it prefers. `start_here`,
 `list_entries`, `find_symbol`, `who_emits`, `who_consumes`, `get_type`,
-`get_source`, `search` and `cant_follow` declare an `outputSchema`, and a
+`get_source`, `search`, `cant_follow`, `dead`, `findings` and `type_usage` declare an `outputSchema`, and a
 client can check every answer against it; the tree tools follow once their
 shape is settled. An answer that is an error (`{ "error": … }`) carries
 `isError: true` and no `structuredContent`, every time, so a client shows a
@@ -102,7 +103,8 @@ running a tool that might can skip asking.
 
 A list reads a page at a time. `list_entries`, `find_symbol`, `search`,
 `who_emits`, `who_consumes`, `impact` (its `entries`), `what_changed` (every
-list) and `cant_follow` (its `causes`) take `offset`, 0 by default. An answer
+list), `cant_follow` (its `causes`), `dead` (its `rows`), `findings` (one kind's
+`rows`) and `type_usage` (every group at once) take `offset`, 0 by default. An answer
 that was cut says `total`, `nextOffset` and `truncated: "n more; next page
 offset k"`, and `next` starts with the same call from that offset:
 
@@ -133,19 +135,22 @@ name:
 start_here → get_flow({entry: id}) → get_source({symbol: id})
 who_emits / who_consumes({channel: id}) → get_flow on a handler
 find_symbol → who_calls / impact({symbol: id}) → get_flow on an entry
+get_type({type: id}) → type_usage({type: id}) → get_flow / check_contract on a use
+findings() → findings({kind}) → the call each row names
+dead({id}) → get_source on the call that could reach it
 search({query}) → whichever of the above its row's id goes to
 cant_follow → get_source on a place it names
 ```
 
 The server's instructions describe the same chains. `list_entries`,
 `find_symbol`, `search`, `who_calls`, `impact`, `who_emits`, `who_consumes`,
-`start_here`, `what_changed` and `cant_follow` all take the same optional
-`service` filter.
+`start_here`, `what_changed`, `cant_follow`, `dead`, `findings` and `type_usage`
+all take the same optional `service` filter.
 
 | Tool | Answers | Takes |
 |---|---|---|
 | `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
-| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, and `maxChars` | `id` (required: any id, a gap id, a channel name or a route said aloud), `maxSteps`, `maxChars` |
+| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars` |
 
 `describe_for_prompt` and the page's *Copy as prompt* write the same text
 (P97): each gathers one subject - the server from the database, the page from
@@ -169,6 +174,32 @@ same for every subject:
   lines it logs under it. A step written out already says under which id.
 - **Shapes**, **Gaps** (in chain order, a loop reached from more ways in first)
   and **Ask next**: the calls that take the ids above, as `next` lists them.
+
+`scope` writes more than one node (P95): `node` (the default) and `method` are
+the node itself; `class` is the class, or the class a method belongs to;
+`file` the file a node is in (or `service#path`); `service` the service a node
+is in (or a service name). A scope the node does not have is an `isError`
+answer naming the ones it does (`scopes`), with a `next` per scope.
+
+- `# Class: …`: *Reached from* (the ways in that reach any method), then
+  *Methods · n*, each method with the ways in that reach it and its own chain
+  under it, the chains sharing `maxSteps` in order, a method whose chain was
+  cut saying how many steps and the call that writes the rest; the gaps of
+  every chain once.
+- `# File: …`: *Reached from* (the ways in that reach any node of the file),
+  *In this file · n*, every node of the file under the class it belongs to and
+  by line (a method under its class, a route under its handler's, anything
+  else under its first caller's), and the gaps recorded in the file.
+- `# Service: …`: *Ways in · n* by kind, *Calls into other services* and
+  *Called from other services* (the crossings `check_contract` lists between
+  two services, by the other service), *Channels* it publishes and consumes,
+  *Findings · n* by kind with the top three of each as `findings` ranks them,
+  and its most common gaps. No *Steps*.
+
+The page gathers a class and a file the same way (`subjectOf` in its
+`steps.js` takes them as targets, and the parity test compares both sides on
+every class and file of every built fixture); no control on the page asks for
+them yet, and the page's side of a service is P134.
 
 `describeForPrompt` and `PROMPT_LIMITS` are still exported from
 `@flowatlas/mcp`; they are core's `renderPrompt` and limits.
@@ -211,6 +242,55 @@ so a file holding both keeps its finding: P130), and `describe_for_prompt` write
 pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 `flowatlas stats` counts them.
 
+### Is it dead, and what to look at
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `dead` | whether one node is dead, with what could make that wrong; or, without `id`, every row `flowatlas dead` lists, verdict first | `id`, or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `offset` |
+| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, or a finding's reason), `service`, `offset` |
+
+`dead` reads the same functions `flowatlas dead` does (the linker's), so the
+two cannot disagree; a test compares them on three fixtures. A **verdict** is
+`dead` (nothing in the graph reaches it and nothing that could is unread),
+`likely-dead` (nothing reaches it, and a call read in part could), `unknown`
+(the graph's silence says nothing: it is triggered from outside the project,
+or a call one segment off names it) or `alive`. Its **evidence**:
+
+- `couldHit`: requests whose address was read in part and could reach the
+  route (`{ call, path, loc }`, the link report's near misses);
+- `oneOff`: requests that found no route and differ from this one by one
+  segment (`{ call, asks, differs, loc }`, `differs` like `cancel for archive`
+  or `:param left out`);
+- `outside`: why the callers are out of sight - the entry kind (`cron`,
+  `invoke`, a bot command), the infrastructure role (`probe`, `webhook`,
+  `callback`, `discovery`, `configured`), `stream`, `declared`, `exported` or
+  `library`;
+- `callers` and `caller` for `alive`; `missing` (`consumer`, `producer`,
+  `both`) for a channel; `unresolvedInjects` for a class in a service whose
+  injects did not all resolve (`likely-dead`); `classReached` for a method
+  nothing calls on a class that is used (`likely-dead`); `via` for a handler
+  or controller judged by the way in or route that decided it.
+
+`dead({id})` takes a way in, a channel (by its bare name too), a class, a
+method or a function, by any name the other tools take; a controller is as
+alive as its liveliest route. Without `id` it lists entries, channels and
+classes (methods only with `kind: "methods"`), dead first, counted under
+`counts`; `excludedEntryKinds` names the kinds never listed.
+
+`findings` gathers the rows the graph classes a finding (P81) that nobody
+accepted, the channels with one end, and the contract errors and warnings the
+last `flowatlas contracts` wrote beside the database. Each row is `{ kind, id,
+to?, method?, service, loc, message, severity?, rank, reach, next }`: `id` the
+node it is about (the loop's method, the route, the sending side, the
+channel), `next` the call that shows it (`get_source` at the loop's line,
+`get_flow`, `check_contract`, `who_emits` / `who_consumes`). Ranked by reach
+(D3): an N+1 by the ways in that reach its loop, an unguarded route by the
+writes it reaches, then the reads, a contract break by severity and then the
+ways in that reach its sender, a one-ended channel by the ends it has; `rank`
+is its place in its kind across the project, and `reach` the numbers it was
+ranked by. The per-item loops are counted under `notes`, and the findings
+accepted with `flowatlas accept` under `accepted`.
+
 ### Finding your way in
 
 | Tool | Answers | Takes |
@@ -251,6 +331,11 @@ route matched too. A helper's choices count: `423` finds the routes whose
 | `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth`, `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` |
 | `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `offset` |
+
+Asked about a class, `who_calls` and `impact` answer for every method of it
+something calls (P95): calls point at methods, never at the class. Each
+`who_calls` caller says the method it calls under `calls`; `impact` says how
+many methods it answered for under `forMethods`.
 
 `entry` can be named the way you would say it aloud. All three of these mean the
 same route:
@@ -368,12 +453,24 @@ What `get_flow` says beside the chain:
 | `who_emits` | everything that publishes on a channel, across every repository | `channel` (required), `offset` |
 | `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required), `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
+| `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `offset` |
 | `check_contract` | what one side of a crossing sends against what the other expects | `edge`, or `from` and `to` |
 
 `get_type` at `detail: 0` names the type and its fields (or its members); at 1
 it says what each field is, where the type is declared, and names each type it
 refers to with its fields' names under `nested`, keyed by id; at 2 it adds the
 structural hash, `meta` and the whole declaration of each nested type.
+
+`type_usage` takes what `get_type` takes (an id, or a name; a name two types
+have answers `candidates`) and lists every edge whose `params` or `returns`
+names the type, grouped: `taking` and `returning` (ways in whose handler takes
+or returns it: `{ id, handler }`), `crossings` (`http_calls`, `hits`),
+`channels` (`emits`, `consumes`) and `calls` inside a service (`{ from, to,
+type, carries }`, `carries` being `params` or `returns`), with `counts` per
+group, and `nested`: the types that hold it one level out, a field of it or a
+type argument, so a change to a nested type shows the outer ones. A type no
+edge names answers with `nested` and a note: it is used inside one function at
+most. `get_type`'s `next` names `type_usage` first.
 
 `check_contract` identifies a crossing either by its two ends or by one string:
 `"from -http_calls-> to"`. Its `findings`, when the contracts checker is

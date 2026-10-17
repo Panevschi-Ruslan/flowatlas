@@ -106,6 +106,8 @@ export interface FlowNode {
    */
   topOfChain?: true;
   gapsInFile?: number;
+  /** On a who_calls row answering for a class (P95): the method of the class this caller calls. */
+  calls?: string;
   children: FlowNode[];
 }
 

@@ -295,7 +295,8 @@ only one of them moved.
   could still reach — what was read matches, each unread piece standing for the
   rest of its segment and any after it, or only the verb was unread — was
   listed by the build in `routes.nearMissed` and by `dead` as `confidence:
-  "likely-dead"` with up to three `nearMiss` requests. No edge was drawn.
+  "likely-dead"` with up to three such requests (under `evidence.couldHit`
+  since P95). No edge was drawn.
 - **TypeORM's raw SQL read as a statement (P126).** A whole statement handed
   to `query` on a repository, an `EntityManager`, a `DataSource` or a
   `QueryRunner` named the tables and the verb its text writes
@@ -346,9 +347,55 @@ only one of them moved.
   `get_source`, `search` and `cant_follow` declared an `outputSchema`; every
   tool was annotated `readOnlyHint`, `openWorldHint: false` and
   `idempotentHint`, and an answer that is an error carried `isError`.
+- **`dead`, `findings` and `type_usage` in the MCP server (P95).** `dead({id})`
+  said whether a way in, channel, class, method or function is dead, with a
+  verdict (`dead`, `likely-dead`, `unknown` or `alive`) and the evidence that
+  could make it wrong: the requests read in part that could reach it
+  (`couldHit`), the requests that found no route one segment off it (`oneOff`,
+  `cancel for archive`), what is outside the project (`outside: cron`,
+  `probe`, `stream`, …), or one caller of an alive node; `dead({service,
+  kind})` listed the rows `flowatlas dead` lists, verdict first, paged. The
+  analysis moved from the CLI into the linker, so the command and the tool
+  read the same functions (a test compares them on three fixtures).
+  `findings()` counted every finding by kind - likely N+1 loops, unguarded
+  routes, contract errors and warnings from the last `flowatlas contracts`,
+  channels with one end, and every other finding reason - with the top three
+  of each, ranked by reach (the ways in that reach a loop, the writes then the
+  reads an unguarded route reaches, severity then the ways in to the sender),
+  each row with the call that shows it; `findings({kind})` listed one kind,
+  paged, the per-item loops counted as `notes`. `type_usage({type})` listed
+  every way in that takes or returns a type, each crossing, publish,
+  subscription and call that carries it, and the types holding it one level
+  out; a name two types have answered `candidates`
+  (`fixtures/multi-repo`, `fixtures/loops-worth-fixing`, `fixtures/cant-follow`).
+- **A class, a file or a service as one prompt (P95).** `describe_for_prompt`
+  took `scope`: `class` wrote every method of a class with the ways in that
+  reach it and its own chain, sharing `maxSteps`; `file` every node of a file
+  under the class it belongs to, the gaps in the file and the ways in that
+  reach it; `service` its ways in by kind, its crossings to and from the other
+  services, its channels, its top findings and its most common gaps. A scope
+  a node does not have was an error naming the ones it has. The page gathers
+  a class and a file the same way (`steps.js`), checked by the parity test.
+- **`who_calls` and `impact` on a class (P95).** Asked about a class, both
+  answered for the methods of it something calls, where they had answered
+  nothing, since calls point at methods; each caller named the method it calls
+  (`calls`), and `impact` said how many methods it answered for (`forMethods`).
 
 ### Changed
 
+- **`flowatlas dead` printed a verdict (P95).** The entries table's
+  `confidence` column became `verdict` (`dead`, `likely-dead`, `unknown`), the
+  channel and provider tables gained one, and a route a request one segment
+  off named was listed with that request beneath it. In JSON every row gained
+  `verdict` and `evidence`, and P91's `nearMiss` moved to `evidence.couldHit`.
+  Infrastructure, stream and declared routes were `unknown`, with `outside`
+  saying why; a class in a service with unresolved injects was `likely-dead`.
+- **The MCP tool list grew to eighteen (P95).** The test's ceilings were
+  raised from 8,000 to 9,700 characters for the part a model reads and from
+  21,000 to 27,500 for the whole list (9,595 and 27,382 with the new tools),
+  their text cut first. `get_type`'s `next` named `type_usage` first, a type's
+  hints added it, a class's hints added the class prompt, and `cant_follow`
+  asked about a finding's reason pointed at `findings({kind})`.
 - **`dead` told routes called from outside apart (P91).** Every entry row
   gained `class` (`actionable`, `stream`, `infrastructure`, `declared`), `why`
   (the rule that put it there), `role` for infrastructure (`probe`, `webhook`,

@@ -1,0 +1,9 @@
+{
+  "id": "orders",
+  "markdown": "# Service: orders\n\n`orders` — service\n\nRead from the source by flowatlas, without running it. Steps are in call order; a best guess is a join it inferred, not one the code proves.\n\n## Ways in · 5\n\n- http · 5: `entry:orders:http:GET:/a/:param`, `entry:orders:http:GET:/orders/:param`, `entry:orders:http:GET:/orders/latest` …\n\n## Calls into other services · 1\n\n- billing · 1: `producer:orders#src/orders/orders.service.ts:49:5` emits `consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated`\n\n## Called from other services · 1\n\n- gateway · 1: `http_out:gateway#src/clients/orders.client.ts:33:12` http_calls `entry:orders:http:GET:/orders/:param`\n\n## Channels\n\n- publishes `channel:order.archived`, `channel:order.created`\n\n## Findings · 5\n\n- unguarded · 4\n  - `src/orders/orders.controller.ts:31`: POST /orders has no guard in front of it and reaches orders. — `entry:orders:http:POST:/orders`\n  - `src/orders/orders.controller.ts:25`: GET /orders/:param has no guard in front of it and reaches orders. — `entry:orders:http:GET:/orders/:param`\n  - `src/orders/orders.controller.ts:19`: GET /orders/latest has no guard in front of it and reaches orders. — `entry:orders:http:GET:/orders/latest`\n- one-ended-channel · 1\n  - `src/orders/orders.service.ts:61`: no consumer in any repo — `channel:order.archived`\n\n## Ask next\n\n- `findings({service: \"orders\"})`\n- `dead({service: \"orders\"})`\n- `list_entries({service: \"orders\"})`\n",
+  "next": [
+    "findings({service: \"orders\"})",
+    "dead({service: \"orders\"})",
+    "list_entries({service: \"orders\"})"
+  ]
+}

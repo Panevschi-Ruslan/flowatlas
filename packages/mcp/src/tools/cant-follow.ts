@@ -14,7 +14,7 @@ import {
   type CantFollowSample,
   type PackageCover,
 } from '@flowatlas/core';
-import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, findingKindOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { nearWords } from '../query/names.js';
@@ -54,8 +54,9 @@ export interface CantFollowAnswer extends Omit<CantFollow, 'causes'> {
   /**
    * Rows of the same scope that are not steps the reader missed, and so in none
    * of the counts above (P81): notes on how a join or a reading was made, and
-   * findings about the code. `search({kinds: ["gaps"]})` lists them, each with
-   * its kind. Absent when there are none.
+   * findings about the code. `findings()` lists the findings ranked by reach
+   * (P95), `search({kinds: ["gaps"]})` both, each with its kind. Absent when
+   * there are none.
    */
   apart?: { notes: number; findings: number };
   /** Set when `accepted.json` could not be read, so nothing was left out (P80). */
@@ -275,7 +276,12 @@ const whyNone = (
     };
   }
   if (apart.length > 0) {
-    return { note: notMissedSaid(cause, apart), next: [callOf('search', { query: cause, kinds: ['gaps'] })] };
+    // Findings have a tool of their own (P95), ranked by reach; notes are only searched.
+    const finding = apart.some((row) => kindOfRow(row) === 'finding');
+    return {
+      note: notMissedSaid(cause, apart),
+      next: [finding ? callOf('findings', { kind: findingKindOf(cause), service }) : callOf('search', { query: cause, kinds: ['gaps'] })],
+    };
   }
   const accepted = rows.accepted.filter((row) => inScope(row) && carries(row, cause));
   if (accepted.length > 0) {

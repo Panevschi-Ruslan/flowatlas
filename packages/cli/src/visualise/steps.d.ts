@@ -84,7 +84,13 @@ export interface PromptKit {
   limits?: Partial<PromptLimits>;
 }
 
-export type PromptTarget = { entry: number } | { channel: number } | { node: number } | { row: number };
+export type PromptTarget =
+  | { entry: number }
+  | { channel: number }
+  | { node: number }
+  | { row: number }
+  | { class: number }
+  | { file: [service: string, path: string] };
 
 export declare const stepField: (model: GraphModel, i: number, key: string) => unknown;
 export declare const stepKindOf: (model: GraphModel, i: number) => StepKind;

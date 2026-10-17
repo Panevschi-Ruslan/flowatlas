@@ -16,6 +16,8 @@ export interface PromptLimits {
   maxFails: number;
   /** Most consumers of a channel written out with their steps. */
   maxConsumers: number;
+  /** Most methods of a class, or nodes of a file, written (P95). */
+  maxMembers: number;
   /** The ceiling on the whole text, in characters. */
   maxChars: number;
 }
@@ -141,6 +143,56 @@ export interface PromptCheckPlace {
   on?: PromptStep;
 }
 
+/** What a scoped subject covers (P95): a class and its methods, a file and its nodes, a service's front. */
+export type PromptScope = 'class' | 'file' | 'service';
+
+/** A method of a class, or a node of a file. */
+export interface PromptMember {
+  id: string;
+  label: string;
+  type: string;
+  kind?: string;
+  loc?: string;
+  /** For a file's node: the id of the class it belongs to; none for one that belongs to no class. */
+  group?: string;
+  /** The ways in that reach it (a class's method); empty for a file's node. */
+  reachedFrom: PromptStep[];
+  /** For a class's method: the walk from it, as a node's `steps`. */
+  steps?: PromptStep[];
+  stepsCut?: number;
+  stepsCutBy?: string;
+}
+
+/** A count of one kind, with the first few of it. */
+export interface PromptCount {
+  kind: string;
+  count: number;
+  first: PromptStep[];
+}
+
+/** The requests between a service and one other, counted, with the first few. */
+export interface PromptCrossing {
+  service: string;
+  count: number;
+  first: Array<{ from: PromptStep; to: PromptStep; type: string }>;
+}
+
+/** A service's front (P95): what an assistant starts from. */
+export interface PromptOverview {
+  /** Its ways in by kind. */
+  waysIn: PromptCount[];
+  /** Requests and publishes it makes into each other service, and those made into it. */
+  crossingsOut: PromptCrossing[];
+  crossingsIn: PromptCrossing[];
+  /** The channels it publishes onto and consumes. */
+  publishes: PromptStep[];
+  consumes: PromptStep[];
+  /** Its findings by kind, ranked by reach, with the top rows of each. */
+  findings: Array<{ kind: string; count: number; top: PromptGap[] }>;
+  /** Its most common gaps, by reason, with the first place of each. */
+  gaps: Array<{ reason: string; count: number; first: PromptGap }>;
+}
+
 export interface PromptSubject {
   id: string;
   /** The id is the page's key for it, the graph's id being unknown there. */
@@ -170,6 +222,12 @@ export interface PromptSubject {
   /** The ways in that reach it, for something that is not one itself. */
   reachedFrom?: PromptStep[];
   gaps: PromptGap[];
+  /** A class, a file or a service rather than one node (P95). */
+  scope?: PromptScope;
+  /** A class's methods, a file's nodes. */
+  members?: PromptMember[];
+  /** A service's front. */
+  overview?: PromptOverview;
 }
 
 export declare const renderPrompt: (subject: PromptSubject, limits?: Partial<PromptLimits>) => string;

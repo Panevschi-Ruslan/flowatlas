@@ -422,13 +422,16 @@ shows `flowatlas`, and a session has these tools, among others:
 | `impact` | every entry point that can reach a symbol, and whose |
 | `who_emits` / `who_consumes` | both ends of a message channel |
 | `get_type` | the shape of a type, with what it refers to |
+| `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it |
 | `check_contract` | whether two services still agree about what crosses |
 | `find_symbol` | fuzzy search, by substring or camel-case initials |
 | `search` | one query over routes, channels, tables, types, gaps, failures and classes |
 | `what_changed` | the last `flowatlas diff`, read back |
 | `get_source` | the code of one symbol, and the only tool returning code |
-| `describe_for_prompt` | an entry, channel, symbol or gap as bounded Markdown to paste into a prompt; the page's *Copy as prompt* writes the same text |
+| `describe_for_prompt` | an entry, channel, symbol or gap, or a whole class, file or service, as bounded Markdown to paste into a prompt; the page's *Copy as prompt* writes the same text |
 | `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |
+| `dead` | whether a node is dead, with what could make that wrong, or a service's dead rows, verdict first |
+| `findings` | likely N+1 loops, unguarded routes, contract breaks and one-ended channels, ranked by reach |
 
 Every row carries an `id` the next tool takes as it is, and every answer ends
 with `next`: the calls that take the ids it returned.
