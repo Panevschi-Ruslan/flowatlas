@@ -1,3 +1,6 @@
+import type { Node as TsNode } from 'ts-morph';
+import { Node } from 'ts-morph';
+
 /**
  * What a marker was given, read the same way wherever it is read.
  *
@@ -126,4 +129,35 @@ export const namesGivenTo = (marker: RecordedMarker): MarkerNames => {
   }
 
   return { names, refused };
+};
+
+/**
+ * `/** @flowatlas-calls catalog GET /items *\/` - the JSDoc twin of
+ * `@CallsService('catalog', 'GET /items')`, for code that takes no decorator:
+ * a function, a worker's handler (P91). The service is written first, then a
+ * verb and a path; a tag without a verb in second place is not this one.
+ */
+const JSDOC_CALLS = /@flowatlas-calls\s+(\S+)\s+([A-Za-z]+)\s+(\S+)/g;
+
+const VERBS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'ALL']);
+
+/** The documentation comments written above a node, or above the statement declaring it. */
+const docsAbove = (node: TsNode): string => {
+  const holder = Node.isVariableDeclaration(node) ? node.getVariableStatement() : node;
+  if (holder === undefined || !Node.isJSDocable(holder)) return '';
+  return holder
+    .getJsDocs()
+    .map((doc) => doc.getInnerText())
+    .join('\n');
+};
+
+/** Every `@flowatlas-calls <service> <METHOD> <path>` above a method or function, as the marker it stands for. */
+export const jsDocCallsMarkers = (node: TsNode): RecordedMarker[] => {
+  const markers: RecordedMarker[] = [];
+  for (const match of docsAbove(node).matchAll(JSDOC_CALLS)) {
+    const [, service, verb, path] = match as unknown as [string, string, string, string];
+    if (!VERBS.has(verb.toUpperCase())) continue;
+    markers.push({ name: 'CallsService', args: [service, `${verb.toUpperCase()} ${path}`] });
+  }
+  return markers;
 };

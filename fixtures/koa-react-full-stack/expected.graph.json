@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "koa-react-full-stack",
-  "generatedAt": "2026-10-08T07:27:09.174Z",
+  "generatedAt": "2026-10-17T04:49:27.798Z",
   "nodes": [
     {
       "id": "db_query:koa-react-full-stack#src/server/orders.repository.ts:16:33",
@@ -80,12 +80,12 @@
     {
       "id": "http_out:koa-react-full-stack#src/web/api/client.ts:10:26",
       "type": "http_out",
-      "label": "GET ?",
+      "label": "? ?",
       "repo": "koa-react-full-stack",
       "file": "src/web/api/client.ts",
       "line": 10,
       "meta": {
-        "method": "GET",
+        "method": null,
         "url": null,
         "path": null,
         "baseUrlEnv": null,

@@ -941,3 +941,57 @@ export class Early {
     expect(method('b')?.meta?.['unreferenced']).toBeUndefined();
   });
 });
+
+/**
+ * A wrapper handed the verb, and a helper whose suffix defaults to nothing
+ * (P91): each caller's request carries the verb it hands in, and `url()` is
+ * the collection the default leaves.
+ */
+describe('a verb a wrapper is handed, and an argument left to its default', () => {
+  const said = (graph: RepoGraph) =>
+    callsOf(graph)
+      .map((call) => `${String(call.meta?.['method'])} ${String(call.meta?.['path'])}`)
+      .sort();
+
+  it('reads the verb at each caller, through the frame its address came out by', () => {
+    const graph = extract(`
+  private req<T>(method: string, path: string): Observable<T> { return this.http.request<T>(method, \`\${environment.apiUrl}\${path}\`); }
+  rename(id: string): Observable<unknown> { return this.req('PATCH', \`/orders/\${id}\`); }
+  remove(id: string): Observable<unknown> { return this.req(Verb.Delete, \`/orders/\${id}\`); }
+`, {}, `export enum Verb { Delete = 'DELETE' }`);
+    expect(said(graph)).toEqual(['DELETE /orders/:param', 'PATCH /orders/:param']);
+    expect(reasons(graph)).not.toContain('api-method-dynamic');
+  });
+
+  it('reads it at each caller where the address is read in place', () => {
+    const graph = extract(`
+  private send(method: string): Observable<unknown> { return this.http.request(method, \`\${environment.apiUrl}/orders/sync\`); }
+  pull(): Observable<unknown> { return this.send('GET'); }
+  push(): Observable<unknown> { return this.send('POST'); }
+`);
+    expect(said(graph)).toEqual(['GET /orders/sync', 'POST /orders/sync']);
+  });
+
+  it('keeps a verb a caller hands on unread at that caller', () => {
+    const graph = extract(`
+  private req<T>(method: string, path: string): Observable<T> { return this.http.request<T>(method, \`\${environment.apiUrl}\${path}\`); }
+  any(verb: string, id: string): Observable<unknown> { return this.req(verb, \`/orders/\${id}\`); }
+`, {}, `
+@Injectable({ providedIn: 'root' })
+export class Screen {
+  constructor(private readonly api: OrdersApiService) {}
+  run(choice: string): void { this.api.any(choice, '1').subscribe(); }
+}`);
+    expect(said(graph)).toEqual(['null /orders/1']);
+    expect(reasons(graph)).toContain('api-method-dynamic');
+  });
+
+  it('reads a helper called without its suffix as the address its default leaves', () => {
+    const graph = extract(`
+  private url(suffix = ''): string { return \`\${environment.apiUrl}/orders\${suffix}\`; }
+  list(): Observable<unknown> { return this.http.get(this.url()); }
+  one(id: string): Observable<unknown> { return this.http.get(this.url(\`/\${id}\`)); }
+`);
+    expect(said(graph)).toEqual(['GET /orders', 'GET /orders/:param']);
+  });
+});

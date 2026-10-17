@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:00:29.052Z",
+  "builtAt": "2026-10-17T04:49:49.426Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 772,
       "packages": {
         "name": "billing",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 38,
       "types": 7,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 806,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -58,7 +58,7 @@
       "edges": 26,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 775,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -81,7 +81,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 0,
+      "durationMs": 610,
       "packages": {
         "name": "web",
         "runtime": [
@@ -139,7 +139,12 @@
     ],
     "duplicated": [
       "entry:orders:http:GET:/a/:param"
-    ]
+    ],
+    "nearMissed": {
+      "entry:orders:http:GET:/orders/latest": [
+        "http_out:gateway#src/clients/orders.client.ts:59:12"
+      ]
+    }
   },
   "types": {
     "total": 14,

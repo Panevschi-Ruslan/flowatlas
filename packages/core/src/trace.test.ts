@@ -5,7 +5,12 @@ import { resolveStaticString, settingKeyIn } from './static-string.js';
 import {
   constantMethodResult,
   constantPropertyValue,
+  forwardedFrom,
   forwardNoWorse,
+  parameterBehind,
+  verbAlong,
+  verbParameterOf,
+  verbsAtCallers,
   literalChoices,
   returnedExpression,
   rootSettingAddress,
@@ -352,7 +357,7 @@ describe('forwarding no worse than the helper', () => {
   const hop = (text: string) => {
     const file = new Project({ useInMemoryFileSystem: true }).createSourceFile('a.ts', `go(${text});`);
     const site = file.getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression);
-    return { site, argument: site.getArguments()[0]! };
+    return { site, argument: site.getArguments()[0]!, hops: [site] };
   };
   const sureness = (reading: string) => ({ unread: 0, partial: 1, read: 2 })[reading] ?? 0;
   const decide = (here: string, readings: string[], undecided = false) => {
@@ -376,5 +381,92 @@ describe('forwarding no worse than the helper', () => {
     expect(decide('unread', ['nobody'])).toEqual({ callers: [], here: true });
     expect(decide('unread', [])).toEqual({ callers: [], here: true });
     expect(decide('unread', ['read'], true)).toEqual({ callers: ['read'], here: true });
+  });
+});
+
+/**
+ * A verb a wrapper is handed, read at each caller (P91): through one wrapper
+ * and two, as a literal, an enum member, a member of an `as const` object and
+ * a parameter's default, and kept unread where a caller hands on something
+ * nothing reads.
+ */
+describe('the verb a wrapper is handed', () => {
+  const source = `
+    enum HttpVerb { Delete = 'DELETE' }
+    const VERBS = { patch: 'PATCH' } as const;
+    declare function fetch(url: string, init?: { method?: string }): Promise<unknown>;
+    class Client {
+      req(method: string, path: string) { return fetch(path, { method }); }
+      byDefault(path: string, method = 'put') { return this.req(method, path); }
+      patch(path: string) { return this.req(VERBS.patch, path); }
+    }
+    class Screen {
+      constructor(private readonly api: Client) {}
+      create() { return this.api.req('POST', '/items'); }
+      remove() { return this.api.req(HttpVerb.Delete, '/items/1'); }
+      rename() { return this.api.patch('/items/1'); }
+      replace() { return this.api.byDefault('/items/1'); }
+      choose(verb: string) { return this.api.req(verb, '/items/2'); }
+      pick(flag: boolean) { return this.choose(flag ? 'GET' : 'PUT'); }
+    }
+  `;
+  const verbParameter = (file: SourceFile) => {
+    const call = file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch');
+    const options = call!.getArguments()[1]!.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    return verbParameterOf(options.getProperty('method'))!;
+  };
+
+  it('finds the parameter a `{ method }` names', () => {
+    expect(verbParameter(parse(source)).getName()).toBe('method');
+  });
+
+  it('reads the verb at every caller, out through a second wrapper', () => {
+    const found = verbsAtCallers(verbParameter(parse(source)));
+    const said = found.calls.map((each) => `${each.site.getText()} ${each.verb ?? 'unread'} ${each.hops.length}`).sort();
+    expect(said).toEqual([
+      "this.api.byDefault('/items/1') PUT 2",
+      "this.api.req('POST', '/items') POST 1",
+      "this.api.req(HttpVerb.Delete, '/items/1') DELETE 1",
+      "this.choose(flag ? 'GET' : 'PUT') unread 2",
+      'this.req(VERBS.patch, path) PATCH 1',
+    ]);
+    expect(found.undecided).toBe(false);
+  });
+
+  it('reads it along the calls an address was followed out through', () => {
+    const file = parse(source);
+    const parameter = verbParameter(file);
+    const path = parameterBehind(file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch')!.getArguments()[0]!)!;
+    const said = forwardedFrom(path)
+      .calls.map((each) => `${each.site.getText()} ${verbAlong(parameter, each.hops) ?? 'unread'}`)
+      .sort();
+    expect(said).toEqual([
+      "this.api.byDefault('/items/1') PUT",
+      "this.api.patch('/items/1') PATCH",
+      "this.api.req('POST', '/items') POST",
+      "this.api.req(HttpVerb.Delete, '/items/1') DELETE",
+      "this.api.req(verb, '/items/2') unread",
+    ]);
+  });
+});
+
+describe('an argument a caller leaves out', () => {
+  it('is the parameter\'s default, read where the helper writes it', () => {
+    const file = parse(`
+      declare function fetch(url: string): Promise<unknown>;
+      export function list(suffix = '') { return fetch(\`/items\${suffix}\`); }
+      export function none(suffix?: string) { return fetch(\`/items\${suffix}\`); }
+      export const all = () => list();
+      export const one = () => list('/1');
+      export const nothing = () => none();
+    `);
+    const calls = file.getDescendantsOfKind(SyntaxKind.CallExpression).filter((each) => each.getExpression().getText() === 'fetch');
+    const of = (index: number) =>
+      forwardedFrom(parameterBehind(calls[index]!.getArguments()[0]!.asKindOrThrow(SyntaxKind.TemplateExpression).getTemplateSpans()[0]!.getExpression())!)
+        .calls.map((each) => each.argument.getText())
+        .sort();
+    expect(of(0)).toEqual(["''", "'/1'"]);
+    // No default: a caller that hands nothing hands nothing worth following.
+    expect(of(1)).toEqual([]);
   });
 });

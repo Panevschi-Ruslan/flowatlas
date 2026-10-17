@@ -9,6 +9,7 @@ import { localBaseClassNames, localBaseTableProperty,
   findConfig,
   loadConfig,
   parseConfig,
+  serviceNamesOf,
 } from './config.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
 
@@ -65,6 +66,7 @@ describe('parseConfig', () => {
         markers: { warnAsError: false },
       },
       callShape: { conditionalWrites: [], perItemHosts: [], boundedCalls: [] },
+      dead: { infrastructure: { paths: [], decorators: [], names: [], builtIn: true } },
     });
   });
 
@@ -204,6 +206,30 @@ describe('parseConfig', () => {
  * would be the worst kind of breaking change: the build succeeds and the service
  * quietly has no routes.
  */
+describe('services named by an alias (P91)', () => {
+  const services = [
+    { name: 'catalog-api', repo: './catalog', type: 'nestjs', aliases: ['catalog', 'catalog-worker'] },
+    { name: 'storefront', repo: './web', type: 'browser', apiTarget: { apiUrl: 'catalog' } },
+  ];
+
+  it('names a service by its name or any alias, and takes an alias as an apiTarget', () => {
+    const config = parseConfig({ services });
+    expect([...serviceNamesOf(config)]).toEqual([
+      ['catalog-api', 'catalog-api'],
+      ['catalog', 'catalog-api'],
+      ['catalog-worker', 'catalog-api'],
+      ['storefront', 'storefront'],
+    ]);
+  });
+
+  it('refuses an alias written twice, or one that is another service\'s name', () => {
+    const twice = [...services, { name: 'stock', repo: './stock', type: 'nestjs', aliases: ['catalog'] }];
+    expect(() => parseConfig({ services: twice })).toThrow(/"catalog" is already a name of "catalog-api"/);
+    const named = [{ ...services[0], aliases: ['storefront'] }, services[1]];
+    expect(() => parseConfig({ services: named })).toThrow(/"storefront" is already a name of "storefront"/);
+  });
+});
+
 describe('a service declared by a document', () => {
   const documentOf = (service: Record<string, unknown>) =>
     parseConfig({ services: [{ name: 'billing', ...service }] }).services[0];

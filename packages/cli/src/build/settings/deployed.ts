@@ -19,10 +19,23 @@ export interface Declared extends Written {
   readonly environment?: string;
 }
 
+/** A binding a worker's configuration declares to another worker (P91). */
+export interface DeclaredBinding {
+  readonly binding: string;
+  readonly service: string;
+  readonly entrypoint?: string;
+  /** The environment it is declared for, when the file declares several. */
+  readonly environment?: string;
+}
+
 /** What a deployment file says: its variables, and the port it is run on locally. */
 export interface DeploymentSettings {
   readonly declared: readonly Declared[];
   readonly ports: readonly number[];
+  /** The other workers it reaches through a binding (P91). */
+  readonly bindings?: readonly DeclaredBinding[];
+  /** The names it is deployed under, its own and one per environment (P91). */
+  readonly names?: readonly string[];
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -95,20 +108,53 @@ const parseJsonc = (text: string): unknown => {
   return JSON.parse(out.replace(/,(\s*[}\]])/g, '$1'));
 };
 
-/** `vars`, and `env.<name>.vars` for one environment; `dev.port` is where it runs locally. */
+/**
+ * `services: [{ binding, service, entrypoint? }]`: the workers a worker reaches
+ * by name rather than by address (P91). Only bindings written out in full; one
+ * whose service is assembled from a placeholder is not a name anybody can read.
+ */
+const bindingsIn = (value: unknown, environment?: string): DeclaredBinding[] =>
+  Array.isArray(value)
+    ? value.flatMap((item) => {
+        if (!isRecord(item)) return [];
+        const binding = literal(item['binding']);
+        const service = literal(item['service']);
+        const entrypoint = literal(item['entrypoint']);
+        if (binding === undefined || service === undefined) return [];
+        return [
+          {
+            binding,
+            service,
+            ...(entrypoint === undefined ? {} : { entrypoint }),
+            ...(environment === undefined ? {} : { environment }),
+          },
+        ];
+      })
+    : [];
+
+/**
+ * `vars`, and `env.<name>.vars` for one environment; `dev.port` is where it
+ * runs locally; `services` and `env.<name>.services` the workers it is bound
+ * to, and `name` and `env.<name>.name` what it is deployed as (P91).
+ */
 const fromWorkerDocument = (document: unknown): DeploymentSettings => {
   if (!isRecord(document)) return { declared: [], ports: [] };
   const env = document['env'];
   const dev = document['dev'];
   const port = isRecord(dev) ? Number(dev['port']) : Number.NaN;
+  const blocks = isRecord(env) ? Object.entries(env).filter((entry): entry is [string, Record<string, unknown>] => isRecord(entry[1])) : [];
+  const bindings = [...bindingsIn(document['services']), ...blocks.flatMap(([name, block]) => bindingsIn(block['services'], name))];
+  const names = [literal(document['name']), ...blocks.map(([, block]) => literal(block['name']))].filter(
+    (name): name is string => name !== undefined,
+  );
   return {
     declared: [
       ...variables(document['vars']),
-      ...(isRecord(env)
-        ? Object.entries(env).flatMap(([name, block]) => variables(isRecord(block) ? block['vars'] : undefined, { environment: name }))
-        : []),
+      ...blocks.flatMap(([name, block]) => variables(block['vars'], { environment: name })),
     ],
     ports: Number.isInteger(port) && port > 0 ? [port] : [],
+    ...(bindings.length === 0 ? {} : { bindings }),
+    ...(names.length === 0 ? {} : { names: [...new Set(names)] }),
   };
 };
 
@@ -142,10 +188,20 @@ const inlineTable = (written: string): Record<string, unknown> | undefined => {
   return out;
 };
 
+/** `[{ a = "x" }, { b = "y" }]`, an inline array of inline tables, on one line. */
+const inlineArray = (written: string): Record<string, unknown>[] | undefined => {
+  const body = /^\[(.*)\]\s*(?:#.*)?$/.exec(written.trim())?.[1];
+  if (body === undefined) return undefined;
+  const tables = body.match(/\{[^{}]*\}/g) ?? [];
+  return tables.map((table) => inlineTable(table)).filter((table): table is Record<string, unknown> => table !== undefined);
+};
+
 /**
- * The part of a worker's TOML configuration that holds variables: tables and
- * inline tables of strings and numbers, which is all `vars` and `dev` are.
- * Everything else in the file is skipped, not misread.
+ * The part of a worker's TOML configuration that holds variables and
+ * bindings: tables and inline tables of strings and numbers, which is all
+ * `vars` and `dev` are, and the arrays of tables `services` is written as
+ * (`[[services]]` or `services = [{ … }]`, P91). Everything else in the file
+ * is skipped, not misread.
  */
 const readToml = (text: string): Record<string, unknown> => {
   const root: Record<string, unknown> = {};
@@ -171,16 +227,30 @@ const readToml = (text: string): Record<string, unknown> => {
       table = tableAt((header[1] as string).split('.').map((key) => key.trim().replace(/^"|"$/g, '')));
       continue;
     }
-    // An array of tables (`[[routes]]`) holds nothing read here.
-    if (line.startsWith('[[')) {
-      table = undefined;
+    // An array of tables: one more entry of the list at that path. Only
+    // `services` is read (P91); `[[routes]]` and the rest hold nothing here.
+    const arrayHeader = /^\[\[([^[\]]+)\]\]\s*(?:#.*)?$/.exec(line);
+    if (arrayHeader !== null) {
+      const path = (arrayHeader[1] as string).split('.').map((key) => key.trim().replace(/^"|"$/g, ''));
+      const last = path.pop() as string;
+      if (last !== 'services') {
+        table = undefined;
+        continue;
+      }
+      const owner = tableAt(path);
+      const list = Array.isArray(owner[last]) ? (owner[last] as unknown[]) : [];
+      const made: Record<string, unknown> = {};
+      list.push(made);
+      owner[last] = list;
+      table = made;
       continue;
     }
     const pair = /^([A-Za-z0-9_."-]+)\s*=\s*(.*)$/.exec(line);
     if (pair === null || table === undefined) continue;
     const key = (pair[1] as string).replace(/^"|"$/g, '');
     const written = pair[2] as string;
-    const value = written.trim().startsWith('{') ? inlineTable(written) : tomlValue(written);
+    const trimmed = written.trim();
+    const value = trimmed.startsWith('{') ? inlineTable(written) : trimmed.startsWith('[') ? inlineArray(written) : tomlValue(written);
     if (value !== undefined) table[key] = value;
   }
   return root;

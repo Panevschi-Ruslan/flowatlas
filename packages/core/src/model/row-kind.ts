@@ -239,6 +239,7 @@ const GAPS: readonly string[] = [
   'invoke-target-not-found',
   'invoke-target-ambiguous',
   'unknown-base-url-env',
+  'service-binding-unknown',
   'target-route-not-found',
   'ambiguous-route',
   'ambiguous-route-application',

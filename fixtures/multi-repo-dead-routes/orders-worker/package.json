@@ -1,0 +1,8 @@
+{
+  "name": "orders-worker",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0"
+  }
+}

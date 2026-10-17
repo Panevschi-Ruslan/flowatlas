@@ -10,3 +10,9 @@ with literal ids. Each caller is credited with `PUT` or `DELETE` (or the caller'
 own `POST`, for the spread) at host `api.example.com`, where the request used to
 read as `GET` with a path starting `/https:/`. The settings object is not
 recorded as the request's body.
+
+`src/items/stock.client.ts` is handed the verb as well (P91): `fetch(url, {
+method })` with `method` a parameter. `Restocker.restock` hands in `'PATCH'`
+and is credited with `PATCH /items/:param/stock`; `Restocker.settle` hands in a
+choice nothing can read, and its request keeps the verb unread, with an
+`api-method-dynamic` row, where it used to read as `GET`.

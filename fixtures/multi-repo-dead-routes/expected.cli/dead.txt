@@ -1,0 +1,9 @@
+nothing here is proof: every row is a heuristic with the reason it fired
+entry kinds never reported (triggered from outside): cron, bot_command, bot_callback, bot_event, scene_step, invoke
+
+entries:
+  id                                              where                             confidence   why
+  entry:catalog-api:http:GET:/items/export        src/items/items.controller.ts:25  dead         no http_calls/hits from any repo (may be a public API)
+  entry:catalog-api:http:GET:/items/:param/price  src/items/items.controller.ts:50  likely-dead  no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it
+  GET:/items/:param/price could be reached by /items/:param/${…}${…} at src/app/items.client.ts:59
+  4 infrastructure routes: 2 probes, 1 callback, 1 webhook — --class infrastructure to list

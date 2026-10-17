@@ -134,6 +134,8 @@ interface FromConfig {
   warnAsError: boolean;
   check: CheckOptions;
   envOwners: Map<string, string[]>;
+  /** Every alias a service is configured with, to the service's name (P91). */
+  aliases: Map<string, string>;
   /** Each service's directory as the configuration writes it, `./` stripped. */
   repoDirs: Map<string, string>;
   /** The services described by a document instead of a repository. */
@@ -190,6 +192,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     warnAsError: false,
     check: {},
     envOwners: new Map(),
+    aliases: new Map(),
     repoDirs: new Map(),
     declared: [],
     readableDirs: [],
@@ -204,10 +207,12 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     const declared: DeclaredDocument[] = [];
     const readableDirs: string[] = [];
     const serviceDirs = new Map<string, string>();
+    const aliases = new Map<string, string>();
     for (const service of services) {
       for (const env of service.baseUrlEnv ?? []) {
         envOwners.set(env, [...(envOwners.get(env) ?? []), service.name]);
       }
+      for (const alias of service.aliases ?? []) aliases.set(alias, service.name);
       // A declared service's rows already name the document relative to the
       // configuration, because the document is where they came from and there
       // is no repository under it. Putting its directory in front would spell
@@ -245,6 +250,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
         ignoreEdges: [...contracts.ignoreEdges],
       },
       envOwners,
+      aliases,
       repoDirs,
       declared,
       readableDirs,
@@ -445,6 +451,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         warnAsError: settings.warnAsError,
         check: settings.check,
         envOwners: settings.envOwners,
+        aliases: settings.aliases,
         flowatlasVersion: VERSION,
         ...(options.service === undefined ? {} : { service: options.service }),
         looksLike: describeRepository(settings),

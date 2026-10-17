@@ -110,6 +110,16 @@ const serviceEntrySchema = z.strictObject({
    */
   hosts: z.array(z.string().min(1)).optional(),
   /**
+   * Other names this service is known by (P91): the short name an annotation
+   * uses for it, the name its worker is deployed under. A name written here
+   * is the service, wherever a service is named - an annotation, a service
+   * binding, `apiTarget` - and must be unique across every name and alias.
+   * Matched exactly: `catalog` is never taken for `catalog-api` unless it is
+   * written down, because a prefix would join the wrong service the day a
+   * second one starts with the same word.
+   */
+  aliases: z.array(z.string().min(1)).optional(),
+  /**
    * Which service answers each of those keys, by name.
    *
    * A frontend's settings key names one backend, and only the project knows
@@ -1146,6 +1156,29 @@ export const flowatlasConfigSchema = z
         boundedCalls: z.array(z.string().min(1)).default([]),
       })
       .default({ conditionalWrites: [], perItemHosts: [], boundedCalls: [] }),
+    /**
+     * What `flowatlas dead` reads as infrastructure (P91): routes something
+     * outside the project calls by design - a probe, a webhook, a provider's
+     * callback - listed apart from the routes nobody calls.
+     *
+     * `paths` are route patterns spelled as `doctor.publicRoutes` spells them
+     * (`METHOD /path`, `*` for any run of characters); `decorators` name a
+     * decorator on the handler or its controller; `names` a handler or a
+     * controller by its name. All three are added to the built-in rules, which
+     * `builtIn: false` turns off.
+     */
+    dead: z
+      .strictObject({
+        infrastructure: z
+          .strictObject({
+            paths: z.array(z.string().min(1)).default([]),
+            decorators: z.array(z.string().min(1)).default([]),
+            names: z.array(z.string().min(1)).default([]),
+            builtIn: z.boolean().default(true),
+          })
+          .default({ paths: [], decorators: [], names: [], builtIn: true }),
+      })
+      .default({ infrastructure: { paths: [], decorators: [], names: [], builtIn: true } }),
   })
   .superRefine((config, ctx) => {
     const seen = new Set<string>();
@@ -1170,9 +1203,32 @@ export const flowatlasConfigSchema = z
       }
     });
 
+    // An alias is a name, and a name names one service (P91): one written
+    // twice, or the same as another service's name, would make whichever
+    // annotation uses it mean two services.
+    const claimed = new Map<string, string>(config.services.map((service) => [service.name, service.name]));
+    config.services.forEach((service, index) => {
+      (service.aliases ?? []).forEach((alias, at) => {
+        const owner = claimed.get(alias);
+        if (owner !== undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['services', index, 'aliases', at],
+            message:
+              owner === service.name
+                ? `${JSON.stringify(alias)} is already a name of ${JSON.stringify(service.name)}.`
+                : `${JSON.stringify(alias)} is already a name of ${JSON.stringify(owner)}; a name names one service.`,
+          });
+          return;
+        }
+        claimed.set(alias, service.name);
+      });
+    });
+
     // A target naming a service that does not exist is a typo that would
-    // otherwise show up much later as a call that reaches nothing.
-    const names = new Set(config.services.map((service) => service.name));
+    // otherwise show up much later as a call that reaches nothing. An alias
+    // is a name the service answers to (P91).
+    const names = new Set(claimed.keys());
     config.services.forEach((service, index) => {
       for (const [key, target] of Object.entries(service.apiTarget ?? {})) {
         if (names.has(target)) continue;
@@ -1412,4 +1468,20 @@ export const shapesFor = (
     for (const path of expandGlob(configDir, pattern)) if (!out.includes(path)) out.push(path);
   }
   return out;
+};
+
+/**
+ * Every name each service answers to, its own and its aliases, mapped to the
+ * service's name (P91). The schema keeps the names unique, so each one maps
+ * to exactly one service.
+ */
+export const serviceNamesOf = (
+  config: Pick<FlowatlasConfig, 'services'>,
+): ReadonlyMap<string, string> => {
+  const names = new Map<string, string>();
+  for (const service of config.services) {
+    names.set(service.name, service.name);
+    for (const alias of service.aliases ?? []) if (!names.has(alias)) names.set(alias, service.name);
+  }
+  return names;
 };

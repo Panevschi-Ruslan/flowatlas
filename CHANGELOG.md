@@ -274,8 +274,51 @@ only one of them moved.
   (`meta.source: "entity-arg"`). Queries read the first two ways carried
   `meta.tableFrom: "inferred-property"` or `"helper"`
   (`fixtures/tables-set-elsewhere`).
+- **Callers `dead` used to miss (P91).** A service could be named by
+  `services[].aliases` (unique across every name and alias, matched exactly)
+  wherever a service is named: `@CallsService`, its JSDoc twin `/**
+  @flowatlas-calls <service> <METHOD> <path> */` (now read on server methods
+  and functions too), `apiTarget`, a base address's host. A worker's
+  `env.X.fetch(input, init)` became an `http_out` with `meta.binding`, joined
+  `static`, `via: "serviceBinding"`, to the service its `wrangler.*`
+  `services` bind `X` to (by name, alias, or the `name` that service's own
+  wrangler file deploys it under); a binding to no known worker was a
+  `service-binding-unknown` row. A request made to exactly what a setting holds
+  (`fetch(process.env.REINDEX_URL)`) whose value is a whole address took the
+  value's path. A wrapper handed the verb (`this.req('PATCH', path)` into
+  `fetch(url, { method })`, `http.request(method, url)`) credited each caller
+  with the verb it hands in, through further wrappers, by one walk in the core
+  (`verbsAtCallers`, `verbAlong`) the server, Angular and React readers share;
+  and a caller leaving an argument out handed in its default (`url()` for
+  `url(suffix = '')`) (`fixtures/multi-repo-dead-routes`).
+- **`likely-dead` (P91).** A route nothing calls that a request read in part
+  could still reach — what was read matches, each unread piece standing for the
+  rest of its segment and any after it, or only the verb was unread — was
+  listed by the build in `routes.nearMissed` and by `dead` as `confidence:
+  "likely-dead"` with up to three `nearMiss` requests. No edge was drawn.
 
 ### Changed
+
+- **`dead` told routes called from outside apart (P91).** Every entry row
+  gained `class` (`actionable`, `stream`, `infrastructure`, `declared`), `why`
+  (the rule that put it there), `role` for infrastructure (`probe`, `webhook`,
+  `callback`, `discovery`, `configured`) and `confidence`. Infrastructure took
+  the probes, webhook and callback receivers by path (at any depth), a
+  `@HealthCheck()` handler, a handler or controller named for what it answers,
+  and what `dead.infrastructure.{paths,decorators,names}` names
+  (`builtIn: false` turned the built-in rules off); a route marked
+  `@flowatlas-public` was `declared`, like one under `doctor.publicRoutes`. The
+  table listed the actionable rows, and folded every other class into one line
+  (`4 infrastructure routes: 2 probes, 1 callback, 1 webhook`); `--class`
+  listed one. The Map counted infrastructure apart from the routes nothing
+  calls. A NestJS entry gained `meta.controllerDecorators`.
+- **A verb nobody read is not `GET` (P91).** A request whose verb a caller
+  hands in and nothing can read kept `method: null`, joined nothing and was an
+  `api-method-dynamic` row; on the server it had been recorded as `GET`. A
+  caller handing in the verb no longer had its second argument read as the body.
+  Snapshots of `nest-forwarded-verb`, `nest-client-wrapper`,
+  `koa-react-full-stack`, `react-client-base` and `react-local-client` moved
+  with it; `ground-truth` and `multi-repo` gained `routes.nearMissed`.
 
 - **One table, one name (P88).** A TypeORM entity whose `@Entity('orders')` or
   `@Entity({ name: 'orders' })` states its table was drawn on that table
@@ -451,6 +494,11 @@ only one of them moved.
 
 ### Fixed
 
+- **`{ method }` was read as no verb at all (P91).** `fetch(url, { method })`
+  written with a shorthand property was taken as the protocol's default, `GET`;
+  it names a binding, and is read as one. An address joined with `+` to a
+  value read at run time (`'https://catalog/items/' + id`) was read as far as
+  it goes, where it had been no address.
 - **`observe` read the real @nestjs/observe format, and counted a request once
   (P85).** The @nestjs/observe reader had been written against keys the SDK
   does not send, so a real telemetry batch joined nothing and left `lastSeen`

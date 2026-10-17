@@ -22,6 +22,7 @@ import {
   runCantFollowCommand,
   runChannel,
   runContracts,
+  runDead,
   runDoctorCommand,
   runFlow,
   runImpact,
@@ -475,6 +476,30 @@ const helperCheckPlain = plainFor('nest-check-through-helper');
 
 const HELPER_CHECK_CASES = [['doctor.txt', (io) => runDoctorCommand({ config: helperCheckPlain.config }, io)]];
 
+/**
+ * Routes nobody calls, told apart (P91): the one the command is for, the one a
+ * request read in part could still reach, and the probes, webhooks and
+ * callbacks something outside calls, folded and then listed.
+ */
+const deadRoutesPlain = plainFor('multi-repo-dead-routes');
+const deadText = async (io, options) => {
+  const { lines } = await runDead({ config: deadRoutesPlain.config, kind: 'entries', ...options });
+  io.out(`${lines.join('\n')}\n`);
+};
+
+const DEAD_ROUTE_CASES = [
+  ['dead.txt', (io) => deadText(io, {})],
+  ['dead.infrastructure.txt', (io) => deadText(io, { class: 'infrastructure' })],
+  [
+    'dead.json',
+    async (io) => {
+      const { result } = await runDead({ config: deadRoutesPlain.config, kind: 'entries' });
+      io.out(`${JSON.stringify(result, null, 2)}\n`);
+    },
+  ],
+  ['doctor.txt', (io) => runDoctorCommand({ config: deadRoutesPlain.config }, io)],
+];
+
 const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
   terraformShape('lambda-terraform-openapi', [
@@ -542,6 +567,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.cli'), owned: true, cases: HELPER_CHECK_CASES },
   { dir: join(root, 'fixtures', 'tables-set-elsewhere', 'expected.cli'), owned: true, cases: TABLES_ELSEWHERE_CASES },
   { dir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.cli'), owned: true, cases: LOOPS_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 
@@ -574,7 +600,7 @@ for (const [file, ask] of CASES) {
   let stderr = '';
   const io = { out: (text) => (stdout += text), err: (text) => (stderr += text), tty: false };
   try {
-    ask(io);
+    await ask(io);
   } catch (error) {
     problems.push(`${file}: ${error instanceof Error ? error.message : String(error)}`);
     continue;

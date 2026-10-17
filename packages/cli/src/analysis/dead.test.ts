@@ -476,3 +476,130 @@ describe('fields the receiver does not declare', () => {
     expect(result.fields[0]?.reason).toContain('nothing there removes it');
   });
 });
+
+/**
+ * Routes something outside the project calls, told from the routes nobody
+ * calls (P91): each rule, what the configuration adds, and what it takes away.
+ */
+describe('routes called from outside the project', () => {
+  const uncalledIn = (nodes: ReturnType<typeof route>[], edges: ReturnType<typeof edge>[] = [], nearMissed?: Record<string, string[]>) =>
+    buildTestDb({
+      nodes,
+      edges,
+      report: {
+        routes: {
+          total: nodes.length,
+          called: 0,
+          uncalled: nodes.filter((each) => each.type === 'entry').map((each) => each.id),
+          duplicated: [],
+          ...(nearMissed === undefined ? {} : { nearMissed }),
+        },
+      },
+    });
+  const handled = (id: string, handler: string) => edge(id, handler, { type: 'handles' });
+
+  it('reads a probe, a webhook, a callback and a well-known address by their path', () => {
+    const db = uncalledIn([
+      route('entry:orders:http:GET:/healthz'),
+      route('entry:orders:http:POST:/webhooks/payments'),
+      route('entry:orders:http:GET:/oauth/callback'),
+      route('entry:orders:http:GET:/.well-known/openid-configuration'),
+      route('entry:orders:http:POST:/payments/notify'),
+    ]);
+    const rows = deadEntries(db, db.report());
+    db.close();
+    expect(rows.map((row) => `${row.key} ${row.class} ${row.role ?? ''} ${row.why}`)).toEqual([
+      'GET:/.well-known/openid-configuration infrastructure discovery path /.well-known/openid-configuration',
+      'GET:/healthz infrastructure probe path /healthz',
+      'GET:/oauth/callback infrastructure callback path /oauth/callback',
+      'POST:/payments/notify infrastructure webhook path /payments/notify',
+      'POST:/webhooks/payments infrastructure webhook path /webhooks/payments',
+    ]);
+  });
+
+  it('keeps a list a screen reads as a route, whatever it is called', () => {
+    const db = uncalledIn([route('entry:orders:http:GET:/users/:param/notifications')]);
+    const rows = deadEntries(db, db.report());
+    db.close();
+    expect(rows.map((row) => row.class)).toEqual(['actionable']);
+  });
+
+  it('reads a probe decorator, and a handler or controller named for what it answers', () => {
+    const db = uncalledIn(
+      [
+        route('entry:orders:http:GET:/ready', { meta: { method: 'GET', path: '/ready', decorators: [{ name: 'HealthCheck', args: [] }] } }),
+        route('entry:orders:http:POST:/stripe', { meta: { method: 'POST', path: '/stripe', controller: 'PaymentsController' } }),
+        route('entry:orders:http:GET:/up', { meta: { method: 'GET', path: '/up', controller: 'HealthController' } }),
+        route('entry:orders:http:GET:/settings/hooks-list', { meta: { method: 'GET', path: '/settings/hooks-list', controller: 'SettingsController' } }),
+        node('orders#src/p.ts:PaymentsController.stripeWebhook', { label: 'PaymentsController.stripeWebhook' }),
+        node('orders#src/s.ts:SettingsController.fetchWebhookSettings', { label: 'SettingsController.fetchWebhookSettings' }),
+      ],
+      [
+        handled('entry:orders:http:POST:/stripe', 'orders#src/p.ts:PaymentsController.stripeWebhook'),
+        handled('entry:orders:http:GET:/settings/hooks-list', 'orders#src/s.ts:SettingsController.fetchWebhookSettings'),
+      ],
+    );
+    const rows = deadEntries(db, db.report());
+    db.close();
+    expect(rows.map((row) => `${row.key} ${row.class} ${row.why}`)).toEqual([
+      'GET:/settings/hooks-list actionable no caller read',
+      'GET:/ready infrastructure decorator @HealthCheck',
+      'GET:/up infrastructure name HealthController',
+      'POST:/stripe infrastructure name stripeWebhook',
+    ]);
+  });
+
+  it('adds what the configuration names, and drops the built-in rules when told to', () => {
+    const nodes = [
+      route('entry:orders:http:POST:/inbound/sms'),
+      route('entry:orders:http:GET:/ping'),
+      route('entry:orders:http:GET:/admin/sync', { meta: { method: 'GET', path: '/admin/sync', decorators: [{ name: 'Scheduled', args: [] }] } }),
+      route('entry:orders:http:GET:/admin/flush', { meta: { method: 'GET', path: '/admin/flush', controller: 'OpsController' } }),
+    ];
+    const infrastructure = { paths: ['POST /inbound/*'], decorators: ['Scheduled'], names: ['OpsController'], builtIn: true };
+    const db = uncalledIn(nodes);
+    const configured = deadEntries(db, db.report(), { infrastructure });
+    const plain = deadEntries(db, db.report(), { infrastructure: { ...infrastructure, builtIn: false } });
+    db.close();
+    expect(configured.map((row) => `${row.key} ${row.role ?? row.class} ${row.why}`)).toEqual([
+      'GET:/admin/flush configured dead.infrastructure.names OpsController',
+      'GET:/admin/sync configured dead.infrastructure.decorators @Scheduled',
+      'GET:/ping probe path /ping',
+      'POST:/inbound/sms configured dead.infrastructure.paths POST /inbound/*',
+    ]);
+    expect(plain.find((row) => row.key === 'GET:/ping')?.class).toBe('actionable');
+    expect(plain.filter((row) => row.role === 'configured')).toHaveLength(3);
+  });
+
+  it('reads a route the code declares public as declared, never as dead evidence', () => {
+    const db = uncalledIn([
+      route('entry:orders:http:GET:/terms', { meta: { method: 'GET', path: '/terms', publicNote: 'shown before sign-in' } }),
+    ]);
+    const rows = deadEntries(db, db.report());
+    db.close();
+    expect(rows.map((row) => `${row.class} ${row.why}`)).toEqual(['declared @flowatlas-public shown before sign-in']);
+  });
+
+  it('calls a route a partly read request could reach likely-dead, names the request, and ranks it after the dead', () => {
+    const db = uncalledIn(
+      [
+        route('entry:orders:http:GET:/items/:param/price'),
+        route('entry:orders:http:GET:/items/export'),
+        route('entry:orders:http:GET:/healthz'),
+        node('ui_api_call:web#src/a.ts:9:3', { type: 'ui_api_call', repo: 'web', file: 'src/a.ts', line: 9, meta: { path: '/items/:param/${…}' } }),
+      ],
+      [],
+      { 'entry:orders:http:GET:/items/:param/price': ['ui_api_call:web#src/a.ts:9:3'] },
+    );
+    const rows = deadEntries(db, db.report());
+    const onlyActionable = deadEntries(db, db.report(), { class: 'actionable' });
+    db.close();
+    expect(rows.map((row) => `${row.key} ${row.confidence}`)).toEqual([
+      'GET:/items/export dead',
+      'GET:/items/:param/price likely-dead',
+      'GET:/healthz dead',
+    ]);
+    expect(rows[1]?.nearMiss).toEqual([{ call: 'ui_api_call:web#src/a.ts:9:3', path: '/items/:param/${…}', file: 'src/a.ts', line: 9 }]);
+    expect(onlyActionable.map((row) => row.key)).toEqual(['GET:/items/export', 'GET:/items/:param/price']);
+  });
+});

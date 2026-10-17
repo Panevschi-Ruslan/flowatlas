@@ -73,11 +73,13 @@ const addTo = (index: Map<string, string[]>, host: string, service: string): voi
   index.set(key, list);
 };
 
-/** The hosts every service is reached at: its name, its configured hosts, and what its files say. */
+/** The hosts every service is reached at: its name and aliases, its configured hosts, and what its files say. */
 export const hostIndexOf = (config: FlowatlasConfig, settings: Readonly<Record<string, RepoSettings>>): HostIndex => {
   const index = new Map<string, string[]>();
   for (const service of config.services) {
     addTo(index, service.name, service.name);
+    // A service is reached at the names it is known by (P91).
+    for (const alias of service.aliases ?? []) addTo(index, alias, service.name);
     for (const host of service.hosts ?? []) addTo(index, host, service.name);
   }
   for (const [service, own] of Object.entries(settings)) {

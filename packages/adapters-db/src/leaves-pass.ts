@@ -8,6 +8,9 @@ import {
   declaredParameterType,
   forwardNoWorse,
   isUniversalMethod,
+  verbAlong,
+  verbParameterOf,
+  verbsAtCallers,
   narrowUnionByLiteral,
   writtenBodyOutward,
   writtenKeysOf,
@@ -184,6 +187,11 @@ interface RecordOptions {
   /** The settings of a `new Request(url, init)` the call was handed. */
   init?: TsNode;
   /**
+   * The binding the request goes through (P91). Its host names nothing - the
+   * deployment decides which worker answers - so only its path is kept.
+   */
+  binding?: { binding: string; typed: boolean };
+  /**
    * Whether the site's second argument belongs to this request, as its
    * settings or its body. It does not when the site is a caller credited with a
    * request whose own settings were already read.
@@ -211,8 +219,6 @@ const returnsResponse = (node: TsNode): boolean =>
     .getCallSignatures()
     .some((signature) => /^(Promise<Response>|Response)$/.test(signature.getReturnType().getText()));
 
-/** Verbs a request can carry, for reading one out of an argument. */
-const KNOWN_VERBS = new Set(HTTP_METHODS.values());
 
 
 interface Site {
@@ -1441,58 +1447,49 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
   /**
-   * Where a request's verb comes from, when it is not written at the call.
-   *
-   * A client that takes the verb as an argument writes `fetch(url, { method })`
-   * once for every verb it will ever send, so the verb is only real at the call
-   * sites, exactly like the address.
+   * The parameter a request's verb comes from, when it is not written at the
+   * call: `fetch(url, { method })` inside a client that takes the verb as an
+   * argument writes one request for every verb it will ever send, so the verb
+   * is only real at the call sites, exactly like the address (P91: read at
+   * each caller by the core's one walk, `verbAlong` / `verbsAtCallers`).
    */
-  interface VerbSource {
-    parameter: ParameterDeclaration;
-    /** Name of the method that takes it, so a caller can be recognised. */
-    owner: string;
-    index: number;
-  }
-
-  const verbParameterOf = (call: CallExpression): VerbSource | undefined => {
-    const [, second] = call.getArguments();
-    const optionsArg = second === undefined ? undefined : deref(second);
-    if (optionsArg === undefined || !Node.isObjectLiteralExpression(optionsArg)) return undefined;
-    const property = optionsArg.getProperty('method');
-    if (property === undefined) return undefined;
-
-    // `{ method }` names a binding in scope rather than pointing at one, so the
-    // parameter is found by name on the method the shorthand sits in.
-    const owningMethod = enclosingMethod(call);
-    const parameter = Node.isPropertyAssignment(property)
-      ? parameterBehind(property.getInitializer() ?? property)
-      : Node.isShorthandPropertyAssignment(property) && owningMethod !== undefined
-        ? parametersOf(owningMethod).find((item) => item.getName() === property.getName())
-        : undefined;
-
-    const owner = parameter === undefined ? undefined : enclosingMethod(parameter);
-    if (parameter === undefined || owner === undefined) return undefined;
-    const index = parametersOf(owner).findIndex((item) => item === parameter);
-    return index < 0 ? undefined : { parameter, owner: owner.getName(), index };
+  const verbParameterAt = (call: CallExpression, init: TsNode | undefined): ParameterDeclaration | undefined => {
+    const written = init === undefined ? call.getArguments()[1] : init;
+    const settings = written === undefined ? undefined : deref(written);
+    if (settings === undefined || !Node.isObjectLiteralExpression(settings)) return undefined;
+    return verbParameterOf(settings.getProperty('method'));
   };
 
-  /** The verb a caller supplies to a client that takes one. */
-  const verbFromSite = (site: TsNode, source: VerbSource | undefined): string | undefined => {
-    if (source === undefined || !Node.isCallExpression(site)) return undefined;
-    const callee = site.getExpression();
-    const called = Node.isPropertyAccessExpression(callee) ? callee.getName() : callee.getText();
-    if (called !== source.owner) return undefined;
-    const argument = site.getArguments()[source.index];
-    if (argument === undefined) return undefined;
-    const value = evaluateExpression(argument);
-    if (!value.resolved || typeof value.value !== 'string') return undefined;
-    const verb = value.value.toUpperCase();
-    return KNOWN_VERBS.has(verb) ? verb : undefined;
+  /**
+   * The binding a worker's request goes through, when it goes through one
+   * (P91): `env.CATALOG.fetch(input, init)`, `this.env.CATALOG.fetch(…)`,
+   * `c.env.CATALOG.fetch(…)`. A binding is a property of the environment the
+   * platform hands the worker; the request reaches whichever worker the
+   * deployment binds the name to, at the path of `input`, whatever host it
+   * names. Recognised by the receiver's type (`Fetcher`), or, where the types
+   * are not installed, by the shape alone - an upper-case property of an
+   * `env` - which the linker holds to the bindings the repository declares.
+   */
+  const bindingOf = (callee: TsNode): { binding: string; typed: boolean } | undefined => {
+    if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'fetch') return undefined;
+    const receiver = callee.getExpression();
+    if (!Node.isPropertyAccessExpression(receiver)) return undefined;
+    const holder = receiver.getExpression();
+    const env = Node.isIdentifier(holder) ? holder.getText() : Node.isPropertyAccessExpression(holder) ? holder.getName() : undefined;
+    if (env !== 'env') return undefined;
+    const type = receiver.getType();
+    const named = type.getSymbol()?.getName() ?? type.getAliasSymbol()?.getName();
+    if (named === 'Fetcher' || /^Fetcher\b/.test(type.getText(receiver))) return { binding: receiver.getName(), typed: true };
+    const untyped = type.isAny() || type.isUnknown() || type.getText(receiver) === 'any';
+    return untyped && /^[A-Z][A-Z0-9_]*$/.test(receiver.getName()) ? { binding: receiver.getName(), typed: false } : undefined;
   };
 
   /** Whether a call reaches the network, and where its address sits. */
-  const recogniseHttp = (call: CallExpression): { method: string; urlIndex: number } | null => {
+  const recogniseHttp = (call: CallExpression): { method: string; urlIndex: number; binding?: { binding: string; typed: boolean } } | null => {
     const callee = call.getExpression();
+
+    const binding = bindingOf(callee);
+    if (binding !== undefined) return { method: 'GET', urlIndex: 0, binding };
 
     if (Node.isIdentifier(callee) && callee.getText() === 'fetch') {
       return { method: 'GET', urlIndex: 0 };
@@ -1590,14 +1587,19 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    */
   const recordHttp = (
     site: CallExpression,
-    info: UrlInfo,
-    method: string,
+    written: UrlInfo,
+    method: string | null,
     owner: Holder,
     options: RecordOptions = {},
   ): void => {
-    const { init, readsSite = true } = options;
+    const { init, readsSite = true, binding } = options;
+    // A request through a binding names a host the platform ignores: the
+    // binding is where it goes (P91).
+    const info: UrlInfo = binding === undefined ? written : { ...written, host: null, baseUrlEnv: null };
 
-    // A second argument can carry the method for a generic request.
+    // A second argument can carry the method for a generic request. `null`
+    // is a verb a caller hands in that nothing can read (P91): the request is
+    // recorded, and joins nothing until the verb is read.
     let verb = method;
     // True when the second argument turned out to be a request's settings
     // rather than its body — `fetch(url, { method, headers, body })`. Its keys
@@ -1670,7 +1672,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     ctx.builder.addNode({
       id,
       type: 'http_out',
-      label: `${verb} ${info.path ?? info.url ?? '?'}`,
+      label: `${verb ?? '?'} ${info.path ?? info.url ?? '?'}`,
       repo: ctx.repo,
       file: owner.file,
       line: place.line,
@@ -1688,6 +1690,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(bodyKeys === undefined ? {} : { bodyKeys }),
         ...(info.host === null ? {} : { host: info.host }),
         ...(application === undefined ? {} : { application }),
+        ...(binding === undefined ? {} : { binding: binding.binding, ...(binding.typed ? {} : { bindingTyped: false }) }),
       },
     });
     owner.ensure();
@@ -1695,10 +1698,22 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       from: owner.id,
       to: id,
       type: 'calls',
-      confidence: info.path === null ? 'heuristic' : 'static',
+      confidence: info.path === null || verb === null ? 'heuristic' : 'static',
       file: owner.file,
       line: place.line,
     });
+
+    // Only where the address was read: one that was not already has its row,
+    // and the annotation that fixes it states the verb too.
+    if (verb === null && info.path !== null) {
+      ctx.report({
+        file: owner.file,
+        line: place.line,
+        reason: 'api-method-dynamic',
+        hint: 'The verb is handed in by the caller and is not a literal, a const or an enum member here. Write it as one, or annotate the call with @CallsService.',
+        symbol: site.getText().slice(0, 80),
+      });
+    }
 
     if (info.host !== null) {
       const apiId = makeExternalApiId(info.host);
@@ -1742,11 +1757,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // client knows the base and takes the path as a parameter, so the request
     // belongs to whoever asked for it; recording it here instead would leave
     // one dead end standing in for every caller.
-    const here = analyzeUrl(urlArg);
+    const here = analyzeUrl(urlArg, { whole: true });
     const split = isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
+    const through = recognised.binding === undefined ? {} : { binding: recognised.binding };
+    const stated = statedVerbOf(call, recognised.method, request?.init);
+    const verbParameter = stated === undefined ? verbParameterAt(call, request?.init) : undefined;
     if (split !== undefined) {
-      const verbSource = verbParameterOf(call);
-      const stated = statedVerbOf(call, recognised.method, request?.init);
       // A caller is drawn on only where its argument leaves the address at
       // least as sure as the request states it here: `bot${token}` with a
       // token nobody can read stays the helper's static request.
@@ -1759,16 +1775,24 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         },
         sureness: ({ info }) => surenessOf(info),
       });
-      for (const { site, reading } of forwarding.callers) {
+      for (const { site, reading, hops } of forwarding.callers) {
         if (!Node.isCallExpression(site)) continue;
-        // What the request states is the request's; a caller's name or
-        // argument only stands in for a verb the request leaves open.
-        const verb =
-          stated?.verb ??
-          verbOfSite(site) ??
-          verbFromSite(site, verbSource) ??
-          recognised.method;
-        recordHttp(site, reading.info, verb, reading.owner, { readsSite: stated?.settings !== true });
+        // What the request states is the request's; a caller's argument, and
+        // then its name, only stand in for a verb the request leaves open.
+        // Read along the calls the address came out through, so the verb and
+        // the address are the same caller's (P91).
+        const along = verbParameter === undefined ? undefined : verbAlong(verbParameter, hops);
+        const verb = stated?.verb ?? (along === undefined ? (verbOfSite(site) ?? recognised.method) : along);
+        // Where the caller is the one handing the verb in, its arguments are
+        // the wrapper's - a verb, a path, a body - and its second is not the
+        // body; where a wrapper of its own settled the verb on the way out
+        // (`post(path, body)` into `request('POST', path, body)`), the
+        // caller's are that wrapper's, and its second is (P91).
+        const handedHere = along !== undefined && verbAlong(verbParameter as ParameterDeclaration, hops.slice(0, -1)) === undefined;
+        recordHttp(site, reading.info, verb, reading.owner, {
+          readsSite: stated?.settings !== true && !handedHere,
+          ...(recognised.binding === undefined ? {} : { binding: recognised.binding }),
+        });
       }
       // A caller through an interface this method implements, or one whose
       // argument says less than the request does here, is answered by the
@@ -1776,7 +1800,31 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       if (!forwarding.here) return true;
     }
 
-    recordHttp(call, here, recognised.method, holder, { init: request?.init });
+    // The address is read here and the verb is a parameter: one request per
+    // caller, each with the verb it hands in (P91). A caller nobody can name,
+    // or none at all, leaves the request here with its verb unread. Where the
+    // address could not be read either, a verb per caller would only be more
+    // requests nothing can join, and the one request stays here, unread.
+    if (verbParameter !== undefined && here.path === null) {
+      recordHttp(call, here, null, holder, { init: request?.init, ...through });
+      return true;
+    }
+    if (verbParameter !== undefined) {
+      const callers = verbsAtCallers(verbParameter);
+      let unnamed = callers.undecided || callers.calls.length === 0;
+      for (const { site, verb } of callers.calls) {
+        const owner = ownerOf(site);
+        if (owner === undefined) {
+          unnamed = true;
+          continue;
+        }
+        recordHttp(site, here, verb, owner, { readsSite: false, ...through });
+      }
+      if (unnamed) recordHttp(call, here, null, holder, { init: request?.init, ...through });
+      return true;
+    }
+
+    recordHttp(call, here, recognised.method, holder, { init: request?.init, ...through });
     return true;
   };
 

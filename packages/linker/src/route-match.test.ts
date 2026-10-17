@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   answeredOnlyByWildcard,
   assumedMountOf,
+  couldReach,
   isMatch,
   matchRoute,
   pathAnswers,
@@ -452,5 +453,45 @@ describe('sibling routes with literal text around a param', () => {
     expect(pathAnswers('/a%2Fb', '/a/b')).toBe(false);
     expect(isMatch(matchRoute('GET', '/x%3Ay', [at('/:param%3Ay', '/:id%3Ay')]))).toBe(true);
     expect(isMatch(matchRoute('GET', '/x', [at('/what%3F', '/what%3F')]))).toBe(false);
+  });
+});
+
+/**
+ * A request read in part, tested against a route nothing calls (P91): each
+ * hole stands for the rest of its segment and any segments after it, and
+ * everything read has to agree.
+ */
+describe('couldReach', () => {
+  const HOLE = '${…}';
+  const price = route('GET', '/items/:param/price');
+
+  it('reaches through a hole at the end, which may hold several segments', () => {
+    expect(couldReach('GET', `/items/${HOLE}`, price)).toBe(true);
+    expect(couldReach('GET', `/items/:param/${HOLE}${HOLE}`, price)).toBe(true);
+  });
+
+  it('reaches through a hole in the middle and at the start, when what was read agrees', () => {
+    expect(couldReach('GET', `/items/${HOLE}/price`, price)).toBe(true);
+    expect(couldReach('GET', `/${HOLE}/price`, price)).toBe(true);
+    expect(couldReach('GET', `/${HOLE}/cost`, price)).toBe(false);
+  });
+
+  it('never reaches across a verb that disagrees, and any verb when the verb was not read', () => {
+    expect(couldReach('DELETE', `/items/${HOLE}`, price)).toBe(false);
+    expect(couldReach(null, `/items/${HOLE}`, price)).toBe(true);
+  });
+
+  it('asks a hole after a separator for a segment, so the collection itself is not one', () => {
+    expect(couldReach('GET', `/items/${HOLE}`, route('GET', '/items'))).toBe(false);
+  });
+
+  it('reaches nothing with an address of which nothing but holes was read', () => {
+    expect(couldReach('GET', `/${HOLE}`, price)).toBe(false);
+    expect(couldReach('GET', `${HOLE}`, price)).toBe(false);
+  });
+
+  it('reaches a route at an address read in full when only the verb was not read', () => {
+    expect(couldReach(null, '/items/42/price', price)).toBe(true);
+    expect(couldReach(null, '/items/42', price)).toBe(false);
   });
 });

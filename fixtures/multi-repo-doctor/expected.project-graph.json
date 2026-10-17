@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:35.086Z",
+  "builtAt": "2026-10-17T04:49:59.448Z",
   "services": [
     {
       "name": "gateway",
@@ -2460,7 +2460,7 @@
       "line": 49,
       "reason": "marker-service-unknown",
       "message": "@CallsService names warehouse, which is not a configured service",
-      "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation.",
+      "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
       "symbol": "http_out:gateway#src/clients/orders.client.ts:49:12"
     },
     {

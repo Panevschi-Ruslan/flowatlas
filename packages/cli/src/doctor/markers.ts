@@ -98,6 +98,8 @@ export interface MarkerOptions {
   parties?: readonly string[];
   /** Which services claim each settings key, from the configuration. */
   envOwners?: ReadonlyMap<string, readonly string[]>;
+  /** Every alias a service is configured with, to the service's name (P91). */
+  aliases?: ReadonlyMap<string, string>;
 }
 
 const markersOn = (node: GraphNode): RecordedMarker[] => {
@@ -157,6 +159,8 @@ export const validateMarkers = (db: GraphDb, options: MarkerOptions = {}): Marke
     if (list === undefined) routesByService.set(entry.repo, [entry]);
     else list.push(entry);
   }
+  // An annotation may name a service by an alias (P91), which serves the routes the service does.
+  for (const [alias, service] of options.aliases ?? []) routesByService.set(alias, routesByService.get(service) ?? []);
 
   const add = (
     node: GraphNode,

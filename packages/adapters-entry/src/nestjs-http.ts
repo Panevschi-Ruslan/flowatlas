@@ -327,6 +327,12 @@ export const nestjsHttpAdapter: EntryAdapter = {
         continue;
       }
       const prefix = readControllerPrefix(controller);
+      // The controller's own decorators, by name, beside the handler's: what
+      // `dead` reads infrastructure from where the class says it (P91).
+      const controllerDecorators = declaration
+        .getDecorators()
+        .filter((item) => !decoratorNames(item).some((name) => FRAMEWORK_DECORATORS.has(name)))
+        .map((item) => decoratorName(item));
       // One entry per application that mounts this controller, which is one
       // entry and no qualifier at all for the ordinary service that creates a
       // single application. The judgement about when an id carries an
@@ -460,6 +466,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
                       // applications from a tie between two routes of one.
                       ...(application === undefined ? {} : { application }),
                       ...(otherDecorators.length > 0 ? { decorators: otherDecorators } : {}),
+                      ...(controllerDecorators.length > 0 ? { controllerDecorators } : {}),
                       ...(authNote === undefined ? {} : { authNote }),
                       ...(publicNote === undefined ? {} : { publicNote }),
                     },

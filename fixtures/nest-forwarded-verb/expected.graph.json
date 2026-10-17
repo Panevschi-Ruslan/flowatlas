@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-forwarded-verb",
-  "generatedAt": "2026-10-07T14:34:10.476Z",
+  "generatedAt": "2026-10-17T04:50:14.130Z",
   "nodes": [
     {
       "id": "external_api:api.example.com",
@@ -40,6 +40,40 @@
         "method": "PUT",
         "url": "https://api.example.com/items/featured",
         "path": "/items/featured",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.com"
+      }
+    },
+    {
+      "id": "http_out:nest-forwarded-verb#src/items/stock.client.ts:21:11",
+      "type": "http_out",
+      "label": "PATCH /items/:param/stock",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.client.ts",
+      "line": 21,
+      "meta": {
+        "method": "PATCH",
+        "url": "https://api.example.com/items/:param/stock",
+        "path": "/items/:param/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.com"
+      }
+    },
+    {
+      "id": "http_out:nest-forwarded-verb#src/items/stock.client.ts:25:11",
+      "type": "http_out",
+      "label": "? /items/settlement",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.client.ts",
+      "line": 25,
+      "meta": {
+        "method": null,
+        "url": "https://api.example.com/items/settlement",
+        "path": "/items/settlement",
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
@@ -103,14 +137,16 @@
       "label": "AppModule",
       "repo": "nest-forwarded-verb",
       "file": "src/app.module.ts",
-      "line": 6,
+      "line": 7,
       "kind": "static",
       "meta": {
         "controllers": [],
         "providers": [
           "ItemsClient",
           "ItemsService",
-          "StockService"
+          "StockService",
+          "StockClient",
+          "Restocker"
         ],
         "exports": []
       }
@@ -235,6 +271,91 @@
       }
     },
     {
+      "id": "nest-forwarded-verb#src/items/stock.client.ts:Restocker",
+      "type": "provider",
+      "label": "Restocker",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.client.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/stock.client.ts:Restocker.restock",
+      "type": "method",
+      "label": "Restocker.restock",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.client.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/stock.client.ts:Restocker.settle",
+      "type": "method",
+      "label": "Restocker.settle",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.client.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "final",
+              "type": "boolean"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/stock.client.ts:StockClient",
+      "type": "provider",
+      "label": "StockClient",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.client.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/stock.client.ts:StockClient.call",
+      "type": "method",
+      "label": "StockClient.call",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.client.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "method",
+              "type": "string"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "nest-forwarded-verb#src/items/stock.service.ts:StockService",
       "type": "provider",
       "label": "StockService",
@@ -295,10 +416,10 @@
       "repo": "nest-forwarded-verb",
       "meta": {
         "stats": {
-          "files": 4,
-          "filesRead": 4,
+          "files": 5,
+          "filesRead": 5,
           "filesUnreadable": 0,
-          "classes": 4,
+          "classes": 6,
           "skippedExternalCalls": {
             "axios": 1
           }
@@ -327,6 +448,22 @@
       "confidence": "static",
       "file": "src/items/items.service.ts",
       "line": 9
+    },
+    {
+      "from": "http_out:nest-forwarded-verb#src/items/stock.client.ts:21:11",
+      "to": "external_api:api.example.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.client.ts",
+      "line": 21
+    },
+    {
+      "from": "http_out:nest-forwarded-verb#src/items/stock.client.ts:25:11",
+      "to": "external_api:api.example.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.client.ts",
+      "line": 25
     },
     {
       "from": "http_out:nest-forwarded-verb#src/items/stock.service.ts:13:11",
@@ -395,6 +532,56 @@
       "confidence": "static",
       "file": "src/items/items.service.ts",
       "line": 9,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.client.ts:Restocker",
+      "to": "nest-forwarded-verb#src/items/stock.client.ts:StockClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items/stock.client.ts",
+      "line": 18
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.client.ts:Restocker.restock",
+      "to": "http_out:nest-forwarded-verb#src/items/stock.client.ts:21:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.client.ts",
+      "line": 21
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.client.ts:Restocker.restock",
+      "to": "nest-forwarded-verb#src/items/stock.client.ts:StockClient.call",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.client.ts",
+      "line": 21,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.client.ts:Restocker.settle",
+      "to": "http_out:nest-forwarded-verb#src/items/stock.client.ts:25:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/items/stock.client.ts",
+      "line": 25
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.client.ts:Restocker.settle",
+      "to": "nest-forwarded-verb#src/items/stock.client.ts:StockClient.call",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.client.ts",
+      "line": 25,
       "params": [
         "string",
         "string"
@@ -474,6 +661,13 @@
   ],
   "types": {},
   "unresolved": [
+    {
+      "file": "src/items/stock.client.ts",
+      "line": 25,
+      "reason": "api-method-dynamic",
+      "hint": "The verb is handed in by the caller and is not a literal, a const or an enum member here. Write it as one, or annotate the call with @CallsService.",
+      "symbol": "this.stock.call(final ? 'PUT' : 'POST', '/items/settlement')"
+    },
     {
       "file": "src/main.ts",
       "line": 1,

@@ -1,4 +1,4 @@
-import { wasRead, type GraphNode } from '@flowatlas/core';
+import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
 import {
   behindUnread,
   callingApplication,
@@ -34,8 +34,12 @@ export interface CallsServiceMarker {
  * project behind it.
  */
 export interface RouteIndex {
-  /** Routes a service serves. Empty when it serves none, undefined when unknown. */
+  /** Routes a service serves, named by its name or an alias. Empty when it serves none, undefined when unknown. */
   routesOf(service: string): readonly GraphNode[] | undefined;
+  /** The service a name or an alias names (P91); undefined for a name no service answers to. */
+  serviceOf?(name: string): string | undefined;
+  /** Every alias configured, for the row about a name no service answers to. */
+  aliases?(): readonly string[];
   /** Services declaring a settings key. More than one means the key names none. */
   claimantsOf(env: string): readonly string[];
   /** The annotation on the method that makes this call, if it carries one. */
@@ -57,12 +61,26 @@ export interface RouteIndex {
    * where no service claims the setting (P77).
    */
   baseUrlOf?(call: GraphNode): BaseUrlAnswer | undefined;
+  /**
+   * The service a request through a worker's binding reaches (P91), from the
+   * bindings the caller's deployment declares and the names services are
+   * known by.
+   */
+  bindingOf?(call: GraphNode, binding: string): BindingAnswer;
 }
+
+/** Where a binding goes, as the deployment files and the configuration say. */
+export type BindingAnswer =
+  | { readonly kind: 'service'; readonly service: string; readonly workers: readonly string[] }
+  /** Declared, to workers no service is named or aliased as, or that name more than one. */
+  | { readonly kind: 'unknown'; readonly workers: readonly string[]; readonly services: readonly string[] }
+  /** No deployment file of the caller declares it. */
+  | { readonly kind: 'undeclared' };
 
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
@@ -77,6 +95,14 @@ interface Details {
     claiming: readonly string[];
     /** What the setting's values said, where they settled nothing (P77). */
     values?: Extract<BaseUrlAnswer, { kind: 'unsettled' }>;
+  };
+  /** A request through a binding no configured service can be found behind (P91). */
+  unknownBinding: {
+    binding: string;
+    /** The workers the deployment binds it to; empty when nothing declares it. */
+    workers: readonly string[];
+    /** The services those workers name, when they name more than one. */
+    services: readonly string[];
   };
   noRoute: {
     targetService: string;
@@ -139,6 +165,19 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
               ? `Add ${env} to services[].baseUrlEnv of whichever service answers it.`
               : `Leave ${env} on the one service that answers it.`,
         },
+  unknownBinding: ({ binding, workers, services }) => ({
+    reason: 'service-binding-unknown',
+    message:
+      workers.length === 0
+        ? `the request goes through the binding ${binding}, which no deployment file of this service declares`
+        : services.length > 1
+          ? `${binding} is bound to ${workers.join(' and ')}, which name ${services.join(' and ')}, not one service`
+          : `${binding} is bound to ${workers.join(' and ')}, which no configured service is named or aliased as`,
+    hint:
+      workers.length === 0
+        ? `Declare ${binding} under services in the worker's wrangler file, or add the service it reaches to the configuration.`
+        : `Add ${workers[0] ?? 'the worker'} to services[].aliases of the service it is, or add that service to the configuration.`,
+  }),
   noRoute: (detail) =>
     detail.unread.length === 0
       ? {
@@ -351,10 +390,12 @@ export const findingFor = (outcome: CallOutcome): Finding | undefined => {
 
 /** The same table for the two ways an annotation can be wrong. */
 const MARKER_FINDINGS = {
-  serviceUnknown: (marker: CallsServiceMarker): Finding => ({
+  serviceUnknown: (marker: CallsServiceMarker, aliases: readonly string[] = []): Finding => ({
     reason: 'marker-service-unknown',
-    message: `@CallsService names ${marker.service}, which is not a configured service`,
-    hint: `Add ${marker.service} to services[] in flowatlas.config.json, or correct the annotation.`,
+    message:
+      `@CallsService names ${marker.service}, which is not a configured service` +
+      (aliases.length === 0 ? '' : ` nor an alias of one (the aliases are ${aliases.join(', ')})`),
+    hint: `Add ${marker.service} to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.`,
   }),
   routeNotFound: (marker: CallsServiceMarker): Finding => ({
     reason: 'marker-route-not-found',
@@ -406,10 +447,85 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
    */
   const callerApplicationIn = (service: string): string | undefined =>
     service === call.repo ? callingApplication(call) : undefined;
-  const method = String(call.meta?.['method'] ?? 'GET');
+  // A verb a caller hands in that nothing could read is `null` (P91), and a
+  // request whose verb is not known matches no route: its address may be
+  // read in full and the route it reaches is still any of the ones there.
+  const stated = call.meta?.['method'];
+  const verbRead = stated !== null;
+  const method = typeof stated === 'string' ? stated : 'GET';
   const path = call.meta?.['path'];
   const env = call.meta?.['baseUrlEnv'];
   const host = call.meta?.['host'];
+
+  /**
+   * The route a service answers this request with, once the service is
+   * known, however it was found: a setting, a value, a binding (P91).
+   */
+  const within = (
+    targetService: string,
+    via: Extract<CallOutcome, { kind: 'linked' }>['via'],
+    taken: { baseUrl?: FoundValue },
+    requestedPath: unknown = path,
+  ): Resolution => {
+    // Knowing which service is asked is not knowing what is asked of it. A route
+    // guessed here would be a route this service does not serve, reported as
+    // drift that does not exist.
+    //
+    // A path read in part is not a path read. `/orders/${…}/items` would once
+    // have matched `/orders/:param/items` and produced an edge marked `static`
+    // towards a route this call may never reach.
+    // An empty path is a request for exactly what a setting holds, which is
+    // only an address once the setting's value says what is in it (P91).
+    if (typeof requestedPath !== 'string' || requestedPath === '' || !wasRead(requestedPath) || !verbRead) {
+      return { outcome: { kind: 'dynamic', targetService }, notes, ...taken };
+    }
+
+    const routes = index.routesOf(targetService) ?? [];
+    const requested = requestedPath as string;
+    const from = callerApplicationIn(targetService);
+    let found = matchRoute(method, requested, routes, from);
+    if (!isMatch(found) && found.reason === 'not-found') {
+      const prefixed = withGlobalPrefix(requested, routes);
+      if (prefixed !== undefined) found = matchRoute(method, prefixed, routes, from);
+    }
+
+    if (isMatch(found)) {
+      return { outcome: { kind: 'linked', via, ...joined(method, requested, found) }, notes, ...taken };
+    }
+    if (found.reason === 'ambiguous') {
+      const setting = typeof env === 'string' ? env : targetService;
+      const choice = chooseAmong(routes, found.candidates, setting);
+      if (choice.kind === 'one') {
+        notes.push(apiGuessedFinding(method, requested, setting, choice.api, choice.apis));
+        return { outcome: { kind: 'linked', via: 'apiName', entry: choice.entry, runnersUp: [] }, notes, ...taken };
+      }
+      return {
+        outcome: {
+          kind: 'ambiguous',
+          targetService,
+          method,
+          path: requested,
+          candidates: choice.kind === 'narrowed' ? choice.entries.map((entry) => entry.id) : found.candidates,
+          ...(found.applications === undefined ? {} : { applications: found.applications }),
+          ...(choice.kind === 'tie' ? { apis: choice.apis } : {}),
+        },
+        notes,
+        ...taken,
+      };
+    }
+    return {
+      outcome: {
+        kind: 'noRoute',
+        targetService,
+        method,
+        path: requested,
+        verbs: verbsAnswering(requested, routes),
+        unread: behindUnread(method, requested, routes),
+      },
+      notes,
+      ...taken,
+    };
+  };
 
   const single = index.markerOf(call.id);
   const markers = index.markersOf?.(call.id) ?? (single === undefined ? [] : [single]);
@@ -425,12 +541,14 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       ...(found.mountAssumed === undefined ? {} : { mountAssumed: found.mountAssumed }),
     };
   };
-  for (const marker of markers) {
-    const routes = index.routesOf(marker.service);
+  for (const written of markers) {
+    const routes = index.routesOf(written.service);
     if (routes === undefined) {
-      notes.push(MARKER_FINDINGS.serviceUnknown(marker));
+      notes.push(MARKER_FINDINGS.serviceUnknown(written, index.aliases?.() ?? []));
       continue;
     }
+    // Named by an alias, the annotation means the service the alias names (P91).
+    const marker = { ...written, service: index.serviceOf?.(written.service) ?? written.service };
     const from = callerApplicationIn(marker.service);
     let found = matchRoute(marker.method, marker.path, routes, from);
     // An annotation is written the way the caller sees the route, which is
@@ -466,6 +584,30 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       ...(rest.length === 0 ? {} : { alsoLinked: rest.map(({ runnersUp: _, guessed: __, ...item }) => item) }),
       notes,
     };
+  }
+
+  // A request through a worker's binding goes where the deployment binds the
+  // name, at its own path (P91).
+  const binding = call.meta?.['binding'];
+  if (typeof binding === 'string') {
+    const bound = index.bindingOf?.(call, binding) ?? { kind: 'undeclared' };
+    if (bound.kind === 'undeclared' && call.meta?.['bindingTyped'] === false) {
+      // Only its shape said it was a binding, and nothing declares one by
+      // that name: it may not be one at all, so nothing is said of it.
+      return { outcome: { kind: 'dynamic' }, notes };
+    }
+    if (bound.kind !== 'service') {
+      return {
+        outcome: {
+          kind: 'unknownBinding',
+          binding,
+          workers: bound.kind === 'unknown' ? bound.workers : [],
+          services: bound.kind === 'unknown' ? bound.services : [],
+        },
+        notes,
+      };
+    }
+    return within(bound.service, 'serviceBinding', {});
   }
 
   if (typeof env !== 'string') {
@@ -506,59 +648,29 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   const via = valued === undefined ? 'baseUrlEnv' : 'baseUrlValue';
   const taken = valued === undefined ? {} : { baseUrl: valued.found };
 
-  // Knowing which service is asked is not knowing what is asked of it. A route
-  // guessed here would be a route this service does not serve, reported as
-  // drift that does not exist.
-  //
-  // A path read in part is not a path read. `/orders/${…}/items` would once
-  // have matched `/orders/:param/items` and produced an edge marked `static`
-  // towards a route this call may never reach.
-  if (typeof path !== 'string' || !wasRead(path)) {
-    return { outcome: { kind: 'dynamic', targetService }, notes, ...taken };
+  // A value that is a whole address - a host and a path - is where the
+  // request goes, path included (P91): `fetch(process.env.REINDEX_URL)` with
+  // `REINDEX_URL=https://catalog.internal/items/reindex` asks for
+  // `/items/reindex`. Where that answers nothing and the request's own path
+  // does, the value's path is a mount in front of the service and the join
+  // made without it stands, as it always did.
+  const start = valued?.kind === 'service' ? pathOfValue(valued.found) : undefined;
+  if (start !== undefined && typeof path === 'string' && wasRead(path)) {
+    const whole = within(targetService, via, taken, normalizePath(`${start}/${path}`));
+    if (whole.outcome.kind === 'linked') return whole;
+    const plain = within(targetService, via, taken);
+    return plain.outcome.kind === 'linked' ? plain : whole;
   }
+  return within(targetService, via, taken);
+};
 
-  const routes = index.routesOf(targetService) ?? [];
-  const requested = path;
-  const from = callerApplicationIn(targetService);
-  let found = matchRoute(method, requested, routes, from);
-  if (!isMatch(found) && found.reason === 'not-found') {
-    const prefixed = withGlobalPrefix(requested, routes);
-    if (prefixed !== undefined) found = matchRoute(method, prefixed, routes, from);
+/** The path a value found for a setting carries beyond its host, when it carries one (P91). */
+export const pathOfValue = (found: FoundValue): string | undefined => {
+  if (found.byName === true) return undefined;
+  try {
+    const path = new URL(found.value).pathname;
+    return path === '' || path === '/' ? undefined : path;
+  } catch {
+    return undefined;
   }
-
-  if (isMatch(found)) {
-    return { outcome: { kind: 'linked', via, ...joined(method, requested, found) }, notes, ...taken };
-  }
-  if (found.reason === 'ambiguous') {
-    const choice = chooseAmong(routes, found.candidates, env);
-    if (choice.kind === 'one') {
-      notes.push(apiGuessedFinding(method, requested, env, choice.api, choice.apis));
-      return { outcome: { kind: 'linked', via: 'apiName', entry: choice.entry, runnersUp: [] }, notes, ...taken };
-    }
-    return {
-      outcome: {
-        kind: 'ambiguous',
-        targetService,
-        method,
-        path: requested,
-        candidates: choice.kind === 'narrowed' ? choice.entries.map((entry) => entry.id) : found.candidates,
-        ...(found.applications === undefined ? {} : { applications: found.applications }),
-        ...(choice.kind === 'tie' ? { apis: choice.apis } : {}),
-      },
-      notes,
-      ...taken,
-    };
-  }
-  return {
-    outcome: {
-      kind: 'noRoute',
-      targetService,
-      method,
-      path: requested,
-      verbs: verbsAnswering(requested, routes),
-      unread: behindUnread(method, requested, routes),
-    },
-    notes,
-    ...taken,
-  };
 };

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:34.978Z",
+  "builtAt": "2026-10-17T04:49:59.448Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 711,
+      "durationMs": 719,
       "packages": {
         "name": "doctor-billing",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 19,
       "types": 4,
       "unresolved": 7,
-      "durationMs": 766,
+      "durationMs": 764,
       "packages": {
         "name": "doctor-gateway",
         "runtime": [
@@ -58,7 +58,7 @@
       "edges": 38,
       "types": 3,
       "unresolved": 17,
-      "durationMs": 729,
+      "durationMs": 750,
       "packages": {
         "name": "doctor-orders",
         "runtime": [
@@ -126,7 +126,7 @@
       "line": 49,
       "reason": "marker-service-unknown",
       "message": "@CallsService names warehouse, which is not a configured service",
-      "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation.",
+      "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
       "symbol": "http_out:gateway#src/clients/orders.client.ts:49:12"
     },
     {

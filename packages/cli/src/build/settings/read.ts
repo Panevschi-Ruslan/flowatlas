@@ -6,6 +6,7 @@ import {
   portOf,
   type HostAlias,
   type RepoSettings,
+  type ServiceBinding,
   type SettingValue,
 } from '@flowatlas/core';
 import { readComposeFile, type ComposeService } from './compose.js';
@@ -34,9 +35,13 @@ interface Gathered {
   values: Map<string, SettingValue[]>;
   namedOnly: Map<string, string[]>;
   hosts: HostAlias[];
+  /** The workers its deployment binds it to (P91). */
+  bindings: ServiceBinding[];
+  /** The names its deployment files deploy it under (P91). */
+  deployedAs: string[];
 }
 
-const gathered = (): Gathered => ({ values: new Map(), namedOnly: new Map(), hosts: [] });
+const gathered = (): Gathered => ({ values: new Map(), namedOnly: new Map(), hosts: [], bindings: [], deployedAs: [] });
 
 const add = (into: Gathered, name: string, value: SettingValue): void => {
   const list = into.values.get(name) ?? [];
@@ -87,6 +92,16 @@ const fromDeployment = (into: Gathered, settings: DeploymentSettings, file: stri
     });
   }
   for (const port of settings.ports) addPort(into, port, file);
+  for (const { binding, service, entrypoint, environment } of settings.bindings ?? []) {
+    into.bindings.push({
+      binding,
+      service,
+      file,
+      ...(entrypoint === undefined ? {} : { entrypoint }),
+      ...(environment === undefined ? {} : { environment: environmentName(environment) }),
+    });
+  }
+  for (const name of settings.names ?? []) if (!into.deployedAs.includes(name)) into.deployedAs.push(name);
 };
 
 /** One kind of file at the top of a repository, by its name. */
@@ -255,8 +270,22 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       seen.add(key);
       return true;
     });
-    if (Object.keys(values).length + Object.keys(namedOnly).length + hosts.length === 0) continue;
-    out[service] = { values, namedOnly, hosts };
+    // A binding for an environment nobody chose says nothing about this one,
+    // as a value does; where the chosen one declares the binding, it is the binding.
+    const bindings = into.bindings.filter((each) => {
+      if (chosen === undefined) return true;
+      const forChosen = into.bindings.some((other) => other.binding === each.binding && other.environment === chosen);
+      return forChosen ? each.environment === chosen : each.environment === undefined;
+    });
+    const deployedAs = [...into.deployedAs].sort();
+    if (Object.keys(values).length + Object.keys(namedOnly).length + hosts.length + bindings.length + deployedAs.length === 0) continue;
+    out[service] = {
+      values,
+      namedOnly,
+      hosts,
+      ...(bindings.length === 0 ? {} : { bindings }),
+      ...(deployedAs.length === 0 ? {} : { deployedAs }),
+    };
   }
   return out;
 };

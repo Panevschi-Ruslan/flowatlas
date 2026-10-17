@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:01:00.913Z",
+  "builtAt": "2026-10-17T04:50:37.421Z",
   "services": [
     {
       "name": "catalog",
@@ -566,6 +566,9 @@
         "path": "/status/size",
         "rawPath": "/status/size",
         "controller": "StatusController",
+        "controllerDecorators": [
+          "Public"
+        ],
         "adapter": "nestjs-http",
         "access": {
           "guards": [

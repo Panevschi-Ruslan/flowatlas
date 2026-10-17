@@ -334,6 +334,10 @@ describe('a request forwarded to its callers', () => {
         // `{ method: 'GET', ...init }` is a default the caller's settings
         // replace, so the caller's verb is the one sent.
         'StockService.archive -> POST /items/archive @ api.example.com',
+        // Handed the verb by the caller (P91): the one it hands in, and none
+        // where nothing can read what it hands in.
+        'Restocker.restock -> PATCH /items/:param/stock @ api.example.com',
+        'Restocker.settle -> ? /items/settlement @ api.example.com',
       ].sort(),
     );
   });
@@ -344,8 +348,8 @@ describe('a request forwarded to its callers', () => {
       .filter((node) => node.type === 'http_out')
       .map((node) => node.meta?.bodyType ?? null);
     // The caller's second argument is `reason`, or the settings it hands
-    // over; neither is a body.
-    expect(bodies).toEqual([null, null, null, null, null]);
+    // over, or the path beside the verb it hands in; none is a body.
+    expect(bodies).toEqual([null, null, null, null, null, null, null]);
   });
 });
 
@@ -480,5 +484,39 @@ describe('explainedByEdge', () => {
   it('does not answer for a heuristic edge, or one into another repository', () => {
     expect(explainedByEdge([edge('a', 'heuristic')], nodeOf, 'shop')('caller', 'x.ts', 3, 'findOpen')).toBe(false);
     expect(explainedByEdge([edge('b', 'static')], nodeOf, 'shop')('caller', 'x.ts', 3, 'findOpen')).toBe(false);
+  });
+});
+
+/**
+ * A worker's request through its binding, a client handed the verb, and a
+ * request to exactly what a setting holds (P91).
+ */
+describe('requests the dead-routes fixture makes', () => {
+  const requestsOf = (graph: RepoGraph) =>
+    graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node): Record<string, unknown> => ({ line: node.line, ...node.meta }))
+      .sort((a, b) => Number(a['line'] ?? 0) - Number(b['line'] ?? 0));
+
+  it('records a request through a binding at its path, with the binding and no host', async () => {
+    const graph = await graphOf('multi-repo-dead-routes/orders-worker');
+    const [item, , restock] = requestsOf(graph);
+    expect(item).toMatchObject({ method: 'GET', path: '/items/:param', binding: 'CATALOG' });
+    expect(item?.['host']).toBeUndefined();
+    // Handed the verb by its caller, and its second argument is the wrapper's path, not a body.
+    expect(restock).toMatchObject({ method: 'PATCH', path: '/items/:param', binding: 'CATALOG', bodyType: null });
+    expect(graph.nodes.some((node) => node.type === 'external_api')).toBe(false);
+  });
+
+  it('records the annotation a function carries in JSDoc as the decorator it stands for', async () => {
+    const graph = await graphOf('multi-repo-dead-routes/orders-worker');
+    const fn = graph.nodes.find((node) => node.type === 'function' && node.label === 'allItems');
+    expect(fn?.meta?.['markers']).toEqual([{ name: 'CallsService', args: ['catalog', 'GET /items'] }]);
+  });
+
+  it('records a request to exactly what a setting holds as rooted at it, with nothing more to its path', async () => {
+    const graph = await graphOf('multi-repo-dead-routes/ops-scripts');
+    expect(requestsOf(graph)).toEqual([expect.objectContaining({ method: 'POST', path: '', baseUrlEnv: 'REINDEX_URL' })]);
+    expect(graph.unresolved.map((row) => row.reason)).not.toContain('dynamic-http-url');
   });
 });

@@ -1,5 +1,6 @@
 import type { GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, ServiceReport } from '@flowatlas/linker';
+import { classifyRoute, routeFactsOf, type InfrastructureRules } from '../analysis/dead.js';
 
 /**
  * The whole project at the size of its services, for the Map tab.
@@ -90,6 +91,12 @@ export interface MapInput {
   rows: readonly Pick<AnchoredUnresolvedRow, 'service' | 'level'>[];
   /** `[node, kind]` per answer a route gives besides its own, as `shapes.ts` packs them. */
   answers?: ReadonlyArray<readonly [node: number, kind: string]>;
+  /**
+   * What the configuration says about routes nobody calls (P91): those it
+   * calls public, and what it names as infrastructure. Without it the
+   * built-in rules alone decide which routes are counted apart.
+   */
+  routes?: { publicRoutes?: readonly string[]; infrastructure?: InfrastructureRules };
 }
 
 /** The count a service box keeps per kind of answer, of the routes that give one (P32). */
@@ -291,9 +298,22 @@ export const packMap = (input: MapInput): PackedMap => {
     if (rank(confidence) < rank(link.b)) link.b = confidence;
     if (rank(confidence) > rank(link.w)) link.w = confidence;
   });
+  // Counted as `dead` counts them (P91): a probe, a webhook or a route the
+  // configuration calls public is called from outside the project, and is
+  // counted apart from the routes nothing explains.
+  const handlerOf = new Map<number, string>();
+  if (neverCalled.size > 0) {
+    for (const [from, to, type] of input.edges) {
+      if (input.edgeTypes[type as number] !== 'handles' || !neverCalled.has(from as number) || handlerOf.has(from as number)) continue;
+      const label = input.nodes[to as number]?.label;
+      if (label !== undefined) handlerOf.set(from as number, label);
+    }
+  }
   for (const i of neverCalled) {
     const box = boxes[owner[i] as number] as MapBox;
-    box.s['uncalled'] = (box.s['uncalled'] ?? 0) + 1;
+    const found = classifyRoute(routeFactsOf(input.nodes[i] as GraphNode, handlerOf.get(i)), input.routes ?? {});
+    const stat = found.class === 'actionable' ? 'uncalled' : 'uncalledOutside';
+    box.s[stat] = (box.s[stat] ?? 0) + 1;
   }
   const answered = new Set<string>();
   for (const [node, kind] of input.answers ?? []) {

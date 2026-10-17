@@ -107,8 +107,12 @@ export const requestVerbOf = (
   if (call.getArguments()[shape.optionsAt] === undefined) return shape.defaultVerb;
   const options = objectAt(call, shape.optionsAt);
   if (options === undefined) return null;
-  const written = valueOf(options, shape.verbKey);
-  if (written === undefined) return shape.defaultVerb;
+  // `{ method }` writes the verb as surely as `{ method: method }` does: it
+  // names a binding, and was read as no verb at all - the default - until a
+  // wrapper handed one in (P91).
+  const property = options.getProperty(shape.verbKey);
+  const written = Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : valueOf(options, shape.verbKey);
+  if (written === undefined) return property === undefined ? shape.defaultVerb : null;
   const value = evaluateExpression(written);
   return value.resolved && typeof value.value === 'string' ? value.value.toUpperCase() : null;
 };

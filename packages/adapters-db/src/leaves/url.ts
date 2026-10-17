@@ -52,7 +52,7 @@ const fromAbsolute = (text: string): UrlInfo | null => {
  * route later. Everything else is recorded as far as it can be read, and a fully
  * computed address is reported rather than guessed at.
  */
-export const analyzeUrl = (node: TsNode): UrlInfo => {
+export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } = {}): UrlInfo => {
   // An address is often given a name before it is used; the name is not the
   // address, so follow it to what it was given.
   const argument = deref(node);
@@ -67,7 +67,25 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
   }
 
   if (Node.isBinaryExpression(argument)) return fromConcatenation(argument);
-  if (!Node.isTemplateExpression(argument)) return EMPTY;
+  // The whole address is a setting: `fetch(process.env.REINDEX_URL)` asks for
+  // whatever the setting holds, path and all, and nothing more (P91). The path
+  // is empty rather than unread: it is the value's, which the linker reads.
+  // Only for the address a request is made to (`whole`): a setting handed to a
+  // helper as one piece of an address is that piece, not an address.
+  // Read where it stands, not followed: a helper that builds an address on a
+  // setting has written a path of its own, which following it would lose.
+  if (!Node.isTemplateExpression(argument)) {
+    const whole = options.whole === true ? readConfig(argument) : null;
+    if (whole === null || whole.dynamic === true) return EMPTY;
+    const otherwise = typeof whole.defaultValue === 'string' && whole.defaultValue !== '' ? whole.defaultValue : undefined;
+    return {
+      url: `\${${whole.key}}`,
+      path: '',
+      baseUrlEnv: whole.key,
+      host: null,
+      ...(otherwise === undefined ? {} : { baseUrlDefault: otherwise }),
+    };
+  }
 
   const head = argument.getHead().getLiteralText();
   const spans = argument.getTemplateSpans();
@@ -148,7 +166,8 @@ const fromConcatenation = (argument: TsNode): UrlInfo => {
   if (!Node.isBinaryExpression(argument) || argument.getOperatorToken().getText() !== '+') return EMPTY;
   const root = rootOf(argument.getLeft());
   const rest = evaluateExpression(argument.getRight());
-  if (root === null || !rest.resolved || typeof rest.value !== 'string') return EMPTY;
+  if (root === null) return fromWrittenConcatenation(argument);
+  if (!rest.resolved || typeof rest.value !== 'string') return EMPTY;
   return {
     url: `\${${root.key}}${rest.value}`,
     path: routePathOf(rest.value),
@@ -156,6 +175,42 @@ const fromConcatenation = (argument: TsNode): UrlInfo => {
     host: null,
     ...(root.otherwise === undefined ? {} : { baseUrlDefault: root.otherwise }),
   };
+};
+
+/** The pieces of `a + b + c`, left to right. */
+const piecesOf = (node: TsNode): TsNode[] =>
+  Node.isBinaryExpression(node) && node.getOperatorToken().getText() === '+'
+    ? [...piecesOf(node.getLeft()), ...piecesOf(node.getRight())]
+    : [node];
+
+/**
+ * `'https://catalog/items/' + id`: an address written out and joined with `+`
+ * to a value read at run time (P91). Read as the same address written as a
+ * template would be - text that is read, and a hole where it is not - so long
+ * as it opens with text that is read.
+ */
+const fromWrittenConcatenation = (argument: TsNode): UrlInfo => {
+  const [first, ...more] = piecesOf(argument);
+  const opening = first === undefined ? undefined : evaluateExpression(first);
+  if (opening?.resolved !== true || typeof opening.value !== 'string' || opening.value === '') return EMPTY;
+  let rest = opening.value;
+  let written = opening.value;
+  more.forEach((piece, index) => {
+    const value = evaluateExpression(piece);
+    if (value.resolved && (typeof value.value === 'string' || typeof value.value === 'number')) {
+      rest += String(value.value);
+      written += String(value.value);
+      return;
+    }
+    const next = more[index + 1];
+    const after = next === undefined ? undefined : evaluateExpression(next);
+    const text = after?.resolved === true && typeof after.value === 'string' ? after.value : '';
+    rest += holeIn(rest, text, index === more.length - 1);
+    written += HOLE;
+  });
+  const absolute = fromAbsolute(rest);
+  if (absolute !== null) return { ...absolute, url: written };
+  return { url: written, path: routePathOf(rest), baseUrlEnv: null, host: null };
 };
 
 /** `scheme://host` at the start of an address, and the host inside it. */

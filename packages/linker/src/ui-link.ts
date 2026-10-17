@@ -1,6 +1,6 @@
-import { wasRead, type GraphNode } from '@flowatlas/core';
+import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
 import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
-import { unreadRouteFinding, type Finding } from './http-link.js';
+import { pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
 import { cmp } from './order.js';
 import {
   behindUnread,
@@ -227,8 +227,14 @@ const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
   if (env === undefined || index.claimantsOf(env).length > 0) return undefined;
   const answer = index.baseUrlOf?.(ask.call);
   if (answer?.kind !== 'service') return undefined;
-  const found = within(ask, answer.service, 'base-url-value');
-  return found.kind === 'linked' ? { ...found, baseUrl: answer.found } : found;
+  // A value with a path of its own is where the request goes, path included
+  // (P91); where that answers nothing and the path alone does, the value's
+  // path is a mount and the join without it stands.
+  const start = pathOfValue(answer.found);
+  const whole = start === undefined ? undefined : within({ ...ask, path: normalizePath(`${start}/${ask.path}`) }, answer.service, 'base-url-value');
+  const found = whole?.kind === 'linked' ? whole : within(ask, answer.service, 'base-url-value');
+  if (found.kind === 'linked') return { ...found, baseUrl: answer.found };
+  return whole ?? found;
 };
 
 /**

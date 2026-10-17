@@ -758,27 +758,52 @@ reading cannot see.
 | Flag | Default | Does |
 |---|---|---|
 | `--kind <kind>` | `all` | one of `entries`, `channels`, `providers`, `fields`, `all` |
+| `--class <class>` | every class | only entries of one class: `actionable`, `stream`, `infrastructure`, `declared` |
 | `--service <name>` | every service | narrow to one |
 
-A route nothing calls gets the reason it ended up in the list, which is not the
-same question as whether it is dead:
+A route nothing calls is put in a **class**, which is not the same question as
+whether it is dead, and every row says which rule put it there (`why`):
 
-| Reason | What it means |
-|---|---|
-| declared public in the configuration | a pattern under `doctor.publicRoutes` covers it, so its callers are outside the project by decision |
-| looks like a health or status probe | the last segment is `health`, `healthz`, `ping`, `readyz`, `metrics`, `status` and the like; whatever runs it is outside the graph |
-| looks like an event stream | the last segment is `stream` or `sse`, or ends in `-stream`; a browser subscribing to one is not read yet |
-| no `http_calls`/`hits` from any repo | nothing above applies, which is what this command is for |
+| Class | Rule (`why`) | What it means |
+|---|---|---|
+| `declared` | `doctor.publicRoutes <pattern>`, or `@flowatlas-public <why>` on the handler or its controller | its callers are outside the project by decision |
+| `infrastructure` | `dead.infrastructure.paths`, `.decorators` or `.names` | the configuration names it (role `configured`) |
+| `infrastructure` | `decorator @HealthCheck` | a probe, whatever its path (role `probe`) |
+| `infrastructure` | `path …` | a probe: the last segment is `health`, `healthz`, `ping`, `readyz`, `metrics`, `status` and the like; a webhook: a segment `webhook`, `webhooks` or `hooks` at any depth, or `notify` / `notifications` on anything but a `GET`; a callback: a segment `callback` or `callbacks` (`/oauth/callback`, `/auth/callback`); a well-known address: `/.well-known/*` (role `probe`, `webhook`, `callback` or `discovery`) |
+| `infrastructure` | `name …` | a handler or controller named for what it answers: ending in `Webhook`, `Callback` or `Probe`, a `HealthController`, a handler starting `handleWebhook` or `onCallback` |
+| `stream` | `path …` | the last segment is `stream` or `sse`, or ends in `-stream`; a browser subscribing to one is not read yet |
+| `actionable` | `no caller read` | nothing above applies, which is what this command is for |
 
-Only the last segment of a path is read, so `/api/health` is a probe and
-`/api/health/reports/:param` is a route like any other. `status` and `metrics`
-are words a business API uses too, so they count only within two segments of the
-root: `/api/status` is a probe and `/api/orders/:param/status` is a route. A
-segment starting with `_` or ending in `-status` counts at any depth.
+Only the last segment of a path is read for a probe, so `/api/health` is a
+probe and `/api/health/reports/:param` is a route like any other. `status` and
+`metrics` are words a business API uses too, so they count only within two
+segments of the root: `/api/status` is a probe and `/api/orders/:param/status`
+is a route. A segment starting with `_` or ending in `-status` counts at any
+depth. `GET /users/:param/notifications` is a list a screen reads, not a
+receiver, and stays actionable.
 
-Rows are ordered by what they mean rather than by name — the ones nothing
-explains first — so `--max` cuts the rows that say why they are here before it
-cuts the rows that do not.
+**`likely-dead`.** Every row has a `confidence`: `dead`, or `likely-dead` where
+a request that joined nothing could still reach the route — its address was read
+in part, and what was read matches the route when each unread piece stands for
+the rest of its segment and any segments after it, or its address was read in
+full and only its verb was not. Such a request is aimed at the route's service
+(its setting names that service, or, for a browser, its `apiTarget` does). The
+row names it under `nearMiss` (up to three, `{ call, path, file, line }`) and no
+edge is drawn: a hole may be the caller and may not. The build lists them in the
+link report as `routes.nearMissed`, by route id.
+
+The table lists the actionable rows, `dead` before `likely-dead`, with each near
+miss on a line of its own beneath; every other class is folded into one line:
+
+```
+  4 infrastructure routes: 2 probes, 1 callback, 1 webhook — --class infrastructure to list
+```
+
+`--class <class>` lists that class instead, each row with its rule. `--format
+json` carries every row (to `--max`) with `class`, `why`, `role`, `confidence`
+and `nearMiss`. Rows are ordered by what they mean rather than by name — the
+ones nothing explains first — so `--max` cuts the rows that say why they are
+here before it cuts the rows that do not (`fixtures/multi-repo-dead-routes`).
 
 `--kind fields` reports a field one side sends and the other does not declare.
 The rows are the ones something happens to: a field the receiver's whitelisting
@@ -1498,7 +1523,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
-| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
+| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
@@ -1683,6 +1708,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
+| `aliases` | string[] | `[]` | other names the service is known by: the short name an annotation uses (`@CallsService('catalog', …)` for `catalog-api`), the name its worker is deployed under (a service binding's target), a host. Wherever a service is named — an annotation, `apiTarget`, a binding, a base address's host — an alias is the service. Unique across every name and alias; matched exactly, never by prefix |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
 | `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi", "path": … }`, path relative to this file |
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
@@ -1751,6 +1777,44 @@ a `base-url-from-name` row; a browser's request is not, because `apiTarget` is
 what names its service. `settingFiles.read: false` turns all of it off;
 `settingFiles.environment` chooses one environment where files name several
 (`fixtures/multi-repo-base-urls`).
+
+**A value that is a whole address is where the request goes.** A request made
+to exactly what a setting holds — `fetch(process.env.REINDEX_URL, { method:
+'POST' })` — or to it plus a suffix, whose value has a path
+(`https://catalog.internal/items/reindex`), asks for that path: it is joined to
+`POST /items/reindex` of the service the host names, `via: "baseUrlValue"`.
+Where the value's path answers nothing and the request's own path does, the
+value's path is a mount in front of the service and the join made without it
+stands.
+
+**A worker's service binding is a request to the worker it is bound to.**
+`env.CATALOG.fetch(input, init?)` — and `this.env.CATALOG.fetch`,
+`c.env.CATALOG.fetch` — is an `http_out` with `meta.binding: "CATALOG"`, its path
+read from `input` (a URL whose host is ignored, a `Request` built from one, or a
+path) and its verb from `init`. The binding is recognised by the receiver's type
+(`Fetcher`), or, with the types not installed, by its shape alone, an upper-case
+property of an `env`. The worker's `wrangler.json`, `wrangler.jsonc` or
+`wrangler.toml` `services: [{ binding, service, entrypoint? }]` (and
+`env.<name>.services`, chosen like `vars` by `settingFiles.environment`) says
+which worker the name reaches; that worker is the configured service named or
+aliased so, or whose own wrangler file deploys it under that `name`. The join is
+`static`, `via: "serviceBinding"`. A binding to a worker no service is, or one no
+wrangler file of the caller declares, is a `service-binding-unknown` row; a
+request recognised by its shape alone and declared nowhere is left alone, since
+it may not be a binding at all. Service-binding RPC (`env.X.someMethod()`) is
+not read.
+
+**A verb a wrapper is handed is read at each caller.** A client that takes the
+verb as an argument — `this.req('PATCH', path, body)` into `fetch(base + path, {
+method })`, or `http.request(method, url)` in a browser — writes one request for
+every verb it will ever send. Each caller is credited with the verb it hands in,
+read the way a segment is (a literal, a `const`, an enum member, a member of an
+`as const` object, a parameter's default), out through further wrappers, along
+the same calls its address was followed through. A caller that hands in
+something nothing can read keeps the request with its verb unread, an
+`api-method-dynamic` row, and joins nothing; it used to be read as `GET`. A
+parameter a caller leaves out is its default: `url(suffix = '')` called as
+`url()` is the base path.
 
 **Two APIs at one address are two entries.** Where two APIs (REST, HTTP or
 WebSocket) or two load balancers of one deployment serve the same method and
@@ -1859,6 +1923,10 @@ worked example of a document that declares routes.
 | `doctor.skipGuardDecorators` | object | `{}` | decorators that switch a guard off for one handler through the reflector, each mapped to the guard classes it switches off (`{"SkipTenantAuth": ["TenantAuthGuard"]}`; `[]` = every guard); a route carrying one is audited as if those guards were absent |
 | `callShape.conditionalWrites` | string[] | `[]` | functions or methods of your own that change a row only in the state it is expected in (a guarded transition, a compare-and-set): a loop whose every query goes through one is a `query-in-loop` note, not a likely N+1 |
 | `callShape.perItemHosts` | string[] | `[]` | hosts that take one recipient per request: a loop whose every request goes to one is a note |
+| `dead.infrastructure.paths` | string[] | `[]` | routes `flowatlas dead` lists as infrastructure, spelled as `doctor.publicRoutes` spells them (`POST /inbound/*`) |
+| `dead.infrastructure.decorators` | string[] | `[]` | handler or controller decorators that mark a route as infrastructure |
+| `dead.infrastructure.names` | string[] | `[]` | handler or controller names (`OpsController`, `OpsController.flush`) that mark a route as infrastructure |
+| `dead.infrastructure.builtIn` | boolean | `true` | `false` turns the built-in probe, webhook, callback and well-known rules off; the three lists still apply |
 | `callShape.boundedCalls` | string[] | `[]` | helpers of your own that split a list into chunks, beside the built-in `chunk`, `chunks`, `batches`, `inChunks` and `splitEvery`: a loop over what one returns is set aside |
 
 **A path segment written as a closed set.** A segment whose type is a union of

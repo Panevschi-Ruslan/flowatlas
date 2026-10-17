@@ -118,13 +118,14 @@ describe('reading what a deployment file declares', () => {
 
   it('reads a worker’s variables, per environment, and the port it runs on locally', () => {
     const json = readWorkerJson(
-      ['{', '  // comment', '  "vars": { "ORDERS_URL": "http://localhost:3001", },', '  "env": { "staging": { "vars": { "ORDERS_URL": "https://orders.staging.example.com" } } },', '  "dev": { "port": 8787 }', '}'].join('\n'),
+      ['{', '  // comment', '  "name": "shop",', '  "vars": { "ORDERS_URL": "http://localhost:3001", },', '  "env": { "staging": { "vars": { "ORDERS_URL": "https://orders.staging.example.com" } } },', '  "dev": { "port": 8787 }', '}'].join('\n'),
     );
     expect(json.declared).toEqual([
       { name: 'ORDERS_URL', raw: 'http://localhost:3001' },
       { name: 'ORDERS_URL', raw: 'https://orders.staging.example.com', environment: 'staging' },
     ]);
     expect(json.ports).toEqual([8787]);
+    expect(json.names).toEqual(['shop']);
     const toml = readWorkerToml(
       ['name = "shop"', '[vars]', 'ORDERS_URL = "http://localhost:3001"', '[env.staging]', 'vars = { ORDERS_URL = "https://orders.staging.example.com" }', '[[routes]]', 'pattern = "x"', '[dev]', 'port = 8787'].join('\n'),
     );
@@ -202,5 +203,108 @@ describe('what a project’s files say its settings are', () => {
     expect(chosen['storefront']?.values['ORDERS_API']).toEqual([{ value: 'http://localhost:3001', file: '.env.development', environment: 'development' }]);
     const other = readProjectSettings({ services: services(dir), rootDir: dir, environment: 'staging' });
     expect(other['storefront']?.values['ORDERS_API']).toEqual([{ value: 'http://orders:3000', file: '.env.example' }]);
+  });
+});
+
+describe('the workers a worker is bound to (P91)', () => {
+  const bound = [
+    { binding: 'CATALOG', service: 'catalog-worker' },
+    { binding: 'STOCK', service: 'stock-worker', entrypoint: 'Lookup' },
+    { binding: 'CATALOG', service: 'catalog-worker-staging', environment: 'staging' },
+  ];
+
+  it('reads them from JSON and from JSON with comments, per environment', () => {
+    const json = readWorkerJson(
+      JSON.stringify({
+        name: 'orders-worker',
+        services: [
+          { binding: 'CATALOG', service: 'catalog-worker' },
+          { binding: 'STOCK', service: 'stock-worker', entrypoint: 'Lookup' },
+        ],
+        env: { staging: { name: 'orders-worker-staging', services: [{ binding: 'CATALOG', service: 'catalog-worker-staging' }] } },
+      }),
+    );
+    expect(json.bindings).toEqual(bound);
+    expect(json.names).toEqual(['orders-worker', 'orders-worker-staging']);
+    const jsonc = readWorkerJson(
+      [
+        '{',
+        '  // reached by name rather than by address',
+        '  "name": "orders-worker",',
+        '  "services": [',
+        '    { "binding": "CATALOG", "service": "catalog-worker" },',
+        '    { "binding": "STOCK", "service": "stock-worker", "entrypoint": "Lookup" },',
+        '  ],',
+        '  "env": { "staging": { "name": "orders-worker-staging", "services": [{ "binding": "CATALOG", "service": "catalog-worker-staging" }] } },',
+        '}',
+      ].join('\n'),
+    );
+    expect(jsonc).toEqual(json);
+  });
+
+  it('reads them from TOML, as an inline array and as arrays of tables, per environment', () => {
+    const inline = readWorkerToml(
+      [
+        'name = "orders-worker"',
+        'services = [ { binding = "CATALOG", service = "catalog-worker" }, { binding = "STOCK", service = "stock-worker", entrypoint = "Lookup" } ]',
+        '[env.staging]',
+        'name = "orders-worker-staging"',
+        'services = [ { binding = "CATALOG", service = "catalog-worker-staging" } ]',
+      ].join('\n'),
+    );
+    expect(inline.bindings).toEqual(bound);
+    expect(inline.names).toEqual(['orders-worker', 'orders-worker-staging']);
+    const tables = readWorkerToml(
+      [
+        'name = "orders-worker"',
+        '[[services]]',
+        'binding = "CATALOG"',
+        'service = "catalog-worker"',
+        '[[services]]',
+        'binding = "STOCK"',
+        'service = "stock-worker"',
+        'entrypoint = "Lookup"',
+        '[[routes]]',
+        'pattern = "shop.example.test/*"',
+        '[env.staging]',
+        'name = "orders-worker-staging"',
+        '[[env.staging.services]]',
+        'binding = "CATALOG"',
+        'service = "catalog-worker-staging"',
+      ].join('\n'),
+    );
+    expect(tables.bindings).toEqual(bound);
+  });
+
+  it('keeps a binding only when it is written out in full', () => {
+    const read = readWorkerJson(JSON.stringify({ services: [{ binding: 'CATALOG' }, { binding: 'STOCK', service: '${STOCK_WORKER}' }] }));
+    expect(read.bindings).toBeUndefined();
+  });
+
+  let root: string | undefined;
+  afterEach(() => {
+    if (root !== undefined) rmSync(root, { recursive: true, force: true });
+    root = undefined;
+  });
+
+  it('hands them to the service whose files declare them, for the chosen environment', () => {
+    root = mkdtempSync(join(tmpdir(), 'flowatlas-bindings-'));
+    mkdirSync(join(root, 'orders'), { recursive: true });
+    writeFileSync(
+      join(root, 'orders', 'wrangler.json'),
+      JSON.stringify({
+        name: 'orders-worker',
+        services: [{ binding: 'CATALOG', service: 'catalog-worker' }],
+        env: { staging: { services: [{ binding: 'CATALOG', service: 'catalog-worker-staging' }] } },
+      }),
+    );
+    const services = [{ name: 'orders', dir: join(root, 'orders') }];
+    const all = readProjectSettings({ services, rootDir: root });
+    expect(all['orders']?.bindings?.map((each) => each.service)).toEqual(['catalog-worker', 'catalog-worker-staging']);
+    expect(all['orders']?.deployedAs).toEqual(['orders-worker']);
+    const staging = readProjectSettings({ services, rootDir: root, environment: 'staging' });
+    expect(staging['orders']?.bindings).toEqual([
+      { binding: 'CATALOG', service: 'catalog-worker-staging', file: 'wrangler.json', environment: 'staging' },
+    ]);
   });
 });

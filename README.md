@@ -263,7 +263,7 @@ read again and the others come from the cache.
 | `flowatlas contracts` | what each service sends against what the other declares, field by field |
 | `flowatlas stats` | what the graph is made of |
 | `flowatlas cycles` | circular dependencies, cross-service ones first |
-| `flowatlas dead` | entries, channels and providers nothing appears to reach |
+| `flowatlas dead` | entries, channels and providers nothing appears to reach; probes, webhooks and callbacks folded apart, and `likely-dead` where a request read in part could still reach the route |
 | `flowatlas config <selector>` | the settings one flow depends on |
 | `flowatlas hotspots` | what the most things point at |
 | `flowatlas visualise` | the whole graph as one page you can open |
@@ -600,7 +600,11 @@ recorded with a reason and a location rather than guessed at or dropped:
 Those are a handful of about a hundred; the whole list, grouped by what each is
 about, is in [the command reference](docs/CLI.md#the-reasons-a-row-can-carry).
 `flowatlas doctor` groups them with what to do, `flowatlas stats` counts them
-and `flowatlas dead` explains the routes nothing calls.
+and `flowatlas dead` explains the routes nothing calls: the ones something
+outside the project calls on purpose (a probe, a webhook, a provider's
+callback, a route declared public) are folded into a line of their own, and a
+route a partly read request could still reach is `likely-dead`, with that
+request named.
 
 A reader that could read nothing says so as well. A file the parser gave up on
 is a `file-not-parsed` row; a service a reader opened and put nothing in the

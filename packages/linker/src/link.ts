@@ -4,6 +4,7 @@ import {
   ENVIRONMENT_META,
   namesGivenTo,
   SCHEMA_VERSION,
+  serviceNamesOf,
   wasRead,
   countsOf,
   type Confidence,
@@ -47,7 +48,7 @@ import { joinChannelPatterns } from './pattern-link.js';
 import { matchTakenPublishes } from './takes-link.js';
 import { joinReferences } from './reference-link.js';
 import { auditRoutes } from './route-audit.js';
-import { answeredOnlyByWildcard } from './route-match.js';
+import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
@@ -89,6 +90,9 @@ const configHashOf = (config: FlowatlasConfig): string =>
           type: s.type,
           baseUrlEnv: s.baseUrlEnv ?? [],
           apiBaseEnv: s.apiBaseEnv ?? [],
+          // Only where there are any, so a configuration without aliases
+          // keeps the fingerprint it always had (P91).
+          ...((s.aliases ?? []).length === 0 ? {} : { aliases: s.aliases }),
         })),
         sharedPackages: [...config.sharedPackages].sort(),
       }),
@@ -166,12 +170,16 @@ const buildRouteIndex = (
     if (nodes.get(edge.to)?.type === 'http_out') callerOf.set(edge.to, edge.from);
   }
 
-  const known = new Set(config.services.map((service) => service.name));
+  // A service answers to its aliases wherever it is named (P91).
+  const names = serviceNamesOf(config);
+  const named = (service: string): string => names.get(service) ?? service;
   return {
     routesOf: (service) =>
-      known.has(service) || routesByService.has(service)
-        ? (routesByService.get(service) ?? [])
+      names.has(service) || routesByService.has(service)
+        ? (routesByService.get(named(service)) ?? [])
         : undefined,
+    serviceOf: (service) => (names.has(service) || routesByService.has(service) ? named(service) : undefined),
+    aliases: () => [...names.keys()].filter((name) => names.get(name) !== name).sort(cmp),
     claimantsOf: (env) => servicesByEnv.get(env) ?? [],
     markerOf: (callId) => callsServicesOf(nodes.get(callerOf.get(callId) ?? ''))[0],
     markersOf: (callId) => callsServicesOf(nodes.get(callerOf.get(callId) ?? '')),
@@ -184,15 +192,17 @@ const buildUiIndex = (
   routesByService: ReadonlyMap<string, GraphNode[]>,
   servicesByEnv: ReadonlyMap<string, string[]>,
 ): UiIndex => {
+  const names = serviceNamesOf(config);
   const targets = new Map<string, string>();
   for (const service of config.services) {
     for (const [env, target] of Object.entries(service.apiTarget ?? {})) {
-      targets.set(`${service.name}\0${env}`, target);
+      // An alias is the service it names (P91).
+      targets.set(`${service.name}\0${env}`, names.get(target) ?? target);
     }
   }
   const serving = [...routesByService.keys()].sort(cmp);
   return {
-    routesOf: (service) => routesByService.get(service),
+    routesOf: (service) => routesByService.get(names.get(service) ?? service),
     targetOf: (repo, env) => targets.get(`${repo}\0${env}`),
     claimantsOf: (env) => servicesByEnv.get(env) ?? [],
     services: () => serving,
@@ -218,9 +228,13 @@ const buildProcedureIndex = (
     declared.set(String(node.meta?.['key']), node);
     byService.set(node.repo, declared);
   }
+  const names = serviceNamesOf(config);
   const targets = new Map<string, string[]>();
   for (const service of config.services) {
-    targets.set(service.name, [...new Set(Object.values(service.apiTarget ?? {}))].sort(cmp));
+    targets.set(
+      service.name,
+      [...new Set(Object.values(service.apiTarget ?? {}).map((target) => names.get(target) ?? target))].sort(cmp),
+    );
   }
   const declaring = [...byService.keys()].sort(cmp);
   const none = new Map<string, GraphNode>();
@@ -321,6 +335,9 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
     const path = call.meta?.['path'];
     return typeof path === 'string' && wasRead(path) ? 'static' : 'heuristic';
   },
+  // A worker's binding names the worker it reaches in its deployment, and the
+  // path was read in full to be matched at all (P91).
+  serviceBinding: () => 'static',
 };
 
 /** The edge a resolved call becomes. */
@@ -476,6 +493,96 @@ const baseUrlLookup = (
 };
 
 /**
+ * The service a request through a worker's binding reaches (P91): the workers
+ * the caller's deployment binds the name to, each found among the names and
+ * aliases of the configured services, or among the names a service's own
+ * deployment files deploy it under.
+ */
+const bindingLookup = (
+  config: FlowatlasConfig,
+  settings: Readonly<Record<string, RepoSettings>>,
+): NonNullable<RouteIndex['bindingOf']> => {
+  const names = serviceNamesOf(config);
+  const deployed = new Map<string, string[]>();
+  for (const [service, own] of Object.entries(settings)) {
+    for (const name of own.deployedAs ?? []) deployed.set(name, [...(deployed.get(name) ?? []), service]);
+  }
+  return (call, binding) => {
+    const declared = (settings[call.repo]?.bindings ?? []).filter((each) => each.binding === binding);
+    if (declared.length === 0) return { kind: 'undeclared' };
+    const workers = [...new Set(declared.map((each) => each.service))].sort(cmp);
+    const services = [
+      ...new Set(workers.flatMap((worker) => (names.has(worker) ? [names.get(worker) as string] : (deployed.get(worker) ?? [])))),
+    ].sort(cmp);
+    return services.length === 1
+      ? { kind: 'service', service: services[0] as string, workers }
+      : { kind: 'unknown', workers, services };
+  };
+};
+
+/** A request that joined nothing, the services it may be asking, and what of it was read. */
+interface Unjoined {
+  readonly call: GraphNode;
+  /** The services it may reach; every service, where nothing named one. */
+  readonly services: readonly string[] | 'any';
+  readonly method: string | null;
+  readonly path: string;
+}
+
+/** Whether a request's address or verb was read in part, which is what makes it a near miss. */
+const partlyRead = (call: GraphNode): { method: string | null; path: string } | undefined => {
+  const path = call.meta?.['path'];
+  const method = call.meta?.['method'];
+  if (typeof path !== 'string' || path === '') return undefined;
+  const verb = typeof method === 'string' ? method : null;
+  return wasRead(path) && verb !== null ? undefined : { method: verb, path };
+};
+
+/** A request between services that may still reach a route of the service it was aimed at. */
+const nearMissOf = (call: GraphNode, outcome: CallOutcome): Unjoined | undefined => {
+  const read = partlyRead(call);
+  if (read === undefined) return undefined;
+  if (outcome.kind === 'dynamic' && outcome.targetService !== undefined) return { call, services: [outcome.targetService], ...read };
+  if (outcome.kind === 'unknownEnv' && outcome.claiming.length > 0) return { call, services: outcome.claiming, ...read };
+  return undefined;
+};
+
+/** A browser's request that may still reach a route: of the service its key names, or of any. */
+const uiNearMissOf = (call: GraphNode, index: UiIndex): Unjoined | undefined => {
+  const read = partlyRead(call);
+  if (read === undefined) return undefined;
+  const env = call.meta?.['baseUrlEnv'];
+  const named = typeof env === 'string' ? (index.targetOf(call.repo, env) ?? index.claimantsOf(env)) : [];
+  const services = typeof named === 'string' ? [named] : named;
+  return { call, services: services.length === 0 ? 'any' : services, ...read };
+};
+
+/**
+ * The requests that could reach each route nothing calls (P91), by route id.
+ *
+ * Asked only of the routes nothing calls: a route something already reaches
+ * is not in question. A near miss is a sentence, never an edge.
+ */
+const nearMissesOf = (
+  uncalled: readonly string[],
+  nodes: ReadonlyMap<string, GraphNode>,
+  partials: readonly Unjoined[],
+): Record<string, string[]> => {
+  const out: Record<string, string[]> = {};
+  if (partials.length === 0) return out;
+  for (const id of uncalled) {
+    const route = nodes.get(id);
+    if (route === undefined) continue;
+    const calls = partials
+      .filter((partial) => partial.services === 'any' || partial.services.includes(route.repo))
+      .filter((partial) => couldReach(partial.method, partial.path, route))
+      .map((partial) => partial.call.id);
+    if (calls.length > 0) out[id] = [...new Set(calls)].sort(cmp);
+  }
+  return out;
+};
+
+/**
  * Joins the repositories into one graph.
  *
  * Two things cross a service boundary: a call to another service's route, and a
@@ -508,6 +615,8 @@ export const linkGraphs = (
   found.push(...matchTakenPublishes(nodes, edges));
   const httpOut = emptyHttpOut();
   const ui = emptyUi();
+  /** Requests that joined nothing and may still reach a route (P91). */
+  const partials: Unjoined[] = [];
 
   const routesByService = routesByServiceOf(nodes);
   const servicesByEnv = servicesByEnvOf(config);
@@ -518,6 +627,7 @@ export const linkGraphs = (
     ...buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv),
     functionUrlsOf: (callId) => urls.get(callId) ?? [],
     ...(valuedBaseUrlOf === undefined ? {} : { baseUrlOf: valuedBaseUrlOf }),
+    bindingOf: bindingLookup(config, settings),
   };
   const uiIndex: UiIndex = {
     ...buildUiIndex(config, routesByService, servicesByEnv),
@@ -622,8 +732,12 @@ export const linkGraphs = (
       const routes = routesByService.get(outcome.entry.repo) ?? [];
       if (outcome.via !== 'functionUrl' && answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
     } else {
-      httpOut[outcome.kind] += 1;
+      // A binding nothing is found behind is counted with the settings no
+      // service claims: both are a name the configuration does not place.
+      httpOut[outcome.kind === 'unknownBinding' ? 'unknownEnv' : outcome.kind] += 1;
     }
+    const partial = nearMissOf(call, outcome);
+    if (partial !== undefined) partials.push(partial);
 
     const aim = aimOf(outcome);
     if (aim !== undefined) call.meta = { ...call.meta, targetService: aim };
@@ -743,6 +857,10 @@ export const linkGraphs = (
     ui.unresolved += 1;
     const reason = uiReasonOf(outcome);
     if (reason !== undefined) ui.byReason[reason] = (ui.byReason[reason] ?? 0) + 1;
+    if (outcome.kind === 'dynamic') {
+      const partial = uiNearMissOf(call, uiIndex);
+      if (partial !== undefined) partials.push(partial);
+    }
     // An address built at run time was already reported where it was written,
     // with the annotation that would fix it; saying it again here adds nothing.
     const finding = uiFindingFor(outcome);
@@ -765,7 +883,9 @@ export const linkGraphs = (
   );
 
   const channels = surveyChannels(nodes.values(), edges.values());
-  const routes = surveyRoutes(nodes.values(), edges.values());
+  const surveyed = surveyRoutes(nodes.values(), edges.values());
+  const nearMissed = nearMissesOf(surveyed.uncalled, nodes, partials);
+  const routes = Object.keys(nearMissed).length === 0 ? surveyed : { ...surveyed, nearMissed };
 
   found.push(...merged.collisions);
 

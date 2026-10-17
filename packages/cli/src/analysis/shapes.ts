@@ -64,6 +64,23 @@ export const deadResultSchema = z.object({
         file: z.string().optional(),
         line: z.number().int().optional(),
         reason: z.string(),
+        /** What the row is (P91): only `actionable` rows are findings. */
+        class: z.enum(['actionable', 'stream', 'infrastructure', 'declared']),
+        /** The rule that put the row in its class. */
+        why: z.string(),
+        role: z.enum(['probe', 'webhook', 'callback', 'discovery', 'configured']).optional(),
+        /** `likely-dead` where a request whose address was read in part could reach it. */
+        confidence: z.enum(['dead', 'likely-dead']),
+        nearMiss: z
+          .array(
+            z.object({
+              call: z.string(),
+              path: z.string(),
+              file: z.string().optional(),
+              line: z.number().int().optional(),
+            }),
+          )
+          .optional(),
       }),
     )
     .optional(),

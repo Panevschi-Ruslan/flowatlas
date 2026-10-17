@@ -1,8 +1,10 @@
 import type { Decorator } from 'ts-morph';
+import { Node } from 'ts-morph';
 import {
   decoratorArgs,
   decoratorName,
   findDecorators,
+  jsDocCallsMarkers,
   type RecordedMarker,
 } from '@flowatlas/core';
 
@@ -25,15 +27,19 @@ export type { RecordedMarker };
  * Reading them here, once, means every later phase takes markers from the graph
  * instead of re-parsing the source to find them.
  */
-export const readMarkers = (node: { getDecorators(): Decorator[] }): RecordedMarker[] =>
-  findDecorators(node, { names: [...MARKER_NAMES], fromModules: MARKER_MODULES }).map(
+export const readMarkers = (node: { getDecorators(): Decorator[] }): RecordedMarker[] => [
+  ...findDecorators(node, { names: [...MARKER_NAMES], fromModules: MARKER_MODULES }).map(
     (decorator) => ({
       name: decoratorName(decorator),
       args: decoratorArgs(decorator).map((value) =>
         value.resolved ? value.value : { unresolved: value.text },
       ),
     }),
-  );
+  ),
+  // `/** @flowatlas-calls <service> <METHOD> <path> */`, the same annotation
+  // written where a decorator is not (P91).
+  ...(Node.isNode(node) ? jsDocCallsMarkers(node) : []),
+];
 
 /** Non-framework decorators on a handler, kept for reporting. */
 export const otherDecorators = (

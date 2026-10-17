@@ -26,6 +26,45 @@ export const EXTERNALLY_TRIGGERED = [
 /** Findings the DI resolver records when it cannot say what a token means. */
 const UNRESOLVED_INJECTS = ['di-type-unresolved', 'di-token-unknown', 'di-token-ambiguous'];
 
+/**
+ * What a route nothing calls is (P91).
+ *
+ * `actionable` is the row the command is for: nothing calls it and nothing
+ * says why. The other three each have their callers outside the project for a
+ * reason the row names - a browser holding a stream open, something outside
+ * that probes or posts to it, a decision the configuration or the code wrote
+ * down - and are listed apart, folded, so a reader of the top of the list is
+ * reading findings. None of them is dropped: a probe nobody runs is still
+ * findable with `--class infrastructure`.
+ */
+export const ENTRY_CLASS_NAMES = ['actionable', 'stream', 'infrastructure', 'declared'] as const;
+export type EntryClassName = (typeof ENTRY_CLASS_NAMES)[number];
+
+/** What kind of infrastructure a route is, for the line that counts them. */
+export type InfrastructureRole = 'probe' | 'webhook' | 'callback' | 'discovery' | 'configured';
+
+/**
+ * How sure a row is that nothing reaches the route.
+ *
+ * `likely-dead` is a route a call could still reach: the call's address was
+ * read in part, and what was read matches the route (P91). The call is named
+ * in `nearMiss`; no edge is drawn from it, because a hole may be the caller
+ * and may not, and an edge claims it is.
+ */
+export type DeadConfidence = 'dead' | 'likely-dead';
+
+/** A call that did not join and could still reach the route. */
+export interface NearMiss {
+  call: string;
+  /** The call's address as far as it was read, holes included. */
+  path: string;
+  file?: string;
+  line?: number;
+}
+
+/** How many near misses a row names. */
+const NEAR_MISSES_NAMED = 3;
+
 export interface DeadEntry {
   id: string;
   service: string;
@@ -35,6 +74,14 @@ export interface DeadEntry {
   file?: string;
   line?: number;
   reason: string;
+  class: EntryClassName;
+  /** Which rule put the row in its class: `path /healthz`, `decorator @HealthCheck`, `no caller read`. */
+  why: string;
+  /** For an infrastructure row, what it is. */
+  role?: InfrastructureRole;
+  confidence: DeadConfidence;
+  /** The calls that could reach it, for a `likely-dead` row (up to three). */
+  nearMiss?: NearMiss[];
 }
 
 export interface DeadChannel {
@@ -94,7 +141,21 @@ export interface DeadOptions {
    * back as a finding.
    */
   publicRoutes?: readonly string[];
+  /** What the configuration adds to, or takes from, the infrastructure rules (`dead.infrastructure`). */
+  infrastructure?: InfrastructureRules;
+  /** Only rows of this class. */
+  class?: EntryClassName;
 }
+
+/** `dead.infrastructure` as the configuration writes it. */
+export interface InfrastructureRules {
+  readonly paths: readonly string[];
+  readonly decorators: readonly string[];
+  readonly names: readonly string[];
+  readonly builtIn: boolean;
+}
+
+const BUILT_IN_ONLY: InfrastructureRules = { paths: [], decorators: [], names: [], builtIn: true };
 
 /**
  * Paths that answer something other than the project.
@@ -160,39 +221,206 @@ const isStream = (path: string): boolean => {
  * Why one route ended up in this list, which is not the same question as
  * whether it is dead.
  *
- * Four answers, and only the first of them is the one the command is for. A
- * reader who opens the list and finds `/health` at the top of it closes the
- * list, so each kind says what it is, and `rank` puts the rows that mean
- * something above the rows that never could — which is also the order `--max`
- * cuts from the bottom of.
+ * A reader who opens the list and finds `/health` at the top of it closes the
+ * list, so each kind says what it is, and the rows that mean something are put
+ * above the rows that never could.
  */
-const ENTRY_CLASSES = {
-  unexplained: { rank: 0, reason: 'no http_calls/hits from any repo (may be a public API)' },
-  stream: {
-    rank: 1,
-    reason: 'looks like an event stream; a browser subscribing to one is not read yet',
-  },
-  probe: {
-    rank: 2,
-    reason: 'looks like a health or status probe; whatever runs it is outside the graph',
-  },
-  declared: {
-    rank: 3,
-    reason: 'declared public in the configuration; its callers are outside the project',
-  },
+const ENTRY_REASONS = {
+  actionable: 'no http_calls/hits from any repo (may be a public API)',
+  stream: 'looks like an event stream; a browser subscribing to one is not read yet',
+  declared: 'declared public in the configuration; its callers are outside the project',
 } as const;
 
-type EntryClass = (typeof ENTRY_CLASSES)[keyof typeof ENTRY_CLASSES];
+/**
+ * Segments a receiver of somebody else's request is named by, at any depth
+ * (P91): a provider posts to `/webhooks/payments`, an identity provider
+ * redirects to `/oauth/callback`.
+ *
+ * `notify` and `notifications` are a provider's words too - a payment
+ * provider's notification endpoint - and also a collection a screen reads,
+ * `GET /users/:param/notifications`. Read as a receiver only where something
+ * is sent to it, never on a `GET`, which is how a list a browser asks for is
+ * told from a receiver a provider posts to.
+ */
+const RECEIVER_SEGMENTS: ReadonlyMap<string, { role: InfrastructureRole; sentOnly?: true }> = new Map([
+  ['webhook', { role: 'webhook' }],
+  ['webhooks', { role: 'webhook' }],
+  ['hooks', { role: 'webhook' }],
+  ['notify', { role: 'webhook', sentOnly: true }],
+  ['notifications', { role: 'webhook', sentOnly: true }],
+  ['callback', { role: 'callback' }],
+  ['callbacks', { role: 'callback' }],
+]);
 
-const classOf = (key: string, publicRoutes: readonly string[]): EntryClass => {
-  const { method, path } = splitKey(key);
-  if (publicRoutes.some((pattern) => matchesRoutePattern(pattern, method, path))) {
-    return ENTRY_CLASSES.declared;
-  }
-  if (isProbe(path)) return ENTRY_CLASSES.probe;
-  if (isStream(path)) return ENTRY_CLASSES.stream;
-  return ENTRY_CLASSES.unexplained;
+/** Decorators that say a handler answers a probe, wherever they are written. */
+const PROBE_DECORATORS = new Set(['HealthCheck']);
+
+/**
+ * Names a handler or controller is given when it answers something outside:
+ * `stripeWebhook`, `PaymentsCallback`, `HealthController`, `handleWebhookEvent`.
+ * Read at the end of the name, or at its start for the two spellings a
+ * receiver is written with, so `fetchWebhookSettings` - a screen's own request
+ * about webhooks - is not one.
+ */
+const NAME_RULES: ReadonlyArray<{ test: RegExp; role: InfrastructureRole }> = [
+  { test: /(?:^w|W)ebhooks?$/, role: 'webhook' },
+  { test: /^handleWebhook(?:[A-Z]|$)/, role: 'webhook' },
+  { test: /(?:^c|C)allbacks?$/, role: 'callback' },
+  { test: /^onCallback(?:[A-Z]|$)/, role: 'callback' },
+  { test: /(?:^p|P)robe$/, role: 'probe' },
+  { test: /HealthController$/, role: 'probe' },
+];
+
+/** The facts about one route the classes are decided from. */
+export interface RouteFacts {
+  readonly method: string;
+  readonly path: string;
+  /** Decorators on the handler and on its controller, by name. */
+  readonly decorators: readonly string[];
+  /** The handler's own name: a method's, or a function's. */
+  readonly handler?: string;
+  readonly controller?: string;
+  /** What `@flowatlas-public` says, where the handler carries one (P90). */
+  readonly publicNote?: string;
+}
+
+/** Where one row belongs, and the rule that put it there. */
+export interface RouteClass {
+  readonly class: EntryClassName;
+  readonly why: string;
+  readonly reason: string;
+  readonly role?: InfrastructureRole;
+}
+
+const ROLE_REASONS: Readonly<Record<InfrastructureRole, string>> = {
+  probe: 'looks like a health or status probe; whatever runs it is outside the graph',
+  webhook: 'looks like a webhook receiver; whatever posts to it is outside the project',
+  callback: 'looks like a callback a provider redirects to; whoever sends it there is outside the project',
+  discovery: 'a well-known address, asked for by clients outside the project',
+  configured: 'named infrastructure under dead.infrastructure; its callers are outside the project',
 };
+
+const infrastructureRow = (role: InfrastructureRole, why: string): RouteClass => ({
+  class: 'infrastructure',
+  role,
+  why,
+  reason: ROLE_REASONS[role],
+});
+
+/** The names a handler or controller is read by, `Controller` left off a controller's. */
+const namesOf = (facts: RouteFacts): string[] =>
+  [facts.handler, facts.controller, facts.controller?.replace(/Controller$/, '')].filter(
+    (name): name is string => name !== undefined && name !== '',
+  );
+
+/** The built-in rules, in the order a reader would give them: what the code says, then the address, then the name. */
+const builtInClassOf = (facts: RouteFacts): RouteClass | undefined => {
+  const decorator = facts.decorators.find((name) => PROBE_DECORATORS.has(name));
+  if (decorator !== undefined) return infrastructureRow('probe', `decorator @${decorator}`);
+  if (isProbe(facts.path)) return infrastructureRow('probe', `path ${facts.path}`);
+  const segments = segmentsOf(facts.path).map((segment) => segment.toLowerCase());
+  if (segments[0] === '.well-known') return infrastructureRow('discovery', `path ${facts.path}`);
+  const sent = facts.method.toUpperCase() !== 'GET';
+  for (const segment of segments) {
+    const receiver = RECEIVER_SEGMENTS.get(segment);
+    if (receiver === undefined || (receiver.sentOnly === true && !sent)) continue;
+    return infrastructureRow(receiver.role, `path ${facts.path}`);
+  }
+  for (const name of namesOf(facts)) {
+    const rule = NAME_RULES.find((each) => each.test.test(name));
+    if (rule !== undefined) return infrastructureRow(rule.role, `name ${name}`);
+  }
+  return undefined;
+};
+
+/** What the configuration names as infrastructure, asked before anything built in. */
+const configuredClassOf = (facts: RouteFacts, rules: InfrastructureRules): RouteClass | undefined => {
+  const path = rules.paths.find((pattern) => matchesRoutePattern(pattern, facts.method, facts.path));
+  if (path !== undefined) return infrastructureRow('configured', `dead.infrastructure.paths ${path}`);
+  const decorator = rules.decorators.find((name) => facts.decorators.includes(name));
+  if (decorator !== undefined) return infrastructureRow('configured', `dead.infrastructure.decorators @${decorator}`);
+  const labels = [
+    ...namesOf(facts),
+    ...(facts.controller !== undefined && facts.handler !== undefined ? [`${facts.controller}.${facts.handler}`] : []),
+  ];
+  const name = rules.names.find((each) => labels.includes(each));
+  return name === undefined ? undefined : infrastructureRow('configured', `dead.infrastructure.names ${name}`);
+};
+
+/**
+ * Which class a route nothing calls belongs to, and why (P91).
+ *
+ * Declared first: a route the configuration or the code calls public has its
+ * callers outside by decision, whatever its address looks like. Then what the
+ * configuration names as infrastructure, then the built-in rules - a decorator,
+ * the address, the name - then a stream, and what none of them explains is the
+ * finding.
+ */
+export const classifyRoute = (
+  facts: RouteFacts,
+  options: { publicRoutes?: readonly string[]; infrastructure?: InfrastructureRules } = {},
+): RouteClass => {
+  const declared = (options.publicRoutes ?? []).find((pattern) => matchesRoutePattern(pattern, facts.method, facts.path));
+  if (declared !== undefined) {
+    return { class: 'declared', why: `doctor.publicRoutes ${declared}`, reason: ENTRY_REASONS.declared };
+  }
+  // A route the code itself says is public (P90). Not dead evidence by itself:
+  // the marker says the route answers callers outside the project, which is
+  // what `doctor.publicRoutes` says from the configuration's side.
+  if (facts.publicNote !== undefined) {
+    return {
+      class: 'declared',
+      why: facts.publicNote === '' ? '@flowatlas-public' : `@flowatlas-public ${facts.publicNote}`,
+      reason: 'declared public by @flowatlas-public; its callers are outside the project',
+    };
+  }
+  const rules = options.infrastructure ?? BUILT_IN_ONLY;
+  const found = configuredClassOf(facts, rules) ?? (rules.builtIn ? builtInClassOf(facts) : undefined);
+  if (found !== undefined) return found;
+  if (isStream(facts.path)) return { class: 'stream', why: `path ${facts.path}`, reason: ENTRY_REASONS.stream };
+  return { class: 'actionable', why: 'no caller read', reason: ENTRY_REASONS.actionable };
+};
+
+/** The name a handler node is called by: `OrdersController.list` is `list`. */
+const ownName = (label: string): string => label.slice(label.lastIndexOf('.') + 1);
+
+/** The decorators an entry records, its handler's and its controller's, by name. */
+const decoratorNamesOf = (node: GraphNode): string[] => {
+  const named = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value
+          .map((item) => (typeof item === 'object' && item !== null ? (item as { name?: unknown }).name : item))
+          .filter((name): name is string => typeof name === 'string')
+      : [];
+  return [...named(node.meta?.['decorators']), ...named(node.meta?.['controllerDecorators'])];
+};
+
+/** What a route says about itself, with its handler's label where one handles it. */
+export const routeFactsOf = (node: GraphNode, handlerLabel?: string): RouteFacts => {
+  const key = splitKey(keyOf(node.id));
+  const method = node.meta?.['method'];
+  const path = node.meta?.['path'];
+  const controller = node.meta?.['controller'];
+  const publicNote = node.meta?.['publicNote'];
+  return {
+    method: typeof method === 'string' ? method : key.method,
+    path: typeof path === 'string' ? path : key.path,
+    decorators: decoratorNamesOf(node),
+    ...(handlerLabel === undefined ? {} : { handler: ownName(handlerLabel) }),
+    ...(typeof controller === 'string' ? { controller } : {}),
+    ...(typeof publicNote === 'string' ? { publicNote } : {}),
+  };
+};
+
+/**
+ * How each class ranks, which is the order rows are listed in and the order
+ * `--max` cuts from the bottom of. A `likely-dead` row is actionable and ranks
+ * after the actionable rows nothing could reach.
+ */
+const RANKS: Readonly<Record<EntryClassName, number>> = { actionable: 0, stream: 2, infrastructure: 3, declared: 4 };
+
+const rankOf = (row: Pick<DeadEntry, 'class' | 'confidence'>): number =>
+  RANKS[row.class] + (row.class === 'actionable' && row.confidence === 'likely-dead' ? 1 : 0);
 
 const located = (node: GraphNode): { file?: string; line?: number } => ({
   ...(node.file === undefined ? {} : { file: node.file }),
@@ -235,24 +463,41 @@ export const deadEntries = (
           .map((entry) => entry.id)
       : report.routes.uncalled;
 
-  const ranked: Array<{ rank: number; row: DeadEntry }> = [];
+  // The calls the build found could still reach each route (P91), named
+  // rather than re-matched here, so the command and the report agree.
+  const nearMissed = report?.routes.nearMissed ?? {};
+  const nearMissesOf = (id: string): NearMiss[] =>
+    (Object.hasOwn(nearMissed, id) ? (nearMissed[id] ?? []) : []).slice(0, NEAR_MISSES_NAMED).flatMap((callId) => {
+      const call = db.node(callId);
+      if (call === undefined) return [];
+      return [{ call: callId, path: String(call.meta?.['path'] ?? '?'), ...located(call) }];
+    });
+
+  const rows: DeadEntry[] = [];
   for (const id of uncalled) {
     const node = db.node(id);
     if (node === undefined || !inService(node, options.service)) continue;
     // The build lists http routes only. The guard is here so that widening it
     // later cannot quietly start reporting a cron job as unreachable.
     if (excluded.has(node.kind ?? '')) continue;
-    const found = classOf(keyOf(id), options.publicRoutes ?? []);
-    ranked.push({
-      rank: found.rank,
-      row: {
-        id,
-        service: node.repo,
-        kind: node.kind ?? 'http',
-        key: keyOf(id),
-        ...located(node),
-        reason: found.reason,
-      },
+    const handler = db.edgesFrom(id, ['handles']).map((edge) => db.node(edge.to)?.label).find((label) => label !== undefined);
+    const found = classifyRoute(routeFactsOf(node, handler), options);
+    const nearMiss = nearMissesOf(id);
+    rows.push({
+      id,
+      service: node.repo,
+      kind: node.kind ?? 'http',
+      key: keyOf(id),
+      ...located(node),
+      reason:
+        nearMiss.length === 0
+          ? found.reason
+          : `${found.reason}; a request whose address was read in part could reach it`,
+      class: found.class,
+      why: found.why,
+      ...(found.role === undefined ? {} : { role: found.role }),
+      confidence: nearMiss.length === 0 ? 'dead' : 'likely-dead',
+      ...(nearMiss.length === 0 ? {} : { nearMiss }),
     });
   }
   for (const channel of report?.channels.noProducers ?? []) {
@@ -265,24 +510,24 @@ export const deadEntries = (
       if (!inService(node, options.service)) continue;
       // A handler whose channel nobody publishes to is the finding this
       // command is for, so it ranks with the routes nothing explains.
-      ranked.push({
-        rank: 0,
-        row: {
-          id: entryId,
-          service: node.repo,
-          kind: node.kind ?? 'event',
-          key: keyOf(entryId),
-          ...located(node),
-          reason: `${channel} has no publisher in any repo`,
-        },
+      rows.push({
+        id: entryId,
+        service: node.repo,
+        kind: node.kind ?? 'event',
+        key: keyOf(entryId),
+        ...located(node),
+        reason: `${channel} has no publisher in any repo`,
+        class: 'actionable',
+        why: 'no publisher read',
+        confidence: 'dead',
       });
     }
   }
 
   // Rank first, then id. `--max` cuts from the bottom, so what it cuts is the
   // rows that say why they are here rather than the rows that do not.
-  ranked.sort((a, b) => a.rank - b.rank || byId(a.row.id, b.row.id));
-  return ranked.map((entry) => entry.row);
+  const wanted = options.class === undefined ? rows : rows.filter((row) => row.class === options.class);
+  return wanted.sort((a, b) => rankOf(a) - rankOf(b) || byId(a.id, b.id));
 };
 
 /** The services that publish to one channel. */

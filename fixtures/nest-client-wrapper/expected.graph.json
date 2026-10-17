@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-client-wrapper",
-  "generatedAt": "2026-10-07T14:34:05.893Z",
+  "generatedAt": "2026-10-17T04:50:08.076Z",
   "nodes": [
     {
       "id": "config_key:nest-client-wrapper#BILLING_URL",
@@ -62,8 +62,7 @@
         "path": "/invoices",
         "baseUrlEnv": "BILLING_URL",
         "responseType": "type:nest-client-wrapper#Invoice",
-        "bodyType": "string",
-        "bodyFrom": "type"
+        "bodyType": null
       }
     },
     {

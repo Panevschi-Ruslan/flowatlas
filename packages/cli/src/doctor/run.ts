@@ -76,6 +76,8 @@ export interface DoctorSettings {
   check?: CheckOptions;
   /** Which services claim each settings key, from the configuration. */
   envOwners?: ReadonlyMap<string, readonly string[]>;
+  /** Every alias a service is configured with, to the service's name (P91). */
+  aliases?: ReadonlyMap<string, string>;
   /** Fixed timestamp, for reproducible output. */
   generatedAt?: string;
   flowatlasVersion?: string;
@@ -96,6 +98,7 @@ export interface DoctorSettings {
 /** The reasons that mean a call does not land where it was aimed. */
 const DESYNC_REASONS: ReadonlySet<string> = new Set([
   'unknown-base-url-env',
+  'service-binding-unknown',
   'target-route-not-found',
   'ambiguous-route',
   'ambiguous-route-application',
@@ -666,6 +669,7 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
       unresolved: input.unresolved,
       ...(parties === undefined ? {} : { parties }),
       ...(settings.envOwners === undefined ? {} : { envOwners: settings.envOwners }),
+      ...(settings.aliases === undefined ? {} : { aliases: settings.aliases }),
     }).filter((issue) => settings.service === undefined || issue.service === settings.service);
     const bounded = cut(found, maxNodes);
     const annotated = db.allNodes().some((node) => Array.isArray(node.meta?.['markers']));

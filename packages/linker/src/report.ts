@@ -90,6 +90,13 @@ export interface LinkReport {
     uncalled: string[];
     /** Routes more than one handler claims; the framework answers with one. */
     duplicated: string[];
+    /**
+     * Uncalled routes a request could still reach, by route id, with the
+     * requests (P91): each one's address was read in part and what was read
+     * matches the route. Never an edge. Absent when there are none, and from
+     * a report written before 0.6.0.
+     */
+    nearMissed?: Record<string, string[]>;
   };
   types: {
     total: number;

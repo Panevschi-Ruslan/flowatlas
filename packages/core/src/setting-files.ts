@@ -51,6 +51,27 @@ export interface RepoSettings {
   readonly namedOnly: Readonly<Record<string, readonly string[]>>;
   /** The hosts this service is reached at, as the files name them. */
   readonly hosts: readonly HostAlias[];
+  /**
+   * The other workers this service reaches through a binding its deployment
+   * declares (P91): `env.CATALOG.fetch(...)` is a request to whichever worker
+   * `CATALOG` is bound to. Absent when the files declare none.
+   */
+  readonly bindings?: readonly ServiceBinding[];
+  /** The names this service is deployed under, as its own deployment files write them (P91). */
+  readonly deployedAs?: readonly string[];
+}
+
+/** A binding a deployment declares to another deployed service, by the name the code reads it under. */
+export interface ServiceBinding {
+  /** The name the code reaches it by: `env.CATALOG`. */
+  readonly binding: string;
+  /** The name the other service is deployed under. */
+  readonly service: string;
+  /** The named entry point of the other service, where one is chosen. */
+  readonly entrypoint?: string;
+  readonly file: string;
+  /** The environment the binding is declared for, when the file declares several. */
+  readonly environment?: string;
 }
 
 export const NO_SETTINGS: RepoSettings = { values: {}, namedOnly: {}, hosts: [] };

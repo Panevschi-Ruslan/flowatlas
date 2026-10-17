@@ -1,6 +1,7 @@
 import {
   applicationOfFile,
   declaredParameterType,
+  enclosingMethod,
   evaluateExpression,
   forEachCall,
   isPlatformRequest,
@@ -14,6 +15,9 @@ import {
   requestVerbOf,
   resolveTypeOrigin,
   siteOf,
+  verbAlong,
+  verbParameterOf,
+  verbsAtCallers,
   writtenBodyOutward,
   writtenKeysOf,
   type BodyRead,
@@ -77,6 +81,12 @@ interface BodyShape {
 interface Spelling {
   readonly urlIndex: number;
   readonly verb: (network: CallExpression) => string | null;
+  /**
+   * Where the verb is written when it is not a constant: the expression a
+   * wrapper's own parameter may stand behind (P91), followed out to the caller
+   * that hands it in.
+   */
+  readonly verbWritten: (network: CallExpression) => TsNode | undefined;
   /** The body, where the call is `network` and `frames` are the callers it was followed out to. */
   readonly body: (network: CallExpression, frames: readonly CallFrame[]) => BodyShape;
   /** Whether the call states what answers it: `fetch` answers with a `Response`, whatever the route sends. */
@@ -114,6 +124,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     return {
       urlIndex: shape.urlIndex,
       verb: (network) => verbOf(network, name),
+      verbWritten: (network) => (shape.method === '' ? network.getArguments()[0] : undefined),
       body: (network, frames) =>
         frames.length === 0
           ? typeOfBody(network, shape.bodyIndex)
@@ -127,6 +138,12 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
   const platformFetch: Spelling = {
     urlIndex: PLATFORM_FETCH.urlAt,
     verb: (network) => requestVerbOf(network),
+    verbWritten: (network) => {
+      const options = network.getArguments()[PLATFORM_FETCH.optionsAt];
+      return options !== undefined && Node.isObjectLiteralExpression(options)
+        ? options.getProperty(PLATFORM_FETCH.verbKey)
+        : undefined;
+    },
     // Written inside the options rather than beside them, and followed out to
     // whoever wrote it the same way a framework request's body is.
     body: (network) => {
@@ -234,10 +251,14 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     frames: readonly CallFrame[],
     choice?: string,
     pathChoices?: readonly string[],
+    handedIn?: string | null,
   ): void => {
     const { call, methodId, file } = site;
 
-    const verb = spelling.verb(network);
+    // A verb a wrapper is handed is read at the caller the address was read
+    // at, along the same frames (P91); one handed in where the address was
+    // already read is the caller's, passed here.
+    const verb = handedIn !== undefined ? handedIn : verbThrough(network, spelling, frames);
     const at = siteOf(call);
     const leaf = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
     // One call reaching one of several segments a table spells out is one
@@ -352,6 +373,54 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     }
   };
 
+  /** The verb a request is sent with, followed out through the frames when it is a wrapper's parameter (P91). */
+  const verbThrough = (network: CallExpression, spelling: Spelling, frames: readonly CallFrame[]): string | null => {
+    const read = spelling.verb(network);
+    if (read !== null || frames.length === 0) return read;
+    const parameter = verbParameterOf(spelling.verbWritten(network));
+    if (parameter === undefined) return null;
+    return verbAlong(parameter, frames.map((frame) => frame.call)) ?? null;
+  };
+
+  /** The site a caller of a wrapper is, when it is a method of a class this reader indexes. */
+  const siteOfCaller = (call: CallExpression): RequestSite | undefined => {
+    const outer = enclosingMethod(call);
+    const owner = outer?.getParent();
+    if (outer === undefined || owner === undefined || !Node.isClassDeclaration(owner)) return undefined;
+    const indexed = ctx.classes.get(owner);
+    const methodId = ctx.methodIdOf(outer);
+    if (indexed === undefined || indexed.role === 'module' || methodId === undefined) return undefined;
+    ctx.ensureMethodNode(outer);
+    return { call, methodId, file: indexed.file };
+  };
+
+  /**
+   * One request per caller of a wrapper that reads its address in place and is
+   * handed its verb (P91), or nothing when the verb is not a parameter. A
+   * caller nobody can name keeps the request where it is written, verb unread.
+   */
+  const perVerbCaller = (
+    network: CallExpression,
+    spelling: Spelling,
+    request: { site: RequestSite; address: ApiUrl },
+  ): boolean => {
+    if (spelling.verb(network) !== null) return false;
+    const parameter = verbParameterOf(spelling.verbWritten(network));
+    if (parameter === undefined) return false;
+    const callers = verbsAtCallers(parameter);
+    let unnamed = callers.undecided || callers.calls.length === 0;
+    for (const caller of callers.calls) {
+      const site = siteOfCaller(caller.site);
+      if (site === undefined) {
+        unnamed = true;
+        continue;
+      }
+      record(network, spelling, site, request.address, [], undefined, undefined, caller.verb);
+    }
+    if (unnamed) record(network, spelling, request.site, request.address, []);
+    return true;
+  };
+
   /**
    * Records one request, at the call that decides its address.
    *
@@ -369,6 +438,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     if (urlArg === undefined) return;
     for (const request of requestsOf(ctx, urlArg, method, site, siblings)) {
       noteIfUnreferenced(ctx, request.site);
+      if (request.frames.length === 0 && request.choice === undefined && perVerbCaller(network, spelling, request)) continue;
       record(
         network,
         spelling,

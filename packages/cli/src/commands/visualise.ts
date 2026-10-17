@@ -112,6 +112,23 @@ const editorFor = (options: VisualiseOptions): PackInput['editor'] => {
   return { name, rootOf: (service) => roots.repoDir(service) };
 };
 
+/**
+ * What the configuration says about routes nobody calls, for the Map's counts
+ * (P91); nothing when the page is drawn from a database alone or the
+ * configuration cannot be read, and the built-in rules then decide.
+ */
+const routeRulesFor = (options: VisualiseOptions): PackInput['routes'] => {
+  if (options.config === undefined && options.db !== undefined) return undefined;
+  try {
+    const { config } = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
+    return { publicRoutes: config.doctor.publicRoutes, infrastructure: config.dead.infrastructure };
+  } catch {
+    return undefined;
+  }
+};
+
+const withRoutes = (routes: PackInput['routes']): Pick<PackInput, 'routes'> => (routes === undefined ? {} : { routes });
+
 export interface VisualiseResult {
   path: string;
   bytes: number;
@@ -156,6 +173,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       accepted: split,
       ...(editor === undefined ? {} : { editor }),
       ...(options.changes === undefined ? {} : { changes: options.changes }),
+      ...withRoutes(routeRulesFor(options)),
     });
   } finally {
     db.close();

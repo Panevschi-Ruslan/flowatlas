@@ -1,13 +1,17 @@
 import { FlowatlasError } from '@flowatlas/core';
 import type { Command } from 'commander';
 import {
+  ENTRY_CLASS_NAMES,
   EXTERNALLY_TRIGGERED,
   deadChannels,
   deadEntries,
   deadFields,
   deadProviders,
   unresolvedInjectCount,
+  type DeadEntry,
   type DeadOptions,
+  type EntryClassName,
+  type InfrastructureRole,
 } from '../analysis/dead.js';
 import { maxRows, openProjectDb, print, wantsJson, type ReadOptions } from '../analysis/open.js';
 import { ANALYTICS_FORMAT_VERSION, type DeadResult } from '../analysis/shapes.js';
@@ -19,6 +23,8 @@ type Kind = (typeof KINDS)[number];
 export interface DeadCommandOptions extends ReadOptions {
   kind?: string;
   service?: string;
+  /** Only entries of this class: `actionable`, `stream`, `infrastructure` or `declared` (P91). */
+  class?: string;
 }
 
 export interface DeadRun {
@@ -35,6 +41,57 @@ const cut = <T>(rows: readonly T[], max: number): { rows: T[]; dropped: number }
 const where = (row: { file?: string; line?: number }): string =>
   row.file === undefined ? '' : `${row.file}:${row.line ?? 0}`;
 
+/** What a row says about itself: the rule that put it in its class, and the sentence. */
+const entryWhy = (row: DeadEntry): string => (row.class === 'actionable' ? row.reason : `${row.why}: ${row.reason}`);
+
+/** A `likely-dead` row's near misses, one line each, under the table. */
+const nearMissLines = (rows: readonly DeadEntry[]): string[] =>
+  rows.flatMap((row) =>
+    (row.nearMiss ?? []).map(
+      (miss) => `  ${row.key} could be reached by ${miss.path} at ${where(miss) || miss.call}`,
+    ),
+  );
+
+/** How a role is counted on the folded line, singular and plural. */
+const ROLE_WORDS: Readonly<Record<InfrastructureRole, [string, string]>> = {
+  probe: ['probe', 'probes'],
+  webhook: ['webhook', 'webhooks'],
+  callback: ['callback', 'callbacks'],
+  discovery: ['well-known address', 'well-known addresses'],
+  configured: ['named in the configuration', 'named in the configuration'],
+};
+
+const counted = (count: number, [one, many]: readonly [string, string]): string =>
+  `${count} ${count === 1 ? one : many}`;
+
+/** What each folded class is called on its line. */
+const CLASS_WORDS: Readonly<Record<Exclude<EntryClassName, 'actionable'>, [string, string]>> = {
+  stream: ['stream route', 'stream routes'],
+  infrastructure: ['infrastructure route', 'infrastructure routes'],
+  declared: ['route declared public', 'routes declared public'],
+};
+
+/**
+ * One line per class that is not listed: how many, what they are, and how to
+ * list them. `12 infrastructure routes: 6 probes, 5 webhooks, 1 callback`.
+ */
+const foldedLines = (rows: readonly DeadEntry[]): string[] => {
+  const lines: string[] = [];
+  for (const name of ['stream', 'infrastructure', 'declared'] as const) {
+    const ofClass = rows.filter((row) => row.class === name);
+    if (ofClass.length === 0) continue;
+    const roles = new Map<InfrastructureRole, number>();
+    for (const row of ofClass) if (row.role !== undefined) roles.set(row.role, (roles.get(row.role) ?? 0) + 1);
+    const said = [...roles.entries()]
+      .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+      .map(([role, count]) => counted(count, ROLE_WORDS[role]));
+    lines.push(
+      `  ${counted(ofClass.length, CLASS_WORDS[name])}${said.length === 0 ? '' : `: ${said.join(', ')}`} — --class ${name} to list`,
+    );
+  }
+  return lines;
+};
+
 /**
  * Everything nothing appears to reach, with the reason it looked that way.
  *
@@ -50,18 +107,30 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
     throw new FlowatlasError('bad-argument', `--kind must be one of ${KINDS.join(', ')}, not ${kind}`);
   }
 
+  const only = options.class as EntryClassName | undefined;
+  if (only !== undefined && !ENTRY_CLASS_NAMES.includes(only)) {
+    throw new FlowatlasError('bad-argument', `--class must be one of ${ENTRY_CLASS_NAMES.join(', ')}, not ${only}`);
+  }
+
   const { db, close, config } = openProjectDb(options);
   try {
     const max = maxRows(options);
     const publicRoutes = config?.doctor?.publicRoutes ?? [];
+    const infrastructure = config?.dead?.infrastructure;
     const scope: DeadOptions = {
       ...(options.service === undefined ? {} : { service: options.service }),
       ...(publicRoutes.length === 0 ? {} : { publicRoutes }),
+      ...(infrastructure === undefined ? {} : { infrastructure }),
     };
     const report = db.report();
     const wanted = (name: Kind): boolean => kind === 'all' || kind === name;
 
-    const entries = wanted('entries') ? cut(deadEntries(db, report, scope), max) : undefined;
+    // Every class is read so the folded lines can count what is not listed;
+    // `--class` narrows what is listed and answered.
+    const allEntries = wanted('entries') ? deadEntries(db, report, scope) : undefined;
+    const listedEntries =
+      allEntries === undefined ? undefined : only === undefined ? allEntries : allEntries.filter((row) => row.class === only);
+    const entries = listedEntries === undefined ? undefined : cut(listedEntries, max);
     const channels = wanted('channels') ? cut(deadChannels(db, report, scope), max) : undefined;
     const providers = wanted('providers') ? cut(deadProviders(db, scope), max) : undefined;
     const fields = wanted('fields') ? await deadFields(db, scope) : undefined;
@@ -105,17 +174,25 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
     }
     lines.push('');
 
-    if (entries !== undefined) {
+    if (allEntries !== undefined) {
+      // Without `--class` the table holds the actionable rows and every other
+      // class is one line saying how many and how to list them (P91); with it,
+      // the table holds that class.
+      const listed = (only === undefined ? allEntries.filter((row) => row.class === 'actionable') : (listedEntries ?? []));
+      const shown = listed.slice(0, max);
       lines.push(
         ...section(
           'entries',
-          renderTable(entries.rows, [
+          renderTable(shown, [
             { header: 'id', value: (row) => row.id },
             { header: 'where', value: where },
-            { header: 'why', value: (row) => row.reason },
+            { header: 'confidence', value: (row) => row.confidence },
+            { header: 'why', value: entryWhy },
           ]),
         ),
-        ...(entries.dropped > 0 ? [`  ${moreRows(entries.dropped)}`] : []),
+        ...(listed.length > shown.length ? [`  ${moreRows(listed.length - shown.length)}`] : []),
+        ...nearMissLines(shown),
+        ...(only === undefined ? foldedLines(allEntries) : []),
       );
     }
     if (channels !== undefined) {
@@ -192,6 +269,7 @@ export const registerDead = (program: Command): void => {
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--kind <kind>', `one of ${KINDS.join(', ')}`, 'all')
+    .option('--class <class>', `only entries of one class: ${ENTRY_CLASS_NAMES.join(', ')}`)
     .option('--service <name>', 'only this service')
     .option('--max <n>', 'most rows per section', '150')
     .option('--format <kind>', 'json or table (default: table)')

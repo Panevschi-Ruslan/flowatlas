@@ -161,6 +161,7 @@ export {
   parseConfig,
   shapesFor,
   serviceConfigSchema,
+  serviceNamesOf,
   starterSchema,
 } from './config.js';
 export type {
@@ -239,7 +240,7 @@ export {
   NO_SETTINGS,
   portOf,
 } from './setting-files.js';
-export type { HostAlias, RepoSettings, SettingValue } from './setting-files.js';
+export type { HostAlias, RepoSettings, ServiceBinding, SettingValue } from './setting-files.js';
 export { GUESSED_META, isTaken, RECORDED_META, strongestTaken, TAKEN_BY_META, TAKES_META } from './takes.js';
 export type { Takes, Taken, TakenInstead } from './takes.js';
 export { OPERATION_VERBS, operationsOf } from './declared-operations.js';
@@ -467,7 +468,7 @@ export { RXJS_DECLARATION_SHAPE, RXJS_SHAPE } from './rxjs-shape.js';
 
 export { isTestDirectory, isTestFile } from './test-files.js';
 
-export { namesGivenTo, takesNames } from './markers.js';
+export { jsDocCallsMarkers, namesGivenTo, takesNames } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';
 
 export { definePass } from './passes.js';
@@ -612,6 +613,10 @@ export {
   rootSettingAddress,
   rootSettingKey,
   splitAtParameter,
+  verbAlong,
+  verbParameterOf,
+  verbsAtCallers,
+  verbSpelledBy,
   writtenBodyOutward,
 } from './trace.js';
 export type {
@@ -626,6 +631,8 @@ export type {
   RootSettingOptions,
   SettingAddress,
   SplitAddress,
+  VerbAtCaller,
+  VerbsAtCallers,
 } from './trace.js';
 
 export {

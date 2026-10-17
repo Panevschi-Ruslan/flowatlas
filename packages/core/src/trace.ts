@@ -19,7 +19,7 @@ import {
   parametersOf,
   type ClassMethod,
 } from './di/member-call.js';
-import { holeIn, UNREAD_SPAN } from './ids.js';
+import { HTTP_METHODS, holeIn, UNREAD_SPAN } from './ids.js';
 import { writtenObjectLiteral } from './origin.js';
 import {
   declarationOf,
@@ -1691,8 +1691,17 @@ export const splitAtParameter = (
 export interface ForwardedCall {
   /** The call that supplies the value, one hop out from where it was needed. */
   site: TsNode;
-  /** What was passed there. */
+  /**
+   * What was passed there, or the parameter's default where nothing was
+   * (P91): `url(suffix = '')` called as `url()` is called with `''`.
+   */
   argument: TsNode;
+  /**
+   * Every call the value was handed through on its way out, innermost first,
+   * ending with `site` (P91). What else those calls hand on - the verb a
+   * wrapper is given beside the address - is read along the same calls.
+   */
+  hops: readonly CallExpression[];
 }
 
 /** Who supplies a parameter, and whether anybody else may. */
@@ -1732,7 +1741,10 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
   if (index < 0) return out;
 
   for (const call of callSitesOf(holder)) {
-    const argument = call.getArguments()[index];
+    // A caller that leaves the argument out hands the parameter its default,
+    // which is written in the helper and read there (P91). One that leaves
+    // out a parameter with no default hands it nothing worth following.
+    const argument = call.getArguments()[index] ?? parameter.getInitializer();
     if (argument === undefined) continue;
     if (dispatchAt(call, holder) === 'undecided') {
       out.undecided = true;
@@ -1743,15 +1755,147 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
     // If nothing calls it either, the whole chain is unused and this hop stands
     // for nobody, so it is dropped rather than recorded as a request.
     const further = parameterBehind(argument, budget);
-    if (further !== undefined) {
+    if (further !== undefined && further !== parameter) {
       const outer = forwardedFrom(further, budget - 1);
-      out.calls.push(...outer.calls);
+      out.calls.push(...outer.calls.map((each) => ({ ...each, hops: [call, ...each.hops] })));
       out.undecided ||= outer.undecided;
       continue;
     }
-    out.calls.push({ site: call, argument });
+    out.calls.push({ site: call, argument, hops: [call] });
   }
   return out;
+};
+
+/**
+ * The verb a value spells, where it spells one outright: a literal, a
+ * `const`, an enum member (`HttpVerb.Delete`), a member of an `as const`
+ * object (`VERBS.patch`). Upper-cased; `null` for anything else, including
+ * a string that is no verb at all.
+ */
+export const verbSpelledBy = (value: TsNode): string | null => {
+  const read = evaluateExpression(value);
+  if (!read.resolved || typeof read.value !== 'string') return null;
+  const verb = read.value.toUpperCase();
+  return (HTTP_METHODS as readonly string[]).includes(verb) ? verb : null;
+};
+
+/**
+ * The parameter a request's verb comes from, where it comes from one: the
+ * expression a client reads its verb from - `{ method }`, `request(method,
+ * url)` - followed to the parameter of the enclosing function it names.
+ *
+ * `{ method }` names a binding in scope rather than pointing at one, so a
+ * shorthand property is asked for the value it names.
+ */
+export const verbParameterOf = (written: TsNode | undefined): ParameterDeclaration | undefined => {
+  if (written === undefined) return undefined;
+  if (Node.isShorthandPropertyAssignment(written)) {
+    const declaration = written.getValueSymbol()?.getDeclarations()[0];
+    return declaration !== undefined && Node.isParameterDeclaration(declaration) ? declaration : undefined;
+  }
+  const value = Node.isPropertyAssignment(written) ? written.getInitializer() : written;
+  return value === undefined ? undefined : parameterBehind(value);
+};
+
+/** One caller's verb, and the calls it was handed through to reach the request. */
+export interface VerbAtCaller {
+  /** The call that decides it: the outermost one a constant is written at. */
+  site: CallExpression;
+  /** The verb, or `null` where the caller hands on something unread. */
+  verb: string | null;
+  /** Every call between the request and `site`, innermost first, ending with `site`. */
+  hops: readonly CallExpression[];
+}
+
+export interface VerbsAtCallers {
+  calls: VerbAtCaller[];
+  /** True when a call may run this function or another implementation of it (R158). */
+  undecided: boolean;
+}
+
+/** The argument a call hands a parameter, or the parameter's default where it hands nothing. */
+const handedTo = (call: CallExpression, parameter: ParameterDeclaration): TsNode | undefined =>
+  call.getArguments()[positionOf(parameter)] ?? parameter.getInitializer();
+
+/**
+ * Every verb a request whose verb is a parameter is sent with, one per caller
+ * (P91).
+ *
+ * A client that takes the verb as an argument - `this.req('PATCH', path,
+ * body)` into `fetch(base + path, { method })` - writes one request for every
+ * verb it will ever send, so the verb is only real at the call sites, exactly
+ * as an address forwarded through a wrapper is. The same walk the address
+ * takes (`callSitesOf`), out through further wrappers that hand the verb on as
+ * one of their own parameters, to the call that writes it as a constant. A
+ * caller handing on something nothing can read is kept, with `verb: null`:
+ * the request is still made there, and its verb is the row.
+ */
+export const verbsAtCallers = (parameter: ParameterDeclaration, budget = 4): VerbsAtCallers => {
+  const out: VerbsAtCallers = { calls: [], undecided: false };
+  if (budget <= 0) return out;
+  const holder = forwarderOf(parameter);
+  if (holder === undefined || positionOf(parameter) < 0) return out;
+  for (const call of callSitesOf(holder)) {
+    if (dispatchAt(call, holder) === 'undecided') {
+      out.undecided = true;
+      continue;
+    }
+    const argument = handedTo(call, parameter);
+    const verb = argument === undefined ? null : verbSpelledBy(argument);
+    const further = argument === undefined || verb !== null ? undefined : parameterBehind(argument);
+    if (further !== undefined && further !== parameter && budget > 1) {
+      const outer = verbsAtCallers(further, budget - 1);
+      out.calls.push(...outer.calls.map((each) => ({ ...each, hops: [call, ...each.hops] })));
+      out.undecided ||= outer.undecided;
+      continue;
+    }
+    out.calls.push({ site: call, verb, hops: [call] });
+  }
+  return out;
+};
+
+/** The name a call is made by: `this.req(…)` and `req(…)` are both `req`. */
+const calledName = (call: CallExpression): string => {
+  const callee = unwrap(call.getExpression());
+  return Node.isPropertyAccessExpression(callee) ? callee.getName() : callee.getText();
+};
+
+/** The name callers call a forwarder by. */
+const nameOf = (holder: Forwarder): string | undefined =>
+  Node.isMethodDeclaration(holder) || Node.isFunctionDeclaration(holder) || Node.isPropertyDeclaration(holder) || Node.isVariableDeclaration(holder)
+    ? holder.getName()
+    : undefined;
+
+/**
+ * The verb a request whose verb is a parameter is sent with by one caller,
+ * read along the calls the request's address was already followed through
+ * (P91). The twin of {@link verbsAtCallers} for a reader that has those calls
+ * in hand: the address and the verb are decided by the same caller, and
+ * reading them along the same calls is what keeps them from belonging to two.
+ *
+ * A call on the way that does not call the function holding the parameter is
+ * passed over: the address may go through a wrapper the verb was already
+ * settled before. `undefined` when the calls run out with the verb still a
+ * parameter, `null` where a call hands on something nothing can read.
+ */
+export const verbAlong = (
+  parameter: ParameterDeclaration,
+  hops: readonly CallExpression[],
+): string | null | undefined => {
+  let current = parameter;
+  for (const hop of hops) {
+    const holder = forwarderOf(current);
+    if (holder === undefined) return null;
+    if (calledName(hop) !== nameOf(holder)) continue;
+    const argument = handedTo(hop, current);
+    if (argument === undefined) return null;
+    const verb = verbSpelledBy(argument);
+    if (verb !== null) return verb;
+    const further = parameterBehind(argument);
+    if (further === undefined || further === current) return null;
+    current = further;
+  }
+  return undefined;
 };
 
 /**

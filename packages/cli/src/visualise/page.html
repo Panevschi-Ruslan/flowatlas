@@ -5576,6 +5576,7 @@ __STEPS_LOGIC__
         `<dt>ways in</dt><dd>${(s.ways || 0).toLocaleString()}${counts ? ' · ' + esc(counts) : ''}</dd>` +
         `<dt>rows to act on</dt><dd>${(s.problems || 0).toLocaleString()}</dd>` +
         (s.uncalled ? `<dt>routes nothing calls</dt><dd>${s.uncalled.toLocaleString()}</dd>` : '') +
+        (s.uncalledOutside ? `<dt>routes called from outside</dt><dd>${s.uncalledOutside.toLocaleString()} · probes, webhooks, callbacks, streams and routes declared public</dd>` : '') +
         (s.failing ? `<dt>routes with failures</dt><dd>${s.failing.toLocaleString()}</dd>` : '') +
         (s.statusUnknown ? `<dt>routes answering an unknown status</dt><dd>${s.statusUnknown.toLocaleString()}</dd>` : '') +
         (s.unread ? '<dt>read</dt><dd>no: nothing could read it</dd>' : '') +

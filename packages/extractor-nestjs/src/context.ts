@@ -4,6 +4,7 @@ import {
   DiMap,
   externalFilePath,
   fileOf,
+  jsDocCallsMarkers,
   lineOf,
   makeSymbolId,
   moduleFunctions,
@@ -250,6 +251,9 @@ export const createNestContext = (options: CreateContextOptions): NestExtractCon
     ensureFunctionNode: (fn) => {
       const file = fileOfFunction(fn);
       const id = makeSymbolId(repo, file, fn.name);
+      // A function takes no decorator, so the one annotation it can carry is
+      // the JSDoc one, read once, the first time the function is drawn (P91).
+      const markers = drawnFunctions.has(id) ? [] : jsDocCallsMarkers(fn.declaration);
       if (!drawnFunctions.has(id)) drawnFunctions.set(id, fn);
       return builder.addNode({
         id,
@@ -258,6 +262,7 @@ export const createNestContext = (options: CreateContextOptions): NestExtractCon
         repo,
         file,
         line: fn.line,
+        ...(markers.length === 0 ? {} : { meta: { markers } }),
       });
     },
 

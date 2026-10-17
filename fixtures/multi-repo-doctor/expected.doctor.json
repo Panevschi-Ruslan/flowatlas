@@ -326,7 +326,7 @@
         "sites": 1,
         "known": true,
         "excluded": false,
-        "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation.",
+        "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
         "rows": [
           {
             "service": "gateway",
@@ -336,7 +336,7 @@
             "level": "action",
             "sites": 1,
             "message": "@CallsService names warehouse, which is not a configured service",
-            "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation."
+            "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation."
           }
         ]
       },
@@ -523,7 +523,7 @@
         "file": "src/clients/orders.client.ts",
         "line": 47,
         "message": "@CallsService names warehouse, which is not a configured service",
-        "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation."
+        "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation."
       },
       {
         "code": "marker-emits-shadowed",

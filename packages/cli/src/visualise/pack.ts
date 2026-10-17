@@ -15,7 +15,7 @@ import {
 } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
-import { packMap, type PackedMap } from './map-pack.js';
+import { packMap, type MapInput, type PackedMap } from './map-pack.js';
 import type { Observed } from '../observe/match.js';
 import { packObserved, type PackedObserved } from './observed.js';
 
@@ -400,6 +400,8 @@ export interface PackInput {
   accepted?: PackAccepted;
   /** What `visualise --diff` compared, already packed. */
   changes?: PackedChanges;
+  /** What the configuration says about routes nobody calls (P91), for the Map's counts. */
+  routes?: MapInput['routes'];
 }
 
 /** The split, as the page needs it: `byEntry` lines up with the rows packed. */
@@ -584,6 +586,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
       services: input.report.services,
       rows: rowsIn,
       answers: shapes.answers.map(([node, kind]) => [node, shapes.answerKinds[kind] as string]),
+      ...(input.routes === undefined ? {} : { routes: input.routes }),
     }),
     shapes,
     sites: packSites(packedEdges),

@@ -1,0 +1,244 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-17T04:49:57.137Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/app/items.client.ts:38:12",
+        "to": "entry:catalog-api:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/app/items.client.ts:38:12|hits|entry:catalog-api:http:GET:/items",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "type:catalog-api#Item[]",
+        "symbol": "catalog-api#src/items/items.controller.ts:ItemsController.list"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#Item[]",
+        "symbol": "storefront#src/app/items.client.ts:ItemsClient.list"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/app/items.client.ts:42:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/app/items.client.ts:42:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "type:catalog-api#Item",
+        "symbol": "catalog-api#src/items/items.controller.ts:ItemsController.one"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#Item",
+        "symbol": "storefront#src/app/items.client.ts:ItemsClient.one"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/app/items.client.ts:46:12@34:12",
+        "to": "entry:catalog-api:http:PATCH:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/app/items.client.ts:46:12@34:12|hits|entry:catalog-api:http:PATCH:/items/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "type:catalog-api#Item",
+        "symbol": "catalog-api#src/items/items.controller.ts:ItemsController.rename"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#Item",
+        "symbol": "storefront#src/app/items.client.ts:ItemsClient.rename"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:ops-scripts#src/reindex.ts:3:9",
+        "to": "entry:catalog-api:http:POST:/items/reindex",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:ops-scripts#src/reindex.ts:3:9|http_calls|entry:catalog-api:http:POST:/items/reindex",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "ops-scripts#src/reindex.ts:reindex declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:ops-scripts#src/reindex.ts:3:9",
+        "to": "entry:catalog-api:http:POST:/items/reindex",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:ops-scripts#src/reindex.ts:3:9|http_calls|entry:catalog-api:http:POST:/items/reindex",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "ops-scripts#src/reindex.ts:reindex declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders-worker#src/worker.ts:11:26",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders-worker#src/worker.ts:11:26|http_calls|entry:catalog-api:http:GET:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "orders-worker#src/worker.ts:itemFor declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders-worker#src/worker.ts:11:26",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders-worker#src/worker.ts:11:26|http_calls|entry:catalog-api:http:GET:/items/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "orders-worker#src/worker.ts:itemFor declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders-worker#src/worker.ts:23:26",
+        "to": "entry:catalog-api:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders-worker#src/worker.ts:23:26|http_calls|entry:catalog-api:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "orders-worker#src/worker.ts:allItems declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders-worker#src/worker.ts:23:26",
+        "to": "entry:catalog-api:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders-worker#src/worker.ts:23:26|http_calls|entry:catalog-api:http:GET:/items",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "orders-worker#src/worker.ts:allItems declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders-worker#src/worker.ts:39:12",
+        "to": "entry:catalog-api:http:PATCH:/items/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders-worker#src/worker.ts:39:12|http_calls|entry:catalog-api:http:PATCH:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "orders-worker#src/worker.ts:CatalogClient.restock declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders-worker#src/worker.ts:39:12",
+        "to": "entry:catalog-api:http:PATCH:/items/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders-worker#src/worker.ts:39:12|http_calls|entry:catalog-api:http:PATCH:/items/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "orders-worker#src/worker.ts:CatalogClient.restock declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/app/items.client.ts:38:12",
+        "to": "entry:catalog-api:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/app/items.client.ts:38:12|hits|entry:catalog-api:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/app/items.client.ts:ItemsClient.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/app/items.client.ts:42:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/app/items.client.ts:42:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/app/items.client.ts:ItemsClient.one declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/app/items.client.ts:46:12@34:12",
+        "to": "entry:catalog-api:http:PATCH:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/app/items.client.ts:46:12@34:12|hits|entry:catalog-api:http:PATCH:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/app/items.client.ts:ItemsClient.rename declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/app/items.client.ts:50:12@34:12",
+        "to": "entry:catalog-api:http:DELETE:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/app/items.client.ts:50:12@34:12|hits|entry:catalog-api:http:DELETE:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/app/items.client.ts:ItemsClient.remove declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/app/items.client.ts:50:12@34:12",
+        "to": "entry:catalog-api:http:DELETE:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/app/items.client.ts:50:12@34:12|hits|entry:catalog-api:http:DELETE:/items/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog-api#src/items/items.controller.ts:ItemsController.remove declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 1,
+    "unchecked": 13,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

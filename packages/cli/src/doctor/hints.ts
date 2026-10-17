@@ -196,7 +196,9 @@ export const SHARPENERS: Readonly<Record<string, (row: Unresolved, context: Hint
   Object.freeze({
     'dynamic-http-url': (_row, context) => callsService(context),
     'api-path-dynamic': (_row, context) => flowatlasCalls(context),
-    'api-method-dynamic': (_row, context) => flowatlasCalls(context),
+    // A request between services whose verb a caller hands in (P91) keeps the
+    // hint its reader wrote, which names the annotation a server takes.
+    'api-method-dynamic': (_row, context) => (context.node?.type === 'http_out' ? undefined : flowatlasCalls(context)),
   });
 
 /**
@@ -480,6 +482,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Two services deploy a function under one name, so which one answers is not known. One of the two declarations is stale, or two environments need telling apart with services[].infra.vars.',
   'unknown-base-url-env': () =>
     'Add the settings key to services[].baseUrlEnv of exactly one service, so the address names a service.',
+  'service-binding-unknown': () =>
+    "A worker's request goes through a binding, and either no wrangler file of the worker declares it under services, or the worker it is bound to is not a configured service by name or alias. Add the worker's name to services[].aliases of the service it is.",
   'target-route-not-found': () =>
     "The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.",
   'route-mount-assumed-empty': () =>

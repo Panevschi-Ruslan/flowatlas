@@ -1,0 +1,9 @@
+nothing here is proof: every row is a heuristic with the reason it fired
+entry kinds never reported (triggered from outside): cron, bot_command, bot_callback, bot_event, scene_step, invoke
+
+entries:
+  id                                              where                                  confidence  why
+  entry:catalog-api:http:GET:/healthz             src/health/health.controller.ts:7      dead        path /healthz: looks like a health or status probe; whatever runs it is outside the graph
+  entry:catalog-api:http:GET:/oauth/callback      src/oauth/oauth.controller.ts:6        dead        path /oauth/callback: looks like a callback a provider redirects to; whoever sends it there is outside the project
+  entry:catalog-api:http:GET:/ready               src/health/health.controller.ts:12     dead        decorator @HealthCheck: looks like a health or status probe; whatever runs it is outside the graph
+  entry:catalog-api:http:POST:/webhooks/payments  src/webhooks/webhooks.controller.ts:6  dead        path /webhooks/payments: looks like a webhook receiver; whatever posts to it is outside the project

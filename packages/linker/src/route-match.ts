@@ -501,4 +501,50 @@ export const behindUnread = (method: string, path: string, routes: readonly Grap
     .sort(cmp);
 };
 
+/**
+ * What a hole in a request's address may stand for: the rest of the segment
+ * it is written in, and any number of whole segments after it. Text nobody
+ * read may hold separators, so a hole is never held to one segment.
+ */
+const HOLE_SPANS = '[^/]*(?:/[^/]+)*';
+
+/** A request's address read in part, as a pattern a route's address can be tested against. */
+const partialShapeOf = (partialPath: string): RegExp => {
+  const read = normalizePath(partialPath)
+    .split(UNREAD_SPAN)
+    .map((piece) =>
+      piece
+        .split('/')
+        .map((segment) => (segment === PARAM_PLACEHOLDER ? '[^/]+' : segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+        .join('/'),
+    );
+  return new RegExp(`^${read.join(HOLE_SPANS)}$`, 'i');
+};
+
+/**
+ * Whether a request whose address was read in part could reach a route (P91).
+ *
+ * The mirror of {@link behindUnread}: there the route's address has the hole,
+ * here the request's does. Each hole stands for whatever text nobody read,
+ * which is the rest of a segment and any segments after it; everything that
+ * was read has to agree. A verb nobody read (`null`) is any verb. What was
+ * read has to say something - a literal segment - or every request with a
+ * hole could reach every route there is.
+ *
+ * Never an edge. The route is not called by this request as far as anything
+ * read says; what this settles is that nothing calling it is not known either,
+ * and `dead` says `likely-dead` rather than `dead`.
+ */
+export const couldReach = (method: string | null | undefined, partialPath: string, route: GraphNode): boolean => {
+  if (route.type !== 'entry' || route.kind !== 'http' || route.meta?.['contributes'] !== undefined) return false;
+  const routePath = String(route.meta?.['path'] ?? '');
+  if (routePath === '' || !wasRead(routePath)) return false;
+  if (typeof method === 'string' && !methodAnswers(String(route.meta?.['method'] ?? ''), method)) return false;
+  if (!saysSomething(partialPath)) return false;
+  // A request read in full and only its verb unread reaches the route its
+  // address matches, whichever verb that turns out to be.
+  if (wasRead(partialPath)) return answeringAt(route, partialPath) !== undefined;
+  return spellingsOf(routePath, route.meta?.['rawPath']).some((spelling) => partialShapeOf(partialPath).test(spelling.path));
+};
+
 export { pathAnswers };
