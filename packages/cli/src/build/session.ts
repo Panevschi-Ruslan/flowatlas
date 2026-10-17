@@ -14,6 +14,8 @@ import {
   openRepo,
   packageFiles,
   repoFiles,
+  standInWantsOf,
+  useStandIns,
   type WarmRepo,
 } from '@flowatlas/extractor-nestjs';
 import { createRegistry, deployedRootsOf, EXTRA_PASSES } from './extractor.js';
@@ -43,6 +45,8 @@ interface WarmExtractor<Ctx> extends IncrementalExtractor<Ctx> {
   files(ctx: Ctx): string[];
   imports(ctx: Ctx): Record<string, string[]>;
   packages(ctx: Ctx): string[];
+  wants(ctx: Ctx): string[];
+  useStandIns(ctx: Ctx, given: StandInsOfBuild): void;
 }
 
 const nestjs: WarmExtractor<WarmRepo> = {
@@ -62,6 +66,8 @@ const nestjs: WarmExtractor<WarmRepo> = {
   files: repoFiles,
   imports: importsOf,
   packages: packageFiles,
+  wants: standInWantsOf,
+  useStandIns,
   extractFull: extractRepoFull,
   extractFiles: (repo, files) => extractRepoIncremental(repo, { files }),
   dependentsOf,
@@ -78,6 +84,10 @@ export interface ServiceSession {
   imports(): Record<string, string[]>;
   /** Declaration files out of installed packages the open program read. */
   packages(): string[];
+  /** The package names the open program wanted something to stand in for (P83). */
+  standInWants(): string[];
+  /** The stand-ins a build worked out, for the next full read (P83). */
+  useStandIns(given: StandInsOfBuild): void;
   globalFiles(): string[];
   dependentsOf(files: readonly string[]): string[];
   extractFull(): Promise<RepoGraph>;
@@ -94,6 +104,8 @@ const sessionOf = <Ctx>(extractor: WarmExtractor<Ctx>, options: OpenOptions): Se
     files: () => extractor.files(ctx),
     imports: () => extractor.imports(ctx),
     packages: () => extractor.packages(ctx),
+    standInWants: () => extractor.wants(ctx),
+    useStandIns: (given) => extractor.useStandIns(ctx, given),
     globalFiles: () => extractor.globalFiles(ctx),
     dependentsOf: (files) => extractor.dependentsOf(ctx, files),
     extractFull: () => extractor.extractFull(ctx),

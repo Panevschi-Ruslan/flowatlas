@@ -179,3 +179,32 @@ describe('workflows and references by name', () => {
     expect(() => makeStateId('library', 'a.asl.json', 'loan-approval', '')).toThrow(InvalidIdError);
   });
 });
+
+describe('normalizeFilePath with Windows paths (P83)', () => {
+  it('climbs out of the repository for a path on the same drive', () => {
+    expect(normalizeFilePath('C:/work/shop/packages/money/src/a.ts', 'C:/work/shop/services/orders')).toBe(
+      '../../packages/money/src/a.ts',
+    );
+    expect(normalizeFilePath('C:\\work\\shop\\packages\\money\\src\\a.ts', 'C:\\work\\shop\\services\\orders')).toBe(
+      '../../packages/money/src/a.ts',
+    );
+  });
+
+  it('strips the repository from a path inside it, either spelling', () => {
+    expect(normalizeFilePath('C:/work/shop/services/orders/src/a.ts', 'C:\\work\\shop\\services\\orders\\')).toBe('src/a.ts');
+    expect(normalizeFilePath('C:/work/a.ts', 'C:/')).toBe('work/a.ts');
+  });
+
+  it('ignores the case of the drive letter', () => {
+    expect(normalizeFilePath('c:/work/shop/services/orders/src/a.ts', 'C:/work/shop/services/orders')).toBe('src/a.ts');
+    expect(normalizeFilePath('C:/work/shop/packages/money/a.ts', 'c:/work/shop/services/orders')).toBe(
+      '../../packages/money/a.ts',
+    );
+  });
+
+  it('leaves a path on another drive absolute, since no relative path leads there', () => {
+    expect(normalizeFilePath('D:/cache/money/a.ts', 'C:/work/shop/services/orders')).toBe('D:/cache/money/a.ts');
+    expect(normalizeFilePath('D:/cache/money/a.ts', '/work/shop/services/orders')).toBe('D:/cache/money/a.ts');
+    expect(normalizeFilePath('/work/shop/a.ts', 'C:/work/shop/services/orders')).toBe('/work/shop/a.ts');
+  });
+});

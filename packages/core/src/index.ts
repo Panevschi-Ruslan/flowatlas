@@ -58,6 +58,8 @@ export {
   makeWorkflowEntryKey,
   normalizeFilePath,
   normalizePath,
+  pathKey,
+  toPosixPath,
   SITE_LEAF_TYPES,
   UNREAD_SPAN,
   wasRead,
@@ -413,6 +415,8 @@ export { forgetPackageIndexes, packageIndexOf, rangeIncludes, serviceDirOf } fro
 export type { PackageIndex, PackageIndexInput, PackageSource, PackageSourceOrigin } from './package-index.js';
 export {
   closeStandIns,
+  hashShapeFile,
+  isWithinDir,
   markStandInEdges,
   mountedFileSystem,
   mountOfPath,
@@ -425,8 +429,14 @@ export {
   STAND_INS_FORMAT_VERSION,
   standInFiles,
   standInOfFile,
+  standInsFingerprint,
+  standInsFingerprintOf,
+  standInsFingerprintOfBuild,
   standInsFor,
   standInsOfBuild,
+  standInWants,
+  realPathOf,
+  virtualRootOf,
   withdrawPackageSourceRows,
 } from './stand-ins.js';
 export { WORK_COUNTS } from './work-counts.js';
@@ -440,11 +450,14 @@ export type { MemberUse, ModuleUses, UsedExport } from './package-uses.js';
 export type {
   Mount,
   MountTable,
+  PackageAnswer,
   PackageCover,
   PackageIndexRecord,
   StandInContext,
   StandInOfFile,
   StandInRequest,
+  StandInsFingerprint,
+  StandInsFingerprintInput,
   StandInsForOptions,
   StandInsOfBuild,
   StandInsRead,

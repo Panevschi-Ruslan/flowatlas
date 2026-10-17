@@ -17,10 +17,14 @@ import {
   reportStandIns,
   standInFiles,
   standInOfFile,
+  standInsFingerprint,
+  standInsFingerprintOf,
   standInsFor,
+  standInWants,
   withdrawPackageSourceRows,
   type Mount,
 } from './stand-ins.js';
+import { forgetPackageIndexes, packageIndexOf, type PackageIndex } from './package-index.js';
 import { WORK_COUNTS } from './work-counts.js';
 
 const dirs: string[] = [];
@@ -332,5 +336,113 @@ describe('packageCoverage', () => {
     expect(coverage.get('@acme/money')).toEqual({ by: 'repo', from: 'money' });
     expect(coverage.get('@acme/queue')).toEqual({ by: 'shape', from: 'shapes/queue.d.ts' });
     expect(coverage.get('loans')).toEqual({ by: 'repo', from: 'loans' });
+  });
+});
+
+describe('what a reading wanted, and what answered it (P83)', () => {
+  const WANTS = {
+    ...PROJECT,
+    'loans/src/flags.ts': "import { isOn } from '@acme/flags';\nexport const on = isOn('x');\n",
+    'loans/src/relative.ts': "import { cash } from './main';\nexport const again = cash;\n",
+  };
+
+  it('lists the names a source, a shape file or nothing answered, and not a relative import', () => {
+    const root = treeOf(WANTS);
+    const project = open(root);
+    expect(standInWants(project)).toEqual(['@acme/flags', '@acme/money', '@acme/queue']);
+  });
+
+  it('lists a name two directories claim', () => {
+    const root = treeOf({ ...WANTS, 'money-copy/package.json': { name: '@acme/money' }, 'money-copy/src/index.ts': 'export {};\n' });
+    const project = open(root, {
+      ...CONFIG,
+      services: [...CONFIG.services, { name: 'money-copy', repo: './money-copy', type: 'nestjs' }],
+    });
+    expect(standInWants(project)).toContain('@acme/money');
+    const fingerprint = standInsFingerprintOf(project, root);
+    expect(fingerprint?.packages['@acme/money']).toEqual({ ambiguous: ['money', 'money-copy'] });
+  });
+
+  it('leaves out a package that is installed', () => {
+    const root = treeOf({
+      ...WANTS,
+      'loans/node_modules/@acme/flags/package.json': { name: '@acme/flags', types: 'index.d.ts' },
+      'loans/node_modules/@acme/flags/index.d.ts': 'export declare const isOn: (name: string) => boolean;\n',
+    });
+    expect(standInWants(open(root))).toEqual(['@acme/money', '@acme/queue']);
+  });
+
+  /** One index made the way a build makes it, for this tree. */
+  const indexOf = (root: string): PackageIndex =>
+    packageIndexOf({
+      services: [
+        { name: 'loans', dir: join(root, 'loans') },
+        { name: 'money-lib', dir: join(root, 'money') },
+      ],
+      folders: root,
+    });
+
+  const fingerprintOf = (root: string, wants: readonly string[] = ['@acme/flags', '@acme/money', '@acme/queue']) =>
+    standInsFingerprint({
+      wants,
+      index: indexOf(root),
+      shapeFiles: shapesFor(parseConfig(CONFIG), undefined, root),
+      configDir: root,
+    });
+
+  it('records each shape file and what answered each wanted name, relative to the configuration', () => {
+    const root = treeOf(WANTS);
+    const fingerprint = fingerprintOf(root);
+    expect(Object.keys(fingerprint.shapes)).toEqual(['shapes/queue.d.ts']);
+    expect(fingerprint.packages).toEqual({
+      '@acme/flags': null,
+      '@acme/money': { dir: 'money', manifestHash: expect.stringMatching(/^sha1:/) },
+      '@acme/queue': null,
+    });
+    expect(standInsFingerprintOf(open(root), root)).toEqual(fingerprint);
+  });
+
+  it.each([
+    ['a shape file added under the glob', (root: string) => writeFileSync(join(root, 'shapes/flags.d.ts'), "declare module '@acme/flags' { export const isOn: (n: string) => boolean; }\n")],
+    ['a shape file edited', (root: string) => writeFileSync(join(root, 'shapes/queue.d.ts'), '// emptied\n')],
+    ['a shape file removed', (root: string) => rmSync(join(root, 'shapes/queue.d.ts'))],
+    ['a directory now answering a missing name', (root: string) => {
+      mkdirSync(join(root, 'flags'), { recursive: true });
+      writeFileSync(join(root, 'flags/package.json'), JSON.stringify({ name: '@acme/flags' }));
+    }],
+    ['two directories now claiming a missing name', (root: string) => {
+      for (const dir of ['flags', 'flags-copy']) {
+        mkdirSync(join(root, dir), { recursive: true });
+        writeFileSync(join(root, dir, 'package.json'), JSON.stringify({ name: '@acme/flags' }));
+      }
+    }],
+    ['a mounted manifest edited', (root: string) => {
+      writeFileSync(join(root, 'money/package.json'), JSON.stringify({ name: '@acme/money', version: '2.0.0' }));
+    }],
+  ])('changes for %s', (_, move) => {
+    const root = treeOf(WANTS);
+    const before = fingerprintOf(root);
+    move(root);
+    forgetPackageIndexes();
+    expect(fingerprintOf(root)).not.toEqual(before);
+  });
+
+  it('does not change for a package nothing wanted, a weaker claim, or the order the names come in', () => {
+    const root = treeOf(WANTS);
+    const before = fingerprintOf(root);
+    mkdirSync(join(root, 'ledger'), { recursive: true });
+    writeFileSync(join(root, 'ledger/package.json'), JSON.stringify({ name: '@acme/ledger' }));
+    // A directory beside the configuration does not take a name from a
+    // configured repository, so the answer for it stays the repository.
+    mkdirSync(join(root, 'money-copy'), { recursive: true });
+    writeFileSync(join(root, 'money-copy/package.json'), JSON.stringify({ name: '@acme/money' }));
+    forgetPackageIndexes();
+    expect(fingerprintOf(root, ['@acme/queue', '@acme/money', '@acme/flags'])).toEqual(before);
+  });
+
+  it('answers nothing for a service with package sources off', () => {
+    const root = treeOf(WANTS);
+    const fingerprint = standInsFingerprint({ wants: ['@acme/money'], index: undefined, shapeFiles: [], configDir: root });
+    expect(fingerprint).toEqual({ shapes: {}, packages: {} });
   });
 });

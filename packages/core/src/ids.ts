@@ -139,18 +139,41 @@ export const normalizePath = (path: string): string => {
   return segments.length === 0 ? '/' : `/${segments.join('/')}`;
 };
 
+/** A path with forward slashes only, whatever the OS wrote it with (P83). */
+export const toPosixPath = (path: string): string => (path.includes('\\') ? path.replace(/\\/g, '/') : path);
+
+/** A drive letter, `C:/`, at the head of a POSIX-spelled Windows path. */
+const DRIVE = /^[A-Za-z]:(?:\/|$)/;
+
+/**
+ * A POSIX-spelled path as two of them are compared (P83): a drive letter is
+ * one drive whatever its case, so `c:/work` and `C:/work` are one place.
+ * Nothing else about case is decided here.
+ */
+export const pathKey = (path: string): string => (DRIVE.test(path) ? `${path.charAt(0).toUpperCase()}${path.slice(1)}` : path);
+
+/** The root a POSIX-spelled absolute path starts at: `/`, or a drive as `C:`; undefined for a relative one. */
+const rootOfPath = (path: string): string | undefined =>
+  path.startsWith('/') ? '/' : DRIVE.test(path) ? path.slice(0, 2).toUpperCase() : undefined;
+
 /**
  * Bring a file path into the form every id uses: POSIX separators,
  * repo-relative when `repoDir` is given, without a leading `./`.
+ *
+ * Whatever the OS (P83): a Windows path, with backslashes or with the forward
+ * slashes the compiler hands over, is named the way a POSIX one is. A drive
+ * letter is compared without its case, and a path on another drive than the
+ * repository stays absolute, because no relative path leads there.
  */
 export const normalizeFilePath = (file: string, repoDir?: string): string => {
-  let out = (typeof file === 'string' ? file : '').replace(/\\/g, '/');
+  let out = toPosixPath(typeof file === 'string' ? file : '');
   if (typeof repoDir === 'string' && repoDir !== '') {
-    const base = repoDir.replace(/\\/g, '/').replace(/\/+$/, '');
+    const base = pathKey(toPosixPath(repoDir).replace(/\/+$/, ''));
+    const key = pathKey(out);
     // A repository at the filesystem root leaves nothing to strip but the
     // separator, and a path that keeps it is not repo-relative.
     if (base === '') out = out.replace(/^\/+/, '');
-    else if (out === base || out.startsWith(`${base}/`)) out = out.slice(base.length + 1);
+    else if (key === base || key.startsWith(`${base}/`)) out = out.slice(base.length + 1);
     // A file the service reads that is not inside it — a handler body in a
     // sibling workspace package — is still named relative to the service,
     // because that is what every other path in its graph is relative to. It
@@ -158,13 +181,13 @@ export const normalizeFilePath = (file: string, repoDir?: string): string => {
     // home directory into node ids: a scheduling app's graph carried fifty-eight of
     // them. Climbing out of the service is a shorter and truer way to say the
     // same thing, and it is the same on every machine.
-    else if (out.startsWith('/')) {
+    else if (rootOfPath(key) !== undefined && rootOfPath(key) === rootOfPath(base)) {
       const from = base.split('/');
-      const to = out.split('/');
+      const to = key.split('/');
       let shared = 0;
       while (shared < from.length && shared < to.length && from[shared] === to[shared]) shared += 1;
       const up = '../'.repeat(from.length - shared);
-      out = `${up}${to.slice(shared).join('/')}`;
+      out = `${up}${out.split('/').slice(shared).join('/')}`;
     }
   }
   out = out.replace(/\/{2,}/g, '/');

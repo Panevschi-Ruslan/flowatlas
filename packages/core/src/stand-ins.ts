@@ -14,7 +14,8 @@
  * The order is fixed (D3): an installed package wins over its source, which
  * wins over a shape file, which wins over a built-in shape.
  */
-import { join, relative, sep } from 'node:path';
+import { createHash } from 'node:crypto';
+import { join, posix, relative, sep } from 'node:path';
 import { Node, Project, type FileSystemHost, type RuntimeDirEntry, type SourceFile, type ts } from 'ts-morph';
 import { z } from 'zod';
 import type { GraphBuilder } from './builder.js';
@@ -27,7 +28,7 @@ import {
   shapeFilesOf,
   type ShapeFileReading,
 } from './declaration-shapes.js';
-import { normalizeFilePath } from './ids.js';
+import { normalizeFilePath, pathKey, toPosixPath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readResolvedPackageJson } from './adapters/manifest.js';
 import {
@@ -340,17 +341,39 @@ export interface MountTable {
 
 const NODE_MODULES = '/node_modules/';
 
+/** A path as mounts are looked up by: forward slashes, the drive letter in one case (P83). */
+const keyOf = (path: string): string => pathKey(toPosixPath(path));
+
+/**
+ * Where an install of a package would put it under a root: `<root>/node_modules/<name>`,
+ * spelled with forward slashes whatever the OS (P83). The compiler hands the
+ * file system forward-slash paths on Windows too, so a mount spelled with the
+ * OS's own separator would match nothing it is asked, silently.
+ */
+export const virtualRootOf = (root: string, name: string): string =>
+  posix.join(toPosixPath(root), 'node_modules', name);
+
+/**
+ * Whether a path is a directory or inside it, both spelled any way the OS
+ * writes them (P83): compared with forward slashes, a drive letter in any case.
+ */
+export const isWithinDir = (path: string, dir: string): boolean => {
+  const at = keyOf(path);
+  const base = keyOf(dir).replace(/\/+$/, '');
+  return at === base || at.startsWith(`${base}/`);
+};
+
 /** Builds the table; a mount whose virtual root is not `<dir>/node_modules/<name>` is a caller's mistake. */
 export const mountTableOf = (mounts: readonly Mount[]): MountTable => {
   for (const mount of mounts) {
-    if (!mount.virtual.endsWith(`${NODE_MODULES}${mount.source.name}`)) {
+    if (!toPosixPath(mount.virtual).endsWith(`${NODE_MODULES}${mount.source.name}`)) {
       throw new Error(`a mount is held at <root>/node_modules/<name>, not at ${mount.virtual}`);
     }
   }
   return {
     mounts,
     byName: new Map(mounts.map((mount) => [mount.source.name, mount])),
-    byVirtual: new Map(mounts.map((mount) => [mount.virtual, mount])),
+    byVirtual: new Map(mounts.map((mount) => [keyOf(mount.virtual), mount])),
   };
 };
 
@@ -361,9 +384,13 @@ export const mountTableOf = (mounts: readonly Mount[]): MountTable => {
  * package installed inside a mounted package's own directory is its own
  * package, and only when no mount is held there does the segment before it
  * decide. A path under no mount falls through to the real file system.
+ *
+ * The path may be spelled with either separator and its drive letter in
+ * either case (P83); it is asked as the table holds every virtual root.
  */
-export const mountOfPath = (table: MountTable, path: string): Mount | undefined => {
+export const mountOfPath = (table: MountTable, asked: string): Mount | undefined => {
   if (table.byVirtual.size === 0) return undefined;
+  const path = keyOf(asked);
   for (let at = path.lastIndexOf(NODE_MODULES); at >= 0; at = at === 0 ? -1 : path.lastIndexOf(NODE_MODULES, at - 1)) {
     const start = at + NODE_MODULES.length;
     let end = path.indexOf('/', start);
@@ -383,24 +410,37 @@ const realFileSystem = (): FileSystemHost => {
 };
 
 /**
+ * The path on disk a path under a mount is really at: the rest of the virtual
+ * path after the mount's root, under the source's directory, joined the way
+ * the OS joins paths (P83). Undefined for a path under no mount.
+ */
+export const realPathOf = (table: MountTable, path: string): string | undefined => {
+  const mount = mountOfPath(table, path);
+  if (mount === undefined) return undefined;
+  const rest = toPosixPath(path).slice(toPosixPath(mount.virtual).length);
+  return rest === '' ? mount.source.dir : join(mount.source.dir, rest);
+};
+
+/**
  * The real file system with each mount's source showing through at its
  * virtual path, read-only. A path under a mount is read from the directory the
  * source is really in and keeps its virtual name, so the checker never learns
  * the other one; the directories above a mount exist so a walk up from a file
  * finds it, as it would an install.
+ *
+ * Every path asked is compared with forward slashes (P83, D3): normalised
+ * once, here at the edge, and handed to the real file system in the OS's own
+ * form only where the read goes to a source's directory. `base` is the real
+ * file system unless a test hands another.
  */
-export const mountedFileSystem = (mounts: readonly Mount[]): FileSystemHost => {
-  const base = realFileSystem();
+export const mountedFileSystem = (mounts: readonly Mount[], base: FileSystemHost = realFileSystem()): FileSystemHost => {
   const table = mountTableOf(mounts);
-  const real = (path: string): string => {
-    const mount = mountOfPath(table, path);
-    return mount === undefined ? path : mount.source.dir + path.slice(mount.virtual.length);
-  };
+  const real = (path: string): string => realPathOf(table, path) ?? path;
   const mounted = (path: string): boolean => mountOfPath(table, path) !== undefined;
   // Every directory above a mount, to the names of what is mounted below it.
   const above = new Map<string, Set<string>>();
   for (const mount of table.mounts) {
-    const parts = mount.virtual.split('/');
+    const parts = keyOf(mount.virtual).split('/');
     for (let at = parts.length - 1; at > 0; at -= 1) {
       const dir = parts.slice(0, at).join('/');
       if (!dir.includes('/node_modules')) break;
@@ -409,6 +449,7 @@ export const mountedFileSystem = (mounts: readonly Mount[]): FileSystemHost => {
       above.set(dir, children);
     }
   }
+  const isAbove = (path: string): boolean => above.has(keyOf(path));
   const refuse = (path: string): never => {
     throw new Error(`read-only: ${path} is a package source held in memory`);
   };
@@ -417,11 +458,16 @@ export const mountedFileSystem = (mounts: readonly Mount[]): FileSystemHost => {
     delete: async (path) => (mounted(path) ? refuse(path) : base.delete(path)),
     deleteSync: (path) => (mounted(path) ? refuse(path) : base.deleteSync(path)),
     readDirSync: (dirPath): RuntimeDirEntry[] => {
-      const children = above.get(dirPath);
+      const children = above.get(keyOf(dirPath));
       if (children === undefined) {
-        return base.readDirSync(real(dirPath)).map((entry) =>
-          mounted(dirPath) ? { ...entry, name: dirPath + entry.name.slice(real(dirPath).length) } : entry,
-        );
+        if (!mounted(dirPath)) return base.readDirSync(dirPath);
+        // Each entry is named at its virtual path: the directory asked, then
+        // what follows the source's directory in the name the disk gave.
+        const at = toPosixPath(dirPath).replace(/\/+$/, '');
+        const from = toPosixPath(real(dirPath)).replace(/\/+$/, '');
+        return base
+          .readDirSync(real(dirPath))
+          .map((entry) => ({ ...entry, name: at + toPosixPath(entry.name).slice(from.length) }));
       }
       let entries: RuntimeDirEntry[] = [];
       try {
@@ -447,11 +493,11 @@ export const mountedFileSystem = (mounts: readonly Mount[]): FileSystemHost => {
     copySync: (from, to) => (mounted(to) ? refuse(to) : base.copySync(real(from), to)),
     fileExists: (filePath) => base.fileExists(real(filePath)),
     fileExistsSync: (filePath) => base.fileExistsSync(real(filePath)),
-    directoryExists: async (dirPath) => above.has(dirPath) || base.directoryExists(real(dirPath)),
-    directoryExistsSync: (dirPath) => above.has(dirPath) || base.directoryExistsSync(real(dirPath)),
+    directoryExists: async (dirPath) => isAbove(dirPath) || base.directoryExists(real(dirPath)),
+    directoryExistsSync: (dirPath) => isAbove(dirPath) || base.directoryExistsSync(real(dirPath)),
     // The virtual name is the name: the checker resolves a symlinked install
     // to where it really is, and here that would be the source's own path.
-    realpathSync: (path) => (mounted(path) || above.has(path) ? path : base.realpathSync(path)),
+    realpathSync: (path) => (mounted(path) || isAbove(path) ? path : base.realpathSync(path)),
     getCurrentDirectory: () => base.getCurrentDirectory(),
     glob: (patterns) => base.glob(patterns),
     globSync: (patterns) => base.globSync(patterns),
@@ -463,6 +509,12 @@ export const mountedFileSystem = (mounts: readonly Mount[]): FileSystemHost => {
 
 interface StandInState {
   readonly rootDir: string;
+  /**
+   * Every package the request's index answers and every name it found
+   * ambiguous, before this service's own installs and members are taken out:
+   * what the cache's fingerprint asks of a wanted name (P83).
+   */
+  readonly index: PackageIndex;
   readonly mounts: readonly Mount[];
   /** The same mounts, for asking of a path or a name (P82). */
   readonly table: MountTable;
@@ -544,12 +596,159 @@ export const standInFiles = (project: Project, rootDir: string): string[] => {
   const out = new Set<string>();
   for (const [mount, files] of mountedFilesRead(project)) {
     out.add(normalizeFilePath(join(mount.source.dir, 'package.json'), rootDir));
-    for (const file of files) {
-      out.add(normalizeFilePath(mount.source.dir + file.slice(mount.virtual.length), rootDir));
-    }
+    for (const file of files) out.add(normalizeFilePath(realPathOf(state.table, file) ?? file, rootDir));
   }
   for (const reading of state.shapeFiles) out.add(normalizeFilePath(reading.path, rootDir));
   return [...out].sort();
+};
+
+/* ── What a reading's stand-ins answered, for the cache to compare (P83) ── */
+
+/**
+ * The packages a reading wanted something to stand in for, by name, sorted.
+ *
+ * Every bare import of the repository's own files, and of the package sources
+ * it read, whose answer is not a real install: an import nothing resolves (a
+ * missing package, or one two directories claim), one a package source
+ * answers, and one a shape file answers, the project's or a reader's built-in.
+ * Those are the names whose answer a directory appearing, moving or going
+ * away can change (D1); an installed package, an alias of the service's own
+ * and a member of its workspace win over every stand-in, so a new directory
+ * says nothing about them.
+ */
+export const standInWants = (project: Project): string[] => {
+  const state = STATE.get(project);
+  if (state === undefined) return [];
+  const out = new Set<string>();
+  const standsIn = (path: string): boolean =>
+    mountOfPath(state.table, path) !== undefined || isDeclarationShape(project, path);
+  for (const file of project.getSourceFiles()) {
+    const path = file.getFilePath();
+    const mount = mountOfPath(state.table, path);
+    if (mount === undefined && (path.includes('/node_modules/') || isDeclarationShape(project, path))) continue;
+    for (const declaration of [...file.getImportDeclarations(), ...file.getExportDeclarations()]) {
+      const specifier = declaration.getModuleSpecifierValue();
+      const name = specifier === undefined ? undefined : packageOfSpecifier(specifier);
+      if (name === undefined || name === mount?.source.name) continue;
+      const target = declaration.getModuleSpecifierSourceFile();
+      if (target === undefined || standsIn(target.getFilePath())) out.add(name);
+    }
+  }
+  return [...out].sort();
+};
+
+/** What the package index answers for one wanted name. */
+export type PackageAnswer =
+  /** One directory is the package: where, relative to the configuration, and a hash of its manifest. */
+  | { dir: string; manifestHash: string }
+  /** More than one claims it, so none is read: the directories, relative to the configuration. */
+  | { ambiguous: string[] };
+
+/**
+ * What stood in for a reading, as the build cache compares it (P83).
+ *
+ * `shapes` is every shape file the service lists, the globs expanded, each
+ * with a hash of its content: a file added under a glob, removed or edited
+ * all change it (D2). `packages` is, for every name the reading wanted
+ * ({@link standInWants}), what the package index answers: one directory, more
+ * than one, or nothing (`null`).
+ */
+export interface StandInsFingerprint {
+  shapes: Record<string, string>;
+  packages: Record<string, PackageAnswer | null>;
+}
+
+export interface StandInsFingerprintInput {
+  /** The names the reading wanted, from {@link standInWants}. */
+  readonly wants: readonly string[];
+  /** The index the reading was or will be given; none when package sources are off for it. */
+  readonly index: PackageIndex | undefined;
+  /** Every shape file listed for the service, as absolute paths. */
+  readonly shapeFiles: readonly string[];
+  /** The configuration's directory, which every path recorded is relative to. */
+  readonly configDir: string;
+  /** How a shape file is hashed; {@link hashShapeFile} unless a caller shares one per build. */
+  readonly hashOf?: (path: string) => string;
+}
+
+const sha1 = (text: string): string => `sha1:${createHash('sha1').update(text).digest('hex')}`;
+
+/** A shape file's content hash, or `missing` when it cannot be read. */
+export const hashShapeFile = (path: string): string => {
+  const text = readText(path);
+  return text === undefined ? 'missing' : sha1(text);
+};
+
+/**
+ * The fingerprint of a reading's stand-ins: the same input, the same object,
+ * keys sorted, so two of them compare by their JSON. Paths are relative to the
+ * configuration and POSIX, so a project that moved as a whole is unchanged.
+ */
+export const standInsFingerprint = (input: StandInsFingerprintInput): StandInsFingerprint => {
+  const { index, configDir } = input;
+  const hashOf = input.hashOf ?? hashShapeFile;
+  const rel = (dir: string): string => normalizeFilePath(dir, configDir) || '.';
+  const shapes: Record<string, string> = {};
+  for (const path of [...input.shapeFiles].sort()) shapes[rel(path)] = hashOf(path);
+  const packages: Record<string, PackageAnswer | null> = {};
+  if (index !== undefined) {
+    for (const name of [...new Set(input.wants)].sort()) {
+      const source = index.sources.get(name);
+      const claimed = index.ambiguous.get(name);
+      packages[name] =
+        source !== undefined
+          ? { dir: rel(source.dir), manifestHash: sha1(JSON.stringify(source.manifest)) }
+          : claimed !== undefined
+            ? { ambiguous: claimed.map((each) => rel(each.dir)).sort() }
+            : null;
+    }
+  }
+  return { shapes, packages };
+};
+
+/**
+ * The fingerprint of what stood in for this project's reading, from what it
+ * was opened with: the index it was given and the shape files it lists. What a
+ * reading on its own leaves in its cache entry; a build asks the names of it
+ * and answers them from its own index.
+ */
+export const standInsFingerprintOf = (project: Project, configDir: string): StandInsFingerprint | undefined => {
+  const state = STATE.get(project);
+  if (state === undefined) return undefined;
+  return standInsFingerprint({
+    wants: standInWants(project),
+    index: state.index,
+    shapeFiles: state.shapeFiles.map((reading) => reading.path),
+    configDir,
+  });
+};
+
+/**
+ * The fingerprint a build's stand-ins (P82) give one service for these wanted
+ * names: the index its `packageSources` setting asks, and the shape files it
+ * lists. Undefined when nothing can stand in for it - package sources off and
+ * no shape file listed - or the build's stand-ins do not name it.
+ */
+export const standInsFingerprintOfBuild = (options: {
+  readonly given: StandInsOfBuild;
+  readonly config: FlowatlasConfig | undefined;
+  readonly service: ServiceConfig;
+  readonly wants: readonly string[];
+  readonly hashOf?: (path: string) => string;
+}): StandInsFingerprint | undefined => {
+  const { given, service } = options;
+  if (!Object.hasOwn(given.perService, service.name)) return undefined;
+  const listed = given.perService[service.name];
+  const search = searchOf(packageSourcesFor(options.config, service));
+  const record = search === undefined ? undefined : given.indexes[search];
+  if (listed === undefined || (record === undefined && listed.files.length === 0)) return undefined;
+  return standInsFingerprint({
+    wants: options.wants,
+    index: record === undefined ? undefined : indexOfRecord(record),
+    shapeFiles: listed.files,
+    configDir: given.configDir,
+    ...(options.hashOf === undefined ? {} : { hashOf: options.hashOf }),
+  });
 };
 
 /* ── The rows that say so ── */
@@ -857,9 +1056,9 @@ export const withdrawPackageSourceRows = (context: StandInContext): void => {
   // path it stands for, the way every other question of a mount is (P82).
   builder.withdrawUnresolved((row) => {
     if (!row.file.includes('node_modules/')) return false;
-    const path = join(repoDir, row.file);
+    const path = toPosixPath(join(repoDir, row.file));
     const mount = mountOfPath(table, path);
-    return mount !== undefined && mount.source.service !== undefined && path !== mount.virtual;
+    return mount !== undefined && mount.source.service !== undefined && path !== toPosixPath(mount.virtual);
   });
 };
 
@@ -895,12 +1094,18 @@ export const packageCoverage = (
   };
   const setting = packageSourcesFor(config, undefined);
   if (setting !== false) {
-    const index = packageIndexOf({
-      services: config.services
-        .filter((each) => each.document === undefined)
-        .map((each) => ({ name: each.name, dir: serviceDirOf(configDir, each.repo) })),
-      ...(setting === true ? { folders: configDir } : {}),
-    });
+    // Asked of the disk as it is now (P125): the MCP server that asks this
+    // lives longer than any one build, and a package added since it started
+    // is what a rebuild would read.
+    const index = packageIndexOf(
+      {
+        services: config.services
+          .filter((each) => each.document === undefined)
+          .map((each) => ({ name: each.name, dir: serviceDirOf(configDir, each.repo) })),
+        ...(setting === true ? { folders: configDir } : {}),
+      },
+      { remember: false },
+    );
     for (const [name, source] of index.sources) out.set(name, { by: 'repo', from: rel(source.dir) });
   }
   const files = new Set<string>([

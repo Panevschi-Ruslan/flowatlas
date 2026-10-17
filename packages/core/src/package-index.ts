@@ -130,11 +130,17 @@ const INDEXES = new Map<string, PackageIndex>();
  *
  * Read from manifests alone - `name`, `version` and the fields that say where
  * the package is entered - and remembered for the process, because every
- * service of a build asks the same question of the same directories.
+ * service of a build asks the same question of the same directories. A caller
+ * in a process that outlives the disk it read (the MCP server, asking what a
+ * rebuild would cover) passes `remember: false` and is answered from the disk
+ * as it is now (P125).
  */
-export const packageIndexOf = (input: PackageIndexInput): PackageIndex => {
+export const packageIndexOf = (
+  input: PackageIndexInput,
+  { remember = true }: { readonly remember?: boolean } = {},
+): PackageIndex => {
   const key = JSON.stringify([input.services.map((service) => [service.name, service.dir]), input.folders ?? null]);
-  const known = INDEXES.get(key);
+  const known = remember ? INDEXES.get(key) : undefined;
   if (known !== undefined) return known;
   WORK_COUNTS.packageIndexes += 1;
 
@@ -162,7 +168,7 @@ export const packageIndexOf = (input: PackageIndexInput): PackageIndex => {
     if (!sources.has(name) && !ambiguous.has(name)) ambiguous.set(name, list);
   }
   const index: PackageIndex = { sources, ambiguous };
-  INDEXES.set(key, index);
+  if (remember) INDEXES.set(key, index);
   return index;
 };
 

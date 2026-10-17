@@ -184,3 +184,30 @@ describe('the stand-ins a build works out once (P82)', () => {
     expect(WORK_COUNTS.packageIndexes - before).toBe(1);
   });
 });
+
+describe('forgetPackageIndexes (P83)', () => {
+  it('makes the next index see a directory added since the last one', () => {
+    const root = treeOf({ 'loans/package.json': { name: 'loans' } });
+    const input = { services: [{ name: 'loans', dir: join(root, 'loans') }], folders: root };
+    expect(packageIndexOf(input).sources.has('@acme/flags')).toBe(false);
+    mkdirSync(join(root, 'flags'), { recursive: true });
+    writeTo(join(root, 'flags'), 'package.json', { name: '@acme/flags' });
+    // Remembered for the process: the same question gets the same answer.
+    expect(packageIndexOf(input).sources.has('@acme/flags')).toBe(false);
+    forgetPackageIndexes();
+    expect(packageIndexOf(input).sources.get('@acme/flags')?.dir).toBe(join(root, 'flags'));
+  });
+});
+
+describe('an index that is not remembered (P125)', () => {
+  it('answers from the disk as it is now, and leaves the remembered one alone', () => {
+    const root = treeOf({ 'loans/package.json': { name: 'loans' } });
+    const input = { services: [{ name: 'loans', dir: join(root, 'loans') }], folders: root };
+    forgetPackageIndexes();
+    const remembered = packageIndexOf(input);
+    mkdirSync(join(root, 'flags'), { recursive: true });
+    writeTo(join(root, 'flags'), 'package.json', { name: '@acme/flags' });
+    expect(packageIndexOf(input, { remember: false }).sources.has('@acme/flags')).toBe(true);
+    expect(packageIndexOf(input)).toBe(remembered);
+  });
+});

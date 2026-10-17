@@ -23,8 +23,15 @@ import { z } from 'zod';
  * 4 records the declaration files out of installed packages that a reading
  * used (P36), so an edited stub re-reads. An older cache does not say which
  * they were, and saying so once beats guessing per repository.
+ *
+ * 5 records what stood in for a repository's missing packages (P83): the shape
+ * files its globs expanded to, and what the package index answered for every
+ * name the reading wanted. A version-4 entry recorded only the files a stand-in
+ * was read from, so a shape file added under a glob, or a package directory
+ * appearing for an import nothing answered, left its graph as it was. It does
+ * not say which names were wanted, and re-reading once beats guessing.
  */
-export const CACHE_VERSION = 4;
+export const CACHE_VERSION = 5;
 
 export const CACHE_FILENAME = 'cache.json';
 
@@ -53,6 +60,27 @@ const dependencyStateSchema = z.strictObject({
 
 export type DependencyState = z.infer<typeof dependencyStateSchema>;
 
+/**
+ * What stood in for a repository's missing packages when it was read (P83):
+ * core's `StandInsFingerprint`. Judged in `dependencies.ts`.
+ */
+const standInsSchema = z.strictObject({
+  /** Every shape file listed for the service, relative to the configuration, to its content hash. */
+  shapes: z.record(z.string(), z.string()),
+  /** Every package name the reading wanted, to what the index answered: a directory, several, or nothing. */
+  packages: z.record(
+    z.string(),
+    z
+      .union([
+        z.strictObject({ dir: z.string(), manifestHash: z.string() }),
+        z.strictObject({ ambiguous: z.array(z.string()) }),
+      ])
+      .nullable(),
+  ),
+});
+
+export type StandInsState = z.infer<typeof standInsSchema>;
+
 const repoCacheSchema = z.strictObject({
   /** Path as written in the configuration, so a moved repository invalidates. */
   repo: z.string(),
@@ -77,6 +105,12 @@ const repoCacheSchema = z.strictObject({
    * `dependencies.ts`; absent where the writer could not say.
    */
   packages: z.record(z.string(), fileStampSchema).optional(),
+  /**
+   * What stood in for the packages it has not installed, as it was when it was
+   * read (P83). Absent where nothing can stand in for it, or where the writer
+   * could not say; the plan reads the second as a reason to read again.
+   */
+  standIns: standInsSchema.optional(),
   globalFiles: z.array(z.string()),
   files: z.record(z.string(), fileStampSchema),
   graphPath: z.string(),

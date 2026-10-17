@@ -334,6 +334,23 @@ only one of them moved.
 
 ### Fixed
 
+- **A cached graph went stale when what stood in for a package moved (P83).**
+  A shape file added under a listed `shapes` glob, a package directory whose
+  `name` answered an import nothing had, and one of two directories claiming a
+  name going away each left the importer's graph as it was until one of its own
+  files changed, under `build --watch` too, where the package index was
+  remembered for the life of the process. Each build now records the expanded
+  shape files and what the index answered for every package a reading wanted,
+  reads a service again when either moved and says which in the plan
+  (`stand-ins changed: ...`); the index is worked out again on every build.
+  The build cache is version 5, so the first build after upgrading reads every
+  repository once (`cache-invalid:version`).
+- **Package sources were not mounted on Windows (P83).** A mount was held at a
+  path spelled with backslashes while the compiler asks with forward slashes,
+  so nothing matched, silently. Paths are compared with forward slashes, and a
+  drive letter in either case, whatever the OS; a file outside the service on
+  the same drive is named relative to it, and one on another drive stays
+  absolute.
 - **Joins made from the repositories' files no longer counted as unresolved
   (P81).** A request P77 joined from the value a file gives its setting swapped
   an `unknown-base-url-env` row for a `base-url-from-files` row at `info`, and

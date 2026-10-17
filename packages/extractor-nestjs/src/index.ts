@@ -28,6 +28,8 @@ export {
   packageFiles,
   reopenRepo,
   repoFiles,
+  standInWantsOf,
+  useStandIns,
 } from './incremental.js';
 export type { ScopedExtract, WarmRepo } from './incremental.js';
 

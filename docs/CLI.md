@@ -359,6 +359,18 @@ build, install, build re-reads on the second build and says
 `dependencies installed in .` for why. Under `--watch` each repository's parsed
 program is held open, which is where most of the saving comes from.
 
+What stood in for a package that is not installed is recorded as well: the
+shape files each service's `shapes` globs expanded to, with a hash of each, and,
+for every package the reading wanted (one it read the source of, one a shape
+file declared, one nothing answered or two directories claimed), what the
+package index answered. A build that finds any of that moved reads the service
+again and says which: `stand-ins changed: shape file flowatlas-shapes/flags.d.ts
+added`, `stand-ins changed: package @acme/flags now at flags-lib`, or `now claimed
+by 2 directories (...)`. A package directory nothing in a service imports does
+not re-read it. The package index is worked out again on every build, a
+`--watch` rebuild included; a new directory beside the configuration does not
+start a rebuild by itself, and the next save in a repository does.
+
 Each repository is read in a process of its own, and the whole of it is held in
 memory while it is read, so a large monorepo with its dependencies installed can
 want several times the heap the runtime picks by default. A share of the machine

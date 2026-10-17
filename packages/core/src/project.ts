@@ -15,10 +15,17 @@ import {
   isDeclarationShape,
   type DeclarationShape,
 } from './declaration-shapes.js';
-import { normalizeFilePath } from './ids.js';
+import { normalizeFilePath, toPosixPath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readPackageJson } from './package-json.js';
-import { mountedFileSystem, recordStandIns, type Mount, type StandInRequest } from './stand-ins.js';
+import {
+  isWithinDir,
+  mountedFileSystem,
+  recordStandIns,
+  virtualRootOf,
+  type Mount,
+  type StandInRequest,
+} from './stand-ins.js';
 import { isTestDirectory, isTestName } from './test-files.js';
 import {
   serviceExtent,
@@ -722,6 +729,10 @@ const installedFrom = (rootDir: string, configPath: string | undefined): ((name:
  * Which package sources a service reads in place of an install (P78): each
  * one it has not installed, is not a package of its own extent, and is not
  * the directory the service itself is in.
+ *
+ * The virtual root is spelled with forward slashes and every directory is
+ * compared that way (P83), so a mount on Windows is held where the compiler
+ * will ask for it.
  */
 const mountsFor = (
   rootDir: string,
@@ -732,16 +743,15 @@ const mountsFor = (
   if (request === undefined || request.packages.length === 0) return [];
   const extent = serviceSourceDirs(rootDir).map((dir) => resolve(dir));
   const root = resolve(rootDir);
-  const inside = (path: string, dir: string): boolean => path === dir || path.startsWith(`${dir}/`);
   return request.packages
     .filter(
       (pkg) =>
         !members.has(pkg.name) &&
-        !extent.some((dir) => inside(pkg.dir, dir)) &&
-        !inside(root, pkg.dir) &&
+        !extent.some((dir) => isWithinDir(pkg.dir, dir)) &&
+        !isWithinDir(root, pkg.dir) &&
         !installed(pkg.name),
     )
-    .map((pkg) => ({ source: pkg, virtual: join(root, 'node_modules', pkg.name) }))
+    .map((pkg) => ({ source: pkg, virtual: virtualRootOf(root, pkg.name) }))
     .sort((a, b) => (a.source.name < b.source.name ? -1 : a.source.name > b.source.name ? 1 : 0));
 };
 
@@ -749,10 +759,11 @@ const mountsFor = (
 const mountedAliases = (mount: Mount): PackageAliases | undefined => {
   const own = aliasesOf(mount.source.dir);
   if (own === undefined) return undefined;
+  // Compared and moved with forward slashes (P83): the compiler's paths are
+  // spelled so on every OS, and the source's directory is the OS's own.
+  const dir = toPosixPath(mount.source.dir).replace(/\/+$/, '');
   const moved = (path: string): string =>
-    path === mount.source.dir || path.startsWith(`${mount.source.dir}/`)
-      ? mount.virtual + path.slice(mount.source.dir.length)
-      : path;
+    isWithinDir(path, dir) ? mount.virtual + toPosixPath(path).slice(dir.length) : path;
   return {
     dir: mount.virtual,
     paths: own.paths,
@@ -806,8 +817,10 @@ const workspaceMemberResolution = (
       if (file === undefined) continue;
       // A package source is read as an install would be: from outside the
       // repository, at the path an install would have.
+      // Spelled with forward slashes, as the compiler spells every path it
+      // resolves, whatever the OS joined it with (P83).
       return {
-        resolvedFileName: file,
+        resolvedFileName: toPosixPath(file),
         extension: extensionOf(file),
         isExternalLibraryImport: source,
       };
@@ -1023,6 +1036,10 @@ export const createProject = (options: CreateProjectOptions): Project => {
   if (options.standIns !== undefined) {
     recordStandIns(project, {
       rootDir,
+      index: {
+        sources: new Map(options.standIns.packages.map((source) => [source.name, source])),
+        ambiguous: options.standIns.ambiguous,
+      },
       mounts,
       ambiguous: new Map([...options.standIns.ambiguous].filter(([name]) => !installed(name) && !members.has(name))),
       shapeFiles: options.standIns.shapeFiles,

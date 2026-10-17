@@ -13,6 +13,7 @@ import {
   readPackageJson,
   readResolvedPackageJson,
   readStandInsOfBuild,
+  standInsFingerprintOf,
   SCHEMA_VERSION,
   countsOf,
   type FlowatlasConfig,
@@ -325,7 +326,7 @@ export const runExtract = async (
   if (options.cache !== false) {
     saveBuildCache(
       join(dirname(outPath), 'cache.json'),
-      repoCacheOf({ warm, graph, outPath, repo, rootDir, registry, extractor: readBrowser?.extractor ?? NESTJS_EXTRACTOR, ...(service === undefined ? {} : { service }), ...(config === undefined ? {} : { config }), ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }) }),
+      repoCacheOf({ warm, graph, outPath, repo, rootDir, registry, extractor: readBrowser?.extractor ?? NESTJS_EXTRACTOR, ...(configDir === undefined ? {} : { configDir }), ...(service === undefined ? {} : { service }), ...(config === undefined ? {} : { config }), ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }) }),
     );
   }
 
@@ -340,6 +341,8 @@ interface RepoCacheOptions {
   rootDir: string;
   registry: ReturnType<typeof createRegistry>;
   extractor: string;
+  /** The configuration's directory, which the stand-ins recorded are relative to (P83). */
+  configDir?: string;
   service?: ServiceConfig;
   config?: FlowatlasConfig;
   tsconfig?: string;
@@ -371,6 +374,7 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
   for (const [file, stamp] of Object.entries(files)) stamp.deps = imports[file] ?? [];
 
   const tsconfig = findTsconfig(rootDir, options.tsconfig ?? options.service?.tsconfig);
+  const standIns = options.configDir === undefined ? undefined : standInsFingerprintOf(warm.project, options.configDir);
   cache.repos[repo] = {
     repo: options.service?.repo ?? rootDir,
     extractor,
@@ -380,6 +384,9 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
     globalFiles: [...globalFiles(warm), ...deployed],
     files,
     packages: stampPackageFiles(rootDir, packageFiles(warm), undefined),
+    // What stood in and for which names (P83): the build that started this
+    // reading asks the names of it and answers them from its own index.
+    ...(standIns === undefined ? {} : { standIns }),
     graphPath: outPath,
     graphHash: hashGraphFile(outPath),
     counts: {

@@ -19,7 +19,11 @@ import {
   serviceSourceDirs,
   countsOf,
   SCHEMA_VERSION,
+  forgetPackageAliases,
+  forgetPackageIndexes,
+  hashShapeFile,
   STAND_INS_FILENAME,
+  standInsFingerprintOfBuild,
   standInsOfBuild,
   type FlowatlasConfig,
   type PackageJson,
@@ -54,6 +58,7 @@ import {
   type CacheProblem,
   type FileStamp,
   type RepoCache,
+  type StandInsState,
 } from '../build/cache.js';
 import { isDeclared, readDeclaredService } from '../build/declared.js';
 import { stampPackageFiles, surveyDependencies } from '../build/dependencies.js';
@@ -253,7 +258,14 @@ export const inPools = async <T, R>(
 };
 
 /** What only the extraction knows about a repository's files. */
-type FileFacts = Pick<RepoCache, 'files' | 'globalFiles' | 'packages'>;
+type FileFacts = Pick<RepoCache, 'files' | 'globalFiles' | 'packages'> & {
+  /**
+   * The package names the reading wanted something to stand in for (P83),
+   * which the build answers from its own index for the next cache. Absent
+   * where the reading did not say.
+   */
+  wants?: readonly string[];
+};
 
 interface Extracted {
   service: ServiceConfig;
@@ -310,6 +322,8 @@ interface SurveyOptions {
   previous?: RepoCache;
   session?: ServiceSession;
   trustTimestamps?: boolean;
+  /** What would stand in for it now, for the names its last reading wanted (P83). */
+  standIns?: StandInsState;
 }
 
 /** Everything planning needs to know about one repository, read from disk. */
@@ -340,6 +354,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
     dependencies: surveyDependencies(repoDir),
     packages: stampPackageFiles(repoDir, Object.keys(previous?.packages ?? {}), previous?.packages),
+    ...(options.standIns === undefined ? {} : { standIns: options.standIns }),
     globalFiles: [...(session?.globalFiles() ?? []), ...deployed],
     files: stampFiles(repoDir, files, previous?.files, {
       ...(options.trustTimestamps === undefined ? {} : { trustTimestamps: options.trustTimestamps }),
@@ -604,6 +619,7 @@ const factsOf = (entry: RepoCache): FileFacts => ({
   files: entry.files,
   globalFiles: entry.globalFiles,
   ...(entry.packages === undefined ? {} : { packages: entry.packages }),
+  ...(entry.standIns === undefined ? {} : { wants: Object.keys(entry.standIns.packages) }),
 });
 
 /** The single entry a lone `flowatlas extract` leaves behind for the build. */
@@ -849,6 +865,7 @@ const factsFromSession = (
     files,
     globalFiles: [...session.globalFiles(), ...deployed],
     packages: stampPackageFiles(session.repoDir, session.packages(), previous?.packages),
+    wants: session.standInWants(),
   };
 };
 
@@ -1018,6 +1035,27 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   for (const dir of serviceDirsIn(outputDir)) clearTemporaries(dir);
   const serviceDirOf = (service: ServiceConfig): string => serviceOutputDir(outputDir, service.name);
 
+  // What stands in for a missing package is worked out again on every build
+  // (P83), from the disk as it is now: a watch is one long process, and the
+  // index and aliases one build remembered would otherwise answer the next.
+  forgetPackageIndexes();
+  forgetPackageAliases();
+  const standIns = standInsOfBuild(loaded.config, loaded.rootDir);
+  const shapeHashes = new Map<string, string>();
+  const hashOf = (file: string): string => {
+    let hash = shapeHashes.get(file);
+    if (hash === undefined) {
+      hash = hashShapeFile(file);
+      shapeHashes.set(file, hash);
+    }
+    return hash;
+  };
+  const standInsOf = (service: ServiceConfig, wants: readonly string[]): StandInsState | undefined =>
+    standInsFingerprintOfBuild({ given: standIns, config: loaded.config, service, wants, hashOf });
+  // An open repository parses again from what it was opened with, so a full
+  // read of it stands in what this build found rather than what the watch did.
+  for (const session of options.sessions?.values() ?? []) session.useStandIns(standIns);
+
   const expected = cacheExpectations(loaded.config);
   const cachePath = cachePathFor(outputDir);
   const noCache = options.cache === false;
@@ -1032,11 +1070,13 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const surveys = readable.map((service) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
+    const now = standInsOf(service, Object.keys(previous?.standIns?.packages ?? {}));
     return surveyService({
       service,
       repoDir: loaded.repoDir(service),
       graphPath: serviceGraphPath(outputDir, service.name),
       config: loaded.config,
+      ...(now === undefined ? {} : { standIns: now }),
       ...(previous === undefined ? {} : { previous }),
       ...(session === undefined ? {} : { session }),
       ...(options.sessions === undefined ? {} : { trustTimestamps: true }),
@@ -1080,7 +1120,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       EXTRACTORS.get(service.type) !== undefined,
   );
   const standInsPath = readApart ? join(outputDir, STAND_INS_FILENAME) : undefined;
-  if (standInsPath !== undefined) await writeJson(standInsPath, standInsOfBuild(loaded.config, loaded.rootDir));
+  if (standInsPath !== undefined) await writeJson(standInsPath, standIns);
 
   const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
     const previous = cache?.repos[service.name];
@@ -1159,7 +1199,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
 
   // Written even when it was ignored: `--no-cache` means read everything now,
   // not stay slow next time.
-  saveBuildCache(cachePath, nextCache(expected, result.project.builtAt, surveys, extracted));
+  saveBuildCache(cachePath, nextCache(expected, result.project.builtAt, surveys, extracted, standInsOf));
   pruneServiceDirs(outputDir, loaded.config.services);
   const leftovers = leftoverRepoOutputs(
     readable.map((service) => loaded.repoDir(service)),
@@ -1210,12 +1250,22 @@ const nextCache = (
   builtAt: string,
   surveys: readonly RepoSurvey[],
   extracted: readonly Extracted[],
+  standInsOf: (service: ServiceConfig, wants: readonly string[]) => StandInsState | undefined,
 ): BuildCache => {
   const cache = emptyCache(expected, builtAt);
   for (const item of extracted) {
     const survey = surveys.find((entry) => entry.service === item.service.name);
     if (survey === undefined || survey.extractor === null || item.graph === undefined) continue;
     const carried = item.facts;
+    // What stood in, for the names this reading wanted (P83): answered from
+    // the index the build handed it, with the shape files as the survey hashed
+    // them before anything was read (one hash per file a build). A reading
+    // that did not say what it wanted records nothing, and the next build
+    // reads it again.
+    const standIns =
+      survey.standIns === undefined || carried?.wants === undefined
+        ? undefined
+        : standInsOf(item.service, carried.wants);
     cache.repos[item.service.name] = {
       repo: survey.repo,
       extractor: survey.extractor,
@@ -1226,6 +1276,7 @@ const nextCache = (
       globalFiles: carried?.globalFiles ?? survey.globalFiles,
       files: carried?.files ?? survey.files,
       packages: carried?.packages ?? survey.packages,
+      ...(standIns === undefined ? {} : { standIns }),
       graphPath: survey.graphPath,
       graphHash: hashGraphFile(survey.graphPath),
       counts: repoCountsOf(item.graph),

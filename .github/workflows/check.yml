@@ -24,3 +24,23 @@ jobs:
       # invariants, snapshots.
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+
+  # Builds and runs the unit tests on Windows (P83). Informational, not a gate:
+  # the fixture snapshots hold POSIX paths and are not run here, and whether
+  # this job becomes required is a decision for the repository's settings.
+  windows-unit:
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: pnpm -r test
