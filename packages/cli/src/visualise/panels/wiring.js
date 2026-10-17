@@ -6,8 +6,8 @@ import { parseMapHash } from '../map.js';
    own, the controls every tab shares, the colophon, and the first view. */
 export function wirePage(page) {
   const { LB, MT, capSel, copyText, depthSel, drawBusiest, drawChanges, drawCrossings, drawEntries, drawMissing,
-    drawSteps, drawWalk, entryIx, entrySearch, esc, flash, fullScreen, graph, graphView, keys, kindSelect,
-    mapController, nodes, notice, reachesCrossing, reopen, repoName, root, setMapFull, startCard, stepsView, store,
+    drawSteps, drawWalk, entryIx, esc, flash, fullScreen, graph, graphView, keys, kindSelect,
+    mapController, nodes, notice, reachesCrossing, reopen, repoName, root, seen, setMapFull, startCard, stepsView, store,
     walkEl } = page;
 
   /* ── wiring ──────────────────────────────────────────────────────── */
@@ -17,15 +17,20 @@ export function wirePage(page) {
   const legendEl = document.getElementById('legend');
   const tabs = [...document.querySelectorAll('.tab')];
   const mapViewEl = document.getElementById('map-view');
+  const workEl = document.querySelector('.work');
 
+  /* The keys are listed once, in the `?` overlay (P101), which every legend
+     that has keys points at. */
+  const KEYS_LEGEND = '<span><b>keys</b> <button class="link-button" data-keys-open>press ? for every key</button></span>';
   const WALK_LEGEND =
-    '<span><b>Trust</b> static, read from the code &middot; marker, an annotation said so &middot; heuristic, a guess</span>' +
+    '<span><b>unmarked</b> read from the code &middot; <b>annotated</b> an annotation said so &middot; ' +
+    '<b>best guess</b> inferred, may be wrong</span>' +
     '<span><b>:param</b> a route hole, so one address matches every id</span>';
   const line = (dash) => `<svg width="30" height="8" aria-hidden="true"><path d="M1 4H29" stroke="currentColor" ` +
     `stroke-width="1.6" stroke-linecap="round"${dash ? ` stroke-dasharray="${dash}"` : ''}/></svg>`;
   const GRAPH_LEGEND =
-    `<span>${line('')} static</span><span>${line('6 4')} heuristic</span>` +
-    `<span>${line('0.5 4')} marker, declared</span>` +
+    `<span>${line('')} read from code</span><span>${line('6 4')} best guess</span>` +
+    `<span>${line('0.5 4')} annotated, declared</span>` +
     '<span><b>band</b> one service; a coloured line leaving it crosses into another</span>' +
     '<span><b>stacked box</b> a group, with its count; click to open</span>' +
     '<span><b>2 guards &middot; 1 pipe</b> plumbing folded onto a way in; click to draw it</span>' +
@@ -36,9 +41,7 @@ export function wirePage(page) {
     '<span><b>Types</b> a line under each node of what it takes and gives back; click a type in the ' +
     'details to open its fields, <i>expand all</i> or E to open everything under it</span>' +
     '<span><b>hover</b> lights the way from the focus, and shows what a node takes and gives back; ' +
-    'on a type in the details, its fields</span>' +
-    '<span><b>keys</b> arrows move &middot; Enter opens &middot; + expands &middot; O who else &middot; W unfolds plumbing &middot; ' +
-    'T types &middot; E opens a type all the way &middot; F full screen &middot; Escape closes &middot; double-click centres</span>';
+    'on a type in the details, its fields</span>' + KEYS_LEGEND;
 
   const swatch = (kind) => `<span class="m-swatch m-k-${kind}"></span>`;
   const MAP_LEGEND =
@@ -48,12 +51,10 @@ export function wirePage(page) {
     `<span>${swatch('http')} requests &middot; ${swatch('message')} messages &middot; ${swatch('workflow')} workflow starts ` +
     `&middot; ${swatch('invoke')} invokes &middot; ${swatch('db')} queries &middot; ${swatch('external')} outside &middot; ` +
     `${swatch('calls')} calls &middot; ${swatch('package')} depends on</span>` +
-    '<span><b>thicker</b> more edges, or seen at run time &middot; <b>solid</b> certain &middot; <b>dashed</b> a best guess among them</span>' +
+    '<span><b>thicker</b> more edges, or seen at run time &middot; <b>solid</b> read from code or annotated &middot; <b>dashed</b> a best guess among them</span>' +
     '<span><b>hover</b> dims what a box does not touch</span>' +
     '<span><b>stacked box</b> a family of names, closed; click to open &middot; <b>frame</b> an open family; ' +
-    'its name closes it</span>' +
-    '<span><b>keys</b> Tab moves &middot; Enter opens &middot; F full screen &middot; Escape closes &middot; ' +
-    'double-click draws one box and what it touches</span>';
+    'its name closes it</span>' + KEYS_LEGEND;
 
   const STEPS_LEGEND =
     '<span><b>order</b> depth first, as the source calls: a handler, its services, the stores, calls and ' +
@@ -61,7 +62,8 @@ export function wirePage(page) {
     '<span><b>in</b> handler &middot; <b>fn</b> service &middot; <b>db</b> store &middot; <b>http</b> outbound call &middot; ' +
     '<b>ch</b> queue or topic &middot; <b>&lambda;</b> function &middot; <b>wf</b> workflow</span>' +
     '<span><b class="g-key-bad">red</b> a failure path &middot; <b>side by side</b> runs beside its siblings &middot; ' +
-    '<b>best guess</b> a join that was inferred, dashed &middot; <b>seen &times;n</b> seen at run time</span>' +
+    '<b>best guess</b> a join that was inferred, dashed &middot; <b>annotated</b> one an annotation made &middot; ' +
+    'unmarked, read from code &middot; <b>seen &times;n</b> seen at run time</span>' +
     '<span><b>per item</b> runs once per item of a loop &middot; <b>likely N+1</b> a query reached per item &middot; ' +
     '<b class="g-key-bad">throws</b> where a failure the way in can answer with is raised &middot; <b>logs</b> the lines a step logs</span>' +
     '<span><b class="g-key-bad">&#x2715; chain breaks</b> where a call finds no route, a way in no handler, or an address was not read</span>' +
@@ -75,6 +77,9 @@ export function wirePage(page) {
   const DEFAULT_VIEW = 'map';
   const SHOWS_A_WAY_IN = new Set(['walk', 'steps']);
   const TABLES = new Set(['crossings', 'missing', 'busiest', 'changes']);
+  /* The tabs that never read the way in picked: the Ways in list steps aside
+     and the tab takes the width (P101). */
+  const WIDE = new Set(['crossings', 'busiest', 'changes']);
   const viewHashNow = (where) => {
     const name = store.get('view');
     const current = store.get('current');
@@ -109,6 +114,7 @@ export function wirePage(page) {
     viewNotice.clear();
     store.set('view', name);
     root.classList.toggle('is-map', name === 'map');
+    workEl.classList.toggle('is-wide', WIDE.has(name));
     for (const tab of tabs) tab.setAttribute('aria-selected', String(tab.dataset.view === name));
     controls.hidden = name !== 'walk';
     tableBar.hidden = !TABLES.has(name);
@@ -244,13 +250,16 @@ export function wirePage(page) {
     if (!twice) followHash();
   });
 
-  entrySearch.addEventListener('input', drawEntries);
   kindSelect.addEventListener('change', drawEntries);
   depthSel.addEventListener('change', drawWalk);
   capSel.addEventListener('change', drawWalk);
 
+  /* Read from code, and - only where a trace was imported, which the band's
+     run-time pill then counts - what was seen running beside it. */
   document.getElementById('colophon').innerHTML =
-    'Everything here was read from source, never run. A path shown as <code>/orders/:param/cancel</code> ' +
+    'Read from the source code.' +
+    (seen.any ? ' Where a trace was imported, what was seen at run time is shown beside it.' : '') +
+    ' A path shown as <code>/orders/:param/cancel</code> ' +
     'is the route as registered; a caller writes a real id there. Where a call could not be ' +
     'followed, it appears under <b>Not joined</b> with the reason rather than being dropped, which is the ' +
     'difference between a map and a guess.';

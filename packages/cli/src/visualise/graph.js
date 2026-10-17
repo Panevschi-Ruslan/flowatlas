@@ -869,7 +869,9 @@ const nodesOfType = (model, wanted) => {
 /**
  * What one search box looks through, as a strategy per group: each says what
  * its items are called and lists them as `{ label, sub, node }`, `node` being
- * the position a hit opens, or -1 when there is none to open.
+ * the position a hit opens, or -1 when there is none to open. A gap carries its
+ * `reason` too, which the page opens Not joined on and says in words (`say`,
+ * handed in by `findEverything`); the code itself is still found.
  */
 export const FIND_GROUPS = Object.freeze({
   routes: Object.freeze({ say: 'Routes and ways in', items: (model) => nodesOfType(model, 'entry') }),
@@ -886,13 +888,13 @@ export const FIND_GROUPS = Object.freeze({
   }),
   gaps: Object.freeze({
     say: 'Gaps',
-    items: (model) => {
+    items: (model, say) => {
       const { reasons, files } = model.data.dicts;
-      return (model.data.rows || []).map((row) => ({
-        label: String(row[ROW.message]),
-        sub: reasons[row[ROW.reason]] + (row[ROW.file] >= 0 && files[row[ROW.file]] ? ' · ' + files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : ''),
-        node: row[ROW.node],
-      }));
+      return (model.data.rows || []).map((row) => {
+        const reason = reasons[row[ROW.reason]];
+        const sub = say(reason) + (row[ROW.file] >= 0 && files[row[ROW.file]] ? ' · ' + files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : '');
+        return { label: String(row[ROW.message]), sub, node: row[ROW.node], reason, hay: `${row[ROW.message]} ${sub} ${reason}` };
+      });
     },
   }),
   fails: Object.freeze({
@@ -941,29 +943,53 @@ export const FIND_GROUPS = Object.freeze({
   }),
 });
 
+/** A node found by `search`, as the one search lists it: its service, kind and file. */
+const nodeHit = (model, i) => {
+  const { types, kinds, repos, files } = model.data.dicts;
+  const node = model.nodes[i];
+  const file = node[FIELD.file] >= 0 && files[node[FIELD.file]] ? files[node[FIELD.file]].split('/').pop() : '';
+  return {
+    label: node[FIELD.label],
+    sub: [repos[node[FIELD.repo]], kinds[node[FIELD.kind]] || types[node[FIELD.type]],
+      file ? file + (node[FIELD.line] ? ':' + node[FIELD.line] : '') : ''].filter(Boolean).join(' · '),
+    node: i,
+  };
+};
+
 /**
  * Every route, channel, table, type, gap, failure and class whose name or note holds
  * every word typed, a group at a time: a name that starts with the words
- * first, shorter names before longer. Each group carries its total, so the
- * list can say how many it did not show.
+ * first, shorter names before longer; then every node `search` finds, ranked
+ * the way it ranks them (P101: the Graph tab's own search box went, so what it
+ * found is a group here). Each group carries its total, so the list can say
+ * how many it did not show.
+ *
+ * `say` words a gap's reason; the index is built on the first call, with the
+ * words that call was handed.
  */
-export const findEverything = (model, query, limit = 8) => {
+export const findEverything = (model, query, limit = 8, say = (reason) => reason) => {
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (terms.length === 0) return [];
   if (!model.findIndex) {
     model.findIndex = Object.entries(FIND_GROUPS).map(([key, group]) => ({
       key, say: group.say,
-      items: group.items(model).map((item) => ({ ...item, hay: (item.hay ?? item.label + ' ' + item.sub).toLowerCase() })),
+      items: group.items(model, say).map((item) => ({ ...item, hay: (item.hay ?? item.label + ' ' + item.sub).toLowerCase() })),
     }));
   }
   const text = terms.join(' ');
-  return model.findIndex.map(({ key, say, items }) => {
+  const groups = model.findIndex.map(({ key, say: title, items }) => {
     const hits = items
       .filter((item) => terms.every((term) => item.hay.includes(term)))
       .map((item) => [item.label.toLowerCase().startsWith(text) ? 0 : 1, item.label.length, item]);
     hits.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-    return { key, say, total: hits.length, hits: hits.slice(0, limit).map(([, , { label, sub, node }]) => ({ label, sub, node })) };
-  }).filter((group) => group.total > 0);
+    return {
+      key, say: title, total: hits.length,
+      hits: hits.slice(0, limit).map(([, , { label, sub, node, reason }]) => (reason === undefined ? { label, sub, node } : { label, sub, node, reason })),
+    };
+  });
+  const nodes = search(model, query, limit);
+  groups.push({ key: 'nodes', say: 'Nodes', total: nodes.total, hits: nodes.hits.map((i) => nodeHit(model, i)) });
+  return groups.filter((group) => group.total > 0);
 };
 
 /**

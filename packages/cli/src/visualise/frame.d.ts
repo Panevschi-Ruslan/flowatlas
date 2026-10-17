@@ -77,3 +77,27 @@ export declare const DRAWER: Readonly<{ min: number; max: number; leave: number 
 export declare const drawerWidth: (wanted: number, room: number) => number;
 export declare const pictureScale: (width: number, height: number, wanted?: number) => number;
 export declare const pictureName: (project: string, label: string, ext: string) => string;
+
+/** The words the page says for codes, by kind of code. */
+export declare const PAGE_WORDS: Readonly<{
+  reason: Readonly<Record<string, string>>;
+  edge: Readonly<Record<string, string>>;
+  trust: Readonly<Record<string, string>>;
+}>;
+export declare const wordFor: (kind: 'reason' | 'edge' | 'trust', code: string) => string;
+
+/** A key the page answers, where, and what it does; `keys` empty for a gesture. */
+export interface Shortcut {
+  id: string;
+  where: 'anywhere' | 'find' | 'graph' | 'map' | 'menu';
+  keys: readonly string[];
+  mod?: boolean;
+  say: string;
+  what: string;
+}
+export declare const SHORTCUTS: readonly Shortcut[];
+export declare const SHORTCUT_PLACES: Readonly<Record<Shortcut['where'], string>>;
+export declare const pressed: (
+  id: string,
+  event: { key: string; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean },
+) => boolean;

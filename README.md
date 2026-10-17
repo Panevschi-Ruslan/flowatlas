@@ -394,7 +394,8 @@ follow* sheet that groups it by cause and package, accepted gaps muted.
 **Busiest** ranks the methods most things lean on, with the ways in that reach
 each. **Changes**, with `--diff`, lists what a branch adds and removes, the
 removed routes something still calls, and shapes that moved. One search box
-above the tabs finds a route, channel, table, type, gap, class or exception; see
+above the tabs (`/`) finds a route, channel, table, type, gap, class, exception or
+node and goes to it, marked; `?` lists every key and ⌘K the commands; see
 [`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
 
 It is a report you can click, not a viewer you keep running. A page generated

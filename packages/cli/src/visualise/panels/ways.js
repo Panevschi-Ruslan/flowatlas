@@ -1,8 +1,8 @@
 import { failsOf, scheduleOf } from '../steps.js';
 
-/* The Ways in list on the left: every entry and screen action the rail and
-   the filters let through, the kind select, and what picking one does on
-   each tab. */
+/* The Ways in list on the left: every entry and screen action the rail, the
+   kind select and the search's "Filter the list" let through, and what
+   picking one does on each tab. */
 export function createWays(page) {
   const { FL, KD, LB, MT, RP, entryIx, esc, failChipsHtml, files, graphLink, hueOf, kinds, model, nodes,
     repoName, scheduleSay, seen, store, typeName } = page;
@@ -17,12 +17,22 @@ export function createWays(page) {
     kindSelect.append(o);
   }
 
-  const entrySearch = document.getElementById('search');
   const listEl = document.getElementById('entries');
   const countEl = document.getElementById('entry-count');
 
+  /* What the search handed the list to filter by (P101): the list's own box
+     went, so a "Filter the list to …" hit of the one search sets it, and a
+     chip above the list says so and takes it off. */
+  const filterEl = document.getElementById('list-filter');
+  let listFilter = '';
+  const filterWays = (query) => {
+    listFilter = String(query || '').trim();
+    drawEntries();
+  };
+  filterEl.addEventListener('click', (event) => { if (event.target.closest('[data-filter-clear]')) filterWays(''); });
+
   const matches = () => {
-    const q = entrySearch.value.trim().toLowerCase();
+    const q = listFilter.toLowerCase();
     const kind = kindSelect.value;
     return entryIx.filter((i) => {
       if (!shown.has(repoName(i))) return false;
@@ -35,12 +45,21 @@ export function createWays(page) {
   function drawEntries() {
     const found = matches();
     countEl.textContent = found.length.toLocaleString() + ' of ' + entryIx.length.toLocaleString();
+    const current = store.get('current');
+    const hidesCurrent = listFilter !== '' && current !== null && entryIx.includes(current) && !found.includes(current);
+    filterEl.hidden = listFilter === '';
+    filterEl.innerHTML = listFilter === '' ? ''
+      : `<span class="chip is-on">filtered: <b>${esc(listFilter)}</b>` +
+        '<button class="chip-x" data-filter-clear aria-label="Clear the filter" title="Clear the filter">&times;</button></span>' +
+        (hidesCurrent ? '<span class="hint">picked way in hidden by the filter ' +
+          '<button class="tool" data-filter-clear>Clear</button></span>' : '');
     listEl.replaceChildren();
     const frag = document.createDocumentFragment();
     for (const i of found.slice(0, 400)) {
       const li = document.createElement('li');
       const b = document.createElement('button');
       b.className = 'row';
+      b.dataset.entry = String(i);
       b.style.setProperty('--hue', hueOf(nodes[i][RP]));
       if (i === store.get('current')) b.setAttribute('aria-current', 'true');
       const meta = nodes[i][MT] || {};
@@ -69,11 +88,11 @@ export function createWays(page) {
     }
     if (found.length > 400) {
       const li = document.createElement('li');
-      li.innerHTML = `<div class="cut" style="margin:8px 12px">${(found.length - 400).toLocaleString()} more. Narrow the filter.</div>`;
+      li.innerHTML = `<div class="cut" style="margin:8px 12px">${(found.length - 400).toLocaleString()} more. Pick a kind, or filter the list from the search, to narrow it.</div>`;
       frag.append(li);
     }
     listEl.append(frag);
   }
 
-  return { drawEntries, entrySearch, kindSelect };
+  return { drawEntries, filterWays, kindSelect };
 }

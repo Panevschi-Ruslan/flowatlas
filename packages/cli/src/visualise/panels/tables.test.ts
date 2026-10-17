@@ -16,7 +16,13 @@ describe('the table tabs', () => {
     const cells = rows[0]!.querySelectorAll('td').map(textOf);
     expect(cells[0]).toMatch(/^gateway orders\.client\.ts:20/);
     expect(cells[1]).toBe('orders');
-    expect(cells[3]).toMatch(/^http_calls · /);
+    // The edge in words, its type in the tooltip; trust said only when it is not read from code (P101).
+    const how = rows[0]!.querySelectorAll('td')[3]!;
+    expect(textOf(how.querySelector('span'))).toBe('requests');
+    expect(how.querySelector('span')!.getAttribute('title')).toBe('http_calls');
+    const trust = data.dicts.confidences[data.edges.find((e) => data.dicts.edgeTypes[e[2]!] === 'http_calls')![3]!];
+    expect(how.querySelectorAll('.trust')).toHaveLength(trust === 'static' ? 0 : 1);
+    expect(textOf(document.querySelector('#walk thead'))).not.toContain('Trust');
   });
 
   it('ranks the busiest methods and says how they are ranked', () => {

@@ -5,7 +5,7 @@ import { acceptCommandFor } from '../steps.js';
    which rule, and what the reader could not follow, by cause (P75). */
 export function createMissing(page) {
   const { acceptLikeHtml, accepted, acceptedNote, acceptedRule, appendUnmatched, data, esc, files,
-    graphLink, plural, reasons, rowService, titleEl, walkEl } = page;
+    graphLink, plural, reasons, rowService, titleEl, walkEl, wordHtml } = page;
 
   /* ── what did not join, and why ──────────────────────────────────── */
 
@@ -26,7 +26,7 @@ export function createMissing(page) {
       const file = row[ROW.file] >= 0 ? files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : '';
       const note = acceptedNote(r);
       const rule = acceptedRule(r);
-      return `<tr class="is-accepted"><td><span class="tag">${esc(reasons[row[ROW.reason]])}</span>` +
+      return `<tr class="is-accepted"><td>${wordHtml('reason', reasons[row[ROW.reason]], 'tag')}` +
         (rule ? `<div class="accepted-note">accepted by rule <code>${esc(rule)}</code></div>` : '') + '</td>' +
         `<td class="mono">${rowService(row) ? esc(rowService(row)) + ' &middot; ' : ''}${esc(file)}` +
         `${row[ROW.node] >= 0 ? ' ' + graphLink(row[ROW.node]) : ''}<div>${esc(row[ROW.message])}</div></td>` +
@@ -70,7 +70,7 @@ export function createMissing(page) {
         `<span class="cf-count"><b>${cause.s.toLocaleString()}</b> ${cause.s === 1 ? 'place' : 'places'}</span>` +
         `<span class="cf-bar" aria-hidden="true"><span style="width:${Math.max(2, Math.round((cause.s / top) * 100))}%"></span></span>` +
         `<span class="hint">${cause.v.length === 1 ? esc(cause.v[0]) : plural(cause.v.length, 'service', 'services')}</span></summary>` +
-        `<div class="cf-body"><p class="hint">${esc(cause.h)}${reasons.length ? ' Rows: ' + reasons.map(esc).join(', ') + '.' : ''}</p>` +
+        `<div class="cf-body"><p class="hint">${esc(cause.h)}${reasons.length ? ' Rows: ' + reasons.map((reason) => wordHtml('reason', reason)).join(', ') + '.' : ''}</p>` +
         `<ul class="cf-pkgs">${packages}</ul>` +
         (cause.more ? `<p class="hint">${plural(cause.more, 'more package', 'more packages')}</p>` : '') + '</div></details>';
     }).join('');
@@ -128,7 +128,7 @@ export function createMissing(page) {
       const anchor = example === undefined ? -1 : example[ROW.node];
       const at = example === undefined ? -1 : data.rows.indexOf(example);
       tr.innerHTML =
-        `<td><span class="tag${tone ? ' is-' + tone : ''}">${esc(u.reason)}</span></td>` +
+        `<td>${wordHtml('reason', u.reason, 'tag' + (tone ? ' is-' + tone : ''))}</td>` +
         `<td class="num">${(showAccepted ? u.count : u.count - taken).toLocaleString()}` +
         (taken ? `<div class="accepted-note">${taken.toLocaleString()} accepted</div>` : '') + '</td>' +
         `<td class="mono">${u.service ? esc(u.service) + ' &middot; ' : ''}${esc(u.example)}` +

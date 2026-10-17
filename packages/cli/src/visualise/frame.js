@@ -13,6 +13,10 @@
  *   pinch         a two-finger move as a pan and a zoom
  *   drawerWidth   how wide the details panel may be dragged
  *   pictureScale, pictureName   what an export is drawn at and called
+ *   PAGE_WORDS, wordFor   the words the page says for a reason, an edge's
+ *                 type and its trust, the code kept for the tooltip
+ *   SHORTCUTS, pressed   every key the page answers, which the handlers and
+ *                 the `?` overlay both read
  */
 
 /** Hops a view may ask for. More than three is most of any graph. */
@@ -249,4 +253,297 @@ export const pictureName = (project, label, ext) => {
   const part = (text) => String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const name = [part(project), part(label).slice(0, 60)].filter(Boolean).join('-') || 'graph';
   return name + '.' + ext;
+};
+
+/* ── Plain words for the codes the page shows (P101) ── */
+
+/**
+ * What the page says for a code a reader would otherwise be handed raw: a
+ * check row's reason, an edge's type as a verb, and how far an edge is
+ * trusted. The code stays wherever a machine reads it - the address, a prompt,
+ * the MCP server - and in the tooltip of the word, so it can be found and
+ * copied. One table, so the words can be reviewed together and cannot drift
+ * from panel to panel.
+ */
+export const PAGE_WORDS = Object.freeze({
+  reason: Object.freeze({
+    'ambiguous-handler': 'two handlers for one route',
+    'ambiguous-route': 'several routes answer the call',
+    'ambiguous-route-api': 'several APIs serve the address',
+    'ambiguous-route-application': 'several applications serve the address',
+    'ambiguous-route-target': 'base setting names no one service',
+    'api-base-override-unread': 'own base address not read',
+    'api-base-unknown': 'base address setting unknown',
+    'api-body-unread': 'API description not read',
+    'api-client-unread': 'client class not followed',
+    'api-method-dynamic': 'verb chosen at run time',
+    'api-path-dynamic': 'address built at run time',
+    'application-root-unread': 'application root not named',
+    'base-url-from-files': 'base address taken from a file',
+    'base-url-from-name': 'base address guessed from its name',
+    'body-already-serialised': 'body sent already serialised',
+    'bootstrap-not-found': 'bootstrap file not found',
+    'bot-handlers-not-found': 'bot handlers not found',
+    'bucket-notification-unread': 'bucket notification not read',
+    'call-dynamic-receiver': 'call on an untyped receiver',
+    'call-module-ref': 'resolved through the container',
+    'call-through-token': 'call through a token not followed',
+    'channel-const-unresolved': 'channel constant not read',
+    'channel-dynamic': 'channel name built at run time',
+    'channel-from-config': 'channel name read from settings',
+    'channel-from-environment': 'channel from an environment variable',
+    'channel-without-consumer': 'nothing consumes the channel',
+    'channel-without-producer': 'nothing publishes to the channel',
+    'consumer-handler-unresolved': 'listener does more than delegate',
+    'db-call-at-module-level': 'query runs on import',
+    'db-handover-unstated': 'data handover not typed',
+    'db-layer-unread': 'data layer not recognised',
+    'db-package-unread': 'data package not described',
+    'db-receiver-name-only': 'data layer known by name only',
+    'decorator-arg-dynamic': 'decorator argument computed',
+    'delivered-onward': 'message handed onward',
+    'delivery-target-unread': 'delivery target outside the project',
+    'deployment-unread': 'no deployment description read',
+    'di-token-ambiguous': 'token provided twice',
+    'di-token-unknown': 'token nothing provides',
+    'di-type-unresolved': 'injected type not resolved',
+    'document-age': 'how old the document is',
+    'duplicate-node-id': 'one id in two repositories',
+    'dynamic-bot-trigger': 'bot trigger computed',
+    'dynamic-cache-key': 'cache key built at run time',
+    'dynamic-config-key': 'config key computed',
+    'dynamic-http-url': 'request address built at run time',
+    'dynamic-table-name': 'table name not written out',
+    'entry-http-description-inactive': 'route description unused',
+    'entry-http-routes-unmatched': 'route description matched no routes',
+    'entry-http-routes-unplaced': 'some routes have no address',
+    'entry-http-types-unmatched': 'route description matched no types',
+    'entry-procedures-description-inactive': 'procedure description unused',
+    'entry-registry-unconfigured': 'handler table not configured',
+    'envelope-unread': 'message reshaped on the way',
+    'environment-from-files': 'environment value taken from a file',
+    'environment-not-set': 'environment variable not set',
+    'environment-value-unread': 'environment value not read',
+    'event-pattern-unread': 'event pattern not read',
+    'fails-filter-unread': 'exception filter status not read',
+    'file-not-parsed': 'file could not be parsed',
+    'function-handler-ambiguous': 'function handler ambiguous',
+    'function-handler-not-found': 'function handler not found',
+    'function-handler-unread': 'function handler not read',
+    'function-image-unread': 'function is a container image',
+    'function-name-disputed': 'function named two ways',
+    'function-name-unread': 'function name not settled',
+    'function-repeated-unread': 'repeated functions not settled',
+    'function-runtime-unread': 'function runtime not read',
+    'function-source-unread': 'function source not found',
+    'global-wrapper-dynamic': 'global wrapper not read',
+    'handler-not-a-method': 'binding is not a method',
+    'handler-not-found': 'handler method not declared',
+    'handler-unread': 'handler not read',
+    'infra-file-unparsed': 'configuration file did not parse',
+    'infra-module-description-invalid': 'module description invalid',
+    'infra-module-missing': 'module directory missing',
+    'infra-module-undescribed': 'outside module not described',
+    'inject-token-unresolved': 'token is not a class',
+    'invoke-target-ambiguous': 'two functions of one name',
+    'invoke-target-not-found': 'invoked function not deployed here',
+    'invoker-not-read': 'who runs the function not read',
+    'iot-action-not-read': 'rule action not followed',
+    'marker-reason-missing': 'public marker gives no reason',
+    'marker-route-not-found': 'annotated route not found',
+    'marker-service-unknown': 'annotated service not configured',
+    'message-undeclared': 'message type not declared',
+    'message-unparsed': 'message not parsed into a type',
+    'middleware-matcher-unread': 'middleware matcher not read',
+    'middleware-route-dynamic': 'middleware route computed',
+    'module-controllers-unread': 'module controllers not read',
+    'module-import-dynamic': 'module import computed',
+    'module-providers-unread': 'module providers not read',
+    'no-type-on-receiver': 'receiver has no type',
+    'no-type-on-sender': 'sender has no type',
+    'orphan-scene-decorator': 'scene step outside a scene',
+    'orphan-update-decorator': 'bot handler outside an update class',
+    'package-from-repo': 'package read from its source',
+    'package-source-ambiguous': 'two sources for one package',
+    'package-version-differs': 'package source is another version',
+    'payload-type-unknown': 'no payload on the channel',
+    'procedure-ambiguous': 'procedure declared twice',
+    'procedure-branch-unread': 'procedure branch not followed',
+    'procedure-call-mismatch': 'procedure called the wrong way',
+    'procedure-input-by-name': 'procedure input known by name',
+    'procedure-key-dynamic': 'procedure key computed',
+    'procedure-members-unmatched': 'procedure description matched nothing',
+    'procedure-not-found': 'procedure not found',
+    'procedure-output-inferred': 'procedure output inferred',
+    'procedure-path-dynamic': 'procedure path computed',
+    'procedure-router-unread': 'procedure tree not read',
+    'procedure-trees-unmatched': 'no procedure tree found',
+    'query-in-loop': 'query inside a loop',
+    'reference-ambiguous': 'deployed name declared twice',
+    'reference-not-found': 'deployed name not found',
+    'registry-handler-anonymous': 'registered handler has no name',
+    'registry-key-dynamic': 'registry key computed',
+    'route-api-guessed': 'API guessed from the setting name',
+    'route-base-path-unread': 'API base path not read',
+    'route-checked-in-body': 'route checks access in its body',
+    'route-claimed-twice': 'two files claim one route',
+    'route-config-unread': 'route configuration not read',
+    'route-file-not-served': 'route file not served',
+    'route-guard-skipped': 'guard switched off',
+    'route-handler-anonymous': 'route handler built at run time',
+    'route-handler-unread': 'route handler not read',
+    'route-link-dynamic': 'link built at run time',
+    'route-loader-unread': 'route loader not read',
+    'route-module-not-found': 'route module not found',
+    'route-mount-assumed-empty': 'mount taken as empty',
+    'route-mount-unread': 'mount path not read',
+    'route-path-dynamic': 'route path computed',
+    'route-path-unread': 'route path not settled',
+    'route-public-declared': 'route public on purpose',
+    'route-registry-unread': 'mounted applications not read',
+    'route-root-ambiguous': 'API root placed twice',
+    'route-root-not-found': 'API root not found',
+    'route-screen-unread': 'screen behind the route not read',
+    'route-shadowed': 'route answered before the application',
+    'route-target-unread': 'route target not read',
+    'route-target-unresolved': 'no route answers the link',
+    'route-unguarded': 'no guard in front',
+    'route-verb-unread': 'route file exports no verb',
+    'route-wildcard-only': 'only a wildcard route answers',
+    's3-write-matches-nothing': 'bucket write notifies nothing',
+    'sender-forwards': 'message forwarded',
+    'server-action-unread': 'server action not read',
+    'service-binding-unknown': 'service binding unknown',
+    'service-read-nothing': 'service read nothing',
+    'shape-file-unmatched': 'shape file not used',
+    'shape-file-unread': 'shape file not read',
+    'sql-parse-failed': 'query text not written out',
+    'start-from-environment': 'what it starts is an environment variable',
+    'start-name-unread': 'what it starts not read',
+    'starter-undescribed': 'starting helper not described',
+    'stream-filter-not-matched': 'stream filter not evaluated',
+    'stream-no-writer': 'nothing writes the stream',
+    'subscription-forward-unread': 'forwarded events not named',
+    'subscription-matches-nothing': 'rule matches nothing published',
+    'subscription-source-unread': 'subscription source not read',
+    'subscription-target-unread': 'subscription target not read',
+    'target-route-not-found': 'route not found on the target',
+    'template-not-found': 'template not found',
+    'template-not-parsed': 'template did not parse',
+    'test-directory-skipped': 'test directory skipped',
+    'type-depth-exceeded': 'type nested too deep',
+    'type-generic-uninstantiated': 'type argument unknown',
+    'type-kind-unsupported': 'kind of type not supported',
+    'type-missing': 'type missing',
+    'type-unresolved': 'type not resolved',
+    'unknown-base-url-env': 'base address setting names no service',
+    'unknown-db-operation': 'query neither reads nor writes',
+    'unknown-db-package': 'data package unknown',
+    'wizard-step-conflict': 'two wizard steps share a number',
+    'workflow-definition-invalid': 'workflow definition invalid',
+    'workflow-definition-not-loaded': 'workflow definition not read',
+    'workflow-definition-unreadable': 'workflow definition unreadable',
+    'workflow-name-duplicate': 'two workflows of one name',
+    'workflow-name-unread': 'workflow name not settled',
+    'workflow-named-by-file': 'workflow named after its file',
+    'workflow-target-dynamic': 'step target chosen at run time',
+    'workflow-target-unreadable': 'step target not named',
+    'workflow-template-unbound': 'step target is a placeholder',
+  }),
+  edge: Object.freeze({
+    imports: 'imports',
+    injects: 'injects',
+    calls: 'calls',
+    handles: 'handled by',
+    guarded_by: 'guarded by',
+    queries: 'queries',
+    caches: 'caches',
+    emits: 'publishes',
+    consumes: 'consumes',
+    http_calls: 'requests',
+    hits: 'answered by',
+    triggers: 'starts',
+    reads_config: 'reads config',
+  }),
+  /* `marker` and `declared` keep a word each: the Graph's trust filter lists
+     both, and core keeps them apart on purpose (model/edges.ts). */
+  trust: Object.freeze({
+    static: 'read from code',
+    marker: 'annotated',
+    declared: 'declared',
+    heuristic: 'best guess',
+    runtime: 'seen at run time',
+  }),
+});
+
+/**
+ * The word for a code: `wordFor('reason', 'route-unguarded')` is "no guard in
+ * front". A code the table has no word for reads as itself with its dashes and
+ * underscores as spaces, so a new reason is still words on the page.
+ */
+export const wordFor = (kind, code) => {
+  const table = PAGE_WORDS[kind];
+  const text = String(code ?? '');
+  return table !== undefined && Object.prototype.hasOwnProperty.call(table, text) ? table[text] : text.replace(/[-_]+/g, ' ');
+};
+
+/* ── The page's keys (P101) ── */
+
+/**
+ * Every key the page answers, where it works and what it does: the handlers
+ * ask `pressed(id, event)` and the `?` overlay lists the table, so a key that
+ * exists is always one a person can find. `keys` are `KeyboardEvent.key`
+ * values; `mod` is Ctrl or ⌘ held; an entry with no keys is a gesture, listed
+ * for completeness. `where` groups them in the overlay.
+ */
+export const SHORTCUTS = Object.freeze([
+  { id: 'find', where: 'anywhere', keys: ['/'], say: '/', what: 'search everything' },
+  { id: 'palette', where: 'anywhere', keys: ['k', 'K'], mod: true, say: '⌘K or Ctrl+K', what: 'run a command' },
+  { id: 'help', where: 'anywhere', keys: ['?'], say: '?', what: 'these keys' },
+  { id: 'press', where: 'anywhere', keys: ['Enter', ' '], say: 'Enter or Space', what: 'press what the keyboard is on: a pill, a box, a button' },
+  { id: 'close', where: 'anywhere', keys: ['Escape'], say: 'Escape', what: 'close the note, list or card that is open' },
+  { id: 'find.move', where: 'find', keys: ['ArrowDown', 'ArrowUp'], say: '↓ ↑', what: 'move through what was found' },
+  { id: 'find.go', where: 'find', keys: ['Enter'], say: 'Enter', what: 'go to it, marked' },
+  { id: 'find.close', where: 'find', keys: ['Escape'], say: 'Escape', what: 'clear the search, or stop picking a path’s end' },
+  { id: 'graph.move', where: 'graph', keys: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'], say: '← → ↑ ↓', what: 'move between nodes' },
+  { id: 'graph.open', where: 'graph', keys: ['Enter', ' '], say: 'Enter', what: 'open a node’s details, or a group' },
+  { id: 'graph.expand', where: 'graph', keys: ['+'], say: '+', what: 'draw more of the flow past a node' },
+  { id: 'graph.also', where: 'graph', keys: ['o', 'O'], say: 'O', what: 'who else uses a node' },
+  { id: 'graph.plumbing', where: 'graph', keys: ['w', 'W'], say: 'W', what: 'unfold the plumbing in front of a node' },
+  { id: 'graph.types', where: 'graph', keys: ['t', 'T'], say: 'T', what: 'types under every node' },
+  { id: 'graph.type-all', where: 'graph', keys: ['e', 'E', '*'], say: 'E', what: 'open a type in the details all the way' },
+  { id: 'graph.full', where: 'graph', keys: ['f', 'F'], say: 'F', what: 'full screen' },
+  { id: 'graph.close', where: 'graph', keys: ['Escape'], say: 'Escape', what: 'close the nearest: a popover, picking an end, the details, an answer, full screen' },
+  { id: 'graph.drawer', where: 'graph', keys: ['ArrowLeft', 'ArrowRight', 'Home', 'End'], say: '← → Home End', what: 'on the edge of the details panel: widen or narrow it' },
+  { id: 'graph.fold', where: 'graph', keys: ['Enter', ' '], say: 'Enter', what: 'on the edge of the details panel: fold it' },
+  { id: 'graph.centre', where: 'graph', keys: [], say: 'double-click', what: 'centre on a node' },
+  { id: 'graph.zoom', where: 'graph', keys: [], say: 'Ctrl or ⌘ + wheel', what: 'zoom; a pinch on a trackpad or a screen too' },
+  { id: 'map.move', where: 'map', keys: [], say: 'Tab', what: 'move between boxes' },
+  { id: 'map.open', where: 'map', keys: ['Enter', ' '], say: 'Enter', what: 'open a box, or a stacked box’s family' },
+  { id: 'map.full', where: 'map', keys: ['f', 'F'], say: 'F', what: 'full screen' },
+  { id: 'map.close', where: 'map', keys: ['Escape'], say: 'Escape', what: 'close the nearest: a notice, the details, one box, full screen' },
+  { id: 'map.focus', where: 'map', keys: [], say: 'double-click', what: 'draw one box and what it touches' },
+  { id: 'map.zoom', where: 'map', keys: [], say: 'Ctrl or ⌘ + wheel', what: 'zoom; a pinch too' },
+  { id: 'menu.move', where: 'menu', keys: ['ArrowDown', 'ArrowUp'], say: '↓ ↑', what: 'move through the commands' },
+  { id: 'menu.run', where: 'menu', keys: ['Enter'], say: 'Enter', what: 'run the command' },
+  { id: 'menu.close', where: 'menu', keys: ['Escape'], say: 'Escape', what: 'close it, or this list, back to where you were' },
+]);
+
+/** The headings the overlay lists the keys under, in its order. */
+export const SHORTCUT_PLACES = Object.freeze({
+  anywhere: 'Anywhere', find: 'In the search', graph: 'On the Graph tab', map: 'On the Map tab', menu: 'In the command list',
+});
+
+const SHORTCUT_BY_ID = new Map(SHORTCUTS.map((shortcut) => [shortcut.id, shortcut]));
+
+/**
+ * Whether a key event is the shortcut `id`. Alt never is; Ctrl or ⌘ only for
+ * a shortcut that asks for it. An id the table does not hold throws, so a
+ * handler cannot answer a key the overlay does not list.
+ */
+export const pressed = (id, event) => {
+  const shortcut = SHORTCUT_BY_ID.get(id);
+  if (shortcut === undefined) throw new Error(`no shortcut ${id}`);
+  if (event.altKey || Boolean(shortcut.mod) !== Boolean(event.ctrlKey || event.metaKey)) return false;
+  return shortcut.keys.includes(event.key);
 };

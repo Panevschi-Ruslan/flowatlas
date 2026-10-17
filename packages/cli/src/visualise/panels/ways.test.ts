@@ -20,17 +20,35 @@ describe('the ways in', () => {
     expect(document.querySelectorAll('#entries a.to-graph')).toHaveLength(page.entryIx.length);
   });
 
-  it('narrows to what the search names and the kind picked', () => {
+  it('narrows to what the search handed it and the kind picked, and says so in a chip that clears it', () => {
     const { page, document } = mountPage(data, { upTo: createWays });
-    const { drawEntries, entrySearch, kindSelect } = createWays(page);
-    entrySearch.value = 'orders';
-    drawEntries();
+    const { drawEntries, filterWays, kindSelect } = createWays(page);
+    expect(document.getElementById('search')).toBeNull();
+    filterWays('orders');
     expect(document.querySelectorAll('#entries button.row').map((row) => textOf(row.querySelector('.row-name'))))
       .toEqual(['POST /orders', 'POST /orders']);
-    entrySearch.value = '';
+    const chip = document.getElementById('list-filter')!;
+    expect(chip.hidden).toBe(false);
+    expect(textOf(chip)).toContain('filtered: orders');
+    chip.querySelector('[data-filter-clear]')!.click();
+    expect(chip.hidden).toBe(true);
+    expect(document.querySelectorAll('#entries button.row')).toHaveLength(page.entryIx.length);
     kindSelect.value = 'event';
     drawEntries();
     expect(document.querySelectorAll('#entries button.row')).toHaveLength(1);
+  });
+
+  it('keeps a way in picked that the filter hides, and says so with a way to clear it', () => {
+    const { page, document } = mountPage(data, { upTo: createWays });
+    const { filterWays } = createWays(page);
+    page.store.set('current', page.entryIx.find((i: number) => !String(page.nodes[i]![1]).includes('orders') &&
+      !page.repoName(i).includes('orders')));
+    filterWays('orders');
+    expect(page.store.get('current')).not.toBeNull();
+    const chip = document.getElementById('list-filter')!;
+    expect(textOf(chip)).toContain('picked way in hidden by the filter');
+    chip.querySelectorAll('[data-filter-clear]')[1]!.click();
+    expect(chip.hidden).toBe(true);
   });
 
   it('picks a way in and opens it on the tab that is open', () => {

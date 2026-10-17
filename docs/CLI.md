@@ -909,7 +909,7 @@ and each service's type, node count and colour.
 names three things worth opening, each worked out from the graph in hand and each a
 link: the *busiest way in* (the one that crosses into other services most often,
 then the one with the most steps; it opens in Steps), the *worst gap* (the gap with
-the most rows to act on; it opens Not joined on that row), and, with `--diff`, the
+the most problems to fix; it opens Not joined on that row), and, with `--diff`, the
 *latest change* (a removed route still called, else the first route added). Its
 close button keeps it closed in this browser; *Start here* in the strip brings it
 back.
@@ -922,15 +922,42 @@ The page is still one readable file; its data is plain JSON in a `<script>`
 block.
 
 **One search box**, beside the service rail, finds a route or other way in, a channel, a
-table, a type, a gap or a class by name, and under *Fails with* the ways in that
-can fail with an exception or a status (`NotFoundException`, `404`). A hit
-opens in the Graph tab, and a way in it opens becomes the one the list, Walk and
-Steps show. The list's own filter matches a path, a name or a service.
+table, a type, a gap (by its message, its reason in words, or the reason's code) or a
+class by name, under *Fails with* the ways in that can fail with an exception or a
+status (`NotFoundException`, `404`), and under *Nodes* every node, by label, type,
+kind, service or file, the way the Graph tab's own search found them (`table orders`
+is the table called `orders`). It is the only search on the page: `/` reaches it from
+anywhere but a field, the arrows move through what it found, Enter goes, and Escape
+clears it and hands the keyboard back. A hit goes to where it is **in the tab that is
+open, when that tab can show it**: a way in is picked on the left, the list scrolls
+to it, and Steps, the Walk or the Map open it (the Map selects its service); a node
+on the Graph tab is focused there; a gap opens Not joined on its row. Anything else
+opens the Graph on it. Where it lands is marked - a strong ring and an accent ground
+that fade after two seconds - and Back returns from it. Its last item, *Filter the
+Ways in list to '…'*, filters the list by path, name or service, which a chip over
+the list then says (*filtered: orders ×*), with a note when the way in picked is one
+it hides. On the Graph tab the box also picks a path's end (see below).
+
+**Words, not codes.** The page says a check row's reason, an edge's type and how far
+an edge is trusted in words - *route not found on the target*, *requests*, *best
+guess* - with the code in the tooltip, and the details panel prints a row's reason
+code beside it to copy. Copy as prompt, links and the MCP server keep the codes. An
+edge read from code says nothing about its trust; only *annotated*, *declared*, *best
+guess* and *seen at run time* are said. Steps no longer marks every row *certain*, so
+the one guess on a way in stands out.
+
+**Keys and commands.** `?` lists every key the page answers, by where it works, from
+the same table the handlers read. ⌘K (Ctrl+K) opens a command list: every tab, the
+open tab's actions (full screen, Types on or off, SVG and PNG export, copy link, copy
+as prompt for the way in picked, problems, filters), and *Search for '…'*, which hands
+what was typed to the search. Arrows, Enter and Escape work it, and on a phone it is
+a sheet the width of the window. Crossings, Busiest and Changes, which never read the
+way in picked, hide the Ways in list and take the width.
 
 The **Map** tab is the whole project at the size of its services:
 
 - **Layout.** *call order*, the default, puts services in columns by how far
-  they sit from the front ends along the calls, with queues and topics as their
+  they sit from the front ends along the calls (*step 1*, *step 2*, …), with queues and topics as their
   own boxes between the columns and each service's stores and outside hosts
   under it, one box per outside host however many call it, capped with
   `+n more`. Hovering a box dims everything it does not touch. *by role* is the
@@ -956,8 +983,10 @@ The **Map** tab is the whole project at the size of its services:
   *Open all* and *Close all* do every family. Within a column, boxes are ordered
   by where what they touch sits, a few sweeps each way, so the same graph always
   draws the same map.
-- **Details.** A box opens its details: a service's counts, ways in by kind,
-  rows to act on, routes nothing calls, what it reaches and what reaches it,
+- **Details.** A box opens its details: a service's counts, ways in by kind
+  (a front end's screen actions among them, as on the Ways in list; a front end
+  with none read says how many screens it has rather than *0 ways in*),
+  problems to fix, routes nothing calls, what it reaches and what reaches it,
   its ways in (each opening in the Graph tab), its busiest classes, and what it
   is built from. A link lists the edges it stands for, each end opening in the
   Graph tab. *Open in Graph* centres the Graph tab on the box. Double-click, or
@@ -969,7 +998,7 @@ The **Map** tab is the whole project at the size of its services:
   or more services use is a box, with a link from each; development
   dependencies are drawn on request. A package nobody installed is named the
   same as one that is.
-- **Checks.** *check* marks, per box: rows to act on, channels with one end,
+- **Checks.** *check* marks, per box: problems to fix, channels with one end,
   routes nothing calls, services nothing could read, or services that reach
   each other at run time (a cycle, its links drawn red). The chips hide a kind
   of link.
@@ -983,10 +1012,14 @@ The **Map** tab is the whole project at the size of its services:
 The **Graph** tab draws the neighbourhood of one node rather than the whole
 graph, which on a real project is far too many boxes to say anything:
 
-- **Choosing a focus.** Search over every node, by label, type, kind, service or
-  file: `table orders` is the table called `orders`. Every way in on the left,
-  and every node named in the Walk, Crossings and Not joined tabs, has a *show in
-  graph* link beside it.
+- **Choosing a focus.** The one search's *Nodes* finds any node, and on this tab
+  a hit is focused here. Every way in on the left, and every node named in the
+  Walk, Crossings and Not joined tabs, has a *show in graph* link beside it.
+- **The bar is one row.** *Back*, *Forward* and the hops, then *Filters* (edge
+  types, trust and plumbing, the most nodes drawn) and *Check* (*Problems*,
+  *problems only*, a path's ends, its direction and depth) as popovers, each
+  saying how much of it is on (*Filters · 2*, *Check · 1*), then the tools.
+  The answer area under the bar is there only when there is an answer.
 - **The drawing.** The focus in the middle, what reaches it to the left and what
   it reaches to the right, one column per hop (one, two or three; two by
   default). Every service is a faint band across the drawing with its name in
@@ -998,14 +1031,15 @@ graph, which on a real project is far too many boxes to say anything:
   names are shortened in the middle, so a path keeps its verb and its last
   segment; hovering a node gives the full name, its service and `file:line`.
   An edge is solid when it was read from the code (`static`), dashed when it was
-  guessed (`heuristic`), and dotted when an annotation or a document said so
-  (`marker`, `declared`). An edge says its type only when hovered and around the
-  open node, so a busy drawing is lines rather than words.
+  guessed (`heuristic`, *best guess*), and dotted when an annotation or a document said so
+  (`marker`, *annotated*; `declared`). An edge says what it does (*calls*, *requests*,
+  *publishes*) only when hovered and around the open node, so a busy drawing is lines
+  rather than words.
 - **Plumbing is folded.** Guards, interceptors, pipes and middleware are not
   drawn as nodes: a way in carries a chip saying what runs in front of it
   (`2 guards · 3 interceptors · 1 pipe`). Clicking the chip, or `W` on the node,
-  draws that chain beside it and folds it back again; the *plumbing* chip above
-  the drawing draws all of it as ordinary nodes. A guard chosen as the focus
+  draws that chain beside it and folds it back again; the *plumbing* chip under
+  *Filters* draws all of it as ordinary nodes. A guard chosen as the focus
   shows the ways in it stands in front of.
 - **Busy sides are grouped.** More than six neighbours of one type on one side
   of a node (the queries on a table, the publishers on a channel, the callers of
@@ -1116,8 +1150,8 @@ graph, which on a real project is far too many boxes to say anything:
   rows or with no handler read, the crossings with rows at either end, and the
   calls that joined nothing or carry rows, each with *show in graph*.
 - **A path between two nodes.** Choose the two ends with *Path from here* and
-  *Path to here* in the panel, or with *from* and *to* above the drawing and the
-  search. Every shortest path is drawn, one column per step, with how many there
+  *Path to here* in the panel, or with *from* and *to* under *Check*, which hand
+  the keyboard to the one search: every hit is then a node to end the path on. Every shortest path is drawn, one column per step, with how many there
   are; past the cap one whole path is drawn first. The edges are followed the
   way the calls run unless *either way* is pressed, within 6, 12 or 24 steps,
   through what the filters let through (the two ends always count). With no
@@ -1149,8 +1183,8 @@ graph, which on a real project is far too many boxes to say anything:
 - **Full screen.** *Full screen*, or `F`, gives the drawing the whole window:
   the heading, the numbers, the service rail and the ways in step aside, and the
   details panel lays over the drawing from the right.
-- **Escape closes one thing at a time, nearest first**: the search's list of
-  nodes (or picking a path's end with it), then the details panel - the drawer
+- **Escape closes one thing at a time, nearest first**: an open *Filters* or
+  *Check* popover (or picking a path's end), then the details panel - the drawer
   in full screen - then the *Problems* list, a half-chosen path, and a path or
   impact answer, back to the neighbourhood, and last full screen.
 - **The details panel** widens or narrows by dragging its left edge, or with the

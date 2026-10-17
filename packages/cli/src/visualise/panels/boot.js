@@ -12,6 +12,7 @@ import { createGraphUi } from './graph-ui.js';
 import { createFrameUi } from './frame-ui.js';
 import { createMapUi } from './map-ui.js';
 import { createStepsUi } from './steps-ui.js';
+import { createPalette } from './palette.js';
 import { wirePage } from './wiring.js';
 
 /* The panels, in the order the page sets them up. Each is handed the page's
@@ -22,7 +23,7 @@ import { wirePage } from './wiring.js';
    which listener on a shared element hears an event first. */
 export const PANELS = [
   createBand, createWays, createWalk, createTables, createFind, createMissing, createGraphDraw, createDetails,
-  createChecking, createGraphUi, createFrameUi, createMapUi, createStepsUi, wirePage,
+  createChecking, createGraphUi, createFrameUi, createMapUi, createStepsUi, createPalette, wirePage,
 ];
 
 /* The page from its packed graph: every panel set up, then the first view. */

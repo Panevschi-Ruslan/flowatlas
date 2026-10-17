@@ -11,7 +11,7 @@ export function createDetails(page) {
     TYPE_KIND_SAYS, acceptLikeHtml, acceptedNote, acceptedRows, acceptedRule, card, confidences,
     contextOf, data, edgeTypes, esc, failChipsHtml, files, glyphOf, graphLink, hueOf, kinds, lookOf,
     metaOf, metaValueHtml, model, nodes, opener, panel, placeOf, plural, reasons, repoName, rowService,
-    scheduleSay, stage, state, typeOf } = page;
+    scheduleSay, stage, state, typeOf, wordHtml } = page;
 
   /* ── the details panel ── */
 
@@ -60,10 +60,10 @@ export function createDetails(page) {
       return `<li><button class="g-far" data-go="${v}" style="--hue:${hueOf(nodes[v][RP])}" ` +
         `title="Centre on ${esc(nodes[v][LB])}${placeOf(v) ? ', ' + esc(placeOf(v)) : ''}">` +
         `<span class="label">${esc(nodes[v][LB])}</span>` +
-        `<small>${esc(repoName(v))} &middot; ${esc(confidences[e[3]])}</small></button></li>`;
+        `<small>${esc(repoName(v))}${confidences[e[3]] === 'static' ? '' : ' &middot; ' + wordHtml('trust', confidences[e[3]])}</small></button></li>`;
     }).join('');
     const rest = all.length - listed.length;
-    return `<div class="g-group"><div class="g-group-name">${esc(edgeTypes[group.type])} &middot; ${all.length}</div>` +
+    return `<div class="g-group"><div class="g-group-name">${wordHtml('edge', edgeTypes[group.type])} &middot; ${all.length}</div>` +
       `<ul class="g-edges">${items}</ul>` +
       (rest > 0 ? `<button class="g-more-btn" data-group="${key}">Show ${rest.toLocaleString()} more</button>` : '') +
       '</div>';
@@ -76,11 +76,12 @@ export function createDetails(page) {
     const file = row[ROW.file] >= 0 ? files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : '';
     const hint = row[ROW.hint] >= 0 ? data.dicts.hints[row[ROW.hint]] : '';
     const isAccepted = acceptedRows.has(r);
-    return `<div class="g-row${isAccepted ? ' is-accepted' : ''}"><span class="tag${tone ? ' is-' + tone : ''}">${esc(reason)}</span> ` +
+    return `<div class="g-row${isAccepted ? ' is-accepted' : ''}">${wordHtml('reason', reason, 'tag' + (tone ? ' is-' + tone : ''))} ` +
       (isAccepted ? '<span class="tag is-accepted-tag" title="Accepted with flowatlas accept">accepted</span> ' : '') +
       `<span class="hint">${esc(data.dicts.levels[row[ROW.level]])}` +
       (row[ROW.sites] > 1 ? ` &middot; ${row[ROW.sites]} places` : '') +
-      (file ? ' &middot; ' + opener(row[ROW.repo], row[ROW.file], row[ROW.line], file) : '') + '</span>' +
+      (file ? ' &middot; ' + opener(row[ROW.repo], row[ROW.file], row[ROW.line], file) : '') +
+      ` &middot; <code class="g-code" title="The reason as doctor, accept and the MCP server name it">${esc(reason)}</code></span>` +
       `<p>${esc(row[ROW.message])}</p>` +
       (isAccepted && acceptedRule(r) ? `<p class="accepted-note">accepted by rule <code>${esc(acceptedRule(r))}</code></p>` : '') +
       (isAccepted && acceptedNote(r) ? `<p class="accepted-note">${esc(acceptedNote(r))}</p>` : '') +

@@ -1,10 +1,11 @@
 import { impactView, middle, neighbourhood, onlyProblems, shortestPath, upstream } from '../graph.js';
+import { wordFor } from '../frame.js';
 
 /* Checking on the Graph tab: the problems list, a path between two nodes and
    impact, each an answer the drawing draws like a neighbourhood. */
 export function createChecking(page) {
   const { BADGE, KD, LB, RP, ambiguousHtml, at, badgesFor, camera, confidences, data, drawDetails,
-    edgeTypes, esc, filterNow, graphLink, hueOf, kinds, model, nodes, panel, placeOf, plural, problems,
+    edgeTypes, esc, filterNow, focusFind, graphLink, hueOf, kinds, model, nodes, panel, placeOf, plural, problems,
     repoName, repos, seen, state, statusEl, store, typeOf, unmatchedHtml } = page;
   const shown = store.get('shown');
 
@@ -23,7 +24,9 @@ export function createChecking(page) {
   const wayBtn = document.getElementById('g-way');
   const pathDepthSel = document.getElementById('g-path-depth');
   const clearBtn = document.getElementById('g-clear');
-  const searchEl = document.getElementById('g-search');
+  const checkBtn = document.getElementById('g-check-btn');
+  /* A path's end is picked with the one search (find.js), which says so in its box. */
+  const searchEl = document.getElementById('find');
   const searchPrompt = searchEl.placeholder;
   const ANSWER_LIMIT = 60;
 
@@ -144,9 +147,10 @@ export function createChecking(page) {
   };
 
   const nameOf = (v) => `<b>${esc(nodes[v][LB])}</b>`;
-  const pickable = (v, note, text) =>
+  /* `codes` go in the tooltip after the place: the words are what the note says. */
+  const pickable = (v, note, text, codes = '') =>
     `<li><button class="g-far" data-pick="${v}" style="--hue:${hueOf(nodes[v][RP])}" ` +
-    `title="${esc(nodes[v][LB])}${placeOf(v) ? ', ' + esc(placeOf(v)) : ''}">` +
+    `title="${esc(nodes[v][LB])}${placeOf(v) ? ', ' + esc(placeOf(v)) : ''}${codes ? ' · ' + esc(codes) : ''}">` +
     `<span class="label">${esc(text || nodes[v][LB])}</span><small>${esc(note)}</small></button>${graphLink(v)}</li>`;
   const listHtml = (key, title, items, empty) => {
     const open = state.answerOpen.has(key);
@@ -157,23 +161,28 @@ export function createChecking(page) {
         ? `<button class="g-more-btn" data-list="${key}">Show ${(items.length - shownItems.length).toLocaleString()} more</button>`
         : '');
   };
-  const reasonsAt = (v) => {
+  const reasonCodesAt = (v) => {
     const found = problems.of(v);
-    return problems.reasonsOf([...found.on, ...found.atLine]).join(', ');
+    return problems.reasonsOf([...found.on, ...found.atLine]);
   };
+  const reasonsAt = (v) => reasonCodesAt(v).map((reason) => wordFor('reason', reason)).join(', ');
 
   const problemsHtml = () => {
     const { waysIn, crossings, calls } = problems.list();
     const ways = waysIn.map((item) => pickable(item.node,
-      [repoName(item.node), item.unhandled ? 'no handler read' : '', reasonsAt(item.node)].filter(Boolean).join(' · ')));
+      [repoName(item.node), item.unhandled ? 'no handler read' : '', reasonsAt(item.node)].filter(Boolean).join(' · '),
+      undefined, reasonCodesAt(item.node).join(', ')));
     const crossed = crossings.map((item) => {
       const e = data.edges[item.edge];
       const v = problems.has(e[1]) ? e[1] : e[0];
-      return pickable(v, `${repoName(e[0])} → ${repoName(e[1])} · ${edgeTypes[e[2]]}, ${confidences[e[3]]} · ` +
-        `${[reasonsAt(e[0]), reasonsAt(e[1])].filter(Boolean).join(', ')}`, `${nodes[e[0]][LB]} → ${nodes[e[1]][LB]}`);
+      const trust = confidences[e[3]] === 'static' ? '' : ', ' + wordFor('trust', confidences[e[3]]);
+      return pickable(v, `${repoName(e[0])} → ${repoName(e[1])} · ${wordFor('edge', edgeTypes[e[2]])}${trust} · ` +
+        `${[reasonsAt(e[0]), reasonsAt(e[1])].filter(Boolean).join(', ')}`, `${nodes[e[0]][LB]} → ${nodes[e[1]][LB]}`,
+        [edgeTypes[e[2]], confidences[e[3]], ...reasonCodesAt(e[0]), ...reasonCodesAt(e[1])].join(', '));
     });
     const unjoined = calls.map((item) => pickable(item.node,
-      [repoName(item.node), item.unjoined ? 'joined nothing' : '', reasonsAt(item.node)].filter(Boolean).join(' · ')));
+      [repoName(item.node), item.unjoined ? 'joined nothing' : '', reasonsAt(item.node)].filter(Boolean).join(' · '),
+      undefined, reasonCodesAt(item.node).join(', ')));
     return '<p>Where to look first. A problem is a row of <b>Not joined</b> that names a node or sits at its ' +
       'line; a node carrying one is badged with the count.</p>' +
       (seen.unmatched.length > 0 ? unmatchedHtml() : '') + ambiguousHtml() +
@@ -222,7 +231,7 @@ export function createChecking(page) {
     const set = state.ends.from !== null ? 'from' : 'to';
     const other = set === 'from' ? 'to' : 'from';
     return `<p>Path ${set} ${nameOf(state.ends[set])}. Now choose where it ${other === 'to' ? 'ends' : 'starts'}: ` +
-      `<b>Path ${other} here</b> on another node, or <b>${other}: pick&hellip;</b> above and search.</p>`;
+      `<b>Path ${other} here</b> on another node, or <b>${other}: pick&hellip;</b> under Check and search.</p>`;
   };
 
   const paintChecks = () => {
@@ -246,6 +255,9 @@ export function createChecking(page) {
       : '';
     searchEl.placeholder = state.picking === null ? searchPrompt
       : `Pick where the path ${state.picking === 'from' ? 'starts' : 'ends'} (Escape to stop)`;
+    // `Check · 2`: what of it is on - problems only, and each end chosen.
+    const on = [state.problemsOnly, state.ends.from !== null, state.ends.to !== null].filter(Boolean).length;
+    checkBtn.textContent = on > 0 ? `Check · ${on}` : 'Check';
   };
 
   /* The answer box and, while a question is asked, the line under the
@@ -285,7 +297,10 @@ export function createChecking(page) {
     button.addEventListener('click', () => {
       state.picking = state.picking === end ? null : end;
       paintChecks();
-      if (state.picking !== null) searchEl.focus();
+      if (state.picking === null) return;
+      // The popover steps aside for the search that picks the end.
+      page.setPopover(null);
+      focusFind();
     });
   }
   wayBtn.addEventListener('click', () => {

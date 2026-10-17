@@ -163,7 +163,7 @@ describe('the service rail', () => {
 describe('Start here', () => {
   const data = testPack('start');
 
-  it('names the way in that crosses the most services and the gap with the most rows to act on, each a link', () => {
+  it('names the way in that crosses the most services and the gap with the most problems to fix, each a link', () => {
     const { page } = mountPage(data, { upTo: createBand });
     const { startHere } = createBand(page);
     const picks = startHere(page.model, page.data);
@@ -176,8 +176,8 @@ describe('Start here', () => {
     expect(page.repoName(wayIn)).toBe('gateway');
     expect(page.reachesCrossing[wayIn]).toBe(1);
     // An action row, never the info row standing for twelve places.
-    expect(gap).toEqual({ what: 'Worst gap', say: 'unknown-base-url-env', note: '1 row to act on',
-      href: '#missing/reason=unknown-base-url-env' });
+    expect(gap).toEqual({ what: 'Worst gap', say: 'base address setting names no service', code: 'unknown-base-url-env',
+      note: '1 problem to fix', href: '#missing/reason=unknown-base-url-env' });
   });
 
   it('names what a branch did when the page has its changes, the routes still called first', () => {

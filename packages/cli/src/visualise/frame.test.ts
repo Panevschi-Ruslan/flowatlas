@@ -1,7 +1,15 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { CONFIDENCE_LEVELS, EDGE_TYPES } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
+import { KNOWN_REASONS } from '../doctor/hints.js';
 import {
   createKeys,
   DRAWER,
+  PAGE_WORDS,
+  pressed,
+  SHORTCUT_PLACES,
+  SHORTCUTS,
+  wordFor,
   drawerWidth,
   formatHash,
   formatViewHash,
@@ -289,5 +297,63 @@ describe('pictures', () => {
   it('names the file after the project and the focus, in characters every system keeps', () => {
     expect(pictureName('Shop map', 'GET /orders/:id', 'svg')).toBe('shop-map-get-orders-id.svg');
     expect(pictureName('', '¿?', 'png')).toBe('graph.png');
+  });
+});
+
+describe('the words the page says for codes (P101)', () => {
+  it('has a word for every reason the doctor knows, and none for a reason it does not', () => {
+    const missing = KNOWN_REASONS.filter((reason) => !(reason in PAGE_WORDS.reason));
+    // A reason added to the doctor's hints gets a word here, or is listed as a gap.
+    expect(missing).toEqual([]);
+    expect(Object.keys(PAGE_WORDS.reason).filter((reason) => !KNOWN_REASONS.includes(reason))).toEqual([]);
+  });
+
+  it('has a verb for every edge type and a word for every trust, each told apart from the others', () => {
+    expect(Object.keys(PAGE_WORDS.edge).sort()).toEqual([...EDGE_TYPES].sort());
+    expect(Object.keys(PAGE_WORDS.trust).sort()).toEqual([...CONFIDENCE_LEVELS].sort());
+    for (const table of Object.values(PAGE_WORDS)) {
+      const words = Object.values(table);
+      expect(new Set(words).size, words.join(', ')).toBe(words.length);
+      // Words, never a code: no dashes, no underscores.
+      expect(words.filter((word) => /[-_]/.test(word))).toEqual([]);
+    }
+  });
+
+  it('falls back to the code with its dashes as spaces', () => {
+    expect(wordFor('reason', 'route-unguarded')).toBe('no guard in front');
+    expect(wordFor('edge', 'http_calls')).toBe('requests');
+    expect(wordFor('trust', 'heuristic')).toBe('best guess');
+    expect(wordFor('reason', 'some-new_reason')).toBe('some new reason');
+    expect(wordFor('reason', 'constructor')).toBe('constructor');
+  });
+});
+
+describe('the keys (P101)', () => {
+  it('answers a shortcut by its keys, Ctrl or ⌘ only where asked, never with Alt', () => {
+    expect(pressed('find', { key: '/' })).toBe(true);
+    expect(pressed('find', { key: '/', ctrlKey: true })).toBe(false);
+    expect(pressed('palette', { key: 'k', metaKey: true })).toBe(true);
+    expect(pressed('palette', { key: 'k', ctrlKey: true })).toBe(true);
+    expect(pressed('palette', { key: 'k' })).toBe(false);
+    expect(pressed('graph.full', { key: 'F' })).toBe(true);
+    expect(pressed('graph.full', { key: 'f', altKey: true })).toBe(false);
+    expect(() => pressed('nothing.here', { key: 'x' })).toThrow('no shortcut nothing.here');
+  });
+
+  it('lists each shortcut once, under a place the overlay has a heading for', () => {
+    const ids = SHORTCUTS.map((shortcut) => shortcut.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(SHORTCUTS.filter((shortcut) => !(shortcut.where in SHORTCUT_PLACES))).toEqual([]);
+  });
+
+  it('is the table the handlers read: every key one answers is listed, and every key listed is answered', () => {
+    const dir = new URL('./panels/', import.meta.url);
+    const code = readdirSync(dir).filter((file) => file.endsWith('.js'))
+      .map((file) => readFileSync(new URL(file, dir), 'utf8')).join('\n');
+    const asked = new Set([...code.matchAll(/pressed\('([^']+)'/g)].map(([, id]) => id));
+    expect([...asked].filter((id) => !SHORTCUTS.some((shortcut) => shortcut.id === id))).toEqual([]);
+    expect(SHORTCUTS.filter((shortcut) => shortcut.keys.length > 0 && !asked.has(shortcut.id)).map((s) => s.id)).toEqual([]);
+    // No handler asks a key by its name any more; every key goes through the table.
+    expect(code.match(/event\.key === '(?:[a-zA-Z+?/*]|Escape|Enter)'/g)).toBeNull();
   });
 });

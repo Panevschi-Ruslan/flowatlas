@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createKeys, VIEWS } from '../frame.js';
+import { createKeys, SHORTCUTS, VIEWS } from '../frame.js';
 import { FakeEvent, textOf } from './test-dom.js';
 import { mountPage, nodeAt, testPack, withServices } from './test-page.js';
 
@@ -157,5 +157,37 @@ describe('the wiring', () => {
     expect(document.querySelectorAll('#fleet .ship')).toHaveLength(0);
     expect(textOf(document.getElementById('svc-button'))).toBe('Services: all ▾');
   });
-});
 
+  it('hides the Ways in list on the tabs that never read it, and brings it back (P101)', () => {
+    const { page, document } = mountPage(data);
+    const work = document.querySelector('.work')!;
+    for (const [view, wide] of [['crossings', true], ['busiest', true], ['map', false], ['steps', false],
+      ['missing', false], ['graph', false]] as const) {
+      page.showView(view);
+      expect(work.classList.contains('is-wide'), view).toBe(wide);
+    }
+  });
+
+  it('points every legend with keys at the ? overlay, which lists every shortcut (P101)', () => {
+    const { page, document } = mountPage(data);
+    for (const view of ['graph', 'map']) {
+      page.showView(view);
+      const legend = document.getElementById('legend')!;
+      expect(textOf(legend)).not.toMatch(/arrows move|Tab moves/);
+      legend.querySelector('[data-keys-open]')!.click();
+      expect(document.getElementById('keys-help')!.hidden).toBe(false);
+      expect(document.querySelectorAll('#keys-list [data-shortcut]')).toHaveLength(SHORTCUTS.length);
+      document.querySelector('[data-keys-close]')!.click();
+    }
+  });
+
+  it('says what was read and, only with a trace, what was seen running (P101)', () => {
+    const { document } = mountPage(data);
+    const said = textOf(document.getElementById('colophon'));
+    expect(said).toMatch(/^Read from the source code\. A path/);
+    expect(said).not.toContain('never run');
+    const traced = mountPage({ ...data, observed: { entries: {}, joins: {} } } as any);
+    expect(textOf(traced.document.getElementById('colophon')))
+      .toMatch(/^Read from the source code\. Where a trace was imported, what was seen at run time is shown beside it\./);
+  });
+});

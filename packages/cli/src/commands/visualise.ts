@@ -75,6 +75,7 @@ export const PAGE_PARTS: readonly (readonly [placeholder: string, file: string])
   ['__FRAME_UI_LOGIC__', 'panels/frame-ui.js'],
   ['__MAP_UI_LOGIC__', 'panels/map-ui.js'],
   ['__STEPS_UI_LOGIC__', 'panels/steps-ui.js'],
+  ['__PALETTE_LOGIC__', 'panels/palette.js'],
   ['__WIRING_LOGIC__', 'panels/wiring.js'],
   ['__BOOT_LOGIC__', 'panels/boot.js'],
 ];

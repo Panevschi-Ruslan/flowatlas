@@ -22,9 +22,10 @@ __PAGE_CSS__</style>
 
     <div class="finder" role="search">
       <input type="search" id="find" autocomplete="off" spellcheck="false"
-        placeholder="Find a route, channel, table, type, gap or class" aria-label="Find anything in the project"
-        aria-controls="find-out">
-      <div class="find-out" id="find-out" hidden></div>
+        placeholder="Find a route, channel, table, type, gap, class or node" aria-label="Find anything in the project"
+        role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="find-out" aria-keyshortcuts="/">
+      <kbd class="find-key" aria-hidden="true">/</kbd>
+      <div class="find-out" id="find-out" role="listbox" aria-label="Found" hidden></div>
     </div>
   </div>
 
@@ -35,10 +36,10 @@ __PAGE_CSS__</style>
         <span class="hint" id="entry-count"></span>
       </div>
       <div class="filters">
-        <input type="search" id="search" placeholder="Filter by path, name or service" aria-label="Filter ways in">
         <select id="kind" aria-label="Kind of entry">
           <option value="">All kinds</option>
         </select>
+        <div class="list-filter" id="list-filter" aria-live="polite" hidden></div>
       </div>
       <ul class="list" id="entries"></ul>
     </section>
@@ -121,7 +122,7 @@ __PAGE_CSS__</style>
           <label class="hint g-pick">check
             <select id="m-mark">
               <option value="">nothing</option>
-              <option value="problems">rows to act on</option>
+              <option value="problems">problems to fix</option>
               <option value="dead">channels with one end</option>
               <option value="uncalled">routes nothing calls</option>
               <option value="cycles">services that reach each other</option>
@@ -176,25 +177,47 @@ __PAGE_CSS__</style>
       </div>
       <div class="graph" id="graph-view" hidden>
         <div class="g-bar">
-          <div class="g-find">
-            <input type="search" id="g-search" placeholder="Find any node by label, kind, service or file"
-              role="combobox" aria-label="Find a node" aria-autocomplete="list" aria-expanded="false"
-              aria-controls="g-results" autocomplete="off">
-            <ul class="g-results" id="g-results" role="listbox" aria-label="Nodes found" hidden></ul>
-          </div>
           <button class="tool" id="g-back" disabled>&larr; Back</button>
           <button class="tool" id="g-forward" disabled>Forward &rarr;</button>
           <label class="hint g-pick">
             hops
             <select id="g-hops"><option>1</option><option selected>2</option><option>3</option></select>
           </label>
-          <label class="hint g-pick">
-            most nodes
-            <select id="g-cap">
-              <option>30</option><option selected>60</option><option>120</option><option>250</option>
-            </select>
-          </label>
+          <div class="g-pop-wrap">
+            <button class="tool g-pop-btn" id="g-filters-btn" aria-expanded="false" aria-controls="g-filters"
+              title="What the drawing leaves out: edge types, trust, plumbing, and how much it draws">Filters</button>
+            <div class="g-pop g-filters" id="g-filters" role="group" aria-label="Filters" hidden>
+              <label class="hint g-pick g-pop-row">
+                most nodes
+                <select id="g-cap">
+                  <option>30</option><option selected>60</option><option>120</option><option>250</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="g-pop-wrap">
+            <button class="tool g-pop-btn" id="g-check-btn" aria-expanded="false" aria-controls="g-check"
+              title="Problems, and a path between two nodes">Check</button>
+            <div class="g-pop g-check" id="g-check" role="group" aria-label="Check" hidden>
+              <button class="tool" id="g-problems" aria-expanded="false" aria-controls="g-answer">Problems</button>
+              <label class="hint g-pick"><input type="checkbox" id="g-only"> problems only</label>
+              <span class="hint" id="g-only-note"></span>
+              <span class="g-check-group" role="group" aria-label="Path between two nodes">
+                <span class="hint">path</span>
+                <button class="tool g-end" id="g-from" data-end="from">from: pick&hellip;</button>
+                <button class="tool" id="g-way" aria-pressed="false" title="Follow edges the way calls run, or either way">&rarr; one way</button>
+                <button class="tool g-end" id="g-to" data-end="to">to: pick&hellip;</button>
+                <label class="hint g-pick">within
+                  <select id="g-path-depth"><option>6</option><option selected>12</option><option>24</option></select>
+                  steps</label>
+              </span>
+            </div>
+          </div>
+          <button class="tool" id="g-clear" hidden>Back to the neighbourhood</button>
           <div class="g-tools">
+            <button class="tool" id="g-find-btn" data-find-open title="Search everything (/)">
+              <span>Search</span> <kbd>/</kbd>
+            </button>
             <button class="tool" id="g-types" aria-pressed="false"
               title="Write under each node what it takes and gives back (T)">
               <span>Types</span> <kbd>T</kbd>
@@ -216,22 +239,6 @@ __PAGE_CSS__</style>
               <span>Full screen</span> <kbd>F</kbd>
             </button>
           </div>
-        </div>
-        <div class="g-filters" id="g-filters"></div>
-        <div class="g-check" id="g-check">
-          <button class="tool" id="g-problems" aria-expanded="false" aria-controls="g-answer">Problems</button>
-          <label class="hint g-pick"><input type="checkbox" id="g-only"> problems only</label>
-          <span class="hint" id="g-only-note"></span>
-          <span class="g-check-group" role="group" aria-label="Path between two nodes">
-            <span class="hint">path</span>
-            <button class="tool g-end" id="g-from" data-end="from">from: pick&hellip;</button>
-            <button class="tool" id="g-way" aria-pressed="false" title="Follow edges the way calls run, or either way">&rarr; one way</button>
-            <button class="tool g-end" id="g-to" data-end="to">to: pick&hellip;</button>
-            <label class="hint g-pick">within
-              <select id="g-path-depth"><option>6</option><option selected>12</option><option>24</option></select>
-              steps</label>
-          </span>
-          <button class="tool" id="g-clear" hidden>Back to the neighbourhood</button>
         </div>
         <div class="g-answer" id="g-answer" aria-live="polite" hidden></div>
         <div class="g-answer" id="g-steps" aria-label="Steps of this way in" hidden></div>
@@ -277,7 +284,26 @@ __PAGE_CSS__</style>
   <footer class="colophon">
     <p id="standfirst"></p>
     <p id="colophon"></p>
+    <p class="colophon-keys"><button class="link-button" data-keys-open>Keys</button> <kbd>?</kbd> &middot;
+      <button class="link-button" data-palette-open>Commands</button> <kbd>&#8984;K</kbd></p>
   </footer>
+</div>
+
+<div class="overlay" id="palette" hidden>
+  <div class="dialog palette-box" role="dialog" aria-modal="true" aria-label="Commands">
+    <input type="text" id="palette-input" autocomplete="off" spellcheck="false" role="combobox"
+      aria-autocomplete="list" aria-expanded="true" aria-controls="palette-list"
+      placeholder="Type a command, or what to search for" aria-label="Command">
+    <ul class="palette-list" id="palette-list" role="listbox" aria-label="Commands"></ul>
+  </div>
+</div>
+
+<div class="overlay" id="keys-help" hidden>
+  <div class="dialog keys-box" role="dialog" aria-modal="true" aria-labelledby="keys-title" tabindex="-1">
+    <div class="g-head"><h3 id="keys-title">Keys</h3>
+      <button class="g-close" data-keys-close aria-label="Close" title="Close (Escape)">&times;</button></div>
+    <div class="keys-list" id="keys-list"></div>
+  </div>
 </div>
 
 <script type="application/json" id="graph">__DATA__</script>
@@ -334,6 +360,8 @@ __FRAME_UI_LOGIC__
 __MAP_UI_LOGIC__
 
 __STEPS_UI_LOGIC__
+
+__PALETTE_LOGIC__
 
 __WIRING_LOGIC__
 

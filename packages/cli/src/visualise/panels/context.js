@@ -1,5 +1,5 @@
 import { createModel, editorUrl, serviceOfRow } from '../graph.js';
-import { createKeys } from '../frame.js';
+import { createKeys, wordFor } from '../frame.js';
 import { createSeen, failChips, failsOf, scheduleOf } from '../steps.js';
 
 /* The page's context: what the page sets up first from the packed graph and
@@ -74,6 +74,15 @@ export function createPageContext(data) {
      of it written as markup is escaped first. */
   const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   const esc = (value) => String(value).replace(/[&<>"']/g, (c) => ESCAPES[c]);
+
+  /* A code a person reads - a reason, an edge's type, its trust - as the
+     page's word for it, with the code in the tooltip (P101). `wordHtml` gives
+     the markup, `cls` its classes; `trustHtml` says the trust only when it is
+     news, since static, read from code, is what an edge is unless marked. */
+  const wordHtml = (kind, code, cls = '') =>
+    `<span${cls ? ` class="${cls}"` : ''} title="${esc(code)}">${esc(wordFor(kind, code))}</span>`;
+  const trustHtml = (confidence) => (confidence === 'static' || !confidence ? ''
+    : wordHtml('trust', confidence, `tag trust is-${confidence}`));
 
   /* Every node named on the page can be opened in the graph. A link rather
      than a handler, so it can be opened in a new tab or copied. */
@@ -201,5 +210,5 @@ export function createPageContext(data) {
   return { CROSSES, FL, FORWARD, GLYPH, KD, LB, LN, MT, RP, TY, acceptLikeHtml, accepted, acceptedNote,
     acceptedRows, acceptedRule, confidences, copyText, data, edgeTypes, entryHeadHtml, entryIx, esc, failChipsHtml,
     files, flash, graphLink, guards, hueOf, keys, kinds, model, nodes, opener, out, plural, reachesCrossing, reasons,
-    repoName, repos, rowService, scheduleSay, seen, store, typeName, types };
+    repoName, repos, rowService, scheduleSay, seen, store, trustHtml, typeName, types, wordHtml };
 }

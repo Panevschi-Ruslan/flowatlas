@@ -392,13 +392,16 @@ export interface FindHit {
   node: number;
   /** What the item is found by, when not its label and sub. */
   hay?: string;
+  /** A gap's reason, as its code. */
+  reason?: string;
 }
 export type FindGroupKey = 'routes' | 'channels' | 'tables' | 'types' | 'gaps' | 'fails' | 'classes';
 export declare const FIND_GROUPS: Readonly<
-  Record<FindGroupKey, Readonly<{ say: string; items: (model: GraphModel) => FindHit[] }>>
+  Record<FindGroupKey, Readonly<{ say: string; items: (model: GraphModel, say: (reason: string) => string) => FindHit[] }>>
 >;
 export declare const findEverything: (
   model: GraphModel,
   query: string,
   limit?: number,
-) => Array<{ key: FindGroupKey; say: string; total: number; hits: FindHit[] }>;
+  say?: (reason: string) => string,
+) => Array<{ key: FindGroupKey | 'nodes'; say: string; total: number; hits: FindHit[] }>;

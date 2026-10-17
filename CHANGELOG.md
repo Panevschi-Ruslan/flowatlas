@@ -398,6 +398,27 @@ only one of them moved.
   tabs gained *Copy link*. A first visit offered a *Start here* card naming
   the busiest way in, the worst gap and, with `--diff`, the latest change,
   each worked out from the graph and each a link.
+- **The page spoke in words and had one search (P101).** A check row's reason,
+  an edge's type and its trust were said in words - *route not found on the
+  target*, *requests*, *best guess* - from one table (`PAGE_WORDS` in
+  `frame.js`), the code kept in the tooltip, in the details panel beside the
+  row, and in prompts, links and the MCP server. Trust was said only when it was
+  not *read from code*: Steps lost its *certain* mark and Crossings showed the
+  edge's verb with a chip only for a guess or an annotation. The Map said
+  *problems to fix* for *rows to act on*, numbered its call-order columns from
+  *step 1*, and counted a front end's screen actions as its ways in (one with
+  none said how many screens it had). The colophon said the page was read from
+  code, and only with a trace that what was seen at run time was beside it. The
+  global search became the only one: `/` reached it, it gained the Graph tab's
+  *Nodes*, and a hit went to where it was in the tab open - a way in picked and
+  opened on Steps, the Walk or the Map, a node focused on the Graph, a gap on
+  its Not joined row - marking where it landed, else opened the Graph; the Ways
+  in list's filter box and the Graph's node search went, the first kept as the
+  search's *Filter the Ways in list to '…'* and a chip over the list. The Graph's
+  filters and checks moved into *Filters* and *Check* popovers, so its bar was
+  one row. Crossings, Busiest and Changes hid the Ways in list. `?` listed every
+  key from the table the handlers read (`SHORTCUTS`), and ⌘K (Ctrl+K) opened a
+  command list of the tabs, the open tab's actions and a search.
 - **The page's source in modules (P103).** `page.html` kept only its markup:
   its styles moved to `page.css` and its script to one module per panel under
   `src/visualise/panels/`, each a factory handed the page so far, written in

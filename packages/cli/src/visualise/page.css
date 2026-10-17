@@ -373,6 +373,10 @@ a { color: var(--accent); }
   align-items: start;
 }
 
+/* The tabs that never read the way in picked take the width (P101). */
+.work.is-wide { grid-template-columns: minmax(0, 1fr); }
+.work.is-wide #ways { display: none; }
+
 @media (max-width: 900px) {
   .work { grid-template-columns: minmax(0, 1fr); }
 }
@@ -430,6 +434,16 @@ input[type='search'] { width: 100%; }
   padding: 10px 12px;
   border-bottom: 1px solid var(--rule-soft);
 }
+
+/* What the search filtered the Ways in list to, and how to take it off. */
+#ways .filters { flex-wrap: wrap; align-items: center; }
+.list-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+.list-filter .chip { display: inline-flex; align-items: center; gap: 4px; cursor: default; }
+.list-filter .chip b { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.chip-x {
+  font: inherit; line-height: 1; padding: 0 2px; border: 0; background: none; color: var(--muted); cursor: pointer;
+}
+.chip-x:hover { color: var(--accent); }
 
 .list {
   list-style: none;
@@ -722,40 +736,6 @@ tr:hover td { background: var(--raise); }
   border-bottom: 1px solid var(--rule-soft);
 }
 
-.g-find { position: relative; flex: 1 1 260px; min-width: 0; }
-
-.g-results {
-  position: absolute;
-  z-index: 5;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-height: 340px;
-  overflow-y: auto;
-  background: var(--raise);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.35);
-}
-
-.g-results li + li { border-top: 1px solid var(--rule-soft); }
-
-.g-hit {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 6px 10px 6px 9px;
-  border-left: 3px solid var(--hue);
-  cursor: pointer;
-}
-
-.g-hit[aria-selected='true'] { background: var(--accent-soft); }
-.g-hit .row-name { display: flex; gap: 7px; align-items: baseline; }
-.g-results .cut { margin: 6px 8px; }
-
 .tool {
   font-family: inherit;
   font-size: 12px;
@@ -773,17 +753,26 @@ tr:hover td { background: var(--raise); }
 
 .g-pick { display: flex; align-items: center; gap: 6px; }
 
-.g-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px 6px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--rule-soft);
+/* Filters and Check: popovers off the bar, so its controls fit one row (P101). */
+.g-pop-wrap { position: relative; }
+.g-pop-btn[aria-expanded='true'] { border-color: var(--accent); background: var(--raise); }
+.g-pop {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 4px);
+  left: 0;
+  width: max-content;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 12px;
+  background: var(--raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.45);
 }
 
-.g-filters .hint { margin-right: 2px; }
-.g-filters .hint:not(:first-child) { margin-left: 10px; }
+.g-filters { display: flex; flex-direction: column; gap: 8px; }
+.g-pop-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 6px; }
+.g-pop-row > .hint:first-child { min-width: 70px; }
 
 .chip {
   font-family: var(--f-mono);
@@ -1310,14 +1299,7 @@ tr:hover td { background: var(--raise); }
 
 /* ── checking: problems, path, impact ───────────────────────────────── */
 
-.g-check {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--rule-soft);
-}
+.g-check { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
 
 .g-check-group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 5px; min-width: 0; }
 .g-check .g-pick input { margin: 0; accent-color: var(--accent); }
@@ -1707,8 +1689,8 @@ kbd {
     white-space: nowrap;
   }
   .g-tools kbd { display: none; }
-  :root.is-full .g-filters { flex-wrap: nowrap; overflow-x: auto; }
-  :root.is-full .g-filters > * { flex: none; }
+  .g-pop { position: fixed; top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-width: none;
+    max-height: 60vh; overflow-y: auto; }
   :root.is-full #legend { display: none; }
 }
 
@@ -1761,7 +1743,7 @@ kbd {
   border: 1px solid var(--rule); border-radius: 9px; padding: 0 6px;
 }
 .s-mark.is-guess { color: var(--warn); border-color: var(--warn); border-style: dashed; }
-.s-mark.is-certain { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, var(--rule)); }
+.s-mark.is-marked { color: var(--muted); }
 .s-mark.is-failure { color: var(--bad); border-color: var(--bad); }
 .s-mark.is-together { color: var(--accent); border-color: var(--accent); }
 .s-mark.is-standin { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, var(--rule)); }
@@ -1983,3 +1965,125 @@ tr.is-target > td { background: var(--accent-soft); }
 
 .colophon p { margin: 0; }
 .colophon p + p { margin-top: 8px; }
+
+/* ── plain words, one search, the keys (P101) ────────────────────────── */
+
+/* A trust worth saying - a guess, an annotation, a declaration - beside an edge's verb. */
+.tag.trust { margin-left: 4px; }
+.tag.trust.is-heuristic { color: var(--warn); border-color: var(--warn); border-style: dashed; }
+.g-code { font-family: var(--f-mono); font-size: 10.5px; color: var(--faint); user-select: all; }
+
+.link-button {
+  font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer;
+  text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-underline-offset: 2px;
+}
+.link-button:hover { text-decoration-color: var(--accent); }
+.colophon-keys kbd, .find-key {
+  font-family: var(--f-mono); font-size: 10.5px; padding: 0 5px; border: 1px solid var(--rule);
+  border-radius: 3px; color: var(--muted); background: var(--raise);
+}
+
+/* The one search: `/` says so in the box, the option the keys are on is lit. */
+.finder input { padding-right: 34px; }
+.finder .find-key { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.finder input:focus + .find-key, .finder input:not(:placeholder-shown) + .find-key { display: none; }
+.find-out [aria-selected='true'] > a, .find-out [aria-selected='true'] > button { background: var(--accent-soft); }
+.find-out .find-tail { border-top: 1px solid var(--rule-soft); margin-top: 6px; padding-top: 4px; }
+.find-out .find-filter button {
+  display: block; width: 100%; text-align: left; font: inherit; font-size: 12.5px; padding: 6px 12px;
+  color: var(--accent); background: none; border: 0; cursor: pointer;
+}
+.find-out .find-filter button:hover { background: var(--raise); }
+.find-out .find-picking { margin: 2px 12px 6px; font-size: 12px; color: var(--accent); font-weight: 600; }
+#g-find-btn { display: none; }
+:root.is-full #g-find-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+/* In full screen the search comes up over the drawing when asked for. */
+:root.is-full.is-finding .rail-row {
+  display: block;
+  position: fixed;
+  z-index: 40;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 32px));
+}
+:root.is-full.is-finding .rail-row .fleet { display: none; }
+:root.is-full.is-finding .finder { margin: 0; }
+
+/* Where a search landed: a strong ring and an accent ground that fade over two seconds. */
+@keyframes found-fade {
+  from { background-color: var(--accent-soft); }
+  to { background-color: transparent; }
+}
+@keyframes found-fill {
+  from { fill: var(--accent-soft); }
+}
+.is-found {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+  animation: found-fade 2s ease-out forwards;
+}
+.g-node.is-found, .m-unit.is-found { outline: none; animation: none; }
+.g-node.is-found .g-box, .m-unit.is-found .m-box {
+  stroke: var(--accent);
+  stroke-width: 3;
+  animation: found-fill 2s ease-out forwards;
+}
+
+/* The command list and the keys: dialogs over the page. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+}
+.overlay[hidden] { display: none; }
+.dialog {
+  width: min(560px, 100%);
+  max-height: 76vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.55);
+  outline: none;
+}
+.palette-box input {
+  font: inherit; font-size: 15px; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--rule-soft);
+  background: transparent; color: var(--ink); outline: none;
+}
+.palette-list { list-style: none; margin: 0; padding: 6px 0; overflow-y: auto; }
+.palette-list [role='option'] { padding: 7px 14px; font-size: 13px; cursor: pointer; }
+.palette-list [role='option'][aria-selected='true'] { background: var(--accent-soft); }
+.palette-list [role='option']:hover { background: var(--raise); }
+.palette-none { padding: 7px 14px; font-size: 13px; color: var(--muted); }
+.keys-box { width: min(720px, 100%); padding: 12px 16px 16px; overflow-y: auto; }
+.keys-box h3 { margin: 0; font-family: var(--f-display); font-size: 17px; font-weight: 600; }
+.keys-list { columns: 2 300px; column-gap: 28px; }
+.keys-list section { break-inside: avoid; margin-top: 12px; }
+.keys-list h4 {
+  margin: 0 0 4px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+.keys-list dl { margin: 0; }
+.keys-row { display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 8px; padding: 3px 0; font-size: 12.5px; }
+.keys-row dt kbd {
+  font-family: var(--f-mono); font-size: 11px; padding: 1px 6px; border: 1px solid var(--rule);
+  border-bottom-width: 2px; border-radius: 3px; background: var(--raise); white-space: nowrap;
+}
+.keys-row dd { margin: 0; color: var(--muted); }
+
+/* A phone: the dialogs are a sheet the width of the window. */
+@media (max-width: 640px) {
+  .overlay { padding: 0; align-items: flex-end; }
+  .dialog { width: 100%; max-height: 82vh; border-radius: 8px 8px 0 0; border-bottom: 0; }
+  .keys-row { grid-template-columns: 7.5em minmax(0, 1fr); }
+}

@@ -1,15 +1,16 @@
-import { PATH_DEPTHS, faceOf, layout, panelKeysOf, search, step } from '../graph.js';
-import { formatHash, pinch } from '../frame.js';
+import { PATH_DEPTHS, faceOf, layout, panelKeysOf, step } from '../graph.js';
+import { formatHash, pinch, pressed, wordFor } from '../frame.js';
 
 /* What a person does on the Graph tab: the state changes every control ends
-   in, the controls and gestures, the keys on a node and in the panel, the
-   node search, and `graph`, which the other tabs open it through. */
+   in, the controls and their Filters and Check popovers, gestures, the keys
+   on a node and in the panel, and `graph`, which the other tabs open it
+   through. Nodes are searched for in the one search (find.js). */
 export function createGraphUi(page) {
-  const { BOX, KD, LB, RP, askImpact, askPath, asked, at, backBtn, camera, card, cardNode, cardSeenNow,
-    chooseEnd, confidences, drawDetails, drawDrawing, drawEntries, drawStatus, edgeTypes, esc, faceRows,
-    forwardBtn, gCapSel, glyphOf, hopsSel, hueOf, isGroup, keys, kinds, model, nodeCardHtml, nodes,
-    paintSelection, panel, placeOf, repoName, repos, state, statusEl, stopPicking, store, svg, titleEl,
-    traceTo, trail, typeCardHtml, typeOf, unitOf, visibleFocus, wideFor, wrap } = page;
+  const { BOX, LB, askImpact, askPath, asked, at, backBtn, camera, card, cardNode, cardSeenNow,
+    confidences, drawDetails, drawDrawing, drawEntries, drawStatus, edgeTypes, faceRows,
+    forwardBtn, gCapSel, hopsSel, isGroup, keys, model, nodeCardHtml, nodes,
+    paintSelection, panel, repos, state, statusEl, store, svg, titleEl,
+    traceTo, trail, typeCardHtml, unitOf, visibleFocus, wideFor, wrap } = page;
   const shown = store.get('shown');
 
   /* ── state changes: every control ends in one of these ── */
@@ -169,35 +170,78 @@ export function createGraphUi(page) {
   document.getElementById('g-zoom-out').addEventListener('click', () => camera.zoom(0.8));
   document.getElementById('g-fit').addEventListener('click', () => camera.frame(state.placed, at(state.focus), true));
 
-  /* Filters: services on the rail above, edge types and trust here. */
+  /* Two popovers off the bar (P101), so the controls fit one row: Filters
+     and Check, each button saying how much of it is on. One is open at a
+     time; a click elsewhere or Escape closes it. */
+  const popovers = [...document.querySelectorAll('#graph-view .g-pop-btn')].map((button) => ({
+    button, pop: document.getElementById(button.getAttribute('aria-controls')),
+  }));
+  const setPopover = (open) => {
+    for (const { button, pop } of popovers) {
+      pop.hidden = pop !== open;
+      button.setAttribute('aria-expanded', String(pop === open));
+    }
+  };
+  /* Closes the one open, true when there was one: the Escape chain asks first. */
+  const closePopovers = () => {
+    const open = popovers.find(({ pop }) => !pop.hidden);
+    if (open === undefined) return false;
+    setPopover(null);
+    if (open.pop.contains(document.activeElement)) open.button.focus();
+    return true;
+  };
+  for (const { button, pop } of popovers) {
+    button.addEventListener('click', () => setPopover(pop.hidden ? pop : null));
+  }
+  document.addEventListener('pointerdown', (event) => {
+    if (!event.target.closest('.g-pop-wrap')) setPopover(null);
+  });
+
+  /* Filters: services on the rail above, edge types, trust and plumbing in
+     the popover, each named in words with its code in the tooltip. */
   const filterBar = document.getElementById('g-filters');
+  const filtersBtn = document.getElementById('g-filters-btn');
   const filterChips = [];
-  const chips = (title, names, hidden) => {
+  /* `Filters · 2`: what is hidden, the rail's services included, and plumbing drawn. */
+  const paintFilters = () => {
+    const on = repos.filter((name) => !shown.has(name)).length + state.hiddenEdgeTypes.size +
+      state.hiddenConfidences.size + (state.plumbing ? 1 : 0);
+    filtersBtn.textContent = on > 0 ? `Filters · ${on}` : 'Filters';
+  };
+  /* A row of the popover: its name, then its chips. */
+  const filterRow = (title) => {
+    const row = document.createElement('div');
+    row.className = 'g-pop-row';
     const label = document.createElement('span');
     label.className = 'hint';
     label.textContent = title;
-    filterBar.append(label);
+    row.append(label);
+    filterBar.append(row);
+    return row;
+  };
+  const chips = (title, names, hidden, kind) => {
+    const row = filterRow(title);
     names.forEach((name, i) => {
       const chip = document.createElement('button');
       chip.className = 'chip';
-      chip.textContent = name;
+      chip.textContent = wordFor(kind, name);
+      chip.title = name;
       chip.setAttribute('aria-pressed', 'true');
       chip.addEventListener('click', () => {
         if (hidden.has(i)) hidden.delete(i); else hidden.add(i);
         chip.setAttribute('aria-pressed', String(!hidden.has(i)));
         draw(false);
+        paintFilters();
       });
       filterChips.push({ chip, hidden, i });
-      filterBar.append(chip);
+      row.append(chip);
     });
   };
-  chips('edges', edgeTypes, state.hiddenEdgeTypes);
-  chips('trust', confidences, state.hiddenConfidences);
+  chips('edges', edgeTypes, state.hiddenEdgeTypes, 'edge');
+  chips('trust', confidences, state.hiddenConfidences, 'trust');
   {
     // Plumbing is folded into a chip on what it wraps unless asked for.
-    const label = document.createElement('span');
-    label.className = 'hint';
-    label.textContent = 'plumbing';
+    const row = filterRow('plumbing');
     const toggle = document.createElement('button');
     toggle.className = 'chip';
     toggle.textContent = 'drawn as nodes';
@@ -209,10 +253,13 @@ export function createGraphUi(page) {
       state.unfolded.clear();
       toggle.setAttribute('aria-pressed', String(state.plumbing));
       draw(false);
+      paintFilters();
     });
-    filterBar.append(label, toggle);
+    row.append(toggle);
   }
-  filterBar.insertAdjacentHTML('beforeend', '<span class="hint">services: the rail above</span>');
+  filterBar.insertAdjacentHTML('beforeend', '<div class="g-pop-row"><span class="hint">services: the rail above</span></div>');
+  store.on((key) => { if (key === 'shown') paintFilters(); });
+  paintFilters();
 
   /* Pointer: one finger or a mouse drags to pan; two fingers pan and pinch to
      zoom; a wheel or a trackpad pans, and a trackpad pinch or ctrl+wheel zooms.
@@ -341,33 +388,34 @@ export function createGraphUi(page) {
   });
 
   const KEYS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
+  /* The keys on a node, as SHORTCUTS (frame.js) lists them. */
   svg.addEventListener('keydown', (event) => {
     const node = event.target.closest('.g-node');
     if (!node) return;
     const v = unitOf(node);
-    if (KEYS[event.key]) {
+    if (pressed('graph.move', event)) {
       event.preventDefault();
       state.cursor = step(state.placed, v, KEYS[event.key]);
       // Into view first, so the card the focus brings is placed where the node ends up.
       camera.reveal(at(state.cursor));
       paintSelection(true);
-    } else if (isGroup(v) && (event.key === 'Enter' || event.key === ' ' || event.key === '+')) {
+    } else if (isGroup(v) && (pressed('graph.open', event) || pressed('graph.expand', event))) {
       event.preventDefault();
       openGroup(v);
-    } else if (event.key === 'Enter' || event.key === ' ') {
+    } else if (pressed('graph.open', event)) {
       event.preventDefault();
       if (card.showing() === 'node:' + v) openWithCard(v, null, true);
       else select(v, true);
-    } else if ((event.key === 'w' || event.key === 'W') && state.hood.chips.has(v)) {
+    } else if (pressed('graph.plumbing', event) && state.hood.chips.has(v)) {
       event.preventDefault();
       toggleChain(v);
-    } else if (event.key === '+') {
+    } else if (pressed('graph.expand', event)) {
       event.preventDefault();
       expand(v);
-    } else if ((event.key === 'o' || event.key === 'O') && !isGroup(v) && state.hood.others.has(v)) {
+    } else if (pressed('graph.also', event) && !isGroup(v) && state.hood.others.has(v)) {
       event.preventDefault();
       toggleAlso(v);
-    } else if (event.key === 'Escape' && state.open !== null) {
+    } else if (pressed('graph.close', event) && state.open !== null) {
       event.preventDefault();
       closeDetails();
     }
@@ -402,11 +450,10 @@ export function createGraphUi(page) {
     else if (target.dataset.act === 'steps') page.stepsInGraph.toggle(v);
   });
   panel.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') { event.preventDefault(); closeDetails(); return; }
+    if (pressed('graph.close', event)) { event.preventDefault(); closeDetails(); return; }
     // `E` (or `*`, as a tree has it) on a type opens everything under it.
     const type = event.target.closest && event.target.closest('button.g-type');
-    if (type && (event.key === 'e' || event.key === 'E' || event.key === '*') &&
-        !event.ctrlKey && !event.metaKey && !event.altKey) {
+    if (type && pressed('graph.type-all', event)) {
       event.preventDefault();
       const { at, ref } = type.dataset;
       page.openEverything([{ at, ref: Number(ref), only: Number(type.dataset.type) }], at,
@@ -435,83 +482,6 @@ export function createGraphUi(page) {
   });
   panel.addEventListener('focusout', (event) => { if (!card.holds(event.relatedTarget)) card.hide(); });
 
-  /* ── search over every node, as a combobox ── */
-
-  const findInput = document.getElementById('g-search');
-  const resultsEl = document.getElementById('g-results');
-  let hits = [];
-  let active = -1;
-
-  const closeResults = () => {
-    resultsEl.hidden = true;
-    findInput.setAttribute('aria-expanded', 'false');
-    findInput.removeAttribute('aria-activedescendant');
-    active = -1;
-  };
-
-  const markActive = () => {
-    resultsEl.querySelectorAll('.g-hit').forEach((el, n) => el.setAttribute('aria-selected', String(n === active)));
-    if (active >= 0) {
-      const el = document.getElementById('g-hit-' + active);
-      findInput.setAttribute('aria-activedescendant', el.id);
-      el.scrollIntoView({ block: 'nearest' });
-    } else findInput.removeAttribute('aria-activedescendant');
-  };
-
-  const drawResults = () => {
-    if (findInput.value.trim() === '') { closeResults(); return; }
-    const found = search(model, findInput.value, 40);
-    hits = found.hits;
-    active = hits.length > 0 ? 0 : -1;
-    resultsEl.innerHTML = hits.map((i, n) =>
-      `<li id="g-hit-${n}" role="option" class="g-hit" data-hit="${i}" aria-selected="false" ` +
-      `style="--hue:${hueOf(nodes[i][RP])}">` +
-      `<span class="row-name"><span class="glyph">${esc(glyphOf(i))}</span>${esc(nodes[i][LB])}</span>` +
-      `<span class="row-meta">${esc(repoName(i))} &middot; ${esc(kinds[nodes[i][KD]] || typeOf(i))}` +
-      (placeOf(i) ? ' &middot; ' + esc(placeOf(i)) : '') + '</span></li>').join('') +
-      (found.total > hits.length
-        ? `<li role="presentation"><div class="cut">${(found.total - hits.length).toLocaleString()} more. Keep typing to narrow.</div></li>`
-        : '') +
-      (found.total === 0 ? '<li role="presentation"><div class="cut">Nothing matches every word.</div></li>' : '');
-    resultsEl.hidden = false;
-    findInput.setAttribute('aria-expanded', 'true');
-    markActive();
-  };
-
-  const pick = (i) => {
-    closeResults();
-    findInput.value = '';
-    if (state.picking !== null) chooseEnd(i);
-    else go(i);
-  };
-
-  findInput.addEventListener('input', drawResults);
-  findInput.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      event.preventDefault();
-      if (resultsEl.hidden) { drawResults(); return; }
-      if (hits.length === 0) return;
-      active = (active + (event.key === 'ArrowDown' ? 1 : -1) + hits.length) % hits.length;
-      markActive();
-    } else if (event.key === 'Enter') {
-      if (active >= 0 && !resultsEl.hidden) { event.preventDefault(); pick(hits[active]); }
-    } else if (event.key === 'Escape' && !resultsEl.hidden) {
-      // Closing the list is all this Escape does; the panel and full screen stay.
-      event.preventDefault();
-      closeResults();
-    } else if (event.key === 'Escape' && state.picking !== null) {
-      // So is giving up picking a path's end, the search's other errand.
-      event.preventDefault();
-      stopPicking();
-    }
-  });
-  findInput.addEventListener('blur', () => setTimeout(closeResults, 120));
-  resultsEl.addEventListener('mousedown', (event) => event.preventDefault());
-  resultsEl.addEventListener('click', (event) => {
-    const hit = event.target.closest('.g-hit');
-    if (hit) pick(Number(hit.dataset.hit));
-  });
-
   const graph = {
     go,
     refresh: () => { if (state.focus !== null) draw(false); },
@@ -537,6 +507,7 @@ export function createGraphUi(page) {
       state.hiddenConfidences.clear();
       for (const i of pick(hidden.confidences, confidences)) state.hiddenConfidences.add(i);
       for (const { chip, hidden: set, i } of filterChips) chip.setAttribute('aria-pressed', String(!set.has(i)));
+      paintFilters();
       drawEntries();
     },
     /* The question a link asks of the view on its focus. Says why when it
@@ -560,5 +531,5 @@ export function createGraphUi(page) {
     },
   };
 
-  return { closeDetails, closeResults, draw, go, graph, hashNow, resultsEl, select, syncControls, writeHash };
+  return { closeDetails, closePopovers, draw, go, graph, hashNow, select, setPopover, syncControls, writeHash };
 }

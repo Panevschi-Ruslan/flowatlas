@@ -1,6 +1,7 @@
 import { answersOf } from '../graph.js';
 import { PROMPT_LIMITS, PROMPT_WALK, renderPrompt } from '../../../../core/src/prompt-text.js';
 import { STEP_BOUNDS, STEP_KINDS, failSay, promptFor, stepsOf } from '../steps.js';
+import { wordFor } from '../frame.js';
 
 /* The Steps tab and the steps above the drawing: a way in as a waterfall, in
    call order, and the one Copy as prompt handler every tab's buttons use. */
@@ -23,11 +24,16 @@ export function createStepsUi(page) {
     const marked = data.standIns && data.standIns.edges[String(k)];
     return marked ? [data.standIns.via[marked[0]], data.standIns.packages[marked[1]]] : null;
   };
+  /* A step read from code says nothing about how it was joined (P101): only
+     an annotation and a guess are marked, so the one guess on a way in stands
+     out. Each says its trust in words, the code in the tooltip. */
   const STEP_MARKS = [
-    [(row) => row.kind !== 'answer' && row.edge >= 0 && row.certain, (row) => ['is-certain', 'certain', `joined ${row.confidence}: the code says so`]],
-    [(row) => row.edge >= 0 && !row.certain && row.confidence !== 'runtime', (row) => ['is-guess', 'best guess', `joined ${row.confidence}: inferred, may be wrong`]],
+    [(row) => row.kind !== 'answer' && row.edge >= 0 && row.certain && row.confidence !== 'static',
+      (row) => ['is-marked', wordFor('trust', row.confidence), `joined ${row.confidence}: an annotation says so`]],
+    [(row) => row.edge >= 0 && !row.certain && row.confidence !== 'runtime',
+      (row) => ['is-guess', wordFor('trust', row.confidence), `joined ${row.confidence}: inferred, may be wrong`]],
     [(row) => row.failure && row.kind !== 'break', () => ['is-failure', 'on failure', 'Runs only when what comes before it fails']],
-    [(row) => row.kind === 'break' && row.reason, (row) => ['is-failure', row.reason, 'The check row that says why']],
+    [(row) => row.kind === 'break' && row.reason, (row) => ['is-failure', wordFor('reason', row.reason), `The check row that says why: ${row.reason}`]],
     [(row) => row.together, () => ['is-together', 'side by side', 'Runs beside its siblings, not after them']],
     [(row) => row.perItem !== '', (row) => ['is-loop', 'per item (' + row.perItem + ')', 'Runs once per item of a ' + row.perItem + ' loop']],
     [(row) => row.nPlusOne, () => ['is-n1', 'likely N+1', 'A query reached once per item of a loop: a list of n items costs n round trips']],

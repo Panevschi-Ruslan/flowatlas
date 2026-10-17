@@ -208,6 +208,9 @@ export const packMap = (input: MapInput): PackedMap => {
   // A service's own counts first, since its column comes from them.
   const entries = new Map<string, Record<string, number>>();
   const ui = new Map<string, number>();
+  // A front end's ways in are its screen actions, as the Ways in list holds them (P101).
+  const actions = new Map<string, number>();
+  const screens = new Map<string, number>();
   const anchors = new Map<string, number>();
   const nodeCount = new Map<string, number>();
   const consumers = new Map<string, number>();
@@ -221,6 +224,8 @@ export const packMap = (input: MapInput): PackedMap => {
       entries.set(node.repo, kinds);
     }
     if (UI_TYPES.has(node.type)) ui.set(node.repo, (ui.get(node.repo) ?? 0) + 1);
+    if (node.type === 'ui_action') actions.set(node.repo, (actions.get(node.repo) ?? 0) + 1);
+    if (node.type === 'ui_component') screens.set(node.repo, (screens.get(node.repo) ?? 0) + 1);
     if (node.type === 'consumer') consumers.set(node.repo, (consumers.get(node.repo) ?? 0) + 1);
   });
 
@@ -235,7 +240,9 @@ export const packMap = (input: MapInput): PackedMap => {
     const box = boxes[boxOf('service', name, roleOf(kinds, ui.get(name) ?? 0, consumers.get(name) ?? 0), anchors.get(name) ?? -1)] as MapBox;
     box.s = {
       nodes: nodeCount.get(name) ?? 0,
-      ways: Object.values(kinds).reduce((sum, n) => sum + n, 0),
+      ways: Object.values(kinds).reduce((sum, n) => sum + n, 0) + (actions.get(name) ?? 0),
+      ...(actions.has(name) ? { actions: actions.get(name) } : {}),
+      ...(screens.has(name) ? { screens: screens.get(name) } : {}),
       problems: problems.get(name) ?? 0,
       ...(reported.get(name)?.skipped === undefined ? {} : { unread: 1 }),
       ...Object.fromEntries(Object.entries(kinds).map(([kind, n]) => ['e:' + kind, n])),

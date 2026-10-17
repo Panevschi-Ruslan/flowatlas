@@ -1,5 +1,5 @@
 import { middle } from '../graph.js';
-import { pictureName, pictureScale, pinch } from '../frame.js';
+import { pictureName, pictureScale, pinch, pressed, wordFor } from '../frame.js';
 import { MAP_BOX_KINDS, MAP_COLUMNS, MAP_LINK_KINDS, boxId, clusterId, createMap, formatMapHash,
   isOpen, mapCallOrder, mapCycles, mapLayout, mapMarks, mapSeenCount, mapTopTargets, mapView,
   openByDefault, serviceInside } from '../map.js';
@@ -9,7 +9,7 @@ import { MAP_BOX_KINDS, MAP_COLUMNS, MAP_LINK_KINDS, boxId, clusterId, createMap
    on it. What is drawn comes from map.js; this draws it. */
 export function createMapUi(page) {
   const { FL, KD, LB, LN, PICTURE_PAD, PICTURE_STYLES, SVG_NS, confidences, copyText, data, esc, files,
-    flash, hueOf, keys, kinds, nodes, plural, repos, root, save, seen, store, svgEl, titleEl, typing } = page;
+    flash, hueOf, keys, kinds, nodes, plural, repos, root, save, seen, store, svgEl, titleEl, typing, wordHtml } = page;
 
   /* ── the map ─────────────────────────────────────────────────────── */
 
@@ -40,7 +40,7 @@ export function createMapUi(page) {
     db: 'queries', external: 'outside calls', calls: 'calls', package: 'depends on',
   };
   const MARK_SAYS = {
-    problems: 'rows to act on', dead: 'channels with one end', uncalled: 'routes nothing calls',
+    problems: 'problems to fix', dead: 'channels with one end', uncalled: 'routes nothing calls',
     cycles: 'in a cycle', unread: 'not read',
   };
 
@@ -67,6 +67,9 @@ export function createMapUi(page) {
     if (kind === 'external') return 'var(--s-1)';
     return 'var(--accent)';
   };
+  /* A front end with no actions read still has screens (P101): it says those
+     rather than "0 ways in". */
+  const waysSaid = (s) => (!s.ways && s.screens ? plural(s.screens, 'screen', 'screens') : plural(s.ways || 0, 'way in', 'ways in'));
   const summed = (unit, key) => unit.members.reduce((sum, i) => sum + (mapModel.boxes[i].s[key] || 0), 0);
   const unitSub = (unit) => {
     if (unit.closed) {
@@ -77,7 +80,7 @@ export function createMapUi(page) {
     const box = boxOfUnit(unit);
     const s = box.s;
     switch (MAP_BOX_KINDS[box.k]) {
-      case 'service': return s.unread ? 'not read' : plural(s.ways || 0, 'way in', 'ways in') + ' · ' + plural(s.nodes || 0, 'node', 'nodes');
+      case 'service': return s.unread ? 'not read' : waysSaid(s) + ' · ' + plural(s.nodes || 0, 'node', 'nodes');
       case 'channel': return `${s.producers} in → ${s.consumers} out`;
       case 'data': return plural(s.tables || 0, 'table', 'tables');
       case 'external': return 'outside the project';
@@ -188,8 +191,8 @@ export function createMapUi(page) {
         mapState.mark === 'cycles' && cycles.links.has(link.id) ? 'is-cycle' : '',
         mapState.link === link.id ? 'is-open' : ''].filter(Boolean).join(' ');
       const say = `${unitName(shown.units.get(link.from))} → ${unitName(shown.units.get(link.to))}: ` +
-        `${plural(link.count, KIND_SAYS[link.kind] === 'depends on' ? 'package' : 'edge', KIND_SAYS[link.kind] === 'depends on' ? 'packages' : 'edges')}, ${link.kind}` +
-        (conf ? `, ${conf} at worst` : '') + (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '');
+        `${plural(link.count, KIND_SAYS[link.kind] === 'depends on' ? 'package' : 'edge', KIND_SAYS[link.kind] === 'depends on' ? 'packages' : 'edges')}, ${KIND_SAYS[link.kind]}` +
+        (conf && conf !== 'static' ? `, ${wordFor('trust', conf)} at worst` : '') + (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '');
       const hit = svgEl('path', { class: 'm-hit', d, 'data-link': link.id });
       hit.append(svgEl('title', {}, say));
       linkLayer.append(hit,
@@ -269,7 +272,7 @@ export function createMapUi(page) {
     const inward = shown.links.filter((link) => link.to === id).sort((a, b) => b.count - a.count);
     const row = (link, other) => `<li><span class="m-swatch m-k-${link.kind}"></span>` +
       `<span class="m-what">${linkButton(link.id, unitName(shown.units.get(other)))}</span>` +
-      `<span class="m-n">${link.count} ${esc(link.kind)}</span></li>`;
+      `<span class="m-n">${link.count} ${esc(KIND_SAYS[link.kind])}</span></li>`;
     return (outward.length ? `<section><h4>Reaches · ${outward.length}</h4><ul class="m-list">` +
         outward.map((link) => row(link, link.to)).join('') + '</ul></section>' : '') +
       (inward.length ? `<section><h4>Reached by · ${inward.length}</h4><ul class="m-list">` +
@@ -299,8 +302,8 @@ export function createMapUi(page) {
     const box = mapModel.boxes[i];
     const s = box.s;
     const reported = (data.report.services || []).find((service) => service.name === box.n);
-    const counts = Object.keys(s).filter((key) => key.startsWith('e:'))
-      .map((key) => `${s[key]} ${key.slice(2)}`).join(' · ');
+    const counts = [...Object.keys(s).filter((key) => key.startsWith('e:')).map((key) => `${s[key]} ${key.slice(2)}`),
+      s.actions ? plural(s.actions, 'screen action', 'screen actions') : ''].filter(Boolean).join(' · ');
     const manifest = data.map.manifests[i];
     const pkgName = (p) => data.map.packages[p];
     const published = new Map();
@@ -323,7 +326,8 @@ export function createMapUi(page) {
       '<section><dl class="g-meta">' +
       `<dt>nodes</dt><dd>${(s.nodes || 0).toLocaleString()}</dd>` +
       `<dt>ways in</dt><dd>${(s.ways || 0).toLocaleString()}${counts ? ' · ' + esc(counts) : ''}</dd>` +
-      `<dt>rows to act on</dt><dd>${(s.problems || 0).toLocaleString()}</dd>` +
+      (s.screens ? `<dt>screens</dt><dd>${s.screens.toLocaleString()}</dd>` : '') +
+      `<dt>problems to fix</dt><dd>${(s.problems || 0).toLocaleString()}</dd>` +
       (s.uncalled ? `<dt>routes nothing calls</dt><dd>${s.uncalled.toLocaleString()}</dd>` : '') +
       (s.uncalledOutside ? `<dt>routes called from outside</dt><dd>${s.uncalledOutside.toLocaleString()} · probes, webhooks, callbacks, streams and routes declared public</dd>` : '') +
       (s.failing ? `<dt>routes with failures</dt><dd>${s.failing.toLocaleString()}</dd>` : '') +
@@ -334,7 +338,7 @@ export function createMapUi(page) {
       topTargetsHtml(box.n) +
       (inside.ways.length ? `<section><h4>Ways in · ${(inside.ways.length + inside.waysLeft).toLocaleString()}</h4><ul class="m-list">` +
         inside.ways.map((v) => `<li><span class="m-what">${toGraph(v, nodes[v][LB])}</span>` +
-          `<span class="m-n">${esc(kinds[nodes[v][KD]])}</span></li>`).join('') +
+          `<span class="m-n">${esc(kinds[nodes[v][KD]] || 'screen action')}</span></li>`).join('') +
         (inside.waysLeft ? `<li><span class="m-n">${inside.waysLeft.toLocaleString()} more</span></li>` : '') + '</ul></section>' : '') +
       (inside.classes.length ? '<section><h4>Busiest classes</h4><ul class="m-list">' +
         inside.classes.map((c) => `<li><span class="m-what">${esc(c.name)}</span><span class="m-n">${c.edges} edges</span></li>`).join('') +
@@ -350,14 +354,14 @@ export function createMapUi(page) {
     const rows = unit.members.map((i) => mapModel.boxes[i])
       .sort((a, b) => (a.n < b.n ? -1 : 1))
       .map((box) => `<li><span class="m-what">${unitButton(boxId(box), box.n)}</span>` +
-        `<span class="m-n">${box.s.ways ? box.s.ways + ' ways in' : ''}</span></li>`).join('');
+        `<span class="m-n">${box.s.ways || box.s.screens ? waysSaid(box.s) : ''}</span></li>`).join('');
     return mapHead(clusterLabel(unit.cluster), `${plural(unit.members.length, 'box', 'boxes')} in ${esc(COLUMN_SAYS[MAP_COLUMNS[cluster.column]])}` +
         (unit.inside ? ` · ${unit.inside.toLocaleString()} edges between them` : ''),
       `<button class="tool" data-map-toggle="${esc(unit.cluster)}">Open</button>` +
       `<button class="tool" data-map-focus="${esc(unit.id)}">${mapState.focus === unit.id ? 'Whole map' : 'Only this and what it touches'}</button>`) +
       '<section><dl class="g-meta">' +
       `<dt>ways in</dt><dd>${summed(unit, 'ways').toLocaleString()}</dd>` +
-      `<dt>rows to act on</dt><dd>${summed(unit, 'problems').toLocaleString()}</dd>` +
+      `<dt>problems to fix</dt><dd>${summed(unit, 'problems').toLocaleString()}</dd>` +
       '</dl></section>' + linksOf(unit.id) +
       `<section><h4>In it</h4><ul class="m-list">${rows}</ul></section>`;
   };
@@ -399,9 +403,10 @@ export function createMapUi(page) {
       const where = files[nodes[a][FL]] ? `${files[nodes[a][FL]]}:${nodes[a][LN]}` : '';
       return `<li><span class="m-what" title="${esc(nodes[a][LB] + ' → ' + nodes[b][LB])}">` +
         `${toGraph(a, nodes[a][LB])} → ${toGraph(b, nodes[b][LB])}</span>` +
-        `<span class="m-n" title="${esc(where)}">${esc(confidences[c])}</span></li>`;
+        `<span class="m-n" title="${esc(where)}">${confidences[c] === 'static' ? '' : wordHtml('trust', confidences[c])}</span></li>`;
     };
-    const conf = link.best >= 0 ? (link.best === link.worst ? confidences[link.best] : `${confidences[link.best]} to ${confidences[link.worst]}`) : '';
+    const trustSaid = (c) => wordFor('trust', confidences[c]);
+    const conf = link.best >= 0 ? (link.best === link.worst ? trustSaid(link.best) : `${trustSaid(link.best)} to ${trustSaid(link.worst)}`) : '';
     return mapHead(`${unitName(from)} → ${unitName(to)}`,
       `${esc(KIND_SAYS[link.kind])} · ${plural(link.count, 'edge', 'edges')}${conf ? ' · ' + esc(conf) : ''}`,
       `${unitButton(link.from, 'From: ' + unitName(from))} ${unitButton(link.to, 'To: ' + unitName(to))}`.replace(/<button /g, '<button class="tool" ')) +
@@ -501,7 +506,7 @@ export function createMapUi(page) {
   });
   mapSvg.addEventListener('keydown', (event) => {
     const unitEl = event.target.closest('.m-unit, .m-frame-head');
-    if (!unitEl || (event.key !== 'Enter' && event.key !== ' ')) return;
+    if (!unitEl || !pressed('map.open', event)) return;
     event.preventDefault();
     if (unitEl.classList.contains('m-frame-head')) { toggleCluster(unitEl.dataset.cluster); return; }
     const unit = mapDrawn.view.units.get(unitEl.dataset.unit);
@@ -635,11 +640,11 @@ export function createMapUi(page) {
   };
   mapFullBtn.addEventListener('click', () => setMapFull(!mapFull));
   document.addEventListener('keydown', (event) => {
-    if (store.get('view') !== 'map' || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
-    if ((event.key === 'f' || event.key === 'F') && !typing(event.target)) {
+    if (store.get('view') !== 'map' || event.defaultPrevented) return;
+    if (pressed('map.full', event) && !typing(event.target)) {
       event.preventDefault();
       setMapFull(!mapFull);
-    } else if (event.key === 'Escape') {
+    } else if (pressed('map.close', event)) {
       if (!mapNotice.hidden) mapSay.clear();
       else if (mapState.link !== null || mapState.selected !== null) { mapState.link = null; mapState.selected = null; drawMap(false); }
       else if (mapState.focus !== null) { mapState.focus = null; drawMap(true); }
@@ -713,8 +718,16 @@ export function createMapUi(page) {
     }
   });
 
-  /* A link's view, by name: what it names and this page does not hold is said. */
+  /* A link's view, by name: what it names and this page does not hold is said.
+     `reveal` opens a service's box, as the search does for a way in on the
+     map (P101), and hands back the box drawn, or null when it is not. */
   const mapController = {
+    reveal(repo) {
+      const id = 'service:' + repo;
+      if (!mapModel.byId.has(id)) return null;
+      selectUnit(id);
+      return mapWorld.querySelector(`[data-unit="${CSS.escape(mapState.selected || id)}"]`);
+    },
     show() { titleEl.textContent = 'The whole project'; drawKindChips(); packagesBox.checked = mapState.packages; devBox.checked = mapState.dev;
       markSel.value = mapState.mark || ''; layoutSel.value = mapState.layout; drawMap(mapFit); },
     apply(asked) {

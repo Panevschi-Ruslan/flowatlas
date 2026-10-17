@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { installDocument, textOf } from '../visualise/panels/test-dom.js';
+import { FakeEvent, installDocument, textOf } from '../visualise/panels/test-dom.js';
 import { inlined, PAGE_PARTS, runVisualise, template, writeParts } from './visualise.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
@@ -110,7 +110,21 @@ describe('the page made of its parts (P103)', () => {
     expect(textOf(doc.getElementById('entry-count'))).toBe(`${rows} of ${rows}`);
     expect(doc.getElementById('map-view')!.hidden).toBe(false);
     expect(doc.querySelectorAll('#m-world .m-unit').length).toBeGreaterThan(0);
-    expect(textOf(doc.getElementById('colophon'))).toMatch(/^Everything here was read from source, never run\./);
+    // Read from code; the run-time sentence only where a trace was imported (P101).
+    expect(textOf(doc.getElementById('colophon'))).toMatch(/^Read from the source code\. A path shown as/);
+    // From the keyboard only (P101): `/`, a word, Enter lands somewhere marked; ⌘K and ? open.
+    doc.body.dispatchEvent(new FakeEvent('keydown', { key: '/' }));
+    const find = doc.getElementById('find')!;
+    expect(doc.activeElement).toBe(find);
+    find.value = 'orders';
+    find.dispatchEvent(new FakeEvent('input'));
+    find.dispatchEvent(new FakeEvent('keydown', { key: 'Enter' }));
+    expect(doc.querySelectorAll('.is-found').length).toBeGreaterThan(0);
+    doc.body.dispatchEvent(new FakeEvent('keydown', { key: 'k', metaKey: true }));
+    expect(doc.getElementById('palette')!.hidden).toBe(false);
+    doc.getElementById('palette-input')!.dispatchEvent(new FakeEvent('keydown', { key: 'Escape' }));
+    doc.body.dispatchEvent(new FakeEvent('keydown', { key: '?' }));
+    expect(doc.getElementById('keys-help')!.hidden).toBe(false);
     expect(template()).toBe(template());
   });
 });

@@ -5,7 +5,7 @@ import { ROW } from '../graph.js';
    joined and the problems answer list too. */
 export function createTables(page) {
   const { CROSSES, FL, LB, LN, MT, RP, confidences, data, edgeTypes, esc, files, graphLink, hueOf, nodes,
-    repoName, repos, rowService, seen, titleEl, walkEl } = page;
+    repoName, repos, rowService, seen, titleEl, trustHtml, walkEl, wordHtml } = page;
 
   /* ── crossings: every edge that leaves a service ─────────────────── */
 
@@ -16,7 +16,7 @@ export function createTables(page) {
       .sort((a, b) => repoName(a[0]) < repoName(b[0]) ? -1 : 1);
 
     const table = document.createElement('table');
-    table.innerHTML = '<thead><tr><th>From</th><th>To</th><th>Route</th><th>Trust</th></tr></thead>';
+    table.innerHTML = '<thead><tr><th>From</th><th>To</th><th>Route</th><th>How</th></tr></thead>';
     const body = document.createElement('tbody');
     for (const e of rows) {
       const from = nodes[e[0]], to = nodes[e[1]];
@@ -26,7 +26,7 @@ export function createTables(page) {
         `<td class="mono"><span class="tag" style="color:${hueOf(from[RP])};border-color:${hueOf(from[RP])}">${esc(repos[from[RP]])}</span> ${esc(files[from[FL]] ? files[from[FL]].split('/').pop() + ':' + from[LN] : from[LB])} ${graphLink(e[0])}</td>` +
         `<td class="mono"><span class="tag" style="color:${hueOf(to[RP])};border-color:${hueOf(to[RP])}">${esc(repos[to[RP]])}</span></td>` +
         `<td class="mono">${esc(meta.m || '')} ${esc(meta.p || to[LB])} ${graphLink(e[1])}</td>` +
-        `<td><span class="tag is-${confidences[e[3]] === 'static' ? 'good' : 'warn'}">${edgeTypes[e[2]]} &middot; ${confidences[e[3]]}</span></td>`;
+        `<td>${wordHtml('edge', edgeTypes[e[2]])} ${trustHtml(confidences[e[3]])}</td>`;
       body.append(tr);
     }
     table.append(body);
@@ -164,7 +164,7 @@ export function createTables(page) {
         (shape.fields.length ? `<ul class="c-fields">${shape.fields.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>`
           : ' <span class="hint">differs below its top level, or only where JSON drops it</span>') + '</li>') +
       changeList('New gaps', changes.gaps, 'This branch introduced no contract finding.', (gap) =>
-        `<li><span class="tag is-${gap.severity === 'error' ? 'bad' : 'warn'}">${esc(gap.severity)} &middot; ${esc(gap.kind)}</span> ${esc(gap.message)}</li>`);
+        `<li><span class="tag is-${gap.severity === 'error' ? 'bad' : 'warn'}">${esc(gap.severity)} &middot; ${wordHtml('reason', gap.kind)}</span> ${esc(gap.message)}</li>`);
   }
   if (changes !== null) document.getElementById('tab-changes').hidden = false;
 

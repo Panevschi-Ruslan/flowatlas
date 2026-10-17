@@ -1,5 +1,6 @@
 import { CARD_BOUNDS, GLANCE, LOOK, cardOf, createFilter, createHistory, createProblems,
   faceLine, labelParts, middle, peekOf, trace, zoomLevel } from '../graph.js';
+import { pressed, wordFor } from '../frame.js';
 
 /* The Graph tab's drawing: its state, the camera, the boxes, lines, lanes,
    groups and chips, the hover card, semantic zoom and the minimap. What is
@@ -305,9 +306,10 @@ export function createGraphDraw(page) {
   /* How many characters of a face fit in a width. */
   const fits = (px, perChar) => Math.max(4, Math.floor(px / perChar));
 
+  /* An edge in words: its verb, and its trust only when it is not static. */
   const edgeName = (k) => {
     const conf = confidences[data.edges[k][3]];
-    return edgeTypes[data.edges[k][2]] + (conf === 'static' ? '' : ' · ' + conf);
+    return wordFor('edge', edgeTypes[data.edges[k][2]]) + (conf === 'static' ? '' : ' · ' + wordFor('trust', conf));
   };
 
   const drawEdge = (k) => {
@@ -322,7 +324,7 @@ export function createGraphDraw(page) {
     g.style.setProperty('--hue', hueOf(nodes[e[1]][RP]));
     const path = curve(at(e[0]), at(e[1]));
     g.append(
-      svgEl('title', {}, `${nodes[e[0]][LB]} → ${nodes[e[1]][LB]}\n${edgeTypes[e[2]]}, ${conf}`),
+      svgEl('title', {}, `${nodes[e[0]][LB]} → ${nodes[e[1]][LB]}\n${edgeName(k)} (${edgeTypes[e[2]]}, ${conf})`),
       svgEl('path', { class: 'g-hit', d: path.d }),
       svgEl('path', { class: 'g-edge', d: path.d, 'marker-end': 'url(#g-arrow)' }),
       // Said on the line only on hover and around the open node, so a busy
@@ -347,7 +349,7 @@ export function createGraphDraw(page) {
     });
     g.style.setProperty('--hue', laneHue(to));
     const path = curve(at(bundle.from), at(bundle.to));
-    const label = n.toLocaleString() + ' × ' + edgeTypes[first[2]];
+    const label = n.toLocaleString() + ' × ' + wordFor('edge', edgeTypes[first[2]]);
     g.append(
       svgEl('title', {}, label),
       svgEl('path', { class: 'g-hit', d: path.d }),
@@ -663,7 +665,7 @@ export function createGraphDraw(page) {
       clear();
       if (!el.hidden) timer = setTimeout(hide, DELAY.leave);
     };
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') hide(); });
+    document.addEventListener('keydown', (event) => { if (pressed('close', event)) hide(); });
     // Scrolling the card itself is reading it; any other scroll moves what it points at.
     window.addEventListener('scroll', (event) => { if (!el.contains(event.target)) hide(); }, true);
     window.addEventListener('resize', hide);

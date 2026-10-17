@@ -1,9 +1,11 @@
+import { wordFor } from '../frame.js';
+
 /* The Walk tab: a way in followed outward, a row per step, a rule across it
    wherever it leaves one service for another. Its title and sheet are the
    ones the other table tabs draw into. */
 export function createWalk(page) {
   const { CROSSES, FL, GLYPH, LB, LN, MT, RP, confidences, edgeTypes, esc, files, graphLink, guards,
-    hueOf, nodes, out, repoName, store, typeName } = page;
+    hueOf, nodes, out, repoName, store, typeName, wordHtml } = page;
 
   /* ── the walk ────────────────────────────────────────────────────── */
 
@@ -40,7 +42,8 @@ export function createWalk(page) {
           graphLink(i) +
         `</span>` +
         `<span class="where">` +
-          (edge ? `<span class="via is-${conf}">${edgeTypes[edge[2]]}${conf === 'static' ? '' : ' &middot; ' + conf}</span>  ` : '') +
+          (edge ? `<span class="via is-${conf}" title="${esc(edgeTypes[edge[2]])}, ${esc(conf)}">${esc(wordFor('edge', edgeTypes[edge[2]]))}` +
+            `${conf === 'static' ? '' : ' &middot; ' + esc(wordFor('trust', conf))}</span>  ` : '') +
           (files[nodes[i][FL]] ? esc(files[nodes[i][FL]].split('/').pop()) + (nodes[i][LN] ? ':' + nodes[i][LN] : '') : '') +
         `</span>`;
       frag.append(row);
@@ -92,7 +95,7 @@ export function createWalk(page) {
           cross.style.setProperty('--hue', hueOf(nodes[to][RP]));
           cross.style.marginLeft = (item.level * 15 + 28) + 'px';
           cross.innerHTML = `<b>${esc(repoName(item.i))} &rarr; ${esc(repoName(to))}</b>` +
-            `over ${edgeTypes[e[2]]}, ${confidences[e[3]]}`;
+            `${wordHtml('edge', edgeTypes[e[2]])}${confidences[e[3]] === 'static' ? '' : ', ' + wordHtml('trust', confidences[e[3]])}`;
           frag.append(cross);
         }
 

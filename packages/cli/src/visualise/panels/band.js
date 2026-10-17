@@ -1,4 +1,4 @@
-import { formatViewHash } from '../frame.js';
+import { formatViewHash, pressed, wordFor } from '../frame.js';
 import { ROW } from '../graph.js';
 import { stepsOf } from '../steps.js';
 
@@ -53,8 +53,8 @@ export function createBand(page) {
       showNote(was ? null : el);
     });
     el.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && openPill === el) { event.preventDefault(); showNote(null); }
-      else if ((event.key === 'Enter' || event.key === ' ') && !el.classList.contains('is-link')) {
+      if (pressed('close', event) && openPill === el) { event.preventDefault(); showNote(null); }
+      else if (pressed('press', event) && !el.classList.contains('is-link')) {
         event.preventDefault();
         showNote(openPill === el ? null : el);
       }
@@ -119,7 +119,7 @@ export function createBand(page) {
       if (buildTimes.open && !event.target.closest('.build-times')) buildTimes.open = false;
     });
     buildTimes.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && buildTimes.open) { event.preventDefault(); buildTimes.open = false; }
+      if (pressed('close', event) && buildTimes.open) { event.preventDefault(); buildTimes.open = false; }
     });
   }
 
@@ -195,7 +195,7 @@ export function createBand(page) {
       filtered();
     });
     pop.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') { event.preventDefault(); setOpen(false); button.focus(); }
+      if (pressed('close', event)) { event.preventDefault(); setOpen(false); button.focus(); }
     });
     document.addEventListener('pointerdown', (event) => {
       if (!pop.hidden && !event.target.closest('.svc-pick')) setOpen(false);
@@ -224,7 +224,7 @@ export function createBand(page) {
       el.title = 'Show what was seen at run time and not found in code, or could be several places';
       const open = () => { page.showView('missing'); document.getElementById('unmatched')?.scrollIntoView({ block: 'nearest' }); };
       el.addEventListener('click', open);
-      el.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
+      el.addEventListener('keydown', (event) => { if (pressed('press', event)) { event.preventDefault(); open(); } });
     }
   }
 
@@ -233,7 +233,7 @@ export function createBand(page) {
   /* Each worked out from the graph in hand, never written in (P98):
        the way in that crosses the most services, ties to the one with the
        most steps, among those that leave a service at all;
-       the gap with the most rows to act on, on Not joined;
+       the gap with the most problems to fix, on Not joined;
        what a branch did, when the page has its changes.
      Each is a link, so it opens what it says and can be sent. Scoring the
      ways in walks each one's steps, so a project with very many is scored on
@@ -277,8 +277,9 @@ export function createBand(page) {
     const [reason, count] = [...toAct].sort((a, b) => b[1] - a[1] || order.indexOf(a[0]) - order.indexOf(b[0]))[0] || [];
     return reason === undefined ? null : {
       what: 'Worst gap',
-      say: reason,
-      note: plural(count, 'row to act on', 'rows to act on'),
+      say: wordFor('reason', reason),
+      code: reason,
+      note: plural(count, 'problem to fix', 'problems to fix'),
       href: formatViewHash('missing', null, { reason }),
     };
   };
@@ -297,7 +298,7 @@ export function createBand(page) {
     }
     return null;
   };
-  /* Up to three `{ what, say, note, href }`, in that order; one with nothing to say is left out. */
+  /* Up to three `{ what, say, note, href }`, in that order, the gap with its `code`; one with nothing to say is left out. */
   const startHere = (model, data) => [busiestWayIn(model), worstGap(data), latestChange(data)].filter(Boolean);
 
   /* The card, above the view rather than over it, until it is closed; the
@@ -323,8 +324,8 @@ export function createBand(page) {
       startEl.innerHTML = '<div class="start-head"><h3 id="start-title">Start here</h3>' +
         '<button class="g-close" data-start-close aria-label="Close Start here" title="Close">&times;</button></div>' +
         (picks.length === 0 ? '<p class="hint">Nothing stands out yet: pick a way in from the list.</p>'
-          : '<ul class="start-picks">' + picks.map(({ what, say, note, href }) =>
-            `<li><span class="start-what">${esc(what)}</span><a href="${esc(href)}">${esc(say)}</a>` +
+          : '<ul class="start-picks">' + picks.map(({ what, say, note, href, code }) =>
+            `<li><span class="start-what">${esc(what)}</span><a href="${esc(href)}"${code ? ` title="${esc(code)}"` : ''}>${esc(say)}</a>` +
             (note ? `<span class="hint">${esc(note)}</span>` : '') + '</li>').join('') + '</ul>');
       startEl.hidden = false;
     },

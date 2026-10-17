@@ -22,17 +22,37 @@ describe('the graph controls', () => {
     expect(page.state.focus).toBe(second);
   });
 
-  it('finds a node by its name and centres on it', () => {
+  it('keeps its filters and checks in two popovers off the bar, one open at a time (P101)', () => {
     const { page, document } = mountPage(data);
     page.showView('graph');
-    const input = document.getElementById('g-search')!;
-    input.value = 'invoicesservice';
-    input.dispatchEvent(new FakeEvent('input'));
-    const hits = document.querySelectorAll('#g-results .g-hit');
-    expect(hits.map((hit) => textOf(hit.querySelector('.row-name')))).toEqual(['fnInvoicesService.create']);
-    input.dispatchEvent(new FakeEvent('keydown', { key: 'Enter' }));
-    expect(page.state.focus).toBe(at('billing#src/invoices/invoices.service.ts:InvoicesService.create'));
-    expect(document.getElementById('g-results')!.hidden).toBe(true);
+    expect(document.getElementById('g-search')).toBeNull();
+    const filtersBtn = document.getElementById('g-filters-btn')!;
+    const checkBtn = document.getElementById('g-check-btn')!;
+    expect(document.getElementById('g-filters')!.hidden).toBe(true);
+    filtersBtn.click();
+    expect(document.getElementById('g-filters')!.hidden).toBe(false);
+    expect(filtersBtn.getAttribute('aria-expanded')).toBe('true');
+    checkBtn.click();
+    expect(document.getElementById('g-filters')!.hidden).toBe(true);
+    expect(document.getElementById('g-check')!.hidden).toBe(false);
+    document.body.dispatchEvent(new FakeEvent('keydown', { key: 'Escape' }));
+    expect(document.getElementById('g-check')!.hidden).toBe(true);
+    expect(checkBtn.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('names the filters in words with the codes in their tooltips, and counts what is on', () => {
+    const { page, document } = mountPage(data);
+    page.showView('graph');
+    const chips = document.querySelectorAll('#g-filters .chip');
+    const trust = chips.filter((chip) => page.data.dicts.confidences.includes(chip.getAttribute('title')!));
+    expect(trust.map(textOf)).toContain('read from code');
+    expect(chips.find((chip) => chip.getAttribute('title') === 'http_calls')).toBeDefined();
+    expect(textOf(document.getElementById('g-filters-btn'))).toBe('Filters');
+    trust.find((chip) => textOf(chip) === 'read from code')!.click();
+    expect(textOf(document.getElementById('g-filters-btn'))).toBe('Filters · 1');
+    document.getElementById('g-only')!.checked = true;
+    document.getElementById('g-only')!.dispatchEvent(new FakeEvent('change'));
+    expect(textOf(document.getElementById('g-check-btn'))).toBe('Check · 1');
   });
 
   it('hides an edge type with its filter chip, and says so', () => {

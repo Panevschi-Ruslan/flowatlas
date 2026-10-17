@@ -421,7 +421,8 @@ how much to trust it. *Steps* shows one way in as a list in call order, with
 what it can fail with and a *Copy as prompt* button; *Not joined* groups what
 could not be followed by cause; *Busiest* ranks the methods most things lean
 on; and `flowatlas visualise --diff main` adds a *Changes* tab for a branch. One
-search box finds a route, channel, table, type, gap or class.
+search box, reached with `/`, finds a route, channel, table, type, gap, class or
+node and goes to it; `?` lists the keys and ⌘K the commands.
 
 ![the generated page](media/10-visualise.png)
 

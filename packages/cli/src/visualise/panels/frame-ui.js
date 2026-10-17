@@ -1,13 +1,13 @@
 import { openAll, typeScriptOf } from '../graph.js';
-import { DRAWER, drawerWidth, pictureName, pictureScale } from '../frame.js';
+import { DRAWER, drawerWidth, pictureName, pictureScale, pressed } from '../frame.js';
 
 /* The frame around the drawing: the Types line, opening types in the panel,
    the notice a link leaves, full screen, the drawer, pictures, Copy link and
    the frame's keys. */
 export function createFrameUi(page) {
-  const { BOX, BOX_HEIGHTS, LB, RP, SVG_NS, at, camera, closeDetails, closeResults, copyText,
+  const { BOX, BOX_HEIGHTS, LB, RP, SVG_NS, at, camera, closeDetails, closePopovers, copyText,
     dismissAnswer, draw, drawDetails, extentOf, flash, hashNow, hueOf, model, nodes, panel, pinLaneNames,
-    plural, resultsEl, sizeMinimap, stage, state, stopPicking, store, svg, svgEl, world, wrap, writeHash,
+    plural, sizeMinimap, stage, state, stopPicking, store, svg, svgEl, world, wrap, writeHash,
     zoomDrawn } = page;
 
   /* ── the frame: full screen, the drawer, pictures, links ─────────── */
@@ -207,10 +207,10 @@ export function createFrameUi(page) {
     End: () => Infinity,
   };
   grip.addEventListener('keydown', (event) => {
-    if (GRIP_KEYS[event.key]) {
+    if (pressed('graph.drawer', event)) {
       event.preventDefault();
       drawer.resize(GRIP_KEYS[event.key](drawer.width()));
-    } else if (event.key === 'Enter' || event.key === ' ') {
+    } else if (pressed('graph.fold', event)) {
       event.preventDefault();
       drawer.fold(true);
       rail.focus();
@@ -347,13 +347,13 @@ export function createFrameUi(page) {
     else window.prompt('Copy this link', link);
   });
 
-  /* Keys for the frame. `F` is full screen and `T` the Types line anywhere
-     but a text field; `W`, `O`,
-     `+`, Enter and the arrows belong to a node with the keyboard on it, and
-     `E` to a type in the details panel.
+  /* Keys for the frame, as SHORTCUTS (frame.js) lists them. `F` is full
+     screen and `T` the Types line anywhere but a text field; `W`, `O`, `+`,
+     Enter and the arrows belong to a node with the keyboard on it, and `E` to
+     a type in the details panel.
 
      Escape closes one thing at a time, the nearest first:
-       1. the search's list of nodes, or picking a path's end with it;
+       1. the Filters or Check popover, or picking a path's end;
        2. the details panel, which is the drawer in full screen;
        3. the problems list, a half-chosen path, then a path or impact
           answer, back to the neighbourhood;
@@ -363,15 +363,15 @@ export function createFrameUi(page) {
   const typing = (el) => el instanceof HTMLElement &&
     (el.isContentEditable || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA');
   document.addEventListener('keydown', (event) => {
-    if (store.get('view') !== 'graph' || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
-    if ((event.key === 'f' || event.key === 'F') && !typing(event.target)) {
+    if (store.get('view') !== 'graph' || event.defaultPrevented) return;
+    if (pressed('graph.full', event) && !typing(event.target)) {
       event.preventDefault();
       fullScreen.toggle();
-    } else if ((event.key === 't' || event.key === 'T') && !typing(event.target)) {
+    } else if (pressed('graph.types', event) && !typing(event.target)) {
       event.preventDefault();
       setTypes(!state.types);
-    } else if (event.key === 'Escape') {
-      if (!resultsEl.hidden) closeResults();
+    } else if (pressed('graph.close', event)) {
+      if (closePopovers()) { /* closed */ }
       else if (state.picking !== null) stopPicking();
       else if (state.open !== null) closeDetails();
       else if (dismissAnswer()) { /* closed */ }
