@@ -16,7 +16,17 @@ import { dbPathFor, openDbFromOptions, type DbOptions } from '../db.js';
 import { cannotRun } from '../exit.js';
 import { indexGraph, matchSpans, type Observed } from '../observe/match.js';
 import { decodeTraceRequest, ProtobufError } from '../observe/otlp-protobuf.js';
-import { OTLP_KEEP, readerFor, type SkippedPart } from '../observe/readers.js';
+import {
+  formatsTaking,
+  NameNeeded,
+  OTLP_KEEP,
+  readerFor,
+  type AccessLogKeys,
+  type AccessLogRole,
+  type ReaderFlag,
+  type ReaderOptions,
+  type SkippedPart,
+} from '../observe/readers/index.js';
 import type { ObservedSpan } from '../observe/span.js';
 import { readObservedBeside, saveObserved } from '../observe/store.js';
 
@@ -33,6 +43,12 @@ export interface ObserveOptions extends DbOptions {
   print?: (message: string) => void;
   /** The clock, for the window and `readAt`; tests and snapshots fix it. */
   now?: Date;
+  /** `--workflow <name>`: the state machine an execution history is of, when the file does not say (P108). */
+  workflow?: string;
+  /** `--function <name>`: the function REPORT lines are of, when no log group says. */
+  function?: string;
+  /** `--access-log-keys route=<k>,status=<k>,...`: the keys an access log's format uses. */
+  accessLogKeys?: string;
 }
 
 export interface ObserveRun {
@@ -99,9 +115,11 @@ const looksLikeJson = (source: string): boolean => /^\uFEFF?\s*[{[]/.test(source
 /**
  * A trace file is one JSON document, or one per line as the OTLP file
  * exporter writes, or an OTLP protobuf request; any of them may be gzipped. A
- * `.pb` file is tried as protobuf first, anything else as JSON first.
+ * `.pb` file is tried as protobuf first, anything else as JSON first. A text
+ * that is not JSON is one document, the text itself, when a reader reads
+ * text (a CSV export, plain log lines, P108); else it is tried as protobuf.
  */
-const documentsOf = (file: string, bytes: Buffer): unknown[] => {
+export const documentsOf = (file: string, bytes: Buffer, options: ReaderOptions = {}): unknown[] => {
   const protobuf = (): unknown[] => {
     try {
       return [decodeTraceRequest(bytes, OTLP_KEEP)];
@@ -123,6 +141,7 @@ const documentsOf = (file: string, bytes: Buffer): unknown[] => {
   const json = jsonDocuments(source);
   if (json !== undefined) return json;
   if (looksLikeJson(source)) throw cannotRun(`${file} is not JSON`);
+  if (!bytes.includes(0) && readerFor(source, options) !== undefined) return [source];
   return protobuf();
 };
 
@@ -137,12 +156,46 @@ export interface TraceFiles {
   repeated: string[];
 }
 
+/** How each flag a format takes is spelled on the command line. */
+const FLAGS: Readonly<Record<ReaderFlag, string>> = {
+  workflow: '--workflow',
+  function: '--function',
+  accessLogKeys: '--access-log-keys',
+};
+
+/** A flag given for a file whose format does not take it is an error, not a flag quietly unused. */
+const checkFlags = (file: string, format: string, takes: readonly ReaderFlag[], given: ReaderOptions): void => {
+  for (const flag of Object.keys(FLAGS) as ReaderFlag[]) {
+    if (given[flag] === undefined || takes.includes(flag)) continue;
+    const formats = formatsTaking(flag).join(' and ');
+    throw cannotRun(`${FLAGS[flag]} applies to ${formats} files only; ${file} is ${format}`);
+  }
+};
+
+const ACCESS_LOG_ROLES: readonly AccessLogRole[] = ['route', 'method', 'path', 'status', 'latency', 'time'];
+
+/** `--access-log-keys route=rk,status=st`: each role to the key that holds it. */
+export const parseAccessLogKeys = (said: string | undefined): AccessLogKeys | undefined => {
+  if (said === undefined) return undefined;
+  const keys: Partial<Record<AccessLogRole, string>> = {};
+  for (const pair of said.split(',').map((part) => part.trim()).filter(Boolean)) {
+    const [role, key, ...rest] = pair.split('=').map((part) => part.trim());
+    if (!ACCESS_LOG_ROLES.includes(role as AccessLogRole) || key === undefined || key === '' || rest.length > 0) {
+      throw cannotRun(
+        `--access-log-keys takes <role>=<key> pairs, the roles ${ACCESS_LOG_ROLES.join(', ')}; not ${JSON.stringify(pair)}`,
+      );
+    }
+    keys[role as AccessLogRole] = key;
+  }
+  if (Object.keys(keys).length === 0) throw cannotRun('--access-log-keys names no key');
+  return keys;
+};
+
+/** What `observe` was told beside the files, as the readers take it. */
+export type TraceFileOptions = { known?: ReadonlySet<string>; now?: Date } & Omit<ReaderOptions, 'part'>;
+
 /** Reads each file with the reader its contents call for. Only file paths: nothing is fetched. */
-export const readTraceFiles = (
-  files: readonly string[],
-  service?: string,
-  options: { known?: ReadonlySet<string>; now?: Date } = {},
-): TraceFiles => {
+export const readTraceFiles = (files: readonly string[], service?: string, options: TraceFileOptions = {}): TraceFiles => {
   const spans: ObservedSpan[] = [];
   const formats: Record<string, string> = {};
   const skipped = new Map<string, SkippedPart>();
@@ -151,6 +204,11 @@ export const readTraceFiles = (
   const known = new Set(options.known);
   const readAt = (options.now ?? new Date()).toISOString();
   let droppedAttributes = 0;
+  const said: ReaderOptions = {
+    ...(options.workflow === undefined ? {} : { workflow: options.workflow }),
+    ...(options.function === undefined ? {} : { function: options.function }),
+    ...(options.accessLogKeys === undefined ? {} : { accessLogKeys: options.accessLogKeys }),
+  };
   for (const file of files) {
     const { bytes, sha256 } = bytesOf(file);
     if (known.has(sha256)) {
@@ -159,13 +217,24 @@ export const readTraceFiles = (
     }
     known.add(sha256);
     let read = 0;
-    for (const document of documentsOf(file, bytes)) {
-      const reader = readerFor(document);
+    for (const [part, document] of documentsOf(file, bytes, said).entries()) {
+      const reader = readerFor(document, said);
       if (reader === undefined) {
-        throw cannotRun(`${file} is neither OTLP (resourceSpans) nor a @nestjs/observe batch (serviceId, snapshots)`);
+        throw cannotRun(
+          `${file} is none of the formats observe reads: OTLP (resourceSpans), a @nestjs/observe batch (serviceId, snapshots), ` +
+            'X-Ray batch-get-traces output (Traces), a Step Functions execution history (events), ' +
+            'API Gateway access log lines (routeKey, status), or Lambda REPORT lines',
+        );
       }
       formats[file] = reader.name;
-      const result = reader.read(document, service);
+      checkFlags(file, reader.name, reader.takes ?? [], said);
+      let result;
+      try {
+        result = reader.read(document, service, { ...said, part });
+      } catch (cause) {
+        if (cause instanceof NameNeeded) throw cannotRun(`${file} ${cause.message}; name it with ${cause.flag} <name>`);
+        throw cause;
+      }
       spans.push(...result.spans);
       read += result.spans.length;
       droppedAttributes += result.droppedAttributes;
@@ -278,7 +347,13 @@ export const runObserve = (files: readonly string[], options: ObserveOptions = {
     throw cannotRun(`${describeObservedProblem(before.problem)}; run again with --reset to start a new one`);
   }
   const previous = before.observed;
-  const read = readTraceFiles(files, options.service, { known: new Set(previous?.sources.map((source) => source.sha256)), now });
+  const read = readTraceFiles(files, options.service, {
+    known: new Set(previous?.sources.map((source) => source.sha256)),
+    now,
+    ...(options.workflow === undefined ? {} : { workflow: options.workflow }),
+    ...(options.function === undefined ? {} : { function: options.function }),
+    ...(options.accessLogKeys === undefined ? {} : { accessLogKeys: parseAccessLogKeys(options.accessLogKeys)! }),
+  });
   const db = openDbFromOptions(options);
   let run: Observed;
   let labels: Map<string, string>;
@@ -321,10 +396,17 @@ export const registerObserve = (program: Command): void => {
   program
     .command('observe')
     .description('add what real traffic did - which joins ran, how long they took, how they answered - from trace files')
-    .argument('<file...>', 'OTLP JSON, JSON lines or protobuf, or @nestjs/observe batches, gzipped or not; nothing is sent anywhere')
+    .argument(
+      '<file...>',
+      'OTLP JSON, JSON lines or protobuf, @nestjs/observe batches, or AWS exports (X-Ray traces, a Step Functions ' +
+        'execution history, API Gateway access logs, Lambda REPORT lines), gzipped or not; nothing is sent anywhere',
+    )
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--service <name>', 'service a span belongs to when the file does not name one')
+    .option('--workflow <name>', 'the state machine a Step Functions execution history is of, when the file does not name it')
+    .option('--function <name>', 'the function Lambda REPORT lines are of, when no log group names it')
+    .option('--access-log-keys <map>', 'the keys an API Gateway access log uses: route=<k>,method=<k>,path=<k>,status=<k>,latency=<k>,time=<k>')
     .option('--since <dur>', 'keep only the hours inside this window (2h, 24h, 7d), kept for later runs; all stops cutting')
     .option('--reset', 'start the observed file again instead of adding to it')
     .option('--no-samples', 'keep no sample requests, and remove the ones the file holds: then it holds no trace id')

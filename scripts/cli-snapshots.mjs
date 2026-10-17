@@ -310,9 +310,37 @@ const DEPLOYED_WORKFLOW_CASES = [
  */
 const lambdaTracesFixture = join(root, 'fixtures', 'lambda-traces');
 const LAMBDA_TRACES = [join(lambdaTracesFixture, 'traces', 'adot.otlp.json')];
+/**
+ * The same checkout as the four exports a Lambda team can make without a
+ * collector (P108): X-Ray traces, the workflow's execution history, the API's
+ * access log and the functions' REPORT lines, each read on its own, and all
+ * of them together as the file they make.
+ */
+const lambdaExport = (file) => join(lambdaTracesFixture, 'exports', file);
+const LAMBDA_EXPORTS = {
+  xray: lambdaExport('xray.batch-get-traces.json'),
+  history: lambdaExport('fulfil-order.history.json'),
+  accessLog: lambdaExport('checkout.access-log.jsonl'),
+  reportsJson: lambdaExport('report-lines.insights.json'),
+  reportsCsv: lambdaExport('report-lines.insights.csv'),
+};
 const LAMBDA_TRACE_CASES = [
   ['observe.txt', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { reset: true }]], lambdaTracesFixture)],
   ['observe.json', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { format: 'json', reset: true }]], lambdaTracesFixture)],
+  ['observe.xray.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.xray], { reset: true }]], lambdaTracesFixture)],
+  ['observe.sfn-history.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.history], { reset: true }]], lambdaTracesFixture)],
+  ['observe.apigw-access-log.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.accessLog], { reset: true }]], lambdaTracesFixture)],
+  ['observe.lambda-report.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.reportsJson], { reset: true }]], lambdaTracesFixture)],
+  ['observe.lambda-report.csv.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.reportsCsv], { reset: true }]], lambdaTracesFixture)],
+  [
+    'observe.exports.json',
+    (io) =>
+      observeOnCopy(
+        io,
+        [[[LAMBDA_EXPORTS.xray, LAMBDA_EXPORTS.history, LAMBDA_EXPORTS.accessLog, LAMBDA_EXPORTS.reportsJson], { format: 'json', reset: true }]],
+        lambdaTracesFixture,
+      ),
+  ],
 ];
 
 const multiRepoWorkflowsFixture = join(root, 'fixtures', 'multi-repo-stepfunctions');

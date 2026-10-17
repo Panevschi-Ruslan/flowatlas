@@ -1273,9 +1273,11 @@ window 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as 
 .flowatlas/observed.json
 ```
 
-Three ways a file can be written, picked by looking at it, and any of them may
-be gzipped (a file that starts with gzip's magic bytes is unpacked first, so a
-body captured from a POST is read as it is):
+Three ways a trace file can be written, and four AWS exports (see
+[AWS exports](#aws-exports-without-a-collector) below), each picked by looking
+at the file, and any of them may be gzipped (a file that starts with gzip's
+magic bytes is unpacked first, so a body captured from a POST is read as it
+is):
 
 - **OTLP/JSON** (`resourceSpans` / `scopeSpans` / `spans`, one document or one
   per line). Read: `service.name`, span kind, `http.request.method` /
@@ -1436,6 +1438,132 @@ over it unless told `--reset`.
 | `--reset` | start the file again instead of adding to it |
 | `--no-samples` | keep no sample requests and remove the ones the file holds: then it holds no trace id at all |
 | `--format json` | print `observed.json` (format 3) instead of the summary |
+| `--workflow <name>` | the state machine a Step Functions execution history is of, when the file does not name it |
+| `--function <name>` | the function Lambda `REPORT` lines are of, when no log group names it |
+| `--access-log-keys <map>` | the keys an API Gateway access log uses, when they are not the documented ones: `route=<k>,method=<k>,path=<k>,status=<k>,latency=<k>,time=<k>` |
+
+Each of the last three applies only to the format that needs it: given for any
+other file, it is an error (`--workflow applies to sfn-history files only;
+traces/a.json is otlp`), never a flag quietly unused.
+
+#### AWS exports, without a collector
+
+A Lambda project often has no OpenTelemetry collector, but it has X-Ray, the
+console's execution history, access logs and a `REPORT` line per invocation.
+`observe` reads four exports of them (P108), each a file the AWS CLI or the
+console writes; it calls no AWS API. What each says becomes the same span
+fields an OTLP span of it gives (*On AWS Lambda* above), so it lands on the
+same nodes, through the same allow-list: every ARN and URL is cut to the name
+inside it, and a JSON string inside a file (an X-Ray `Document`, a log
+`@message`) is parsed, read field by field and dropped. A file that needs a
+name it does not say is refused with the flag that gives it, never counted on
+a guess. Over `fixtures/lambda-traces`, the X-Ray export of the checkout gives
+every entry, join, step, table and channel its OTLP trace gives; each other
+export gives the entries it can see, with the same counts.
+
+| Export | Format name | Gives |
+|---|---|---|
+| X-Ray traces | `xray` | entries, joins, steps, tables, channels, samples |
+| Step Functions execution history | `sfn-history` | the workflow's run, its steps, a step's direct invoke of a function, samples |
+| API Gateway access log | `apigw-access-log` | the route's hits, statuses and latencies; no joins, no samples |
+| Lambda `REPORT` lines | `lambda-report` | each function's runs, durations and errors; no joins, no samples |
+
+**X-Ray traces** (`xray`).
+
+```
+aws xray get-trace-summaries --start-time <t0> --end-time <t1> --query 'TraceSummaries[].Id' --output text
+aws xray batch-get-traces --trace-ids <id> <id> ... > xray.json
+```
+
+One output, an array of outputs, one per line, or a bare array of segment
+documents. Read, of each segment: `id`, `trace_id`, `parent_id`, `start_time`
+and `end_time`, `fault` (the error; `error`, a 4xx, is not one, its status
+is), `http.request.method`, the path of `http.request.url`,
+`http.response.status`, `origin`, `inferred`, `resource_arn`, and of `aws`:
+`operation`, `function_arn`, `function_name`, `table_name`, `resource_names`
+(DynamoDB), `queue_url`, `topic_arn`, `state_machine_arn`, `bucket_name`,
+`stream_name`. `name` is read as a segment's service, a state machine's step
+(its direct subsegments) and an SDK subsegment's AWS service; never a remote
+call's, which is its host. An `AWS::Lambda::Function` segment is the
+function's run; an `AWS::StepFunctions::StateMachine` segment the workflow's,
+its subsegments the steps; an `AWS::ApiGateway::Stage` segment the route,
+the stage cut off the path. A function's trigger is said by what it hangs
+under: a stage, a step, an invoke, or a send or a write a mapping delivered.
+The `AWS::Lambda` segment above a function's own, and subsegments that name no
+call (`Invocation`, `Overhead`, a team's own), are read through, their
+children hung on their parent, and counted in the summary. An inferred segment
+of an AWS service is the callee's side of its call; one of a remote host is
+not read. Never read: `annotations`, `metadata`, `sql`, `user`, `cause`,
+`aws.request_id`, `aws.account_id`, `aws.region`, `aws.xray`,
+`http.request.client_ip`, `user_agent`, `x_forwarded_for`.
+
+**A Step Functions execution history** (`sfn-history`).
+
+```
+aws stepfunctions get-execution-history --execution-arn <arn> > run.history.json
+```
+
+The machine is named by `stateMachineArn` or `executionArn` when the output of
+`aws stepfunctions describe-execution --execution-arn <arn>` is merged into
+the file (`jq -s '.[0] * .[1]' describe.json history.json`), by the version or
+alias ARN an `ExecutionStarted` event carries, else by `--workflow <name>`;
+with none, the file is refused: `run.history.json names no state machine
+(merge describe-execution's stateMachineArn into it); name it with --workflow
+<name>`. The run, from `ExecutionStarted` to `ExecutionSucceeded` / `Failed` /
+`TimedOut` / `Aborted`, is one span on the `workflow` entry, its trace id the
+execution's name (never its ARN). Each `*StateEntered` / `*StateExited` pair,
+by `name` and the chain of `previousEventId`s (so a Map state's iterations are
+one span each), is a step under the step around it; a `TaskFailed`,
+`LambdaFunctionFailed`, `LambdaFunctionTimedOut` or `ExecutionFailed` inside
+it fails it. `LambdaFunctionScheduled.resource` is a call that invokes the
+function; `TaskScheduled` is the service and operation of its `resourceType`
+and `resource` only (`lambda` / `invoke` is `Lambda/Invoke`), and names no
+target, since its `parameters` are not read. Never read: every `input`,
+`output`, `inputDetails`, `outputDetails`, `parameters`, `cause` and `error`
+text, `roleArn`, `taskToken`.
+
+**API Gateway access logs** (`apigw-access-log`), in the JSON format the API
+Gateway docs give as the example, such as
+`{ "requestId":"$context.requestId", "ip":"$context.identity.sourceIp",
+"requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod",
+"routeKey":"$context.routeKey", "status":"$context.status",
+"responseLatency":"$context.responseLatency" }`:
+
+```
+aws logs filter-log-events --log-group-name <access-log-group> --start-time <t0> > access.json
+```
+
+or JSON lines, or a Logs Insights result downloaded as JSON or CSV. Read,
+matched without regard to case: `routeKey` (`POST /checkout`; `ANY` takes the
+request's method), else `httpMethod` + `resourcePath` (a REST API's template);
+`$default` and a missing template fall back to the path of `path`; `status`;
+`responseLatency`, `latency`, `integrationLatency`, the first there;
+`requestTimeEpoch` or `requestTime`; `integrationStatus` of 500 or more is an
+error. A team that named its keys otherwise says them with
+`--access-log-keys route=rk,status=code,latency=took,time=when`. One span a
+line, with no parent: entries only, never a join, and no sample. Never read:
+`ip`, `sourceIp`, `userAgent`, `caller`, `user`, `identity.*`, `authorizer.*`,
+`requestId`, `extendedRequestId`, `domainName`, or any key not named above.
+
+**Lambda `REPORT` lines** (`lambda-report`), from a Logs Insights query over the
+functions' log groups,
+
+```
+filter @type = "REPORT" | fields @timestamp, @message, @log, @logStream, @duration
+```
+
+exported from the console as JSON or CSV (or `aws logs get-query-results`),
+or plain lines starting `REPORT RequestId:` (as `aws logs tail` prints them,
+with `--function`). The function is named by the record's log group
+(`/aws/lambda/<name>`, `@log` being `<account>:<group>`; the account is not
+read) or its stream in a log group of the team's own, each line by its own,
+else by `--function <name>`; lines none of them names refuse the file. Each
+line is one run of the function: `Duration` (or `@duration`), `@timestamp`,
+and an error when the line says `Status: error` or `Status: timeout`. One span
+a line, with no parent, and no sample. Never read: `RequestId`, `Billed
+Duration`, `Memory Size`, `Max Memory Used`, `Init Duration`, the X-Ray
+`TraceId` and `SegmentId` on the line, and every line that is not a `REPORT`
+line (counted: `not read: 2 lines not starting REPORT`).
 
 ---
 

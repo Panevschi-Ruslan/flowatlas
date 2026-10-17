@@ -1,0 +1,217 @@
+{
+  "executionArn": "arn:aws:states:eu-west-1:111122223333:execution:fulfil-order:run-0001",
+  "stateMachineArn": "arn:aws:states:eu-west-1:111122223333:stateMachine:fulfil-order",
+  "name": "run-0001",
+  "status": "SUCCEEDED",
+  "startDate": "2025-10-16T08:30:00.075000+00:00",
+  "stopDate": "2025-10-16T08:30:00.900000+00:00",
+  "input": "{\"orderId\":\"planted-order-77\",\"customer\":\"planted-customer\"}",
+  "inputDetails": { "included": true },
+  "output": "{\"receipt\":\"planted-receipt\"}",
+  "outputDetails": { "included": true },
+  "traceHeader": "Root=1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2;Parent=planted-parent;Sampled=1",
+  "events": [
+    {
+      "timestamp": "2025-10-16T08:30:00.075000+00:00",
+      "type": "ExecutionStarted",
+      "id": 1,
+      "previousEventId": 0,
+      "executionStartedEventDetails": {
+        "input": "{\"orderId\":\"planted-order-77\",\"customer\":\"planted-customer\"}",
+        "inputDetails": { "truncated": false },
+        "roleArn": "arn:aws:iam::111122223333:role/shop-workflows"
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.080000+00:00",
+      "type": "TaskStateEntered",
+      "id": 2,
+      "previousEventId": 1,
+      "stateEnteredEventDetails": {
+        "name": "ReserveStock",
+        "input": "{\"orderId\":\"planted-order-77\"}",
+        "inputDetails": { "truncated": false }
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.081000+00:00",
+      "type": "TaskScheduled",
+      "id": 3,
+      "previousEventId": 2,
+      "taskScheduledEventDetails": {
+        "resourceType": "lambda",
+        "resource": "invoke",
+        "region": "eu-west-1",
+        "parameters": "{\"FunctionName\":\"arn:aws:lambda:eu-west-1:111122223333:function:reserve-stock\",\"Payload\":{\"orderId\":\"planted-order-77\"}}"
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.082000+00:00",
+      "type": "TaskStarted",
+      "id": 4,
+      "previousEventId": 3,
+      "taskStartedEventDetails": { "resourceType": "lambda", "resource": "invoke" }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.298000+00:00",
+      "type": "TaskSucceeded",
+      "id": 5,
+      "previousEventId": 4,
+      "taskSucceededEventDetails": {
+        "resourceType": "lambda",
+        "resource": "invoke",
+        "output": "{\"Payload\":{\"reserved\":\"planted-reservation\"}}",
+        "outputDetails": { "truncated": false }
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.300000+00:00",
+      "type": "TaskStateExited",
+      "id": 6,
+      "previousEventId": 5,
+      "stateExitedEventDetails": {
+        "name": "ReserveStock",
+        "output": "{\"stock\":\"planted-reservation\"}",
+        "outputDetails": { "truncated": false }
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.310000+00:00",
+      "type": "TaskStateEntered",
+      "id": 7,
+      "previousEventId": 6,
+      "stateEnteredEventDetails": {
+        "name": "ChargeCard",
+        "input": "{\"orderId\":\"planted-order-77\"}",
+        "inputDetails": { "truncated": false }
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.312000+00:00",
+      "type": "LambdaFunctionScheduled",
+      "id": 8,
+      "previousEventId": 7,
+      "lambdaFunctionScheduledEventDetails": {
+        "resource": "arn:aws:lambda:eu-west-1:111122223333:function:charge-card",
+        "input": "{\"card\":\"planted-card-4242\"}",
+        "inputDetails": { "truncated": false },
+        "timeoutInSeconds": 30
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.315000+00:00",
+      "type": "LambdaFunctionStarted",
+      "id": 9,
+      "previousEventId": 8
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.595000+00:00",
+      "type": "LambdaFunctionSucceeded",
+      "id": 10,
+      "previousEventId": 9,
+      "lambdaFunctionSucceededEventDetails": {
+        "output": "{\"payment\":\"planted-payment\"}",
+        "outputDetails": { "truncated": false }
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.600000+00:00",
+      "type": "TaskStateExited",
+      "id": 11,
+      "previousEventId": 10,
+      "stateExitedEventDetails": {
+        "name": "ChargeCard",
+        "output": "{\"payment\":\"planted-payment\"}",
+        "outputDetails": { "truncated": false }
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.610000+00:00",
+      "type": "TaskStateEntered",
+      "id": 12,
+      "previousEventId": 11,
+      "stateEnteredEventDetails": { "name": "MarkPaid", "input": "{\"orderId\":\"planted-order-77\"}", "inputDetails": { "truncated": false } }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.611000+00:00",
+      "type": "TaskScheduled",
+      "id": 13,
+      "previousEventId": 12,
+      "taskScheduledEventDetails": {
+        "resourceType": "dynamodb",
+        "resource": "updateItem",
+        "region": "eu-west-1",
+        "parameters": "{\"TableName\":\"orders\",\"Key\":{\"orderId\":{\"S\":\"planted-order-77\"}},\"UpdateExpression\":\"SET paid = :yes\"}"
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.612000+00:00",
+      "type": "TaskStarted",
+      "id": 14,
+      "previousEventId": 13,
+      "taskStartedEventDetails": { "resourceType": "dynamodb", "resource": "updateItem" }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.698000+00:00",
+      "type": "TaskSucceeded",
+      "id": 15,
+      "previousEventId": 14,
+      "taskSucceededEventDetails": { "resourceType": "dynamodb", "resource": "updateItem", "output": "{}", "outputDetails": { "truncated": false } }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.700000+00:00",
+      "type": "TaskStateExited",
+      "id": 16,
+      "previousEventId": 15,
+      "stateExitedEventDetails": { "name": "MarkPaid", "output": "{\"orderId\":\"planted-order-77\"}", "outputDetails": { "truncated": false } }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.710000+00:00",
+      "type": "TaskStateEntered",
+      "id": 17,
+      "previousEventId": 16,
+      "stateEnteredEventDetails": { "name": "SendReceipt", "input": "{\"orderId\":\"planted-order-77\"}", "inputDetails": { "truncated": false } }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.711000+00:00",
+      "type": "TaskScheduled",
+      "id": 18,
+      "previousEventId": 17,
+      "taskScheduledEventDetails": {
+        "resourceType": "sns",
+        "resource": "publish",
+        "region": "eu-west-1",
+        "parameters": "{\"TopicArn\":\"arn:aws:sns:eu-west-1:111122223333:receipts\",\"Message\":\"planted-message\"}",
+        "taskCredentials": { "roleArn": "arn:aws:iam::111122223333:role/planted-task-role" }
+      }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.712000+00:00",
+      "type": "TaskStarted",
+      "id": 19,
+      "previousEventId": 18,
+      "taskStartedEventDetails": { "resourceType": "sns", "resource": "publish" }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.888000+00:00",
+      "type": "TaskSucceeded",
+      "id": 20,
+      "previousEventId": 19,
+      "taskSucceededEventDetails": { "resourceType": "sns", "resource": "publish", "output": "{\"MessageId\":\"planted-msg\"}", "outputDetails": { "truncated": false } }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.890000+00:00",
+      "type": "TaskStateExited",
+      "id": 21,
+      "previousEventId": 20,
+      "stateExitedEventDetails": { "name": "SendReceipt", "output": "{\"receipt\":\"planted-receipt\"}", "outputDetails": { "truncated": false } }
+    },
+    {
+      "timestamp": "2025-10-16T08:30:00.900000+00:00",
+      "type": "ExecutionSucceeded",
+      "id": 22,
+      "previousEventId": 21,
+      "executionSucceededEventDetails": { "output": "{\"receipt\":\"planted-receipt\"}", "outputDetails": { "truncated": false } }
+    }
+  ]
+}

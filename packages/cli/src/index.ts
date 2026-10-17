@@ -105,16 +105,24 @@ export { linkRepos, unlinkRepos } from './commands/link.js';
 export type { LinkOptions, LinkResult, UnlinkResult } from './commands/link.js';
 export { installMcp, serverEntry, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
 export { runChannel } from './commands/channel.js';
-export { runObserve, readTraceFiles } from './commands/observe.js';
-export type { ObserveOptions, ObserveRun, TraceFiles } from './commands/observe.js';
+export { documentsOf, parseAccessLogKeys, runObserve, readTraceFiles } from './commands/observe.js';
+export type { ObserveOptions, ObserveRun, TraceFileOptions, TraceFiles } from './commands/observe.js';
 export { indexGraph, matchSpans, edgeIdOf, OBSERVED_FORMAT_VERSION } from './observe/match.js';
 export type { MatchOptions, Observed } from './observe/match.js';
 export { decodeTraceRequest, ProtobufError } from './observe/otlp-protobuf.js';
 export { KEPT_FIELDS, keepAllowed } from './observe/span.js';
 export type { ObservedSpan, SpanKind } from './observe/span.js';
-export { OTLP_KEEP, TRACE_READERS, readerFor } from './observe/readers.js';
-export type { SkippedPart, TraceRead, TraceReader } from './observe/readers.js';
-export { ALLOW_LISTS, NESTJS_OBSERVE_READS, OTLP_READS } from './observe/allow-list.js';
+export { formatsTaking, NameNeeded, OTLP_KEEP, TRACE_READERS, readerFor } from './observe/readers/index.js';
+export type { AccessLogKeys, ReaderFlag, ReaderOptions, SkippedPart, TraceRead, TraceReader } from './observe/readers/index.js';
+export {
+  ALLOW_LISTS,
+  APIGW_ACCESS_LOG_READS,
+  LAMBDA_REPORT_READS,
+  NESTJS_OBSERVE_READS,
+  OTLP_READS,
+  SFN_HISTORY_READS,
+  XRAY_READS,
+} from './observe/allow-list.js';
 export { runFlow } from './commands/flow.js';
 export { runImpact } from './commands/impact.js';
 export { runStats, collectStats, summariseStats } from './commands/stats.js';

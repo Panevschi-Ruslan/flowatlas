@@ -26,7 +26,8 @@
       "state",
       "tables",
       "awsOp",
-      "transport"
+      "transport",
+      "sampleable"
     ],
     "dropped": [
       "request and response headers",

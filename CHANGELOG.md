@@ -8,6 +8,26 @@ only one of them moved.
 
 ### Added
 
+- **AWS exports read without a collector (P108).** `flowatlas observe` reads
+  four files a Lambda team can export with the AWS CLI or the console, picked
+  by looking at them, and calls no AWS API: X-Ray `batch-get-traces` output
+  (`xray`: functions, workflows, steps, stages and every SDK call, matched as
+  P107 matches their OTLP spans), a Step Functions `get-execution-history`
+  (`sfn-history`: the run, its steps paired by the chain of events, a step's
+  direct invoke of a function), API Gateway JSON access logs
+  (`apigw-access-log`) and Lambda `REPORT` lines from a Logs Insights export
+  in JSON or CSV, or plain (`lambda-report`). The last two give entries only:
+  no joins and no samples (a span has `sampleable: false`, now on
+  `privacy.kept`). New flags `--workflow`, `--function` and
+  `--access-log-keys`; a history that names no state machine or `REPORT`
+  lines no log group names the function of are refused with the flag that
+  gives it, and a flag given for a format that does not take it is an error.
+  Each reader's never-read list (X-Ray annotations, metadata, `sql` and
+  `cause`, a workflow's input, output and parameters, client addresses,
+  request ids, memory figures) is tested absent from the file.
+  `fixtures/lambda-traces/exports/` holds the checkout of P107 as each export,
+  with new `observe.*` snapshots.
+
 - **AWS traffic matched to the map (P107).** `flowatlas observe` reads what an
   OpenTelemetry-instrumented Lambda function or the AWS Distro's layer writes,
   and lands it on the nodes the Terraform and state machine readers draw: a

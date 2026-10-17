@@ -10,7 +10,8 @@
  * Never read, whatever the format: header values, cookies, request and
  * response bodies, user ids, query strings, hosts, statements, span names,
  * events, error and status messages, log lines, and a batch's objectives,
- * runtime and custom data.
+ * runtime and custom data; nor (P108) X-Ray annotations and metadata, a
+ * workflow's input and output, client addresses, or request ids.
  *
  * These lists say which fields of each record a reader looks at; what a span
  * may carry out of any reader is one list, `KEPT_FIELDS` in `span.ts`
@@ -100,10 +101,132 @@ export const NESTJS_OBSERVE_READS = {
   tags: ['http.method', 'http.url'],
 } as const satisfies AllowList;
 
+/**
+ * X-Ray `batch-get-traces` output (P108). Each segment's `Document` is a JSON
+ * string: it is parsed, read through these lists field by field, and dropped.
+ * `name` is read as the service of a segment, the step of a state machine's
+ * direct subsegment, and the AWS service of an SDK subsegment; never a
+ * remote call's (it is a host). Not read: `annotations`, `metadata`, `sql`,
+ * `user`, `cause`, `service`, `precursor_ids`, `aws.request_id`,
+ * `aws.account_id`, `aws.region`, `aws.xray`, `http.request.client_ip`,
+ * `user_agent`, `x_forwarded_for`, and every other field.
+ */
+export const XRAY_READS = {
+  output: ['Traces'],
+  trace: ['Segments'],
+  segment: ['Document'],
+  /** `fault` is read as an error; `error` (a 4xx) is not, its status is. */
+  document: [
+    'id',
+    'trace_id',
+    'parent_id',
+    'type',
+    'name',
+    'origin',
+    'namespace',
+    'inferred',
+    'start_time',
+    'end_time',
+    'fault',
+    'http',
+    'aws',
+    'resource_arn',
+    'subsegments',
+  ],
+  http: ['request', 'response'],
+  /** `url` is reduced to the shape of its path. */
+  request: ['method', 'url'],
+  response: ['status'],
+  /** Each an ARN, a URL or a name, cut to the deployed name inside it in `aws.ts`. */
+  aws: [
+    'operation',
+    'function_arn',
+    'function_name',
+    'table_name',
+    'resource_names',
+    'queue_url',
+    'topic_arn',
+    'state_machine_arn',
+    'bucket_name',
+    'stream_name',
+  ],
+} as const satisfies AllowList;
+
+/**
+ * Step Functions `get-execution-history` output, with `describe-execution`'s
+ * names merged in when the user did (P108). Not read: every `input`,
+ * `output`, `inputDetails`, `outputDetails`, `parameters`, `cause` and
+ * `error`, `roleArn`, `taskToken`, and every other detail: a failure is the
+ * event's type, not its text.
+ */
+export const SFN_HISTORY_READS = {
+  execution: ['events', 'executionArn', 'stateMachineArn', 'name'],
+  event: [
+    'id',
+    'previousEventId',
+    'type',
+    'timestamp',
+    'executionStartedEventDetails',
+    'stateEnteredEventDetails',
+    'stateExitedEventDetails',
+    'lambdaFunctionScheduledEventDetails',
+    'taskScheduledEventDetails',
+  ],
+  executionStarted: ['stateMachineAliasArn', 'stateMachineVersionArn'],
+  stateEntered: ['name'],
+  stateExited: ['name'],
+  /** A function's ARN, cut to its name. */
+  lambdaScheduled: ['resource'],
+  /** `lambda` and `invoke`, `dynamodb` and `updateItem.sync`: cut to the operation. */
+  taskScheduled: ['resourceType', 'resource'],
+} as const satisfies AllowList;
+
+/**
+ * An API Gateway access log line, by the names the API Gateway docs' JSON
+ * examples use, matched without regard to case, plus whatever
+ * `--access-log-keys` names (P108 D4). Not read: `ip`, `sourceIp`,
+ * `userAgent`, `caller`, `user`, `identity.*`, `authorizer.*`, `requestId`,
+ * `extendedRequestId`, `domainName`, and any key not named here.
+ */
+export const APIGW_ACCESS_LOG_READS = {
+  /** `path` is reduced to the shape of its path. */
+  line: [
+    'routeKey',
+    'httpMethod',
+    'resourcePath',
+    'path',
+    'status',
+    'responseLatency',
+    'latency',
+    'integrationLatency',
+    'requestTimeEpoch',
+    'requestTime',
+    'integrationStatus',
+  ],
+  /** A CloudWatch Logs export the lines come in: the message (parsed, read, dropped) and its time. */
+  record: ['@message', '@timestamp', 'message', 'timestamp'],
+} as const satisfies AllowList;
+
+/**
+ * Lambda `REPORT` lines from a CloudWatch Logs export (P108). Of a line, only
+ * `Duration` and `Status` are read; not `RequestId`, `Billed Duration`,
+ * `Memory Size`, `Max Memory Used`, `Init Duration`, the X-Ray ids on the
+ * line, nor any line that is not a `REPORT` line.
+ */
+export const LAMBDA_REPORT_READS = {
+  /** `@log` and `@logStream` are read for the function's name only, cut from the log group. */
+  record: ['@message', '@timestamp', '@log', '@logStream', '@duration', 'message', 'timestamp'],
+  line: ['Duration', 'Status'],
+} as const satisfies AllowList;
+
 /** Every reader's list, by reader name. */
 export const ALLOW_LISTS: Readonly<Record<string, AllowList>> = {
   otlp: OTLP_READS,
   'nestjs-observe': NESTJS_OBSERVE_READS,
+  xray: XRAY_READS,
+  'sfn-history': SFN_HISTORY_READS,
+  'apigw-access-log': APIGW_ACCESS_LOG_READS,
+  'lambda-report': LAMBDA_REPORT_READS,
 };
 
 type Json = Record<string, unknown>;

@@ -84,6 +84,8 @@ export const OBSERVED_KEPT = [
   'tables',
   'awsOp',
   'transport',
+  // A span from a source with no tree, never a sample (P108).
+  'sampleable',
 ] as const;
 
 /**

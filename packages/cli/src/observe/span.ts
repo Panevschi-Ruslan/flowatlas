@@ -59,6 +59,12 @@ export interface ObservedSpan {
   awsOp?: string;
   /** Which service's channels `destination` is spelled for (`sqs/<name>`, `sns/<name>`, ...). */
   transport?: AwsTransport;
+  /**
+   * `false` on a span from a source with no tree (an access log line, a
+   * REPORT line, P108): it is counted on its entry and never made a sample,
+   * since a sample of one span with an id made up for it says nothing.
+   */
+  sampleable?: false;
 }
 
 export type FaasTrigger = 'http' | 'pubsub' | 'datasource' | 'timer' | 'other';

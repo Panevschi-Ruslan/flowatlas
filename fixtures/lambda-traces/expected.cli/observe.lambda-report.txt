@@ -1,0 +1,13 @@
+6 spans read from 1 file(s)
+not read: 2 lines not starting REPORT
+0 joins seen, 6 entries hit, 0 seen at run time but not found in code, 0 that could be more than one place
+slowest entries (p95):
+  shop ship-order  count 1  p50 400ms  p95 400ms  max 400ms  errors 0%
+  shop print-label  count 1  p50 320ms  p95 320ms  max 320ms  errors 0%
+  shop charge-card  count 1  p50 270ms  p95 270ms  max 270ms  errors 100%
+  shop reserve-stock  count 1  p50 200ms  p95 200ms  max 200ms  errors 0%
+  shop checkout  count 1  p50 180ms  p95 180ms  max 180ms  errors 0%
+failing most:
+  shop charge-card  count 1  p50 270ms  p95 270ms  max 270ms  errors 100%
+window 2025-10-16T08:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
+<copy>/observed.json

@@ -41,9 +41,34 @@ Two spans are planted to match nothing: a read of `carts`, a table nothing in
 the map names (`table`), and `SecretsManager/GetSecretValue`, a service nothing
 here reads (`cloud`).
 
+## The exports
+
+`exports/` holds the same checkout as four files a Lambda team can make with
+the AWS CLI or the console, without a collector (P108), each written from the
+AWS documentation's examples with made-up ids, ARNs and times, and every field
+a reader must not read planted in it:
+
+| File | What it is | What it gives |
+|---|---|---|
+| `xray.batch-get-traces.json` | `aws xray batch-get-traces`: the stage, each function's `AWS::Lambda` and `AWS::Lambda::Function` segments, the state machine with its steps, an inferred DynamoDB segment | everything the OTLP trace gives: nine entries, twelve joins, the steps, the table, the channels, the two planted unmatched calls |
+| `fulfil-order.history.json` | `aws stepfunctions get-execution-history`, with `describe-execution` merged in | the workflow's run, its four steps, and `ChargeCard`'s direct invoke of `charge-card` |
+| `checkout.access-log.jsonl` | the HTTP API's JSON access log: the checkout, and a `$default` request for `/favicon.ico` | `POST /checkout`'s hit, status and latency, and the favicon as unmatched |
+| `report-lines.insights.json`, `.csv` | a Logs Insights export of the functions' log groups: six `REPORT` lines, a `START` line and a log line | each function's run, `charge-card`'s as an error |
+
+Planted, and never read: annotations, metadata, a `sql` block, a `cause`, a
+user, request ids, the account and the region, a client address, a user
+agent, the API's id, a query string, a workflow's input, output and
+parameters, a role ARN, memory figures, an init duration and the X-Ray ids on
+a `REPORT` line.
+
 ## Asked of it
 
 `expected.cli/observe.txt` and `observe.json`: `observe` over the trace, the
 clock fixed. Every span the trace was written to exercise lands on the node the
 map draws for it - nine entries, twelve joins, four steps, the table and the
 call sites - and the only unmatched rows are the two planted ones.
+
+`expected.cli/observe.xray.txt`, `observe.sfn-history.txt`,
+`observe.apigw-access-log.txt`, `observe.lambda-report.txt` and
+`observe.lambda-report.csv.txt`: `observe` over each export alone;
+`observe.exports.json`: the file the four make together.

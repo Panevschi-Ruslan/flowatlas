@@ -7,7 +7,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { readTraceFiles } from '../commands/observe.js';
 import { PLANTED } from './__fixtures__/planted.js';
 import { decodeTraceRequest, ProtobufError } from './otlp-protobuf.js';
-import { OTLP_KEEP, otlpReader } from './readers.js';
+import { OTLP_KEEP, otlpReader } from './readers/index.js';
 
 /*
  * A protobuf writer for the test only: it writes an OTLP/JSON document as the

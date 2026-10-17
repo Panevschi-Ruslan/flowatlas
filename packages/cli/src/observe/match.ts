@@ -716,7 +716,11 @@ const samplesOf = (
     if (span.parentId !== undefined) push(childrenOf, `${span.traceId}/${span.parentId}`, span);
   }
   const byEntry = new Map<string, ObservedSpan[]>();
-  for (const [span, entries] of tally.entryOf) for (const entry of entries) push(byEntry, entry, span);
+  for (const [span, entries] of tally.entryOf) {
+    // A line of an access log or a REPORT line is one span with an id made up for it: no request to show (P108).
+    if (span.sampleable === false) continue;
+    for (const entry of entries) push(byEntry, entry, span);
+  }
   const samples: Record<string, EntrySamples> = {};
   const atOf = (span: ObservedSpan): string => span.at ?? hourFor(span);
   for (const [entry, roots] of [...byEntry.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {

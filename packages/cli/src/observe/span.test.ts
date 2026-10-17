@@ -3,11 +3,17 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OBSERVED_KEPT } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { TRACE_READERS } from './readers.js';
+import { documentsOf } from '../commands/observe.js';
+import { TRACE_READERS } from './readers/index.js';
 import { KEPT_FIELDS, keepAllowed, type ObservedSpan } from './span.js';
 
-const traces = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures/multi-repo/traces');
-const documents = readdirSync(traces).map((file) => JSON.parse(readFileSync(join(traces, file), 'utf8')) as unknown);
+const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures');
+/** Every trace and export of the fixtures, each document as `observe` hands it to a reader. */
+const documents = ['multi-repo/traces', 'lambda-traces/traces', 'lambda-traces/exports'].flatMap((dir) =>
+  readdirSync(join(fixtures, dir))
+    .filter((file) => !file.endsWith('.pb'))
+    .flatMap((file) => documentsOf(file, readFileSync(join(fixtures, dir, file)))),
+);
 
 describe('the allow-list every reader ends with', () => {
   it('is the list the observed file names as kept', () => {
@@ -30,15 +36,18 @@ describe('the allow-list every reader ends with', () => {
 
   it('leaves no key outside it on any span, from every reader over every fixture trace', () => {
     const kept = new Set<string>(KEPT_FIELDS);
-    let read = 0;
+    const read = new Map<string, number>();
     for (const reader of TRACE_READERS.values()) {
       for (const document of documents.filter((one) => reader.sniff(one))) {
-        for (const span of reader.read(document).spans) {
+        // The two exports that need a name are given one, as their flag would.
+        for (const span of reader.read(document, undefined, { workflow: 'w', function: 'f' }).spans) {
           for (const key of Object.keys(span)) expect(kept.has(key), `${reader.name}: ${key}`).toBe(true);
-          read += 1;
+          read.set(reader.name, (read.get(reader.name) ?? 0) + 1);
         }
       }
     }
-    expect(read).toBeGreaterThan(20);
+    // Every reader read some fixture, so none of them is left out of this check.
+    expect([...read.keys()].sort()).toEqual([...TRACE_READERS.keys()].sort());
+    expect([...read.values()].reduce((a, b) => a + b, 0)).toBeGreaterThan(60);
   });
 });
