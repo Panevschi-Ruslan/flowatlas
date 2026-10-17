@@ -2046,6 +2046,10 @@ __FRAME_LOGIC__
 /* The map's logic - services, links, layout, checks - written in from map.js. */
 __MAP_LOGIC__
 
+/* One subject as the Markdown an assistant is handed - written in from core's
+   prompt-text.js, the renderer the MCP server's describe_for_prompt writes with. */
+__PROMPT_LOGIC__
+
 /* A way in as its steps, and as a prompt - written in from steps.js. */
 __STEPS_LOGIC__
 
@@ -2057,6 +2061,8 @@ __STEPS_LOGIC__
        is known by its position in this page; a link names it by its key, which
        is the same in every build of the graph. */
     const TY = 0, LB = 1, RP = 2, KD = 3, FL = 4, LN = 5, MT = 6;
+    /* The service a check row is in, named even where no node is in it (P133). */
+    const rowService = (row) => serviceOfRow(repos, row);
     const nodes = data.nodes;
     const keys = createKeys(data.keys, nodes.length);
     /* What was seen at run time, when a trace was imported; nothing otherwise. */
@@ -2467,7 +2473,7 @@ __STEPS_LOGIC__
       const items = loops.map(([r, waysIn]) => {
         const row = data.rows[r];
         const file = row[ROW.file] >= 0 ? files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : '';
-        return `<tr><td class="mono">${row[ROW.repo] >= 0 ? esc(repos[row[ROW.repo]]) + ' &middot; ' : ''}${esc(file)}` +
+        return `<tr><td class="mono">${rowService(row) ? esc(rowService(row)) + ' &middot; ' : ''}${esc(file)}` +
           `${row[ROW.node] >= 0 ? ' ' + graphLink(row[ROW.node]) : ''}<div>${esc(row[ROW.message])}</div></td>` +
           `<td class="num">${waysIn.toLocaleString()}</td></tr>`;
       }).join('');
@@ -2573,7 +2579,7 @@ __STEPS_LOGIC__
         const rule = acceptedRule(r);
         return `<tr class="is-accepted"><td><span class="tag">${esc(reasons[row[ROW.reason]])}</span>` +
           (rule ? `<div class="accepted-note">accepted by rule <code>${esc(rule)}</code></div>` : '') + '</td>' +
-          `<td class="mono">${row[ROW.repo] >= 0 ? esc(repos[row[ROW.repo]]) + ' &middot; ' : ''}${esc(file)}` +
+          `<td class="mono">${rowService(row) ? esc(rowService(row)) + ' &middot; ' : ''}${esc(file)}` +
           `${row[ROW.node] >= 0 ? ' ' + graphLink(row[ROW.node]) : ''}<div>${esc(row[ROW.message])}</div></td>` +
           `<td class="accepted-note">${note ? esc(note) : 'no note'}</td></tr>`;
       });
@@ -3758,7 +3764,7 @@ __STEPS_LOGIC__
         `<p>${esc(row[ROW.message])}</p>` +
         (isAccepted && acceptedRule(r) ? `<p class="accepted-note">accepted by rule <code>${esc(acceptedRule(r))}</code></p>` : '') +
         (isAccepted && acceptedNote(r) ? `<p class="accepted-note">${esc(acceptedNote(r))}</p>` : '') +
-        (isAccepted ? '' : acceptLikeHtml(acceptCommandFor({ reason, service: row[ROW.repo] >= 0 ? repos[row[ROW.repo]] : '', message: row[ROW.message] }))) +
+        (isAccepted ? '' : acceptLikeHtml(acceptCommandFor({ reason, service: rowService(row), message: row[ROW.message] }))) +
         (hint ? `<p class="hint-text">${esc(hint)}</p>` : '') +
         `<button class="tool" data-prompt="row:${r}" title="Copy as Markdown for an assistant">Copy as prompt</button></div>`;
     };
@@ -4008,7 +4014,7 @@ __STEPS_LOGIC__
     /* A `file:line` that opens in the editor `--editor-links` named, or plain text. */
     const editor = data.editor || null;
     const opener = (repo, file, line, text) => {
-      const url = editor === null || repo < 0 || file < 0
+      const url = editor === null || typeof repo !== 'number' || repo < 0 || file < 0
         ? null
         : editorUrl(editor.name, editor.roots[repo], files[file], line);
       return url === null
@@ -6130,15 +6136,9 @@ __STEPS_LOGIC__
       };
     })();
 
-    /* Copy as prompt: one handler for every button that asks, on any tab. */
-    const entryIdOf = new Map(Object.entries(data.entryIds || {}).map(([id, i]) => [i, id]));
-    const promptKit = {
-      keyOf: keys.keyOf,
-      idOf: (i) => entryIdOf.get(i) || (typeName(i) === 'channel' ? nodes[i][LB] : null),
-      faceLine,
-      answersOf,
-      seen,
-    };
+    /* Copy as prompt: one handler for every button that asks, on any tab, in
+       the words describe_for_prompt answers with (P97). */
+    const promptKit = { seen, walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
     const promptOf = (asked) => {
       const [kind, at] = asked.split(':');
       return promptFor(model, { [kind]: Number(at) }, promptKit);

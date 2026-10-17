@@ -1171,11 +1171,13 @@ the tables, addresses and channels they reach, and the next service's way in.
   `file:line` and *show in graph*. The depth goes to
   4, 8, 12 or 24 steps.
 - **Copy as prompt** copies the way in as Markdown for an assistant: what is in
-  front of it, what it can fail with, its schedule, the steps with repo-relative
-  `file:line`, shapes in and out, log lines, open gaps with their reasons, and
-  the graph server's ids to ask next. No source code. The same button is on a
-  channel and on a check row, and the graph server's `describe_for_prompt`
-  writes the same text.
+  front of it, what it can fail with, its schedule, the steps `get_flow` walks
+  with their ids, repo-relative `file:line` and marks, shapes in and out, log
+  lines, open gaps with their reasons, and the graph server's calls to make
+  next. No source code. The same button is on a channel and on a check row,
+  and the graph server's `describe_for_prompt` writes the same text, character
+  for character (P97): a check row is copied as its gap id, which the tool
+  takes.
 
 The **Not joined** tab lists every row by reason, under its kind: *Missed*
 (gaps), *Notes* (how a join or a reading was made) and *Findings* (about the

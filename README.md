@@ -427,7 +427,7 @@ shows `flowatlas`, and a session has these tools, among others:
 | `search` | one query over routes, channels, tables, types, gaps, failures and classes |
 | `what_changed` | the last `flowatlas diff`, read back |
 | `get_source` | the code of one symbol, and the only tool returning code |
-| `describe_for_prompt` | an entry, channel or symbol as bounded Markdown to paste into a prompt |
+| `describe_for_prompt` | an entry, channel, symbol or gap as bounded Markdown to paste into a prompt; the page's *Copy as prompt* writes the same text |
 | `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |
 
 Every row carries an `id` the next tool takes as it is, and every answer ends

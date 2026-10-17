@@ -1,13 +1,14 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
-import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted } from '@flowatlas/core';
-import { acceptedSplitOf } from '@flowatlas/linker';
+import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted, type AcceptedRead } from '@flowatlas/core';
+import { acceptedSplitOf, type GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
 import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
 import { readObservedBeside } from '../observe/store.js';
 import { EDITOR_NAMES } from '../visualise/graph.js';
-import { packGraph, type PackInput } from '../visualise/pack.js';
+import { packGraph, type PackedGraph, type PackInput } from '../visualise/pack.js';
 import { packChanges, type PackedChanges } from '../visualise/changes.js';
 import { runDiff } from './diff.js';
 import { shipped } from '../own-path.js';
@@ -28,18 +29,39 @@ const part = (name: string): string => {
 };
 
 /**
+ * Core's prompt renderer (P97), the one the MCP server writes with: copied
+ * beside the page when the command is built, and read from core itself when it
+ * runs from source.
+ */
+const promptPart = (): string => {
+  const name = 'prompt-text.js';
+  const beside = shipped(import.meta.url, `visualise/${name}`, `../visualise/${name}`, `../../../core/src/${name}`);
+  try {
+    return readFileSync(beside, 'utf8');
+  } catch {
+    try {
+      return readFileSync(createRequire(import.meta.url).resolve(`@flowatlas/core/${name}`), 'utf8');
+    } catch {
+      throw cannotRun(`the page's ${name} is missing; rebuild the command`);
+    }
+  }
+};
+
+/**
  * The page, with the graph view's logic written into it.
  *
- * The logic is three modules of its own - what to draw, the frame around it,
- * and the map of the whole project - so that a test can import exactly the
- * text the browser runs; the page holds all three inline, in one module
- * script, so the result is still one file with nothing to fetch.
+ * The logic is modules of its own - what to draw, the frame around it, the
+ * map of the whole project, the steps of a way in, and core's renderer for a
+ * copied prompt - so that a test can import exactly the text the browser runs;
+ * the page holds them inline, in one module script, so the result is still
+ * one file with nothing to fetch.
  */
-const template = (): string =>
+export const template = (): string =>
   part('page.html')
     .replace('__GRAPH_LOGIC__', () => part('graph.js'))
     .replace('__FRAME_LOGIC__', () => part('frame.js'))
     .replace('__MAP_LOGIC__', () => part('map.js'))
+    .replace('__PROMPT_LOGIC__', () => promptPart())
     .replace('__STEPS_LOGIC__', () => part('steps.js'));
 
 /**
@@ -129,6 +151,32 @@ const routeRulesFor = (options: VisualiseOptions): PackInput['routes'] => {
 
 const withRoutes = (routes: PackInput['routes']): Pick<PackInput, 'routes'> => (routes === undefined ? {} : { routes });
 
+/**
+ * The graph in a database, packed for the page: every node and edge, and the
+ * rows as every other surface counts them - demoted where an annotation
+ * answered them, and split by what was accepted, once (P80). The prompt
+ * parity test packs through here too, so it reads what the page reads (P97).
+ */
+export const packDatabase = (
+  db: GraphDb,
+  read: AcceptedRead,
+  extra: Partial<Pick<PackInput, 'observed' | 'editor' | 'changes' | 'routes'>> = {},
+): PackedGraph => {
+  const report = db.report();
+  if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
+  const split = acceptedSplitOf(db, db.allUnresolved(), read);
+  return packGraph({
+    builtAt: report.builtAt,
+    nodes: db.allNodes(),
+    edges: db.allEdges(),
+    unresolved: split.rows,
+    report,
+    typeOf: (id) => db.type(id),
+    accepted: split,
+    ...extra,
+  });
+};
+
 export interface VisualiseResult {
   path: string;
   bytes: number;
@@ -154,27 +202,14 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
   let packed;
   let counts;
   try {
-    const report = db.report();
-    if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
-    const nodes = db.allNodes();
-    const edges = db.allEdges();
-    counts = { nodes: nodes.length, edges: edges.length };
-    // The rows as every other surface counts them: demoted where an annotation
-    // answered them, and split by what was accepted, once (P80).
-    const split = acceptedSplitOf(db, db.allUnresolved(), read);
-    packed = packGraph({
-      builtAt: report.builtAt,
-      nodes,
-      edges,
-      unresolved: split.rows,
-      report,
-      typeOf: (id) => db.type(id),
+    packed = packDatabase(db, read, {
       ...(observed === undefined ? {} : { observed }),
-      accepted: split,
       ...(editor === undefined ? {} : { editor }),
       ...(options.changes === undefined ? {} : { changes: options.changes }),
       ...withRoutes(routeRulesFor(options)),
     });
+    const totals = db.counts();
+    counts = { nodes: totals.nodes, edges: totals.edges };
   } finally {
     db.close();
   }

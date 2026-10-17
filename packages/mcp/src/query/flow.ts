@@ -113,6 +113,11 @@ export interface FlowOptions {
    */
   maxChars?: number;
   detail?: DetailLevel;
+  /**
+   * Filled with the graph edge behind each row, for a caller that reads more
+   * of the edge than a row says (the prompt's marks, P97). Never on the wire.
+   */
+  edgesOf?: Map<FlowNode, GraphEdge>;
 }
 
 /** A crossing the walk reached and did not follow, so it can be asked about directly (P92). */
@@ -370,6 +375,12 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
   const sizeOf = (row: FlowNode, parentService: string | undefined): number => JSON.stringify(slimTree(row, parentService)).length + 1;
 
   const rowOf = (edge: GraphEdge, target: GraphNode | undefined, repeat: 'cycle' | 'again' | undefined, seenAt?: string): FlowNode => {
+    const row = rowFor(edge, target, repeat, seenAt);
+    options.edgesOf?.set(row, edge);
+    return row;
+  };
+
+  const rowFor = (edge: GraphEdge, target: GraphNode | undefined, repeat: 'cycle' | 'again' | undefined, seenAt?: string): FlowNode => {
     if (repeat !== undefined) {
       return {
         node: {

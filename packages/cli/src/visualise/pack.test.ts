@@ -3,7 +3,7 @@ import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { stableKeys } from './keys.js';
 import { wordsOf } from './dictionary.js';
-import { createModel, type GraphModel } from './graph.js';
+import { createModel, serviceOfRow, type GraphModel } from './graph.js';
 import { packObserved } from './observed.js';
 import { packGraph, type PackedGraph } from './pack.js';
 import { ambiguousOf, logsOf, unmatchedOf } from './steps.js';
@@ -166,8 +166,11 @@ describe('packing what the details panel shows', () => {
     expect(levels[onNode![5] as number]).toBe('action');
     expect(hints[onNode![8] as number]).toBe('name the class');
     expect(onNode![7]).toBe('a receiver read by its name only');
-    // A service with no node of its own has no index; the row says -1 rather than a wrong one.
-    expect(elsewhere![1]).toBe(-1);
+    // A service with no node of its own is not in the list of services, so its row names it (P97, P133).
+    expect(elsewhere![1]).toBe('web');
+    expect(serviceOfRow(repos, elsewhere!)).toBe('web');
+    expect(serviceOfRow(repos, onNode!)).toBe('api');
+    expect(serviceOfRow(repos, [-1, -1])).toBe('');
     expect(files[elsewhere![2] as number]).toBe('src/new.ts');
     expect(elsewhere![6]).toBe(4);
     expect(elsewhere![8]).toBe(-1);

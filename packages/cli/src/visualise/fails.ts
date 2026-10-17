@@ -28,15 +28,21 @@ export interface PackedFail {
   ch?: Array<{ s?: number; x: string; a?: 1 }>;
   /** The throw refuses a check of who is asking whose answer was not read (P90). */
   fam?: 'auth';
+  /** The status the thrown class declares for itself, where nothing maps it (P87). */
+  dc?: number;
 }
 
 /**
  * What a throw through a helper adds to its record (P90), as the last element:
  * `via`, the choices as `[status, exception]` with a status packed as the
- * record's own is, and `fam`. Absent for every other failure.
+ * record's own is, and `fam`; and `dc`, the status a class states for itself
+ * where nothing maps it (P87), which a copied prompt says (P97). Absent for
+ * every other failure.
  */
 export interface PackedFailMore {
   via?: 'helper';
+  /** The status the thrown class declares for itself, where nothing maps it (P87). */
+  dc?: number;
   ch?: Array<[s: number, x: string]>;
   fam?: 'auth';
 }
@@ -83,11 +89,12 @@ type Raw = [s: number, x: string, at: number, f: number, l: number, src: string,
 const packedStatus = (status: number | undefined, assumed: true | undefined): number =>
   status === undefined ? -1 : assumed === true ? -status : status;
 
-/** What a throw through a helper adds, or nothing for any other failure (P90). */
+/** What a throw through a helper adds, and a status the class states, or nothing (P90, P97). */
 const moreOf = (item: Failure): PackedFailMore | undefined => {
-  if (item.via === undefined && item.chosenFrom === undefined && item.family === undefined) return undefined;
+  if (item.via === undefined && item.chosenFrom === undefined && item.family === undefined && item.declared === undefined) return undefined;
   return {
     ...(item.via === undefined ? {} : { via: item.via }),
+    ...(item.declared === undefined ? {} : { dc: item.declared }),
     ...(item.chosenFrom === undefined
       ? {}
       : { ch: item.chosenFrom.map((choice): [number, string] => [packedStatus(choice.status, choice.assumed), choice.exception]) }),

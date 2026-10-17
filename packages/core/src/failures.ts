@@ -6,6 +6,7 @@
  * written on the entry node under `meta.fails`, so a reader leading with "what
  * can go wrong here" has the answer without walking the chain.
  */
+import { compareFailChoices, groupFails } from './prompt-text.js';
 
 /** Where a failure comes from. */
 export const FAILURE_SOURCES = ['throw', 'guard', 'pipe'] as const;
@@ -75,9 +76,8 @@ const choiceKey = (choices: readonly FailureChoice[] | undefined): string =>
     ? ''
     : choices.map((choice) => `${choice.exception}/${choice.status ?? ''}${choice.assumed === true ? '?' : ''}`).join(',');
 
-/** The order choices are written in: by status, then exception. */
-export const compareChoices = (a: FailureChoice, b: FailureChoice): number =>
-  (a.status ?? 1000) - (b.status ?? 1000) || cmp(a.exception, b.exception);
+/** The order choices are written in: by status, then exception; the prompt renderer's, so there is one (P97). */
+export const compareChoices: (a: FailureChoice, b: FailureChoice) => number = compareFailChoices;
 
 /** The key on an entry's `meta` that holds its failures. */
 export const FAILS_META = 'fails';
@@ -156,37 +156,9 @@ export interface FailureGroup {
   at: Failure[];
 }
 
-const groupKey = (item: Failure): string => `${item.status ?? ''}\u0000${item.exception}`;
-
-/** Each (status, exception) once, by status then exception, with its sites. */
-export const groupFailures = (fails: readonly Failure[]): FailureGroup[] => {
-  const byKey = new Map<string, Failure[]>();
-  for (const item of fails) {
-    const key = groupKey(item);
-    const list = byKey.get(key);
-    if (list === undefined) byKey.set(key, [item]);
-    else list.push(item);
-  }
-  const groups = [...byKey.values()].map((at): FailureGroup => {
-    const [first] = at as [Failure, ...Failure[]];
-    const declared = at.every((item) => item.declared !== undefined && item.declared === first.declared)
-      ? first.declared
-      : undefined;
-    const used = new Set(at.map((item) => item.source));
-    const choices = new Map<string, FailureChoice>();
-    for (const item of at) for (const choice of item.chosenFrom ?? []) choices.set(choiceKey([choice]), choice);
-    return {
-      ...(first.status === undefined ? {} : { status: first.status }),
-      exception: first.exception,
-      ...(at.every((item) => item.assumed === true) ? { assumed: true as const } : {}),
-      ...(declared === undefined ? {} : { declared }),
-      ...(at.every((item) => item.via === 'helper') ? { via: 'helper' as const } : {}),
-      ...(choices.size === 0 ? {} : { chosenFrom: [...choices.values()].sort(compareChoices) }),
-      ...(at.every((item) => item.family === 'auth') ? { family: 'auth' as const } : {}),
-      sources: FAILURE_SOURCES.filter((source) => used.has(source)),
-      sites: at.length,
-      at,
-    };
-  });
-  return groups.sort((a, b) => (a.status ?? 1000) - (b.status ?? 1000) || cmp(a.exception, b.exception));
-};
+/**
+ * Each (status, exception) once, by status then exception, with its sites.
+ * One implementation, the prompt renderer's (P97): the page groups with it too,
+ * and a group written two ways would be two texts.
+ */
+export const groupFailures = (fails: readonly Failure[]): FailureGroup[] => groupFails(fails);

@@ -6,6 +6,9 @@ import type { GraphModel } from './graph.js';
 import type { PackedGraph } from './pack.js';
 import type { PackedFail } from './fails.js';
 import type { PackedAccessOf } from './access.js';
+import type { PromptLimits, PromptSubject, PROMPT_WALK } from '@flowatlas/core';
+
+type PromptWalk = typeof PROMPT_WALK;
 
 export interface StepLog {
   level: string;
@@ -17,7 +20,6 @@ export type StepKind = 'handler' | 'service' | 'db' | 'http' | 'channel' | 'lamb
 
 export declare const STEP_KINDS: Readonly<Record<StepKind, Readonly<{ glyph: string; say: string }>>>;
 export declare const STEP_BOUNDS: Readonly<{ depth: number; rows: number }>;
-export declare const PROMPT_BOUNDS: Readonly<{ chars: number; steps: number; gaps: number; consumers: number }>;
 
 export interface StepRow {
   node: number;
@@ -74,14 +76,15 @@ export interface StepOptions {
   seen?: Seen;
 }
 
+/** What a prompt is gathered and written with (P97): the walk's bounds, what was seen, and core's renderer. */
 export interface PromptKit {
-  keyOf(i: number): string;
-  idOf?: (i: number) => string | null;
-  faceLine?: (model: GraphModel, i: number) => string;
-  answersOf?: StepOptions['answersOf'];
+  walk: PromptWalk;
   seen?: Seen;
-  chars?: number;
+  render: (subject: PromptSubject, limits?: Partial<PromptLimits>) => string;
+  limits?: Partial<PromptLimits>;
 }
+
+export type PromptTarget = { entry: number } | { channel: number } | { node: number } | { row: number };
 
 export declare const stepField: (model: GraphModel, i: number, key: string) => unknown;
 export declare const stepKindOf: (model: GraphModel, i: number) => StepKind;
@@ -94,12 +97,9 @@ export declare const stepBreakOf: (
   model: GraphModel,
   i: number,
 ) => { say: string; reason: string; message: string } | null;
-export declare const placeOfStep: (model: GraphModel, i: number) => string;
-export declare const promptFor: (
-  model: GraphModel,
-  target: { entry: number } | { channel: number } | { row: number },
-  kit: PromptKit,
-) => string;
+export declare const stepIdOf: (model: GraphModel, i: number) => string | null;
+export declare const subjectOf: (model: GraphModel, target: PromptTarget, kit: Pick<PromptKit, 'walk' | 'seen'>) => PromptSubject | null;
+export declare const promptFor: (model: GraphModel, target: PromptTarget, kit: PromptKit) => string;
 export declare const failsOf: (model: GraphModel, entry: number) => readonly PackedFail[];
 export declare const ACCESS_WHERE_SAY: Readonly<Record<'global' | 'module' | 'controller' | 'route', string>>;
 export declare const accessOf: (model: GraphModel, entry: number) => PackedAccessOf | null;

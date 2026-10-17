@@ -133,6 +133,14 @@ describe('writing the graph as a page', () => {
     expect(Array.isArray(map.links)).toBe(true);
   });
 
+  it('writes core’s prompt renderer in ahead of the steps, the one describe_for_prompt writes with (P97)', () => {
+    expect(page).not.toContain('__PROMPT_LOGIC__');
+    expect(page).toContain(readFileSync(new URL('../../../core/src/prompt-text.js', import.meta.url), 'utf8'));
+    expect(page.indexOf('export const renderPrompt')).toBeLessThan(page.indexOf('export const subjectOf'));
+    const { ids, nodes } = dataOf(page);
+    expect(ids).toHaveLength(nodes.length);
+  });
+
   it('names every node by a key of its own, the same key in the next build', () => {
     const { nodes, keys } = dataOf(page);
     const keyAt = (i: number): string =>

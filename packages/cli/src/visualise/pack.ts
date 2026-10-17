@@ -12,6 +12,7 @@ import {
   type GraphNode,
   type RowKind,
   type TypeEntry,
+  waysInOf,
 } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
@@ -30,6 +31,7 @@ import { failuresByEntry, packFails, type PackedFailRecord, type PackedFails } f
 import { dictionary, wordsOf, type Word } from './dictionary.js';
 import { packAccess, type PackedAccess } from './access.js';
 import { packCantFollow, type PackedCantFollow } from './cant-follow.js';
+import { packIds } from './node-ids.js';
 
 export type { PackedAccess };
 
@@ -135,12 +137,26 @@ export interface PackedGraph {
    */
   unresolved: Array<{ reason: string; kind: RowKind; count: number; service: string; example: string }>;
   /**
-   * Every finding, `[node, repo, file, line, reason, level, sites, message, hint]`.
+   * Every finding, `[node, repo, file, line, reason, level, sites, message, hint, waysIn?]`.
    *
    * `node` is the position of the node the row names, or -1 when it names none;
-   * `repo`, `file`, `reason`, `level` and `hint` are indices, -1 for absent.
+   * `repo`, `file`, `reason`, `level` and `hint` are indices, -1 for absent,
+   * and `repo` the service's name where no node is in that service.
+   * `waysIn` is there only on a row that counts the ways in reaching it (P89).
    */
   rows: unknown[][];
+  /**
+   * Every node's id, by position, each less what its type, service and file
+   * already say (P97): see `node-ids.ts`. The prompt names steps by them.
+   */
+  ids: string[];
+  /**
+   * Edges whose target the graph does not hold, `[from, to, type, confidence,
+   * line]`: `to` the id it names, `line` 0 for none, the rest as `edges` has
+   * them. The prompt walks them into a missing step, as `get_flow` does.
+   * Absent when there are none.
+   */
+  dangling?: Array<[from: number, to: string, type: number, confidence: number, line: number]>;
   /** Ids of the ways in, so a link can name one. */
   entryIds: Record<string, number>;
   /**
@@ -298,10 +314,15 @@ const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerate
   // When a schedule fires, and in which zone (P71).
   ['expression', 'ex', false],
   ['timeZone', 'tz', true],
+  // How many steps a chain holds, which lengthens the walk under a prompt (P97).
+  ['states', 'ss', false],
   // The value a request's base address was taken from, and the file it is in (P77).
   ['baseUrl', 'bu', false],
   ['baseUrlFrom', 'bf', true],
 ];
+
+/** Fields a copied prompt says in full whatever the label says (P97): a schedule's expression. */
+const SAID_IN_FULL: ReadonlySet<string> = new Set(['expression']);
 
 /** How many of `META_FIELDS` the walk and the lists read, and so always ship. */
 const LISTED = 8;
@@ -346,7 +367,7 @@ const metaPacker = (nodes: readonly GraphNode[], position: ReadonlyMap<string, n
       // said twice: `write orders` carries its table, `click="save()"` its
       // event and handler. On a real project that is a good share of what the
       // panel would otherwise add to the page.
-      if (index >= LISTED && typeof value === 'string' && node.label.includes(value)) return;
+      if (index >= LISTED && typeof value === 'string' && node.label.includes(value) && !SAID_IN_FULL.has(field)) return;
       out[key] = isEnum && typeof value === 'string' ? valueIx.get(value) : value;
     });
     return Object.keys(out).length === 0 ? 0 : out;
@@ -518,6 +539,15 @@ export const packGraph = (input: PackInput): PackedGraph => {
 
   const known = (edge: GraphEdge): boolean => position.has(edge.from) && position.has(edge.to);
   const packedEdges = input.edges.filter(known);
+  const dangling = input.edges
+    .filter((edge) => position.has(edge.from) && !position.has(edge.to))
+    .map((edge): [number, string, number, number, number] => [
+      position.get(edge.from) as number,
+      edge.to,
+      edgeTypeIx.get(edge.type) as number,
+      confIx.get(edge.confidence) as number,
+      edge.line ?? 0,
+    ]);
   const edges = packedEdges.map((edge) => [
     position.get(edge.from) as number,
     position.get(edge.to) as number,
@@ -530,17 +560,25 @@ export const packGraph = (input: PackInput): PackedGraph => {
   // and the others still carry their file, so the page can say where they are.
   const indexOr = (map: Map<string, number>, value: string | null): number =>
     value === null || value === '' ? -1 : (map.get(value) ?? -1);
-  const rows = rowsIn.map((row) => [
-    row.node === null ? -1 : (position.get(row.node) ?? -1),
-    indexOr(repoIx, row.service),
-    indexOr(fileIx, row.file),
-    row.line ?? 0,
-    reasonIx.get(row.reason) as number,
-    levelIx.get(row.level) as number,
-    row.sites,
-    row.message,
-    indexOr(hintIx, row.hint),
-  ]);
+  const rows = rowsIn.map((row) => {
+    // A service no node is in (one that read nothing) is not in the page's
+    // list of services, so its name ships as it is, as a word does (P84, P97).
+    const service = row.service === null || row.service === '' || repoIx.has(row.service) ? indexOr(repoIx, row.service) : row.service;
+    const packed: unknown[] = [
+      row.node === null ? -1 : (position.get(row.node) ?? -1),
+      service,
+      indexOr(fileIx, row.file),
+      row.line ?? 0,
+      reasonIx.get(row.reason) as number,
+      levelIx.get(row.level) as number,
+      row.sites,
+      row.message,
+      indexOr(hintIx, row.hint),
+    ];
+    const waysIn = waysInOf(row);
+    if (waysIn !== undefined) packed.push(waysIn);
+    return packed;
+  });
 
   const shapes = packShapes({
     nodes: input.nodes,
@@ -576,6 +614,8 @@ export const packGraph = (input: PackInput): PackedGraph => {
     unresolved: byReason(rowsIn),
     rows,
     entryIds,
+    ids: packIds(input.nodes),
+    ...(dangling.length === 0 ? {} : { dangling }),
     keys: stableKeys(input.nodes.map((node) => node.id)),
     steps,
     map: packMap({
@@ -589,7 +629,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
       ...(input.routes === undefined ? {} : { routes: input.routes }),
     }),
     shapes,
-    sites: packSites(packedEdges),
+    sites: packSites(packedEdges, position),
     busiest: packBusiest(input.nodes, packedEdges, position, rowsIn),
     ...(input.changes === undefined ? {} : { changes: input.changes }),
     ...(fails === undefined ? {} : { fails: fails.fails }),

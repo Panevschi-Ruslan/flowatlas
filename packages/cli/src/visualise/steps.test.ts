@@ -1,4 +1,4 @@
-import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import { PROMPT_LIMITS, PROMPT_WALK, renderPrompt, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { createKeys } from './frame.js';
@@ -17,8 +17,13 @@ import {
   likeRoute,
   promptFor,
   scheduleOf,
+  stepIdOf,
   stepsOf,
+  subjectOf,
 } from './steps.js';
+
+/** What the page hands the prompt: the walk's bounds and core's renderer, as `page.html` does (P97). */
+const kit = { walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
 
 /**
  * A synthetic shop: a route calls a service that reads a table, publishes to
@@ -69,7 +74,7 @@ describe('sites', () => {
     expect(sites.concurrent).toEqual([6]);
     const branch = packSites([e(1, 2, 'calls', { meta: { order: 0, transitions: [{ kind: 'branch' }] } }),
       e(1, 3, 'calls', { meta: { order: 1, transitions: [{ kind: 'catch' }] } })]);
-    expect(branch).toEqual({ order: [0, 1], failure: [1], concurrent: [0], loop: [] });
+    expect(branch).toEqual({ order: [0, 1], failure: [1], concurrent: [0], loop: [], ordered: [[0, 0], [1, 0]] });
   });
 });
 
@@ -144,21 +149,56 @@ describe('observed', () => {
 });
 
 describe('prompt', () => {
-  it('writes the steps with places, marks, gaps and ids, within its bound', () => {
-    const data = pack();
-    const model = modelOf(data);
-    const keys = createKeys(data.keys, data.nodes.length);
-    const kit = { keyOf: keys.keyOf, idOf: (i: number) => (i === 0 ? nodes[0]!.id : null) };
+  it('names every node by its id, which the pack ships less what the node already says (P97)', () => {
+    const model = modelOf(pack());
+    expect(nodes.map((_, i) => stepIdOf(model, i))).toEqual(nodes.map((node) => node.id));
+  });
+
+  it('gathers a way in as the server does: its walk in call order, ids, places, marks', () => {
+    const model = modelOf(pack());
+    const subject = subjectOf(model, { entry: 0 }, kit)!;
+    expect(subject).toMatchObject({ id: 'entry:shop-api:http:POST:/orders', type: 'entry', kind: 'http', service: 'shop-api', loc: 'src/a.ts:4' });
+    expect(subject.steps.map((step) => `${step.depth}:${step.label}`)).toEqual([
+      '1:Orders.place', '2:insert', '3:orders', '2:publish order.created', '3:order.created', '4:onOrderCreated',
+      '2:Orders.guess', '2:Orders.onFail',
+    ]);
+    expect(subject.steps[6]).toMatchObject({ via: { type: 'calls', confidence: 'heuristic' }, marks: { together: true } });
+    expect(subject.steps[7]).toMatchObject({ via: { type: 'triggers' }, marks: { failure: true } });
     const text = promptFor(model, { entry: 0 }, kit);
     expect(text).toContain('# Way in: POST /orders');
     expect(text).toContain('`entry:shop-api:http:POST:/orders`');
-    expect(text).toContain('`shop-api: src/a.ts:12`');
-    expect(text).toContain('best guess: heuristic');
-    expect(text).toContain('on failure');
-    const short = promptFor(model, { entry: 0 }, { ...kit, chars: 200 });
-    expect(short.length).toBeLessThan(300);
-    expect(short).toMatch(/more lines cut/);
+    expect(text).toContain('**insert** `db:shop-api#1` — shop-api `src/a.ts:12`');
+    expect(text).toContain('[best guess, side by side]');
+    expect(text).toContain('[on failure]');
+    const short = promptFor(model, { entry: 0 }, { ...kit, limits: { ...PROMPT_LIMITS, maxChars: 500 } });
+    expect(short.length).toBeLessThanOrEqual(500);
+    expect(short).toMatch(/more line\(s\) cut to stay under 500 characters/);
+  });
+
+  it('gathers a channel with what publishes onto it and what consumes it', () => {
+    const model = modelOf(pack());
+    const subject = subjectOf(model, { channel: 5 }, kit)!;
+    expect(subject.producers!.map((step) => step.id)).toEqual(['producer:shop-api#1']);
+    expect(subject.steps.map((step) => step.id)).toEqual(['consumer:shop-worker#1']);
     expect(promptFor(model, { channel: 5 }, kit)).toContain('## Consumed by · 1');
+  });
+
+  it('gathers a check row as its gap id, every row of it, and the ways in that reach it', () => {
+    const data = packGraph({
+      builtAt: '2026-01-01T00:00:00Z', nodes, edges, report,
+      unresolved: [
+        { service: 'shop-api', file: 'src/a.ts', line: 12, reason: 'channel-dynamic', level: 'action', sites: 1, message: 'second', hint: 'Annotate it.', node: nodes[1]!.id },
+        { service: 'shop-api', file: 'src/a.ts', line: 3, reason: 'channel-dynamic', level: 'action', sites: 1, message: 'first', hint: null, node: null },
+      ] as never,
+    });
+    const subject = subjectOf(modelOf(data), { row: 0 }, kit)!;
+    expect(subject).toMatchObject({ id: 'gap:shop-api|src/a.ts|channel-dynamic', type: 'check', kind: 'action', service: 'shop-api', loc: 'src/a.ts' });
+    expect(subject.check!.places.map((place) => [place.loc, place.message, place.on?.id])).toEqual([
+      ['src/a.ts:3', 'first', undefined],
+      ['src/a.ts:12', 'second', 'shop-api#Orders.place'],
+    ]);
+    expect(subject.reachedFrom!.map((step) => step.id)).toEqual(['entry:shop-api:http:POST:/orders']);
+    expect(subjectOf(modelOf(data), { row: 9 }, kit)).toBeNull();
   });
 });
 
@@ -259,13 +299,13 @@ describe('failures, loops, logs and schedules on the steps (P74)', () => {
   });
 
   it('copies the failures and the logs into the prompt', () => {
-    const text = promptFor(model, { entry: 0 }, { keyOf: (i) => 'k' + i });
+    const text = promptFor(model, { entry: 0 }, kit);
     expect(text).toContain('## Can fail with 401 · 409 · Error');
-    expect(text).toContain('- 409 `ConflictException` (throw) in `Carts.add` at `src/carts.ts:21`');
+    expect(text).toContain('- **409** `ConflictException` — throw at `src/carts.ts:21`');
     expect(text).toContain('per item (for-of), likely N+1');
     expect(text).toContain('throws 409 ConflictException');
     expect(text).toContain('- logs log `adding {count} items` at line 16');
-    expect(promptFor(model, { entry: 3 }, { keyOf: (i) => 'k' + i })).toContain('- schedule: `0 3 * * *` in Europe/Paris');
+    expect(promptFor(model, { entry: 3 }, kit)).toContain('- schedule: `0 3 * * *` in Europe/Paris');
   });
 });
 
@@ -292,8 +332,7 @@ describe('who covers a way in, and accepting every gap like one (P76)', () => {
       o: [['Public', 1, 'route', 'JwtAuthGuard']],
     });
     expect(accessOf(model, 1)).toBeNull();
-    const keys = createKeys(data.keys, data.nodes.length);
-    const text = promptFor(model, { entry: 0 }, { keyOf: keys.keyOf, idOf: () => null });
+    const text = promptFor(model, { entry: 0 }, kit);
     expect(text).toContain('## In front of it');
     expect(text).toContain('- JwtAuthGuard · the whole application (APP_GUARD in AuthModule), switched off by @Public');
     expect(text).toContain('- @Public on this route, open on purpose; JwtAuthGuard reads it');

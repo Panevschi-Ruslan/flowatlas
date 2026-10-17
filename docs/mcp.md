@@ -145,10 +145,33 @@ The server's instructions describe the same chains. `list_entries`,
 | Tool | Answers | Takes |
 |---|---|---|
 | `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
-| `describe_for_prompt` | one entry, channel or symbol as Markdown to hand on: what is in front of it, what it can fail with, the chain in call order with repo-relative `file:line`, shapes in and out, gaps with their reasons, and the ids to ask next. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception) and `maxChars` | `id` (required), `maxSteps`, `maxChars` |
+| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, and `maxChars` | `id` (required: any id, a gap id, a channel name or a route said aloud), `maxSteps`, `maxChars` |
 
-`describe_for_prompt` is rendered by `describeForPrompt`, a pure function
-exported from `@flowatlas/mcp`, so a page can copy the same text.
+`describe_for_prompt` and the page's *Copy as prompt* write the same text
+(P97): each gathers one subject - the server from the database, the page from
+its packed model - and core's `renderPrompt` writes it. The headings are the
+same for every subject:
+
+- `# Way in: …`, `# Channel: …`, `# Check: …` (a gap id) or `# Symbol: …`, then
+  the id line (`` `id` — type / kind in service at `file:line` ``) and, for a
+  way in, its schedule and the hits seen at run time.
+- *In front of it* (the checks and opt-outs, P76) and *Can fail with* with the
+  statuses in the heading, one line per status and exception with how many
+  places raise it (P87).
+- For a channel, *Published by · n* and *Consumed by · n*, each consumer with
+  the steps under it; for a check, *Where · n*, every row of the gap id at its
+  line with the node it is on; for a symbol or a check, *Reached from*, the
+  ways in that reach it.
+- **Steps**: the walk `get_flow` takes, in call order, each step with how it
+  was reached and how sure the join is, what it takes and returns, and its
+  marks in brackets - `best guess`, `on failure`, `side by side`, `per item
+  (for-of)`, `likely N+1`, `throws 409 ConflictException`, `seen ×n` - and the
+  lines it logs under it. A step written out already says under which id.
+- **Shapes**, **Gaps** (in chain order, a loop reached from more ways in first)
+  and **Ask next**: the calls that take the ids above, as `next` lists them.
+
+`describeForPrompt` and `PROMPT_LIMITS` are still exported from
+`@flowatlas/mcp`; they are core's `renderPrompt` and limits.
 
 Every unresolved row is a **gap** (the reading could not follow something), a
 **note** (how a join or a reading was made; nothing was missed) or a

@@ -8,7 +8,9 @@
  *   stepInline    the table, address or channel a step names
  *   stepsOf       a way in, depth first in call order: a waterfall of rows
  *   createSeen    what was seen at run time, when the pack carries it
- *   promptFor     a way in, a channel or a check row as bounded Markdown
+ *   stepIdOf      a node's id, as the graph and the MCP tools name it
+ *   subjectOf     a way in, a channel, any node or a check row as the subject of a prompt
+ *   promptFor     the same as Markdown, written by core's renderPrompt, as the MCP server writes it
  *   failsOf       what a way in can fail with, failGroups each answer once, failChips the statuses
  *   logsOf        the lines a step logs
  *   scheduleOf    when a scheduled way in fires, and in which zone
@@ -422,68 +424,6 @@ const breakRow = (row, at, broken) => ({
   reason: broken.reason, message: broken.message,
 });
 
-/* ── Copy as prompt (P67) ── */
-
-/** How long a prompt may get, in characters, and how many of each list it names. */
-export const PROMPT_BOUNDS = Object.freeze({ chars: 8000, steps: 80, gaps: 20, consumers: 4 });
-
-const PROMPT_MARKS = Object.freeze([
-  [(row) => !row.certain && row.confidence !== '', (row) => 'best guess: ' + row.confidence],
-  [(row) => row.failure, () => 'on failure'],
-  [(row) => row.together, () => 'side by side'],
-  [(row) => row.perItem !== '', (row) => 'per item (' + row.perItem + ')'],
-  [(row) => row.nPlusOne, () => 'likely N+1'],
-  [(row) => row.throws.length > 0, (row) => 'throws ' + row.throws.map(failSay).join(', ')],
-  [(row) => row.seen > 0, (row) => 'seen ×' + row.seen],
-  [(row) => row.again, () => 'listed above'],
-  [(row) => row.loop, () => 'loops back'],
-]);
-
-/** A node's place, repository first, then its repo-relative `file:line`. */
-export const placeOfStep = (model, i) => {
-  const file = model.data.dicts.files[model.nodes[i][4]];
-  const repo = model.data.dicts.repos[model.nodes[i][2]];
-  if (!file) return repo;
-  const line = model.nodes[i][5];
-  return `${repo}: ${file}${line ? ':' + line : ''}`;
-};
-
-const tick = (text) => '`' + String(text).replace(/`/g, "'") + '`';
-
-const stepLine = (model, row) => {
-  if (row.kind === 'break') {
-    return '  '.repeat(row.depth) + `- chain breaks here: ${row.inline}` + (row.message ? ` (${row.message})` : '');
-  }
-  const label = row.kind === 'answer' ? 'answers ' + row.inline : model.nodes[row.node][1];
-  const inline = row.inline && row.kind !== 'answer' && row.inline !== label ? ' → ' + tick(row.inline) : '';
-  const marks = PROMPT_MARKS.filter(([when]) => when(row)).map(([, say]) => say(row));
-  const pad = '  '.repeat(row.depth);
-  const logs = row.logs.map((log) => `${pad}  - logs ${log.level}` + (log.text ? ' ' + tick(log.text) : '') +
-    (log.line ? ' at line ' + log.line : ''));
-  return [pad + `- ${STEP_KINDS[row.kind].say} ${tick(label)}${inline}` +
-    (row.kind === 'answer' ? '' : ' at ' + tick(placeOfStep(model, row.node))) +
-    (marks.length ? ' [' + marks.join(', ') + ']' : ''), ...logs];
-};
-
-/** What a throw through a helper is chosen from, in words (P90); nothing for any other failure. */
-const helperSaid = (fail) => {
-  if (fail.v !== 'helper') return '';
-  if (fail.ch && fail.ch.length) return ' — chosen at run time from ' + fail.ch.map((c) => tick(c.x)).join(', ');
-  return fail.fam === 'auth' ? ' — refuses a check of who is asking; what the helper returns was not read' : ' — what the helper returns was not read';
-};
-
-/** What a way in can fail with, a line per status and exception: how, how many places, the first of them. */
-const failLines = (model, entry) => failGroups(failsOf(model, entry)).map((group) => {
-  const [fail] = group.sites;
-  const where = fail.f ? fail.f + (fail.l ? ':' + fail.l : '') : '';
-  const node = fail.at >= 0 ? model.nodes[fail.at][1] : fail.id || '';
-  const chosen = fail.v === 'helper' && fail.s === undefined ? choiceStatuses(fail) : '';
-  return `- ${group.s === undefined ? chosen || 'no status' : group.s + (group.a ? '?' : '')} ${tick(group.x)} (${group.srcs.join('/')}` +
-    (group.n > 1 ? ` ×${group.n}, first` : '') + ')' +
-    (node ? ' in ' + tick(node) : '') + (where ? ' at ' + tick(where) : '') +
-    (group.a ? ' — assumed: no code on the path writes this status' : '') + helperSaid(fail);
-});
-
 /* ── What stands in front of a way in (P76) ── */
 
 /** Where a check was put, in the words the page says it in. */
@@ -509,12 +449,6 @@ export const accessSay = (check) =>
 export const optOutSay = (item) =>
   '@' + item[0] + ' on ' + (item[2] === 'controller' ? 'its controller' : 'this route') +
   (item[1] ? ', open on purpose' : ', switches a check off') + (item[3] ? '; ' + item[3] + ' reads it' : '; no check in front reads it');
-
-const accessLines = (model, entry) => {
-  const access = accessOf(model, entry);
-  if (access === null) return [];
-  return [...access.g.map((check) => `- ${accessSay(check)}`), ...(access.o || []).map((item) => `- ${optOutSay(item)}`)];
-};
 
 /* ── Accepting every gap like one (P76) ── */
 
@@ -552,154 +486,457 @@ export const acceptCommandFor = ({ reason, service, message }) => {
   return words.join(' ');
 };
 
-/** The check rows on these nodes, as one line each: reason, place, message, hint. */
-const gapLines = (model, nodes, limit) => {
-  const { reasons, hints, files, repos } = model.data.dicts;
-  const out = [];
-  const rows = model.data.rows || [];
-  for (const i of nodes) {
-    for (const r of model.rowsOn.get(i) || []) {
-      const row = rows[r];
-      const file = row[2] >= 0 ? files[row[2]] : '';
-      const where = (row[1] >= 0 ? repos[row[1]] + ': ' : '') + file + (file && row[3] ? ':' + row[3] : '');
-      const hint = row[8] >= 0 ? ` (${hints[row[8]]})` : '';
-      out.push(`- ${tick(reasons[row[4]])} at ${tick(where)}: ${row[7]}${hint}`);
-    }
-  }
-  return out.length > limit ? [...out.slice(0, limit), `- ${out.length - limit} more not listed`] : out;
-};
+/* ── Copy as prompt (P67, P97) ── */
 
-/**
- * Lines while they fit, and a line saying what was cut when they do not: a
- * prompt is pasted, and one too long to paste is no use.
+/*
+ * The page gathers the same subject the MCP server gathers from its database
+ * (`gatherPromptSubject` in `@flowatlas/mcp`) and hands it to core's
+ * `renderPrompt`, which the page holds inline: the same subject is then the
+ * same text from either. Every rule below has its twin on the server, and the
+ * parity test on the fixtures fails the day one of them moves alone.
  */
-const bounded = (sections, chars) => {
-  const out = [];
-  let used = 0;
-  for (const [i, section] of sections.entries()) {
-    for (const [j, line] of section.entries()) {
-      if (used + line.length + 1 > chars) {
-        const left = section.length - j + sections.slice(i + 1).reduce((sum, s) => sum + s.length, 0);
-        out.push(`… ${left} more lines cut to keep this short.`);
-        return out.join('\n');
-      }
-      out.push(line);
-      used += line.length + 1;
-    }
-  }
-  return out.join('\n');
-};
 
-const idLines = (kit, i) => {
-  const id = kit.idOf ? kit.idOf(i) : null;
-  return [`- id: ${tick(id || kit.keyOf(i))}${id ? '' : ' (the page\'s key for it)'}`];
-};
-
-const shapeLines = (model, kit, i) => {
-  const face = kit.faceLine ? kit.faceLine(model, i) : '';
-  return face ? [`- shape: ${tick(face)}`] : [];
-};
-
-const stepsBlock = (model, kit, steps) => {
-  const listed = steps.rows.slice(0, PROMPT_BOUNDS.steps).flatMap((row) => stepLine(model, row));
-  const left = steps.rows.length - listed.length + steps.more;
-  return left > 0 ? [...listed, `- … ${left} more steps not listed`] : listed;
-};
-
-const PROMPT_HEAD = 'Read from the source by flowatlas, without running it. Steps are in call order; ' +
-  'a best guess is a join it inferred, not one the code proves.';
-
-const PROMPT_TARGETS = Object.freeze({
-  entry: (model, kit, i) => {
-    const steps = stepsOf(model, i, { answersOf: kit.answersOf, seen: kit.seen });
-    const hits = kit.seen ? kit.seen.entry(i) : 0;
-    const fails = failLines(model, i);
-    const access = accessLines(model, i);
-    const schedule = scheduleOf(model, i);
-    return [
-      [`# Way in: ${model.nodes[i][1]}`, '', PROMPT_HEAD, ''],
-      [...idLines(kit, i), `- source: ${tick(placeOfStep(model, i))}`, ...shapeLines(model, kit, i),
-        ...(schedule ? [`- schedule: ${tick(schedule.expression)}` + (schedule.zone ? ` in ${schedule.zone}` : '')] : []),
-        ...(hits ? [`- seen at run time: ${hits} hits`] : []), ''],
-      ...(access.length ? [['## In front of it', ...access, '']] : []),
-      ...(fails.length ? [[`## Can fail with ${failChips(failsOf(model, i)).join(' · ')}`, ...fails, '']] : []),
-      ['## Steps', ...stepsBlock(model, kit, steps), ''],
-      ...stepGaps(model, steps),
-      ['## Ask for more', '- `get_flow` with the id above for the whole flow; `get_source` with a file:line for the code.'],
-    ];
-  },
-  channel: (model, kit, i) => {
-    const { edgeTypes } = model.data.dicts;
-    const into = model.incoming[i].filter((k) => edgeTypes[model.edges[k][2]] === 'emits').map((k) => model.edges[k][0]);
-    const outOf = model.outgoing[i].filter((k) => edgeTypes[model.edges[k][2]] === 'consumes').map((k) => model.edges[k][1]);
-    const consumers = outOf.slice(0, PROMPT_BOUNDS.consumers).flatMap((c) => {
-      const steps = stepsOf(model, c, { answersOf: kit.answersOf, seen: kit.seen, rows: 40 });
-      return [`### ${model.nodes[c][1]}`, ...stepsBlock(model, kit, steps), ''];
-    });
-    return [
-      [`# Channel: ${model.nodes[i][1]}`, '', PROMPT_HEAD, ''],
-      [...idLines(kit, i), ...shapeLines(model, kit, i), ''],
-      [`## Published by · ${into.length}`, ...into.map((p) => `- ${tick(model.nodes[p][1])} at ${tick(placeOfStep(model, p))}`),
-        ...(into.length === 0 ? ['- nothing found in the code publishes to it'] : []), ''],
-      [`## Consumed by · ${outOf.length}`, ...(outOf.length === 0 ? ['- nothing found in the code consumes it', ''] : consumers)],
-      ...stepGaps(model, { rows: [{ node: i }] }),
-      ['## Ask for more', '- `who_emits` and `who_consumes` with the id above.'],
-    ];
-  },
-  row: (model, kit, r) => {
-    const row = model.data.rows[r];
-    const { reasons, levels, hints, files, repos } = model.data.dicts;
-    const file = row[2] >= 0 ? files[row[2]] : '';
-    const where = (row[1] >= 0 ? repos[row[1]] + ': ' : '') + file + (file && row[3] ? ':' + row[3] : '');
-    const node = row[0];
-    return [
-      [`# Check: ${reasons[row[4]]}`, '', PROMPT_HEAD, ''],
-      [`- level: ${levels[row[5]]}`, `- at: ${tick(where)}`, `- says: ${row[7]}`,
-        ...(row[8] >= 0 ? [`- hint: ${hints[row[8]]}`] : []),
-        ...(node >= 0 ? [`- on: ${tick(model.nodes[node][1])} at ${tick(placeOfStep(model, node))}`, ...idLines(kit, node)] : []), ''],
-      ...(node >= 0 ? [['## Reached from', ...callersOf(model, node).map((c) => `- ${tick(model.nodes[c][1])} at ${tick(placeOfStep(model, c))}`), '']] : []),
-      ['## Ask for more', '- `who_calls` or `impact` with the id above.'],
-    ];
-  },
+/** How the packed id of a node starts, and what it stands for (`node-ids.ts`). */
+const STEP_ID_PREFIX = Object.freeze({
+  '#': (type, repo, file) => repo + '#' + file + ':',
+  ':': (type, repo, file) => type + ':' + repo + '#' + file + ':',
+  '!': (type, repo) => type + ':' + repo + '#',
+  '^': (type, repo) => type + ':' + repo + ':',
+  '~': (type) => type + ':',
+  '=': () => '',
 });
 
-const stepGaps = (model, steps) => {
-  const nodes = [...new Set(steps.rows.map((row) => row.node))];
-  const lines = gapLines(model, nodes, PROMPT_BOUNDS.gaps);
-  return lines.length ? [['## Open gaps', ...lines, '']] : [];
+/** A node's id, as the graph and the MCP tools name it; null on a page packed without ids. */
+export const stepIdOf = (model, i) => {
+  if (!model.stepIds) model.stepIds = new Map();
+  const known = model.stepIds.get(i);
+  if (known !== undefined) return known;
+  const packed = model.data.ids && model.data.ids[i];
+  if (typeof packed !== 'string') return null;
+  const prefix = STEP_ID_PREFIX[packed.charAt(0)];
+  const { types, repos, files } = model.data.dicts;
+  const node = model.nodes[i];
+  const id = prefix ? prefix(types[node[0]], repos[node[2]], files[node[4]] || '') + packed.slice(1) : packed;
+  model.stepIds.set(i, id);
+  return id;
 };
 
-/** The ways in that reach a node, nearest first, a handful of them. */
-const callersOf = (model, i, limit = 8) => {
-  const { edgeTypes, types } = model.data.dicts;
-  const seen = new Set([i]);
-  const queue = [i];
-  const out = [];
-  while (queue.length > 0 && out.length < limit) {
-    const at = queue.shift();
-    for (const k of model.incoming[at]) {
-      const from = model.edges[k][0];
-      if (seen.has(from) || !STEP_FOLLOWS.has(edgeTypes[model.edges[k][2]])) continue;
-      seen.add(from);
-      if (types[model.nodes[from][0]] === 'entry') out.push(from);
-      queue.push(from);
+/** The position of the node an id names, or -1. */
+const stepAtOf = (model, id) => {
+  if (!model.stepAt) model.stepAt = new Map(model.nodes.map((_, i) => [stepIdOf(model, i), i]));
+  return model.stepAt.get(id) ?? -1;
+};
+
+/** A node as a line names it: id, label, type, kind, service and `file:line`. */
+const promptPlaceOf = (model, i, depth) => {
+  const node = model.nodes[i];
+  const { types, repos, kinds, files } = model.data.dicts;
+  const file = files[node[4]] || '';
+  const kind = kinds[node[3]] || '';
+  const repo = repos[node[2]] || '';
+  return {
+    depth, id: stepIdOf(model, i), label: node[1], type: types[node[0]],
+    ...(kind === '' ? {} : { kind }), ...(repo === '' ? {} : { service: repo }),
+    ...(file === '' ? {} : { loc: node[5] ? file + ':' + node[5] : file }),
+  };
+};
+
+/** The edges the walk under a prompt follows: `get_flow`'s, which also reads settings. */
+const PROMPT_FOLLOWS = Object.freeze(new Set([...STEP_FOLLOWS, 'reads_config']));
+
+/** What the walk reads of each edge beyond its ends: the packed sites, by edge, once per model. */
+const promptSitesOf = (model) => {
+  if (!model.promptSites) {
+    const sites = model.data.sites || {};
+    const carried = sites.carried || [];
+    model.promptSites = {
+      ordered: new Map((sites.ordered || []).map(([k, line]) => [k, line])),
+      carries: new Map((sites.carries || []).map(([k, params, returns]) =>
+        [k, { params: params.map((p) => carried[p]), ...(returns < 0 ? {} : { returns: carried[returns] }) }])),
+      because: new Map(sites.because || []),
+      takenBy: new Map((sites.takenBy || []).map(([k, nodes]) => [k, new Set(nodes)])),
+      dangling: new Map(),
+    };
+    for (const [from, to, type, confidence, line] of model.data.dangling || []) {
+      const list = model.promptSites.dangling.get(from) || [];
+      list.push({ k: -1, to: -1, id: to, type, confidence, line });
+      model.promptSites.dangling.set(from, list);
     }
   }
-  return out.slice(0, limit);
+  return model.promptSites;
+};
+
+/** The edges out of a node the walk follows, as `{ k, to, id, type, confidence, ordered, order, line }`. */
+const promptEdgesOf = (model, i) => {
+  if (!model.promptEdges) model.promptEdges = new Map();
+  const known = model.promptEdges.get(i);
+  if (known) return known;
+  const { edgeTypes, confidences } = model.data.dicts;
+  const { order } = sitesOf(model);
+  const { ordered, dangling } = promptSitesOf(model);
+  const list = [
+    ...model.outgoing[i].map((k) => {
+      const [, to, type, confidence] = model.edges[k];
+      const isOrdered = ordered.has(k);
+      return { k, to, id: stepIdOf(model, to), type: edgeTypes[type], confidence: confidences[confidence],
+        ordered: isOrdered, order: isOrdered ? order[k] : 0, line: isOrdered ? ordered.get(k) : order[k] };
+    }),
+    ...(dangling.get(i) || []).map((edge) => ({ ...edge, type: edgeTypes[edge.type], confidence: confidences[edge.confidence],
+      ordered: false, order: 0 })),
+  ].filter((edge) => PROMPT_FOLLOWS.has(edge.type));
+  model.promptEdges.set(i, list);
+  return list;
+};
+
+const stepCmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/** `get_flow`'s call order: as written, by line, then by target; a workflow's own order after. */
+const promptInCallOrder = (a, b) =>
+  Number(a.ordered) - Number(b.ordered) || (a.ordered ? a.order - b.order : 0) ||
+  (a.line || Number.MAX_SAFE_INTEGER) - (b.line || Number.MAX_SAFE_INTEGER) ||
+  stepCmp(a.id, b.id) || stepCmp(a.type, b.type) || a.k - b.k;
+
+/* What a step is worth the walk's room, the least first: `get_flow`'s ranks (P92). */
+const PROMPT_RANK = Object.freeze({ out: 0, store: 1, handles: 2, toward: 3, calls: 4, plumbing: 5 });
+const PROMPT_LEAVING_EDGES = Object.freeze(new Set(['http_calls', 'hits', 'emits', 'consumes', 'triggers']));
+const PROMPT_LEAVING_NODES = Object.freeze(new Set(['http_out', 'producer', 'consumer', 'ui_api_call', 'channel', 'external_api', 'entry']));
+const PROMPT_STORE_EDGES = Object.freeze(new Set(['queries', 'caches']));
+const PROMPT_STORE_NODES = Object.freeze(new Set(['db_query', 'cache_op', 'table']));
+
+const promptTypeOf = (model, i) => (i < 0 ? undefined : stepTypeOf(model, i));
+
+const promptCrossingRank = (model, edge) => {
+  const target = promptTypeOf(model, edge.to);
+  if (PROMPT_LEAVING_EDGES.has(edge.type) || PROMPT_LEAVING_NODES.has(target)) return PROMPT_RANK.out;
+  if (PROMPT_STORE_EDGES.has(edge.type) || PROMPT_STORE_NODES.has(target)) return PROMPT_RANK.store;
+  return undefined;
+};
+
+/** Who calls a node, and whether it leaves its service itself: read once per model. */
+const promptRanking = (model) => {
+  if (!model.promptRanking) {
+    const { edgeTypes } = model.data.dicts;
+    const fanIns = new Map();
+    const leaves = new Map();
+    model.promptRanking = {
+      fanIn: (i) => {
+        if (!fanIns.has(i)) {
+          fanIns.set(i, new Set(model.incoming[i].filter((k) => edgeTypes[model.edges[k][2]] === 'calls').map((k) => model.edges[k][0])).size);
+        }
+        return fanIns.get(i);
+      },
+      leavesFrom: (i) => {
+        if (!leaves.has(i)) leaves.set(i, promptEdgesOf(model, i).some((edge) => promptCrossingRank(model, edge) === PROMPT_RANK.out));
+        return leaves.get(i);
+      },
+    };
+  }
+  return model.promptRanking;
+};
+
+const promptRankOf = (model, edge, under, plumbing) => {
+  const crossing = promptCrossingRank(model, edge);
+  if (crossing !== undefined) return crossing;
+  if (under === PROMPT_RANK.plumbing) return PROMPT_RANK.plumbing;
+  if (edge.type === 'handles') return PROMPT_RANK.handles;
+  if (edge.type !== 'calls') return PROMPT_RANK.calls;
+  const ranking = promptRanking(model);
+  if (edge.to >= 0 && ranking.leavesFrom(edge.to)) return PROMPT_RANK.toward;
+  return edge.to >= 0 && ranking.fanIn(edge.to) > plumbing ? PROMPT_RANK.plumbing : PROMPT_RANK.calls;
+};
+
+/** Rows first, then what is only counted; within each, by rank, then nearest, then first reached. */
+const promptExpandsFirst = (a, b) =>
+  Number(a.flow === undefined) - Number(b.flow === undefined) || a.rank - b.rank || a.level - b.level || a.seq - b.seq;
+
+/** The limit that left out more says the sentence; a tie goes to the budget. */
+const PROMPT_BY_WEIGHT = Object.freeze(['maxNodes', 'maxChars', 'depth']);
+
+/**
+ * The walk under a prompt: `get_flow`'s (`buildFlowTree`), on the packed
+ * model. Each node is expanded once in the whole walk, in priority order -
+ * crossings into another service, store or channel first, plumbing last - and
+ * a node met again is a reference to the row its subtree is under; children
+ * are written in call order. `{ root, left, stoppedBy }`: what the walk
+ * reached, how many rows it left out and the limits that did.
+ */
+const promptWalkOf = (model, start, walk) => {
+  const steps = Number(stepField(model, start, 'ss'));
+  const depth = walk.depth + (Number.isInteger(steps) && steps > 0 ? steps : 0);
+  const startId = stepIdOf(model, start);
+  const root = { at: start, id: startId, children: [] };
+  const { takenBy } = promptSitesOf(model);
+  const placed = new Map();
+  const reached = new Set([startId]);
+  const cut = { depth: 0, maxNodes: 0, maxChars: 0 };
+  let stopped;
+  let used = 1;
+  let scanned = 0;
+  let seq = 0;
+  const scanLimit = walk.maxNodes * 4;
+  const queue = [{ flow: root, at: start, id: startId, path: new Set([startId]), level: 0, rank: PROMPT_RANK.out, seq: seq++ }];
+  const pop = () => {
+    let best = 0;
+    for (let q = 1; q < queue.length; q += 1) if (promptExpandsFirst(queue[q], queue[best]) < 0) best = q;
+    return queue.splice(best, 1)[0];
+  };
+  while (queue.length > 0) {
+    const item = pop();
+    const edges = (item.at < 0 ? [] : promptEdgesOf(model, item.at))
+      .filter((edge) => !(edge.type === 'consumes' && item.takenBy !== undefined && !item.takenBy.has(edge.to)))
+      .sort(promptInCallOrder);
+    if (edges.length === 0) continue;
+    if (item.level >= depth) {
+      if (item.flow !== undefined) cut.depth += edges.length;
+      continue;
+    }
+    const candidates = edges
+      .map((edge, order) => ({ edge, order, rank: promptRankOf(model, edge, item.rank, walk.plumbingFanIn) }))
+      .sort((a, b) => a.rank - b.rank || a.order - b.order);
+    const rows = [];
+    for (const { edge, order, rank } of candidates) {
+      scanned += 1;
+      if (scanned > scanLimit) {
+        stopped = stopped || 'maxNodes';
+        cut[stopped] += 1;
+        continue;
+      }
+      const repeat = item.path.has(edge.id) ? 'cycle' : reached.has(edge.id) ? 'again' : undefined;
+      if (repeat === undefined) reached.add(edge.id);
+      let row = item.flow === undefined || stopped !== undefined
+        ? undefined
+        : { at: edge.to, id: edge.id, edge, repeat, ...(repeat === 'again' && placed.has(edge.id) ? { seenAt: placed.get(edge.id) } : {}), children: [] };
+      if (row !== undefined && used >= walk.maxNodes) {
+        stopped = 'maxNodes';
+        row = undefined;
+      }
+      const taken = edge.k >= 0 ? takenBy.get(edge.k) : undefined;
+      const next = { at: edge.to, id: edge.id, path: new Set([...item.path, edge.id]), level: item.level + 1, rank, ...(taken ? { takenBy: taken } : {}) };
+      if (row === undefined) {
+        cut[stopped || 'maxNodes'] += 1;
+        if (repeat === undefined) queue.push({ ...next, flow: undefined, seq: seq++ });
+        continue;
+      }
+      used += 1;
+      rows.push({ order, row });
+      if (repeat === undefined) {
+        placed.set(edge.id, item.id);
+        queue.push({ ...next, flow: row, seq: seq++ });
+      }
+    }
+    if (item.flow !== undefined) item.flow.children.push(...rows.sort((a, b) => a.order - b.order).map((entry) => entry.row));
+  }
+  const stoppedBy = PROMPT_BY_WEIGHT.filter((limit) => cut[limit] > 0).sort((a, b) => cut[b] - cut[a]);
+  return { root, left: stoppedBy.reduce((sum, limit) => sum + cut[limit], 0), stoppedBy };
+};
+
+/** What the edge into a step says about when and how often it runs, and how often it was seen. */
+const promptMarksOf = (model, edge, underFailure, seen) => {
+  const { failure, concurrent, loop: loops } = sitesOf(model);
+  const loop = loops.get(edge.k);
+  const count = seen.join(edge.k);
+  return {
+    ...(underFailure || failure.has(edge.k) ? { failure: true } : {}),
+    ...(concurrent.has(edge.k) ? { together: true } : {}),
+    ...(loop ? { perItem: loop.kind } : {}),
+    ...(isNPlusOne(model, edge.k, loop) ? { nPlusOne: true } : {}),
+    ...(count && count.count > 0 ? { seen: count.count } : {}),
+  };
+};
+
+/** The lines a step logs, as the server reads them: a level, the line, the template. */
+const promptLogsOf = (model, i) => logsOf(model, i).map((log) =>
+  ({ level: log.level, ...(log.line > 0 ? { line: log.line } : {}), ...(log.text ? { text: log.text } : {}) }));
+
+/** The walk as lines in reading order, depth first, as a person reads a call chain. */
+const promptStepsOf = (model, root, seen) => {
+  const steps = [];
+  const { carries, because } = promptSitesOf(model);
+  const visit = (row, depth, underFailure) => {
+    const { edge } = row;
+    if (row.repeat !== undefined) {
+      steps.push({ depth, id: row.id, label: row.at < 0 ? row.id : model.nodes[row.at][1], type: 'ref', repeat: true,
+        ...(row.seenAt === undefined ? {} : { seenAt: row.seenAt }) });
+      return;
+    }
+    const carried = edge.k >= 0 ? carries.get(edge.k) : undefined;
+    const reasons = edge.k >= 0 ? because.get(edge.k) : undefined;
+    const marks = row.at < 0 ? {} : promptMarksOf(model, edge, underFailure, seen);
+    const logs = row.at < 0 ? [] : promptLogsOf(model, row.at);
+    steps.push({
+      ...(row.at < 0 ? { depth, id: row.id, label: row.id, type: 'missing' } : promptPlaceOf(model, row.at, depth)),
+      via: { type: edge.type, confidence: edge.confidence, ...(reasons ? { because: reasons } : {}) },
+      ...(carried && carried.params.length > 0 ? { params: carried.params } : {}),
+      ...(carried && carried.returns !== undefined ? { returns: carried.returns } : {}),
+      ...(Object.keys(marks).length === 0 ? {} : { marks }),
+      ...(logs.length === 0 ? {} : { logs }),
+    });
+    for (const child of row.children) visit(child, depth + 1, marks.failure === true);
+  };
+  for (const child of root.children) visit(child, 1, false);
+  return steps;
+};
+
+/** The service a check row is in: a position in the services, or the name of one no node is in; '' for none. */
+const promptRowService = (model, row) =>
+  typeof row[1] === 'string' ? row[1] : row[1] >= 0 ? model.data.dicts.repos[row[1]] : '';
+
+/** A check row as a gap of the chain: reason, place, message, hint, and its reach where it counts it. */
+const promptGapOf = (model, r, id) => {
+  const row = model.data.rows[r];
+  const { reasons, hints, files } = model.data.dicts;
+  const file = row[2] >= 0 ? files[row[2]] : '';
+  const service = promptRowService(model, row);
+  return {
+    reason: reasons[row[4]], message: String(row[7]), id,
+    ...(service === '' ? {} : { service }),
+    ...(file === '' ? {} : { loc: row[3] ? file + ':' + row[3] : file }),
+    ...(row[8] >= 0 ? { hint: hints[row[8]] } : {}),
+    ...(typeof row[9] === 'number' ? { waysIn: row[9] } : {}),
+  };
+};
+
+/** The ways in that reach a node, within `reachDepth` hops back, by id, a handful. */
+const promptReachedFrom = (model, i, walk) => {
+  const { edgeTypes, types } = model.data.dicts;
+  const seen = new Set([i]);
+  let layer = [i];
+  const found = [];
+  for (let hop = 0; hop < walk.reachDepth && layer.length > 0 && seen.size < walk.reachNodes; hop += 1) {
+    const next = [];
+    for (const at of layer) {
+      for (const k of model.incoming[at]) {
+        const from = model.edges[k][0];
+        if (seen.has(from) || !PROMPT_FOLLOWS.has(edgeTypes[model.edges[k][2]])) continue;
+        seen.add(from);
+        if (types[model.nodes[from][0]] === 'entry') found.push(from);
+        next.push(from);
+      }
+    }
+    layer = next;
+  }
+  return found
+    .map((at) => promptPlaceOf(model, at, 1))
+    .sort((a, b) => stepCmp(a.id, b.id))
+    .slice(0, walk.reachedFrom);
+};
+
+/** A way in's failures, as it stores them: what the renderer groups and marks steps with. */
+const promptFailsOf = (model, i) => failsOf(model, i).map((fail) => ({
+  ...(fail.s === undefined ? {} : { status: fail.s }), exception: fail.x,
+  at: fail.at >= 0 ? stepIdOf(model, fail.at) : fail.id,
+  ...(fail.f === undefined ? {} : { file: fail.f }), ...(fail.l === undefined ? {} : { line: fail.l }), source: fail.src,
+  ...(fail.a ? { assumed: true } : {}), ...(fail.dc === undefined ? {} : { declared: fail.dc }),
+  ...(fail.v ? { via: fail.v } : {}),
+  ...(fail.ch ? { chosenFrom: fail.ch.map((c) => ({ exception: c.x, ...(c.s === undefined ? {} : { status: c.s }), ...(c.a ? { assumed: true } : {}) })) } : {}),
+  ...(fail.fam ? { family: fail.fam } : {}),
+}));
+
+/** What stands in front of a way in, as the server reads it off the node (P76). */
+const promptAccessOf = (model, i) => {
+  const access = accessOf(model, i);
+  if (access === null) return undefined;
+  return {
+    guards: access.g.map(([name, where, via, skippedBy]) => ({ name, where, via, ...(skippedBy === undefined ? {} : { skippedBy }) })),
+    ...(access.o ? { optOuts: access.o.map(([decorator, open, where, skips]) => ({ decorator, where, public: open === 1, skips })) } : {}),
+  };
+};
+
+/** A node as the subject of a prompt: its walk, its gaps, and what its kind adds. */
+const promptNodeSubject = (model, i, walk, seen) => {
+  const type = stepTypeOf(model, i);
+  const flow = promptWalkOf(model, i, walk);
+  const steps = promptStepsOf(model, flow.root, seen);
+  const gaps = [];
+  for (const id of [stepIdOf(model, i), ...new Set(steps.map((step) => step.id))]) {
+    const at = stepAtOf(model, id);
+    for (const r of (at < 0 ? [] : model.rowsOn.get(at)) || []) gaps.push(promptGapOf(model, r, id));
+  }
+  for (const step of steps) {
+    if (step.type === 'missing') gaps.push({ reason: 'node-missing', message: `the graph points at ${step.id} and holds no such node`, id: step.id });
+  }
+  const { edgeTypes } = model.data.dicts;
+  const producers = type === 'channel'
+    ? model.incoming[i].filter((k) => edgeTypes[model.edges[k][2]] === 'emits')
+      .map((k) => promptPlaceOf(model, model.edges[k][0], 1)).sort((a, b) => stepCmp(a.id, b.id))
+    : undefined;
+  const reachedFrom = type === 'entry' || type === 'channel' ? undefined : promptReachedFrom(model, i, walk);
+  const { depth: _depth, ...head } = promptPlaceOf(model, i, 0);
+  const fails = type === 'entry' ? promptFailsOf(model, i) : [];
+  const access = type === 'entry' ? promptAccessOf(model, i) : undefined;
+  const schedule = type === 'entry' ? scheduleOf(model, i) : null;
+  const hits = type === 'entry' ? seen.entry(i) : 0;
+  return {
+    ...head,
+    ...(schedule === null ? {} : { schedule: { expression: schedule.expression, ...(schedule.zone ? { zone: schedule.zone } : {}) } }),
+    ...(hits > 0 ? { hits } : {}),
+    ...(access === undefined ? {} : { access }),
+    ...(fails.length === 0 ? {} : { fails }),
+    steps,
+    stepsCut: flow.left,
+    ...(flow.stoppedBy.length === 0 ? {} : { stepsCutBy: flow.stoppedBy[0] }),
+    ...(producers === undefined ? {} : { producers }),
+    ...(reachedFrom === undefined ? {} : { reachedFrom }),
+    gaps,
+  };
 };
 
 /**
- * A way in (`{ entry }`), a channel (`{ channel }`) or a check row
- * (`{ row }`) as Markdown an assistant can act on: its steps with the
- * repo-relative `file:line` of each, its shape, the gaps left open on it and
- * the ids the MCP tools take. Never more than `chars` long, and never any
- * code: the page does not carry it.
- *
- * `kit`: `{ keyOf(i), idOf(i), faceLine(model, i), answersOf, seen, chars }`.
+ * A check row as the subject of a prompt: its gap id, which is what `flowatlas
+ * accept` and `describe_for_prompt` take, and every row that answers to it -
+ * the same reason in the same file - each at its line, with the node it is on.
+ */
+const promptCheckSubject = (model, r, walk) => {
+  const { reasons, levels, hints, files } = model.data.dicts;
+  const rows = model.data.rows;
+  const [, repo, file, , reason] = rows[r];
+  const same = rows
+    .filter((row) => row[1] === repo && row[2] === file && row[4] === reason)
+    .sort((a, b) => a[3] - b[3] || stepCmp(String(a[7]), String(b[7])));
+  const service = promptRowService(model, rows[r]);
+  const path = file >= 0 ? files[file] : '';
+  const places = same.map((row) => ({
+    ...(path === '' ? {} : { loc: row[3] ? path + ':' + row[3] : path }),
+    message: String(row[7]),
+    ...(row[8] >= 0 ? { hint: hints[row[8]] } : {}),
+    ...(row[0] >= 0 ? { on: promptPlaceOf(model, row[0], 1) } : {}),
+  }));
+  const first = same.find((row) => row[0] >= 0);
+  const firstType = first ? stepTypeOf(model, first[0]) : '';
+  const reachedFrom = first && firstType !== 'entry' && firstType !== 'channel' ? promptReachedFrom(model, first[0], walk) : undefined;
+  return {
+    id: `gap:${service}|${path}|${reasons[reason]}`, label: reasons[reason], type: 'check',
+    kind: [...new Set(same.map((row) => levels[row[5]]))].join(', '),
+    ...(service === '' ? {} : { service }), ...(path === '' ? {} : { loc: path }),
+    check: { places }, steps: [], stepsCut: 0,
+    ...(reachedFrom === undefined ? {} : { reachedFrom }),
+    gaps: [],
+  };
+};
+
+/**
+ * What a copied prompt says about a way in, a channel or any node
+ * (`{ entry }`, `{ channel }`, `{ node }`: a position) or a check row
+ * (`{ row }`), gathered from the packed model into the subject core's
+ * `renderPrompt` writes; null for a target that names nothing. `kit`:
+ * `{ walk, seen? }`, `walk` the bounds of the walk (core's `PROMPT_WALK`).
+ */
+export const subjectOf = (model, target, kit) => {
+  const [kind] = Object.keys(target);
+  const at = target[kind];
+  const seen = kit.seen || NO_SEEN;
+  if (kind === 'row') return model.data.rows && model.data.rows[at] ? promptCheckSubject(model, at, kit.walk) : null;
+  if (kind !== 'entry' && kind !== 'channel' && kind !== 'node') return null;
+  return at >= 0 && at < model.nodes.length ? promptNodeSubject(model, at, kit.walk, seen) : null;
+};
+
+/**
+ * The Markdown for a target, as the MCP server's `describe_for_prompt` writes
+ * it: `kit.render` is core's `renderPrompt` (the page passes the copy it holds
+ * inline), `kit.limits` its `PROMPT_LIMITS`. Never any code: the page does not
+ * carry it. '' for a target that names nothing.
  */
 export const promptFor = (model, target, kit) => {
-  const [kind] = Object.keys(target);
-  const make = PROMPT_TARGETS[kind];
-  if (!make) return '';
-  return bounded(make(model, kit, target[kind]), kit.chars ?? PROMPT_BOUNDS.chars);
+  const subject = subjectOf(model, target, kit);
+  return subject === null ? '' : kit.render(subject, kit.limits);
 };

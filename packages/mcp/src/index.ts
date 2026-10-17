@@ -53,7 +53,7 @@ export { summariseProject, START_LIMITS } from './query/start.js';
 export type { GapReason, ServiceCount, StartCounts, StartInput, StartLimits, StartSummary } from './query/start.js';
 export { describeForPrompt, PROMPT_LIMITS } from './prompt/describe.js';
 export type { PromptGap, PromptLimits, PromptStep, PromptSubject } from './prompt/describe.js';
-export { gatherPromptSubject } from './prompt/gather.js';
+export { gatherCheckSubject, gatherPromptSubject, rowsOfGap } from './prompt/gather.js';
 export { runSearch, SEARCH_KINDS } from './tools/search.js';
 export type { GapHit, SearchKind, TypeHit } from './tools/search.js';
 export { summariseChanges, readDiff } from './tools/changes.js';

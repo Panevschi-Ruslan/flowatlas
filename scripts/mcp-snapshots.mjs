@@ -7,6 +7,10 @@
  * The tool tests assert behaviour; these snapshots hold the exact wire shape,
  * which is what every later phase renders from. A change here is a change other
  * packages will see, so it should be read before it is accepted.
+ *
+ * Three `describe_for_prompt` answers are also written as Markdown under
+ * `fixtures/multi-repo/expected.prompt/` (P97): the page's "Copy as prompt"
+ * must write exactly those files too, and the CLI's parity test checks it.
  */
 import { isDeepStrictEqual } from 'node:util';
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -64,6 +68,9 @@ const CASES = [
   ['cant_follow.all', 'cant_follow', {}],
   ['cant_follow.by-service', 'cant_follow', { service: 'gateway' }],
   ['describe_for_prompt.symbol', 'describe_for_prompt', { id: 'orders#src/orders/orders.service.ts:OrdersService.findOne' }],
+  // The three subjects the page's "Copy as prompt" is checked against (P97).
+  ['describe_for_prompt.invoice', 'describe_for_prompt', { id: 'entry:gateway:http:POST:/orders/:param/invoice' }],
+  ['describe_for_prompt.gap', 'describe_for_prompt', { id: 'gap:web|src/app/orders-api.service.ts|api-path-dynamic' }],
   // Answers that say where they stopped (P94): a caller walk cut by depth, a
   // route said with a real value, a literal segment beside a hole, every
   // crossing between two services, and a channel that does not exist.
@@ -122,8 +129,18 @@ const PLUMBING_CASES = [
   ['describe_for_prompt.post-orders', 'describe_for_prompt', { id: 'POST /orders' }],
 ];
 
+/**
+ * The Markdown of three answers above, written out as the prompt snapshots
+ * (P97): the page's "Copy as prompt" test and the server's test both read
+ * them, so one file is what both sides must write.
+ */
+const PROMPTS = {
+  dir: join(fixture, 'expected.prompt'),
+  files: { 'describe_for_prompt.invoice': 'entry.md', 'describe_for_prompt.channel': 'channel.md', 'describe_for_prompt.gap': 'row.md' },
+};
+
 const SUITES = [
-  { fixture, outDir, cases: CASES },
+  { fixture, outDir, cases: CASES, prompts: PROMPTS },
   {
     fixture: join(root, 'fixtures', 'nest-check-through-helper'),
     outDir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.mcp'),
@@ -163,6 +180,10 @@ for (const suite of SUITES) {
   if (update) {
     rmSync(suite.outDir, { recursive: true, force: true });
     mkdirSync(suite.outDir, { recursive: true });
+    if (suite.prompts !== undefined) {
+      rmSync(suite.prompts.dir, { recursive: true, force: true });
+      mkdirSync(suite.prompts.dir, { recursive: true });
+    }
   }
 
   for (const [name, tool, args] of suite.cases) {
@@ -174,6 +195,20 @@ for (const suite of SUITES) {
     }
     const actual = `${JSON.stringify(parsed, null, 2)}\n`;
     const path = join(suite.outDir, `${name}.json`);
+    const promptFile = suite.prompts?.files[name];
+    if (promptFile !== undefined) {
+      const promptPath = join(suite.prompts.dir, promptFile);
+      if (update) writeFileSync(promptPath, parsed.markdown);
+      else {
+        let recorded;
+        try {
+          recorded = readFileSync(promptPath, 'utf8');
+        } catch {
+          recorded = undefined;
+        }
+        if (recorded !== parsed.markdown) problems.push(`${promptFile}: the prompt snapshot differs from ${name}'s markdown`);
+      }
+    }
 
     if (update) {
       writeFileSync(path, actual);

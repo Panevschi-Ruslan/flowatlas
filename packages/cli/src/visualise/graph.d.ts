@@ -27,6 +27,8 @@ export declare const ROW: Readonly<{
   hint: 8;
 }>;
 
+export declare const serviceOfRow: (repos: readonly string[], row: readonly unknown[]) => string;
+
 export interface GraphModel {
   data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'> & Partial<Pick<PackedGraph, 'rows' | 'steps' | 'shapes' | 'fails'>>;
   nodes: unknown[][];

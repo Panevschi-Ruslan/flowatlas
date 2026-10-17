@@ -675,8 +675,8 @@ describe('answers that hand on the id the next question needs', () => {
   it('describes an entry as bounded Markdown with places, shapes, gaps and ids', async () => {
     const answer = await call('describe_for_prompt', { id: 'entry:gateway:http:POST:/orders/:param/cancel' });
     expect(answer.id).toBe('entry:gateway:http:POST:/orders/:param/cancel');
-    expect(answer.markdown).toMatch(/^# POST \/orders\/:param\/cancel/);
-    expect(answer.markdown).toContain('## Chain');
+    expect(answer.markdown).toMatch(/^# Way in: POST \/orders\/:param\/cancel/);
+    expect(answer.markdown).toContain('## Steps');
     expect(answer.markdown).toMatch(/`src\/[^`]+:\d+`/);
     expect(answer.markdown).toContain('`target-route-not-found`');
     expect(answer.markdown).toContain('## Ask next');
@@ -686,7 +686,30 @@ describe('answers that hand on the id the next question needs', () => {
   it('describes a channel with what publishes onto it', async () => {
     const answer = await call('describe_for_prompt', { id: 'order.created' });
     expect(answer.id).toBe('channel:order.created');
-    expect(answer.markdown).toContain('## Published by');
+    expect(answer.markdown).toContain('## Published by · 1');
+    expect(answer.markdown).toContain('## Consumed by · 1');
+  });
+
+  it('describes a check by its gap id, every row of it at its line (P97)', async () => {
+    const id = 'gap:web|src/app/orders-api.service.ts|api-path-dynamic';
+    const answer = await call('describe_for_prompt', { id });
+    expect(answer.id).toBe(id);
+    expect(answer.markdown).toMatch(/^# Check: api-path-dynamic/);
+    expect(answer.markdown).toContain('## Where · 3');
+    expect(answer.next).toEqual(['search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})']);
+    expect((await call('describe_for_prompt', { id: 'gap:web|src/nowhere.ts|api-path-dynamic' })).error).toMatch(/no rows answer to/);
+  });
+
+  it('writes the text the shared prompt snapshots hold, which the page writes too (P97)', async () => {
+    const dir = join(FIXTURE, 'expected.prompt');
+    const asked = {
+      'entry.md': 'entry:gateway:http:POST:/orders/:param/invoice',
+      'channel.md': 'channel:order.created',
+      'row.md': 'gap:web|src/app/orders-api.service.ts|api-path-dynamic',
+    };
+    for (const [file, id] of Object.entries(asked)) {
+      expect((await call('describe_for_prompt', { id })).markdown).toBe(readFileSync(join(dir, file), 'utf8'));
+    }
   });
 
   it('keeps the Markdown under the ceiling it was given', async () => {

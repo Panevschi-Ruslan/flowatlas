@@ -35,6 +35,13 @@ export const ROW = Object.freeze({
   node: 0, repo: 1, file: 2, line: 3, reason: 4, level: 5, sites: 6, message: 7, hint: 8,
 });
 
+/**
+ * The service a row is in: its position in the services, or its name where no
+ * node is in that service (a repository that read nothing), '' for none (P133).
+ */
+export const serviceOfRow = (repos, row) =>
+  typeof row[ROW.repo] === 'string' ? row[ROW.repo] : row[ROW.repo] >= 0 ? repos[row[ROW.repo]] : '';
+
 const pushTo = (map, key, value) => {
   const list = map.get(key);
   if (list === undefined) map.set(key, [value]);
@@ -79,7 +86,7 @@ export const failsByEntry = (data) => {
     return Object.freeze({ ...status(s), x: wordIn(xs, x), at,
       ...(id === undefined ? {} : { id }), ...(f < 0 ? {} : { f: files[f] }), ...(l < 0 ? {} : { l }), src: wordIn(ss, src),
       ...(more.via ? { v: more.via } : {}), ...(more.ch ? { ch: more.ch.map(([cs, cx]) => Object.freeze({ ...status(cs), x: cx })) } : {}),
-      ...(more.fam ? { fam: more.fam } : {}) });
+      ...(more.fam ? { fam: more.fam } : {}), ...(more.dc === undefined ? {} : { dc: more.dc }) });
   });
   for (const [entry, list] of Object.entries(data.fails)) out.set(Number(entry), list.map((r) => one[r]));
   return out;

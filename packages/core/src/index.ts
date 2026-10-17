@@ -736,6 +736,33 @@ export {
   settleFailures,
 } from './failures.js';
 export type { Failure, FailureChoice, FailureGroup, FailureSource } from './failures.js';
+export { hasSiteOrder, loopOfEdge, runsBeside, runsOnFailure, siteOrderOf } from './edge-sites.js';
+export {
+  askNextOf,
+  compareFailChoices,
+  groupFails,
+  PROMPT_FAIL_SOURCES,
+  PROMPT_LIMITS,
+  PROMPT_MAX_NEXT,
+  PROMPT_WALK,
+  promptFit,
+  promptHintsFor,
+  promptNextFor,
+  renderPrompt,
+} from './prompt-text.js';
+export type {
+  PromptAccess,
+  PromptCheckPlace,
+  PromptFailChoice,
+  PromptFailGroup,
+  PromptFailure,
+  PromptGap,
+  PromptLimits,
+  PromptLog,
+  PromptMarks,
+  PromptStep,
+  PromptSubject,
+} from './prompt-text.js';
 
 export {
   CAUSE_META,

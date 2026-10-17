@@ -1,4 +1,4 @@
-import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import { PROMPT_LIMITS, PROMPT_WALK, renderPrompt, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, DiffReport, LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { packBusiest } from './busiest.js';
@@ -78,10 +78,10 @@ describe('where a chain breaks', () => {
     expect(stepBreakOf(model, 8)).toBeNull();
   });
 
-  it('says the break in a prompt', () => {
+  it('says the break in a prompt, as the gap it is (P97)', () => {
     const model = modelOf(pack());
-    const text = promptFor(model, { entry: 0 }, { keyOf: String });
-    expect(text).toContain('- chain breaks here: no route (target service shop-orders has no route');
+    const text = promptFor(model, { entry: 0 }, { walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS });
+    expect(text).toMatch(/- `target-route-not-found` at shop-gateway `src\/carts.client.ts:9`: target service shop-orders has no route/);
   });
 });
 

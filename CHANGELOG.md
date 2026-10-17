@@ -607,6 +607,28 @@ only one of them moved.
   to `gapId`, and it carries `sites` and every `places` (at most ten), so
   `next` leads to `get_source` and `who_calls`. `start_here` lists
   `topFindings` beside `topGaps` (`fixtures/cant-follow/expected.mcp`).
+- **Copy as prompt now writes the same text as `describe_for_prompt` (P97).**
+  The page's button and the MCP tool had drifted into two documents with their
+  own headings, bounds, step marks and advice. Both now gather one subject and
+  hand it to one renderer, core's `renderPrompt` (`prompt-text.js`, written into
+  the page as it is), so the same way in, channel or check is the same
+  characters from either. One heading scheme for every subject: `# Way in:`,
+  `# Channel:`, `# Check:` or `# Symbol:`, the id line, *In front of it*, *Can
+  fail with* with its statuses in the heading, *Published by · n* and
+  *Consumed by · n* (each consumer with what it goes on to do), *Where · n* for
+  a check, *Reached from*, **Steps** in call order, **Shapes**, **Gaps** and
+  **Ask next** with each call written out with its id. The server's text gained
+  the page's step marks (best guess, on failure, side by side, per item, likely
+  N+1, throws, seen ×n) and log lines, a schedule and the hits seen at run
+  time; the page's gained the ids and calls, and walks the steps `get_flow`
+  walks (`reads_config` included, each node once, the crossings first) rather
+  than its Steps view's. `describe_for_prompt` takes a gap id
+  (`gap:<service>|<file>|<reason>`), as a check row on the page copies it: every
+  row of it at its line, with the node it is on. The page ships every node's
+  id, less what its type, service and file already say. The shared snapshots
+  are `fixtures/multi-repo/expected.prompt/`, and a parity test compares both
+  sides on every way in, channel, symbol and gap of every built fixture, walked
+  in full and cut short.
 
 ### Fixed
 
