@@ -305,3 +305,27 @@ whether the annotation can be about anything else.
 
 An annotation that reached no route counts for nothing here: the reader still
 has something to fix, and the marker checks say what.
+
+## What a catalogue says of each service (P119)
+
+`flowatlas.catalog.json` is the same project with `services[].catalog` added:
+an owner, a lifecycle and the system `bookshop` for the gateway, orders and
+billing, a description and a source address for two of them, and only the
+system for `web`, which is how its owner and lifecycle come out `unknown` and
+listed. It writes to the same `.flowatlas`, so it reads the graph
+`flowatlas.config.json` built and is never built itself.
+
+`expected.cli/export.*` hold what `flowatlas export` writes from it:
+
+| Relation | From |
+|---|---|
+| `web` consumes `gateway-openapi`, and nothing else | the browser's requests join only the gateway's routes |
+| `gateway` consumes `orders-openapi` and `billing-openapi` | the base-address request and the marker request |
+| `billing` consumes `orders-asyncapi` | `order.created`, which orders publishes and billing handles |
+| `gateway` depends on `resource:api.stripe.com` | the request that leaves the project |
+| `orders` depends on `resource:orders` | its queries on the `orders` table |
+| `invoice.requested` | consumed by billing, published by nothing: listed, consumes nothing |
+
+The workspace holds a container per service, `orders store`, `order messages`
+and `invoice messages`, the host outside, and a dynamic view per flow that
+crosses containers, the browser's click first (it crosses three services).

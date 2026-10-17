@@ -307,6 +307,37 @@ flowatlas spec --service orders --out orders/api --check
 repository, and exits 1 when a file there differs from what would be written
 now, is missing, or is one the run no longer writes.
 
+## A committed catalogue
+
+A Backstage catalogue and a C4 model are kept by hand, and they rot where
+nobody looks: the `consumesApis` and `dependsOn` a new call should have added.
+`flowatlas export` writes both from the joins the graph made, and `--check`
+keeps a committed copy true. Write under the output (never into a repository
+the configuration reads), copy the files where the catalogue lives, commit
+them, and fail the job when they are out of date:
+
+```sh
+flowatlas export backstage                      # into <output>/export/backstage/
+cp .flowatlas/export/backstage/* catalog/bookshop/
+flowatlas export backstage --out catalog/bookshop --check
+flowatlas export structurizr --out docs/architecture --check
+```
+
+`--check` writes nothing and exits 1 when a file differs from what would be
+written now, is missing, or is one the run no longer writes, printing the first
+line each file gained and lost with the entity and field it is under:
+
+```
+gateway.yaml: differs
+  + gateway spec.consumesApis: - orders-asyncapi
+```
+
+That is the relation the branch added; run the export again and commit the
+files with the change. `catalog-locations.yaml` lists every entity file, so the
+catalogue registers one location. What the code cannot say (owner, lifecycle,
+system) comes from `services[].catalog` and is `unknown` until somebody writes
+it; the run lists every such service.
+
 ## Before a deploy
 
 A pull request is compared with `main`. A deploy should be compared with what

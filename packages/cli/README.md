@@ -120,11 +120,12 @@ lists them all, generated from their READMEs.
 | `flowatlas doctor` | what could not be read, and what has drifted; `--unresolved` groups it by cause and package |
 | `flowatlas accept` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base>` | what a branch changes and who would notice |
+| `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue or a Structurizr workspace, relations from the joins; `--check` keeps a committed copy true |
 | `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a way in step by step, a graph to walk, every type on hover |
 | `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
-`flowatlas --help` lists all twenty-two.
+`flowatlas --help` lists all twenty-eight.
 
 ---
 

@@ -278,6 +278,7 @@ read again and the others come from the cache.
 | `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks |
 | `flowatlas spec` | an OpenAPI document of each service's routes and an AsyncAPI document of its channels, written from the graph; `spec diff <base>` sorts an API change into breaking kinds with the callers each breaks |
+| `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue (`consumesApis` and `dependsOn` from the joins) or a Structurizr workspace (containers and one dynamic view per flow); `--check` fails when a committed copy is out of date |
 | `flowatlas cache <action>` | list, prune or clear the graphs `diff` keeps per commit |
 
 `doctor` is the one to run after a first build. It groups every finding by

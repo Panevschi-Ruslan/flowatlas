@@ -457,3 +457,17 @@ describe('architecture rules in the configuration (P114)', () => {
     expect(() => parseConfig({ services: [service], rules: [{ name: 'a', forbid }, { name: 'a', forbid }] })).toThrow(/Duplicate rule name "a"/);
   });
 });
+
+describe('what a software catalogue says of a service (P119)', () => {
+  it('reads services[].catalog as written, every key optional', () => {
+    const catalog = { owner: 'team-orders', lifecycle: 'production', system: 'shop', description: 'Takes orders.', sourceUrl: 'https://example.com/shop/orders' };
+    const config = parseConfig({ services: [{ name: 'orders', repo: '.', type: 'server', catalog }, { name: 'web', repo: './web', type: 'browser', catalog: {} }] });
+    expect(config.services[0]?.catalog).toEqual(catalog);
+    expect(config.services[1]?.catalog).toEqual({});
+  });
+
+  it('refuses a key the catalogue does not have, and an empty value', () => {
+    expect(() => parseConfig({ services: [{ name: 'orders', repo: '.', catalog: { team: 'x' } }] })).toThrow();
+    expect(() => parseConfig({ services: [{ name: 'orders', repo: '.', catalog: { owner: '' } }] })).toThrow();
+  });
+});

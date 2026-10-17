@@ -37,7 +37,9 @@ import {
   runDeployedShow,
   runSpec,
   runSpecDiff,
+  runExport,
 } from '../packages/cli/dist/index.js';
+import { catalogProblems, dslProblems } from '../packages/linker/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
 import { makeDeployedProject, SHIPPED } from './deployed-fixture.mjs';
 
@@ -80,6 +82,29 @@ const acceptUnreadable = (io) => {
   }
 };
 
+/**
+ * What `flowatlas export` writes (P119), into a directory of its own that is
+ * removed afterwards: one written file, or what the run said, with that
+ * directory written as `<out>`. Every run is held to Backstage's entity rules
+ * and the DSL's statements first (`catalogProblems`, `dslProblems`), so a
+ * snapshot can never record a catalogue Backstage would refuse.
+ */
+const exportRun = (kind, exportConfig, options, show) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-export-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    const run = runExport(kind, { config: exportConfig, out, ...options }, { out: (text) => show === undefined && io.out(said(text)), err: (text) => io.err(said(text)), tty: false });
+    const problems = run.backstage !== undefined ? catalogProblems(run.backstage.entities) : dslProblems(run.structurizr.files[0].text);
+    if (problems.length > 0) throw new Error(`the export breaks its format: ${problems.join('; ')}`);
+    if (show !== undefined) io.out(readFileSync(join(out, show), 'utf8'));
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+
+/** The bookshop with what a catalogue says of each service (P119), every service but the browser given an owner. */
+const catalogConfig = join(fixture, 'flowatlas.catalog.json');
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
   ['accept.unreadable.txt', acceptUnreadable],
@@ -114,6 +139,13 @@ const CASES = [
   // the empty run a project without one uploads).
   ['dead.sarif.json', async (io) => io.out(renderSarif((await runDead({ config, format: 'sarif' })).sarif))],
   ['cycles.sarif.json', (io) => io.out(renderSarif(runCycles({ config, format: 'sarif' }).sarif))],
+  // The bookshop as a Backstage catalogue and a Structurizr workspace (P119):
+  // what each run says, each entity file, and the workspace.
+  ['export.backstage.txt', exportRun('backstage', catalogConfig, {})],
+  ...['gateway', 'orders', 'billing', 'web', 'resources', 'catalog-locations'].map((name) => [`export.backstage.${name}.yaml`, exportRun('backstage', catalogConfig, {}, `${name}.yaml`)]),
+  ['export.structurizr.txt', exportRun('structurizr', catalogConfig, {})],
+  ['export.structurizr.dsl', exportRun('structurizr', catalogConfig, {}, 'workspace.dsl')],
+  ['export.structurizr.post-orders.dsl', exportRun('structurizr', catalogConfig, { flow: ['POST /orders'], maxLabels: '1' }, 'workspace.dsl')],
 ];
 
 /**
@@ -365,6 +397,14 @@ const MULTI_EVENT_CASES = [
   ['spec.loans.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'loans.asyncapi.yaml')],
   ['spec.routing.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'routing.asyncapi.yaml')],
   ['spec.notifications.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'notifications.asyncapi.yaml')],
+  // Functions and channels as a catalogue and a workspace (P119): AsyncAPI
+  // APIs, a function started by name, queues, and the delivery matched by a
+  // pattern only, drawn when asked and named as a guess.
+  ['export.backstage.txt', exportRun('backstage', multiEventsPlain.config, {})],
+  ['export.backstage.routing.yaml', exportRun('backstage', multiEventsPlain.config, {}, 'routing.yaml')],
+  ['export.backstage.notifications.yaml', exportRun('backstage', multiEventsPlain.config, {}, 'notifications.yaml')],
+  ['export.backstage.heuristic.platform-events.yaml', exportRun('backstage', multiEventsPlain.config, { includeHeuristic: true }, 'platform-events.yaml')],
+  ['export.structurizr.dsl', exportRun('structurizr', multiEventsPlain.config, {}, 'workspace.dsl')],
 ];
 
 /**

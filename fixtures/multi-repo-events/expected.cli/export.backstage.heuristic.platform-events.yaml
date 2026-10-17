@@ -1,0 +1,27 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: platform-events
+  annotations:
+    flowatlas/graph-id: repo:platform-events
+    flowatlas/heuristic-relations: api:loans-asyncapi
+spec:
+  type: service
+  lifecycle: unknown
+  owner: unknown
+  providesApis:
+    - platform-events-asyncapi
+  consumesApis:
+    - loans-asyncapi
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: platform-events-asyncapi
+  description: "The channels platform-events publishes (1), read from the code by flowatlas."
+spec:
+  type: asyncapi
+  lifecycle: unknown
+  owner: unknown
+  definition:
+    $text: ./platform-events.asyncapi.yaml

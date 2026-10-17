@@ -126,6 +126,23 @@ const serviceEntrySchema = z.strictObject({
    */
   tags: z.array(z.string().min(1)).optional(),
   /**
+   * What a software catalogue says of this service and the code cannot (P119):
+   * who owns it, where in its life it is, which system it belongs to, a line
+   * about it, and the address of its repository. `flowatlas export` writes
+   * these as they are and writes `unknown` for an owner or lifecycle nobody
+   * gave; none of them is ever guessed from the code.
+   */
+  catalog: z
+    .strictObject({
+      owner: z.string().min(1).optional(),
+      lifecycle: z.string().min(1).optional(),
+      system: z.string().min(1).optional(),
+      description: z.string().min(1).optional(),
+      /** The repository's address (`https://…/tree/main/`), for `backstage.io/source-location`. */
+      sourceUrl: z.string().min(1).optional(),
+    })
+    .optional(),
+  /**
    * Which service answers each of those keys, by name.
    *
    * A frontend's settings key names one backend, and only the project knows
@@ -1305,6 +1322,8 @@ export type CustomConsumerConfig = z.infer<typeof customConsumerSchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;
 export type ServiceConfig = z.infer<typeof serviceConfigSchema>;
+/** What a software catalogue says of a service (P119): `services[].catalog`. */
+export type ServiceCatalog = NonNullable<ServiceConfig['catalog']>;
 export type FlowatlasConfig = z.infer<typeof flowatlasConfigSchema>;
 
 export interface LoadedConfig {

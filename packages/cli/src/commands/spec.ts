@@ -89,7 +89,7 @@ export interface SpecRun {
 }
 
 /** The services asked for, or every one; an unknown name is refused with the known ones. */
-const wanted = (loaded: LoadedConfig, names: readonly string[] | undefined): string[] => {
+export const wanted = (loaded: LoadedConfig, names: readonly string[] | undefined): string[] => {
   const known = loaded.config.services.map((service) => service.name);
   if (names === undefined || names.length === 0) return known;
   const unknown = names.filter((name) => !known.includes(name));

@@ -1997,6 +1997,90 @@ change `{ kind, level, document, format, service, operation, field, base,
 head, message, place, callers, public, note, confidence, key }`, `key`
 `<kind>|<document>|<operation>|<field>`.
 
+### `flowatlas export backstage|structurizr`
+
+Writes the map into the tools that already hold one: a
+[Backstage](https://backstage.io/docs/features/software-catalog/descriptor-format)
+catalogue whose relations are the joins the graph made, or a
+[Structurizr DSL](https://docs.structurizr.com/dsl/language) workspace with a C4
+container view and one dynamic view per flow. Build first; `export` reads the
+graph, writes only into the output directory, and sends nothing anywhere.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--out <dir>` | `<output>/export/<kind>/` | where the files go; a directory inside a configured repository is refused, except with `--check`, which writes nothing. The catalogue's own repository is fine when it is not a configured service |
+| `--service <name>` | every one | only this service, repeatable: its entities (or the joins touching it) and what they reach |
+| `--include-heuristic` | off | also draw joins the linker only guessed (`heuristic`, `runtime`), marked as such |
+| `--check` | off | write nothing; exit 1 when a file there differs from what would be written now, is missing, or is no longer written, printing the first line each differing file gained (`+`) and lost (`-`) with the entity and field it is under |
+| `--json` | off | print what would be written as data: the entities (Backstage) or the model (Structurizr), and the summary |
+| `--flow <entry>` | the ranked flows | structurizr only: draw this way in, repeatable, in the order given |
+| `--max-flows <n>` | 10 | structurizr only: most dynamic views |
+| `--max-labels <n>` | 3 | structurizr only: labels a relationship lists before it says `+N more` |
+
+Only `static`, `declared` and `marker` joins are drawn by default. Every file is
+the same bytes every run (sorted, no timestamp), so a repository can commit the
+export and run `--check` in CI ([ci.md](ci.md#a-committed-catalogue)).
+
+**Backstage.** One file per service, `<service>.yaml`, holding its `Component`
+and its `API`s; `resources.yaml`; the OpenAPI and AsyncAPI documents the APIs
+point at (written as [`spec`](#flowatlas-spec) writes them); and
+`catalog-locations.yaml`, one `Location` listing every entity file, so one
+registration in Backstage picks them all up.
+
+| Entity | Written from |
+|---|---|
+| `Component` per service | `spec.type` `service`, `website` (a browser repository) or `function` (every way in a function or workflow reached by name); `lifecycle`, `owner`, `system`, `description` from `services[].catalog`; an owner or lifecycle nobody gave is `unknown` and the run lists the services, a system nobody gave is left out |
+| `API` per service and kind | `<service>-openapi` for a service with routes, `<service>-asyncapi` for one that publishes; `definition` is `$text: ./<service>.openapi.yaml`, or an inline list of the operations when there is no single document (two applications, say) |
+| `providesApis` | the service's own APIs |
+| `consumesApis` | a request into another service's route (`http_calls`, `hits`): that service's OpenAPI API; a delivery off a channel another service publishes (`consumes`): the publisher's AsyncAPI API. A channel nothing in the project publishes names nothing, and the run lists it |
+| `dependsOn` | `resource:<table>` for every table queried; `resource:<host>` for every host outside the project called; `component:<service>` for a function or workflow of another service started by name |
+| `Resource` per table | `spec.type: database`, one per table name, owned by the owner of the service that writes it (the first by name when two do; the run says so), `flowatlas/written-by` and `flowatlas/read-by` naming the services |
+| `Resource` per host | `spec.type: external-api`, owner `unknown` |
+
+Annotations: `flowatlas/graph-id` (the node ids), `backstage.io/source-location`
+only from `services[].catalog.sourceUrl` (never guessed), and, because a
+Backstage relation holds no attributes, `flowatlas/heuristic-relations` on an
+entity naming the relations drawn from a heuristic join only, and
+`flowatlas/confidence: heuristic` on a resource only such joins reach. A name a
+catalogue cannot hold (`[a-z0-9]` words joined by `-`, `_` or `.`, at most 63
+characters) is normalised and the original kept as `title`.
+
+**Structurizr.** `workspace.dsl`: a `softwareSystem` named for the project (the
+one `catalog.system` every service shares, else the configuration's directory)
+holding a container per service (technology: its `type`), a container per
+service with tables (`<service> store`, tag `Database`) and a container per
+channel prefix (`order messages` for `order.created`, tag `Queue`); each host
+outside the project is a `softwareSystem` beside it (tag `External`), and a
+`person "User"` uses each browser repository.
+
+| Relationship | Description | Technology |
+|---|---|---|
+| a request into another service | `POST /invoices` | `HTTP` |
+| a function of another service started by name | `invokes nightly-report` | `Invoke` |
+| a publish, and a delivery | `publishes order.created`; `delivers order.created` (queue to consumer) | `Messaging` |
+| a query | `writes orders`, `reads invoices`, `reads and writes orders` | `SQL` |
+| a call outside the project | `POST /v1/charges` | `HTTP` |
+
+One relationship per pair and kind, its labels sorted and cut at `--max-labels`
+with `+N more`; one drawn only from heuristic joins is tagged `Heuristic`. Then
+`container <system> "Containers" { include * autolayout lr }`, one `dynamic`
+view per flow, and a `styles` block giving `Database`, `Queue` and `External`
+their shapes. Flows are walked as [`flow --format sequence`](#flowatlas-flow-entry)
+walks them, from every way in and every browser action, and ranked by the
+services they cross; a dynamic view holds the cross-container steps in call
+order, only on relationships of the model (a step on a heuristic join, a cache
+read or a caller the model does not hold is left out and counted). A way in
+whose flow never leaves its container gets no view, and two ways in that draw
+the same steps (a route and the function behind it) get one. The run counts
+what `--max-flows` and `--max-labels` cut.
+
+Neither Backstage nor the Structurizr CLI runs here: every file the snapshots
+and tests hold is checked against Backstage's entity rules (envelope, kind
+fields, names, references, annotation keys) and the DSL statements written
+(identifiers defined once before use, every dynamic step on a relationship of
+the model, quotes escaped, blocks closed), by `catalogProblems` and
+`dslProblems` of `@flowatlas/linker`.
+
 ### `flowatlas check --env <name>`
 
 Can this be deployed there. `diff` compares a branch with `main`; a release
@@ -2203,6 +2287,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
 | `aliases` | string[] | `[]` | other names the service is known by: the short name an annotation uses (`@CallsService('catalog', …)` for `catalog-api`), the name its worker is deployed under (a service binding's target), a host. Wherever a service is named — an annotation, `apiTarget`, a binding, a base address's host — an alias is the service. Unique across every name and alias; matched exactly, never by prefix |
 | `tags` | string[] | `[]` | names an architecture rule can select the service by: `frontend`, `edge`, `domain:payments`. A tag is a name only; nothing is inferred from it ([`rules`](#rules)) |
+| `catalog` | object | none | what a software catalogue says of the service and the code cannot, for [`export`](#flowatlas-export-backstagestructurizr): `{ "owner", "lifecycle", "system", "description", "sourceUrl" }`, every key optional. Written as given; an owner or lifecycle nobody gave is `unknown`, and nothing is guessed from the code |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
 | `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi", "path": … }`, path relative to this file |
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |

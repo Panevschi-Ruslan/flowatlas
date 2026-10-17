@@ -542,6 +542,27 @@ only one of them moved.
 - **MCP `get_spec` and `describe_for_prompt({withSpec})` (P118).** A service's
   document, or one route or channel end with the schemas it uses, as JSON text
   bounded by `maxChars`; a route's prompt can carry its fragment.
+- **`flowatlas export backstage` and `flowatlas export structurizr` (P119).**
+  The map written into the tools that already keep one, from the joins the
+  graph made and nothing else. `backstage` writes a `Component` per service
+  (`service`, `website` or `function`), an `API` per service and kind pointing
+  at the OpenAPI or AsyncAPI document written beside it, `Resource`s for the
+  tables queried (one per table, owned by its writer) and the hosts called, and
+  one `Location` listing every file; `consumesApis` comes from requests into
+  another service's routes and deliveries off channels another service
+  publishes, `dependsOn` from queries, outside hosts and functions started by
+  name. Owner, lifecycle and system come from the new `services[].catalog`
+  (`owner`, `lifecycle`, `system`, `description`, `sourceUrl`) and are
+  `unknown` (and listed) when nobody wrote them. `structurizr` writes a DSL
+  workspace: a container per service, store and channel prefix, the hosts
+  outside, relationships described by what crosses them (collapsed past
+  `--max-labels`), the container view, and a dynamic view per flow in call
+  order (`--flow`, `--max-flows`). Only `static`, `declared` and `marker` joins
+  by default; `--include-heuristic` draws the rest, marked. Files go to
+  `<output>/export/<kind>/`, never into a configured repository, the same
+  bytes every run; `--check` writes nothing and fails when a committed copy
+  is out of date, naming the first relation that differs; `--json` prints the
+  entities or the model.
 
 ### Changed
 

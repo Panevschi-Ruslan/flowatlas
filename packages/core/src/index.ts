@@ -211,6 +211,7 @@ export type {
   StarterConfig,
   LoadedConfig,
   PackageSourcesSetting,
+  ServiceCatalog,
   ServiceConfig,
 } from './config.js';
 export type {

@@ -1,0 +1,33 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: gateway
+  description: The one address the browser calls.
+  annotations:
+    backstage.io/source-location: url:https://example.com/bookshop/gateway/tree/main/
+    flowatlas/graph-id: repo:gateway
+spec:
+  type: service
+  lifecycle: production
+  owner: team-storefront
+  system: bookshop
+  providesApis:
+    - gateway-openapi
+  consumesApis:
+    - billing-openapi
+    - orders-openapi
+  dependsOn:
+    - resource:api.stripe.com
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: gateway-openapi
+  description: "The routes gateway answers (8), read from the code by flowatlas."
+spec:
+  type: openapi
+  lifecycle: production
+  owner: team-storefront
+  system: bookshop
+  definition:
+    $text: ./gateway.openapi.yaml

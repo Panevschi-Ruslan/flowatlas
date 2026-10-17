@@ -278,3 +278,59 @@ export type {
   FindingRow,
   FindingSources,
 } from './analysis/findings.js';
+export {
+  collapseLabels,
+  drawnByDefault,
+  EXPORT_CONFIDENCES,
+  exportModelOf,
+  JOIN_KINDS,
+  publishersOf,
+  SERVICE_KINDS,
+  serviceKindOf,
+} from './export/joins.js';
+export type {
+  ExportApi,
+  ExportGraph,
+  ExportJoin,
+  ExportModel,
+  ExportModelOptions,
+  ExportService,
+  JoinEdge,
+  JoinKind,
+  JoinTarget,
+  ServiceHalf,
+  ServiceKind,
+} from './export/joins.js';
+export {
+  BACKSTAGE_ANNOTATIONS,
+  BACKSTAGE_API_VERSION,
+  BACKSTAGE_LOCATION_FILE,
+  BACKSTAGE_RESOURCES_FILE,
+  CATALOG_UNKNOWN,
+  exportBackstage,
+} from './export/backstage.js';
+export type { BackstageDocument, BackstageEntity, BackstageExport, BackstageOptions, BackstageSummary, ExportFile } from './export/backstage.js';
+export {
+  channelGroupOf,
+  DEFAULT_EXPORT_FLOWS,
+  DEFAULT_MAX_LABELS,
+  dslString,
+  exportStructurizr,
+  renderWorkspace,
+  STRUCTURIZR_FILE,
+} from './export/structurizr.js';
+export type {
+  ExportFlow,
+  StructurizrElement,
+  StructurizrExport,
+  StructurizrModel,
+  StructurizrOptions,
+  StructurizrRelationship,
+  StructurizrStep,
+  StructurizrSummary,
+  StructurizrView,
+} from './export/structurizr.js';
+export { catalogName, dslIdentifier, MAX_CATALOG_NAME, nameBook } from './export/names.js';
+export { yamlDocument, yamlDocuments, yamlScalar } from './export/yaml.js';
+export type { YamlValue } from './export/yaml.js';
+export { catalogEntityProblems, catalogProblems, dslProblems } from './export/checks.js';
