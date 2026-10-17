@@ -1365,7 +1365,9 @@ rows, so a database built by 0.5.x still shows them.
 Each reason is a row that opens: the summary is the reason in words (the code
 in its tooltip), its count and its first place; opened, it lists every place
 it stands for (service, `file:line`, message, *show in graph*), fifty at most,
-then `flowatlas doctor --max-nodes <n>` for the rest. Each row and each place
+then `flowatlas doctor --reason <code> --max-nodes <n>` for the rest, with
+`--service <name>` when every row of the reason is in one service: a command
+whose whole output is that reason's places. Each row and each place
 has one `⋯` menu (keyboard: Enter opens it, the arrows move, Enter runs, Escape
 closes and hands the keyboard back):
 

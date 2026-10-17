@@ -97,6 +97,18 @@ describe('what did not join, split by what it is (P100)', () => {
     }
   });
 
+  it('names no service in the command for the rest when the reason is in more than one (P141)', () => {
+    const spread = testPack('missing-spread', { unresolved: [...EXTRA, ...Array.from({ length: 5 }, (_, i): Unresolved => ({
+      file: `src/orders/line-${i}.ts`, line: i + 1, reason: 'type-unresolved', service: 'orders', message: `Line${i} is not resolved`,
+    }))] });
+    const { page, document } = mountPage(spread);
+    page.showView('missing');
+    const row = document.querySelector('.nj-row[data-reason="type-unresolved"]')!;
+    (row.querySelector('summary') as any).click();
+    expect(textOf(row.querySelectorAll('.nj-places > p.hint').at(-1)!)).toBe(
+      '15 more places; flowatlas doctor --reason type-unresolved --max-nodes 65 lists every one.');
+  });
+
   it('says each reason in words, its code in the tooltip and in the row opened', () => {
     const { document } = mount();
     const tags = document.querySelectorAll('#tab-sheet .nj-row .nj-what .tag');
@@ -113,8 +125,9 @@ describe('what did not join, split by what it is (P100)', () => {
     (row.querySelector('summary') as any).click();
     expect((row.querySelector('details') as any).open).toBe(true);
     expect(row.querySelectorAll('.nj-place')).toHaveLength(50);
+    // The command for the rest lists that reason only, and only its service when all of it is in one (P141).
     expect(textOf(row.querySelectorAll('.nj-places > p.hint').at(-1)!)).toBe(
-      '10 more places; flowatlas doctor --max-nodes 60 lists every one under its reason.');
+      '10 more places; flowatlas doctor --reason type-unresolved --max-nodes 60 --service gateway lists every one.');
     const routes = document.querySelector('.nj-row[data-reason="route-unguarded"]')!;
     (routes.querySelector('summary') as any).click();
     // The accepted ones are under Accepted, not here.

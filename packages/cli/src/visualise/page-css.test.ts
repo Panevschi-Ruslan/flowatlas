@@ -96,3 +96,29 @@ describe('the page’s text sizes', () => {
     expect(allowed).not.toContain('.m-name');
   });
 });
+
+describe('the page’s chip rows (P137)', () => {
+  const rules = [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map(([, selector, body]) => ({ selector: selector!.trim().replace(/\s+/g, ' '), body: body! }));
+  /** Every declaration written for `selector`, the later over the earlier. */
+  const declared = (selector: string): Map<string, string> => new Map(rules.filter((rule) => rule.selector === selector)
+    .flatMap((rule) => [...rule.body.matchAll(/([\w-]+)\s*:\s*([^;]+);?/g)].map(([, name, value]) => [name!, value!.trim()])));
+  const html = readFileSync(new URL('./page.html', import.meta.url), 'utf8');
+
+  it('lay the Map’s kinds of link out as a row that wraps, and keep the Graph’s Filters a column', () => {
+    const kinds = /<span id="m-kinds"[^>]*>/.exec(html)![0];
+    expect(kinds).toContain('class="m-kinds"');
+    expect(kinds).not.toContain('g-filters');
+    const row = declared('.m-kinds');
+    expect(row.get('display')).toMatch(/flex/);
+    expect(row.get('flex-flow')).toBe('row wrap');
+    expect(declared('.g-filters').get('flex-direction')).toBe('column');
+  });
+
+  it('wrap the Ways in list’s failures line a whole chip at a time, never cut mid-word', () => {
+    expect(declared('.list li.v-row .row-fails').get('white-space')).toBe('normal');
+    expect(declared('.list li.v-row .row-fails .fail-chips').get('flex-wrap')).toBe('wrap');
+    expect(declared('.list li.v-row .fail-chip').get('white-space')).toBe('nowrap');
+    expect(rules.some((rule) => rule.selector.endsWith('.fail-chips') && /flex-wrap:\s*nowrap/.test(rule.body))).toBe(false);
+  });
+});

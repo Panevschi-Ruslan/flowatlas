@@ -51,6 +51,33 @@ describe('the ways in', () => {
     expect(chip.hidden).toBe(true);
   });
 
+  it('wraps a failures line whole chips at a time, the row as many lines taller, the chips in its tooltip (P137)', () => {
+    const id = 'entry:orders:http:POST:/orders';
+    const undeclared = [500, 502, 503].map((status, n) => ({ status, count: n + 1 }));
+    const traced = {
+      ...data,
+      observed: { entries: {}, joins: {}, failures: { [id]: {
+        hits: 9, window: { from: '2026-01-01', to: '2026-01-02' }, declaredSeen: [], declaredNeverSeen: [], undeclared,
+      } } },
+    } as any;
+    const heightAt = (width: number): { height: string; title: string; fails: any } => {
+      const { page, document } = mountPage(traced, { upTo: createWays });
+      // The list as wide as a phone's leaves it, or not laid out yet.
+      Object.defineProperty(document.getElementById('entries'), 'clientWidth', { value: width });
+      createWays(page).drawEntries();
+      const row = document.querySelectorAll('#entries button.row').find((b: any) => b.title.startsWith('POST /orders\n'))!;
+      return { height: (row.parentNode as any).style.height, title: (row as any).title, fails: row.querySelector('.row-fails') };
+    };
+    const wide = heightAt(1200);
+    expect(wide.height).toBe('80px');
+    expect(wide.fails).not.toBeNull();
+    expect(textOf(wide.fails)).toContain('500 ×1 not declared');
+    expect(wide.title).toBe('POST /orders\nseen failing with 500 ×1 not declared · 502 ×2 not declared · 503 ×3 not declared');
+    // 300px of list: the lead, then a chip a line - each 24px - rather than one cut mid-word.
+    expect(heightAt(300).height).toBe(`${80 + 3 * 24}px`);
+    expect(heightAt(0).height).toBe('80px');
+  });
+
   it('picks a way in and opens its steps, from any tab but the graph', () => {
     const { page, document } = mountPage(data, { upTo: createWays });
     const opened: string[] = [];

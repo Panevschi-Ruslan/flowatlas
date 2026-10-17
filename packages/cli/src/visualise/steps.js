@@ -14,11 +14,13 @@
  *   promptFor     the same as Markdown, written by core's renderPrompt, as the MCP server writes it
  *   failsOf       what a way in can fail with, failGroups each answer once, failChips the statuses
  *   failChipsSeen the same chips with what traffic answered beside them (P106), failSeenSay one group's
+ *   failChipLines how many lines a chip line wraps to at a width, so a fixed-height row can be tall enough (P137)
  *   logsOf        the lines a step logs
  *   scheduleOf    when a scheduled way in fires, and in which zone
  *   accessOf      what stands in front of a way in, and from where
  *   acceptCommandForPlace  the `flowatlas accept` line that takes one place
  *   acceptCommandForLike   the one that takes every row like it, with --dry-run
+ *   doctorCommandForReason the `flowatlas doctor` line that lists every place of one reason (P141)
  */
 
 /**
@@ -252,6 +254,29 @@ export const failChipsSeen = (fails, compared) => {
         (row.maybe ? '; maybe ' + row.maybe.join(', ') + ', which name no status' : '') + ' (' + over + ')',
     })),
   ];
+};
+
+/**
+ * How many lines a failure line takes at `width` pixels when its chips wrap
+ * (P137): `lead` ("can fail with ") then each chip, a `·` between them, laid
+ * out the way a wrapping flex row lays them, a whole item to the next line
+ * when it does not fit. The Ways in list draws a row at a fixed height, so it
+ * asks this rather than measuring; the sizes are the page's 12px chips, read
+ * a little wide, so a guess errs towards a line too many, never a chip cut. A
+ * width of 0 or less is one not laid out yet: one line.
+ */
+export const failChipLines = (lead, chips, width) => {
+  if (!(width > 0)) return 1;
+  const MONO = 7.4, UI = 6.6, CHIP = 14, SEP = 6, GAP = 4;
+  const items = [...(lead ? [lead.trim().length * UI] : []),
+    ...chips.flatMap((text, n) => [...(n > 0 ? [SEP] : []), String(text).length * MONO + CHIP])];
+  let lines = 1, x = 0;
+  for (const w of items) {
+    if (x === 0) x = w;
+    else if (x + GAP + w <= width) x += GAP + w;
+    else { lines += 1; x = w; }
+  }
+  return lines;
 };
 
 const NO_LOGS = Object.freeze([]);
@@ -637,6 +662,20 @@ export const acceptCommandForPlace = (place) => {
   const where = route !== null ? ['--path', shellWord(route.method + ' ' + route.path)]
     : place.file ? ['--file', shellWord(place.file)] : [];
   return acceptLine(place.reason, place.service, [...where, '--note', shellWord('<why this one is fine>')]);
+};
+
+/**
+ * The `flowatlas doctor` line whose whole output is one reason's places
+ * (P141): `--reason` keeps only that reason, `--max-nodes` lists `count` of
+ * its places rather than the handful, and `--service` narrows it further when
+ * every row of the reason is in that one service (`services`, each row's, ''
+ * for a row that names none).
+ */
+export const doctorCommandForReason = (reason, services, count) => {
+  const one = new Set(services);
+  const service = one.size === 1 ? [...one][0] : '';
+  return ['flowatlas', 'doctor', '--reason', shellWord(reason), '--max-nodes', String(count),
+    ...(service ? ['--service', shellWord(service)] : [])].join(' ');
 };
 
 /**

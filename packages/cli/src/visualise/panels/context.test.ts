@@ -38,9 +38,10 @@ describe('the page context', () => {
     expect(page.guards[v].every((e: number[]) => page.edgeTypes[e[2]!] === 'guarded_by')).toBe(true);
   });
 
-  it('starts the shared state on no way in, the Map tab and every service', () => {
+  it('starts the shared state on no way in, no tab open yet and every service', () => {
     expect(page.store.get('current')).toBeNull();
-    expect(page.store.get('view')).toBe('map');
+    // The first view is a change from nothing, whichever it is, so its panel is shown (P137).
+    expect(page.store.get('view')).toBeNull();
     expect([...page.store.get('shown')]).toEqual(page.repos);
   });
 });

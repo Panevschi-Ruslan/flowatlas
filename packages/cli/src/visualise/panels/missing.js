@@ -1,5 +1,6 @@
 import { ROW } from '../graph.js';
 import { PAGE_WORDS } from '../frame.js';
+import { doctorCommandForReason } from '../steps.js';
 
 /* The Not joined tab, split by what a row is (P100): what the reader
    Couldn't join (gaps, with what it could not follow by cause and package
@@ -96,7 +97,8 @@ export function createMissing(page) {
           `<span class="nj-tools">${row[ROW.node] >= 0 ? graphLink(row[ROW.node]) : ''}${rowMenu(r, 'this place')}</span></li>`;
       }).join('') + '</ol>' +
       (rest > 0 ? `<p class="hint">${plural(rest, 'more place', 'more places')}; ` +
-        `<code>flowatlas doctor --max-nodes ${group.rows.length}</code> lists every one under its reason.</p>` : '');
+        `<code>${esc(doctorCommandForReason(group.reason, group.rows.map((r) => rowService(data.rows[r]) || ''), group.rows.length))}</code>` +
+        ' lists every one.</p>' : '');
   };
 
   /* ── what was accepted (P72, P76) ─────────────────────────────────── */

@@ -1009,6 +1009,18 @@ only one of them moved.
 
 ### Fixed
 
+- **Four page bugs seen in a browser (P137).** A page opened at `#map` (a
+  link, a bookmark, a reload) showed the Map tab selected over an empty panel:
+  the tabs' shared state began on the map, so opening it changed nothing and
+  its panel stayed hidden. No tab is open now until the first is shown, and a
+  test boots the page at every tab's address, at desktop and phone widths. The
+  Map's kinds of link stacked in a column since P101 gave the Graph's Filters
+  popover that class; they are a wrapping row of their own again. On a phone,
+  the Ways in list cut a failure chip mid-word (`500 ×1 not de…`); the chips
+  now wrap whole, the row a line taller for each line they take at the list's
+  width, and the row's tooltip says them all. The line under a Not joined row
+  names `flowatlas doctor --reason <code> --max-nodes <n>` (and `--service`
+  when the reason is all in one service), which lists only that reason's places.
 - **The Crossings tab drew nothing (P140).** Its table reached for the Not
   joined tab's per-kind sections, which were not in its scope, and stopped on
   the error before drawing a row; it lists every crossing again.

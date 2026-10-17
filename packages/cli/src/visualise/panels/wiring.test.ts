@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { packChanges } from '../changes.js';
 import { createKeys, SHORTCUTS, VIEWS } from '../frame.js';
 import { FakeEvent, textOf } from './test-dom.js';
 import { mountPage, nodeAt, testPack, withServices } from './test-page.js';
@@ -258,6 +259,50 @@ describe('the wiring', () => {
   it('puts the select in place of the row under 360px (P102)', () => {
     const { document } = mountPage(data, { width: 340 });
     expect(document.querySelector('#views > .panel-head')!.classList.contains('is-select')).toBe(true);
+  });
+
+  /** The panel each tab shows: the table tabs share one sheet. */
+  const PANEL_OF: Record<string, string> = {
+    map: 'map-view', steps: 'steps-view', graph: 'graph-view',
+    crossings: 'tab-sheet', missing: 'tab-sheet', busiest: 'tab-sheet', changes: 'tab-sheet',
+  };
+  const PANELS = [...new Set(Object.values(PANEL_OF))];
+  /** A page written with --diff, so it has the Changes tab too. */
+  const withChanges = {
+    ...data,
+    changes: packChanges({
+      base: { ref: 'main', services: {} }, head: { ref: null, services: {} },
+      nodes: { added: ['entry:orders:http:GET:/orders/today'], removed: [], changed: [], moved: [] },
+      edges: { added: [], removed: [], changed: [] },
+      types: { added: [], removed: [], changed: [] },
+      counts: { base: { nodes: 1, edges: 0, types: 0, unresolved: { rows: 0, sites: 0 } },
+        head: { nodes: 2, edges: 0, types: 0, unresolved: { rows: 0, sites: 0 } } },
+      impact: [], contracts: { new: [], fixed: [], preexisting: [], ignored: [] }, warnings: [],
+    } as any),
+  };
+
+  it('shows the panel of whichever tab is the first one opened, at every address a tab has (P137)', () => {
+    const v = at('entry:orders:http:POST:/orders');
+    const addresses: Array<[string, string]> = [
+      ['', 'map'], ['#map', 'map'], ['#map/m=dead', 'map'], ['#map/o=role', 'map'],
+      ['#steps', 'steps'], [`#steps/${testKey(v)}`, 'steps'], [`#walk/${testKey(v)}`, 'steps'],
+      ['#crossings', 'crossings'], ['#missing', 'missing'], ['#missing/reason=di-token-unknown', 'missing'],
+      ['#busiest', 'busiest'], ['#changes', 'changes'],
+      ['#graph', 'graph'], [`#graph/${testKey(v)}`, 'graph'], [`#graph/${testKey(v)}/3`, 'graph'],
+      ['#timeline', 'map'],
+    ];
+    for (const [hash, view] of addresses) {
+      for (const width of [1280, 390]) {
+        const { page, document } = mountPage(withChanges, { address: `file:///project/multi-repo.html${hash}`, width });
+        const where = `${hash || 'no hash'} at ${width}px`;
+        expect(page.store.get('view'), where).toBe(view);
+        for (const id of PANELS) expect(document.getElementById(id)!.hidden, `${id} on ${where}`).toBe(id !== PANEL_OF[view]);
+        expect(document.querySelector('.tab[aria-selected="true"]')!.getAttribute('data-view'), where).toBe(view);
+        // Something is in it: the map its drawing, a table its rows, Steps its way in.
+        expect(document.getElementById(PANEL_OF[view]!)!.childNodes.length, where).toBeGreaterThan(0);
+      }
+    }
+    expect([...new Set(addresses.map(([, view]) => view))].sort()).toEqual([...VIEWS].sort());
   });
 
   it('says what was read and, only with a trace, what was seen running (P101)', () => {

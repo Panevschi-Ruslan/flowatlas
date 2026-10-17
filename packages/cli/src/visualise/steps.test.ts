@@ -11,6 +11,8 @@ import {
   acceptCommandForPlace,
   accessOf,
   createSeen,
+  doctorCommandForReason,
+  failChipLines,
   failChips,
   failChipsSeen,
   failGroups,
@@ -366,6 +368,28 @@ describe('failures, loops, logs and schedules on the steps (P74)', () => {
     ]);
     expect(failChips([fail({ a: 1 }), fail({ s: 404 })])).toEqual(['404', '500?']);
     expect(failChips([fail({ a: 1 }), fail({})])).toEqual(['500']);
+  });
+
+  it('writes the doctor line for one reason, its service only when every row is in it (P141)', () => {
+    expect(doctorCommandForReason('type-unresolved', ['gateway', 'gateway'], 60))
+      .toBe('flowatlas doctor --reason type-unresolved --max-nodes 60 --service gateway');
+    expect(doctorCommandForReason('type-unresolved', ['gateway', 'orders'], 60))
+      .toBe('flowatlas doctor --reason type-unresolved --max-nodes 60');
+    // A row that names no service is not in the one the others are in.
+    expect(doctorCommandForReason('call-dynamic', ['gateway', ''], 3)).toBe('flowatlas doctor --reason call-dynamic --max-nodes 3');
+    expect(doctorCommandForReason('call-dynamic', ['shop api'], 3)).toBe("flowatlas doctor --reason call-dynamic --max-nodes 3 --service 'shop api'");
+  });
+
+  it('says how many lines a failure line wraps to, a whole chip to the next line (P137)', () => {
+    const chips = ['409 never seen', '500 ×1 not declared'];
+    // Wide enough for all of it, or not laid out yet: one line.
+    expect(failChipLines('can fail with ', chips, 1000)).toBe(1);
+    expect(failChipLines('can fail with ', chips, 0)).toBe(1);
+    // A phone's list (P137's 390px): the second chip goes to a line of its own rather than being cut.
+    expect(failChipLines('can fail with ', chips, 300)).toBe(2);
+    // Narrower than a chip and its neighbour: a line each, the lead on its own.
+    expect(failChipLines('can fail with ', chips, 150)).toBe(3);
+    expect(failChipLines('', ['404'], 40)).toBe(1);
   });
 
   it('sets what traffic answered beside each failure chip, and says it in the copied prompt (P106)', () => {

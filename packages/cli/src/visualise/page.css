@@ -726,7 +726,11 @@ tr:hover td { background: var(--raise); }
 .list li.v-row .row { height: 100%; overflow: hidden; line-height: 1.5; }
 .list li.v-row .row-name,
 .list li.v-row .row-meta { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; word-break: normal; }
-.list li.v-row .fail-chips { flex-wrap: nowrap; }
+/* The failures line wraps whole chips, never one cut mid-word: the row is as
+   many lines taller as ways.js works out they take (P137). */
+.list li.v-row .row-fails { white-space: normal; text-overflow: clip; }
+.list li.v-row .row-fails .fail-chips { display: flex; flex-wrap: wrap; row-gap: 4px; }
+.list li.v-row .fail-chip { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .list li .to-graph { width: 34px; border-left: 1px solid var(--rule-soft); }
 .list li .to-graph:hover { background: var(--raise); }
 
@@ -778,6 +782,9 @@ tr:hover td { background: var(--raise); }
 }
 
 .g-filters { display: flex; flex-direction: column; gap: 8px; }
+/* The Map's kinds of link: a row of chips on its bar that wraps, never the
+   Graph popover's column (P137). */
+.m-kinds { display: inline-flex; flex-flow: row wrap; align-items: center; gap: 5px 6px; }
 .g-pop-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 6px; }
 .g-pop-row > .hint:first-child { min-width: 70px; }
 

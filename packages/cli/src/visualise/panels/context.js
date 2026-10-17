@@ -243,7 +243,10 @@ export function createPageContext(data) {
     return hint;
   };
 
-  const store = createStore({ current: null, view: 'map', shown: new Set(repos) });
+  /* No tab is open until the first view is shown (wiring.js `start`): a store
+     that began on `map` made opening the page at `#map` a change to nothing,
+     so the map's panel was never un-hidden (P137). */
+  const store = createStore({ current: null, view: null, shown: new Set(repos) });
 
   return { CROSSES, FL, GLYPH, KD, LB, LN, MT, RP, TY, accepted, acceptedNote,
     acceptedRows, acceptedRule, confidences, copyText, data, edgeTypes, entryHeadHtml, entryIx, esc, failChipsHtml,

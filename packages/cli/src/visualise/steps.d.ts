@@ -145,6 +145,8 @@ export interface AcceptPlace {
   message?: string;
 }
 export declare const acceptCommandForPlace: (place: AcceptPlace) => string;
+/** The `flowatlas doctor --reason <r> --max-nodes <n>` line, with `--service` when every row is in one service (P141). */
+export declare const doctorCommandForReason: (reason: string, services: readonly string[], count: number) => string;
 export declare const acceptCommandForLike: (place: AcceptPlace) => string | null;
 export declare const failChips: (fails: readonly PackedFail[]) => string[];
 /** One status and exception a way in fails with, and the places that raise it (P87). */
@@ -166,6 +168,8 @@ export interface FailChip {
   title?: string;
 }
 export declare const failChipsSeen: (fails: readonly PackedFail[], compared: PackedFailuresSeen | null | undefined) => FailChip[];
+/** How many lines a failure line wraps to at `width` pixels; 1 for a width not laid out yet (P137). */
+export declare const failChipLines: (lead: string, chips: readonly string[], width: number) => number;
 export declare const failSeenSay: (group: PackedFailGroup, compared: PackedFailuresSeen | null | undefined) => string;
 export declare const failWindowSay: (window: PackedFailuresSeen['window'] | undefined) => string;
 export declare const unmatchedOf: (
