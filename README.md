@@ -315,7 +315,11 @@ a request nothing but a catch-all serves; and `whitelist-strip`, a field sent to
 a receiver whose whitelisting `ValidationPipe` removes it on arrival. App-wide
 guards (`APP_GUARD`, `useGlobalGuards`) count, a `@Public()`-style decorator the
 project wrote is read as the opt-out it is, and a route that checks the caller
-in its own body is `route-checked-in-body` rather than unguarded. Routes that
+in its own body is `route-checked-in-body` rather than unguarded, also when the
+exception comes from a helper that picks it from a table
+(`throw toHttpError(check)`). A route is public only where something says so in
+words: a decorator, `doctor.publicRoutes`, or `/** @flowatlas-public <why> */`
+on the handler or its controller, which is listed at `info` with its reason. Routes that
 are public by decision go in `doctor.publicRoutes` or are accepted by rule, and
 a decorator that cannot be followed goes in `doctor.skipGuardDecorators`; all of
 it is in [the command reference](docs/CLI.md). `diff` answers the other question a build

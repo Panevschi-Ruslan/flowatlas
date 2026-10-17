@@ -1,11 +1,11 @@
-import { findDecorators, lineOf, type Failure } from '@flowatlas/core';
+import { compareChoices, findDecorators, lineOf, type Failure, type FailureChoice } from '@flowatlas/core';
 import { Node, SyntaxKind, type ClassDeclaration, type MethodDeclaration } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import { NEST_COMMON } from '../index-classes.js';
 import { resolveClassExpression } from '../util/resolve-class.js';
 import type { WrapperRef } from '../bootstrap.js';
 import type { EntryRecord } from '../wrapping/types.js';
-import { classNamed, statusWritten } from './throws.js';
+import { classNamed, MOST_CHOICES, statusWritten } from './throws.js';
 
 /*
  * What an exception filter answers a throw with (P87).
@@ -58,6 +58,20 @@ export interface Site {
   /** The thrown class and every class it extends, nearest first. */
   lineage: readonly string[];
   /** The status the exception carries itself. */
+  own?: number;
+  /**
+   * What a helper can choose to throw (P90), each answered through the
+   * filters on its own, since a filter may catch one of them and not another.
+   */
+  choices?: readonly ChoiceSite[];
+}
+
+/** One exception a helper can give, as a filter sees it (P90). */
+export interface ChoiceSite {
+  exception: string;
+  status?: number;
+  assumed?: true;
+  lineage: readonly string[];
   own?: number;
 }
 
@@ -372,6 +386,7 @@ const catches = (filter: FilterInFront, lineage: readonly string[]): boolean =>
  * filter, the framework's answer stands as the body reader gave it.
  */
 export const throughFilters = (site: Site, filters: readonly FilterInFront[]): Failure => {
+  if (site.choices !== undefined) return throughFiltersChosen(site, site.choices, filters);
   const filter = filters.find((each) => catches(each, site.lineage));
   if (filter === undefined || filter.answer.kind === 'framework') return site.failure;
   const { status: _status, assumed: _assumed, declared: _declared, ...rest } = site.failure;
@@ -384,4 +399,46 @@ export const throughFilters = (site: Site, filters: readonly FilterInFront[]): F
   }
   const status = site.own ?? site.failure.status;
   return status === undefined ? site.failure : { ...rest, status, assumed: true };
+};
+
+const choiceKey = (choice: FailureChoice): string => `${choice.exception}\u0000${choice.status ?? ''}\u0000${choice.assumed === true ? 1 : ''}`;
+
+/**
+ * What the caller gets for a throw whose exception a helper chooses (P90):
+ * every choice through the filters, each once by status then exception, and a
+ * status for the throw only where every choice ends in the same one.
+ */
+const throughFiltersChosen = (site: Site, choices: readonly ChoiceSite[], filters: readonly FilterInFront[]): Failure => {
+  const { status: _status, assumed: _assumed, declared: _declared, chosenFrom: _chosen, ...rest } = site.failure;
+  const byKey = new Map<string, FailureChoice>();
+  for (const choice of choices) {
+    const answered = throughFilters(
+      {
+        failure: {
+          ...rest,
+          exception: choice.exception,
+          ...(choice.status === undefined ? {} : { status: choice.status }),
+          ...(choice.assumed === true ? { assumed: true as const } : {}),
+        },
+        lineage: choice.lineage,
+        ...(choice.own === undefined ? {} : { own: choice.own }),
+      },
+      filters,
+    );
+    const one: FailureChoice = {
+      exception: choice.exception,
+      ...(answered.status === undefined ? {} : { status: answered.status }),
+      ...(answered.assumed === true ? { assumed: true as const } : {}),
+    };
+    byKey.set(choiceKey(one), one);
+  }
+  const chosenFrom = [...byKey.values()].sort(compareChoices).slice(0, MOST_CHOICES);
+  const [first] = chosenFrom;
+  const agreed = first?.status !== undefined && byKey.size <= MOST_CHOICES && chosenFrom.every((choice) => choice.status === first.status);
+  return {
+    ...(agreed ? { status: first.status } : {}),
+    ...rest,
+    ...(agreed && chosenFrom.every((choice) => choice.assumed === true) ? { assumed: true as const } : {}),
+    chosenFrom,
+  };
 };

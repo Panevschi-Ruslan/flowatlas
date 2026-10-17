@@ -2727,12 +2727,17 @@ __STEPS_LOGIC__
     const failSiteHtml = (v, f) => `<span class="hint">${esc(f.src)}${f.at >= 0 ? ' in ' + esc(nodes[f.at][LB]) : f.id ? ' in ' + esc(f.id.split(':').pop()) : ''}` +
       (f.f ? ' &middot; ' + opener(nodes[v][RP], files.indexOf(f.f), f.l || 0, f.f + (f.l ? ':' + f.l : '')) : '') + '</span>' +
       (f.at >= 0 ? graphLink(f.at) : '');
+    /* A throw whose exception a helper chooses (P90): what it can give, and from which classes. */
+    const failHelperChip = (f) => (f.v === 'helper' && choiceStatuses(f)) || 'no status';
+    const failHelperHtml = (f) => f.v !== 'helper' ? ''
+      : f.ch && f.ch.length ? `<span class="hint" title="The helper picks one at run time; which a request gets is not known">chosen at run time from ${f.ch.map((c) => esc(c.x)).join(', ')}</span>`
+        : `<span class="hint">${f.fam === 'auth' ? 'refuses a check of who is asking; ' : ''}what the helper returns was not read</span>`;
     const failsHtml = (v) => {
       const groups = failGroups(failsOf(model, v));
       if (groups.length === 0) return '';
       return `<section><h4>Can fail with &middot; ${groups.length}</h4>${failChipsHtml(v)}<ul class="fail-list">` +
         groups.map((g) => `<li><span class="fail-chip"${g.a ? ' title="Assumed: no code on the path writes this status"' : ''}>` +
-          `${g.s === undefined ? 'no status' : g.s + (g.a ? '?' : '')}</span><code>${esc(g.x)}</code>` +
+          `${g.s === undefined ? esc(failHelperChip(g.sites[0])) : g.s + (g.a ? '?' : '')}</span><code>${esc(g.x)}</code>` + failHelperHtml(g.sites[0]) +
           (g.n === 1 ? failSiteHtml(v, g.sites[0])
             : `<details class="fail-sites"><summary class="hint">${esc(g.srcs.join('/'))} &times;${g.n}</summary><ul>` +
               g.sites.map((f) => `<li>${failSiteHtml(v, f)}</li>`).join('') + '</ul></details>') +

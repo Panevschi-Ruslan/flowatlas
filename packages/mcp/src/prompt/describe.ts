@@ -112,6 +112,7 @@ const gapLine = (gap: PromptGap): string => {
  * path writes is marked `?` and says why.
  */
 const failLine = (fail: FailRef): string => {
+  if (fail.via === 'helper') return helperLine(fail);
   const status = fail.status === undefined ? 'no status' : `${fail.status}${fail.assumed === true ? '?' : ''}`;
   const count = fail.sites > 1 ? ` ×${fail.sites}, first` : '';
   const place = fail.loc === undefined ? code(fail.at) : code(fail.loc);
@@ -122,6 +123,31 @@ const failLine = (fail: FailRef): string => {
         ? ' — assumed: no code on the path writes this status'
         : ` — assumed: the class states ${fail.declared} and nothing maps it`;
   return `- **${status}** ${code(fail.exception)} — ${fail.sources.join('/')}${count} at ${place}${assumed}`;
+};
+
+/** `401 | 403 | 423`, each status once, lowest first, `?` where only assumed. */
+const choiceStatuses = (choices: NonNullable<FailRef['chosenFrom']>): string[] => {
+  const statuses = [...new Set(choices.flatMap((choice) => (choice.status === undefined ? [] : [choice.status])))].sort((a, b) => a - b);
+  return statuses.map((status) => `${status}${choices.every((choice) => choice.status !== status || choice.assumed === true) ? '?' : ''}`);
+};
+
+/**
+ * A throw whose exception a helper chooses (P90): the helper with what it can
+ * give, `toHttpError (401 | 403 | 423)`, and the classes behind each status.
+ */
+const helperLine = (fail: FailRef): string => {
+  const count = fail.sites > 1 ? ` ×${fail.sites}, first` : '';
+  const place = fail.loc === undefined ? code(fail.at) : code(fail.loc);
+  const choices = fail.chosenFrom ?? [];
+  const statuses = choiceStatuses(choices);
+  const head = fail.status !== undefined ? `${fail.status}${fail.assumed === true ? '?' : ''}` : statuses.length > 0 ? statuses.join(' | ') : 'no status';
+  const what =
+    choices.length > 0
+      ? ` — chosen at run time from ${choices.map((choice) => code(choice.exception)).join(', ')}`
+      : fail.family === 'auth'
+        ? ' — refuses a check of who is asking; what the helper returns was not read'
+        : ' — what the helper returns was not read';
+  return `- **${code(`${fail.exception} (${head})`)}**${what} — ${fail.sources.join('/')}${count} at ${place}`;
 };
 
 /** First edge on the chain that says what it carries, read as the subject's shapes. */

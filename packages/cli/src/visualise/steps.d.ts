@@ -120,6 +120,7 @@ export interface PackedFailGroup {
 }
 export declare const failGroups: (fails: readonly PackedFail[]) => PackedFailGroup[];
 export declare const failSay: (fail: PackedFail) => string;
+export declare const choiceStatuses: (fail: PackedFail) => string;
 export declare const unmatchedOf: (
   observed: Pick<NonNullable<PackedGraph['observed']>, 'unmatched' | 'services' | 'kinds'>,
 ) => Array<{ service?: string; kind: string; name: string }>;

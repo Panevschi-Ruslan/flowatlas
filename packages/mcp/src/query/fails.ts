@@ -1,4 +1,4 @@
-import { failuresOf, groupFailures, type Failure, type FailureGroup, type GraphNode } from '@flowatlas/core';
+import { failuresOf, groupFailures, type Failure, type FailureChoice, type FailureGroup, type GraphNode } from '@flowatlas/core';
 
 /** One place a failure comes from, at `detail >= 2` (P87). */
 export interface FailPlace {
@@ -20,6 +20,12 @@ export interface FailRef {
   assumed?: true;
   /** The status the thrown class states for itself, where nothing maps it. */
   declared?: number;
+  /** `exception` is a helper that chooses what is thrown at run time (P90). */
+  via?: 'helper';
+  /** What the helper can choose, with the status each answers (P90). */
+  chosenFrom?: FailureChoice[];
+  /** `auth`: the throw refuses a check of who is asking whose answer the helper turns into the exception (P90). */
+  family?: 'auth';
   /** How the places come about: `throw`, `guard`, `pipe`. */
   sources: Failure['source'][];
   /** How many places raise it. */
@@ -48,6 +54,9 @@ const refOf = (group: FailureGroup, detail: number): FailRef => {
     exception: group.exception,
     ...(group.assumed === true ? { assumed: true as const } : {}),
     ...(group.declared === undefined ? {} : { declared: group.declared }),
+    ...(group.via === undefined ? {} : { via: group.via }),
+    ...(group.chosenFrom === undefined ? {} : { chosenFrom: group.chosenFrom }),
+    ...(group.family === undefined ? {} : { family: group.family }),
     sources: group.sources,
     sites: group.sites,
     at: first.at,

@@ -131,6 +131,8 @@ const GATED = {
       'route-unguarded',
       'route-guard-skipped',
       'route-checked-in-body',
+      'route-public-declared',
+      'marker-reason-missing',
       'route-shadowed',
       'fails-filter-unread',
       'server-action-unread',

@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T02:22:05.582Z",
+  "configHash": "971cfa210a7b",
+  "services": [
+    {
+      "name": "lending",
+      "repo": "./lending",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 43,
+      "edges": 38,
+      "types": 5,
+      "unresolved": 0,
+      "durationMs": 628,
+      "packages": {
+        "name": "check-through-helper-lending",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "typeorm"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 8,
+    "called": 0,
+    "uncalled": [
+      "entry:lending:http:DELETE:/desk/holds/:param",
+      "entry:lending:http:GET:/catalogue/items",
+      "entry:lending:http:GET:/catalogue/new-arrivals",
+      "entry:lending:http:GET:/desk/overdue",
+      "entry:lending:http:GET:/desk/stats",
+      "entry:lending:http:GET:/opening-hours",
+      "entry:lending:http:GET:/opening-hours/today",
+      "entry:lending:http:POST:/desk/renewals"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 15,
+      "reason": "route-unguarded",
+      "message": "GET /catalogue/items has no guard in front of it and reaches CatalogueItem.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /catalogue/items"
+    },
+    {
+      "service": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 21,
+      "reason": "marker-reason-missing",
+      "level": "info",
+      "message": "GET /catalogue/new-arrivals has no guard in front of it and reaches CatalogueItem, and is marked @flowatlas-public with no reason given.",
+      "hint": "Taken as public. Write why after the marker, /** @flowatlas-public <why> */, so whoever reviews the route can check the decision still holds.",
+      "symbol": "GET /catalogue/new-arrivals"
+    },
+    {
+      "service": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 20,
+      "reason": "route-checked-in-body",
+      "level": "info",
+      "message": "POST /desk/renewals reaches Loan with no guard in front of it, and refuses a request in its own code through toHttpError(…) (401, 403 or 423, chosen at run time) in DeskController.renew, src/desk/desk.controller.ts:23.",
+      "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
+      "symbol": "POST /desk/renewals"
+    },
+    {
+      "service": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 28,
+      "reason": "route-checked-in-body",
+      "level": "info",
+      "message": "DELETE /desk/holds/:param reaches Hold with no guard in front of it, and refuses a request in its own code through toHttpError(…) (401, 403 or 423, chosen at run time) in DeskController.cancelHold, src/desk/desk.controller.ts:33.",
+      "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
+      "symbol": "DELETE /desk/holds/:param"
+    },
+    {
+      "service": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 39,
+      "reason": "route-checked-in-body",
+      "level": "info",
+      "message": "GET /desk/overdue reaches Loan with no guard in front of it, and refuses a request in its own code through reject(…) after a check of who is asking (the status it gives was not read) in DeskController.overdue, src/desk/desk.controller.ts:41.",
+      "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
+      "symbol": "GET /desk/overdue"
+    },
+    {
+      "service": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 46,
+      "reason": "route-unguarded",
+      "message": "GET /desk/stats has no guard in front of it and reaches Loan.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /desk/stats"
+    },
+    {
+      "service": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 14,
+      "reason": "route-public-declared",
+      "level": "info",
+      "message": "GET /opening-hours has no guard in front of it and reaches OpeningHour, and is declared public: opening hours are shown to anyone.",
+      "hint": "Decided on purpose, so nothing is missing. Check that the reason still holds.",
+      "symbol": "GET /opening-hours"
+    },
+    {
+      "service": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 19,
+      "reason": "route-public-declared",
+      "level": "info",
+      "message": "GET /opening-hours/today has no guard in front of it and reaches OpeningHour, and is declared public: opening hours are shown to anyone.",
+      "hint": "Decided on purpose, so nothing is missing. Check that the reason still holds.",
+      "symbol": "GET /opening-hours/today"
+    }
+  ],
+  "totals": {
+    "nodes": 43,
+    "edges": 38,
+    "types": 5,
+    "missed": 0,
+    "sites": 0,
+    "notes": 5,
+    "findings": 3,
+    "unresolved": 0
+  }
+}

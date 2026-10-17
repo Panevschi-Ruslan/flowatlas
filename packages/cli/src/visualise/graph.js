@@ -43,6 +43,21 @@ const pushTo = (map, key, value) => {
 
 const fileKey = (repo, file) => repo + ':' + file;
 
+/**
+ * A failure as a few words, for the search list: as steps.js's `failSay`,
+ * which the page's other readers use - `409 ConflictException`, `500? Error`,
+ * the exception alone, or a helper with what it can give, `toHttpError (401 |
+ * 403 | 423)` (P90).
+ */
+export const failSaid = (fail) => {
+  if (fail.v === 'helper' && fail.s === undefined) {
+    const statuses = [...new Set((fail.ch || []).filter((c) => c.s !== undefined).map((c) => c.s))].sort((a, b) => a - b);
+    const said = statuses.map((s) => s + ((fail.ch || []).every((c) => c.s !== s || c.a) ? '?' : ''));
+    return said.length ? fail.x + ' (' + said.join(' | ') + ')' : fail.fam === 'auth' ? fail.x + ' (refuses who is asking)' : fail.x;
+  }
+  return fail.s === undefined ? fail.x : fail.s + (fail.a ? '? ' : ' ') + fail.x;
+};
+
 /** A packed word: a position in `list`, or the word itself where listing it would not pay (P84). */
 export const wordIn = (list, word) => (typeof word === 'number' ? list[word] : word);
 
@@ -54,10 +69,18 @@ export const failsByEntry = (data) => {
   const out = new Map();
   if (!data.fails) return out;
   const { fails: all = [], exceptions: xs, failSources: ss, files } = data.dicts;
-  // A negated status is an assumed one (P87); -1 is none.
-  const one = all.map(([s, x, at, f, l, src, id]) => Object.freeze({ ...(s === -1 ? {} : { s: Math.abs(s) }), x: wordIn(xs, x), at,
-    ...(id === undefined ? {} : { id }), ...(f < 0 ? {} : { f: files[f] }), ...(l < 0 ? {} : { l }), src: wordIn(ss, src),
-    ...(s < -1 ? { a: 1 } : {}) }));
+  // A negated status is an assumed one (P87); -1 is none. After the source
+  // comes the id of a place the graph does not draw, then what a throw through
+  // a helper adds (P90): the one is a string, the other an object.
+  const status = (s) => ({ ...(s === -1 ? {} : { s: Math.abs(s) }), ...(s < -1 ? { a: 1 } : {}) });
+  const one = all.map(([s, x, at, f, l, src, ...rest]) => {
+    const id = rest.find((item) => typeof item === 'string');
+    const more = rest.find((item) => typeof item === 'object' && item !== null) || {};
+    return Object.freeze({ ...status(s), x: wordIn(xs, x), at,
+      ...(id === undefined ? {} : { id }), ...(f < 0 ? {} : { f: files[f] }), ...(l < 0 ? {} : { l }), src: wordIn(ss, src),
+      ...(more.via ? { v: more.via } : {}), ...(more.ch ? { ch: more.ch.map(([cs, cx]) => Object.freeze({ ...status(cs), x: cx })) } : {}),
+      ...(more.fam ? { fam: more.fam } : {}) });
+  });
   for (const [entry, list] of Object.entries(data.fails)) out.set(Number(entry), list.map((r) => one[r]));
   return out;
 };
@@ -877,7 +900,7 @@ export const FIND_GROUPS = Object.freeze({
         if (!node) continue;
         const seen = new Set();
         for (const fail of fails) {
-          const label = fail.s === undefined ? fail.x : fail.s + (fail.a ? '? ' : ' ') + fail.x;
+          const label = failSaid(fail);
           if (seen.has(label)) continue;
           seen.add(label);
           // Found by the exception and status only, not by the way in's path.

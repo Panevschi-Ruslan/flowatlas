@@ -1,5 +1,16 @@
-import { lineOf } from '@flowatlas/core';
-import { Node, SyntaxKind, type ClassDeclaration, type ConstructorDeclaration, type Expression, type Identifier } from 'ts-morph';
+import { lineOf, soundsLikeAuthCheck } from '@flowatlas/core';
+import {
+  Node,
+  SyntaxKind,
+  VariableDeclarationKind,
+  type CallExpression,
+  type ClassDeclaration,
+  type ConstructorDeclaration,
+  type Expression,
+  type Identifier,
+  type PropertyAccessExpression,
+} from 'ts-morph';
+import { functionNamedBy, memberFunctionCalled } from '../passes/called-function.js';
 import {
   EXCEPTION_STATUS,
   HTTP_EXCEPTION,
@@ -29,10 +40,22 @@ export interface ClassAnswer {
   lineage: string[];
 }
 
+/** One exception a helper can give, and what its class answers with (P90). */
+export interface Choice extends ClassAnswer {
+  exception: string;
+}
+
 /** One `throw` written in a body. */
 export interface Thrown extends ClassAnswer {
+  /** The class thrown, or the helper that builds it (P90). */
   exception: string;
   line: number;
+  /** What is thrown is what a helper returns (P90). */
+  via?: 'helper';
+  /** Every exception the helper can give, when its answer was read (P90). */
+  choices?: Choice[];
+  /** The throw refuses a request whose check is about who is asking, where the helper's answer could not be read (P90). */
+  family?: 'auth';
 }
 
 /** What a name in `new Name(...)` stands for. */
@@ -295,25 +318,369 @@ const caughtWithin = (thrown: Node, body: Node): boolean => {
   return false;
 };
 
-/** What `throw new X(...)` throws, or nothing for a rethrow or a value built elsewhere. */
-const thrownBy = (expression: Expression | undefined): Omit<Thrown, 'line'> | undefined => {
-  if (expression === undefined || !Node.isNewExpression(expression)) return undefined;
-  const callee = expression.getExpression();
-  if (!Node.isIdentifier(callee)) return undefined;
-  const named = classNamed(callee);
-  return { exception: named.name, ...answerOfClass(named, expression.getArguments()) };
+/** How many helpers deep a thrown value is read: the one thrown, and one it calls (P90). */
+export const MOST_HELPER_DEPTH = 2;
+
+/** Most exceptions one helper is listed with (P90). */
+export const MOST_CHOICES = 12;
+
+/** How many names bound to names are followed to a table or a class. */
+const MOST_BINDINGS = 4;
+
+/** Looks through casts, brackets and an `await`. */
+const unwrapped = (expression: Node): Node => {
+  let at = bare(expression);
+  while (Node.isAwaitExpression(at)) at = bare(at.getExpression());
+  return at;
+};
+
+/** What a name is declared as, through an import to the declaration it names. */
+const declaredAs = (identifier: Identifier): Node | undefined => {
+  const symbol = identifier.getSymbol();
+  if (symbol === undefined) return undefined;
+  const aliased = symbol.isAlias() ? symbol.getAliasedSymbol() : undefined;
+  return aliased?.getDeclarations()[0] ?? symbol.getDeclarations()[0];
+};
+
+/** The value a `const` is bound to, when the name is one. */
+const constValue = (declaration: Node | undefined): Node | undefined => {
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  if (declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+  return declaration.getInitializer();
+};
+
+/** A helper a throw calls: a function or method of this service, and the name it is called by. */
+interface Helper {
+  name: string;
+  body: Node;
+}
+
+/** `this.reject` → `reject`, `this.errors.toHttp` → `errors.toHttp`. */
+const helperName = (callee: Node): string => callee.getText().replace(/^this\./, '').replace(/\s+/g, '');
+
+/** A method of a class written here that an access names, read off the type of what it is called on. */
+const methodOnType = (access: PropertyAccessExpression): Node | undefined => {
+  const receiver = access.getExpression();
+  const name = access.getName();
+  const declarations = receiver.getType().getSymbol()?.getDeclarations() ?? [];
+  for (const declaration of declarations) {
+    if (!Node.isClassDeclaration(declaration) || declaration.getSourceFile().isDeclarationFile()) continue;
+    const method = declaration.getInstanceMethod(name) ?? declaration.getStaticMethod(name);
+    const body = method?.getBody();
+    if (body !== undefined) return body;
+    const property = declaration.getInstanceProperty(name) ?? declaration.getStaticProperty(name);
+    const value = property !== undefined && Node.isPropertyDeclaration(property) ? property.getInitializer() : undefined;
+    if (value !== undefined && (Node.isArrowFunction(value) || Node.isFunctionExpression(value))) return value.getBody();
+  }
+  return undefined;
+};
+
+/**
+ * The function or method of this service a call names (P90): `f(x)`, `this.f(x)`,
+ * `errors.f(x)` on an object of functions or a module, or a method of a class
+ * written here, called on an instance of it.
+ */
+const helperCalled = (call: CallExpression): Helper | undefined => {
+  const callee = bare(call.getExpression());
+  if (Node.isIdentifier(callee)) {
+    const fn = functionNamedBy(callee);
+    return fn === undefined ? undefined : { name: helperName(callee), body: fn.body };
+  }
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const member = memberFunctionCalled(callee);
+  if (member !== undefined) return { name: helperName(callee), body: member.body };
+  const body = methodOnType(callee);
+  return body === undefined ? undefined : { name: helperName(callee), body };
+};
+
+/** The values an object or `Map` written as a `const` holds, by the expression that names it. */
+const tableOf = (expression: Node, hops = 0): Map<string | undefined, Node> | undefined => {
+  const value = bare(expression);
+  let written: Node | undefined;
+  if (Node.isIdentifier(value)) written = constValue(declaredAs(value));
+  else if (Node.isPropertyAccessExpression(value)) {
+    // `this.denials`, `HttpErrors.TABLE`: a property written with its table.
+    const declaration = value.getSymbol()?.getDeclarations()[0];
+    written = declaration !== undefined && Node.isPropertyDeclaration(declaration) ? declaration.getInitializer() : undefined;
+  }
+  if (written === undefined) return undefined;
+  const table = bare(written);
+  if (Node.isIdentifier(table) && hops < MOST_BINDINGS) return tableOf(table, hops + 1);
+  if (Node.isObjectLiteralExpression(table)) {
+    const values = new Map<string | undefined, Node>();
+    for (const property of table.getProperties()) {
+      // A spread, a shorthand or a method is a value this cannot list.
+      if (!Node.isPropertyAssignment(property)) return undefined;
+      const initializer = property.getInitializer();
+      if (initializer === undefined) return undefined;
+      values.set(property.getName().replace(/^['"`]|['"`]$/g, ''), initializer);
+    }
+    return values;
+  }
+  if (Node.isNewExpression(table) && table.getExpression().getText() === 'Map') {
+    const [entries] = table.getArguments();
+    const list = entries === undefined ? undefined : bare(entries);
+    if (list === undefined || !Node.isArrayLiteralExpression(list)) return undefined;
+    const values = new Map<string | undefined, Node>();
+    for (const [index, element] of list.getElements().entries()) {
+      const pair = bare(element);
+      if (!Node.isArrayLiteralExpression(pair) || pair.getElements().length !== 2) return undefined;
+      const [key, entry] = pair.getElements() as unknown as [Node, Node];
+      values.set(Node.isStringLiteral(key) ? key.getLiteralValue() : `#${index}`, entry);
+    }
+    return values;
+  }
+  return undefined;
+};
+
+/**
+ * The values a lookup in a table can give: `TABLE[key]`, `TABLE.key`,
+ * `TABLE.get(key)`. A key written as a literal gives its one value; any other
+ * key, every value the table holds.
+ */
+const lookedUp = (expression: Node): Node[] | undefined => {
+  const value = bare(expression);
+  const pick = (table: Map<string | undefined, Node> | undefined, key: Node | undefined): Node[] | undefined => {
+    if (table === undefined) return undefined;
+    const literal = key !== undefined && (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key)) ? key.getLiteralValue() : undefined;
+    if (literal === undefined) return [...table.values()];
+    const found = table.get(literal);
+    return found === undefined ? undefined : [found];
+  };
+  if (Node.isElementAccessExpression(value)) {
+    const argument = value.getArgumentExpression();
+    return pick(tableOf(value.getExpression()), argument === undefined ? undefined : bare(argument));
+  }
+  if (Node.isPropertyAccessExpression(value)) {
+    const table = tableOf(value.getExpression());
+    const found = table?.get(value.getName());
+    return found === undefined ? undefined : [found];
+  }
+  if (Node.isCallExpression(value)) {
+    const callee = bare(value.getExpression());
+    if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'get') return undefined;
+    const [key] = value.getArguments();
+    return pick(tableOf(callee.getExpression()), key === undefined ? undefined : bare(key));
+  }
+  return undefined;
+};
+
+/** Both sides of `a ?? b`, `a || b` and `c ? a : b`: either can be the value. */
+const eitherOf = (value: Node): Node[] | undefined => {
+  if (Node.isConditionalExpression(value)) return [value.getWhenTrue(), value.getWhenFalse()];
+  if (Node.isBinaryExpression(value)) {
+    const operator = value.getOperatorToken().getKind();
+    if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) return [value.getLeft(), value.getRight()];
+  }
+  return undefined;
+};
+
+/** Every answer of a list, or nothing when one of them could not be read. */
+const allOf = <T>(items: readonly Node[], read: (item: Node) => T[] | undefined): T[] | undefined => {
+  const found: T[] = [];
+  for (const item of items) {
+    const one = read(item);
+    if (one === undefined) return undefined;
+    found.push(...one);
+  }
+  return found;
+};
+
+/**
+ * The classes an expression in `new (...)` can stand for (P90): a class named
+ * outright, a `const` bound to one, a lookup in a table of them, and either
+ * side of a `??` that falls back to one. A class handed in as a parameter, or
+ * anything built at run time, cannot be named.
+ */
+const classesOf = (expression: Node, hops = 0): NamedClass[] | undefined => {
+  const value = bare(expression);
+  if (hops > MOST_BINDINGS) return undefined;
+  const either = eitherOf(value);
+  if (either !== undefined) return allOf(either, (item) => classesOf(item, hops + 1));
+  const values = lookedUp(value);
+  if (values !== undefined) return allOf(values, (item) => classesOf(item, hops + 1));
+  if (!Node.isIdentifier(value)) return undefined;
+  const declaration = declaredAs(value);
+  const bound = constValue(declaration);
+  if (bound !== undefined) return classesOf(bound, hops + 1);
+  if (declaration !== undefined && (Node.isVariableDeclaration(declaration) || Node.isParameterDeclaration(declaration))) return undefined;
+  const named = classNamed(value);
+  return named.declaration !== undefined || named.module !== undefined || named.builtIn === true ? [named] : undefined;
+};
+
+/** The expressions a function's body hands back: each `return`, or the body of an arrow written as one. */
+const returnedBy = (body: Node): Node[] | undefined => {
+  if (!Node.isBlock(body)) return [body];
+  const owner = body.getParent();
+  const returned: Node[] = [];
+  for (const statement of body.getDescendantsOfKind(SyntaxKind.ReturnStatement)) {
+    if (statement.getFirstAncestor((at) => Node.isFunctionLikeDeclaration(at)) !== owner) continue;
+    const expression = statement.getExpression();
+    // A bare `return` hands back nothing a `throw` can be read as.
+    if (expression === undefined) return undefined;
+    returned.push(expression);
+  }
+  return returned.length === 0 ? undefined : returned;
+};
+
+/**
+ * The exceptions an expression can be (P90): `new X(...)`, `new TABLE[key](...)`
+ * and `new (TABLE.get(key) ?? Fallback)(...)`, a lookup in a table of
+ * exceptions already built, either side of a ternary, a `const` bound to any
+ * of those, and what another helper returns, one level down.
+ */
+const choicesOf = (expression: Node, depth: number, hops = 0): Choice[] | undefined => {
+  const value = unwrapped(expression);
+  if (hops > MOST_BINDINGS) return undefined;
+  if (Node.isNewExpression(value)) {
+    const classes = classesOf(value.getExpression());
+    return classes?.map((named) => ({ exception: named.name, ...answerOfClass(named, value.getArguments()) }));
+  }
+  const either = eitherOf(value);
+  if (either !== undefined) return allOf(either, (item) => choicesOf(item, depth, hops + 1));
+  const values = lookedUp(value);
+  if (values !== undefined) return allOf(values, (item) => choicesOf(item, depth, hops + 1));
+  if (Node.isCallExpression(value)) {
+    const helper = helperCalled(value);
+    return helper === undefined || depth >= MOST_HELPER_DEPTH ? undefined : exceptionChoices(helper, depth + 1);
+  }
+  if (Node.isIdentifier(value)) {
+    const bound = constValue(declaredAs(value));
+    return bound === undefined ? undefined : choicesOf(bound, depth, hops + 1);
+  }
+  return undefined;
+};
+
+const choiceKey = (choice: Choice): string => `${choice.exception}\u0000${choice.status ?? ''}`;
+
+/**
+ * Every exception a helper can return (P90), each once, in the order its table
+ * writes them; nothing when any of its answers cannot be read, since a list
+ * with one missing would say the helper cannot give what it can.
+ *
+ * `depth` is the helper's own: 1 for the one thrown, 2 for one it calls, and
+ * one that calls another again is not read (`MOST_HELPER_DEPTH`).
+ */
+export const exceptionChoices = (fn: { body: Node }, depth = 1): Choice[] | undefined => {
+  const returned = returnedBy(fn.body);
+  if (returned === undefined) return undefined;
+  const found = allOf(returned, (expression) => choicesOf(expression, depth));
+  if (found === undefined) return undefined;
+  const byKey = new Map<string, Choice>();
+  for (const choice of found) if (!byKey.has(choiceKey(choice))) byKey.set(choiceKey(choice), choice);
+  return [...byKey.values()];
+};
+
+/** The words a call is named with: the function, what it is called on, and the type of that. */
+const namesOfCall = (call: CallExpression): string[] => {
+  const callee = bare(call.getExpression());
+  if (Node.isIdentifier(callee)) return [callee.getText()];
+  if (!Node.isPropertyAccessExpression(callee)) return [];
+  const receiver = bare(callee.getExpression());
+  const receiverName = Node.isPropertyAccessExpression(receiver) ? receiver.getName() : Node.isIdentifier(receiver) ? receiver.getText() : undefined;
+  const typeName = receiver.getType().getSymbol()?.getName();
+  return [callee.getName(), receiverName, typeName].filter((name): name is string => name !== undefined && name !== '__type');
+};
+
+/** The call whose answer a value is: the call itself, or a `const` bound to one. */
+const callBehind = (expression: Node): CallExpression | undefined => {
+  const value = unwrapped(expression);
+  if (Node.isCallExpression(value)) return value;
+  if (!Node.isIdentifier(value)) return undefined;
+  const bound = constValue(declaredAs(value));
+  const call = bound === undefined ? undefined : unwrapped(bound);
+  return call !== undefined && Node.isCallExpression(call) ? call : undefined;
+};
+
+/**
+ * Whether a test reads a property of the answer of a check of who is asking:
+ * `!r.ok`, `r.denied`, `r.error`, `!(await this.auth.verify(req)).ok`, where
+ * `r` is what a call named with `AUTH_CHECK_WORDS` returned.
+ */
+const testsAuthAnswer = (condition: Node): boolean =>
+  [condition, ...condition.getDescendants()].some((node) => {
+    if (!Node.isPropertyAccessExpression(node)) return false;
+    const call = callBehind(node.getExpression());
+    return call !== undefined && soundsLikeAuthCheck(...namesOfCall(call));
+  });
+
+/**
+ * Whether a throw is the refusal of an auth-shaped check (P90): it sits under
+ * an `if` of its own function that tests what such a check answered. Read from
+ * the check, never from the route.
+ */
+const refusesAuth = (thrown: Node): boolean => {
+  for (let at: Node | undefined = thrown; at !== undefined; at = at.getParent()) {
+    if (Node.isFunctionLikeDeclaration(at)) return false;
+    const parent = at.getParent();
+    if (parent !== undefined && Node.isIfStatement(parent) && parent.getExpression() !== at && testsAuthAnswer(parent.getExpression())) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/** One status, when every choice answers the same one. */
+const choicesAgree = (choices: readonly Choice[]): Pick<ClassAnswer, 'status' | 'assumed'> => {
+  const status = agreed(choices.map((choice) => choice.status));
+  if (status === undefined) return {};
+  return { status, ...(choices.every((choice) => choice.assumed === true) ? { assumed: true as const } : {}) };
+};
+
+/**
+ * What `throw f(x)` throws (P90): what the helper `f` returns, read off its
+ * answers. Where those cannot be read, the throw is still listed - as the
+ * refusal of a check of who is asking when the test above it says so, and as
+ * a failure with nothing more to it when the helper is one of this service's.
+ * A call to something this cannot open, under no such test, says nothing.
+ */
+const thrownThrough = (call: CallExpression, statement: Node): Omit<Thrown, 'line'> | undefined => {
+  const helper = helperCalled(call);
+  const choices = helper === undefined ? undefined : exceptionChoices(helper);
+  const auth = choices === undefined && refusesAuth(statement);
+  if (helper === undefined && !auth) return undefined;
+  return {
+    exception: helper?.name ?? helperName(bare(call.getExpression())),
+    via: 'helper',
+    ...(choices === undefined ? {} : { choices: choices.slice(0, MOST_CHOICES), ...(choices.length > MOST_CHOICES ? {} : choicesAgree(choices)) }),
+    ...(auth ? { family: 'auth' as const } : {}),
+    lineage: [],
+  };
+};
+
+/**
+ * What a `throw` throws: `new X(...)` as the class answers it; a helper's
+ * answer, `throw f(x)`, `throw await f(x)` or `throw e` with `e` a `const`
+ * bound to such a call (P90). Nothing for a rethrow or a value built
+ * elsewhere.
+ */
+const thrownBy = (expression: Expression | undefined, statement: Node): Omit<Thrown, 'line'> | undefined => {
+  if (expression === undefined) return undefined;
+  if (Node.isNewExpression(expression)) {
+    const callee = expression.getExpression();
+    if (!Node.isIdentifier(callee)) return undefined;
+    const named = classNamed(callee);
+    return { exception: named.name, ...answerOfClass(named, expression.getArguments()) };
+  }
+  const call = callBehind(expression);
+  if (call === undefined) return undefined;
+  // `throw Error('x')` builds the language's own error without `new`; it was
+  // never read as a helper and is not one.
+  const callee = bare(call.getExpression());
+  if (Node.isIdentifier(callee) && classNamed(callee).builtIn === true) return undefined;
+  return thrownThrough(call, statement);
 };
 
 /**
  * Every exception a body throws and does not catch itself, in the order it is
- * written. A value thrown by name - a rethrow, an error built by a helper - is
- * left out: what it is was decided somewhere else.
+ * written. A value thrown by name that no helper built - a rethrow, a caught
+ * error - is left out: what it is was decided somewhere else.
  */
 export const throwsIn = (body: Node): Thrown[] => {
   const found: Thrown[] = [];
   for (const statement of body.getDescendantsOfKind(SyntaxKind.ThrowStatement)) {
     if (caughtWithin(statement, body)) continue;
-    const thrown = thrownBy(statement.getExpression());
+    const thrown = thrownBy(statement.getExpression(), statement);
     if (thrown !== undefined) found.push({ ...thrown, line: lineOf(statement) });
   }
   return found;

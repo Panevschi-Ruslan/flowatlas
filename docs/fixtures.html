@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>155 fixtures</span>
-    <span>355 snapshot files</span>
+    <span>156 fixtures</span>
+    <span>360 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -734,7 +734,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>NestJS <span class="count" data-total="32">32</span></h2>
+    <h2>NestJS <span class="count" data-total="33">33</span></h2>
     <ul>
       <li class="fixture" data-search="nest-addressing nestjs where a nestjs service's addresses are decided, and what it costs to read the wrong file (r89).">
         <div class="head">
@@ -751,6 +751,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>The smallest NestJS service the tool reads end to end: three modules, a users controller and its service, wired by injection.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-check-through-helper nestjs a check thrown through a helper (p90): a community library's lending desk (nestjs + typeorm) with no guard anywhere.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-check-through-helper">nest-check-through-helper</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A check thrown through a helper (P90): a community library's lending desk (NestJS + TypeORM) with no guard anywhere.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-client-wrapper nestjs a service whose outgoing requests all go through a client class it wrote itself.">
         <div class="head">

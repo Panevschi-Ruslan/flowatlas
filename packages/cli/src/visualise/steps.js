@@ -140,10 +140,19 @@ export const failGroups = (fails) => {
  * only assumes is `500?`.
  */
 export const failChips = (fails) => {
-  const statuses = [...new Set(fails.filter((f) => f.s !== undefined).map((f) => f.s))].sort((a, b) => a - b);
-  const bare = [...new Set(fails.filter((f) => f.s === undefined).map((f) => f.x))].sort();
-  const assumed = (s) => fails.every((f) => f.s !== s || f.a);
+  // What a helper can choose stands for it where it says no one status (P90).
+  const answers = fails.flatMap((f) => (f.s === undefined && f.ch && f.ch.some((c) => c.s !== undefined) ? f.ch : [f]));
+  const statuses = [...new Set(answers.filter((f) => f.s !== undefined).map((f) => f.s))].sort((a, b) => a - b);
+  const bare = [...new Set(answers.filter((f) => f.s === undefined).map((f) => f.x))].sort();
+  const assumed = (s) => answers.every((f) => f.s !== s || f.a);
   return [...statuses.map((s) => s + (assumed(s) ? '?' : '')), ...bare];
+};
+
+/** `401 | 403 | 423`: what a helper can choose, each status once, `?` where only assumed (P90). */
+export const choiceStatuses = (fail) => {
+  const choices = fail.ch || [];
+  const statuses = [...new Set(choices.filter((c) => c.s !== undefined).map((c) => c.s))].sort((a, b) => a - b);
+  return statuses.map((s) => s + (choices.every((c) => c.s !== s || c.a) ? '?' : '')).join(' | ');
 };
 
 /** The failures of a way in written in one node, by that node's position. */
@@ -153,8 +162,18 @@ const failsByNode = (fails) => {
   return out;
 };
 
-/** A failure as a few words: `409 ConflictException`, `500? Error`, or the exception alone. */
-export const failSay = (fail) => (fail.s === undefined ? fail.x : fail.s + (fail.a ? '? ' : ' ') + fail.x);
+/**
+ * A failure as a few words: `409 ConflictException`, `500? Error`, the
+ * exception alone, or a helper with what it can choose, `toHttpError (401 | 403
+ * | 423)` (P90).
+ */
+export const failSay = (fail) => {
+  if (fail.v === 'helper' && fail.s === undefined) {
+    const statuses = choiceStatuses(fail);
+    return statuses ? fail.x + ' (' + statuses + ')' : fail.fam === 'auth' ? fail.x + ' (refuses who is asking)' : fail.x;
+  }
+  return fail.s === undefined ? fail.x : fail.s + (fail.a ? '? ' : ' ') + fail.x;
+};
 
 const NO_LOGS = Object.freeze([]);
 
@@ -435,15 +454,23 @@ const stepLine = (model, row) => {
     (marks.length ? ' [' + marks.join(', ') + ']' : ''), ...logs];
 };
 
+/** What a throw through a helper is chosen from, in words (P90); nothing for any other failure. */
+const helperSaid = (fail) => {
+  if (fail.v !== 'helper') return '';
+  if (fail.ch && fail.ch.length) return ' — chosen at run time from ' + fail.ch.map((c) => tick(c.x)).join(', ');
+  return fail.fam === 'auth' ? ' — refuses a check of who is asking; what the helper returns was not read' : ' — what the helper returns was not read';
+};
+
 /** What a way in can fail with, a line per status and exception: how, how many places, the first of them. */
 const failLines = (model, entry) => failGroups(failsOf(model, entry)).map((group) => {
   const [fail] = group.sites;
   const where = fail.f ? fail.f + (fail.l ? ':' + fail.l : '') : '';
   const node = fail.at >= 0 ? model.nodes[fail.at][1] : fail.id || '';
-  return `- ${group.s === undefined ? 'no status' : group.s + (group.a ? '?' : '')} ${tick(group.x)} (${group.srcs.join('/')}` +
+  const chosen = fail.v === 'helper' && fail.s === undefined ? choiceStatuses(fail) : '';
+  return `- ${group.s === undefined ? chosen || 'no status' : group.s + (group.a ? '?' : '')} ${tick(group.x)} (${group.srcs.join('/')}` +
     (group.n > 1 ? ` ×${group.n}, first` : '') + ')' +
     (node ? ' in ' + tick(node) : '') + (where ? ' at ' + tick(where) : '') +
-    (group.a ? ' — assumed: no code on the path writes this status' : '');
+    (group.a ? ' — assumed: no code on the path writes this status' : '') + helperSaid(fail);
 });
 
 /* ── What stands in front of a way in (P76) ── */

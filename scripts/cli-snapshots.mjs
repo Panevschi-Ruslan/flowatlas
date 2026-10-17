@@ -443,6 +443,15 @@ const STAND_IN_CASES = [
   ['shapes.suggest.json', (io) => runShapesSuggest({ config: standInsPlain.config, suggest: true, json: true }, io)],
 ];
 
+/**
+ * Routes that refuse a request through a helper, and routes public by a marker
+ * only (P90): the health check names the helper with what it can choose, lists
+ * the declared ones at info, and leaves the rest unguarded.
+ */
+const helperCheckPlain = plainFor('nest-check-through-helper');
+
+const HELPER_CHECK_CASES = [['doctor.txt', (io) => runDoctorCommand({ config: helperCheckPlain.config }, io)]];
+
 const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
   terraformShape('lambda-terraform-openapi', [
@@ -507,6 +516,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'sqs-environment-fallback', 'expected.cli'), owned: true, cases: FALLBACK_CASES },
   { dir: join(root, 'fixtures', 'cant-follow', 'expected.cli'), owned: true, cases: CANT_FOLLOW_CASES },
   { dir: join(root, 'fixtures', 'uninstalled-internal-packages', 'expected.cli'), owned: true, cases: STAND_IN_CASES },
+  { dir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.cli'), owned: true, cases: HELPER_CHECK_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

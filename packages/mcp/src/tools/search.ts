@@ -4,6 +4,7 @@ import {
   describeAcceptedProblem,
   failuresOf,
   groupFailures,
+  type FailureGroup,
   gapIdOf,
   isRule,
   kindOfRow,
@@ -173,9 +174,13 @@ const fails: Finder = ({ db, text, service, limit }) => {
   const wanted = text.toLowerCase();
   const rows: FailHit[] = [];
   for (const node of db.nodesByType('entry').filter(inService(service))) {
-    const matched = groupFailures(failuresOf(node)).filter((group) =>
-      (group.status === undefined ? group.exception : `${group.status} ${group.exception}`).toLowerCase().includes(wanted),
-    );
+    // A helper's choices are what it can answer (P90): found by any of them.
+    const said = (group: FailureGroup): string =>
+      [
+        group.status === undefined ? group.exception : `${group.status} ${group.exception}`,
+        ...(group.chosenFrom ?? []).map((choice) => (choice.status === undefined ? choice.exception : `${choice.status} ${choice.exception}`)),
+      ].join('\n');
+    const matched = groupFailures(failuresOf(node)).filter((group) => said(group).toLowerCase().includes(wanted));
     const [first] = matched;
     if (first === undefined) continue;
     rows.push({

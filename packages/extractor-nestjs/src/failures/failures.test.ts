@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { answerOfCatch, throughFilters, type FilterInFront, type Site } from './filters.js';
 import { guardRefusals } from './guards.js';
 import { validatesDto } from './pass.js';
-import { answerOfClass, classNamed, statusDeclaredBy, throwsIn } from './throws.js';
+import { answerOfClass, classNamed, MOST_CHOICES, statusDeclaredBy, throwsIn } from './throws.js';
 
 // What a whole route fails with is the snapshot of fixtures/nest-failures and
 // fixtures/nest-fails-accurate; the variant without its filter is read in
@@ -255,5 +255,186 @@ describe('whether a handler takes something to validate (P87)', () => {
     expect(takes('@Body() dto: { name: string }')).toBe(false);
     expect(takes('@Body() dto: Record<string, unknown>')).toBe(false);
     expect(takes('dto: CreateDto')).toBe(false);
+  });
+});
+
+describe('a check thrown through a helper (P90)', () => {
+  const HEAD = `
+    import { HttpException, UnauthorizedException, ForbiddenException, NotFoundException, GoneException, ConflictException } from '@nestjs/common';
+    class LockedAccountError extends HttpException { constructor(m: string) { super(m, 423); } }
+    type Answer = { ok: true } | { ok: false; reason: 'missing' | 'denied' | 'locked' };
+    class LibrarianAuth { verify(req: unknown): Promise<Answer> { return Promise.resolve({ ok: true }); } }
+    declare const librarianAuth: LibrarianAuth;
+    declare function parseBody(req: unknown): Answer;
+  `;
+  /** What the function named `handler` throws, as `[exception, status, choices, family]`. */
+  const thrown = (source: string) =>
+    throwsIn(fileOf(HEAD + source).getFunctionOrThrow('handler').getBodyOrThrow()).map((found) => ({
+      exception: found.exception,
+      ...(found.status === undefined ? {} : { status: found.status }),
+      ...(found.via === undefined ? {} : { via: found.via }),
+      ...(found.choices === undefined ? {} : { choices: found.choices.map((choice) => [choice.exception, choice.status]) }),
+      ...(found.family === undefined ? {} : { family: found.family }),
+    }));
+  const DENIALS = [
+    ['UnauthorizedException', 401],
+    ['ForbiddenException', 403],
+    ['LockedAccountError', 423],
+  ];
+
+  it('reads a table of classes in an object, a Map and a switch', () => {
+    expect(
+      thrown(`
+      const TABLE = { missing: UnauthorizedException, denied: ForbiddenException, locked: LockedAccountError } as const;
+      const toHttpError = (r: { reason: keyof typeof TABLE }) => new TABLE[r.reason](r.reason);
+      function handler(r: any) { throw toHttpError(r); }`),
+    ).toEqual([{ exception: 'toHttpError', via: 'helper', choices: DENIALS }]);
+    expect(
+      thrown(`
+      const BY_REASON = new Map<string, any>([['missing', UnauthorizedException], ['denied', ForbiddenException]]);
+      function toHttp(reason: string) { return new (BY_REASON.get(reason) ?? LockedAccountError)(reason); }
+      function handler(r: any) { throw toHttp(r.reason); }`),
+    ).toEqual([{ exception: 'toHttp', via: 'helper', choices: DENIALS }]);
+    expect(
+      thrown(`
+      function toHttp(reason: string) {
+        switch (reason) {
+          case 'missing': return new UnauthorizedException();
+          case 'denied': return new ForbiddenException();
+          default: return reason === 'gone' ? new LockedAccountError('x') : new ForbiddenException();
+        }
+      }
+      function handler(r: any) { throw toHttp(r.reason); }`),
+    ).toEqual([{ exception: 'toHttp', via: 'helper', choices: DENIALS }]);
+  });
+
+  it('reads a table of exceptions already built, and a literal key picks its one value', () => {
+    expect(
+      thrown(`
+      const BUILT = { missing: new UnauthorizedException(), denied: new ForbiddenException() };
+      function pick(reason: 'missing' | 'denied') { return BUILT[reason]; }
+      function handler(r: any) { if (r) throw pick(r); throw BUILT['denied']; }`),
+    ).toEqual([
+      { exception: 'pick', via: 'helper', choices: [['UnauthorizedException', 401], ['ForbiddenException', 403]] },
+    ]);
+  });
+
+  it('gives one status where every choice agrees', () => {
+    expect(
+      thrown(`
+      const toConflict = (m: string) => new ConflictException(m);
+      function handler() { throw toConflict('taken'); }`),
+    ).toEqual([{ exception: 'toConflict', status: 409, via: 'helper', choices: [['ConflictException', 409]] }]);
+  });
+
+  it('follows a const bound to the call, an await, a method of this class and an object of helpers', () => {
+    const answer = [{ exception: 'UnauthorizedException', status: 401 }];
+    const source = `
+      const errors = { unauthorized: () => new UnauthorizedException() };
+      class Desk {
+        reject() { return new UnauthorizedException(); }
+        async later() { return new UnauthorizedException(); }
+        run() { const e = this.reject(); throw e; }
+        async wait() { throw await this.later(); }
+      }
+      function handler() { throw errors.unauthorized(); }`;
+    expect(thrown(source).map(({ exception, choices }) => [exception, choices])).toEqual([['errors.unauthorized', [['UnauthorizedException', 401]]]]);
+    const desk = fileOf(HEAD + source).getClassOrThrow('Desk');
+    const of = (name: string) => throwsIn(desk.getMethodOrThrow(name).getBodyOrThrow()).map(({ exception, status }) => ({ exception, status }));
+    expect(of('run')).toEqual([{ exception: 'reject', status: 401 }]);
+    expect(of('wait').map(({ status }) => status)).toEqual(answer.map(({ status }) => status));
+  });
+
+  it('reads a helper calling a helper, and stops at the next one down', () => {
+    expect(
+      thrown(`
+      const inner = () => new ForbiddenException();
+      const outer = () => inner();
+      function handler() { throw outer(); }`),
+    ).toEqual([{ exception: 'outer', status: 403, via: 'helper', choices: [['ForbiddenException', 403]] }]);
+    expect(
+      thrown(`
+      const deepest = () => new ForbiddenException();
+      const inner = () => deepest();
+      const outer = () => inner();
+      function handler() { throw outer(); }`),
+    ).toEqual([{ exception: 'outer', via: 'helper' }]);
+  });
+
+  it('keeps a helper it cannot read, as a refusal of who is asking only where the check says so', () => {
+    const source = `
+      function reject(Error: new (m: string) => Error, m: string) { return new Error(m); }
+      async function handler(req: unknown) {
+        const answer = await librarianAuth.verify(req);
+        if (!answer.ok) throw reject(UnauthorizedException, 'no');
+        if (!(await librarianAuth.verify(req)).ok) throw reject(ForbiddenException, 'no');
+        const parsed = parseBody(req);
+        if (!parsed.ok) throw reject(NotFoundException, 'no');
+      }`;
+    expect(thrown(source)).toEqual([
+      { exception: 'reject', via: 'helper', family: 'auth' },
+      { exception: 'reject', via: 'helper', family: 'auth' },
+      { exception: 'reject', via: 'helper' },
+    ]);
+  });
+
+  it('says nothing of a call it cannot open under no such test, a rethrow, or the language error called without new', () => {
+    expect(
+      thrown(`
+      import { makeError } from 'somewhere';
+      function handler(req: unknown) {
+        try { return 1; } catch (error) { throw error; }
+        if (!parseBody(req).ok) throw makeError();
+        throw Error('plain');
+      }`),
+    ).toEqual([]);
+    expect(
+      thrown(`
+      import { makeError } from 'somewhere';
+      async function handler(req: unknown) { if (!(await librarianAuth.verify(req)).ok) throw makeError(); }`),
+    ).toEqual([{ exception: 'makeError', via: 'helper', family: 'auth' }]);
+  });
+
+  it('lists a table of not-found answers as choices that are no check', () => {
+    expect(
+      thrown(`
+      const MISSING = { none: NotFoundException, gone: GoneException };
+      const toNotFound = (why: keyof typeof MISSING) => new MISSING[why]();
+      function handler(why: any) { throw toNotFound(why); }`),
+    ).toEqual([{ exception: 'toNotFound', via: 'helper', choices: [['NotFoundException', 404], ['GoneException', 410]] }]);
+  });
+
+  it('answers each choice through the filters, and caps the list', () => {
+    const chosen = (filters: FilterInFront[]) =>
+      throughFilters(
+        {
+          failure: { exception: 'toHttpError', at: 'x', source: 'throw', via: 'helper' },
+          lineage: [],
+          choices: [
+            { exception: 'Locked', status: 500, assumed: true, lineage: ['Locked', 'DomainError', 'Error'], own: 423 },
+            { exception: 'UnauthorizedException', status: 401, lineage: ['UnauthorizedException', 'HttpException', 'Error'], own: 401 },
+          ],
+        },
+        filters,
+      );
+    expect(chosen([])).toEqual({
+      exception: 'toHttpError',
+      at: 'x',
+      source: 'throw',
+      via: 'helper',
+      chosenFrom: [
+        { exception: 'UnauthorizedException', status: 401 },
+        { exception: 'Locked', status: 500, assumed: true },
+      ],
+    });
+    expect(chosen([{ name: 'F', catches: ['DomainError'], answer: { kind: 'fromException' } }]).chosenFrom).toEqual([
+      { exception: 'UnauthorizedException', status: 401 },
+      { exception: 'Locked', status: 423 },
+    ]);
+    expect(chosen([{ name: 'F', catches: [], answer: { kind: 'fixed', status: 400 } }])).toMatchObject({ status: 400 });
+    const many = Array.from({ length: MOST_CHOICES + 3 }, (_, i) => ({ exception: `E${i}`, status: 400, lineage: [`E${i}`] }));
+    const capped = throughFilters({ failure: { exception: 'h', at: 'x', source: 'throw', via: 'helper' }, lineage: [], choices: many }, []);
+    expect(capped.chosenFrom).toHaveLength(MOST_CHOICES);
+    expect(capped.status).toBeUndefined();
   });
 });

@@ -12,6 +12,8 @@ export const FAILURE_SOURCES = ['throw', 'guard', 'pipe'] as const;
 
 export type FailureSource = (typeof FAILURE_SOURCES)[number];
 
+const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
 export interface Failure {
   /**
    * The status the caller gets back. Absent where the code does not say one:
@@ -35,12 +37,50 @@ export interface Failure {
   assumed?: true;
   /** The status the thrown class declares for itself, where nothing maps it and the caller gets `status` instead (P87). */
   declared?: number;
+  /**
+   * The exception is built by a helper and chosen there at run time (P90):
+   * `throw toHttpError(result)`. `exception` is then the helper's name, since
+   * naming one of the classes it can give would be a guess.
+   */
+  via?: 'helper';
+  /**
+   * Every exception the helper can give, read off its table, with the status
+   * each answers (P90). `status` above is set only when every choice agrees.
+   * Absent where the helper's answer could not be read.
+   */
+  chosenFrom?: FailureChoice[];
+  /**
+   * What the failure is about, where that is all that could be read (P90):
+   * `auth` when the throw refuses a request whose check, by the words the code
+   * uses for it, is about who is asking (`soundsLikeAuthCheck`).
+   */
+  family?: 'auth';
 }
+
+/** One exception a helper can choose to throw (P90). */
+export interface FailureChoice {
+  exception: string;
+  status?: number;
+  /** The status is the framework's default for it, written nowhere (P87). */
+  assumed?: true;
+}
+
+/** Whether a failure's status, or any status its helper can choose, is one of these (P90). */
+export const failsWithAny = (item: Failure, statuses: ReadonlySet<number>): boolean =>
+  (item.status !== undefined && statuses.has(item.status)) ||
+  (item.chosenFrom ?? []).some((choice) => choice.status !== undefined && statuses.has(choice.status));
+
+const choiceKey = (choices: readonly FailureChoice[] | undefined): string =>
+  choices === undefined
+    ? ''
+    : choices.map((choice) => `${choice.exception}/${choice.status ?? ''}${choice.assumed === true ? '?' : ''}`).join(',');
+
+/** The order choices are written in: by status, then exception. */
+export const compareChoices = (a: FailureChoice, b: FailureChoice): number =>
+  (a.status ?? 1000) - (b.status ?? 1000) || cmp(a.exception, b.exception);
 
 /** The key on an entry's `meta` that holds its failures. */
 export const FAILS_META = 'fails';
-
-const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 /** The order failures are written in: by status, then exception, then place. */
 export const compareFailures = (a: Failure, b: Failure): number =>
@@ -60,6 +100,9 @@ const failureKey = (item: Failure): string =>
     item.source,
     item.assumed === true ? 1 : '',
     item.declared ?? '',
+    item.via ?? '',
+    choiceKey(item.chosenFrom),
+    item.family ?? '',
   ].join('\u0000');
 
 /** One list, without repeats, in a stable order. */
@@ -99,6 +142,12 @@ export interface FailureGroup {
   assumed?: true;
   /** The status the class declares, when every site agrees on one. */
   declared?: number;
+  /** Present when every site throws what a helper chose (P90). */
+  via?: 'helper';
+  /** What the helper can choose, every site's choices once, by status then exception (P90). */
+  chosenFrom?: FailureChoice[];
+  /** Present when every site says the same (P90). */
+  family?: 'auth';
   /** How the sites come about, in `FAILURE_SOURCES` order, each once. */
   sources: FailureSource[];
   /** How many places raise it. */
@@ -124,11 +173,16 @@ export const groupFailures = (fails: readonly Failure[]): FailureGroup[] => {
       ? first.declared
       : undefined;
     const used = new Set(at.map((item) => item.source));
+    const choices = new Map<string, FailureChoice>();
+    for (const item of at) for (const choice of item.chosenFrom ?? []) choices.set(choiceKey([choice]), choice);
     return {
       ...(first.status === undefined ? {} : { status: first.status }),
       exception: first.exception,
       ...(at.every((item) => item.assumed === true) ? { assumed: true as const } : {}),
       ...(declared === undefined ? {} : { declared }),
+      ...(at.every((item) => item.via === 'helper') ? { via: 'helper' as const } : {}),
+      ...(choices.size === 0 ? {} : { chosenFrom: [...choices.values()].sort(compareChoices) }),
+      ...(at.every((item) => item.family === 'auth') ? { family: 'auth' as const } : {}),
       sources: FAILURE_SOURCES.filter((source) => used.has(source)),
       sites: at.length,
       at,

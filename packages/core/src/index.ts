@@ -665,7 +665,17 @@ export {
   withAccepted,
   withoutAccepted,
 } from './accepted.js';
-export { ACCESS_META, ACCESS_WHERE, accessOf, OPT_OUT_WORDS, PUBLIC_WORDS, soundsLikeOptOut, soundsPublic } from './access.js';
+export {
+  ACCESS_META,
+  ACCESS_WHERE,
+  accessOf,
+  AUTH_CHECK_WORDS,
+  OPT_OUT_WORDS,
+  PUBLIC_WORDS,
+  soundsLikeAuthCheck,
+  soundsLikeOptOut,
+  soundsPublic,
+} from './access.js';
 export type { AccessGuard, AccessOptOut, AccessWhere, RouteAccess } from './access.js';
 export type {
   AcceptedFile,
@@ -701,8 +711,17 @@ export type {
 } from './observed.js';
 export { compileGlob, expandGlob, isGlob, NEVER_WALKED } from './glob.js';
 export type { Glob } from './glob.js';
-export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, groupFailures, settleFailures } from './failures.js';
-export type { Failure, FailureGroup, FailureSource } from './failures.js';
+export {
+  compareChoices,
+  compareFailures,
+  FAILS_META,
+  FAILURE_SOURCES,
+  failsWithAny,
+  failuresOf,
+  groupFailures,
+  settleFailures,
+} from './failures.js';
+export type { Failure, FailureChoice, FailureGroup, FailureSource } from './failures.js';
 
 export {
   CAUSE_META,

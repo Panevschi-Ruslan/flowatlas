@@ -100,3 +100,34 @@ describe('a chain written for a prompt', () => {
     expect(describeForPrompt(subject())).not.toContain('Can fail with');
   });
 });
+
+describe('a throw through a helper, written for a prompt (P90)', () => {
+  it('names the helper with what it can choose, and the classes behind it', () => {
+    const text = describeForPrompt(
+      subject({
+        fails: [
+          {
+            exception: 'toHttpError',
+            via: 'helper',
+            chosenFrom: [
+              { exception: 'UnauthorizedException', status: 401 },
+              { exception: 'ForbiddenException', status: 403 },
+              { exception: 'LockedAccountError', status: 423 },
+            ],
+            sources: ['throw'],
+            sites: 1,
+            at: 'shop#src/carts.controller.ts:CartsController.create',
+            loc: 'src/carts.controller.ts:15',
+          },
+          { exception: 'reject', via: 'helper', family: 'auth', sources: ['throw'], sites: 2, at: 'x', loc: 'src/carts.controller.ts:30' },
+        ],
+      }),
+    );
+    expect(text).toContain(
+      '- **`toHttpError (401 | 403 | 423)`** — chosen at run time from `UnauthorizedException`, `ForbiddenException`, `LockedAccountError` — throw at `src/carts.controller.ts:15`',
+    );
+    expect(text).toContain(
+      '- **`reject (no status)`** — refuses a check of who is asking; what the helper returns was not read — throw ×2, first at `src/carts.controller.ts:30`',
+    );
+  });
+});

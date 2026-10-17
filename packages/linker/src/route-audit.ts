@@ -1,8 +1,10 @@
 import {
   accessOf,
   DATA_REACH,
+  failsWithAny,
   failuresOf,
   matchesRoutePattern,
+  type Failure,
   type GraphEdge,
   type GraphNode,
   type Unresolved,
@@ -24,8 +26,26 @@ export interface RouteAuditOptions {
    */
   skipGuardDecorators?: Readonly<Record<string, readonly string[]>>;
 }
+/** The statuses that refuse a request for who is asking. */
+const REFUSING: ReadonlySet<number> = new Set([401, 403]);
 
+/** `401, 403 or 423`. */
+const statusList = (statuses: readonly number[]): string =>
+  statuses.length <= 1 ? statuses.join('') : `${statuses.slice(0, -1).join(', ')} or ${statuses[statuses.length - 1]}`;
 
+/**
+ * What a throw that refuses a request is, in words: the class and its status,
+ * or the helper that chooses it and what it can give (P90).
+ */
+const refusalSaid = (item: Failure): string => {
+  if (item.via !== 'helper') return `${item.exception} (${item.status ?? '?'})`;
+  const statuses = [...new Set((item.chosenFrom ?? []).flatMap((choice) => (choice.status === undefined ? [] : [choice.status])))].sort(
+    (a, b) => a - b,
+  );
+  if (statuses.length === 0) return `through ${item.exception}(…) after a check of who is asking (the status it gives was not read)`;
+  if (item.status !== undefined) return `through ${item.exception}(…) (${item.status})`;
+  return `through ${item.exception}(…) (${statusList(statuses)}, chosen at run time)`;
+};
 
 /** Wrapping that can refuse a request: a guard, or middleware that may be one. */
 const GATES = new Set(['guard', 'middleware']);
@@ -202,6 +222,39 @@ export const auditRoutes = (
     // Middleware is in `gates` already, because it is a `guarded_by` edge with
     // `layer: middleware` whoever read it, which is the point of R109.
     if (gates.length > 0) continue;
+    // Said in so many words on the handler or its controller (P90): open on
+    // purpose, and listed so the decision can be reviewed, since a marker that
+    // silenced the audit would be a way to hide a hole. Nothing else is read as
+    // public: not the verb, not the path, not any name.
+    const publicNote = entry.meta?.['publicNote'];
+    if (typeof publicNote === 'string') {
+      const reached = dataReached(entry.id);
+      const reaches = reached === undefined ? '' : ` and reaches ${reached.type === 'db_query' ? 'stored data' : reached.label}`;
+      rows.push(
+        publicNote === ''
+          ? {
+              service: entry.repo,
+              file: entry.file ?? '',
+              line: entry.line ?? 0,
+              reason: 'marker-reason-missing',
+              level: 'info' as const,
+              message: `${method} ${path} has no guard in front of it${reaches}, and is marked @flowatlas-public with no reason given.`,
+              hint: 'Taken as public. Write why after the marker, /** @flowatlas-public <why> */, so whoever reviews the route can check the decision still holds.',
+              symbol: `${method} ${path}`,
+            }
+          : {
+              service: entry.repo,
+              file: entry.file ?? '',
+              line: entry.line ?? 0,
+              reason: 'route-public-declared',
+              level: 'info' as const,
+              message: `${method} ${path} has no guard in front of it${reaches}, and is declared public: ${publicNote}.`,
+              hint: 'Decided on purpose, so nothing is missing. Check that the reason still holds.',
+              symbol: `${method} ${path}`,
+            },
+      );
+      continue;
+    }
     if (decorators.some((name) => options.publicDecorators.includes(name))) continue;
     // Written on the handler or on its class, and read as open on purpose by
     // its name or the flag it sets: the same decision `publicDecorators` names,
@@ -263,14 +316,19 @@ export const auditRoutes = (
      * before the data is read; so it is listed, at `info`, with the throw it
      * rests on, and not as an unguarded route (P76).
      */
+    // Thrown through a helper too (P90): `throw toHttpError(result)` refuses a
+    // request when any exception the helper can choose is a 401 or a 403, or,
+    // where its answer could not be read, when the test above the throw is of
+    // what a check of who is asking answered.
     const refusals = failuresOf(entry).filter(
-      (item) => item.source === 'throw' && (item.status === 401 || item.status === 403),
+      (item) => item.source === 'throw' && (failsWithAny(item, REFUSING) || item.family === 'auth'),
     );
     const [refusal] = refusals;
     if (refusal !== undefined) {
       const where = nodes.get(refusal.at)?.label ?? refusal.at.split(/[#:]/).pop() ?? refusal.at;
       const place = refusal.file === undefined ? '' : `, ${refusal.file}${refusal.line === undefined ? '' : `:${refusal.line}`}`;
       const more = refusals.length > 1 ? ` and ${refusals.length - 1} more` : '';
+      const helper = refusal.via === 'helper';
       rows.push({
         service: entry.repo,
         file: entry.file ?? '',
@@ -278,9 +336,11 @@ export const auditRoutes = (
         reason: 'route-checked-in-body',
         level: 'info' as const,
         message:
-          `${method} ${path} reaches ${data} with no guard in front of it, and refuses a request in its own code: ` +
-          `${refusal.exception} (${refusal.status ?? '?'}) in ${where}${place}${more}.`,
-        hint: 'Nothing is missing if that check runs before the data is read, and this cannot tell the order. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.',
+          `${method} ${path} reaches ${data} with no guard in front of it, and refuses a request in its own code` +
+          `${helper ? ' ' : ': '}${refusalSaid(refusal)} in ${where}${place}${more}.`,
+        hint: helper
+          ? 'The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.'
+          : 'Nothing is missing if that check runs before the data is read, and this cannot tell the order. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.',
         symbol: `${method} ${path}`,
       });
       continue;

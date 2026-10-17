@@ -1,0 +1,34 @@
+unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 2 to act on · missed: 0 · notes: 5 · findings: 3
+  3 findings: 2 routes with no guard, 1 public marker with no reason
+  route-unguarded (finding): 2 rows
+    Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".
+      lending/src/catalogue/catalogue.controller.ts:15  GET /catalogue/items
+      lending/src/desk/desk.controller.ts:46  GET /desk/stats
+  route-checked-in-body (note): 3 rows
+    The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.
+      lending/src/desk/desk.controller.ts:20  POST /desk/renewals
+      lending/src/desk/desk.controller.ts:28  DELETE /desk/holds/:param
+      lending/src/desk/desk.controller.ts:39  GET /desk/overdue
+  route-public-declared (note): 2 rows
+    Decided on purpose, so nothing is missing. Check that the reason still holds.
+      lending/src/hours/opening-hours.controller.ts:14  GET /opening-hours
+      lending/src/hours/opening-hours.controller.ts:19  GET /opening-hours/today
+  marker-reason-missing (finding): 1 row
+    Taken as public. Write why after the marker, /** @flowatlas-public <why> */, so whoever reviews the route can check the decision still holds.
+      lending/src/catalogue/catalogue.controller.ts:21  GET /catalogue/new-arrivals
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 2 now, +2)
+  no baseline at <root>/fixtures/nest-check-through-helper/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  route-unguarded: 0 → 2 (+2)
+  new (2):
+    lending|src/catalogue/catalogue.controller.ts|GET /catalogue/items|route-unguarded
+    lending|src/desk/desk.controller.ts|GET /desk/stats|route-unguarded

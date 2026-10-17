@@ -97,3 +97,50 @@ describe('packing what each way in can fail with (P68, P84)', () => {
     expect(failsByEntry(data).size).toBe(0);
   });
 });
+
+describe('a throw through a helper on the page (P90)', () => {
+  const helperNodes: GraphNode[] = [
+    {
+      id: 'entry:desk:http:POST:/desk/renewals',
+      type: 'entry',
+      kind: 'http',
+      label: 'POST /desk/renewals',
+      repo: 'desk',
+      meta: {
+        fails: [
+          {
+            exception: 'toHttpError',
+            at: 'desk#src/desk.controller.ts:DeskController.renew',
+            file: 'src/desk.controller.ts',
+            line: 23,
+            source: 'throw',
+            via: 'helper',
+            chosenFrom: [
+              { exception: 'UnauthorizedException', status: 401 },
+              { exception: 'ForbiddenException', status: 403 },
+              { exception: 'Locked', status: 500, assumed: true },
+            ],
+          },
+          { exception: 'reject', at: 'desk#src/desk.controller.ts:DeskController.renew', source: 'throw', via: 'helper', family: 'auth' },
+        ],
+      },
+    },
+  ];
+
+  it('packs what the helper can choose and expands it back, with an id beside it or not', () => {
+    const fails = failsByEntry(pack(helperNodes));
+    expect(fails.get(0)).toEqual([
+      {
+        x: 'toHttpError',
+        at: -1,
+        id: 'desk#src/desk.controller.ts:DeskController.renew',
+        f: 'src/desk.controller.ts',
+        l: 23,
+        src: 'throw',
+        v: 'helper',
+        ch: [{ s: 401, x: 'UnauthorizedException' }, { s: 403, x: 'ForbiddenException' }, { s: 500, x: 'Locked', a: 1 }],
+      },
+      { x: 'reject', at: -1, id: 'desk#src/desk.controller.ts:DeskController.renew', src: 'throw', v: 'helper', fam: 'auth' },
+    ]);
+  });
+});

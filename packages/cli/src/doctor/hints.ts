@@ -499,7 +499,11 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'route-unguarded': () =>
     'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".',
   'route-checked-in-body': () =>
-    'No guard is in front of this route, and its own code throws a 401 or a 403, so it checks who is asking in the body. Nothing is missing if that check runs before the data is read, which this cannot tell. A guard makes the check visible to every reader; /** @flowatlas-auth <how> */ says it in words.',
+    'No guard is in front of this route, and its own code throws a 401 or a 403, so it checks who is asking in the body. The exception may be built by a helper that chooses it at run time (throw toHttpError(result)): then the statuses listed are what the helper\'s table can give, or, where the table cannot be read, the test before the throw is of what a check of who is asking answered. Nothing is missing if that check runs before the data is read, which this cannot tell. A guard makes the check visible to every reader; /** @flowatlas-auth <how> */ says it in words.',
+  'route-public-declared': () =>
+    'The handler or its controller says the route is open on purpose, with /** @flowatlas-public <why> */, so nothing is missing; the reason is listed so the decision can be reviewed. Check that it still holds.',
+  'marker-reason-missing': () =>
+    'A /** @flowatlas-public */ marker gives no reason. The route is taken as public all the same; write why after the marker so whoever reviews it can check the decision still holds.',
   'route-guard-skipped': () =>
     'A decorator named under doctor.skipGuardDecorators switches the guard off for this route, so nothing is missing — the decision is written in the source. Check that it still holds. A handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.',
   'route-shadowed': () =>
@@ -660,6 +664,7 @@ export const isKnownReason = (reason: string): boolean => entryOf(HINTS, reason)
 export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many: string]>> = Object.freeze({
   'query-in-loop': ['likely N+1', 'likely N+1s'],
   'route-unguarded': ['route with no guard', 'routes with no guard'],
+  'marker-reason-missing': ['public marker with no reason', 'public markers with no reason'],
   'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
   'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],
   'route-file-not-served': ['route file served at no address', 'route files served at no address'],

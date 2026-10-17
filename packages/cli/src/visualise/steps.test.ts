@@ -6,7 +6,19 @@ import { answersOf, createModel, type GraphModel } from './graph.js';
 import { createMap, mapCallOrder, mapSeenCount, mapTopTargets, mapView } from './map.js';
 import { packGraph, type PackedGraph } from './pack.js';
 import { packSites } from './sites.js';
-import { acceptCommandFor, accessOf, createSeen, failChips, failGroups, failsOf, likeRoute, promptFor, scheduleOf, stepsOf } from './steps.js';
+import {
+  acceptCommandFor,
+  accessOf,
+  createSeen,
+  failChips,
+  failGroups,
+  failSay,
+  failsOf,
+  likeRoute,
+  promptFor,
+  scheduleOf,
+  stepsOf,
+} from './steps.js';
 
 /**
  * A synthetic shop: a route calls a service that reads a table, publishes to
@@ -285,3 +297,17 @@ describe('who covers a way in, and accepting every gap like one (P76)', () => {
   });
 });
 
+
+describe('a throw through a helper, as the page says it (P90)', () => {
+  const helper = {
+    x: 'toHttpError', at: -1, src: 'throw' as const, v: 'helper' as const,
+    ch: [{ s: 401, x: 'UnauthorizedException' }, { s: 403, x: 'ForbiddenException' }, { s: 500, x: 'Locked', a: 1 as const }],
+  };
+
+  it('names the helper with what it can choose, and chips each status', () => {
+    expect(failSay(helper)).toBe('toHttpError (401 | 403 | 500?)');
+    expect(failSay({ x: 'reject', at: -1, src: 'throw', v: 'helper', fam: 'auth' })).toBe('reject (refuses who is asking)');
+    expect(failChips([helper, { s: 404, x: 'NotFoundException', at: -1, src: 'throw' }])).toEqual(['401', '403', '404', '500?']);
+    expect(failChips([{ x: 'reject', at: -1, src: 'throw', v: 'helper' }])).toEqual(['reject']);
+  });
+});

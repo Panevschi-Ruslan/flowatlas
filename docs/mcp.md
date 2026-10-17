@@ -152,7 +152,8 @@ is what `flowatlas accept` takes, every hit carries its `kind` (`gap`, `note` or
 ways in that can fail with it, one hit per route with the id `get_flow` takes:
 the first answer that matched (`exception`, `status`, `assumed` when nothing
 on the path writes that status, `sites`), and `more` when others on the same
-route matched too.
+route matched too. A helper's choices count: `423` finds the routes whose
+`toHttpError` can choose a 423.
 
 ### Following a chain
 
@@ -195,8 +196,14 @@ What `get_flow` says beside the chain:
   (`throw`, `guard`, `pipe`). `assumed: true` is a status nothing on the path
   writes, such as the framework's 500 for an error it does not know;
   `declared` is the status the error class states where no filter maps it. At
-  `detail >= 2` each entry adds `places: [{ at, loc, source }]`. Read for
-  NestJS.
+  `detail >= 2` each entry adds `places: [{ at, loc, source }]`. A throw whose
+  exception a helper chooses at run time (`throw toHttpError(check)`) is named
+  after the helper and adds `via: 'helper'` and `chosenFrom: [{ exception,
+  status?, assumed? }]`, what the helper's table can give; `status` is there
+  only when every choice agrees, and `family: 'auth'` marks a helper whose
+  answer could not be read that refuses a check of who is asking.
+  `describe_for_prompt` writes it as `toHttpError (401 | 403 | 423)` with the
+  classes it is chosen from. Read for NestJS.
 - **Guards** in front of a NestJS route carry `where` (`global`, `module`,
   `controller`, `route`), `via` (`APP_GUARD in AuthModule.forRoot`), and
   `skippedBy` when an opt-out decorator switches one off; the entry carries

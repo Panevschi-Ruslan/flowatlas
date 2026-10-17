@@ -22,6 +22,23 @@ export interface PackedFail {
   src: Failure['source'];
   /** The status is the framework's default, written nowhere on the path (P87): drawn `500?`. */
   a?: 1;
+  /** `x` is a helper that chooses the exception at run time (P90). */
+  v?: 'helper';
+  /** What the helper can choose, each `{ s?, x, a? }` (P90). */
+  ch?: Array<{ s?: number; x: string; a?: 1 }>;
+  /** The throw refuses a check of who is asking whose answer was not read (P90). */
+  fam?: 'auth';
+}
+
+/**
+ * What a throw through a helper adds to its record (P90), as the last element:
+ * `via`, the choices as `[status, exception]` with a status packed as the
+ * record's own is, and `fam`. Absent for every other failure.
+ */
+export interface PackedFailMore {
+  via?: 'helper';
+  ch?: Array<[s: number, x: string]>;
+  fam?: 'auth';
 }
 
 /**
@@ -37,7 +54,11 @@ export interface PackedFail {
  * of every route they guard or serve, so the same failure is the same record
  * on all of them, shipped once.
  */
-export type PackedFailRecord = [s: number, x: Word, at: number, f: number, l: number, src: Word, id?: string];
+export type PackedFailRecord =
+  | [s: number, x: Word, at: number, f: number, l: number, src: Word]
+  | [s: number, x: Word, at: number, f: number, l: number, src: Word, id: string]
+  | [s: number, x: Word, at: number, f: number, l: number, src: Word, more: PackedFailMore]
+  | [s: number, x: Word, at: number, f: number, l: number, src: Word, id: string, more: PackedFailMore];
 
 /** By entry position, the records it fails with, in the order the entry lists them. */
 export type PackedFails = Record<number, number[]>;
@@ -56,7 +77,23 @@ export const failuresByEntry = (nodes: readonly GraphNode[]): Array<[number, Fai
     return fails.length === 0 ? [] : [[index, fails]];
   });
 
-type Raw = [s: number, x: string, at: number, f: number, l: number, src: string, id?: string];
+type Raw = [s: number, x: string, at: number, f: number, l: number, src: string, ...rest: Array<string | PackedFailMore>];
+
+/** A status as a record packs it: -1 for none, negated where it is assumed. */
+const packedStatus = (status: number | undefined, assumed: true | undefined): number =>
+  status === undefined ? -1 : assumed === true ? -status : status;
+
+/** What a throw through a helper adds, or nothing for any other failure (P90). */
+const moreOf = (item: Failure): PackedFailMore | undefined => {
+  if (item.via === undefined && item.chosenFrom === undefined && item.family === undefined) return undefined;
+  return {
+    ...(item.via === undefined ? {} : { via: item.via }),
+    ...(item.chosenFrom === undefined
+      ? {}
+      : { ch: item.chosenFrom.map((choice): [number, string] => [packedStatus(choice.status, choice.assumed), choice.exception]) }),
+    ...(item.family === undefined ? {} : { fam: item.family }),
+  };
+};
 
 /**
  * The failures, each distinct one once: `fails` lists record positions by
@@ -72,7 +109,7 @@ export const packFails = (
   const rawOf = (item: Failure): Raw => {
     const at = position.get(item.at) ?? -1;
     const raw: Raw = [
-      item.status === undefined ? -1 : item.assumed === true ? -item.status : item.status,
+      packedStatus(item.status, item.assumed),
       item.exception,
       at,
       item.file === undefined ? -1 : (fileIx.get(item.file) ?? -1),
@@ -80,6 +117,8 @@ export const packFails = (
       item.source,
     ];
     if (at === -1) raw.push(item.at);
+    const more = moreOf(item);
+    if (more !== undefined) raw.push(more);
     return raw;
   };
   const records = new Map<string, Raw>();
@@ -101,15 +140,9 @@ export const packFails = (
   return {
     fails,
     tables: {
-      fails: distinct.map(([s, x, at, f, l, src, ...id]): PackedFailRecord => [
-        s,
-        exceptions.word(x),
-        at,
-        f,
-        l,
-        sources.word(src),
-        ...id,
-      ]),
+      fails: distinct.map(
+        ([s, x, at, f, l, src, ...rest]) => [s, exceptions.word(x), at, f, l, sources.word(src), ...rest] as PackedFailRecord,
+      ),
       ...(exceptions.list.length === 0 ? {} : { exceptions: exceptions.list }),
       ...(sources.list.length === 0 ? {} : { failSources: sources.list }),
     },

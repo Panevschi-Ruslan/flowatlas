@@ -142,6 +142,7 @@ export interface History {
 export declare const ALL: GraphFilter;
 export declare const createModel: (data: GraphModel['data']) => GraphModel;
 export declare const wordIn: (list: readonly string[] | undefined, word: number | string) => string;
+export declare const failSaid: (fail: PackedFail) => string;
 export declare const failsByEntry: (data: GraphModel['data']) => ReadonlyMap<number, readonly PackedFail[]>;
 export declare const createFilter: (model: GraphModel, hidden?: Hidden) => GraphFilter;
 export declare const neighbours: (

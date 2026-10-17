@@ -116,3 +116,47 @@ export const OPT_OUT_WORDS = /skip|bypass|ignore|exclude|exempt|disable|optional
 
 export const soundsLikeOptOut = (...names: ReadonlyArray<string | undefined>): boolean =>
   names.some((name) => name !== undefined && OPT_OUT_WORDS.test(name));
+
+/**
+ * The words a check of who is asking is named with (P90): the stems a word of
+ * the name starts with.
+ */
+export const AUTH_CHECK_WORDS: readonly string[] = [
+  'auth',
+  'verif',
+  'permission',
+  'access',
+  'allowed',
+  'entitle',
+  'role',
+  'member',
+  'employee',
+  'session',
+  'token',
+  'signature',
+  'credential',
+];
+
+const AUTH_CHECK_STEM = new RegExp(`^(?:${AUTH_CHECK_WORDS.join('|')})`, 'i');
+
+/** `LibrarianAuth` → `librarian`, `auth`; `verify_token` → `verify`, `token`. */
+const wordsOfName = (name: string): string[] =>
+  name
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .split(/[^A-Za-z0-9]+/)
+    .filter((word) => word.length > 0);
+
+/**
+ * Whether the names of a check say it is about who is asking (P90).
+ *
+ * Asked of the call whose result a handler tests right before it refuses a
+ * request - the function's name and the type of what it is called on - because
+ * those are the code's own words for what it checks. Each name is cut into
+ * words and a word counts when it starts with one of `AUTH_CHECK_WORDS`, so
+ * `verifyMembership` and `LibrarianAuth` do and `remember`, `parse`, `validate`
+ * and `load` do not. Never asked of a route's path or verb: a route is not
+ * checked or public by what it is called.
+ */
+export const soundsLikeAuthCheck = (...names: ReadonlyArray<string | undefined>): boolean =>
+  names.some((name) => name !== undefined && wordsOfName(name).some((word) => AUTH_CHECK_STEM.test(word)));

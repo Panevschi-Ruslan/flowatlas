@@ -62,56 +62,81 @@ const CASES = [
   ['describe_for_prompt.symbol', 'describe_for_prompt', { id: 'orders#src/orders/orders.service.ts:OrdersService.findOne' }],
 ];
 
-const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-const server = createFlowatlasServer({ configPath: join(fixture, 'flowatlas.config.json') });
-await server.connect(serverSide);
-const client = new Client({ name: 'snapshots', version: '0' });
-await client.connect(clientSide);
+/**
+ * A throw through a helper (P90): the lending desk of
+ * `fixtures/nest-check-through-helper`, whose failures name the helper with
+ * what it can choose, and whose prompt says it in one line.
+ */
+const HELPER_CASES = [
+  ['get_flow.renewals', 'get_flow', { entry: 'POST /desk/renewals' }],
+  ['get_flow.overdue', 'get_flow', { entry: 'GET /desk/overdue' }],
+  ['describe_for_prompt.renewals', 'describe_for_prompt', { id: 'POST /desk/renewals' }],
+  ['search.fails-423', 'search', { query: '423', kinds: ['fails'] }],
+];
 
-if (update) {
-  rmSync(outDir, { recursive: true, force: true });
-  mkdirSync(outDir, { recursive: true });
-}
+const SUITES = [
+  { fixture, outDir, cases: CASES },
+  {
+    fixture: join(root, 'fixtures', 'nest-check-through-helper'),
+    outDir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.mcp'),
+    cases: HELPER_CASES,
+  },
+];
 
 const problems = [];
 let compared = 0;
+let written = 0;
 
-for (const [name, tool, args] of CASES) {
-  const response = await client.callTool({ name: tool, arguments: args });
-  const actual = `${JSON.stringify(JSON.parse(response.content[0].text), null, 2)}\n`;
-  const path = join(outDir, `${name}.json`);
+for (const suite of SUITES) {
+  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+  const server = createFlowatlasServer({ configPath: join(suite.fixture, 'flowatlas.config.json') });
+  await server.connect(serverSide);
+  const client = new Client({ name: 'snapshots', version: '0' });
+  await client.connect(clientSide);
 
   if (update) {
-    writeFileSync(path, actual);
-    continue;
+    rmSync(suite.outDir, { recursive: true, force: true });
+    mkdirSync(suite.outDir, { recursive: true });
   }
-  let expected;
-  try {
-    expected = readFileSync(path, 'utf8');
-  } catch {
-    problems.push(`${name}: no snapshot; run pnpm mcp:snapshots -- --update`);
-    continue;
-  }
-  compared += 1;
-  if (expected !== actual) problems.push(`${name}: answer differs from the snapshot`);
-}
 
-if (!update) {
-  let recorded = [];
-  try {
-    recorded = readdirSync(outDir).filter((file) => file.endsWith('.json'));
-  } catch {
-    recorded = [];
-  }
-  const extra = recorded.filter((file) => !CASES.some(([name]) => `${name}.json` === file));
-  for (const file of extra) problems.push(`${file}: snapshot for a question nobody asks any more`);
-}
+  for (const [name, tool, args] of suite.cases) {
+    const response = await client.callTool({ name: tool, arguments: args });
+    const actual = `${JSON.stringify(JSON.parse(response.content[0].text), null, 2)}\n`;
+    const path = join(suite.outDir, `${name}.json`);
 
-await client.close();
+    if (update) {
+      writeFileSync(path, actual);
+      written += 1;
+      continue;
+    }
+    let expected;
+    try {
+      expected = readFileSync(path, 'utf8');
+    } catch {
+      problems.push(`${name}: no snapshot; run pnpm mcp:snapshots -- --update`);
+      continue;
+    }
+    compared += 1;
+    if (expected !== actual) problems.push(`${name}: answer differs from the snapshot`);
+  }
+
+  if (!update) {
+    let recorded = [];
+    try {
+      recorded = readdirSync(suite.outDir).filter((file) => file.endsWith('.json'));
+    } catch {
+      recorded = [];
+    }
+    const extra = recorded.filter((file) => !suite.cases.some(([name]) => `${name}.json` === file));
+    for (const file of extra) problems.push(`${file}: snapshot for a question nobody asks any more`);
+  }
+
+  await client.close();
+}
 
 if (problems.length > 0) {
   for (const problem of problems) console.error(`    ${problem}`);
   console.error('Re-run with --update once the difference has been reviewed.');
   process.exit(1);
 }
-console.log(update ? `wrote ${CASES.length} mcp snapshot(s)` : `mcp snapshots ok: ${compared} compared`);
+console.log(update ? `wrote ${written} mcp snapshot(s)` : `mcp snapshots ok: ${compared} compared`);

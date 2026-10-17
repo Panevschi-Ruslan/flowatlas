@@ -282,3 +282,80 @@ describe('what the reader of the framework read in front of a route (P76)', () =
   });
 });
 
+
+describe('a check thrown through a helper, and a route public by marker only (P90)', () => {
+  const helper = (extra: Record<string, unknown>) => ({
+    exception: 'toHttpError',
+    at: 'api#OrdersController.list',
+    file: 'src/orders.controller.ts',
+    line: 14,
+    source: 'throw',
+    via: 'helper',
+    ...extra,
+  });
+  const reasons = (meta: Record<string, unknown>) => {
+    const { nodes, edges } = graph({ meta });
+    return auditRoutes(nodes, edges, OPTIONS);
+  };
+
+  it('reads a helper that can choose a 401 or a 403 as a check in the body, naming it and what it can give', () => {
+    const chosenFrom = [
+      { exception: 'UnauthorizedException', status: 401 },
+      { exception: 'ForbiddenException', status: 403 },
+      { exception: 'LockedAccountError', status: 423 },
+    ];
+    const [row] = reasons({ fails: [helper({ chosenFrom })] });
+    expect(row).toMatchObject({ reason: 'route-checked-in-body', level: 'info' });
+    expect(row?.message).toBe(
+      'GET /orders reaches Order with no guard in front of it, and refuses a request in its own code through ' +
+        'toHttpError(…) (401, 403 or 423, chosen at run time) in OrdersController.list, src/orders.controller.ts:14.',
+    );
+    expect(row?.hint).toContain('chosen at run time');
+  });
+
+  it('keeps a helper whose table gives only 404 and 410 unguarded', () => {
+    const chosenFrom = [
+      { exception: 'NotFoundException', status: 404 },
+      { exception: 'GoneException', status: 410 },
+    ];
+    expect(reasons({ fails: [helper({ chosenFrom })] }).map((row) => row.reason)).toEqual(['route-unguarded']);
+  });
+
+  it('reads a helper it could not read as a check only under a check of who is asking', () => {
+    const [auth] = reasons({ fails: [helper({ family: 'auth' })] });
+    expect(auth).toMatchObject({ reason: 'route-checked-in-body' });
+    expect(auth?.message).toContain('through toHttpError(…) after a check of who is asking (the status it gives was not read) in');
+    expect(reasons({ fails: [helper({})] }).map((row) => row.reason)).toEqual(['route-unguarded']);
+  });
+
+  it('lists a route marked @flowatlas-public at info with its reason, and an empty marker as one without', () => {
+    const [declared] = reasons({ publicNote: 'opening hours are shown to anyone' });
+    expect(declared).toMatchObject({ reason: 'route-public-declared', level: 'info' });
+    expect(declared?.message).toBe(
+      'GET /orders has no guard in front of it and reaches Order, and is declared public: opening hours are shown to anyone.',
+    );
+    expect(reasons({ publicNote: '' }).map((row) => [row.reason, row.level])).toEqual([['marker-reason-missing', 'info']]);
+  });
+
+  it('calls no route public by its verb, its path or its name', () => {
+    const entry = node('entry:api:http:GET:/catalogue/items', 'entry', {
+      kind: 'http',
+      label: 'GET /catalogue/items',
+      file: 'src/public-catalogue.controller.ts',
+      line: 3,
+      meta: { method: 'GET', path: '/catalogue/items', controller: 'PublicCatalogueController' },
+    });
+    const nodes = new Map<string, GraphNode>([
+      [entry.id, entry],
+      ['api#PublicCatalogueController.items', node('api#PublicCatalogueController.items', 'method')],
+      ['db_query:api#2', node('db_query:api#2', 'db_query')],
+      ['table:api#Item', node('table:api#Item', 'table', { label: 'Item' })],
+    ]);
+    const edges = [
+      edge(entry.id, 'handles', 'api#PublicCatalogueController.items'),
+      edge('api#PublicCatalogueController.items', 'calls', 'db_query:api#2'),
+      edge('db_query:api#2', 'queries', 'table:api#Item'),
+    ];
+    expect(auditRoutes(nodes, edges, OPTIONS).map((row) => [row.reason, row.level])).toEqual([['route-unguarded', undefined]]);
+  });
+});

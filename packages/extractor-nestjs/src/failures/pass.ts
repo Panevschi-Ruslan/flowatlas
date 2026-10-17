@@ -78,9 +78,22 @@ const throwsOf = (scope: Scope): Site[] =>
       source: 'throw',
       ...(thrown.assumed === true ? { assumed: true } : {}),
       ...(thrown.declared === undefined ? {} : { declared: thrown.declared }),
+      ...(thrown.via === undefined ? {} : { via: thrown.via }),
+      ...(thrown.family === undefined ? {} : { family: thrown.family }),
     },
     lineage: thrown.lineage,
     ...(thrown.own === undefined ? {} : { own: thrown.own }),
+    ...(thrown.choices === undefined
+      ? {}
+      : {
+          choices: thrown.choices.map((choice) => ({
+            exception: choice.exception,
+            ...(choice.status === undefined ? {} : { status: choice.status }),
+            ...(choice.assumed === true ? { assumed: true as const } : {}),
+            lineage: choice.lineage,
+            ...(choice.own === undefined ? {} : { own: choice.own }),
+          })),
+        }),
   }));
 
 /** A refusal the framework throws for a check: one of its own exceptions, carrying its status. */
@@ -306,7 +319,10 @@ const failuresFrom = (
 };
 
 /** A failure with no status line to set: on a bot or a message handler. */
-const withoutStatus = ({ status: _status, assumed: _assumed, declared: _declared, ...rest }: Failure): Failure => rest;
+const withoutStatus = ({ status: _status, assumed: _assumed, declared: _declared, chosenFrom, ...rest }: Failure): Failure => ({
+  ...rest,
+  ...(chosenFrom === undefined ? {} : { chosenFrom: [...new Set(chosenFrom.map((choice) => choice.exception))].sort().map((exception) => ({ exception })) }),
+});
 
 /**
  * What each way in can fail with (P68), written on the entry as `meta.fails`.

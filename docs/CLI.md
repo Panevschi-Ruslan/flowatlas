@@ -1492,7 +1492,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
-| The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-shadowed` |
+| The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |
@@ -1875,7 +1875,9 @@ written down a second time under `doctor.publicRoutes`), `route-checked-in-body`
 (the same route again, except that its own code throws a 401 or a 403 — it
 checks who is asking in the body rather than in a guard; listed at `info` with
 the throw it rests on, since nothing here can tell whether the check runs before
-the data is read), `route-shadowed` (a
+the data is read; the exception may come from a helper, see below),
+`route-public-declared` and `marker-reason-missing` (a route marked
+`@flowatlas-public`, with and without its reason, both at `info`), `route-shadowed` (a
 route a worker answers before the
 application, whose guards then never run) and `route-wildcard-only` (a request
 only a catch-all route answers). Accept them into the baseline once reviewed;
@@ -1920,6 +1922,40 @@ cannot see any of that. The annotation on the handler says so in one line, and
 the route audit then says nothing about it. Like every marker it is
 unverifiable: it is worth what whoever wrote it is worth, and it is the same
 bargain `@flowatlas-calls` offers for an address built at run time.
+
+**A check thrown through a helper.** A handler often refuses a request with
+`if (!check.ok) throw toHttpError(check)`, where `toHttpError` picks the
+exception from a table at run time. The throw is read through the helper - a
+function of the service, a method of the class (`this.reject(...)`), a member
+of an object of functions (`errors.toHttp(...)`), or a method of an injected
+class written in the project - and through `const e = toHttpError(check);
+throw e;` and `throw await ...`. What the helper returns is read off every
+`return`, through a ternary and a `switch`: `new X(...)`, `new TABLE[key](...)`,
+`new (TABLE.get(key) ?? Fallback)(...)` for an object or `Map` of exception
+classes written as a `const`, `TABLE[key]` for one of exceptions already built,
+and one more helper it calls (two levels in all). The failure is named after
+the helper, `exception: 'toHttpError'`, with `via: 'helper'` and
+`chosenFrom: [{exception, status}]`, every class the table can give, each
+answered through the exception filters in front of the route; `status` is set
+only when every choice agrees. Where any of those cannot be read - the helper
+returns what it was handed, or builds a class from a parameter - the failure is
+kept with no choices, and is `family: 'auth'` when the `if` above the throw
+tests what a check of who is asking answered: a call whose name, receiver or
+receiver's type has a word such as `auth`, `verify`, `permission`, `access`,
+`role`, `member`, `session`, `token` or `signature` in it (`!check.ok`,
+`check.denied`, `!(await this.auth.verify(req)).ok`). A route with no guard is
+`route-checked-in-body` when any choice is a 401 or a 403, or the failure is
+`family: 'auth'`; a helper whose table gives a 404 and a 410 is not a check
+(`fixtures/nest-check-through-helper`).
+
+**`/** @flowatlas-public <why> */`.** A route open on purpose, said on the
+handler or on its controller class, the handler's own first. The route audit
+gives it no `route-unguarded` row, and lists it at `info` as
+`route-public-declared` with the reason given, so the decision stays visible;
+a marker with no reason is taken as public all the same and listed as
+`marker-reason-missing`. Nothing else is ever read as public: not the verb, not
+the path, not a controller's name, not a handler that takes no user. A `GET
+/catalogue/items` with no guard and no marker is `route-unguarded`.
 
 **A channel addressed as a template.** `` `ticket:${id}:${verb}` `` has two
 holes and they are not the same kind of thing. The id is genuinely unknowable
@@ -2914,9 +2950,17 @@ What is listed is what the route can actually answer (`fixtures/nest-fails-accur
   read. Such a filter is a `fails-filter-unread` row at `info`. The page draws
   an assumed status as `500?`.
 
+- **Through a helper.** `throw toHttpError(check)` names the helper as the
+  exception and carries `via: 'helper'`, `chosenFrom: [{exception, status?,
+  assumed?}]` (what its table can give, at most twelve, each through the
+  filters) and `status` only when every choice agrees; where the helper's
+  answer cannot be read, `family: 'auth'` says the throw refuses a check of
+  who is asking (P90, see the route audit above).
+
 `get_flow`, `describe_for_prompt`, the page and the search box all read it,
 and all of them group it: each status and exception once, with how many places
-raise it.
+raise it. A helper is shown with what it can choose, `toHttpError (401 | 403 |
+423)`, and the search box finds it by any of those statuses.
 
 A `calls` edge says how the call runs. Inside a `for`, `for…of`, `for…in`,
 `while` or `do` body, or a function handed to `map`, `forEach`, `reduce` and the

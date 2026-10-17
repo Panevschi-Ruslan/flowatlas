@@ -254,6 +254,11 @@ only one of them moved.
   another service creates was joined from that function's entry instead of
   being a `subscription-source-unread` row
   (`fixtures/lambda-terraform-destinations`).
+- **`/** @flowatlas-public <why> */` (P90).** On a handler or its controller,
+  a route open on purpose had no `route-unguarded` row and a
+  `route-public-declared` row at `info` naming the reason instead; a marker
+  with no reason was taken as public and listed as `marker-reason-missing`.
+  Nothing else was read as public: not a verb, a path or a name.
 
 ### Changed
 
@@ -279,6 +284,22 @@ only one of them moved.
   `maxFails` (12); a `fails` search hit is one per route; the page's error card
   and *Copy as prompt* list the groups with counts, draw an assumed status as
   `500?` and keep the places behind a disclosure (`fixtures/nest-fails-accurate`).
+- **A check thrown through a helper (P90).** `throw toHttpError(check)`, where
+  the helper picks the exception from a table at run time, was read through the
+  helper (a function, a method of the class, a member of an object of
+  functions, a method of an injected class), a `const` it is held in and an
+  `await`: the failure was named after the helper, with `via: 'helper'` and
+  `chosenFrom: [{exception, status}]` (an object or `Map` of classes, a table
+  of built exceptions, a `switch` or ternary, one more helper down), each
+  choice answered through the filters, and `status` only where every choice
+  agrees. A helper whose answer cannot be read, under an `if` that tests what a
+  check of who is asking answered (`soundsLikeAuthCheck` in the core), became
+  `family: 'auth'`. The route audit counted either as `route-checked-in-body`,
+  naming the helper and its statuses; a table of 404 and 410 stayed
+  `route-unguarded`. `get_flow`, `describe_for_prompt` (`toHttpError (401 | 403
+  | 423)`), search and the page showed the choices
+  (`fixtures/nest-check-through-helper`).
+
 - **Fewer `route-unguarded` rows (P76).** A route covered by an app-wide guard,
   or opened by a public-sounding opt-out decorator on the handler or its class,
   no longer had a row; an opt-out that switches one check off made it

@@ -70,6 +70,7 @@ const NOTES: readonly string[] = [
   // The route audit, where the source says what was decided
   'route-checked-in-body',
   'route-guard-skipped',
+  'route-public-declared',
   // An end declared by a document rather than read (cli/doctor/age.ts); the old
   // spelling as well, since a stored row may still carry it.
   'document-age',
@@ -83,6 +84,8 @@ const FINDINGS: readonly string[] = [
   // Who may ask (the route audit, linker)
   'route-unguarded',
   'route-shadowed',
+  // A decision said with no reason to review it by (P90)
+  'marker-reason-missing',
   // Two declarations where the framework takes one, or one it never serves
   'route-claimed-twice',
   'route-file-not-served',
