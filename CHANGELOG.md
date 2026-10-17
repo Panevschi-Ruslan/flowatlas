@@ -908,6 +908,19 @@ only one of them moved.
 
 ### Fixed
 
+- **A new gap under a gap id the base already had (P194).** `flowatlas diff`
+  compared gaps by gap id (one reason in one file), so a second unjoined
+  request in a file that already had one, or any gap id whose rows grew, was
+  not new, and one whose rows shrank was not gone. The rows under an id both
+  sides hold are now matched one by one on what each says (symbol with
+  positions masked, and message), never on the line, and the sites left over
+  are listed under the same id at the first new or gone one, with the new
+  optional field `kept` (the sites both sides share) on the row in `diff.json`,
+  on `what_changed`'s `newGaps`, and in the Markdown (`gap, 1 more beside 1`).
+  A site replaced by another is listed under both. A row standing for several
+  sites is matched by its count. Same `diff.json` format: the field is optional
+  and every format reads with or without it.
+
 - **`doctor.json` holds every row (P192).** The file `doctor` writes was cut
   like the terminal: six places per reason and 150 rows per section, with
   `truncated` saying how many, although `--max-nodes` promised "the file is

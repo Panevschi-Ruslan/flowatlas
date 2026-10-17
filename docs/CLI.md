@@ -2000,7 +2000,13 @@ or `no-edge`), and each channel left with a consumer and no producer or the
 other way round. **Gaps and findings** lists, by gap id
 (`gap:<service>|<file>|<reason>`), the places the reading cannot follow and the
 findings that the head has and the base does not, each with the method it is
-in. The MCP server's `what_changed({verdict: true})` reads both.
+in. A gap id is one reason in one file, so a second unjoined request in a file
+that already had one keeps the id; the rows under an id both sides hold are
+matched one by one on what each says (its symbol with positions masked, and its
+message), never on its line, and the sites left over are listed under the same
+id at the first new one (`gap, 1 more beside 1`). An id that lost sites is
+listed under `removed` the same way, and one whose site was replaced by another
+under both. The MCP server's `what_changed({verdict: true})` reads both.
 
 **Changed flows**, after the impact, is the question a reviewer has about each
 way in: what does this request do now that it did not do before. Every way in
@@ -2033,7 +2039,9 @@ unchanged by it.
 
 `diff.json` is format 3 (`diffFormatVersion`). Format 2 added `unresolved`
 (`{ added, removed }`, each row `{ id, kind, service, file, line?, reason,
-node?, sites }`, `kind` `gap` or `finding`) and `joins` (`{ lost }`, each
+node?, sites, kept? }`, `kind` `gap` or `finding`; `kept`, written since P194
+without a format change, is set when both sides hold the id: the sites they
+share, with `sites`, `line` and `node` those of the sites beyond them) and `joins` (`{ lost }`, each
 `{ kind, caller, target, edge, service, targetService, now, targetRemoved }`,
 `kind` `target-gone`, `no-producer` or `no-consumer`). Format 3 adds `flows`:
 one per way in walked, `{ entry, label, service, side, reaches, participants,

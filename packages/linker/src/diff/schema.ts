@@ -119,6 +119,8 @@ const gapRefSchema = z.strictObject({
   reason: z.string().min(1),
   node: z.string().min(1).optional(),
   sites: z.number().int().min(1),
+  /** Optional, so formats 2 and 3 read with and without it (P194). */
+  kept: z.number().int().min(0).optional(),
 });
 
 const lostJoinSchema = z.strictObject({
