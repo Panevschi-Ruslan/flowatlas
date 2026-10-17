@@ -446,7 +446,7 @@ export function createGraphUi(page) {
     else if (target.dataset.act === 'centre') go(v);
     else if (target.dataset.act === 'expand') expand(v);
     else if (target.dataset.act === 'also') toggleAlso(v);
-    else if (target.dataset.act === 'walk') { store.set('current', v); drawEntries(); page.showView('walk'); }
+    else if (target.dataset.act === 'open-steps') { store.set('current', v); drawEntries(); page.showView('steps'); }
     else if (target.dataset.act === 'steps') page.stepsInGraph.toggle(v);
   });
   panel.addEventListener('keydown', (event) => {

@@ -85,7 +85,7 @@ describe('the search over everything', () => {
     const row = document.querySelector(`#entries [data-entry="${v}"]`)!;
     expect(row.classList.contains('is-found')).toBe(true);
     expect(row.getAttribute('aria-current')).toBe('true');
-    expect(document.getElementById('s-head')!.classList.contains('is-found')).toBe(true);
+    expect(document.querySelector('#s-list [data-node]')!.classList.contains('is-found')).toBe(true);
     expect(scrolled.includes(row)).toBe(true);
   });
 
@@ -112,7 +112,7 @@ describe('the search over everything', () => {
     const reason = data.unresolved[0]!.reason;
     page.goToFound({ label: 'a row', sub: '', node: -1, reason });
     expect(page.store.get('view')).toBe('missing');
-    const row = document.querySelector(`#walk tr[data-reason="${reason}"]`)!;
+    const row = document.querySelector(`#tab-sheet tr[data-reason="${reason}"]`)!;
     expect(row.classList.contains('is-found')).toBe(true);
   });
 

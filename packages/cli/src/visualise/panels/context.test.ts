@@ -32,22 +32,22 @@ describe('the page context', () => {
     expect(page.opener(0, 0, 3, 'src/a.ts:3')).toBe('<span class="g-place">src/a.ts:3</span>');
   });
 
-  it('follows only the edges a walk follows, and keeps guards aside', () => {
+  it('keeps what runs in front of a way in, as the graph lists it', () => {
     const v = at('entry:gateway:http:POST:/orders');
     expect(page.guards[v].map((e: number[]) => page.nodes[e[1]!]![page.LB])).toEqual(['AuthGuard', 'RolesGuard']);
-    expect(page.out[v].every((e: number[]) => page.FORWARD.has(page.edgeTypes[e[2]!]))).toBe(true);
+    expect(page.guards[v].every((e: number[]) => page.edgeTypes[e[2]!] === 'guarded_by')).toBe(true);
   });
 
-  it('starts the shared state on no way in, the Walk tab and every service', () => {
+  it('starts the shared state on no way in, the Map tab and every service', () => {
     expect(page.store.get('current')).toBeNull();
-    expect(page.store.get('view')).toBe('walk');
+    expect(page.store.get('view')).toBe('map');
     expect([...page.store.get('shown')]).toEqual(page.repos);
   });
 });
 
 describe('the store the tabs share', () => {
   it('tells every listener what was set, until it stops listening', () => {
-    const store = createStore({ current: null, view: 'walk', shown: new Set<string>() });
+    const store = createStore({ current: null, view: 'map', shown: new Set<string>() });
     const heard: [string, unknown][] = [];
     const stop = store.on((key, value) => heard.push([key, value]));
     store.set('current', 3);
@@ -60,7 +60,7 @@ describe('the store the tabs share', () => {
 
   it('says a Set changed in place when it is set again', () => {
     const shown = new Set(['a']);
-    const store = createStore({ current: null, view: 'walk', shown });
+    const store = createStore({ current: null, view: 'map', shown });
     let told = 0;
     store.on((key) => { if (key === 'shown') told += 1; });
     shown.delete('a');

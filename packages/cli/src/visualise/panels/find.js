@@ -8,7 +8,7 @@ import { formatViewHash, pressed, wordFor } from '../frame.js';
    the place it lands is marked. It is also how a path's end is picked on the
    Graph tab, and how the Ways in list is filtered. */
 export function createFind(page) {
-  const { entryIx, esc, keys, model, repoName, store, walkEl } = page;
+  const { entryIx, esc, keys, model, repoName, sheetEl, store } = page;
 
   /* ── one search over everything (P73, P101) ─────────────────────── */
 
@@ -124,7 +124,7 @@ export function createFind(page) {
     history.pushState(null, '', location.href);
     if (hit.reason !== undefined) {
       page.showView('missing', undefined, { reason: hit.reason });
-      if (markFound(walkEl.querySelector(`tr[data-reason="${CSS.escape(hit.reason)}"]`))) return;
+      if (markFound(sheetEl.querySelector(`tr[data-reason="${CSS.escape(hit.reason)}"]`))) return;
       // Its rows were all accepted: the node it names, when it names one.
       if (hit.node < 0) return;
     }
@@ -134,9 +134,9 @@ export function createFind(page) {
       if (v !== store.get('current')) store.set('current', v);
       page.drawEntries();
       markFound(document.querySelector(`#entries [data-entry="${v}"]`));
-      if (view === 'steps' || view === 'walk') {
+      if (view === 'steps') {
         page.showView(view);
-        markFound(view === 'steps' ? document.getElementById('s-head') : walkEl.querySelector('.step'));
+        markFound(document.querySelector('#s-list [data-node]'));
         return;
       }
       if (view === 'map' && markFound(page.mapController.reveal(repoName(v)))) return;

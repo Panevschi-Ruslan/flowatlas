@@ -125,6 +125,14 @@ describe('the page made of its parts (P103)', () => {
     doc.getElementById('palette-input')!.dispatchEvent(new FakeEvent('keydown', { key: 'Escape' }));
     doc.body.dispatchEvent(new FakeEvent('keydown', { key: '?' }));
     expect(doc.getElementById('keys-help')!.hidden).toBe(false);
+    // One Steps tab, three ways to draw it (P99): the first way in leaves a service, so a crossing row shows.
+    expect(doc.querySelector('.tab[data-view="walk"]')).toBeNull();
+    doc.querySelector('.tab[data-view="steps"]')!.click();
+    for (const mode of ['compact', 'detailed', 'waterfall']) {
+      doc.querySelector(`[data-step-mode="${mode}"]`)!.click();
+      expect(doc.querySelectorAll(mode === 'waterfall' ? '#s-list .w-row' : '#s-list .s-row').length, mode).toBeGreaterThan(1);
+      if (mode !== 'waterfall') expect(doc.querySelectorAll('#s-list .s-cross').length, mode).toBeGreaterThan(0);
+    }
     expect(template()).toBe(template());
   });
 });

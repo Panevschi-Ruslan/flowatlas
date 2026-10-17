@@ -1,11 +1,12 @@
 import { SHORTCUTS, SHORTCUT_PLACES, VIEWS, pressed } from '../frame.js';
+import { STEP_MODES } from '../steps.js';
 
 /* What a person can do, findable from the keyboard (P101): the command list
    (⌘K or Ctrl+K) - every tab, every action of the tab open, and a search for
    whatever was typed - and the list of every key (`?`). Both are dialogs that
    keep the keyboard while open and hand it back when closed. */
 export function createPalette(page) {
-  const { LB, MT, esc, focusFind, nodes, repoName, state, store, typing } = page;
+  const { LB, MT, esc, focusFind, nodes, repoName, setStepMode, state, stepMode, store, typing } = page;
 
   /* ── a list moved through with the keys (P101) ──────────────────── */
 
@@ -47,7 +48,7 @@ export function createPalette(page) {
   const press = (id) => document.getElementById(id).click();
   const tabOf = (name) => document.querySelector(`.tab[data-view="${name}"]`);
   /* The button each tab copies its link with. */
-  const LINK_BUTTONS = { graph: 'g-copy', map: 'm-copy', walk: 'w-link', steps: 's-link' };
+  const LINK_BUTTONS = { graph: 'g-copy', map: 'm-copy', steps: 's-link' };
   const wayInSaid = () => {
     const i = store.get('current');
     const meta = nodes[i][MT] || {};
@@ -62,6 +63,12 @@ export function createPalette(page) {
       say: () => 'Go to ' + tabOf(name).textContent.trim(),
       when: () => tabOf(name) !== null && !tabOf(name).hidden && view() !== name,
       run: () => page.showView(name),
+    })),
+    ...STEP_MODES.map((name) => ({
+      id: 'steps:' + name,
+      say: 'Draw the steps ' + name,
+      when: () => view() === 'steps' && stepMode() !== name,
+      run: () => setStepMode(name),
     })),
     { id: 'full', say: 'Full screen', when: onDrawing, run: () => press(view() === 'graph' ? 'g-full' : 'm-full') },
     { id: 'types', say: () => (state.types ? 'Types off' : 'Types on'), when: () => view() === 'graph', run: () => press('g-types') },

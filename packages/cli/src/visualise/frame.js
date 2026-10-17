@@ -168,7 +168,13 @@ export const formatHash = (keys, focus, hops, expanded = [], more = {}) => {
  * The page's tabs, by the name the address and the markup give them, in the
  * order they are drawn (P98). Every one opens from a link.
  */
-export const VIEWS = Object.freeze(['map', 'walk', 'steps', 'crossings', 'missing', 'busiest', 'changes', 'graph']);
+export const VIEWS = Object.freeze(['map', 'steps', 'crossings', 'missing', 'busiest', 'changes', 'graph']);
+
+/**
+ * Tabs that went, by the tab that shows what they showed: a link made while
+ * they were there still opens the same way in (P99 folded Walk into Steps).
+ */
+export const VIEWS_MOVED = Object.freeze({ walk: 'steps' });
 
 /**
  * `#<view>[/<way in>][/<name>=<value>&…]`: a tab, the way in it opens on, and
@@ -178,7 +184,8 @@ export const VIEWS = Object.freeze(['map', 'walk', 'steps', 'crossings', 'missin
  *
  * The way in is a node's key, the one `#graph/` links carry; a key this page
  * does not hold comes back as `entry: null` with the key, so the page can say
- * so. A name that is no tab comes back as `view: null` with the name. A
+ * so. A name that is no tab comes back as `view: null` with the name; one
+ * that was a tab comes back as the tab that took it over (`VIEWS_MOVED`). A
  * segment holding `=` is never a key, since keys are letters and digits, so
  * the way in can be left out before it.
  */
@@ -200,7 +207,9 @@ export const parseViewHash = (hash, keys) => {
     }
   }
   const at = /^[a-z0-9]+$/.test(key) ? keys.find(key) : -1;
-  return { view: VIEWS.includes(name) ? name : null, name, entry: at >= 0 ? at : null, key, rest };
+  const view = VIEWS.includes(name) ? name
+    : Object.prototype.hasOwnProperty.call(VIEWS_MOVED, name) ? VIEWS_MOVED[name] : null;
+  return { view, name, entry: at >= 0 ? at : null, key, rest };
 };
 
 /** The address of a tab, with the way in it shows by key and where in it to go; empty parts are left out. */

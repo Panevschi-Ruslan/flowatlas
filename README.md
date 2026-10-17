@@ -1035,7 +1035,8 @@ in `packages/cli/src/visualise/`: `page.html` is the markup and a placeholder
 per part, `page.css` its styles, `graph.js`, `frame.js`, `map.js` and
 `steps.js` the logic (with core's `prompt-text.js`), and `panels/` the page
 itself, one module per panel - `context.js` for what every panel reads and the
-state the tabs share, then `band.js`, `ways.js`, `walk.js`, `tables.js`,
+state the tabs share, then `band.js`, `ways.js`, `sheet.js` (the title and
+the sheet the table tabs draw into), `tables.js`,
 `find.js`, `missing.js`, the Graph tab's `graph-draw.js`, `details.js`,
 `checking.js`, `graph-ui.js` and `frame-ui.js`, then `map-ui.js`,
 `steps-ui.js` and `wiring.js`, and `boot.js`, which sets them up in that order.

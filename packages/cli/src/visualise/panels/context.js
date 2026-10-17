@@ -48,18 +48,16 @@ export function createPageContext(data) {
   const repoName = (i) => repos[nodes[i][RP]];
   const typeName = (i) => types[nodes[i][TY]];
 
-  /* Edges a walk follows outward. Guards hang off the entry, never descended. */
+  /* Edges that lead on from a way in, and the two of them that cross from
+     one service into another. */
   const FORWARD = new Set(['handles', 'calls', 'queries', 'caches', 'emits', 'consumes',
     'http_calls', 'hits', 'triggers', 'reads_config']);
   const CROSSES = new Set(['http_calls', 'hits']);
 
-  const out = nodes.map(() => []);
+  /* What runs in front of a node - its guards - as the graph lists them: the
+     Steps tab says them under the step they guard, never descended. */
   const guards = nodes.map(() => []);
-  for (const e of data.edges) {
-    const name = edgeTypes[e[2]];
-    if (name === 'guarded_by') guards[e[0]].push(e);
-    else if (FORWARD.has(name)) out[e[0]].push(e);
-  }
+  for (const e of data.edges) if (edgeTypes[e[2]] === 'guarded_by') guards[e[0]].push(e);
 
   /* Short, readable stand-ins for node types; the vocabulary is the subject's. */
   const GLYPH = {
@@ -205,10 +203,10 @@ export function createPageContext(data) {
     }, 1600));
   };
 
-  const store = createStore({ current: null, view: 'walk', shown: new Set(repos) });
+  const store = createStore({ current: null, view: 'map', shown: new Set(repos) });
 
-  return { CROSSES, FL, FORWARD, GLYPH, KD, LB, LN, MT, RP, TY, acceptLikeHtml, accepted, acceptedNote,
+  return { CROSSES, FL, GLYPH, KD, LB, LN, MT, RP, TY, acceptLikeHtml, accepted, acceptedNote,
     acceptedRows, acceptedRule, confidences, copyText, data, edgeTypes, entryHeadHtml, entryIx, esc, failChipsHtml,
-    files, flash, graphLink, guards, hueOf, keys, kinds, model, nodes, opener, out, plural, reachesCrossing, reasons,
+    files, flash, graphLink, guards, hueOf, keys, kinds, model, nodes, opener, plural, reachesCrossing, reasons,
     repoName, repos, rowService, scheduleSay, seen, store, trustHtml, typeName, types, wordHtml };
 }

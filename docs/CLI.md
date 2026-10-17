@@ -884,7 +884,7 @@ No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
 Map with its tabs on screen, lists every way in, follows any one of them across service
 boundaries, and has a tab each for every crossing and for everything that did not
-join. The tabs are Map, Walk, Steps, Crossings, Not joined, Busiest, Changes (only
+join. The tabs are Map, Steps, Crossings, Not joined, Busiest, Changes (only
 with `--diff`) and Graph; their row stays at the top of the window while the tab
 scrolls, and on a narrow screen the tabs come before the ways in.
 
@@ -930,7 +930,7 @@ is the table called `orders`). It is the only search on the page: `/` reaches it
 anywhere but a field, the arrows move through what it found, Enter goes, and Escape
 clears it and hands the keyboard back. A hit goes to where it is **in the tab that is
 open, when that tab can show it**: a way in is picked on the left, the list scrolls
-to it, and Steps, the Walk or the Map open it (the Map selects its service); a node
+to it, and Steps or the Map open it (the Map selects its service); a node
 on the Graph tab is focused there; a gap opens Not joined on its row. Anything else
 opens the Graph on it. Where it lands is marked - a strong ring and an accent ground
 that fade after two seconds - and Back returns from it. Its last item, *Filter the
@@ -1014,7 +1014,7 @@ graph, which on a real project is far too many boxes to say anything:
 
 - **Choosing a focus.** The one search's *Nodes* finds any node, and on this tab
   a hit is focused here. Every way in on the left, and every node named in the
-  Walk, Crossings and Not joined tabs, has a *show in graph* link beside it.
+  Steps, Crossings and Not joined tabs, has a *show in graph* link beside it.
 - **The bar is one row.** *Back*, *Forward* and the hops, then *Filters* (edge
   types, trust and plumbing, the most nodes drawn) and *Check* (*Problems*,
   *problems only*, a path's ends, its direction and depth) as popovers, each
@@ -1138,7 +1138,8 @@ graph, which on a real project is far too many boxes to say anything:
   with every type written out inline (`function create(dto: { // CreateOrder …
   }): { // Order … };`, a route as `type Request` and `type Response`), within
   the same bounds, a type inside itself kept as its name. From it: *Centre here*, *Expand*,
-  *Who else uses this* with its count, *Open in Walk* for a way in, *Path from here*, *Path to here* and
+  *Who else uses this* with its count, *Steps* (above the drawing) and *Open in Steps* for a way in,
+  *Path from here*, *Path to here* and
   *Impact*. Clicking a node in its lists walks on to it.
 - **Problems.** A node carrying rows is badged with the count on its top edge,
   red for rows naming it and amber for rows at its line, counted apart; a group
@@ -1228,10 +1229,35 @@ graph, which on a real project is far too many boxes to say anything:
 The **Steps** tab is one way in as a list, in the order the code calls things
 (source order, not time), indented by depth: the handler, the services it calls,
 the tables, addresses and channels they reach, and the next service's way in.
+Clicking a way in on the left opens it here from any tab but the Graph. It is
+the page's one view of a way in: an older `#walk/<key>` link opens here on the
+same way in.
 
-- **Rows.** Each step has a kind mark (handler, service, database, request,
-  queue or topic, function, workflow) and its table, address template or channel
-  written inline. Calls inside `Promise.all` and its kin are marked *side by
+- **Compact, detailed, waterfall.** A switch on the bar draws the steps three
+  ways, and the page remembers the choice in this browser (compact when it
+  cannot). *Compact* is a line per step: its kind, its name, the file by its
+  name (the path from the repository root in the tooltip) and only the marks that
+  change the reading - *best guess*, *on failure*, *per item*, *likely N+1*,
+  *throws*, why a chain breaks, *seen ×n*, and *listed above* or *loops back* on a
+  repeat. *Detailed* adds every other mark (*annotated*, *side by side*, a stand-in's
+  types), the full path, the table, address or channel inline, the lines a step
+  logs, and the settings a step reads (`cfg`), each a leaf under the step that
+  reads it. *Waterfall* draws a bar per step in its service's colour, under its
+  parent: a step nothing runs under is one unit wide, a parent as wide as what
+  runs under it, children end to end in call order and side-by-side ones from the
+  same place. Its axis says *steps, not time*: the widths show what runs inside
+  and beside what, never how long. A repeat, a loop, an answer or a break is a
+  mark of no width. The steps above the Graph tab's drawing follow the same
+  switch, and the command list (⌘K) offers it on this tab.
+- **Rows.** Each step has a kind mark - `in` handler, `view` screen, `act` user
+  action, `fn` service, `db` store, `http` outbound call, `ch` queue or topic,
+  `λ` function, `wf` workflow, `cfg` reads config - in one neutral chip, the
+  service being the colour of the rule along the row; the legend lists them all.
+  Where a way in leaves one service for another a row of its own says so between
+  the call and what answers it, in the colour of the service it enters: *→
+  orders · requests*, with the edge's trust only when it is not read from code.
+  Guards are said under the step they stand in front of (*runs first AuthGuard,
+  RolesGuard*). Calls inside `Promise.all` and its kin are marked *side by
   side*; a call run once per item of a loop is marked *per item*, and a query,
   request or publish there *likely N+1* unless the loop is per item on purpose
   or bounded (P89). The **Busiest** tab lists the likely N+1 loops under the
@@ -1248,7 +1274,9 @@ the tables, addresses and channels they reach, and the next service's way in.
 - **Moving around.** Hovering a row lights its node in the Graph tab's
   drawing, where a way in's steps also open above the drawing; a row opens its
   `file:line` and *show in graph*. The depth goes to
-  4, 8, 12 or 24 steps.
+  4, 8, 12 or 24 steps (12 to start); a list holds 300 rows. The line under
+  the last row says which of the two left steps out: *past depth 12: raise the
+  depth*, or *past the first 300 rows* with a button that shows 300 more.
 - **Copy as prompt** copies the way in as Markdown for an assistant: what is in
   front of it, what it can fail with, its schedule, the steps `get_flow` walks
   with their ids, repo-relative `file:line` and marks, shapes in and out, log
@@ -1288,12 +1316,12 @@ What `flowatlas observe` saw is on the page too, when it has run: a seen count
 on each way in and each step, and thicker Map links where traffic went.
 
 **Every tab has an address.** `#map…` and `#graph/…` keep the grammars described
-above; every other tab is `#<tab>`, with the way in for the two that show one,
-and where in the tab to go after it:
+above; every other tab is `#<tab>`, with the way in for Steps, the one that
+shows one, and where in the tab to go after it:
 
 | Address | Opens |
 |---|---|
-| `#walk/<key>`, `#steps/<key>` | Walk or Steps on the way in whose node key is `<key>` |
+| `#steps/<key>` (and an older `#walk/<key>`) | Steps on the way in whose node key is `<key>` |
 | `#crossings`, `#busiest`, `#changes` | that tab |
 | `#missing`, `#missing/reason=<reason>` | Not joined, at that reason's row |
 | `#graph` | the Graph tab, on the way in picked |
@@ -1301,7 +1329,7 @@ and where in the tab to go after it:
 Any of them takes a way in (`#crossings/<key>`), which becomes the one picked.
 Moving between tabs rewrites the address without adding to the browser's history;
 picking another way in adds to it, so *Back* returns to the way in before. *Copy
-link* on Walk, Steps and the table tabs copies the address of what is on screen. A
+link* on Steps and the table tabs copies the address of what is on screen. A
 link naming a tab this page does not have (`#changes` on a page written without
 `--diff`), a way in it does not hold, or a reason with no rows here opens what the
 page has and says so above the tab.

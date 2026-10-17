@@ -17,7 +17,11 @@ describe('the details panel', () => {
     expect(sections).toContain('Out · 3');
     expect(sections.some((title) => title.startsWith('In · '))).toBe(true);
     expect(sections.some((title) => title.startsWith('Problems · '))).toBe(true);
-    expect(panel.querySelector('[data-act="walk"]')).not.toBeNull();
+    expect(panel.querySelector('[data-act="walk"]')).toBeNull();
+    expect(panel.querySelector('[data-act="steps"]')).not.toBeNull();
+    panel.querySelector('[data-act="open-steps"]')!.click();
+    expect(page.store.get('view')).toBe('steps');
+    expect(page.store.get('current')).toBe(at('entry:gateway:http:POST:/orders'));
     expect(panel.querySelector('[data-prompt]')!.getAttribute('data-prompt')).toBe(`entry:${at('entry:gateway:http:POST:/orders')}`);
   });
 

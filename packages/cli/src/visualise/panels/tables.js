@@ -5,7 +5,7 @@ import { ROW } from '../graph.js';
    joined and the problems answer list too. */
 export function createTables(page) {
   const { CROSSES, FL, LB, LN, MT, RP, confidences, data, edgeTypes, esc, files, graphLink, hueOf, nodes,
-    repoName, repos, rowService, seen, titleEl, trustHtml, walkEl, wordHtml } = page;
+    repoName, repos, rowService, seen, sheetEl, titleEl, trustHtml, wordHtml } = page;
 
   /* ── crossings: every edge that leaves a service ─────────────────── */
 
@@ -33,7 +33,7 @@ export function createTables(page) {
     const sheet = document.createElement('div');
     sheet.className = 'sheet';
     sheet.append(table);
-    walkEl.replaceChildren(sheet);
+    sheetEl.replaceChildren(sheet);
     appendUnmatched();
   }
 
@@ -44,7 +44,7 @@ export function createTables(page) {
     more.className = 'sheet is-padded';
     more.id = 'unmatched';
     more.innerHTML = (seen.unmatched.length > 0 ? unmatchedHtml() : '') + ambiguousHtml();
-    walkEl.append(more);
+    sheetEl.append(more);
   };
 
   /* What a trace saw that the code does not show: a check of its own. */
@@ -113,7 +113,7 @@ export function createTables(page) {
             ? `<p class="hint">${(busiest.ranked - busiest.rows.length).toLocaleString()} more methods have a caller; ` +
               '<code>flowatlas hotspots --type method</code> lists them all.</p>' : '')) +
       loopsHtml();
-    walkEl.replaceChildren(sheet);
+    sheetEl.replaceChildren(sheet);
   }
   /* The likely N+1 loops, reached from the most ways in first, as doctor lists them (P89). */
   function loopsHtml() {
@@ -145,7 +145,7 @@ export function createTables(page) {
     (items.length === 0 ? `<p class="hint">${empty}</p>` : `<ul class="s-unmatched">${items.map(render).join('')}</ul>`) + '</div>';
   function drawChanges() {
     titleEl.textContent = 'Changes';
-    if (changes === null) { walkEl.replaceChildren(); return; }
+    if (changes === null) { sheetEl.replaceChildren(); return; }
     const c = changes.counts;
     const delta = changes.unresolved.head - changes.unresolved.base;
     const head = `<div class="sheet is-padded"><p class="c-sum"><span>against <b>${esc(changes.base || 'base')}</b>, ` +
@@ -153,7 +153,7 @@ export function createTables(page) {
       `${c.nodesChanged} changed</span><span><b>+${c.edgesAdded}</b> &minus;${c.edgesRemoved} edges</span>` +
       `<span>not joined ${changes.unresolved.base} &rarr; <b>${changes.unresolved.head}</b>${delta > 0 ? ' (+' + delta + ')' : ''}</span></p>` +
       '<p class="hint">Read by <code>flowatlas diff</code>, which wrote the whole answer to <code>diff.json</code>.</p></div>';
-    walkEl.innerHTML = head +
+    sheetEl.innerHTML = head +
       changeList('Removed but still called', changes.stillCalled,
         'No route this branch removed is still called on the head side.',
         (route) => changeRouteHtml(route, 'called from ' + route.callers.map(esc).join(', ')).replace('<li>', '<li class="is-bad">')) +

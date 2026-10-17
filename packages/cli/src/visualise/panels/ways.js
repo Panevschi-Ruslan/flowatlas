@@ -79,8 +79,8 @@ export function createWays(page) {
         if (i !== store.get('current')) history.pushState(null, '', location.href);
         store.set('current', i);
         drawEntries();
-        // On the graph a way in is a focus; on Steps its steps; anywhere else a walk.
-        if (store.get('view') === 'graph') page.graph.go(i); else page.showView(store.get('view') === 'steps' ? 'steps' : 'walk');
+        // On the graph a way in is a focus; anywhere else its steps.
+        if (store.get('view') === 'graph') page.graph.go(i); else page.showView('steps');
       });
       li.append(b);
       li.insertAdjacentHTML('beforeend', graphLink(i));

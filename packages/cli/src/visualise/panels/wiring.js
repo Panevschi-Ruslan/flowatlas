@@ -1,18 +1,18 @@
 import { formatViewHash, parseHash, parseViewHash } from '../frame.js';
 import { parseMapHash } from '../map.js';
+import { STEP_KINDS } from '../steps.js';
 
 /* What ties the panels together: the tabs and their legends, `showView`,
    following a link's address, Copy link on the tabs without one of their
    own, the controls every tab shares, the colophon, and the first view. */
 export function wirePage(page) {
-  const { LB, MT, capSel, copyText, depthSel, drawBusiest, drawChanges, drawCrossings, drawEntries, drawMissing,
-    drawSteps, drawWalk, entryIx, esc, flash, fullScreen, graph, graphView, keys, kindSelect,
-    mapController, nodes, notice, reachesCrossing, reopen, repoName, root, seen, setMapFull, startCard, stepsView, store,
-    walkEl } = page;
+  const { LB, MT, copyText, drawBusiest, drawChanges, drawCrossings, drawEntries, drawMissing,
+    drawSteps, entryIx, esc, flash, fullScreen, graph, graphView, keys, kindSelect,
+    mapController, nodes, notice, reachesCrossing, reopen, repoName, root, seen, setMapFull, sheetEl, startCard, stepsView,
+    store } = page;
 
   /* ── wiring ──────────────────────────────────────────────────────── */
 
-  const controls = document.getElementById('walk-controls');
   const tableBar = document.getElementById('table-bar');
   const legendEl = document.getElementById('legend');
   const tabs = [...document.querySelectorAll('.tab')];
@@ -22,7 +22,7 @@ export function wirePage(page) {
   /* The keys are listed once, in the `?` overlay (P101), which every legend
      that has keys points at. */
   const KEYS_LEGEND = '<span><b>keys</b> <button class="link-button" data-keys-open>press ? for every key</button></span>';
-  const WALK_LEGEND =
+  const TABLE_LEGEND =
     '<span><b>unmarked</b> read from the code &middot; <b>annotated</b> an annotation said so &middot; ' +
     '<b>best guess</b> inferred, may be wrong</span>' +
     '<span><b>:param</b> a route hole, so one address matches every id</span>';
@@ -56,26 +56,33 @@ export function wirePage(page) {
     '<span><b>stacked box</b> a family of names, closed; click to open &middot; <b>frame</b> an open family; ' +
     'its name closes it</span>' + KEYS_LEGEND;
 
+  /* Every glyph a step is drawn with, with its word, from the one list the
+     rows draw from (P99). */
   const STEPS_LEGEND =
     '<span><b>order</b> depth first, as the source calls: a handler, its services, the stores, calls and ' +
     'publishes they make, then the next service&rsquo;s way in</span>' +
-    '<span><b>in</b> handler &middot; <b>fn</b> service &middot; <b>db</b> store &middot; <b>http</b> outbound call &middot; ' +
-    '<b>ch</b> queue or topic &middot; <b>&lambda;</b> function &middot; <b>wf</b> workflow</span>' +
+    '<span class="s-glyphs">' + Object.values(STEP_KINDS).map((kind) =>
+      `<span><span class="s-glyph">${esc(kind.glyph)}</span> ${esc(kind.say)}</span>`).join('') + '</span>' +
+    '<span><b class="s-key-cross">&rarr; orders &middot; requests</b> the steps after it run in another service ' +
+    '&middot; <b>runs first</b> the guards in front of a step</span>' +
     '<span><b class="g-key-bad">red</b> a failure path &middot; <b>side by side</b> runs beside its siblings &middot; ' +
     '<b>best guess</b> a join that was inferred, dashed &middot; <b>annotated</b> one an annotation made &middot; ' +
     'unmarked, read from code &middot; <b>seen &times;n</b> seen at run time</span>' +
     '<span><b>per item</b> runs once per item of a loop &middot; <b>likely N+1</b> a query reached per item &middot; ' +
     '<b class="g-key-bad">throws</b> where a failure the way in can answer with is raised &middot; <b>logs</b> the lines a step logs</span>' +
     '<span><b class="g-key-bad">&#x2715; chain breaks</b> where a call finds no route, a way in no handler, or an address was not read</span>' +
-    '<span><b>hover</b> a row lights its node on the Graph tab&rsquo;s drawing</span>';
+    '<span><b>compact</b> a line per step and the marks that change the reading &middot; <b>detailed</b> every mark, ' +
+    'the full path, settings read, logs &middot; <b>waterfall</b> a bar per step in its service&rsquo;s colour, ' +
+    'one unit per step, not time</span>' +
+    '<span><b>hover</b> a row lights its node on the Graph tab&rsquo;s drawing</span>' + KEYS_LEGEND;
 
   /* The tab open is in the address, so every tab can be linked to (P98):
      the map and the graph write their own, every other tab `#<tab>`, with
-     the way in for the two that show one. Moving between tabs replaces the
+     the way in for Steps, the one that shows one. Moving between tabs replaces the
      address rather than adding to the history; picking another way in adds
      to it (ways.js), so Back steps through what a person looked at. */
   const DEFAULT_VIEW = 'map';
-  const SHOWS_A_WAY_IN = new Set(['walk', 'steps']);
+  const SHOWS_A_WAY_IN = new Set(['steps']);
   const TABLES = new Set(['crossings', 'missing', 'busiest', 'changes']);
   /* The tabs that never read the way in picked: the Ways in list steps aside
      and the tab takes the width (P101). */
@@ -116,18 +123,16 @@ export function wirePage(page) {
     root.classList.toggle('is-map', name === 'map');
     workEl.classList.toggle('is-wide', WIDE.has(name));
     for (const tab of tabs) tab.setAttribute('aria-selected', String(tab.dataset.view === name));
-    controls.hidden = name !== 'walk';
     tableBar.hidden = !TABLES.has(name);
-    walkEl.hidden = name === 'graph' || name === 'map' || name === 'steps';
+    sheetEl.hidden = name === 'graph' || name === 'map' || name === 'steps';
     stepsView.hidden = name !== 'steps';
     graphView.hidden = name !== 'graph';
     mapViewEl.hidden = name !== 'map';
     // Busiest and Changes draw none of the marks a legend explains.
     legendEl.hidden = name === 'busiest' || name === 'changes';
-    legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : name === 'map' ? MAP_LEGEND : name === 'steps' ? STEPS_LEGEND : WALK_LEGEND;
+    legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : name === 'map' ? MAP_LEGEND : name === 'steps' ? STEPS_LEGEND : TABLE_LEGEND;
     writeViewHash(where);
-    if (name === 'walk') drawWalk();
-    else if (name === 'steps') drawSteps();
+    if (name === 'steps') drawSteps();
     else if (name === 'crossings') drawCrossings();
     else if (name === 'missing') drawMissing();
     else if (name === 'busiest') drawBusiest();
@@ -138,8 +143,8 @@ export function wirePage(page) {
 
   for (const tab of tabs) tab.addEventListener('click', () => showView(tab.dataset.view));
 
-  /* Copy link on the tabs that have no address of their own to build: Walk,
-     Steps and the tables. The map and the graph copy theirs. */
+  /* Copy link on the tabs that have no address of their own to build: Steps
+     and the tables. The map and the graph copy theirs. */
   document.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-view-link]');
     if (!button) return;
@@ -177,7 +182,7 @@ export function wirePage(page) {
         'renamed after the link was made.' + (store.get('current') === null ? '' : ` Shown instead: ${wayInSay(store.get('current'))}.`));
     }
     if (asked.view === 'missing' && asked.rest.reason) {
-      const row = walkEl.querySelector(`tr[data-reason="${CSS.escape(asked.rest.reason)}"]`);
+      const row = sheetEl.querySelector(`tr[data-reason="${CSS.escape(asked.rest.reason)}"]`);
       if (row === null) {
         said.push(`This link opens Not joined on <code>${esc(asked.rest.reason)}</code>, which has no rows here ` +
           '(or only accepted ones): it was fixed, or accepted, after the link was made.');
@@ -222,7 +227,7 @@ export function wirePage(page) {
     }
     if (asked.hidden !== null) graph.setHidden(asked.hidden);
     // A way in opened from a link or a search hit is the one picked everywhere:
-    // the left list marks it and Steps and Walk show it when next opened.
+    // the left list marks it and Steps shows it when next opened.
     if (asked.focus !== store.get('current') && entryIx.includes(asked.focus)) {
       store.set('current', asked.focus);
       drawEntries();
@@ -251,8 +256,6 @@ export function wirePage(page) {
   });
 
   kindSelect.addEventListener('change', drawEntries);
-  depthSel.addEventListener('change', drawWalk);
-  capSel.addEventListener('change', drawWalk);
 
   /* Read from code, and - only where a trace was imported, which the band's
      run-time pill then counts - what was seen running beside it. */

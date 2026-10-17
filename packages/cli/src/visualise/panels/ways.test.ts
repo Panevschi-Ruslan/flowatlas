@@ -51,7 +51,7 @@ describe('the ways in', () => {
     expect(chip.hidden).toBe(true);
   });
 
-  it('picks a way in and opens it on the tab that is open', () => {
+  it('picks a way in and opens its steps, from any tab but the graph', () => {
     const { page, document } = mountPage(data, { upTo: createWays });
     const opened: string[] = [];
     page.showView = (name: string) => opened.push(name);
@@ -59,7 +59,7 @@ describe('the ways in', () => {
     drawEntries();
     document.querySelectorAll('#entries button.row')[1]!.dispatchEvent(new FakeEvent('click'));
     expect(page.store.get('current')).toBe(page.entryIx[1]);
-    expect(opened).toEqual(['walk']);
+    expect(opened).toEqual(['steps']);
     expect(document.querySelectorAll('#entries button.row')[1]!.getAttribute('aria-current')).toBe('true');
   });
 });

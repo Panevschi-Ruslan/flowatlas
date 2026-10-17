@@ -270,8 +270,9 @@ export function createDetails(page) {
           ? `<button class="tool" data-act="also" aria-pressed="${others.shown}" title="${ALSO_SAYS[others.look].count(others.count)}, ` +
             `not in the flow, drawn faded as context (O)">${ALSO_SAYS[others.look].ask} &middot; ${others.count.toLocaleString()}</button>`
           : '') +
-        (DOORS.has(t) ? '<button class="tool" data-act="walk">Open in Walk</button>' : '') +
-        (DOORS.has(t) ? '<button class="tool" data-act="steps" title="This way in as a waterfall, in call order">Steps</button>' : '') +
+        (DOORS.has(t) ? '<button class="tool" data-act="steps" aria-controls="g-steps" ' +
+          'title="This way in\u2019s steps, in call order, above the drawing">Steps</button>' : '') +
+        (DOORS.has(t) ? '<button class="tool" data-act="open-steps" title="This way in on the Steps tab">Open in Steps</button>' : '') +
         (DOORS.has(t) || t === 'channel'
           ? `<button class="tool" data-prompt="${t === 'channel' ? 'channel' : 'entry'}:${v}" title="Copy as Markdown for an assistant">Copy as prompt</button>`
           : '') +

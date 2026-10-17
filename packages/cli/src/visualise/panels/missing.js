@@ -5,7 +5,7 @@ import { acceptCommandFor } from '../steps.js';
    which rule, and what the reader could not follow, by cause (P75). */
 export function createMissing(page) {
   const { acceptLikeHtml, accepted, acceptedNote, acceptedRule, appendUnmatched, data, esc, files,
-    graphLink, plural, reasons, rowService, titleEl, walkEl, wordHtml } = page;
+    graphLink, plural, reasons, rowService, sheetEl, titleEl, wordHtml } = page;
 
   /* ── what did not join, and why ──────────────────────────────────── */
 
@@ -148,8 +148,8 @@ export function createMissing(page) {
     sheet.className = 'sheet';
     sheet.append(table);
     if (showAccepted && accepted.rows.length > 0) sheet.insertAdjacentHTML('beforeend', acceptedListHtml());
-    walkEl.replaceChildren(...(accepted.rows.length > 0 || accepted.problem ? [bar] : []), sheet);
-    if (cantFollow !== null) walkEl.insertAdjacentHTML('beforeend', cantFollowHtml());
+    sheetEl.replaceChildren(...(accepted.rows.length > 0 || accepted.problem ? [bar] : []), sheet);
+    if (cantFollow !== null) sheetEl.insertAdjacentHTML('beforeend', cantFollowHtml());
     appendUnmatched();
   }
 

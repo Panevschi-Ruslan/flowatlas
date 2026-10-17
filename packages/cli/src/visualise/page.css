@@ -79,7 +79,7 @@
 * { box-sizing: border-box; }
 
 /* A class that sets `display` would otherwise win over the attribute, and
-   the walk's controls stayed on screen under every other tab. */
+   a tab's controls stayed on screen under every other tab. */
 [hidden] { display: none !important; }
 
 body {
@@ -490,7 +490,7 @@ input[type='search'] { width: 100%; }
   color: var(--hue);
 }
 
-/* ── the walk ───────────────────────────────────────────────────────── */
+/* ── the tabs ───────────────────────────────────────────────────────── */
 
 .tabs {
   display: flex;
@@ -514,51 +514,11 @@ input[type='search'] { width: 100%; }
   border-color: var(--accent);
 }
 
-.walk {
+/* The sheet the table tabs draw into (P99: it was the Walk's). */
+.tab-sheet {
   overflow: auto;
   max-height: 620px;
   padding: 4px 0 12px;
-}
-
-.step {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 10px;
-  padding: 3px 14px 3px 0;
-  padding-left: calc(var(--level) * 15px + 14px);
-  white-space: nowrap;
-  position: relative;
-}
-
-/* One hairline per level of depth, so the shape of the walk is readable
-   without spending characters on drawing it. */
-.step[data-level]:not([data-level='0'])::before {
-  content: '';
-  position: absolute;
-  left: calc(var(--level) * 15px + 4px);
-  top: 0;
-  bottom: 0;
-  border-left: 1px solid var(--rule);
-}
-
-.step:hover { background: var(--raise); }
-
-.via {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.via.is-marker { color: var(--warn); }
-.via.is-heuristic { color: var(--warn); }
-.via.is-runtime { color: var(--bad); }
-
-.what {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
-  min-width: 0;
 }
 
 .glyph {
@@ -579,34 +539,6 @@ input[type='search'] { width: 100%; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.where {
-  font-size: 11px;
-  color: var(--faint);
-  font-family: var(--f-mono);
-  text-align: right;
-}
-
-.crossing {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 5px 14px 5px 0;
-  padding: 4px 10px;
-  border-left: 3px solid var(--hue);
-  background: var(--raise);
-  border-radius: var(--radius);
-  font-size: 11.5px;
-  color: var(--muted);
-}
-
-.crossing b {
-  font-weight: 600;
-  color: var(--hue);
-  font-family: var(--f-ui);
-}
-
-.repeat { color: var(--faint); font-style: italic; }
 
 .cut {
   margin: 8px 14px 0 0;
@@ -721,7 +653,6 @@ tr:hover td { background: var(--raise); }
 .list li .row { flex: 1; min-width: 0; }
 .list li .to-graph { width: 34px; border-left: 1px solid var(--rule-soft); }
 .list li .to-graph:hover { background: var(--raise); }
-.what .to-graph { margin-left: 2px; }
 
 /* ── the graph ──────────────────────────────────────────────────────── */
 
@@ -1882,7 +1813,88 @@ kbd {
 @media (max-width: 640px) {
   .s-row { padding-left: calc(var(--depth) * 10px + 10px); padding-right: 10px; }
   .s-row[data-depth]:not([data-depth='0'])::before { left: calc(var(--depth) * 10px + 2px); }
-  .s-where { margin-left: 0; flex-basis: 100%; }
+  .s-row.is-detailed .s-where { margin-left: 0; flex-basis: 100%; }
+}
+
+/* ── one Steps view: compact, detailed, waterfall (P99) ──────────────── */
+
+/* The glyph is the step's kind, in one neutral chip; the service is the
+   colour of the rule that marks the row, not of the chip. */
+.s-glyph { color: var(--muted); border-color: var(--rule); background: var(--paper); }
+.s-row { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--hue) 70%, transparent); }
+.s-row.is-failure { box-shadow: none; }
+.s-modes .tool[aria-pressed='true'] { background: var(--raise); color: var(--ink); border-color: var(--accent); }
+
+/* Compact: one line, the place by its file's name, cut short before it wraps. */
+.s-row.is-compact { flex-wrap: nowrap; }
+.s-row.is-compact .s-what { flex: 0 1 auto; min-width: 0; }
+.s-row.is-compact .s-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }
+.s-row.is-compact .s-marks { flex: none; flex-wrap: nowrap; }
+.s-row.is-compact .s-where { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-row.is-config .s-label { color: var(--muted); }
+
+/* Where a way in leaves one service for another: a row of its own, a thin
+   rule in the colour of the service it enters, across the indent. */
+.s-cross {
+  position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px;
+  margin: 3px 14px 3px calc(var(--depth) * 16px + 14px); padding: 2px 0 2px 10px;
+  border-top: 1px solid color-mix(in srgb, var(--hue) 70%, transparent);
+  font-size: 11.5px; color: var(--muted);
+}
+.s-cross-to { font-weight: 600; color: var(--hue); font-family: var(--f-mono); }
+.s-cross .tag { font-size: 10.5px; }
+.s-first {
+  padding: 0 14px 2px calc(var(--depth) * 16px + 14px + 33px);
+  font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere;
+}
+.s-first b { font-weight: 600; color: var(--ink); margin-right: 4px; }
+.legend .s-glyphs { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
+.legend .s-glyphs .s-glyph { display: inline-block; }
+.legend .s-key-cross { color: var(--accent); font-family: var(--f-mono); }
+
+/* Waterfall: a bar per step on a track, from where it starts for as many
+   units as it spans. The label sits beside the bar, indented by depth. */
+.s-list.is-waterfall { padding-bottom: 8px; }
+.w-head { position: sticky; top: 0; z-index: 1; background: var(--paper); padding: 4px 14px 2px; }
+.w-axis { display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); align-items: end; gap: 10px; }
+.w-axis-say { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); letter-spacing: .04em; }
+.w-ticks { position: relative; height: 16px; border-bottom: 1px solid var(--rule); }
+.w-tick { position: absolute; bottom: 1px; transform: translateX(-50%); font-family: var(--f-mono); font-size: 10px; color: var(--faint); }
+.w-tick:first-child { transform: none; }
+.w-row {
+  display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); align-items: center; gap: 10px;
+  padding: 1px 14px; min-height: 22px;
+}
+.w-row:hover, .w-row.is-lit { background: var(--raise); }
+.w-label {
+  display: flex; align-items: baseline; gap: 6px; min-width: 0; padding-left: calc(var(--depth) * 12px);
+}
+.w-label .s-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.w-cross { flex: none; font-family: var(--f-mono); font-size: 10.5px; color: var(--hue); }
+.w-track { position: relative; height: 12px; }
+.w-bar {
+  position: absolute; top: 1px; bottom: 1px; left: var(--start); width: max(3px, var(--span));
+  background: var(--hue); border-radius: 2px; opacity: .85;
+}
+.w-row.is-guess .w-bar {
+  background: repeating-linear-gradient(90deg, var(--hue) 0 6px, transparent 6px 9px);
+}
+.w-row.is-failure .w-bar { background: var(--bad); }
+.w-row.is-failure .s-label { color: var(--bad); }
+/* No width of its own: a mark where it would start. */
+.w-row.is-mark .w-bar {
+  width: 8px; height: 8px; top: 2px; margin-left: -4px; border-radius: 0; transform: rotate(45deg);
+  background: var(--paper); border: 1.5px solid var(--hue);
+}
+.w-row.is-mark.is-failure .w-bar { border-color: var(--bad); background: var(--paper); }
+.w-row.is-mark .s-label { color: var(--muted); font-style: italic; }
+@media (max-width: 640px) {
+  .w-axis, .w-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .w-axis-say { order: -1; }
+  .w-row { padding: 3px 10px; }
+  .w-label { padding-left: calc(var(--depth) * 8px); }
+  .s-cross { margin-left: calc(var(--depth) * 10px + 10px); margin-right: 10px; }
+  .s-first { padding-left: calc(var(--depth) * 10px + 10px + 33px); padding-right: 10px; }
 }
 
 /* ── the page opens on the product (P98) ──────────────────────────── */
@@ -1954,7 +1966,7 @@ kbd {
 
 .v-notice code { font-family: var(--f-mono); font-size: 11px; }
 
-/* Copy link on Walk, Steps and the tables, at the end of their bars. */
+/* Copy link on Steps and the tables, at the end of their bars. */
 .v-link { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
 .v-link svg { width: 13px; height: 13px; flex: none; }
 .v-link.is-done { color: var(--good); border-color: var(--good); }

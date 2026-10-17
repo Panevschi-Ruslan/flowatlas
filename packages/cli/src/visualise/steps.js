@@ -7,6 +7,7 @@
  *   stepKindOf    what a node is, as the Steps view draws it
  *   stepInline    the table, address or channel a step names
  *   stepsOf       a way in, depth first in call order: a waterfall of rows
+ *   stepUnits     the rows laid out in steps, not time: where each starts, how wide
  *   createSeen    what was seen at run time, when the pack carries it
  *   stepIdOf      a node's id, as the graph and the MCP tools name it
  *   subjectOf     a way in, a channel, any node or a check row as the subject of a prompt
@@ -18,33 +19,50 @@
  *   acceptCommandFor  the `flowatlas accept` line that takes every gap like one
  */
 
-/** What each kind of step is drawn as, and called. */
+/**
+ * What each kind of step is drawn as, and called: the page's one vocabulary
+ * for a step (P99), in the Steps tab, the steps above the drawing and the
+ * legend that lists them.
+ */
 export const STEP_KINDS = Object.freeze({
   handler: Object.freeze({ glyph: 'in', say: 'handler' }),
+  view: Object.freeze({ glyph: 'view', say: 'screen' }),
+  act: Object.freeze({ glyph: 'act', say: 'user action' }),
   service: Object.freeze({ glyph: 'fn', say: 'service' }),
   db: Object.freeze({ glyph: 'db', say: 'store' }),
   http: Object.freeze({ glyph: 'http', say: 'outbound call' }),
   channel: Object.freeze({ glyph: 'ch', say: 'queue or topic' }),
   lambda: Object.freeze({ glyph: 'λ', say: 'function' }),
   workflow: Object.freeze({ glyph: 'wf', say: 'workflow' }),
+  config: Object.freeze({ glyph: 'cfg', say: 'reads config' }),
   answer: Object.freeze({ glyph: '!', say: 'answer' }),
   break: Object.freeze({ glyph: '✕', say: 'chain breaks' }),
   other: Object.freeze({ glyph: '·', say: 'step' }),
 });
 
+/** How the Steps tab draws a way in: a line per step, every mark, or a bar per step (P99). */
+export const STEP_MODES = Object.freeze(['compact', 'detailed', 'waterfall']);
+
 const STEP_BY_TYPE = Object.freeze({
-  entry: 'handler', ui_action: 'handler', ui_component: 'handler',
+  entry: 'handler', ui_action: 'act', ui_component: 'view',
   method: 'service', provider: 'service', function: 'service',
   db_query: 'db', table: 'db', cache_op: 'db',
   http_out: 'http', external_api: 'http', ui_api_call: 'http',
   channel: 'channel', producer: 'channel', consumer: 'channel',
+  config_key: 'config',
 });
 
 const STEP_BY_ENTRY_KIND = Object.freeze({ invoke: 'lambda', workflow: 'workflow' });
 
-/** The edges a waterfall follows: what runs next, not what is imported or injected. */
-const STEP_FOLLOWS = Object.freeze(new Set(['handles', 'calls', 'queries', 'caches', 'emits', 'consumes',
+/** The edges that say what runs next, not what is imported or injected: a waterfall descends these. */
+const STEP_RUNS = Object.freeze(new Set(['handles', 'calls', 'queries', 'caches', 'emits', 'consumes',
   'http_calls', 'hits', 'triggers']));
+
+/** What a step reads without running it: a leaf, never descended (P99). */
+const STEP_LEAVES = Object.freeze(new Set(['reads_config']));
+
+/** Every edge a waterfall lists: what runs next, and the settings a step reads. */
+const STEP_FOLLOWS = Object.freeze(new Set([...STEP_RUNS, ...STEP_LEAVES]));
 
 /** Proven or written down in the code; the rest are best guesses, or seen. */
 const STEP_CERTAIN = Object.freeze(new Set(['static', 'marker']));
@@ -238,13 +256,14 @@ const isNPlusOne = (model, k, loop) => {
 /**
  * The edges out of a node a waterfall follows, in call order: a workflow's
  * own order or the line of the call first, the place of what it reaches
- * after, and anything with neither last.
+ * after, and anything with neither last. `follows` is which edges: what runs
+ * next by default, with the settings it reads when asked.
  */
-const stepChildren = (model, i) => {
+const stepChildren = (model, i, follows = STEP_RUNS) => {
   const { edgeTypes } = model.data.dicts;
   const { order } = sitesOf(model);
   return model.outgoing[i]
-    .filter((k) => STEP_FOLLOWS.has(edgeTypes[model.edges[k][2]]))
+    .filter((k) => follows.has(edgeTypes[model.edges[k][2]]))
     .sort((a, b) => {
       const ka = placeAmongSiblings(model, order, a), kb = placeAmongSiblings(model, order, b);
       if (ka !== kb) return ka - kb;
@@ -313,72 +332,124 @@ export const createSeen = (data) => {
  * A step reached a second time is listed once more as `again` and not walked
  * twice; a step already on its own path is a `loop`. A route's failure
  * answers come first, under the handler, the way a waterfall shows its
- * failing spans first.
+ * failing spans first. A setting a step reads is a `config` leaf under it,
+ * listed each time it is read and never walked (P99).
  *
- * `options`: `{ depth, rows, answersOf(model, i), seen }`.
+ * Every row also has its place on a waterfall drawn in steps, not time
+ * (`start`, `span`; `stepUnits`). `more` counts what was left out, split in
+ * `cut` by what left it out: the depth, or the rows a waterfall holds.
+ *
+ * `options`: `{ depth, rows, config, answersOf(model, i), seen }`; `config`
+ * false leaves the settings out (a compact list, a waterfall, a count).
  */
 export const stepsOf = (model, entry, options = {}) => {
   const depth = options.depth ?? STEP_BOUNDS.depth;
   const cap = options.rows ?? STEP_BOUNDS.rows;
+  const follows = options.config === false ? STEP_RUNS : STEP_FOLLOWS;
   const answersOf = options.answersOf || (() => []);
   const seen = options.seen || NO_SEEN;
-  const { confidences } = model.data.dicts;
+  const { confidences, edgeTypes } = model.data.dicts;
   const { failure, concurrent, loop: loops } = sitesOf(model);
   const throwsAt = failsByNode(failsOf(model, entry));
   const rows = [{
     node: entry, depth: 0, edge: -1, parent: -1, kind: stepKindOf(model, entry), inline: stepInline(model, entry),
     confidence: '', certain: true, failure: false, together: false, again: false, loop: false, crosses: false,
     seen: seen.entry(entry), answer: null, perItem: '', nPlusOne: false,
-    throws: throwsAt.get(entry) || NO_FAILS, logs: logsOf(model, entry),
+    throws: throwsAt.get(entry) || NO_FAILS, logs: logsOf(model, entry), start: 0, span: 1,
   }];
   for (const answer of answersOf(model, entry)) {
     if (answer.kind !== 'failure') continue;
     rows.push({
       node: entry, depth: 1, edge: -1, parent: 0, kind: 'answer', inline: String(answer.status),
       confidence: '', certain: true, failure: true, together: false, again: false, loop: false, crosses: false,
-      seen: 0, answer, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS,
+      seen: 0, answer, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS, start: 0, span: 0,
     });
   }
   const opening = stepBreakOf(model, entry);
   if (opening) rows.push(breakRow(rows[0], 0, opening));
-  let more = 0;
+  const cut = { depth: 0, rows: 0 };
   const walked = new Set([entry]);
-  const stack = stepChildren(model, entry).reverse().map((k) => ({ k, parent: 0, path: [entry] }));
+  const stack = stepChildren(model, entry, follows).reverse().map((k) => ({ k, parent: 0, path: [entry] }));
   while (stack.length > 0) {
     const { k, parent, path } = stack.pop();
     if (rows.length >= cap) {
-      more += 1;
+      cut.rows += 1;
       continue;
     }
     const e = model.edges[k];
     const to = e[1];
     const up = rows[parent];
     const confidence = confidences[e[3]];
-    const loop = path.includes(to);
-    const again = !loop && walked.has(to);
+    // A setting read is a leaf of its own each time: nothing runs under it.
+    const leaf = STEP_LEAVES.has(edgeTypes[e[2]]);
+    const loop = !leaf && path.includes(to);
+    const again = !leaf && !loop && walked.has(to);
     const join = seen.join(k);
     const row = {
-      node: to, depth: up.depth + 1, edge: k, parent, kind: stepKindOf(model, to), inline: stepInline(model, to),
+      node: to, depth: up.depth + 1, edge: k, parent, kind: leaf ? 'config' : stepKindOf(model, to), inline: stepInline(model, to),
       confidence, certain: STEP_CERTAIN.has(confidence), failure: up.failure || failure.has(k),
       together: concurrent.has(k), again, loop, crosses: model.nodes[to][2] !== model.nodes[up.node][2],
       seen: join ? join.count : 0, answer: null,
       perItem: loops.has(k) ? loops.get(k).kind : '', nPlusOne: isNPlusOne(model, k, loops.get(k)),
-      throws: again || loop ? NO_FAILS : throwsAt.get(to) || NO_FAILS, logs: again || loop ? NO_LOGS : logsOf(model, to),
+      throws: again || loop || leaf ? NO_FAILS : throwsAt.get(to) || NO_FAILS,
+      logs: again || loop || leaf ? NO_LOGS : logsOf(model, to), start: 0, span: 1,
     };
     rows.push(row);
-    if (loop || again) continue;
+    if (loop || again || leaf) continue;
     walked.add(to);
     const broken = stepBreakOf(model, to);
     if (broken) rows.push(breakRow(row, rows.length - 1, broken));
     if (row.depth >= depth) {
-      more += stepChildren(model, to).length;
+      cut.depth += stepChildren(model, to, follows).length;
       continue;
     }
     const at = rows.length - 1;
     const next = [...path, to];
-    for (const child of stepChildren(model, to).reverse()) stack.push({ k: child, parent: at, path: next });
+    for (const child of stepChildren(model, to, follows).reverse()) stack.push({ k: child, parent: at, path: next });
   }
-  return { rows, more };
+  stepUnits(rows);
+  return { rows, more: cut.depth + cut.rows, cut };
+};
+
+/**
+ * Lays rows out on a waterfall drawn in steps, not time (P99): every step
+ * that runs is one unit wide when nothing runs under it, and as wide as its
+ * children when something does. Children run end to end in call order; a run
+ * of side-by-side siblings (`together`) starts at one x and is as wide as the
+ * widest. What runs nothing of its own - an answer, a break, a step listed
+ * above or looping back - is a mark of no width where it would start. Sets
+ * `start` and `span` on each row, in units from the way in's start, and
+ * returns the whole width. P111 lays the same tree on a time axis instead.
+ */
+export const stepUnits = (rows) => {
+  if (rows.length === 0) return 0;
+  const kids = rows.map(() => []);
+  for (let r = 1; r < rows.length; r += 1) kids[rows[r].parent].push(r);
+  const marks = (row) => row.kind === 'answer' || row.kind === 'break' || row.again || row.loop;
+  // Children are pushed after their parent, so the rows backwards are children first.
+  const laid = rows.map(() => 0);
+  for (let r = rows.length - 1; r >= 0; r -= 1) {
+    let end = 0, groupStart = 0, groupEnd = 0, inGroup = false;
+    for (const c of kids[r]) {
+      const width = marks(rows[c]) ? 0 : rows[c].span;
+      if (rows[c].together && inGroup) {
+        laid[c] = groupStart;
+        groupEnd = Math.max(groupEnd, groupStart + width);
+      } else {
+        end = Math.max(end, groupEnd);
+        laid[c] = end;
+        groupStart = end;
+        groupEnd = end + width;
+        inGroup = rows[c].together;
+        if (!inGroup) end = groupEnd;
+      }
+    }
+    const inside = Math.max(end, groupEnd);
+    rows[r].span = marks(rows[r]) ? 0 : Math.max(1, inside);
+  }
+  rows[0].start = 0;
+  for (let r = 1; r < rows.length; r += 1) rows[r].start = rows[rows[r].parent].start + laid[r];
+  return rows[0].span;
 };
 
 /* ── Where a chain breaks (P73) ── */
@@ -420,7 +491,7 @@ export const stepBreakOf = (model, i) => {
 const breakRow = (row, at, broken) => ({
   node: row.node, depth: row.depth + 1, edge: -1, parent: at, kind: 'break', inline: broken.say,
   confidence: '', certain: true, failure: true, together: false, again: false, loop: false, crosses: false,
-  seen: 0, answer: null, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS,
+  seen: 0, answer: null, perItem: '', nPlusOne: false, throws: NO_FAILS, logs: NO_LOGS, start: 0, span: 0,
   reason: broken.reason, message: broken.message,
 });
 
@@ -541,8 +612,11 @@ const promptPlaceOf = (model, i, depth) => {
   };
 };
 
-/** The edges the walk under a prompt follows: `get_flow`'s, which also reads settings. */
-const PROMPT_FOLLOWS = Object.freeze(new Set([...STEP_FOLLOWS, 'reads_config']));
+/**
+ * The edges the walk under a prompt follows: `get_flow`'s, which also reads
+ * settings. Named apart from the waterfall's, since it is the server's list.
+ */
+const PROMPT_FOLLOWS = Object.freeze(new Set([...STEP_RUNS, 'reads_config']));
 
 /** What the walk reads of each edge beyond its ends: the packed sites, by edge, once per model. */
 const promptSitesOf = (model) => {

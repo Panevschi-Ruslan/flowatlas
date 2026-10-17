@@ -46,10 +46,9 @@ __PAGE_CSS__</style>
 
     <section class="panel" id="views">
       <div class="panel-head">
-        <h2 id="walk-title">The walk</h2>
+        <h2 id="view-title">The whole project</h2>
         <div class="tabs" role="tablist">
-          <button class="tab" role="tab" data-view="map" aria-selected="false">Map</button>
-          <button class="tab" role="tab" data-view="walk" aria-selected="true">Walk</button>
+          <button class="tab" role="tab" data-view="map" aria-selected="true">Map</button>
           <button class="tab" role="tab" data-view="steps" aria-selected="false">Steps</button>
           <button class="tab" role="tab" data-view="crossings" aria-selected="false">Crossings</button>
           <button class="tab" role="tab" data-view="missing" aria-selected="false">Not joined</button>
@@ -60,27 +59,6 @@ __PAGE_CSS__</style>
       </div>
       <aside class="start" id="start" aria-labelledby="start-title" hidden></aside>
       <p class="v-notice" id="v-notice" role="status" hidden></p>
-      <div class="filters" id="walk-controls">
-        <label class="hint" style="display:flex;align-items:center;gap:6px">
-          depth
-          <select id="depth">
-            <option>3</option><option>4</option><option>5</option>
-            <option selected>6</option><option>8</option><option>10</option>
-          </select>
-        </label>
-        <label class="hint" style="display:flex;align-items:center;gap:6px">
-          most nodes
-          <select id="cap">
-            <option>40</option><option selected>90</option><option>200</option><option>500</option>
-          </select>
-        </label>
-        <button class="tool v-link" id="w-link" data-view-link title="Copy a link to this way in on this tab">
-          <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round"><path d="M6.6 9.4a2.6 2.6 0 0 0 3.7 0l2.5-2.5a2.6 2.6 0 0 0-3.7-3.7l-.9.9"/>
-            <path d="M9.4 6.6a2.6 2.6 0 0 0-3.7 0L3.2 9.1a2.6 2.6 0 0 0 3.7 3.7l.9-.9"/></svg>
-          <span>Copy link</span>
-        </button>
-      </div>
       <div class="filters t-bar" id="table-bar" hidden>
         <button class="tool v-link" id="t-link" data-view-link title="Copy a link to this tab">
           <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -89,12 +67,20 @@ __PAGE_CSS__</style>
           <span>Copy link</span>
         </button>
       </div>
-      <div class="walk" id="walk"></div>
+      <div class="tab-sheet" id="tab-sheet"></div>
       <div class="steps-view" id="steps-view" hidden>
         <div class="s-bar">
           <label class="hint">depth
             <select id="s-depth"><option>4</option><option>8</option><option selected>12</option><option>24</option></select>
           </label>
+          <span class="g-split s-modes" role="group" aria-label="How the steps are drawn" id="s-modes">
+            <button class="tool" data-step-mode="compact" aria-pressed="true"
+              title="A line per step: what it is, where, and only the marks that change the reading">Compact</button>
+            <button class="tool" data-step-mode="detailed" aria-pressed="false"
+              title="Every mark, the full path, the settings read and the lines logged">Detailed</button>
+            <button class="tool" data-step-mode="waterfall" aria-pressed="false"
+              title="A bar per step, coloured by service, laid out in steps, not time">Waterfall</button>
+          </span>
           <button class="tool" id="s-copy" title="Copy this way in as Markdown for an assistant: steps, places, shapes, gaps, ids">Copy as prompt</button>
           <span class="hint" id="s-note"></span>
           <button class="tool v-link" id="s-link" data-view-link title="Copy a link to the steps of this way in">
@@ -339,7 +325,7 @@ __BAND_LOGIC__
 
 __WAYS_LOGIC__
 
-__WALK_LOGIC__
+__SHEET_LOGIC__
 
 __TABLES_LOGIC__
 

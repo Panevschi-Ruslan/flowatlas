@@ -29,7 +29,9 @@ describe('the wiring', () => {
       expect(document.getElementById('graph-view')!.hidden).toBe(view !== 'graph');
       expect(document.getElementById('map-view')!.hidden).toBe(view !== 'map');
       expect(document.getElementById('steps-view')!.hidden).toBe(view !== 'steps');
-      expect(document.getElementById('walk-controls')!.hidden).toBe(view !== 'walk');
+      expect(document.getElementById('tab-sheet')!.hidden).toBe(['graph', 'map', 'steps'].includes(view));
+      const legend = document.getElementById('legend')!;
+      if (view === 'steps') expect(textOf(legend)).toContain('cfg reads config');
     }
   });
 
@@ -53,7 +55,7 @@ describe('the wiring', () => {
     expect(document.querySelectorAll('.tab').map((tab: any) => tab.dataset.view)).toEqual([...VIEWS]);
   });
 
-  it('writes each tab in the address as it opens, the way in on the two that show one', () => {
+  it('writes each tab in the address as it opens, the way in on Steps, the one that shows one', () => {
     const { page, document, window } = mountPage(data);
     const key = page.keys.keyOf(page.store.get('current'));
     const written: Record<string, string> = {};
@@ -63,11 +65,22 @@ describe('the wiring', () => {
       written[(tab as any).dataset.view] = window.location.hash;
     }
     expect(written).toEqual({
-      map: '#map', walk: `#walk/${key}`, steps: `#steps/${key}`, crossings: '#crossings', missing: '#missing',
+      map: '#map', steps: `#steps/${key}`, crossings: '#crossings', missing: '#missing',
       busiest: '#busiest', graph: `#graph/${key}/2`,
     });
     // Moving between tabs adds nothing to the history.
     expect(window.history.length).toBe(1);
+  });
+
+  it('opens a link made for the Walk tab on Steps, on the same way in, and says Steps from then on (P99)', () => {
+    const v = at('entry:orders:http:POST:/orders');
+    const { page, document, window } = mountPage(data, { address: `file:///project/graph.html#walk/${testKey(v)}` });
+    expect(page.store.get('view')).toBe('steps');
+    expect(page.store.get('current')).toBe(v);
+    expect(document.getElementById('steps-view')!.hidden).toBe(false);
+    expect(document.getElementById('v-notice')!.hidden).toBe(true);
+    expect(window.location.hash).toBe(`#steps/${testKey(v)}`);
+    expect(document.querySelector('.tab[data-view="walk"]')).toBeNull();
   });
 
   it('opens Steps on the way in a link names', () => {
@@ -86,7 +99,7 @@ describe('the wiring', () => {
       expect(page.store.get('view')).toBe(view);
     }
     const { document, window } = mountPage(data, { address: 'file:///project/graph.html#missing/reason=di-token-unknown' });
-    const row = document.querySelector('#walk tr.is-target') as any;
+    const row = document.querySelector('#tab-sheet tr.is-target') as any;
     expect(row.dataset.reason).toBe('di-token-unknown');
     expect(window.location.hash).toBe('#missing/reason=di-token-unknown');
     expect(document.getElementById('table-bar')!.hidden).toBe(false);
@@ -105,8 +118,8 @@ describe('the wiring', () => {
   });
 
   it('says so for a way in, or a reason, the page does not hold, and shows what it has', () => {
-    const stale = mountPage(data, { address: 'file:///project/graph.html#walk/zzzzzz' });
-    expect(stale.page.store.get('view')).toBe('walk');
+    const stale = mountPage(data, { address: 'file:///project/graph.html#steps/zzzzzz' });
+    expect(stale.page.store.get('view')).toBe('steps');
     expect(stale.page.entryIx).toContain(stale.page.store.get('current'));
     expect(textOf(stale.document.getElementById('v-notice'))).toMatch(/names a way in this page does not hold, zzzzzz.*Shown instead: /);
     const gone = mountPage(data, { address: 'file:///project/graph.html#missing/reason=no-such-reason' });

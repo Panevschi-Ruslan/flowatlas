@@ -249,7 +249,7 @@ export function createBand(page) {
     const crossing = entryIx.filter((i) => reachesCrossing[i]);
     let best = null;
     for (const i of (crossing.length > 0 ? crossing : entryIx).slice(0, START_SCORED)) {
-      const rows = stepsOf(model, i, { rows: START_ROWS }).rows.filter((row) => row.kind !== 'break');
+      const rows = stepsOf(model, i, { rows: START_ROWS, config: false }).rows.filter((row) => row.kind !== 'break');
       const crossings = rows.filter((row) => row.crosses && !row.again && !row.loop).length;
       if (best === null || crossings > best.crossings || (crossings === best.crossings && rows.length > best.steps)) {
         best = { i, crossings, steps: rows.length };

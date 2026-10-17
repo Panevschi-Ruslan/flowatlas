@@ -19,6 +19,7 @@ import {
   pictureScale,
   pinch,
   VIEWS,
+  VIEWS_MOVED,
 } from './frame.js';
 import { parseMapHash } from './map.js';
 import { stableKeys } from './keys.js';
@@ -231,6 +232,14 @@ describe('every tab in the address (P98)', () => {
     }
     expect(parseViewHash('', keys)).toBeNull();
     expect(parseViewHash('#', keys)).toBeNull();
+  });
+
+  it('opens a tab that went on the tab that took it over, the way in and all (P99)', () => {
+    expect(VIEWS).not.toContain('walk');
+    expect(parseViewHash(`#walk/${key(1)}`, keys)).toEqual({ view: 'steps', name: 'walk', entry: 1, key: key(1), rest: {} });
+    expect(parseViewHash('#walk', keys)).toMatchObject({ view: 'steps', entry: null });
+    for (const moved of Object.values(VIEWS_MOVED)) expect(VIEWS).toContain(moved);
+    expect(parseViewHash('#constructor', keys)).toMatchObject({ view: null, name: 'constructor' });
   });
 
   it('lists each tab once, map first and graph last', () => {

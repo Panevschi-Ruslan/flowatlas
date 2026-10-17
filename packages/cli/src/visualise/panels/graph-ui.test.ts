@@ -15,7 +15,7 @@ describe('the graph controls', () => {
     page.graph.go(first);
     expect(window.location.hash).toBe(`#graph/${page.keys.keyOf(first)}/${page.state.hops}`);
     page.graph.go(second);
-    expect(textOf(document.getElementById('walk-title'))).toBe('order.created');
+    expect(textOf(document.getElementById('view-title'))).toBe('order.created');
     document.getElementById('g-back')!.click();
     expect(page.state.focus).toBe(first);
     document.getElementById('g-forward')!.click();

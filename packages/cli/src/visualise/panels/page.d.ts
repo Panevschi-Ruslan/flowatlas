@@ -10,7 +10,7 @@ import type { PackedGraph } from '../pack.js';
 export interface PageState {
   /** The way in picked on the left, by node position. */
   current: number | null;
-  /** The tab open: walk, steps, graph, map, crossings, missing, busiest or changes. */
+  /** The tab open: map, steps, crossings, missing, busiest, changes or graph. */
   view: string;
   /** The services the rail lets through, by name: one Set, changed in place and set again. */
   shown: Set<string>;

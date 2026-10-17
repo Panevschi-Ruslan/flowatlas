@@ -67,6 +67,7 @@ export declare const formatHash: (
   more?: { ask?: Ask | null; hidden?: Partial<HiddenNames> | null; also?: readonly number[] },
 ) => string;
 export declare const VIEWS: readonly string[];
+export declare const VIEWS_MOVED: Readonly<Record<string, string>>;
 export declare const parseViewHash: (hash: string, keys: Keys) => AskedTab | null;
 export declare const formatViewHash: (view: string, key?: string | null, rest?: Record<string, string | null | undefined>) => string;
 export declare const pinch: (

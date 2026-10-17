@@ -64,7 +64,7 @@ export const PAGE_PARTS: readonly (readonly [placeholder: string, file: string])
   ['__CONTEXT_LOGIC__', 'panels/context.js'],
   ['__BAND_LOGIC__', 'panels/band.js'],
   ['__WAYS_LOGIC__', 'panels/ways.js'],
-  ['__WALK_LOGIC__', 'panels/walk.js'],
+  ['__SHEET_LOGIC__', 'panels/sheet.js'],
   ['__TABLES_LOGIC__', 'panels/tables.js'],
   ['__FIND_LOGIC__', 'panels/find.js'],
   ['__MISSING_LOGIC__', 'panels/missing.js'],

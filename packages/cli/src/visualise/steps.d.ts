@@ -16,9 +16,12 @@ export interface StepLog {
   text: string;
 }
 
-export type StepKind = 'handler' | 'service' | 'db' | 'http' | 'channel' | 'lambda' | 'workflow' | 'answer' | 'break' | 'other';
+export type StepKind = 'handler' | 'view' | 'act' | 'service' | 'db' | 'http' | 'channel' | 'lambda' | 'workflow'
+  | 'config' | 'answer' | 'break' | 'other';
 
 export declare const STEP_KINDS: Readonly<Record<StepKind, Readonly<{ glyph: string; say: string }>>>;
+export type StepMode = 'compact' | 'detailed' | 'waterfall';
+export declare const STEP_MODES: readonly StepMode[];
 export declare const STEP_BOUNDS: Readonly<{ depth: number; rows: number }>;
 
 export interface StepRow {
@@ -48,6 +51,12 @@ export interface StepRow {
   /** On a `break` row: the check row's reason and message, '' when the break is structural. */
   reason?: string;
   message?: string;
+  /** Where the step starts on a waterfall in steps, not time, in units from the way in's start (P99). */
+  start: number;
+  /** How many units wide it is: one for a step nothing runs under, its children's width otherwise, 0 for a mark. */
+  span: number;
+  /** How long it takes, in milliseconds, when run time says so: P111 adds it. */
+  ms?: number;
 }
 
 export interface Seen {
@@ -72,6 +81,8 @@ export interface SeenAmbiguous {
 export interface StepOptions {
   depth?: number;
   rows?: number;
+  /** False leaves out the settings a step reads; listed by default. */
+  config?: boolean;
   answersOf?: (model: GraphModel, i: number) => Array<{ kind: string; status: string; ref: number }>;
   seen?: Seen;
 }
@@ -98,7 +109,15 @@ export declare const stepInline: (model: GraphModel, i: number) => string;
 export declare const createSeen: (
   data: Pick<PackedGraph, 'edges'> & Partial<Pick<PackedGraph, 'entryIds' | 'observed'>>,
 ) => Seen;
-export declare const stepsOf: (model: GraphModel, entry: number, options?: StepOptions) => { rows: StepRow[]; more: number };
+export interface StepsFound {
+  rows: StepRow[];
+  /** Steps left out, both ways. */
+  more: number;
+  /** What left them out: the depth, or the rows a waterfall holds. */
+  cut: { depth: number; rows: number };
+}
+export declare const stepsOf: (model: GraphModel, entry: number, options?: StepOptions) => StepsFound;
+export declare const stepUnits: (rows: Array<Pick<StepRow, 'parent' | 'kind' | 'together' | 'again' | 'loop'> & { start: number; span: number }>) => number;
 export declare const stepBreakOf: (
   model: GraphModel,
   i: number,

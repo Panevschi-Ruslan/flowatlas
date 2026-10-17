@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { textOf } from './test-dom.js';
+import { createStepsUi } from './steps-ui.js';
+import { FakeEvent, textOf } from './test-dom.js';
 import { mountPage, nodeAt, testPack } from './test-page.js';
 
-/** The Steps tab and Copy as prompt (P103). */
+/** The Steps tab and Copy as prompt (P103), one view with three modes (P99). */
 describe('the steps', () => {
   const data = testPack('steps-ui');
   const at = nodeAt(data);
@@ -36,5 +37,126 @@ describe('the steps', () => {
     expect(textOf(box.querySelector('p b'))).toBe('Steps of POST /orders');
     page.stepsInGraph.toggle(v);
     expect(box.hidden).toBe(true);
+  });
+
+  const onSteps = (address?: string) => {
+    const mounted = mountPage(data, address ? { address } : {});
+    mounted.page.store.set('current', at('entry:gateway:http:POST:/orders'));
+    mounted.page.showView('steps');
+    return mounted;
+  };
+  const rowOf = (document: any, id: string) => document.querySelector(`#s-list .s-row[data-node="${at(id)}"]`);
+
+  it('opens compact: a line per step, the file by its name with the path in its tooltip, no word for what is certain', () => {
+    const { document, page } = onSteps();
+    expect(page.stepMode()).toBe('compact');
+    expect(document.querySelector('[data-step-mode="compact"]')!.getAttribute('aria-pressed')).toBe('true');
+    const first = document.querySelector('#s-list .s-row')!;
+    expect(first.classList.contains('is-compact')).toBe(true);
+    const where = first.querySelector('.s-where')!;
+    expect(textOf(where)).toBe('orders.controller.ts:12');
+    expect(where.getAttribute('title')).toBe('src/orders/orders.controller.ts:12');
+    const marks = document.querySelectorAll('#s-list .s-mark').map(textOf);
+    expect(marks).not.toContain('certain');
+    expect(marks).not.toContain('read from code');
+    // An annotated join changes nothing about how the steps read, so compact leaves it out; a guess stays.
+    expect(marks).not.toContain('annotated');
+    expect(textOf(rowOf(document, 'gateway#src/loop.ts:Loop.a').querySelector('.s-marks'))).toContain('best guess');
+    expect(document.querySelectorAll('#s-list details.s-logs')).toHaveLength(0);
+  });
+
+  it('draws every mark and the path from the repository root in detailed, and remembers it', () => {
+    const { document, window } = onSteps();
+    document.querySelector('[data-step-mode="detailed"]')!.click();
+    const first = document.querySelector('#s-list .s-row')!;
+    expect(first.classList.contains('is-detailed')).toBe(true);
+    expect(textOf(first.querySelector('.s-where'))).toBe('src/orders/orders.controller.ts:12');
+    expect(document.querySelectorAll('#s-list .s-mark').map(textOf)).toContain('annotated');
+    expect(window.storage.get('flowatlas.steps.mode')).toBe('detailed');
+    expect(document.querySelector('[data-step-mode="detailed"]')!.getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('[data-step-mode="compact"]')!.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('opens on the mode kept for this reader, and on compact when nothing can be kept', () => {
+    const kept = mountPage(data, { upTo: createStepsUi });
+    kept.window.storage.set('flowatlas.steps.mode', 'waterfall');
+    expect(createStepsUi(kept.page).stepMode()).toBe('waterfall');
+    const odd = mountPage(data, { upTo: createStepsUi });
+    odd.window.storage.set('flowatlas.steps.mode', 'sideways');
+    expect(createStepsUi(odd.page).stepMode()).toBe('compact');
+    const blocked = mountPage(data, { upTo: createStepsUi });
+    const fail = () => { throw new Error('storage is off'); };
+    (globalThis as any).localStorage = { getItem: fail, setItem: fail, removeItem: fail };
+    const ui = createStepsUi(blocked.page);
+    expect(ui.stepMode()).toBe('compact');
+    ui.setStepMode('detailed');
+    expect(ui.stepMode()).toBe('detailed');
+  });
+
+  it('draws a crossing as a row of its own, between the call and the other service’s handler', () => {
+    for (const mode of ['compact', 'detailed']) {
+      const { document, page } = onSteps();
+      page.setStepMode(mode);
+      const items = document.querySelectorAll('#s-list > li');
+      const cross = items.findIndex((li: any) => li.classList.contains('s-cross'));
+      expect(cross, mode).toBeGreaterThan(0);
+      expect(textOf(items[cross]!)).toBe('→ orders · requests');
+      expect(items[cross - 1]!.dataset.node).toBe(String(at('http_out:gateway#src/clients/orders.client.ts:20:4')));
+      expect(items[cross + 1]!.dataset.node).toBe(String(at('entry:orders:http:POST:/orders')));
+      // The mark it replaced is gone.
+      expect(document.querySelectorAll('#s-list .s-mark').map(textOf).some((mark: string) => mark.startsWith('into '))).toBe(false);
+      // The channel's handler in another service is a crossing too, in words.
+      expect(document.querySelectorAll('#s-list .s-cross').map(textOf)).toContain('→ billing · consumes');
+    }
+  });
+
+  it('says what runs in front of a step under it, never walked', () => {
+    const { document } = onSteps();
+    const first = document.querySelector('#s-list .s-first')!;
+    expect(textOf(first)).toBe('runs first AuthGuard, RolesGuard');
+    expect(first.previousElementSibling!.dataset.node).toBe(String(at('entry:gateway:http:POST:/orders')));
+    expect(rowOf(document, 'guard:gateway#AuthGuard')).toBeNull();
+  });
+
+  it('draws a waterfall in units, its axis saying it is steps, not time', () => {
+    const { document, page } = onSteps();
+    page.setStepMode('waterfall');
+    expect(textOf(document.querySelector('#s-list .w-axis-say'))).toBe('steps, not time');
+    expect(document.getElementById('s-list')!.classList.contains('is-waterfall')).toBe(true);
+    const bars = document.querySelectorAll('#s-list .w-row');
+    expect(bars.length).toBeGreaterThan(5);
+    expect(bars[0]!.getAttribute('style')).toContain('--start:0%;--span:100%');
+    // A step on its own path again has no width: a mark where it would start.
+    const loop = bars.filter((bar: any) => bar.classList.contains('is-mark'));
+    expect(loop.length).toBeGreaterThan(0);
+    expect(textOf(document.getElementById('s-note'))).toMatch(/laid out in steps, not time\.$/);
+    // Hovering a bar lights its node, as a row does.
+    const v = at('gateway#src/orders/orders.controller.ts:OrdersController.create');
+    page.graph.go(at('entry:gateway:http:POST:/orders'));
+    page.showView('steps');
+    const bar = document.querySelector(`#s-list .w-row[data-node="${v}"] .w-bar`)!;
+    bar.dispatchEvent(new FakeEvent('pointerover'));
+    expect(document.querySelector('#g-world .g-node.is-hover')!.dataset.node).toBe(String(v));
+  });
+
+  it('says which bound left steps out, the depth by name', () => {
+    const { document } = onSteps();
+    const depth = document.getElementById('s-depth') as any;
+    depth.value = '4';
+    depth.dispatchEvent(new FakeEvent('change'));
+    expect(textOf(document.querySelector('#s-list .s-cut'))).toMatch(/more steps? past depth 4: raise the depth; or open it in the graph\.$/);
+  });
+
+  it('draws the steps above the drawing in the mode the Steps tab is in, and switches both', () => {
+    const { page, document } = mountPage(data);
+    page.setStepMode('detailed');
+    const v = at('entry:gateway:http:POST:/orders');
+    page.stepsInGraph.toggle(v);
+    const box = document.getElementById('g-steps')!;
+    expect(box.querySelectorAll('.s-row.is-detailed').length).toBeGreaterThan(3);
+    expect(box.querySelector('[data-step-mode="detailed"]')!.getAttribute('aria-pressed')).toBe('true');
+    box.querySelector('[data-step-mode="waterfall"]')!.click();
+    expect(page.stepMode()).toBe('waterfall');
+    expect(textOf(box.querySelector('.w-axis-say'))).toBe('steps, not time');
   });
 });

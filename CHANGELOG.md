@@ -419,7 +419,25 @@ only one of them moved.
   one row. Crossings, Busiest and Changes hid the Ways in list. `?` listed every
   key from the table the handlers read (`SHORTCUTS`), and ⌘K (Ctrl+K) opened a
   command list of the tabs, the open tab's actions and a search.
-- **The page's source in modules (P103).** `page.html` kept only its markup:
+- **One Steps view (P99).** The Walk tab went: Steps is the page's one view of
+  a way in, and everything that opened the Walk - a way in clicked on the left,
+  *Open in Steps* in the Graph's details, Start here, an old `#walk/<key>`
+  link - opens Steps on the same way in. Steps draws in one vocabulary of step
+  kinds, now with `view` (screen), `act` (user action) and `cfg` (reads
+  config), in a neutral chip, the service being the colour of the row's rule;
+  the legend lists every kind. A crossing into another service is a row of its
+  own again (*→ orders · requests*, trust only when not read from code) in
+  place of the *into orders* mark, and guards are said under the step they
+  stand in front of. A switch on the bar, remembered in the browser, draws the
+  steps *compact* (a line each, the file by its name, only the marks that
+  change the reading), *detailed* (every mark, the full path, logs, and the
+  settings a step reads as leaves) or as a *waterfall*: a bar per step in its
+  service's colour, laid out in steps, not time, on an axis that says so. The
+  steps above the Graph's drawing and the command list follow the switch. The
+  line under a cut list says whether the depth or the 300 rows left steps out,
+  and the second has a button for 300 more. `stepsOf` rows gained `start` and
+  `span` (units on the waterfall) and the result `cut`.
+- **The page's source in modules (P103). `page.html` kept only its markup:
   its styles moved to `page.css` and its script to one module per panel under
   `src/visualise/panels/`, each a factory handed the page so far, written in
   through placeholders `PAGE_PARTS` lists in order. The page the command wrote
