@@ -1,11 +1,14 @@
-import { mkdtempSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
-import { writeFileSync } from 'node:fs';
+import { describe, expect, it, vi } from 'vitest';
+import * as glob from './glob.js';
 import {
+  acceptedFor,
   acceptedKeyOf,
+  compileAccepted,
   covers,
+  describeAcceptedProblem,
   describeAccepted,
   gapIdOf,
   isRule,
@@ -13,13 +16,36 @@ import {
   routeOfSymbol,
   loadAccepted,
   parseGapId,
+  readAccepted,
   saveAccepted,
   splitAccepted,
   withAccepted,
   withoutAccepted,
 } from './accepted.js';
 
+/** A rename that can be told to fail, to show a write cut short leaves the file whole. */
+const renames = vi.hoisted(() => ({ fail: false }));
+vi.mock('node:fs', async (importOriginal) => {
+  const fs = await importOriginal<typeof import('node:fs')>();
+  return {
+    ...fs,
+    renameSync: (from: string, to: string) => {
+      if (renames.fail) throw new Error('rename stubbed to fail');
+      return fs.renameSync(from, to);
+    },
+  };
+});
+
+/** Every glob compiled, counted. */
+vi.mock('./glob.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./glob.js')>();
+  return { ...actual, compileGlob: vi.fn(actual.compileGlob) };
+});
+
 const AT = '2026-01-01T00:00:00.000Z';
+
+const dbIn = (prefix: string): string => join(mkdtempSync(join(tmpdir(), prefix)), 'graph.db');
+const writeRaw = (dbPath: string, text: string): void => writeFileSync(join(dbPath, '..', 'accepted.json'), text);
 
 describe('accepted gaps', () => {
   it('name a gap by service, file and reason, and read the name back', () => {
@@ -113,4 +139,138 @@ describe('accepted gaps', () => {
     expect(routeOfSymbol('GET /orders/:param')).toEqual({ method: 'GET', path: '/orders/:param' });
     expect(routeOfSymbol('OrdersController.list')).toBeUndefined();
   });
+
+  it('match a file glob in the grammar shapes uses: ? is one character, ** matches no segment too', () => {
+    const gap = (file: string) => ({ reason: 'r', file });
+    expect(covers({ reason: 'r', file: 'src/**/public.ts' }, gap('src/public.ts'))).toBe(true);
+    expect(covers({ reason: 'r', file: 'src/**/public.ts' }, gap('src/a/b/public.ts'))).toBe(true);
+    expect(covers({ reason: 'r', file: 'src/a?.ts' }, gap('src/ab.ts'))).toBe(true);
+    expect(covers({ reason: 'r', file: 'src/a?.ts' }, gap('src/a.ts'))).toBe(false);
+    expect(isRule({ reason: 'r', file: 'src/a?.ts' })).toBe(true);
+  });
 });
+
+describe('a file that cannot be read (P80)', () => {
+  // In the order the file is written in.
+  const ENTRIES = [
+    { reason: 'b', service: 's', note: 'kept', acceptedAt: AT },
+    { reason: 'a', note: '', acceptedAt: AT },
+  ];
+
+  it('is no problem when it is not there', () => {
+    expect(readAccepted(dbIn('flowatlas-accepted-none-'))).toEqual({ gaps: [] });
+  });
+
+  it('reads a good file as before, through the old name too', () => {
+    const db = dbIn('flowatlas-accepted-good-');
+    saveAccepted(db, ENTRIES);
+    expect(readAccepted(db)).toEqual({ gaps: ENTRIES });
+    expect(loadAccepted(db)).toEqual(ENTRIES);
+  });
+
+  it('says which of four ways it cannot be read, and accepts nothing', () => {
+    const cases: Array<[string, string, RegExp]> = [
+      ['{"acceptedFormatVersion": 2, "gaps": [\n<<<<<<< HEAD\n', 'unparseable', /JSON/],
+      ['', 'unparseable', /JSON/],
+      ['[]', 'invalid', /not an object/],
+      [JSON.stringify({ acceptedFormatVersion: 2, gaps: [{ note: '', acceptedAt: AT }] }), 'invalid', /^gaps\.0\.reason: /],
+      [JSON.stringify({ acceptedFormatVersion: 3, gaps: [] }), 'newer-version', /written by a newer flowatlas.*upgrade to change it/],
+      [JSON.stringify({ acceptedFormatVersion: 0, gaps: [] }), 'unknown-version', /acceptedFormatVersion 0 /],
+      [JSON.stringify({ acceptedFormatVersion: '2', gaps: [] }), 'unknown-version', /acceptedFormatVersion "2" /],
+      [JSON.stringify({ gaps: [] }), 'unknown-version', /no acceptedFormatVersion/],
+    ];
+    for (const [text, kind, detail] of cases) {
+      const db = dbIn('flowatlas-accepted-bad-');
+      writeRaw(db, text);
+      const read = readAccepted(db);
+      expect(read.gaps).toEqual([]);
+      expect(read.problem?.kind).toBe(kind);
+      expect(read.problem?.path).toBe(join(db, '..', 'accepted.json'));
+      expect(read.problem?.detail).toMatch(detail);
+      expect(loadAccepted(db)).toEqual([]);
+    }
+  });
+
+  it('is said in one sentence that names the file', () => {
+    expect(describeAcceptedProblem({ path: '/p/accepted.json', kind: 'unparseable', detail: 'Unexpected end of JSON input' })).toBe(
+      'accepted.json at /p/accepted.json cannot be read (Unexpected end of JSON input), so nothing in it is accepted',
+    );
+  });
+
+  it('is never left half-written: a failed rename leaves the old file and no temporary', () => {
+    const db = dbIn('flowatlas-accepted-atomic-');
+    saveAccepted(db, ENTRIES);
+    const before = readFileSync(join(db, '..', 'accepted.json'), 'utf8');
+    renames.fail = true;
+    try {
+      expect(() => saveAccepted(db, [{ reason: 'c', note: '', acceptedAt: AT }])).toThrow(/rename stubbed to fail/);
+    } finally {
+      renames.fail = false;
+    }
+    expect(readFileSync(join(db, '..', 'accepted.json'), 'utf8')).toBe(before);
+    expect(readdirSync(join(db, '..')).filter((name) => name.endsWith('.tmp'))).toEqual([]);
+    expect(existsSync(join(db, '..', 'accepted.json'))).toBe(true);
+  });
+});
+
+describe('compiled accepted rules (P80)', () => {
+  const ENTRIES = [
+    { reason: 'r', service: 'catalog', file: 'src/public/**', note: '', acceptedAt: AT },
+    { reason: 'route-unguarded', service: 'inventory', path: 'GET /levels/*', note: 'levels', acceptedAt: AT },
+    { reason: 'route-unguarded', path: '/health', note: '', acceptedAt: AT },
+    { reason: 'r', file: 'src/a?.ts', note: '', acceptedAt: AT },
+    { reason: 'exact', service: 's', file: 'src/x.ts', note: '', acceptedAt: AT },
+    { reason: 'everywhere', note: '', acceptedAt: AT },
+  ];
+  const GAPS = [
+    { reason: 'r', service: 'catalog', file: 'src/public/a/b.ts' },
+    { reason: 'r', service: 'catalog', file: 'src/private/a.ts' },
+    { reason: 'r', service: 'other', file: 'src/public/a.ts' },
+    { reason: 'route-unguarded', service: 'inventory', symbol: 'GET /levels/summary' },
+    { reason: 'route-unguarded', service: 'inventory', node: 'GET /levels/low' },
+    { reason: 'route-unguarded', service: 'inventory', symbol: 'POST /levels/summary' },
+    { reason: 'route-unguarded', service: 'any', symbol: 'DELETE /health' },
+    { reason: 'route-unguarded', service: 'inventory', symbol: 'LevelsController.low' },
+    { reason: 'r', file: 'src/ab.ts' },
+    { reason: 'r', file: 'src/a.ts' },
+    { reason: 'exact', service: 's', file: 'src/x.ts' },
+    { reason: 'exact', service: 's', file: 'src/y.ts' },
+    { reason: 'everywhere' },
+    { reason: 'none' },
+  ];
+
+  it('take exactly what covers takes, entry by entry and row by row', () => {
+    const rules = compileAccepted(ENTRIES);
+    for (const gap of GAPS) {
+      expect(rules.match(gap)).toBe(ENTRIES.find((entry) => covers(entry, gap)));
+      expect(acceptedFor(ENTRIES, gap)).toBe(rules.match(gap));
+    }
+  });
+
+  it('split rows in one pass, saying which entry took each', () => {
+    const split = compileAccepted(ENTRIES).split(GAPS);
+    expect(split.fresh).toEqual(GAPS.filter((gap) => !ENTRIES.some((entry) => covers(entry, gap))));
+    expect(split.accepted).toHaveLength(GAPS.length - split.fresh.length);
+    expect(split.byEntry).toHaveLength(GAPS.length);
+    expect(split.byEntry[3]).toBe(ENTRIES[1]);
+    expect(split.byEntry[1]).toBeUndefined();
+    expect(splitAccepted(ENTRIES, GAPS)).toEqual({ fresh: split.fresh, accepted: split.accepted });
+  });
+
+  it('match a row on what matchedAs says it is about', () => {
+    const rows = [{ reason: 'route-unguarded', service: 'inventory', line: 3 }];
+    const split = compileAccepted(ENTRIES).split(rows, (row) => ({ ...row, symbol: 'GET /levels/x' }));
+    expect(split.accepted).toEqual(rows);
+  });
+
+  it('compile each file glob once, however many rows they are asked about', () => {
+    const compiled = vi.mocked(glob.compileGlob);
+    compiled.mockClear();
+    const rules = compileAccepted(ENTRIES);
+    rules.split([...GAPS, ...GAPS, ...GAPS]);
+    for (const gap of GAPS) rules.match(gap);
+    // Two entries carry a glob: src/public/** and src/a?.ts.
+    expect(compiled).toHaveBeenCalledTimes(2);
+  });
+});
+

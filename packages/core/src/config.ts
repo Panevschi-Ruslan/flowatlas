@@ -1,8 +1,9 @@
-import { existsSync, readdirSync, readFileSync, statSync, type Dirent } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { z } from 'zod';
 import { isUniversalMethod } from './adapters/db.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
+import { expandGlob } from './glob.js';
 import { ENTRY_KINDS } from './model/nodes.js';
 import { requestReadingSchema } from './request.js';
 
@@ -1370,7 +1371,8 @@ export const packageSourcesFor = (
  * The project's list and then the service's own, each path or glob relative to
  * the configuration's directory; a glob is expanded against the disk and a
  * plain path is kept whether or not it is there, so a file named and missing is
- * a row (`shape-file-unread`) rather than nothing.
+ * a row (`shape-file-unread`) rather than nothing. The grammar is `glob.ts`'s,
+ * the one an accepted `file` rule is read with too.
  */
 export const shapesFor = (
   config: Pick<FlowatlasConfig, 'shapes'> | undefined,
@@ -1380,64 +1382,7 @@ export const shapesFor = (
   const patterns = [...(config?.shapes ?? []), ...(service?.shapes ?? [])];
   const out: string[] = [];
   for (const pattern of patterns) {
-    for (const path of expandPattern(configDir, pattern)) if (!out.includes(path)) out.push(path);
+    for (const path of expandGlob(configDir, pattern)) if (!out.includes(path)) out.push(path);
   }
   return out;
-};
-
-/** Directories a glob over shape files never walks into. */
-const NEVER_WALKED = new Set(['node_modules', '.git']);
-
-/** One path segment of a glob as a test on a name. */
-const segmentTest = (segment: string): RegExp =>
-  new RegExp(
-    `^${segment
-      .split('')
-      .map((char) => (char === '*' ? '[^/]*' : char === '?' ? '[^/]' : char.replace(/[.+^${}()|[\]\\]/g, '\\$&')))
-      .join('')}$`,
-  );
-
-/**
- * The files a path or glob names, absolute and sorted. `*` and `?` match within
- * one segment, `**` any number of them; anything else is a literal path.
- */
-const expandPattern = (base: string, pattern: string): string[] => {
-  const written = pattern.replace(/\\/g, '/');
-  if (!/[*?]/.test(written)) return [isAbsolute(written) ? written : resolve(base, written)];
-  const absolute = isAbsolute(written) ? written : resolve(base, written).split('\\').join('/');
-  const segments = absolute.split('/');
-  const fixed = segments.findIndex((segment) => /[*?]/.test(segment));
-  const start = segments.slice(0, fixed).join('/') || '/';
-  const rest = segments.slice(fixed);
-  const found: string[] = [];
-  const walk = (dir: string, at: number): void => {
-    const segment = rest[at];
-    if (segment === undefined) return;
-    let entries: Dirent[];
-    try {
-      entries = readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    const last = at === rest.length - 1;
-    if (segment === '**') {
-      walk(dir, at + 1);
-      for (const entry of entries) {
-        if (entry.isDirectory() && !NEVER_WALKED.has(entry.name)) walk(join(dir, entry.name), at);
-      }
-      return;
-    }
-    const test = segmentTest(segment);
-    for (const entry of entries) {
-      if (!test.test(entry.name)) continue;
-      const path = join(dir, entry.name);
-      if (last) {
-        if (entry.isFile()) found.push(path);
-      } else if (entry.isDirectory() && !NEVER_WALKED.has(entry.name)) {
-        walk(path, at + 1);
-      }
-    }
-  };
-  walk(start, 0);
-  return [...new Set(found)].sort();
 };

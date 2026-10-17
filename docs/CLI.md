@@ -1216,7 +1216,13 @@ are still worth a shape file.
 
 **Accepted gaps.** A gap accepted with `flowatlas accept` is left out of every
 count, the text says how many accepted gaps were left out, and `doctor.json`
-says the same under `unresolved.accepted`.
+says the same under `unresolved.accepted`. A gap is matched the same way here,
+under `--unresolved`, on the page and in the graph server: demoted first where
+an annotation answers it, and on the route it is about even when the row was
+read back from the database without its symbol. An `accepted.json` that cannot
+be read is a warning line here and `unresolved.accepted.problem` (`path`,
+`kind`: `unparseable`, `invalid`, `newer-version` or `unknown-version`,
+`detail`) in the file, and nothing is left out; see `accept` below.
 
 `--strict` on a project with no baseline yet exits 2, not 1: there is nothing to
 compare against, which is a different answer from "something got worse". Write
@@ -1439,7 +1445,7 @@ flowatlas accept channel-dynamic --service billing --remove
 |---|---|---|
 | `--config <path>` / `--db <path>` | found from the working directory | which graph to accept against |
 | `--service <name>` | every one | accept the reason only in this service |
-| `--file <path>` | every file | only in this repository-relative file, or every file a glob names (`src/public/**`) |
+| `--file <path>` | every file | only in this repository-relative file, or every file a glob names (`src/public/**`; see *Globs* below) |
 | `--path <pattern>` | none | a route finding on every route a pattern names: `GET /api/public/*`, or `/api/public/*` for every method |
 | `--note <text>` | none | why; required for a rule (`--path` or a file glob) |
 | `--dry-run` | off | list what would be accepted and write nothing |
@@ -1451,6 +1457,30 @@ graph server's `search` returns it. A reason on its own accepts it everywhere;
 `--service`, `--file` and `--path` narrow it. A target no current gap matches is
 refused, so a typo does not accept nothing silently. Accepting routes by rule
 is described under `doctor` above.
+
+**A file that cannot be read.** An `accepted.json` that is not JSON (a merge
+conflict, a truncated write), is JSON of the wrong shape (an entry without a
+`reason`), or carries an `acceptedFormatVersion` this version does not know is
+never read as empty and never written over. Adding and `--remove` exit 2,
+naming the file and what is wrong with it, and leave it byte for byte as it
+was; a file written by a newer flowatlas says to upgrade. `--list` and
+`--dry-run` still run and say the problem first. Every surface that reads the
+file - `doctor` (a warning line, and `unresolved.accepted.problem` in
+`doctor.json`), `doctor --unresolved`, `shapes --suggest`, `visualise` (the
+build output and the accepted bar) and the graph server's `cant_follow` and
+`search` (a `note`) - says so and accepts nothing, so every gap is counted as
+new until the file is fixed or moved. The file is written through a temporary
+renamed into place, so an interrupted write leaves the old file whole.
+
+**Globs.** One grammar, shared by an accepted `--file` rule and by `shapes`:
+separators are `/` (a `\` is read as one); `*` is any run of characters within
+one segment; `?` is one character within one segment; `**` as a whole segment
+is zero or more segments, so `src/**/x.ts` matches `src/x.ts` as well as
+`src/a/b/x.ts`, and `src/public/**` everything under `src/public`; `**` inside
+a segment is two `*`; everything else, dots and brackets included, is literal.
+A route pattern (`--path`, `doctor.publicRoutes`) is not a path on disk and
+keeps its own rule: `*` is any run of characters, `/` included, so
+`GET /api/*` covers `/api/a/b`.
 
 ### `flowatlas diff <base-ref> [head-ref]`
 
@@ -1513,7 +1543,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `infra.vars` | string[] | none | for a service read from Terraform: the variable files a deployment is read with, in order, relative to the service's directory (`["infra/env/dev.tfvars"]`). Without it, a name two files set differently is reported, never picked |
 | `readTestDirectories` | string[] | `[]` | directories named like tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`, `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) that hold code the application runs, relative to the service's directory: `["src/fixtures"]` |
 | `builtInShapes` | boolean | project setting | whether the reader's built-in declaration shapes stand in for packages this service has not installed; `false` turns them off for this service alone |
-| `shapes` | string[] | none | shape files this service reads beside the project's, as paths or globs relative to the configuration; added to the project's list |
+| `shapes` | string[] | none | shape files this service reads beside the project's, as paths or globs relative to the configuration (the grammar under `accept`, *Globs*); added to the project's list |
 | `packageSources` | boolean or `"services"` | project setting | where this service reads the source of a package it has not installed; overrides the project setting |
 
 **A directory named like tests is not read, and says so.** Test code is left out

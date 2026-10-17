@@ -1,15 +1,15 @@
 import {
   causeLabel,
+  describeAcceptedProblem,
   groupCantFollow,
-  loadAccepted,
   packageCoverage,
   placeIdOf,
-  splitAccepted,
+  readAccepted,
   type CantFollow,
   type CantFollowSample,
   type PackageCover,
 } from '@flowatlas/core';
-import type { AnchoredUnresolvedRow, GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { MAX_NEXT, withNext } from '../query/next.js';
@@ -45,6 +45,8 @@ export interface CantFollowAnswer extends Omit<CantFollow, 'causes'> {
   }>;
   /** Gaps accepted with `flowatlas accept`, out of every count above. */
   accepted?: { rows: number; sites: number };
+  /** Set when `accepted.json` could not be read, so nothing was left out (P80). */
+  note?: string;
 }
 
 
@@ -140,7 +142,8 @@ export const registerCantFollow = (server: McpServer, ctx: ToolContext): void =>
     },
     (input) =>
       withDb(ctx.handle, (db) => {
-        const split = splitAccepted(loadAccepted(ctx.handle.path), db.allUnresolved());
+        // Demoted, matched on routes and split as doctor --unresolved does (P80).
+        const split = acceptedSplitOf(db, db.allUnresolved(), readAccepted(ctx.handle.path));
         const answer = cantFollowFor(db, split.fresh, {
           top: input.top,
           samples: input.samples,
@@ -151,7 +154,8 @@ export const registerCantFollow = (server: McpServer, ctx: ToolContext): void =>
         const accepted = split.accepted.length === 0
           ? {}
           : { accepted: { rows: split.accepted.length, sites: split.accepted.reduce((sum, row) => sum + row.sites, 0) } };
-        return withNext({ ...answer, ...accepted }, nextOf(answer, input));
+        const note = split.problem === undefined ? {} : { note: `${describeAcceptedProblem(split.problem)}.` };
+        return withNext({ ...answer, ...accepted, ...note }, nextOf(answer, input));
       }),
   );
 };

@@ -148,8 +148,16 @@ export interface DoctorReport {
     /** Places where nothing joins. Reported, never added to anything. */
     nothing: { rows: number; sites: number };
     excluded: { reasons: string[]; sites: number };
-    /** Gaps `accepted.json` names (P72): out of every count above, present only when there are some. */
-    accepted?: { rows: number; sites: number };
+    /**
+     * Gaps `accepted.json` names (P72): out of every count above, present only
+     * when there are some or the file could not be read. `problem` says why it
+     * accepted nothing (P80): every row is then counted as new.
+     */
+    accepted?: {
+      rows: number;
+      sites: number;
+      problem?: { path: string; kind: 'unparseable' | 'invalid' | 'newer-version' | 'unknown-version'; detail: string };
+    };
     byReason: ReasonGroup[];
     /** Reasons the catalogue has never heard of, each named once. */
     unknownReasons: string[];
@@ -268,6 +276,13 @@ export const doctorReportSchema = z.object({
       .object({
         rows: z.number().int().nonnegative(),
         sites: z.number().int().nonnegative(),
+        problem: z
+          .object({
+            path: z.string(),
+            kind: z.enum(['unparseable', 'invalid', 'newer-version', 'unknown-version']),
+            detail: z.string(),
+          })
+          .optional(),
       })
       .optional(),
     byReason: z.array(

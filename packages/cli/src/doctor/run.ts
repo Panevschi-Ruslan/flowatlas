@@ -10,7 +10,7 @@
 import { tally, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
-import type { GraphDb, ServiceReport } from '@flowatlas/linker';
+import { withAnsweredDemoted, type GraphDb, type ServiceReport } from '@flowatlas/linker';
 import { halfOf } from '../readers.js';
 import {
   compareBaseline,
@@ -20,8 +20,6 @@ import {
   type UnresolvedSnapshot,
 } from './baseline.js';
 import {
-  ANSWERED_HINT,
-  answeredByMarker,
   requestsAround,
   genericHint,
   hintFor,
@@ -29,7 +27,7 @@ import {
   kindHint,
   type HintContext,
 } from './hints.js';
-import { callerOfProducer, validateMarkers, type MarkerIssue } from './markers.js';
+import { validateMarkers, type MarkerIssue } from './markers.js';
 import { mostlyUnread, noWayInSentence, waysInByService, waysInTotal, type WaysIn } from './ways-in.js';
 import {
   DOCTOR_FORMAT_VERSION,
@@ -481,61 +479,8 @@ const desyncOf = (
 
 const onService = (row: Unresolved, service: string): boolean => (row.service ?? '') === service;
 
-/**
- * The rows again, with the ones an annotation has already answered demoted.
- *
- * A row saying "annotate this" that the joined graph can see is annotated is
- * not something to act on: acting on it means writing an annotation that is
- * already there. It was counted in the number at the top of the section, which
- * is the whole argument for reading the section, and it was a row the baseline
- * could never be cleared of, because nothing anybody writes can clear it (R36).
- *
- * Applied once, at the top, so the count, the grouping, the fold and the
- * baseline are all looking at the same rows. Idempotent: a row already at
- * `info` is left as it is.
- */
-export const withAnsweredDemoted = (
-  rows: readonly Unresolved[],
-  db: Pick<GraphDb, 'node' | 'nodesByType' | 'allNodes' | 'edgesFrom' | 'edgesTo'>,
-): Unresolved[] => {
-  // Both kinds of outgoing request: one row's node is the call it names, and a
-  // browser request was never indexed here at all, so no `api-path-dynamic`
-  // row could find its node to be answered (R39).
-  const callsAt = new Map<string, GraphNode>();
-  for (const type of ['http_out', 'ui_api_call'] as const) {
-    for (const call of db.nodesByType(type)) {
-      callsAt.set(`${call.repo}|${call.file ?? ''}|${call.line ?? 0}`, call);
-    }
-  }
-  /**
-   * Methods by the name a row calls them, within the file they are declared in.
-   *
-   * A row read off one repository names its symbol as it is written rather
-   * than by id: the method, then what about it could not be read. The line is
-   * the line of the *call*, not of the method, so the join is the name and the
-   * file — the same join `doctor` already makes to put a marker issue on a row.
-   * A row about a publish names the producer instead, and its method is the one
-   * that calls it (R177).
-   */
-  const methodsAt = new Map<string, GraphNode>();
-  for (const node of db.allNodes()) {
-    if (node.type !== 'method') continue;
-    methodsAt.set(`${node.repo}|${node.file ?? ''}|${node.label}`, node);
-  }
-  const idFor = (row: Unresolved): string | undefined => {
-    if (row.symbol !== undefined && db.node(row.symbol) !== undefined) return callerOfProducer(db, row.symbol) ?? row.symbol;
-    const here = callsAt.get(`${row.service ?? ''}|${row.file}|${row.line}`);
-    if (here !== undefined) return here.id;
-    if (row.symbol === undefined) return undefined;
-    const named = row.symbol.split(' -> ')[0] ?? row.symbol;
-    return methodsAt.get(`${row.service ?? ''}|${row.file}|${named}`)?.id;
-  };
-  return rows.map((row) =>
-    (row.level ?? 'action') === 'action' && answeredByMarker(row.reason, idFor(row), db)
-      ? { ...row, level: 'info' as const, hint: ANSWERED_HINT }
-      : row,
-  );
-};
+/** Moved to the linker (P80), so every surface demotes the same rows; re-exported for the callers that found it here. */
+export { withAnsweredDemoted };
 
 /**
  * Runs the check over an opened graph.

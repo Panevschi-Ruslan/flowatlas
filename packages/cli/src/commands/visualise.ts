@@ -1,7 +1,7 @@
-import { loadAccepted } from '@flowatlas/core';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
-import { loadConfig } from '@flowatlas/core';
+import { describeAcceptedProblem, loadConfig, readAccepted } from '@flowatlas/core';
+import { acceptedSplitOf } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
 import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
@@ -132,7 +132,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
   const editor = editorFor(options);
   const db = openDbFromOptions(options);
   const observed = loadObserved(dbPathFor(options));
-  const accepted = loadAccepted(dbPathFor(options));
+  const read = readAccepted(dbPathFor(options));
   let packed;
   let counts;
   try {
@@ -141,15 +141,18 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
     const nodes = db.allNodes();
     const edges = db.allEdges();
     counts = { nodes: nodes.length, edges: edges.length };
+    // The rows as every other surface counts them: demoted where an annotation
+    // answered them, and split by what was accepted, once (P80).
+    const split = acceptedSplitOf(db, db.allUnresolved(), read);
     packed = packGraph({
       builtAt: report.builtAt,
       nodes,
       edges,
-      unresolved: db.allUnresolved(),
+      unresolved: split.rows,
       report,
       typeOf: (id) => db.type(id),
       ...(observed === undefined ? {} : { observed }),
-      ...(accepted.length === 0 ? {} : { accepted }),
+      accepted: split,
       ...(editor === undefined ? {} : { editor }),
       ...(options.changes === undefined ? {} : { changes: options.changes }),
     });
@@ -168,6 +171,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
   writeFileSync(path, page, 'utf8');
 
   const result = { path, bytes: Buffer.byteLength(page), ...counts };
+  if (read.problem !== undefined) print(`warning: ${describeAcceptedProblem(read.problem)}`);
   print(
     `${result.nodes.toLocaleString()} nodes, ${result.edges.toLocaleString()} edges, ` +
       `${Math.round(result.bytes / 1024)}KB`,

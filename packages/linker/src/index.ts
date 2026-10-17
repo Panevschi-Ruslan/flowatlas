@@ -80,6 +80,19 @@ export type {
   UnresolvedCount,
 } from './diff/types.js';
 export { GraphDb, GraphStore, openGraphDb } from './db/reader.js';
+export { acceptedSplitOf } from './db/accepted-split.js';
+export type { AcceptedSplitOf, SplitRow } from './db/accepted-split.js';
+export {
+  ANSWERED_HINT,
+  answeredByMarker,
+  callerOfProducer,
+  canonicalReason,
+  coversEveryUnread,
+  MARKER_ANSWERS,
+  requestsAround,
+  withAnsweredDemoted,
+} from './answered.js';
+export type { DemotableRow, MarkerGraph } from './answered.js';
 export type {
   AnchoredUnresolvedRow,
   SearchOptions,

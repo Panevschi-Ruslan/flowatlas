@@ -153,6 +153,8 @@ export {
 export type { RenderOptions, Renderer, RepoPalette, SourceBlock } from './render/index.js';
 export { runCycles, CYCLE_EDGES } from './commands/cycles.js';
 export { runDead } from './commands/dead.js';
+export { registerAccept, runAccept, targetOf } from './commands/accept.js';
+export type { AcceptOptions, AcceptRun } from './commands/accept.js';
 export {
   registerDoctor,
   runCantFollowCommand,

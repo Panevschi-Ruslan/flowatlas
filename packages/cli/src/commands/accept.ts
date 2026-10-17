@@ -15,20 +15,28 @@
  *
  * A rule goes on accepting rows nobody has looked at, so it must say why
  * (`--note`), and `--dry-run` lists what it would take before it is written.
+ *
+ * A file that cannot be read is never written over (P80): adding and
+ * `--remove` refuse, naming the file and what is wrong with it, and `--list`
+ * and `--dry-run` say so first. Reading it as empty and saving one entry used
+ * to wipe every other entry and rule in it.
  */
 import {
+  ACCEPTED_FILE,
   acceptedKeyOf,
-  covers,
+  compileAccepted,
   describeAccepted,
-  isFileGlob,
+  describeAcceptedProblem,
   isGapId,
+  isGlob,
   isRule,
-  loadAccepted,
   parseGapId,
+  readAccepted,
   saveAccepted,
   withAccepted,
   withoutAccepted,
   type AcceptedGap,
+  type AcceptedProblem,
   type GapLike,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
@@ -53,6 +61,8 @@ export interface AcceptOptions extends DbOptions {
 export interface AcceptRun {
   path: string | null;
   accepted: AcceptedGap[];
+  /** Why `accepted.json` could not be read, on a `--list` or `--dry-run` that still ran. */
+  problem?: AcceptedProblem;
   /** Gaps in the current graph the change covers. */
   covered: number;
   /** On a dry run: what the target would accept, as `file:line  message`. */
@@ -81,37 +91,62 @@ const describe = (gap: GapLike): string =>
 const DRY_RUN_LIMIT = 20;
 
 /** A rule names more than one place, and must say why it is accepted. */
-const isWideRule = (target: GapLike): boolean => target.path != null || (target.file != null && isFileGlob(target.file));
+const isWideRule = (target: GapLike): boolean => target.path != null || (target.file != null && isGlob(target.file));
+
+/** What to do about a file that cannot be read, said after the problem. */
+const FIX_HINT = 'Fix or move the file; flowatlas accept --list shows what it holds once it reads.';
+
+/** The stop for a writer handed a file it cannot read: nothing is written over it. */
+const refusal = (problem: AcceptedProblem) =>
+  cannotRun(`${ACCEPTED_FILE} at ${problem.path} cannot be read (${problem.detail}); nothing was written`, [FIX_HINT]);
 
 export const runAccept = (argument: string | undefined, options: AcceptOptions = {}): AcceptRun => {
   const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
   const dbPath = dbPathFor(options);
-  const current = loadAccepted(dbPath);
+  const { gaps: current, problem } = readAccepted(dbPath);
+  const withProblem = problem === undefined ? {} : { problem };
 
   if (options.list === true || argument === undefined) {
+    if (problem !== undefined) {
+      print(`${describeAcceptedProblem(problem)}.`);
+      print(FIX_HINT);
+      return { path: null, accepted: current, covered: 0, ...withProblem };
+    }
     if (current.length === 0) print('no gap is accepted');
     for (const gap of current) print(`${isRule(gap) ? 'rule  ' : ''}${describe(gap)}  ${gap.note}`);
     return { path: null, accepted: current, covered: 0 };
   }
 
   const target = targetOf(argument, options);
+  // Before the graph is opened: whatever else is wrong, the file comes first.
+  if (problem !== undefined && options.dryRun !== true) throw refusal(problem);
+  const entry: AcceptedGap = {
+    reason: target.reason,
+    ...(target.service == null ? {} : { service: target.service }),
+    ...(target.file == null ? {} : { file: target.file }),
+    ...(target.path == null ? {} : { path: target.path }),
+    note: options.note ?? '',
+    acceptedAt: options.acceptedAt ?? new Date().toISOString(),
+  };
   const db = openDbFromOptions(options);
   let matchedRows: ReturnType<typeof db.allUnresolved>;
   try {
-    matchedRows = db.allUnresolved().filter((row) => covers(target, row));
+    const rule = compileAccepted([entry]);
+    matchedRows = db.allUnresolved().filter((row) => rule.match(row) !== undefined);
   } finally {
     db.close();
   }
   const covered = matchedRows.length;
 
   if (options.dryRun === true) {
+    if (problem !== undefined) print(`${describeAcceptedProblem(problem)}; writing this would be refused.`);
     const matched = matchedRows.map(
       (row) => `${row.service ?? ''}  ${row.file ?? ''}${row.line === null ? '' : `:${row.line}`}  ${row.message}`,
     );
     print(`would accept: ${describeAccepted(target)} (${covered} gap${covered === 1 ? '' : 's'})`);
     for (const line of matched.slice(0, DRY_RUN_LIMIT)) print(`  ${line}`);
     if (matched.length > DRY_RUN_LIMIT) print(`  ... and ${matched.length - DRY_RUN_LIMIT} more`);
-    return { path: null, accepted: current, covered, matched };
+    return { path: null, accepted: current, covered, matched, ...withProblem };
   }
 
   if (options.remove === true) {
@@ -133,14 +168,6 @@ export const runAccept = (argument: string | undefined, options: AcceptOptions =
       `It would accept ${covered} gap${covered === 1 ? '' : 's'} today; --dry-run lists them.`,
     ]);
   }
-  const entry: AcceptedGap = {
-    reason: target.reason,
-    ...(target.service == null ? {} : { service: target.service }),
-    ...(target.file == null ? {} : { file: target.file }),
-    ...(target.path == null ? {} : { path: target.path }),
-    note: options.note ?? '',
-    acceptedAt: options.acceptedAt ?? new Date().toISOString(),
-  };
   const next = withAccepted(current, entry);
   const path = saveAccepted(dbPath, next);
   print(`accepted: ${describe(target)} (${covered} gap${covered === 1 ? '' : 's'})`);

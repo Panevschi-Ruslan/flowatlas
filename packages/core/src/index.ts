@@ -602,8 +602,11 @@ export {
   acceptedFor,
   acceptedKeyOf,
   acceptedPathFor,
+  compileAccepted,
+  compileRoutePattern,
   covers,
   describeAccepted,
+  describeAcceptedProblem,
   gapIdOf,
   isFileGlob,
   isGapId,
@@ -611,6 +614,7 @@ export {
   loadAccepted,
   matchesRoutePattern,
   parseGapId,
+  readAccepted,
   routeOfSymbol,
   routePatternOf,
   saveAccepted,
@@ -620,7 +624,19 @@ export {
 } from './accepted.js';
 export { ACCESS_META, ACCESS_WHERE, accessOf, OPT_OUT_WORDS, PUBLIC_WORDS, soundsLikeOptOut, soundsPublic } from './access.js';
 export type { AccessGuard, AccessOptOut, AccessWhere, RouteAccess } from './access.js';
-export type { AcceptedFile, AcceptedGap, GapLike } from './accepted.js';
+export type {
+  AcceptedFile,
+  AcceptedGap,
+  AcceptedProblem,
+  AcceptedProblemKind,
+  AcceptedRead,
+  AcceptedRules,
+  AcceptedSplit,
+  GapLike,
+  RoutePattern,
+} from './accepted.js';
+export { compileGlob, expandGlob, isGlob, NEVER_WALKED } from './glob.js';
+export type { Glob } from './glob.js';
 export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, settleFailures } from './failures.js';
 export type { Failure, FailureSource } from './failures.js';
 

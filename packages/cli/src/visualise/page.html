@@ -1687,6 +1687,7 @@
   .access-list { list-style: none; margin: 4px 0 0; padding: 0; }
   .access-list li { padding: 3px 0; border-top: 1px solid var(--rule-soft); font-size: 12px; overflow-wrap: anywhere; }
   .access-list .is-off { color: var(--muted); text-decoration: line-through; }
+  .accepted-problem { color: var(--warn); font-weight: 600; }
   .accepted-rules { margin: 6px 0 0; padding: 0 0 0 18px; font-size: 12px; color: var(--muted); }
   .accepted-rules code, .accept-cmd { font-family: var(--f-mono); font-size: 11.5px; overflow-wrap: anywhere; }
   .accept-cmd { display: block; margin: 4px 0 0; color: var(--ink); }
@@ -2591,6 +2592,8 @@ __STEPS_LOGIC__
           acceptedRulesHtml();
         bar.querySelector('input').addEventListener('change', (event) => { showAccepted = event.target.checked; drawMissing(); });
       }
+      /* An accepted.json that could not be read accepts nothing, and says so (P80). */
+      if (accepted.problem) bar.insertAdjacentHTML('beforeend', `<span class="hint accepted-problem">${esc(accepted.problem)}</span>`);
       const table = document.createElement('table');
       table.innerHTML = '<thead><tr><th>Reason</th><th class="num">Count</th><th>One of them</th></tr></thead>';
       const body = document.createElement('tbody');
@@ -2620,7 +2623,7 @@ __STEPS_LOGIC__
       sheet.className = 'sheet';
       sheet.append(table);
       if (showAccepted && accepted.rows.length > 0) sheet.insertAdjacentHTML('beforeend', acceptedListHtml());
-      walkEl.replaceChildren(...(accepted.rows.length > 0 ? [bar] : []), sheet);
+      walkEl.replaceChildren(...(accepted.rows.length > 0 || accepted.problem ? [bar] : []), sheet);
       if (cantFollow !== null) walkEl.insertAdjacentHTML('beforeend', cantFollowHtml());
       appendUnmatched();
     }

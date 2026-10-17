@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { saveAccepted, SCHEMA_VERSION, type ProjectGraph } from '@flowatlas/core';
@@ -157,6 +157,21 @@ describe('search', () => {
     ]);
     expect(found.results.gaps[0].accepted).toBeUndefined();
     expect(found.results.gaps[1]).toMatchObject({ accepted: true, note: 'known; read by name' });
+  });
+
+  it('says an accepted.json it cannot read, and marks nothing accepted (P80)', async () => {
+    const file = join(dbPath, '..', 'accepted.json');
+    const good = readFileSync(file, 'utf8');
+    try {
+      writeFileSync(file, good.replace('"acceptedFormatVersion": 2', '"acceptedFormatVersion": 3'));
+      const found = await call('search', { query: 'orders', kinds: ['gaps'] });
+      expect(found.results.gaps.every((gap: { accepted?: true }) => gap.accepted === undefined)).toBe(true);
+      expect(found.note).toMatch(/^accepted\.json at .* cannot be read \(format version 3 was written by a newer flowatlas/);
+      // A search that shows no gap has nothing to say about them.
+      expect((await call('search', { query: 'coupon' })).note).toBeUndefined();
+    } finally {
+      writeFileSync(file, good);
+    }
   });
 
   it('finds the ways in that can fail with an exception, by its name or status', async () => {

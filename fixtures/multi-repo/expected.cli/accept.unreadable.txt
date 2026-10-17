@@ -1,0 +1,6 @@
+accepted.json at <copy>/accepted.json cannot be read (Unexpected token '<', ...""gaps": [ <<<<<<< HE"... is not valid JSON), so nothing in it is accepted.
+Fix or move the file; flowatlas accept --list shows what it holds once it reads.
+--- stderr ---
+accepted.json at <copy>/accepted.json cannot be read (Unexpected token '<', ...""gaps": [ <<<<<<< HE"... is not valid JSON); nothing was written
+Fix or move the file; flowatlas accept --list shows what it holds once it reads.
+exit 2

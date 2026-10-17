@@ -20,7 +20,10 @@ import {
   type RecordedMarker,
   type Unresolved,
 } from '@flowatlas/core';
-import { isMatch, matchRoute, type GraphDb } from '@flowatlas/linker';
+import { callerOfProducer, isMatch, matchRoute, type GraphDb } from '@flowatlas/linker';
+
+/** Moved to the linker with the demotion that asks it (P80); re-exported for the callers that found it here. */
+export { callerOfProducer } from '@flowatlas/linker';
 
 /**
  * What can be wrong with an annotation.
@@ -111,16 +114,6 @@ const literal = (marker: RecordedMarker, index = 0): string | undefined => {
   const value = marker.args[index];
   return typeof value === 'string' ? value : undefined;
 };
-
-/**
- * The body that makes the call a row names, when the row names a producer.
- *
- * A row about a publish or a start names the producer drawn for the call,
- * which is the node a walk passes (R177); the annotation that would answer it
- * is written on the body that calls it.
- */
-export const callerOfProducer = (db: Pick<GraphDb, 'node' | 'edgesTo'>, id: string): string | undefined =>
-  db.node(id)?.type === 'producer' ? db.edgesTo(id, ['calls'])[0]?.from : undefined;
 
 /**
  * Whether a recorded row sits at this method.

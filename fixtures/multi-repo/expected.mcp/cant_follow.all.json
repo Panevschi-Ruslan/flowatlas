@@ -53,7 +53,7 @@
       "reasons": [
         "api-path-dynamic"
       ],
-      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.",
+      "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.",
       "services": [
         "web"
       ],
@@ -170,7 +170,7 @@
       "reasons": [
         "dynamic-http-url"
       ],
-      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.",
       "services": [
         "gateway"
       ],

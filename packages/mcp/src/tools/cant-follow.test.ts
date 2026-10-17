@@ -1,4 +1,7 @@
+import { appendFileSync, cpSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { saveAccepted } from '@flowatlas/core';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -114,3 +117,46 @@ describe('cant_follow on a project read without an install (P78)', () => {
     }
   });
 });
+
+describe('cant_follow and accepted.json (P80)', () => {
+  let ruled: Client;
+  let dbPath: string;
+
+  beforeAll(async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'flowatlas-mcp-accepted-'));
+    cpSync(join(ROOT, 'fixtures', 'nest-route-access', '.flowatlas'), directory, { recursive: true });
+    dbPath = join(directory, 'graph.db');
+    saveAccepted(dbPath, [
+      { reason: 'route-unguarded', service: 'inventory', path: 'GET /levels/*', note: 'published', acceptedAt: '2026-01-01T00:00:00.000Z' },
+    ]);
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+    await createFlowatlasServer({ dbPath }).connect(serverSide);
+    ruled = new Client({ name: 'test', version: '0' });
+    await ruled.connect(clientSide);
+  });
+
+  afterAll(async () => {
+    await ruled.close();
+  });
+
+  const ask = async (args: Record<string, unknown> = {}): Promise<any> => {
+    const response = (await ruled.callTool({ name: 'cant_follow', arguments: args })) as { content: Array<{ text: string }> };
+    return JSON.parse(response.content[0]!.text);
+  };
+
+  it('lets a route rule take the rows it takes in doctor', async () => {
+    const answer = await ask();
+    expect(answer.accepted).toEqual({ rows: 2, sites: 2 });
+    expect(answer.note).toBeUndefined();
+  });
+
+  it('says a file it cannot read, and leaves nothing out', async () => {
+    const before = await ask();
+    appendFileSync(join(dbPath, '..', 'accepted.json'), '}');
+    const answer = await ask();
+    expect(answer.accepted).toBeUndefined();
+    expect(answer.note).toMatch(/^accepted\.json at .* cannot be read \(.*\), so nothing in it is accepted\.$/);
+    expect(answer.total.sites).toBe(before.total.sites + before.accepted.sites);
+  });
+});
+

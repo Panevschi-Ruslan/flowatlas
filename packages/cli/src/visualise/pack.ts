@@ -1,4 +1,15 @@
-import { acceptedFor, describeAccepted, gapIdOf, isRule, splitAccepted, STEP_OF_META, type AcceptedGap, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
+import {
+  describeAccepted,
+  describeAcceptedProblem,
+  gapIdOf,
+  isRule,
+  STEP_OF_META,
+  type AcceptedGap,
+  type AcceptedProblem,
+  type GraphEdge,
+  type GraphNode,
+  type TypeEntry,
+} from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type PackedMap } from './map-pack.js';
@@ -131,6 +142,10 @@ export interface PackedGraph {
    * (`route-unguarded · service catalog · path GET /public/*`), and `byRule`
    * the rule each such row was taken by, by position. Both absent when no row
    * was taken by a rule.
+   *
+   * `problem` is the sentence for an `accepted.json` that could not be read
+   * (P80), shown on the accepted bar; nothing is accepted then. Present with
+   * empty rows only for that.
    */
   accepted?: {
     rows: number[];
@@ -138,6 +153,7 @@ export interface PackedGraph {
     notes: Record<string, string>;
     rules?: string[];
     byRule?: Record<string, number>;
+    problem?: string;
   };
   /** What stands in front of each way in, and from where (P76). See `access.ts`. */
   access?: PackedAccess;
@@ -324,22 +340,42 @@ export interface PackInput {
   typeOf?: (id: string) => TypeEntry | undefined;
   /** What `flowatlas observe` wrote, when it did. */
   observed?: Observed;
-  /** What `flowatlas accept` wrote, when it did. */
-  accepted?: readonly AcceptedGap[];
+  /**
+   * What `flowatlas accept` wrote, as the one split worked it out over
+   * `unresolved` (`acceptedSplitOf` in the linker, P80): the entry that took
+   * each row by position, and the file's problem when it could not be read.
+   */
+  accepted?: PackAccepted;
   /** What `visualise --diff` compared, already packed. */
   changes?: PackedChanges;
 }
 
+/** The split, as the page needs it: `byEntry` lines up with the rows packed. */
+export interface PackAccepted {
+  byEntry: ReadonlyArray<AcceptedGap | undefined>;
+  problem?: AcceptedProblem;
+}
+
+/**
+ * One pass over the rows: what the accepted bar marks, and the rows left for
+ * the breakdown of what could not be followed. Nothing is matched here; the
+ * split already said which entry took each row.
+ */
 const packAccepted = (
-  accepted: readonly AcceptedGap[],
+  accepted: PackAccepted | undefined,
   rows: readonly AnchoredUnresolvedRow[],
-): NonNullable<PackedGraph['accepted']> => {
+): { packed?: NonNullable<PackedGraph['accepted']>; fresh: AnchoredUnresolvedRow[] } => {
+  if (accepted === undefined) return { fresh: [...rows] };
   const out: NonNullable<PackedGraph['accepted']> = { rows: [], ids: {}, notes: {} };
+  const fresh: AnchoredUnresolvedRow[] = [];
   const rules: string[] = [];
   const byRule: Record<string, number> = {};
   rows.forEach((row, index) => {
-    const entry = acceptedFor(accepted, row);
-    if (entry === undefined) return;
+    const entry = accepted.byEntry[index];
+    if (entry === undefined) {
+      fresh.push(row);
+      return;
+    }
     const id = gapIdOf(row);
     out.rows.push(index);
     out.ids[String(index)] = id;
@@ -350,7 +386,9 @@ const packAccepted = (
     if (at === -1) at = rules.push(said) - 1;
     byRule[String(index)] = at;
   });
-  return rules.length === 0 ? out : { ...out, rules, byRule };
+  const problem = accepted.problem === undefined ? {} : { problem: `${describeAcceptedProblem(accepted.problem)}.` };
+  if (out.rows.length === 0 && accepted.problem === undefined) return { fresh };
+  return { packed: { ...out, ...(rules.length === 0 ? {} : { rules, byRule }), ...problem }, fresh };
 };
 const withFails = (fails: PackedFails | undefined): { fails?: PackedFails } => (fails === undefined ? {} : { fails });
 const withAccess = (access: PackedAccess | undefined): { access?: PackedAccess } => (access === undefined ? {} : { access });
@@ -376,6 +414,7 @@ const packStandIns = (edges: readonly GraphEdge[]): Pick<PackedGraph, 'standIns'
 
 export const packGraph = (input: PackInput): PackedGraph => {
   const rowsIn = input.unresolved;
+  const accepted = packAccepted(input.accepted, rowsIn);
   const [types, typeIx] = dictionary(input.nodes.map((node) => node.type));
   const [repos, repoIx] = dictionary(input.nodes.map((node) => node.repo));
   const [kinds, kindIx] = dictionary(input.nodes.map((node) => node.kind ?? ''));
@@ -482,10 +521,8 @@ export const packGraph = (input: PackInput): PackedGraph => {
     ...withAccess(packAccess(input.nodes)),
     ...packLogs(input.nodes),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
-    ...(input.accepted === undefined || input.accepted.length === 0
-      ? {}
-      : { accepted: packAccepted(input.accepted, rowsIn) }),
-    ...packCantFollow(splitAccepted(input.accepted ?? [], rowsIn).fresh, position),
+    ...(accepted.packed === undefined ? {} : { accepted: accepted.packed }),
+    ...packCantFollow(accepted.fresh, position),
     ...packStandIns(packedEdges),
     ...(input.editor === undefined
       ? {}

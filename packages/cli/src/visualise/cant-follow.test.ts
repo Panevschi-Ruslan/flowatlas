@@ -1,4 +1,4 @@
-import type { GraphNode } from '@flowatlas/core';
+import { compileAccepted, type AcceptedGap, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { packGraph } from './pack.js';
@@ -54,14 +54,14 @@ const rows: AnchoredUnresolvedRow[] = [
   },
 ];
 
-const pack = (accepted?: Parameters<typeof packGraph>[0]['accepted']) =>
+const pack = (accepted?: readonly AcceptedGap[]) =>
   packGraph({
     builtAt: '2026-10-08T00:00:00.000Z',
     nodes,
     edges: [],
     unresolved: rows,
     report,
-    ...(accepted === undefined ? {} : { accepted }),
+    ...(accepted === undefined ? {} : { accepted: compileAccepted(accepted).split(rows) }),
   });
 
 describe("what the reader couldn't follow, on the page (P75)", () => {

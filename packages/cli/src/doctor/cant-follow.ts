@@ -7,7 +7,15 @@
  * the one list a person can work through from the top, because the first line
  * is the fix that recovers the most.
  */
-import { causeLabel, groupCantFollow, type CantFollow, type CantFollowOptions, type CantFollowRow } from '@flowatlas/core';
+import {
+  causeLabel,
+  describeAcceptedProblem,
+  groupCantFollow,
+  type AcceptedProblem,
+  type CantFollow,
+  type CantFollowOptions,
+  type CantFollowRow,
+} from '@flowatlas/core';
 import { oneLine, where } from './render.js';
 
 /** Version of the JSON this prints. Bump it when a field is removed or changes meaning. */
@@ -20,15 +28,18 @@ export interface CantFollowReport extends CantFollow {
   /** The cause or package it was narrowed to, when it was. */
   cause: string | null;
   package: string | null;
-  /** Gaps `accepted.json` names, left out of every count above. Absent when none. */
-  accepted?: { rows: number; sites: number };
+  /**
+   * Gaps `accepted.json` names, left out of every count above. Absent when
+   * none and the file read; `problem` says why nothing was left out (P80).
+   */
+  accepted?: { rows: number; sites: number; problem?: AcceptedProblem };
   /** Set when the rows had to be taken from the database. */
   note: string | null;
 }
 
 export const cantFollowReport = (
   rows: readonly CantFollowRow[],
-  options: CantFollowOptions & { accepted?: { rows: number; sites: number }; note?: string } = {},
+  options: CantFollowOptions & { accepted?: { rows: number; sites: number; problem?: AcceptedProblem }; note?: string } = {},
 ): CantFollowReport => {
   const { accepted, note, ...grouping } = options;
   return {
@@ -38,7 +49,7 @@ export const cantFollowReport = (
     package: grouping.package ?? null,
     note: note ?? null,
     ...groupCantFollow(rows, grouping),
-    ...(accepted === undefined || accepted.rows === 0 ? {} : { accepted }),
+    ...(accepted === undefined || (accepted.rows === 0 && accepted.problem === undefined) ? {} : { accepted }),
   };
 };
 
@@ -67,7 +78,9 @@ export const renderCantFollowText = (
     `can't follow: ${plural(report.total.sites, 'place')} over ${plural(report.total.rows, 'row')}, by cause` +
       (narrowed.length === 0 ? '' : ` (${narrowed.join(', ')})`),
   );
-  if (report.accepted !== undefined) {
+  if (report.accepted?.problem !== undefined) {
+    lines.push(`  warning: ${describeAcceptedProblem(report.accepted.problem)}; every place is counted`);
+  } else if (report.accepted !== undefined) {
     lines.push(`  ${plural(report.accepted.rows, 'accepted gap')} left out (accepted.json; flowatlas accept --list)`);
   }
   if (report.causes.length === 0) {

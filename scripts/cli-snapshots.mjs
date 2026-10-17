@@ -13,10 +13,12 @@
  * bytes the same on every terminal. The one exception is named `.ansi.txt` and
  * exists to lock the repository palette.
  */
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  runAccept,
   runCantFollowCommand,
   runChannel,
   runContracts,
@@ -42,8 +44,34 @@ const contractsConfig = join(contractsFixture, 'flowatlas.config.json');
 const GATEWAY_ORDERS = 'entry:gateway:http:GET:/orders/:param';
 const ORDERS_CREATE = 'orders#src/orders/orders.service.ts:OrdersService.create';
 
+/**
+ * `accept` handed an `accepted.json` it cannot read (P80): what `--list` says,
+ * then the refusal to write over it, as stderr says it, with the exit code.
+ * Run on a copy of the fixture's output, so nothing another snapshot reads is
+ * written, and the copy's path said as `<copy>`.
+ */
+const acceptUnreadable = (io) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-accept-unreadable-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    writeFileSync(join(copy, 'accepted.json'), '{\n  "acceptedFormatVersion": 2,\n  "gaps": [\n<<<<<<< HEAD\n');
+    const db = join(copy, 'graph.db');
+    const print = (line) => io.out(said(`${line}\n`));
+    runAccept(undefined, { db, list: true, print });
+    try {
+      runAccept('channel-dynamic', { db, note: 'known', print });
+    } catch (error) {
+      io.err(said(`${error.message}\n${error.details.map((line) => `${line}\n`).join('')}exit ${error.code}\n`));
+    }
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
+  ['accept.unreadable.txt', acceptUnreadable],
   ['flow.get-orders.tree.l0.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '0' }, io)],
   ['flow.get-orders.tree.l1.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree' }, io)],
   ['flow.get-orders.tree.l2.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '2' }, io)],

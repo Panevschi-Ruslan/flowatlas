@@ -266,6 +266,20 @@ only one of them moved.
 - **`accepted.json` is version 2 (P76)**, for rules by `path` and file glob. A
   version 1 file was still read; an older `flowatlas` refuses version 2 rather
   than reading a rule as wider than it is.
+- **One glob grammar for accepted rules and `shapes` (P80).** An accepted
+  `file` glob was read with the grammar `shapes` uses: `?` became one
+  character rather than itself, `**` as a whole segment matched zero segments
+  too (`src/**/x.ts` took `src/x.ts`), and `**` inside a segment stayed within
+  it. Route patterns kept `*` as any run, `/` included. `isFileGlob` became
+  `isGlob`, kept one version under the old name.
+- **Every surface split accepted rows the same way (P80).** Doctor's report,
+  `doctor --unresolved`, `shapes --suggest`, the page and the graph server's
+  `cant_follow` and `search` went through one split in the linker
+  (`acceptedSplitOf`): rows an annotation answered were demoted first, and a
+  route rule took a row read back without its symbol on every one of them.
+  `cant_follow` gave such rows the "nothing to do here" hint doctor already
+  gave, and the page showed them at `info`. The rules were compiled once per
+  surface rather than once per row.
 - **The Map laid out in call order by default (P66).** Services went in columns
   by call depth from the front ends, with queues and topics between the
   columns, stores and outside hosts under the app that uses them (one box per
@@ -285,6 +299,18 @@ only one of them moved.
 
 ### Fixed
 
+- **An `accepted.json` that could not be read was wiped (P80).** A file that
+  did not parse (a merge conflict, a truncated write), did not match the
+  format, or came from a newer flowatlas was read as empty, and the next
+  `flowatlas accept` saved it with one entry: every other accepted gap and rule
+  was gone, and doctor showed every gap as new without saying why. Adding and
+  `--remove` refused instead, exit 2, naming the file and the problem, and left
+  it as it was; `--list` and `--dry-run` said the problem first. Doctor (a
+  warning line and `unresolved.accepted.problem`), `doctor --unresolved`,
+  `shapes --suggest`, `visualise` and the graph server's `cant_follow` and
+  `search` (a `note`) said it and accepted nothing. The file was written
+  through a temporary renamed into place. `readAccepted` returned the gaps and
+  the problem; `loadAccepted` was kept one version.
 - **A large service file no longer slowed the cold build down (P79).** The
   call-shape pass of P69 walked every call in a file once for each call edge
   it looked up there, so its cost grew with calls times edges; it, and the

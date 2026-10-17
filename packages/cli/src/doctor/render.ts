@@ -8,7 +8,7 @@
  */
 import { resolve } from 'node:path';
 import type { ContractFinding } from '@flowatlas/contracts';
-import { NODE_TYPES } from '@flowatlas/core';
+import { describeAcceptedProblem, NODE_TYPES } from '@flowatlas/core';
 import { isInstalled, partialReadNotice, type ReadRepo } from '../partial-read.js';
 import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
@@ -153,9 +153,11 @@ const unresolvedSection = (
   const acceptedLine =
     unresolved.accepted === undefined
       ? []
-      : [
-          `  ${unresolved.accepted.rows} accepted gap${unresolved.accepted.rows === 1 ? '' : 's'} left out (accepted.json; flowatlas accept --list)`,
-        ];
+      : unresolved.accepted.problem !== undefined
+        ? [`  warning: ${describeAcceptedProblem(unresolved.accepted.problem)}; every gap is counted as new`]
+        : [
+            `  ${unresolved.accepted.rows} accepted gap${unresolved.accepted.rows === 1 ? '' : 's'} left out (accepted.json; flowatlas accept --list)`,
+          ];
   if (unresolved.byReason.length === 0) return ['unresolved: none', ...ways, ...acceptedLine];
 
   const lines: string[] = [
@@ -492,6 +494,12 @@ export const renderDoctorGithub = (report: DoctorReport, options: GithubOptions 
     lines.push(
       annotation('warning', options.serviceAt?.(service.service), `${service.service}: no way in`, `${noWayInSentence(service)}.`),
     );
+  }
+  // A file of accepted gaps that could not be read decides no exit either, and
+  // is said before the rows it would have hidden (P80).
+  const problem = report.unresolved.accepted?.problem;
+  if (problem !== undefined) {
+    lines.push(annotation('warning', undefined, 'accepted.json cannot be read', `${describeAcceptedProblem(problem)}.`));
   }
   for (const issue of report.markers.issues) {
     lines.push(

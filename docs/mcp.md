@@ -126,7 +126,9 @@ when you know roughly what something is called.
 `search` is the wider net. `kinds` is any of `routes`, `channels`, `tables`,
 `types`, `gaps`, `fails` and `classes`. A gap's id, `gap:<service>|<file>|<reason>`,
 is what `flowatlas accept` takes, new gaps come first, and an accepted one says
-`accepted: true` with its note, and `acceptedBy` when a rule took it. Under
+`accepted: true` with its note, and `acceptedBy` when a rule took it; an
+`accepted.json` that cannot be read marks nothing accepted and says so in
+`note`. Under
 `fails`, an exception name or a status (`NotFoundException`, `404`) lists the
 ways in that can fail with it, each with the id `get_flow` takes.
 
@@ -204,8 +206,10 @@ code says about why: `module-not-installed` (with the package), `import-unresolv
 (a path or alias that resolves to no file), `re-export-missing`, `any-typed`,
 `language-any`, `callback-param`, `untyped-parameter`, `dynamic-member`,
 `interface-type`, `function-field`, and so on; a row with no finer answer counts
-under its own reason. Gaps accepted with `flowatlas accept` are left out and
-counted apart. `next` offers `get_source` on the first place and the calls that
+under its own reason. Rows are demoted where an annotation already answers
+them and gaps accepted with `flowatlas accept` are left out and counted apart,
+exactly as `doctor --unresolved` does, a route rule included; an `accepted.json`
+that cannot be read leaves nothing out and says so in `note`. `next` offers `get_source` on the first place and the calls that
 narrow to its cause and its package.
 
 Under `module-not-installed`, a package the configuration as it stands would

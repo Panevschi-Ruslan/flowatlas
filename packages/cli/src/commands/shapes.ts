@@ -18,6 +18,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import {
   collectPackageUses,
+  describeAcceptedProblem,
   exportKindOf,
   groupCantFollow,
   listRepoSources,
@@ -27,6 +28,7 @@ import {
   serviceDirOf,
   shapesFor,
   starterShape,
+  type AcceptedProblem,
   type CantFollowSample,
   type LoadedConfig,
   type ModuleUses,
@@ -115,6 +117,8 @@ export interface ShapesSuggestReport {
   /** The glob to add under `shapes` when what `--out` wrote is not read yet. */
   listShapes?: string;
   note: string | null;
+  /** Why `accepted.json` could not be read, so nothing in it was left out (P80). Absent when it read. */
+  acceptedProblem?: AcceptedProblem;
 }
 
 const whole = (value: string | undefined, fallback: number, flag: string): number => {
@@ -216,8 +220,8 @@ export const shapesSuggest = (options: ShapesOptions): ShapesSuggestReport => {
   const loaded = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
   const coverage = packageCoverage(loaded.config, loaded.rootDir);
 
-  const { fresh, note } =
-    options.suggest === false ? { fresh: [], note: undefined } : cantFollowRowsOf(options);
+  const { fresh, note, accepted } =
+    options.suggest === false ? { fresh: [], note: undefined, accepted: undefined } : cantFollowRowsOf(options);
   const grouped = groupCantFollow(fresh, {
     cause: MISSING,
     top: Number.MAX_SAFE_INTEGER,
@@ -298,6 +302,7 @@ export const shapesSuggest = (options: ShapesOptions): ShapesSuggestReport => {
     skipped,
     shapeFiles: summaries,
     note: note ?? null,
+    ...(accepted?.problem === undefined ? {} : { acceptedProblem: accepted.problem }),
   };
 
   if (options.out !== undefined) {
@@ -370,6 +375,7 @@ const exportLine = (use: SuggestedExport, width: number): string => {
 export const renderShapesText = (report: ShapesSuggestReport): string => {
   const lines: string[] = [];
   if (report.note !== null) lines.push(`note: ${report.note}`, '');
+  if (report.acceptedProblem !== undefined) lines.push(`warning: ${describeAcceptedProblem(report.acceptedProblem)}`, '');
   const narrowed = report.service === null ? '' : ` (service ${report.service})`;
   lines.push(
     `packages not installed: ${plural(report.total.packages, 'package')} over ${plural(report.total.sites, 'place')}${narrowed}, most places first`,

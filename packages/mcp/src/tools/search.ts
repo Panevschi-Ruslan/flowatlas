@@ -1,5 +1,15 @@
-import { acceptedFor, acceptedKeyOf, describeAccepted, failuresOf, gapIdOf, isRule, loadAccepted, type AcceptedGap, type GraphNode } from '@flowatlas/core';
-import type { AnchoredUnresolvedRow, GraphDb } from '@flowatlas/linker';
+import {
+  acceptedKeyOf,
+  describeAccepted,
+  describeAcceptedProblem,
+  failuresOf,
+  gapIdOf,
+  isRule,
+  readAccepted,
+  type AcceptedRead,
+  type GraphNode,
+} from '@flowatlas/core';
+import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
@@ -60,7 +70,7 @@ interface SearchQuery {
   service: string | undefined;
   limit: number;
   bounded: Bounded;
-  accepted: readonly AcceptedGap[];
+  accepted: AcceptedRead;
 }
 
 type Finder = (query: SearchQuery) => { rows: Hit[]; total: number };
@@ -103,15 +113,18 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
   const wanted = text.toLowerCase();
   const seen = new Set<string>();
   const rows: GapHit[] = [];
-  for (const row of db.allUnresolved()) {
-    if (service !== undefined && row.service !== service) continue;
-    if (!gapText(row).includes(wanted)) continue;
+  const candidates = db
+    .allUnresolved()
+    .filter((row) => (service === undefined || row.service === service) && gapText(row).includes(wanted));
+  // Which entry took each row, as every other surface decides it (P80).
+  const split = acceptedSplitOf(db, candidates, accepted);
+  candidates.forEach((row, index) => {
     const id = gapIdOf(row);
-    const entry = acceptedFor(accepted, row);
+    const entry = split.byEntry[index];
     // One row per gap id: the same reason in one file is one thing to accept —
     // unless a route rule took some of that file's rows and not the others.
     const key = `${id}\u0000${entry === undefined ? '' : acceptedKeyOf(entry)}`;
-    if (seen.has(key)) continue;
+    if (seen.has(key)) return;
     seen.add(key);
     rows.push({
       id,
@@ -128,7 +141,7 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
             ...(isRule(entry) ? { acceptedBy: describeAccepted(entry) } : {}),
           }),
     });
-  }
+  });
   // New gaps first: an accepted one is the least likely to be the question.
   rows.sort((a, b) => Number(a.accepted === true) - Number(b.accepted === true));
   return cut(rows, limit);
@@ -175,7 +188,7 @@ export const runSearch = (
   db: GraphDb,
   input: { query: string; kinds?: readonly SearchKind[]; service?: string; limit: number },
   bounded: Bounded,
-  accepted: readonly AcceptedGap[],
+  accepted: AcceptedRead,
 ): { results: Partial<Record<SearchKind, Hit[]>>; counts: Partial<Record<SearchKind, number>>; next: string[] } => {
   const text = input.query.trim();
   const kinds = input.kinds === undefined || input.kinds.length === 0 ? SEARCH_KINDS : input.kinds;
@@ -210,6 +223,7 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     (input) =>
       withDb(ctx.handle, (db) => {
         const bounded = bound(input);
+        const accepted = readAccepted(ctx.handle.path);
         const { results, counts, next } = runSearch(
           db,
           {
@@ -219,13 +233,15 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
             limit: Math.min(input.limit, bounded.maxNodes),
           },
           bounded,
-          loadAccepted(ctx.handle.path),
+          accepted,
         );
         if (Object.keys(counts).length === 0) return { error: `nothing matches ${JSON.stringify(input.query)}` };
-        return withNext(
-          { query: input.query, counts, results, ...(bounded.note === undefined ? {} : { note: bounded.note }) },
-          next,
-        );
+        // An accepted.json that could not be read marks nothing accepted, and says so (P80).
+        const notes = [
+          ...(bounded.note === undefined ? [] : [bounded.note]),
+          ...(accepted.problem === undefined || counts.gaps === undefined ? [] : [`${describeAcceptedProblem(accepted.problem)}.`]),
+        ];
+        return withNext({ query: input.query, counts, results, ...(notes.length === 0 ? {} : { note: notes.join(' ') }) }, next);
       }),
   );
 };
