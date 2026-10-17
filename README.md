@@ -1029,6 +1029,23 @@ lists every fixture and what it proves, generated from their READMEs.
 `PUBLISHING.md` is the release runbook. `scripts/demo/record.sh` remakes every recording in the
 walkthrough from `fixtures/multi-repo`.
 
+The page `flowatlas visualise` writes is one file made of parts that live apart
+in `packages/cli/src/visualise/`: `page.html` is the markup and a placeholder
+per part, `page.css` its styles, `graph.js`, `frame.js`, `map.js` and
+`steps.js` the logic (with core's `prompt-text.js`), and `panels/` the page
+itself, one module per panel - `context.js` for what every panel reads and the
+state the tabs share, then `band.js`, `ways.js`, `walk.js`, `tables.js`,
+`find.js`, `missing.js`, the Graph tab's `graph-draw.js`, `details.js`,
+`checking.js`, `graph-ui.js` and `frame-ui.js`, then `map-ui.js`,
+`steps-ui.js` and `wiring.js`, and `boot.js`, which sets them up in that order.
+`PAGE_PARTS` in `packages/cli/src/commands/visualise.ts` lists every part in
+the order it is written in; the build copies the folder beside the command. A
+panel is a factory handed the page so far and returning what the panels after
+it may call, so each has a test beside it that mounts the page's markup in a
+small test document (`panels/test-dom.ts`) and checks what it drew; a new panel
+is a module, its `.d.ts`, a placeholder in `page.html`, a row in `PAGE_PARTS`
+and a place in `boot.js`'s list.
+
 ### The rules the code is held to
 
 Twelve invariants. `pnpm invariants` enforces three of them on every run — the

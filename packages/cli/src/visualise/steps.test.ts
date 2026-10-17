@@ -22,7 +22,10 @@ import {
   subjectOf,
 } from './steps.js';
 
-/** What the page hands the prompt: the walk's bounds and core's renderer, as `page.html` does (P97). */
+/**
+ * What the page hands the prompt: the walk's bounds and core's renderer, as the
+ * Steps panel (`panels/steps-ui.js`) does (P97).
+ */
 const kit = { walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
 
 /**

@@ -48,21 +48,82 @@ const promptPart = (): string => {
 };
 
 /**
- * The page, with the graph view's logic written into it.
- *
- * The logic is modules of its own - what to draw, the frame around it, the
- * map of the whole project, the steps of a way in, and core's renderer for a
- * copied prompt - so that a test can import exactly the text the browser runs;
- * the page holds them inline, in one module script, so the result is still
- * one file with nothing to fetch.
+ * What `page.html` is made of besides its markup (P103), in the order the page
+ * holds them: each placeholder and the file written in its place. The styles;
+ * the logic - what to draw, the frame around it, the map of the whole project,
+ * core's renderer for a copied prompt, the steps of a way in; then the page's
+ * context, one factory per panel, and the boot that calls them in order.
  */
+export const PAGE_PARTS: readonly (readonly [placeholder: string, file: string])[] = [
+  ['__PAGE_CSS__', 'page.css'],
+  ['__GRAPH_LOGIC__', 'graph.js'],
+  ['__FRAME_LOGIC__', 'frame.js'],
+  ['__MAP_LOGIC__', 'map.js'],
+  ['__PROMPT_LOGIC__', 'prompt-text.js'],
+  ['__STEPS_LOGIC__', 'steps.js'],
+  ['__CONTEXT_LOGIC__', 'panels/context.js'],
+  ['__BAND_LOGIC__', 'panels/band.js'],
+  ['__WAYS_LOGIC__', 'panels/ways.js'],
+  ['__WALK_LOGIC__', 'panels/walk.js'],
+  ['__TABLES_LOGIC__', 'panels/tables.js'],
+  ['__FIND_LOGIC__', 'panels/find.js'],
+  ['__MISSING_LOGIC__', 'panels/missing.js'],
+  ['__GRAPH_DRAW_LOGIC__', 'panels/graph-draw.js'],
+  ['__DETAILS_LOGIC__', 'panels/details.js'],
+  ['__CHECKING_LOGIC__', 'panels/checking.js'],
+  ['__GRAPH_UI_LOGIC__', 'panels/graph-ui.js'],
+  ['__FRAME_UI_LOGIC__', 'panels/frame-ui.js'],
+  ['__MAP_UI_LOGIC__', 'panels/map-ui.js'],
+  ['__STEPS_UI_LOGIC__', 'panels/steps-ui.js'],
+  ['__WIRING_LOGIC__', 'panels/wiring.js'],
+  ['__BOOT_LOGIC__', 'panels/boot.js'],
+];
+
+/** A panel's imports, one statement each: `import { a, b } from '../graph.js';`. */
+const PANEL_IMPORT = /^import \{([^}]*)\} from '[^']+';\n/gm;
+
+/**
+ * A part as the page holds it. A panel imports what it uses so that a test can
+ * load it alone; in the page every part shares one script, where those names
+ * are already declared, so its imports are dropped. An import the page could
+ * not drop - a default, a namespace, a name taken under another - is refused
+ * rather than written in broken.
+ */
+export const inlined = (file: string, text: string): string => {
+  if (!file.startsWith('panels/')) return text;
+  const bare = text.replace(PANEL_IMPORT, (_statement, names: string) => {
+    if (/\bas\b/.test(names)) throw cannotRun(`the page's ${file} imports a name under another; rebuild the command`);
+    return '';
+  });
+  if (/^import\b/m.test(bare)) throw cannotRun(`the page's ${file} has an import the page cannot drop; rebuild the command`);
+  return bare;
+};
+
+/** Placeholders the command fills itself, after the parts: the title and the graph. */
+const FILLED_LATER = new Set(['__TITLE__', '__DATA__']);
+
+/**
+ * `html` with every part written into it, each read by `read`, so the result
+ * is still one file with nothing to fetch. A part with no placeholder, or a
+ * placeholder left without its part, refuses to write a page with a panel
+ * missing.
+ */
+export const writeParts = (html: string, read: (file: string) => string): string => {
+  let page = html;
+  for (const [placeholder, file] of PAGE_PARTS) {
+    if (!page.includes(placeholder)) throw cannotRun(`the page has no place for its ${file}; rebuild the command`);
+    const text = inlined(file, read(file));
+    // Replaced through a function: a part is free to contain `$&` or `$1`.
+    page = page.replace(placeholder, () => text);
+  }
+  const left = [...page.matchAll(/__[A-Z][A-Z_]*__/g)].map(([found]) => found).filter((found) => !FILLED_LATER.has(found));
+  if (left.length > 0) throw cannotRun(`the page's ${left[0]} has no part; rebuild the command`);
+  return page;
+};
+
+/** The page as the command ships it, every part read from beside the code. */
 export const template = (): string =>
-  part('page.html')
-    .replace('__GRAPH_LOGIC__', () => part('graph.js'))
-    .replace('__FRAME_LOGIC__', () => part('frame.js'))
-    .replace('__MAP_LOGIC__', () => part('map.js'))
-    .replace('__PROMPT_LOGIC__', () => promptPart())
-    .replace('__STEPS_LOGIC__', () => part('steps.js'));
+  writeParts(part('page.html'), (file) => (file === 'prompt-text.js' ? promptPart() : part(file)));
 
 /**
  * A name for the project, since the configuration does not carry one.

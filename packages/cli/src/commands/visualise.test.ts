@@ -2,8 +2,10 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { runVisualise } from './visualise.js';
+import { installDocument, textOf } from '../visualise/panels/test-dom.js';
+import { inlined, PAGE_PARTS, runVisualise, template, writeParts } from './visualise.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const CONFIG = join(ROOT, 'fixtures', 'multi-repo', 'flowatlas.config.json');
@@ -13,6 +15,11 @@ afterAll(() => rmSync(scratch, { recursive: true, force: true, maxRetries: 10, r
 
 let page: string;
 let out: string;
+
+const VISUALISE = resolve(import.meta.dirname, '..', 'visualise');
+/** A part as it sits in the source, before the page drops a panel's imports. */
+const sourceOf = (file: string): string =>
+  readFileSync(file === 'prompt-text.js' ? resolve(ROOT, 'packages/core/src/prompt-text.js') : join(VISUALISE, file), 'utf8');
 
 const dataOf = (html: string): Record<string, any> => {
   const opening = '<script type="application/json" id="graph">';
@@ -24,6 +31,88 @@ beforeAll(() => {
   out = join(scratch, 'graph.html');
   runVisualise({ config: CONFIG, out, print: () => {} });
   page = readFileSync(out, 'utf8');
+});
+
+describe('the page made of its parts (P103)', () => {
+  /** The page's one module script, as written. */
+  const scriptOf = (html: string): string => {
+    const opening = '<script type="module">';
+    const start = html.indexOf(opening) + opening.length;
+    return html.slice(start, html.indexOf('</script>', start));
+  };
+
+  it('holds its markup and placeholders only, under 400 lines', () => {
+    const html = readFileSync(join(VISUALISE, 'page.html'), 'utf8');
+    expect(html.split('\n').length).toBeLessThan(400);
+    for (const [placeholder] of PAGE_PARTS) expect(html.split(placeholder)).toHaveLength(2);
+  });
+
+  it('writes every part in, as one style, one graph and one module script, with no placeholder left', () => {
+    expect(page.match(/<style>/g)).toHaveLength(1);
+    expect(page.match(/<script type="application\/json" id="graph">/g)).toHaveLength(1);
+    expect(page.match(/<script type="module">/g)).toHaveLength(1);
+    expect(page.match(/<script/g)).toHaveLength(2);
+    expect(page).not.toMatch(/__[A-Z][A-Z_]*__/);
+    for (const [, file] of PAGE_PARTS) expect(page, file).toContain(inlined(file, sourceOf(file)).trim());
+  });
+
+  it('drops a panel’s imports, since the page already holds every name they bring', () => {
+    const script = scriptOf(page);
+    expect(script).not.toMatch(/^import\b/m);
+    expect(inlined('panels/x.js', "import { a,\n  b } from '../graph.js';\nexport function x() {}\n")).toBe('export function x() {}\n');
+    expect(() => inlined('panels/x.js', "import { a as b } from '../graph.js';\n")).toThrow(/under another/);
+    expect(() => inlined('panels/x.js', "import * as all from '../graph.js';\n")).toThrow(/cannot drop/);
+    expect(inlined('graph.js', "import { a } from 'b';\n")).toBe("import { a } from 'b';\n");
+  });
+
+  it('refuses a page with no place for a part, or a place with no part', () => {
+    const html = PAGE_PARTS.map(([placeholder]) => placeholder).join('\n');
+    const read = (): string => 'part';
+    expect(writeParts(html, read)).toBe(PAGE_PARTS.map(() => 'part').join('\n'));
+    expect(() => writeParts(html.replace('__BAND_LOGIC__', ''), read)).toThrow(/no place for its panels\/band\.js/);
+    expect(() => writeParts(html + '\n__LOST_LOGIC__', read)).toThrow(/__LOST_LOGIC__ has no part/);
+    expect(writeParts(html + '\n__TITLE__ __DATA__', read)).toContain('__TITLE__ __DATA__');
+    expect(writeParts(html, () => '$& $1')).toContain('$& $1');
+  });
+
+  it('never has two parts declare one name in the script they share', () => {
+    const owner = new Map<string, string>();
+    const twice: string[] = [];
+    for (const [, file] of PAGE_PARTS.filter(([, name]) => name.endsWith('.js'))) {
+      const text = inlined(file, sourceOf(file));
+      for (const [, name] of text.matchAll(/^(?:export )?(?:const|let|var|class|function\*?|async function) ([A-Za-z_$][\w$]*)/gm)) {
+        if (owner.has(name!)) twice.push(`${name} in ${owner.get(name!)} and ${file}`);
+        owner.set(name!, file);
+      }
+    }
+    expect(twice).toEqual([]);
+  });
+
+  it.skipIf(!existsSync(resolve(import.meta.dirname, '..', '..', 'dist', 'index.js')))(
+    'ships every part beside the built command',
+    () => {
+      const dist = resolve(import.meta.dirname, '..', '..', 'dist', 'visualise');
+      for (const [, file] of PAGE_PARTS) expect(existsSync(join(dist, file)), file).toBe(true);
+      expect(existsSync(join(dist, 'page.html'))).toBe(true);
+    },
+  );
+
+  it('runs, as written, in a document: the band, the ways in and the first view drawn', async () => {
+    const markup = page.slice(page.indexOf('<div class="shell">'), page.indexOf('<script type="module">'));
+    const window = installDocument(markup);
+    const file = join(scratch, 'page-boot.mjs');
+    writeFileSync(file, scriptOf(page));
+    await import(pathToFileURL(file).href);
+    const doc = window.document;
+    expect(doc.querySelectorAll('#band .stat dt').map(textOf)[0]).toBe('Graph');
+    const rows = doc.querySelectorAll('#entries button.row').length;
+    expect(rows).toBeGreaterThan(0);
+    expect(textOf(doc.getElementById('entry-count'))).toBe(`${rows} of ${rows}`);
+    expect(doc.getElementById('map-view')!.hidden).toBe(false);
+    expect(doc.querySelectorAll('#m-world .m-unit').length).toBeGreaterThan(0);
+    expect(textOf(doc.getElementById('colophon'))).toMatch(/^Everything here was read from source, never run\./);
+    expect(template()).toBe(template());
+  });
 });
 
 describe('writing the graph as a page', () => {

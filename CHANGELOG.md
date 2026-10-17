@@ -383,6 +383,14 @@ only one of them moved.
 
 ### Changed
 
+- **The page's source in modules (P103).** `page.html` kept only its markup:
+  its styles moved to `page.css` and its script to one module per panel under
+  `src/visualise/panels/`, each a factory handed the page so far, written in
+  through placeholders `PAGE_PARTS` lists in order. The page the command wrote
+  was still one file and drew the same thing on every fixture; the command
+  refused to write one with a part or a placeholder missing, and the built
+  command shipped `page.css` and `panels/` beside it. Every panel gained a
+  test that mounted the page's markup in a small test document.
 - **`flowatlas dead` printed a verdict (P95).** The entries table's
   `confidence` column became `verdict` (`dead`, `likely-dead`, `unknown`), the
   channel and provider tables gained one, and a route a request one segment
@@ -679,6 +687,9 @@ only one of them moved.
 
 ### Fixed
 
+- **The Crossings tab drew nothing (P140).** Its table reached for the Not
+  joined tab's per-kind sections, which were not in its scope, and stopped on
+  the error before drawing a row; it lists every crossing again.
 - **`impact` said only one of its notes (P132).** An answer whose walk stopped
   at its limit, asked at `detail: 3`, said only that the level was clamped: the
   second note overwrote the first. It now says both: the walk limit under
