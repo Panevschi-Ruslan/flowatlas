@@ -110,6 +110,8 @@ export interface Seen {
   samples(entry: number): readonly PackedSample[];
   /** The ways in that have samples, by position. */
   sampled: readonly number[];
+  /** How many fields of a way in's bodies traffic carried differently from its code, and which (P113), or null. */
+  drift(node: number): { fields: number; paths: readonly string[] } | null;
 }
 
 /** A span that fit several places: `places` are edge positions for a `join`, node positions otherwise. */

@@ -8,7 +8,8 @@
  * shape of its path and loses its host and query, an error is at most `true`.
  *
  * Never read, whatever the format: header values, cookies, request and
- * response bodies, user ids, query strings, hosts, statements, span names,
+ * response bodies (except with `--shapes`, for their key names and JSON types
+ * only, P113), user ids, query strings, hosts, statements, span names,
  * events, error and status messages, log lines, and a batch's objectives,
  * runtime and custom data; nor (P108) X-Ray annotations and metadata, a
  * workflow's input and output, client addresses, or request ids; and of a
@@ -101,6 +102,13 @@ export const NESTJS_OBSERVE_READS = {
   node: ['o', 'c', 'm', 'd', 'e', 't', 'ch'],
   /** `http.url` is reduced to the shape of its path. */
   tags: ['http.method', 'http.url'],
+  /**
+   * Of a snapshot, only with `--shapes` (P113): the captured request, and of
+   * it only `body`, walked for its shape (key names and JSON types) and
+   * dropped. Never its `headers`. Version 0.3.x captures no response body.
+   */
+  shapesSnapshot: ['rq'],
+  capturedRequest: ['body'],
 } as const satisfies AllowList;
 
 /**
@@ -144,8 +152,8 @@ export const JAEGER_READS = {
  * compared with the front end's base URLs and dropped; of `response.content`
  * only `mimeType`, to tell an API call from a file, when `_resourceType` is
  * not written. Never read: `request.headers`, `cookies`, `queryString`,
- * `postData`, `headersSize`, `bodySize`, `response.headers`, `cookies`,
- * `content.text`, `redirectURL`, `serverIPAddress`, `connection`, `timings`,
+ * `postData` and `content.text` (except with `--shapes`, below),
+ * `headersSize`, `bodySize`, `response.headers`, `cookies`, `redirectURL`, `serverIPAddress`, `connection`, `timings`,
  * `cache`, `pages`, `creator`, `browser`, `comment`, and every key starting
  * `_` other than `_resourceType`.
  */
@@ -156,6 +164,17 @@ export const HAR_READS = {
   request: ['method', 'url'],
   response: ['status', 'content'],
   content: ['mimeType'],
+  /**
+   * Only with `--shapes` (P113), and only of a call kept as an API call: the
+   * request's `postData` (its JSON `text`, or the `name` of each form field,
+   * never a field's `value`) and the response content's `text` when its type
+   * is JSON (base64-decoded when `encoding` says so). Each is parsed, walked
+   * for its shape (key names and JSON types) and dropped in the same function.
+   */
+  shapesRequest: ['postData'],
+  postData: ['mimeType', 'text', 'params'],
+  param: ['name'],
+  shapesContent: ['mimeType', 'text', 'encoding'],
 } as const satisfies AllowList;
 
 /**

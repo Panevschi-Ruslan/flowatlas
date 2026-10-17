@@ -70,6 +70,20 @@ only one of them moved.
   and `describe_for_prompt` write a step's and a way in's p95 and error rate.
   Sample trees in `observed.json` now say when each span began after the
   request did (`start`, ms); the format version is unchanged.
+- **Payload shapes from traffic (P113).** `flowatlas observe --shapes` reads
+  the JSON bodies a HAR or a @nestjs/observe batch carries for their shape
+  only - key names and JSON types, never a value - folding keys that are
+  values (ids, emails, tokens, UUIDs) into an index signature, and keeps them
+  per route and status under `shapes` in `observed.json` (format 3, optional;
+  `privacy.bodies` says `not read` or `read for shape only`). Each route's
+  shapes are compared with the types its code declares through the contracts
+  package and its wire rules: the summary names the routes whose traffic
+  differs, `flowatlas contracts` gains a `traffic` section (`seenIn` / `of`
+  per field, never an error), `check_contract` carries `traffic` and takes an
+  entry id, `get_flow` hints it where traffic differs, the page's Steps header
+  shows `traffic differs: n fields` (and the Ways in row beside the way in's
+  p95 and error rate), and `flowatlas dead` lists declared
+  optional fields no traffic carried. Without `--shapes` no body is read.
 
 - **`flowatlas doctor --reason <code>` (P141).** Lists the places of one
   reason, or several (repeatable, or a comma list), under every level the

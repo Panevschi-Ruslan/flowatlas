@@ -1,0 +1,44 @@
+{
+  "entry": "entry:gateway:http:POST:/orders/:param/invoice",
+  "traffic": {
+    "samples": 1,
+    "window": {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-16T09:00:00.000Z"
+    },
+    "against": {
+      "request": "type:@fx/contracts#OrderDto"
+    },
+    "request": [
+      {
+        "severity": "info",
+        "kind": "extra_field",
+        "field": "giftNote",
+        "expected": null,
+        "actual": "string",
+        "seenIn": 1,
+        "of": 1,
+        "message": "requests send `giftNote: string`; the route's OrderDto declares no such field (1 of 1)"
+      },
+      {
+        "severity": "warning",
+        "kind": "missing_required",
+        "field": "status",
+        "expected": "type:@fx/contracts#OrderStatus",
+        "actual": null,
+        "seenIn": 0,
+        "of": 1,
+        "message": "the route's OrderDto requires `status: type:@fx/contracts#OrderStatus`; no request sent it (0 of 1)"
+      }
+    ],
+    "unchecked": [
+      "response 500: status-not-declared"
+    ]
+  },
+  "callers": 3,
+  "next": [
+    "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:123:3\", to: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
+    "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:138:3\", to: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
+    "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:61:12\", to: \"entry:gateway:http:POST:/orders/:param/invoice\"})"
+  ]
+}

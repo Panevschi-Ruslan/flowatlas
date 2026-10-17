@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted, type AcceptedRead } from '@flowatlas/core';
+import { trafficPaths, trafficReport } from '@flowatlas/contracts';
 import { acceptedSplitOf, confirmedJoins, neverSeen, type ContractBreak, type GraphDb } from '@flowatlas/linker';
 import { CONTRACT_STATUS_RANK, crossingStatusOf, docsNow, loadContractBreaks, rankedFindingsOf } from '@flowatlas/mcp';
 import type { Command } from 'commander';
@@ -252,9 +253,18 @@ export const packDatabase = (
       ? undefined
       : (() => {
           const never = neverSeen(db, extra.observed);
+          // Bodies traffic carried against the code (P113), when `observe --shapes` kept their shapes.
+          const shapes = extra.observed.shapes;
+          const drift =
+            shapes === undefined
+              ? []
+              : trafficReport(shapes, extra.observed.window, db)
+                  .entries.filter((comparison) => comparison.differs > 0)
+                  .map((comparison) => ({ entry: comparison.entry, fields: comparison.differs, paths: trafficPaths(comparison) }));
           return {
             never: { window: never.window.label, rows: never.rows },
             confirmed: confirmedJoins(db, extra.observed).map((join) => join.id),
+            ...(drift.length === 0 ? {} : { drift }),
           };
         })();
   const { contracts = [], ...rest } = extra;

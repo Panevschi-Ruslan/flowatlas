@@ -176,6 +176,8 @@ describe('the page’s control edges (P142)', () => {
     }
     // The frames and rules that only decorate keep --rule.
     expect(tokensIn(ruleOf('.panel').body, BORDER)).toEqual(['rule']);
+    // A chip that says a state of traffic (P113) draws its edge in its own colour, not a mix with the rule.
+    expect(tokensIn(ruleOf('.fail-chip.is-drift').body, BORDER)).toEqual(['warn']);
   });
 
   it('ring a focus in the accent, and mark a focus or a pick that has no ring with an accent bar', () => {

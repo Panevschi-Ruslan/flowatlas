@@ -542,7 +542,7 @@ window longer than the file holds says `short: true` and every row is `weak`.
 | `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required), `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `offset` |
-| `check_contract` | what one side of a crossing sends against what the other expects | `edge`, or `from` and `to` |
+| `check_contract` | what one side of a crossing sends against what the other expects; on an entry, what traffic carried into it against its code | `edge` (a crossing or an entry id), or `from` and `to` |
 
 `get_type` at `detail: 0` names the type and its fields (or its members); at 1
 it says what each field is, where the type is declared, and names each type it
@@ -565,6 +565,22 @@ most. `get_type`'s `next` names `type_usage` first.
 installed (`flowatlas mcp` installs it), are `{ severity, kind, direction,
 field, expected, actual, message, ignored? }`; the crossing is the answer's
 `edge`.
+
+**Traffic as the third side (P113).** When `flowatlas observe --shapes` left
+body shapes beside the database, an answer about a crossing into an entry
+carries `traffic`: what real requests and answers carried, compared with the
+route's declared body type and its declared answer (or, when the route
+declares none it can be read through, the type the caller expects back).
+`traffic` is `{ samples, window, against?: { request?, response? }, request?:
+diff[], responses?: { [status]: diff[] }, unchecked?: ["response 500:
+status-not-declared", ...] }`, each diff `{ severity, kind, field, expected,
+actual, seenIn, of, message }`: `seenIn` bodies carried the field, of `of`
+that could have. Traffic is never an `error` on its own; `declared_never_sent`
+(information) is a declared optional field no body of at least 50 carried.
+Given an entry id as `edge` (`check_contract({edge: "entry:…"})`), it answers
+`{ entry, traffic | note, callers }` with `next` checking each call into it,
+and `get_flow` on an entry whose traffic differs puts that call second in its
+`next`. Only key names and JSON types are ever kept of a body, never a value.
 
 Given two service names as `from` and `to` (and no node by either name, which
 would win), it lists every crossing from one into the other: each request

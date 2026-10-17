@@ -7,6 +7,7 @@
  * nothing anywhere compares the two. These are the words for that comparison.
  */
 import type { GraphEdge, GraphNode, TypeEntry } from '@flowatlas/core';
+import type { TrafficReport } from './traffic.js';
 
 /**
  * Version of `contracts.json`, independent of the graph schema.
@@ -181,6 +182,10 @@ export interface FieldDiff {
   note?: string | null;
   /** The whole sentence, with neither service named. */
   message: string;
+  /** Compared with traffic (P113): the bodies that carried the field. */
+  seenIn?: number;
+  /** Compared with traffic: the bodies that could have, those with the object it sits in. */
+  of?: number;
 }
 
 /** One disagreement, placed on the edge it was found on. */
@@ -281,6 +286,12 @@ export interface ContractReport {
   ignored: ContractFinding[];
   unchecked: UncheckedEdge[];
   summary: ContractSummary;
+  /**
+   * What traffic carried against what the code declares (P113), when
+   * `observe --shapes` left shapes beside the graph. Never counted in the
+   * summary: traffic alone does not fail a contract.
+   */
+  traffic?: TrafficReport;
 }
 
 /**

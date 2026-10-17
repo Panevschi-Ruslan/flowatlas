@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { ALLOW_LISTS, NESTJS_OBSERVE_READS, only } from '../allow-list.js';
-import { PLANTED } from '../__fixtures__/planted.js';
+import { BODY_VALUES, PLANTED } from '../__fixtures__/planted.js';
 import { nestjsObserveReader, otlpReader, readerFor, TRACE_READERS } from './index.js';
 
 const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../../fixtures/multi-repo');
@@ -201,5 +201,41 @@ describe('a saved series of @nestjs/observe batch posts', () => {
     expect(droppedAttributes).toBeGreaterThan(3);
     const text = JSON.stringify(spans);
     for (const secret of PLANTED) expect(text).not.toContain(secret);
+  });
+});
+
+describe('the @nestjs/observe reader with --shapes (P113)', () => {
+  /** A snapshot whose captured request throws when read: nothing may touch it without --shapes. */
+  const trapped = (): unknown => {
+    const snapshot: Record<string, unknown> = { ti: 't1', p: 'http', op: 'POST /invoices', a: { m: 'POST', sc: 201 } };
+    Object.defineProperty(snapshot, 'rq', { enumerable: true, get: () => { throw new Error('rq was read'); } });
+    return { serviceId: 'billing', snapshots: [snapshot] };
+  };
+
+  it('never touches the captured request without --shapes, and reads it only with', () => {
+    expect(() => nestjsObserveReader.read(trapped())).not.toThrow();
+    expect(nestjsObserveReader.read(batch)).not.toHaveProperty('bodies');
+    expect(() => nestjsObserveReader.read(trapped(), undefined, { shapes: true })).toThrow('rq was read');
+  });
+
+  it('keeps the body of rq as key names and JSON types, by its server span, and never its headers', () => {
+    const { bodies } = nestjsObserveReader.read(batch, undefined, { shapes: true });
+    expect(bodies).toEqual([
+      {
+        traceId: 'e1000000000000000000000000000001',
+        spanId: 'e1000000000000000000000000000001:0',
+        request: {
+          t: 'object',
+          n: 1,
+          f: {
+            amount: { s: { t: 'number', n: 1 }, n: 1 },
+            memo: { s: { t: 'string', n: 1 }, n: 1 },
+            orderId: { s: { t: 'string', n: 1 }, n: 1 },
+          },
+        },
+      },
+    ]);
+    const text = JSON.stringify(bodies);
+    for (const value of [...BODY_VALUES, 'authorization', 'headers', 'Bearer']) expect(text, value).not.toContain(value);
   });
 });

@@ -27,6 +27,7 @@ import { wordsOf, type Word } from './dictionary.js';
  *     unmatched: [[service, kind, name, next?]],    // seen at run time, not found in code; `next` looks for it (P110)
  *     never?: { window, rows: [[node, strong]] },   // what the code runs and traffic never touched (P110)
  *     confirmed?: [edge],                           // best guesses traffic went through (P110)
+ *     drift?: { [entryId]: [fields, paths] },       // bodies traffic carried that differ from the code (P113)
  *     ambiguous?: [[service, kind, name, count, places, unnamed?]],  // fit several places (P85)
  *     services?: [name], kinds?: [kind]             // what `service` and `kind` index (P84)
  *   }
@@ -63,6 +64,12 @@ import { wordsOf, type Word } from './dictionary.js';
  * `confirmed` are positions in `edges` of `heuristic` joins the window holds.
  * An unmatched row's `next` is the MCP call that looks for it in the map,
  * the text `cant_follow` names.
+ *
+ * `drift` (P113) is the contracts package's `compareTraffic` for each way in
+ * `observe --shapes` read bodies of whose traffic differs from its code: how
+ * many fields, and the paths (`request giftNote`, `200 owner`), worked out by
+ * the command and handed in as `traffic.drift`. The Steps header's
+ * `traffic differs` chip reads it.
  */
 export type PackedAmbiguous = [service: Word, kind: Word, name: string, count: number, places: number[], unnamed?: number];
 
@@ -127,6 +134,7 @@ export interface PackedObserved {
   unmatched: Array<[service: Word, kind: Word, name: string, next?: string]>;
   never?: { window: string; rows: Array<[node: number, strong: 0 | 1]> };
   confirmed?: number[];
+  drift?: Record<string, [fields: number, paths: string[]]>;
   ambiguous?: PackedAmbiguous[];
   services?: string[];
   kinds?: string[];
@@ -137,6 +145,8 @@ export interface PackTraffic {
   never: { window: string; rows: ReadonlyArray<{ id: string; confidence: 'strong' | 'weak' }> };
   /** Join ids of best guesses traffic went through. */
   confirmed: readonly string[];
+  /** Ways in whose bodies differ from their code (P113): how many fields, and which. */
+  drift?: ReadonlyArray<{ entry: string; fields: number; paths: readonly string[] }>;
 }
 
 /** The figures a row measured, each only when it did. */
@@ -290,6 +300,8 @@ export const packObserved = (
     const place = at.get(id);
     return place === undefined ? [] : [place];
   });
+  const drift: Record<string, [number, string[]]> = {};
+  for (const row of traffic?.drift ?? []) if (entryIds[row.entry] !== undefined && row.fields > 0) drift[row.entry] = [row.fields, [...row.paths]];
   const ambiguous = ambiguousIn.map(({ service, kind, name, count, candidates, more }): PackedAmbiguous => {
     const places = candidates.flatMap((id) => {
       const place = kind === 'join' ? at.get(id) : position.get(id);
@@ -310,6 +322,7 @@ export const packObserved = (
     unmatched,
     ...(traffic === undefined ? {} : { never: { window: traffic.never.window, rows: neverRows } }),
     ...(confirmed.length === 0 ? {} : { confirmed }),
+    ...(Object.keys(drift).length === 0 ? {} : { drift }),
     ...(ambiguous.length === 0 ? {} : { ambiguous }),
     ...(services.list.length === 0 ? {} : { services: services.list }),
     ...(kinds.list.length === 0 ? {} : { kinds: kinds.list }),

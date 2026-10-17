@@ -369,7 +369,7 @@ const NO_SAMPLES = Object.freeze([]);
 const NO_SEEN = Object.freeze({
   any: false, most: 0, unmatched: Object.freeze([]), ambiguous: Object.freeze([]),
   join: () => null, entry: () => 0, failures: () => null,
-  window: '', neverSeen: Object.freeze([]), never: () => null, confirmed: () => 0,
+  window: '', neverSeen: Object.freeze([]), never: () => null, confirmed: () => 0, drift: () => null,
   timed: false, period: null, stats: () => null, entryStats: () => null, nodeStats: () => null, figuresOf: () => null,
   samples: () => NO_SAMPLES, sampled: Object.freeze([]),
 });
@@ -399,7 +399,9 @@ export const ambiguousOf = ({ ambiguous = [], services, kinds }) =>
  * `never(i)` is a node the code runs and traffic never touched, `{ window,
  * strong }`, or null; `confirmed(k)` how often traffic went through a best
  * guess, 0 when it is not one or was not seen (P110); `window` the hours
- * the file holds, in words.
+ * the file holds, in words. `drift(i)` is how many fields of a way in's
+ * bodies traffic carried differently from its code, `{ fields, paths }`, or
+ * null (P113).
  *
  * Run time (P111): `stats(k)` is a join's figures (`p50`, `p95`, `max` in
  * ms, `errorRate`), `entryStats(i)` a way in's, `nodeStats(i)` a step's own
@@ -457,6 +459,12 @@ export const createSeen = (data) => {
   const window = (observed.never && observed.never.window) || '';
   const never = new Map((observed.never ? observed.never.rows : []).map(([i, strong]) => [i, { window, strong: strong === 1 }]));
   const confirmed = new Set(observed.confirmed || []);
+  // Ways in whose bodies differ from their code (P113), by position.
+  const drift = new Map();
+  for (const [id, [fields, paths]] of Object.entries(observed.drift || {})) {
+    const at = data.entryIds ? data.entryIds[id] : undefined;
+    if (at !== undefined) drift.set(at, { fields, paths });
+  }
   return {
     any: true,
     most,
@@ -469,6 +477,7 @@ export const createSeen = (data) => {
     neverSeen: Object.freeze([...never].map(([node, said]) => ({ node, strong: said.strong }))),
     never: (i) => never.get(i) || null,
     confirmed: (k) => (confirmed.has(k) && joins.has(k) ? joins.get(k).count : 0),
+    drift: (i) => drift.get(i) || null,
     timed,
     period,
     stats: (k) => stats.get(k) || null,

@@ -2,6 +2,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { z } from 'zod';
 import { isEntryId } from './ids.js';
+import { mergeShapeRecords, type EntryShapes, type Shape } from './observed-shape.js';
 import { emptyAgg, mergeAgg, summarise, type Agg } from './observed-stats.js';
 
 /**
@@ -23,7 +24,8 @@ import { emptyAgg, mergeAgg, summarise, type Agg } from './observed-stats.js';
  *     unmatched: [{ service?, kind, name, count, ...figures }],
  *     ambiguous: [{ service?, kind, name, candidates, more?, count }],
  *     samples:   { [entryId]: { slow: Sample[], failing: Sample[] } },
- *     buckets:   [{ hour, spans, joins, entries, symbols, channels, unmatched, ambiguous }]
+ *     shapes?:   { [entryId]: { request?: Shape, responses?: { [status]: Shape }, samples, lastSeen } },
+ *     buckets:   [{ hour, spans, joins, entries, symbols, channels, unmatched, ambiguous, shapes? }]
  *   }
  *
  * `figures` are `summarise`'s (`observed-stats.ts`): `firstSeen`, `p50`,
@@ -40,6 +42,11 @@ import { emptyAgg, mergeAgg, summarise, type Agg } from './observed-stats.js';
  * Trace ids appear in `samples` only, at most `SAMPLES_PER_ENTRY` slow and as
  * many failing per entry, each a tree of at most `SPANS_PER_SAMPLE` spans with
  * no span or parent id. Without samples the file holds no id at all.
+ *
+ * `shapes` (P113) are written only by `observe --shapes`: the key names and
+ * JSON types of the bodies each route was sent and answered with, never a
+ * value (`observed-shape.ts`), merged per hour like the counts so `--since`
+ * cuts them too. `privacy.bodies` says whether bodies were read at all.
  */
 export const OBSERVED_FILE = 'observed.json';
 export const OBSERVED_FORMAT_VERSION = 3;
@@ -197,6 +204,9 @@ export interface AmbiguousSpan {
   count: number;
 }
 
+/** Whether a run read any body (P113): never, or for its shape only (`observe --shapes`). */
+export type ObservedBodies = 'not read' | 'read for shape only';
+
 export interface ObservedPrivacy {
   /** `OBSERVED_KEPT`. */
   kept: string[];
@@ -205,6 +215,8 @@ export interface ObservedPrivacy {
   /** Attribute keys seen and not read, counted each time one was seen. Never a name. */
   droppedAttributes: number;
   samples: { kept: boolean; perEntry: number; spansPerSample: number };
+  /** Absent in a file written before P113, which read none. */
+  bodies?: ObservedBodies;
 }
 
 export interface ObservedWindow {
@@ -246,6 +258,8 @@ export interface ObservedBucket {
   channels: Record<string, Agg>;
   unmatched: UnmatchedAgg[];
   ambiguous: AmbiguousSpan[];
+  /** The bodies of the hour, by entry (P113); absent when none was read for its shape. */
+  shapes?: Record<string, EntryShapes>;
 }
 
 /**
@@ -306,6 +320,8 @@ export interface Observed {
   ambiguous: AmbiguousSpan[];
   /** By entry id; the only place a trace id is written. */
   samples: Record<string, EntrySamples>;
+  /** By entry id, the shapes of the bodies it was sent and answered with (P113); absent when none. */
+  shapes?: Record<string, EntryShapes>;
   buckets: ObservedBucket[];
 }
 
@@ -421,6 +437,10 @@ const mergeAmbiguous = (a: readonly AmbiguousSpan[], b: readonly AmbiguousSpan[]
   return [...rows.values()].sort(byCount);
 };
 
+/** `{ shapes }` when there are any, else nothing: a file without bodies read has no such key. */
+const shapesOf = (shapes: Record<string, EntryShapes>): { shapes?: Record<string, EntryShapes> } =>
+  Object.keys(shapes).length === 0 ? {} : { shapes };
+
 /** Two lists of hours as one: the same hour in both adds up. */
 export const mergeBuckets = (a: readonly ObservedBucket[], b: readonly ObservedBucket[]): ObservedBucket[] => {
   const hours = new Map<string, ObservedBucket>();
@@ -439,6 +459,7 @@ export const mergeBuckets = (a: readonly ObservedBucket[], b: readonly ObservedB
             channels: mergeRecords(had.channels, bucket.channels, mergeAgg),
             unmatched: mergeUnmatched(had.unmatched, bucket.unmatched),
             ambiguous: mergeAmbiguous(had.ambiguous, bucket.ambiguous),
+            ...shapesOf(mergeShapeRecords(had.shapes ?? {}, bucket.shapes ?? {})),
           },
     );
   }
@@ -520,7 +541,7 @@ const figuresOf = (agg: Agg): ObservedFigures => {
 const measuredAtOf = (agg: JoinAgg): { measuredAt?: MeasuredAt } =>
   agg.count - (agg.carried ?? 0) === 0 ? {} : { measuredAt: (agg.callee ?? 0) >= agg.count - (agg.carried ?? 0) ? 'callee' : 'caller' };
 
-export type ObservedRollUp = Pick<Observed, 'spans' | 'joins' | 'entries' | 'symbols' | 'channels' | 'unmatched' | 'ambiguous'>;
+export type ObservedRollUp = Pick<Observed, 'spans' | 'joins' | 'entries' | 'symbols' | 'channels' | 'unmatched' | 'ambiguous' | 'shapes'>;
 
 /** The window as one: every hour added up, under the names version 1 used. */
 export const rollUp = (buckets: readonly ObservedBucket[]): ObservedRollUp => {
@@ -546,6 +567,7 @@ export const rollUp = (buckets: readonly ObservedBucket[]): ObservedRollUp => {
       ...figuresOf(agg),
     })),
     ambiguous: all.ambiguous,
+    ...(all.shapes === undefined ? {} : { shapes: all.shapes }),
   };
 };
 
@@ -557,6 +579,8 @@ export interface ObservedParts {
   since?: string;
   /** False when `--no-samples` said so: then the file holds no sample, and so no id. */
   samplesKept: boolean;
+  /** True when a run read bodies for their shape (`--shapes`, P113); a file holding shapes says so whatever this is. */
+  bodiesRead?: boolean;
 }
 
 /** A whole file from its hours, samples and sources: the roll-up, the window and the privacy block. */
@@ -572,6 +596,7 @@ export const observedFromParts = (parts: ObservedParts): Observed => {
       dropped: [...OBSERVED_DROPPED],
       droppedAttributes: parts.droppedAttributes,
       samples: { kept: parts.samplesKept, perEntry: SAMPLES_PER_ENTRY, spansPerSample: SPANS_PER_SAMPLE },
+      bodies: parts.bodiesRead === true || rolled.shapes !== undefined ? 'read for shape only' : 'not read',
     },
     window: {
       ...(parts.since === undefined ? {} : { since: parts.since }),
@@ -586,6 +611,7 @@ export const observedFromParts = (parts: ObservedParts): Observed => {
     unmatched: rolled.unmatched,
     ambiguous: rolled.ambiguous,
     samples: parts.samplesKept ? sortedRecord({ ...parts.samples }) : {},
+    ...(rolled.shapes === undefined ? {} : { shapes: rolled.shapes }),
     buckets,
   });
 };
@@ -625,6 +651,8 @@ export const mergeObserved = (previous: Observed | undefined, run: Observed, opt
     droppedAttributes: (base?.privacy.droppedAttributes ?? 0) + run.privacy.droppedAttributes,
     ...(since === undefined ? {} : { since }),
     samplesKept,
+    // Once a run has read bodies, the file says so until it is started again.
+    bodiesRead: run.privacy.bodies === 'read for shape only' || base?.privacy.bodies === 'read for shape only',
   });
 };
 
@@ -755,6 +783,26 @@ const sample = z.object({
   cut: z.number().optional(),
   tree,
 });
+const shapeSchema: z.ZodType<Shape> = z.lazy(() =>
+  z.object({
+    t: z.enum(['string', 'number', 'boolean', 'null', 'object', 'array', 'mixed']),
+    ts: z.array(z.enum(['string', 'number', 'boolean', 'null', 'object', 'array'])).optional(),
+    f: z.record(z.string(), z.object({ s: shapeSchema, n: z.number(), opt: z.literal(true).optional() })).optional(),
+    i: shapeSchema.optional(),
+    idx: shapeSchema.optional(),
+    cut: z.literal(true).optional(),
+    n: z.number(),
+  }),
+);
+const entryShapes = z.record(
+  z.string(),
+  z.object({
+    request: shapeSchema.optional(),
+    responses: z.record(z.string(), shapeSchema).optional(),
+    samples: z.number(),
+    lastSeen: z.string().nullable(),
+  }),
+);
 const currentSchema = olderSchema.extend({
   ambiguous: z.array(ambiguousRow),
   privacy: z.object({
@@ -762,10 +810,12 @@ const currentSchema = olderSchema.extend({
     dropped: z.array(z.string()),
     droppedAttributes: z.number(),
     samples: z.object({ kept: z.boolean(), perEntry: z.number(), spansPerSample: z.number() }),
+    bodies: z.enum(['not read', 'read for shape only']).optional(),
   }),
   window: z.object({ since: z.string().optional(), from: z.string().nullable(), to: z.string().nullable() }),
   sources: z.array(z.object({ sha256: z.string(), format: z.string(), spans: z.number(), readAt: z.string() })),
   samples: z.record(z.string(), z.object({ slow: z.array(sample), failing: z.array(sample) })),
+  shapes: entryShapes.optional(),
   buckets: z.array(
     z.object({
       hour: z.string(),
@@ -776,6 +826,7 @@ const currentSchema = olderSchema.extend({
       channels: z.record(z.string(), agg),
       unmatched: z.array(agg.extend({ service: z.string().optional(), kind: z.string(), name: z.string() })),
       ambiguous: z.array(ambiguousRow),
+      shapes: entryShapes.optional(),
     }),
   ),
 });

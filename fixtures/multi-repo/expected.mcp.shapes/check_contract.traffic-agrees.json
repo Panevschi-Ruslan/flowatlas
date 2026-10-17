@@ -1,0 +1,20 @@
+{
+  "entry": "entry:orders:http:GET:/orders/:param",
+  "traffic": {
+    "samples": 1,
+    "window": {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-16T09:00:00.000Z"
+    },
+    "against": {
+      "response": "type:@fx/contracts#OrderDto"
+    },
+    "responses": {
+      "200": []
+    }
+  },
+  "callers": 1,
+  "next": [
+    "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:33:12\", to: \"entry:orders:http:GET:/orders/:param\"})"
+  ]
+}

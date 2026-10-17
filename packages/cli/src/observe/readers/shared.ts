@@ -1,3 +1,4 @@
+import { SHAPE_BODY_BYTES, shapeOf, type Shape } from '@flowatlas/core';
 import { keepAllowed, type ObservedSpan } from '../span.js';
 
 /**
@@ -36,6 +37,11 @@ export interface ReadContext {
   source?: string;
   /** Where the project's front ends send their calls, asked only by a reader of a browser's record. */
   frontEnd?: () => FrontEndContext;
+  /**
+   * `--shapes` (P113): read the JSON bodies a format carries for their shape
+   * only. Without it no reader looks at a body at all.
+   */
+  shapes?: boolean;
 }
 
 /**
@@ -68,11 +74,13 @@ export interface TraceReader {
   read(document: unknown, fallbackService?: string, options?: ReaderOptions): TraceRead;
   /** The flags this format takes; any other one given for a file of it is an error. */
   takes?: readonly ReaderFlag[];
+  /** The format carries request or response bodies, which `--shapes` reads for their shape (P113). */
+  carriesBodies?: true;
 }
 
 /** Parts of a file a reader saw and did not read, counted so nothing is dropped unsaid. */
 export interface SkippedPart {
-  noun: 'snapshot' | 'job' | 'node' | 'span' | 'segment' | 'subsegment' | 'event' | 'line' | 'entry';
+  noun: 'snapshot' | 'job' | 'node' | 'span' | 'segment' | 'subsegment' | 'event' | 'line' | 'entry' | 'body';
   /** Why, as it reads after the noun: `of protocol ws`, `without o, c and m`. */
   why: string;
   count: number;
@@ -89,6 +97,19 @@ export interface TraceRead {
   droppedAttributes: number;
   /** Fixed sentences the summary says about the file, never quoting it (P112). */
   notes?: string[];
+  /** With `--shapes` (P113): the shapes of the bodies each span's exchange carried, by span. */
+  bodies?: SpanBodies[];
+}
+
+/**
+ * The bodies of one exchange as shapes (P113), by the span it is: key names
+ * and JSON types only. The body itself never leaves the function that parsed it.
+ */
+export interface SpanBodies {
+  traceId: string;
+  spanId: string;
+  request?: Shape;
+  response?: Shape;
 }
 
 /**
@@ -205,3 +226,27 @@ export const operationName = (word: string): string | undefined => {
   const base = word.split(/[.:]/)[0] ?? '';
   return /^[A-Za-z][A-Za-z0-9]*$/.test(base) ? base.charAt(0).toUpperCase() + base.slice(1) : undefined;
 };
+
+/**
+ * The shape of a body a file holds as text (P113), parsed, walked and dropped
+ * here: the text and the parsed value go out of scope when this returns, and
+ * only the shape is handed back. `base64` text is decoded first. A body over
+ * `SHAPE_BODY_BYTES` or one that is not JSON is counted in `skips`, never quoted.
+ */
+export const shapeOfText = (body: unknown, encoding: unknown, skips: Skips): Shape | undefined => {
+  if (typeof body !== 'string' || body === '') return undefined;
+  const text = encoding === 'base64' ? Buffer.from(body, 'base64').toString('utf8') : body;
+  if (Buffer.byteLength(text, 'utf8') > SHAPE_BODY_BYTES) {
+    skips.add('body', 'over 1 MB');
+    return undefined;
+  }
+  try {
+    return shapeOf(JSON.parse(text));
+  } catch {
+    skips.add('body', 'not JSON');
+    return undefined;
+  }
+};
+
+/** The shape of form fields (P113): their names only, each a string, value-like names folded. No value is read. */
+export const shapeOfFormNames = (names: readonly string[]): Shape => shapeOf(Object.fromEntries(names.map((name) => [name, ''])));

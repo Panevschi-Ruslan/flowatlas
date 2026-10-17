@@ -1,3 +1,4 @@
+import { observedOver, type EntryShapes } from '@flowatlas/core';
 import type { DeadOptions, GraphDb } from '@flowatlas/linker';
 import { byId } from './graph.js';
 
@@ -55,6 +56,13 @@ export interface DeadField {
    */
   dropped: boolean;
   reason: string;
+  /**
+   * A field the code declares optional and traffic never carried (P113):
+   * how many bodies could have, over which window of the observed file.
+   * Only on such a row; never proof, since one environment's traffic is not
+   * every caller's.
+   */
+  neverSentIn?: { window: string; samples: number };
 }
 
 /** What each kind of row says about itself. Fully decided by the two fields above. */
@@ -109,9 +117,61 @@ interface ContractFinding {
 const directionOf = (said: string | undefined): FieldDirection =>
   said === 'request' || said === 'payload' ? said : 'response';
 
+/** As much of a traffic comparison as this file reads (P113): the declared fields no body carried. */
+interface TrafficSideRead {
+  against: { typeId: string };
+  diffs: Array<{ kind: string; path: string; of: number }>;
+}
+
 interface ContractsModule {
   checkContracts?: (db: GraphDb) => { findings: ContractFinding[] };
+  compareTraffic?: (
+    entry: string,
+    shapes: EntryShapes,
+    db: GraphDb,
+  ) => { request?: TrafficSideRead; responses?: Record<string, TrafficSideRead> };
 }
+
+/**
+ * Declared optional fields traffic never carried (P113), from the shapes
+ * `observe --shapes` kept, over the window `dead --since` reads: one row per
+ * type, field and direction, the routes it was declared on in `sentOn`.
+ */
+const neverSentFields = (db: GraphDb, contracts: ContractsModule, options: DeadOptions): DeadField[] => {
+  if (options.observed === undefined || typeof contracts.compareTraffic !== 'function') return [];
+  const { counts, window } = observedOver(options.observed, options.since);
+  const rows = new Map<string, DeadField>();
+  for (const [entry, shapes] of Object.entries(counts.shapes ?? {})) {
+    if (options.service !== undefined && db.node(entry)?.repo !== options.service) continue;
+    const compared = contracts.compareTraffic(entry, shapes, db);
+    const sides: Array<[FieldDirection, TrafficSideRead | undefined]> = [
+      ['request', compared.request],
+      ...Object.values(compared.responses ?? {}).map((side): [FieldDirection, TrafficSideRead] => ['response', side]),
+    ];
+    for (const [direction, side] of sides) {
+      for (const diff of side?.diffs ?? []) {
+        if (diff.kind !== 'declared_never_sent') continue;
+        const key = `${side!.against.typeId}#${diff.path}#${direction}`;
+        const had = rows.get(key);
+        if (had !== undefined) {
+          if (!had.sentOn.includes(entry)) had.sentOn.push(entry);
+          had.neverSentIn!.samples += diff.of;
+          continue;
+        }
+        rows.set(key, {
+          typeId: side!.against.typeId,
+          field: diff.path,
+          sentOn: [entry],
+          direction,
+          dropped: false,
+          reason: `declared optional and carried by no ${direction} traffic read over ${window.label}`,
+          neverSentIn: { window: window.label, samples: diff.of },
+        });
+      }
+    }
+  }
+  return [...rows.values()];
+};
 
 /**
  * Fields one service sends and the receiver does not declare.
@@ -131,6 +191,7 @@ export const deadFields = async (db: GraphDb, options: DeadOptions = {}): Promis
   };
 
   let findings: ContractFinding[];
+  let neverSent: DeadField[];
   try {
     // The specifier is held in a variable so the type-checker does not try to
     // resolve a package that is not a dependency of this one.
@@ -138,6 +199,7 @@ export const deadFields = async (db: GraphDb, options: DeadOptions = {}): Promis
     const contracts = (await import(specifier)) as ContractsModule;
     if (typeof contracts.checkContracts !== 'function') return unavailable;
     findings = contracts.checkContracts(db).findings;
+    neverSent = neverSentFields(db, contracts, options);
   } catch {
     return unavailable;
   }
@@ -178,6 +240,8 @@ export const deadFields = async (db: GraphDb, options: DeadOptions = {}): Promis
     }
   }
 
+  // Declared and never carried, from traffic (P113): rows of their own, never merged with a field sent and not declared.
+  for (const row of neverSent) rows.set(`${row.typeId}#${row.field}#${row.direction}#never`, row);
   for (const row of rows.values()) row.sentOn.sort(byId);
   // What is removed first, as everywhere else in this command: the rows
   // something happens to above the rows nothing happens to, so a reader who

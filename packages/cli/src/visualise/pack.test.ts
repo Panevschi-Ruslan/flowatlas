@@ -349,6 +349,21 @@ describe('logs and unmatched spans through dictionaries (P84)', () => {
     expect(packObserved({ joins: {}, entries: {}, symbols: {}, channels: {}, unmatched: [] } as never, [], {}, new Map())).not.toHaveProperty('ambiguous');
   });
 
+  it('packs the ways in whose bodies differ from their code by entry id, and only those the page has (P113)', () => {
+    const empty = { joins: {}, entries: {}, symbols: {}, channels: {}, unmatched: [] } as never;
+    const traffic = {
+      never: { window: '2h', rows: [] },
+      confirmed: [],
+      drift: [
+        { entry: 'entry:api:http:GET:/orders', fields: 2, paths: ['request giftNote', '200 owner'] },
+        { entry: 'entry:gone:http:GET:/x', fields: 1, paths: ['request x'] },
+      ],
+    };
+    const packed = packObserved(empty, [], { 'entry:api:http:GET:/orders': 0 }, new Map(), [], traffic);
+    expect(packed.drift).toEqual({ 'entry:api:http:GET:/orders': [2, ['request giftNote', '200 owner']] });
+    expect(packObserved(empty, [], {}, new Map(), [], { ...traffic, drift: [] })).not.toHaveProperty('drift');
+  });
+
   it('packs one build to the same bytes twice, with every dictionary sorted', () => {
     const one = JSON.stringify(packLogs(logging));
     expect(JSON.stringify(packLogs(logging))).toBe(one);

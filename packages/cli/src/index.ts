@@ -108,7 +108,7 @@ export { runInit, scanCandidates } from './commands/init.js';
 export { linkRepos, linkSuggested, unlinkRepos } from './commands/link.js';
 export type { SuggestedOptions, SuggestedResult } from './commands/link.js';
 export type { LinkOptions, LinkResult, UnlinkResult } from './commands/link.js';
-export { installMcp, reasonCatalog, serverEntry, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
+export { installMcp, reasonCatalog, serverEntry, trafficHook, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
 export { runChannel } from './commands/channel.js';
 export { documentsOf, parseAccessLogKeys, runListen, runObserve, runObserveDiff, readTraceFiles } from './commands/observe.js';
 export { diffObserved, diffLines, DIFF_MIN_COUNT, type ObservedDiff, type ObservedDiffRow } from './observe/diff.js';

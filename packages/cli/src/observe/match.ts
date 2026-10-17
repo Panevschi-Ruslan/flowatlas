@@ -3,9 +3,11 @@ import {
   AMBIGUOUS_CANDIDATES,
   emptyAgg,
   hourOf,
+  isEntryId,
   isError,
   isJoinEdge,
   joinIdOf,
+  mergeEntryShapes,
   STEP_OF_META,
   wasRead,
   observedFromParts,
@@ -15,6 +17,7 @@ import {
   type AmbiguousKind,
   type AmbiguousSpan,
   type EntrySamples,
+  type EntryShapes,
   type GraphEdge,
   type GraphNode,
   type JoinAgg,
@@ -29,6 +32,7 @@ import {
 } from '@flowatlas/core';
 import { channelLabelOf } from './aws.js';
 import { matchAws } from './match-aws.js';
+import type { SpanBodies } from './readers/index.js';
 import { VALUE, type ObservedSpan } from './span.js';
 
 export { OBSERVED_FORMAT_VERSION, type Observed } from '@flowatlas/core';
@@ -255,6 +259,8 @@ interface HourTally {
   channels: Map<string, Agg>;
   unmatched: Map<string, UnmatchedAgg>;
   ambiguous: Map<string, AmbiguousSpan>;
+  /** The shapes of the bodies of the hour, by entry (P113). */
+  shapes: Map<string, EntryShapes>;
 }
 
 const emptyHour = (): HourTally => ({
@@ -265,6 +271,7 @@ const emptyHour = (): HourTally => ({
   channels: new Map(),
   unmatched: new Map(),
   ambiguous: new Map(),
+  shapes: new Map(),
 });
 
 /**
@@ -277,6 +284,8 @@ export class Tally {
   readonly placeOf = new Map<ObservedSpan, string>();
   /** The entries a span was credited to: a function behind a route is both the route and the function (P107). */
   readonly entryOf = new Map<ObservedSpan, string[]>();
+  /** The join a span was measured on, when one was credited: where a call's bodies went (P113). */
+  readonly joinOf = new Map<ObservedSpan, GraphEdge>();
 
   constructor(private readonly hourFor: (span: ObservedSpan) => string) {}
 
@@ -310,6 +319,20 @@ export class Tally {
   join(edge: GraphEdge, measured: ObservedSpan, side: MeasuredAt): void {
     const agg: JoinAgg = this.add(this.hour(measured).joins, edgeIdOf(edge), measured);
     if (side === 'callee') agg.callee = (agg.callee ?? 0) + 1;
+    if (!this.joinOf.has(measured)) this.joinOf.set(measured, edge);
+  }
+
+  /** The shapes of one exchange's bodies, on the entry it reached, in the hour of its span (P113). */
+  body(entryId: string, span: ObservedSpan, bodies: SpanBodies): void {
+    const shapes = this.hour(span).shapes;
+    const one: EntryShapes = {
+      ...(bodies.request === undefined ? {} : { request: bodies.request }),
+      ...(bodies.response === undefined || span.status === undefined ? {} : { responses: { [String(span.status)]: bodies.response } }),
+      samples: 1,
+      lastSeen: span.at ?? null,
+    };
+    const had = shapes.get(entryId);
+    shapes.set(entryId, had === undefined ? one : mergeEntryShapes(had, one));
   }
 
   entry(id: string, span: ObservedSpan): void {
@@ -367,6 +390,7 @@ export class Tally {
       channels: sorted(tally.channels),
       unmatched: [...tally.unmatched.values()].sort(byCount),
       ambiguous: [...tally.ambiguous.values()].sort(byCount),
+      ...(tally.shapes.size === 0 ? {} : { shapes: sorted(tally.shapes) }),
     }));
   }
 }
@@ -406,6 +430,14 @@ export interface MatchOptions {
   droppedAttributes?: number;
   /** The hour a span goes to when neither it nor its trace says when it started. */
   now?: Date;
+  /**
+   * With `--shapes` (P113): the shapes of the bodies the readers saw, by span.
+   * Each goes on the entry its span reached; the file's privacy block says
+   * bodies were read for shape only.
+   */
+  bodies?: readonly SpanBodies[];
+  /** Told how many exchanges' bodies were placed on an entry and how many on none. */
+  onBodies?: (placed: number, unplaced: number) => void;
 }
 
 export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], options: MatchOptions = {}): Observed => {
@@ -611,6 +643,22 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
     });
   };
 
+  /**
+   * The entry an exchange reached, for its bodies (P113): the one its server
+   * span was credited to, else the entry of the join its call was, else - a
+   * browser's call that fit several call sites - the one route of the service
+   * its origin named that fits it. Two routes fit: none.
+   */
+  const entryOfExchange = (span: ObservedSpan): string | undefined => {
+    const credited = tally.entryOf.get(span)?.[0];
+    if (credited !== undefined) return credited;
+    const joined = tally.joinOf.get(span);
+    if (joined !== undefined) return isEntryId(joined.to) ? joined.to : undefined;
+    if (span.kind !== 'client' || span.peerService === undefined) return undefined;
+    const routes = matchRoute(index.httpEntries, span, (node) => node.repo === span.peerService);
+    return routes.length === 1 ? routes[0]!.id : undefined;
+  };
+
   const childrenOf = new Map<ObservedSpan, ObservedSpan[]>();
   for (const span of spans) {
     const parent = parentOf(span);
@@ -638,12 +686,29 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
     if (span.kind === 'client' && span.awsOp === undefined && span.method !== undefined && routeOf(span) !== undefined) client(span);
   }
 
+  if (options.bodies !== undefined) {
+    let placed = 0;
+    let unplaced = 0;
+    for (const bodies of options.bodies) {
+      const span = byId.get(`${bodies.traceId}/${bodies.spanId}`);
+      const entry = span === undefined ? undefined : entryOfExchange(span);
+      if (span === undefined || entry === undefined) {
+        unplaced += 1;
+        continue;
+      }
+      tally.body(entry, span, bodies);
+      placed += 1;
+    }
+    options.onBodies?.(placed, unplaced);
+  }
+
   return observedFromParts({
     buckets: tally.buckets(),
     samples: samplesOf(spans, tally, hourFor),
     sources: options.sources ?? [],
     droppedAttributes: options.droppedAttributes ?? 0,
     samplesKept: true,
+    ...(options.bodies === undefined ? {} : { bodiesRead: true }),
   });
 };
 

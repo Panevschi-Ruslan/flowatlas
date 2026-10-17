@@ -6,7 +6,7 @@ import { failChipLines, failChipsSeen, failsOf, scheduleOf } from '../steps.js';
    kind select and the search's "Filter the list" let through, and what
    picking one does on each tab. */
 export function createWays(page) {
-  const { FL, KD, LB, MT, RP, entryIx, esc, failChipsHtml, files, graphLink, hueOf, kinds, model, nodes,
+  const { FL, KD, LB, MT, RP, driftRowHtml, entryIx, esc, failChipsHtml, files, graphLink, hueOf, kinds, model, nodes,
     repoName, scheduleSay, seen, store, typeName, virtualList } = page;
   const shown = store.get('shown');
 
@@ -119,7 +119,7 @@ export function createWays(page) {
       `<span class="row-meta">${esc(repoName(i))} &middot; ${esc(kinds[nodes[i][KD]] || typeName(i))}` +
       (files[nodes[i][FL]] ? ' &middot; ' + esc(files[nodes[i][FL]].split('/').pop()) : '') +
       (seen.entry(i) ? ` &middot; <span class="row-seen" title="Hits seen at run time">seen &times;${seen.entry(i).toLocaleString()}</span>` : '') +
-      timeHtml(i) +
+      timeHtml(i) + driftRowHtml(i) +
       (seen.never(i) ? ` &middot; <span class="row-never${seen.never(i).strong ? ' is-strong' : ''}" title="${seen.never(i).strong ? 'Never seen while its neighbours were busy' : 'Never seen, and nothing beside it was busy either'}">not seen in ${esc(seen.never(i).window)}</span>` : '') +
       (scheduleOf(model, i) ? ` &middot; <span class="sched">${esc(scheduleSay(scheduleOf(model, i)))}</span>` : '') +
       '</span>' + (fails(i) ? `<span class="row-meta row-fails">${failChipsHtml(i)}</span>` : '');

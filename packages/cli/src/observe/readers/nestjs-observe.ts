@@ -1,6 +1,20 @@
 import { NESTJS_OBSERVE_READS, only } from '../allow-list.js';
 import { pathOf, type ObservedSpan } from '../span.js';
-import { Dropped, isObject, isoOfText, list, msOf, Skips, text, withFields, type Json, type TraceReader } from './shared.js';
+import { shapeOf, type Shape } from '@flowatlas/core';
+import {
+  Dropped,
+  isObject,
+  isoOfText,
+  list,
+  msOf,
+  shapeOfText,
+  Skips,
+  text,
+  withFields,
+  type Json,
+  type SpanBodies,
+  type TraceReader,
+} from './shared.js';
 
 // --- @nestjs/observe -------------------------------------------------------
 
@@ -11,6 +25,9 @@ import { Dropped, isObject, isoOfText, list, msOf, Skips, text, withFields, type
  * matched in `op`, the answer in `a` (`m` method, `sc` status, `ou` original
  * URL) and its span tree in `t`. A tree node is `{ o, c, m, t, ch }`: origin,
  * class, method key, tags, children; `n`, a name, is optional and not read.
+ *
+ * With `--shapes` (P113), and only then, the captured request's `rq.body` is
+ * walked for its shape and dropped (`requestShape`); its headers never are.
  */
 const isSnapshot = (value: unknown): boolean => isObject(value) && typeof value['ti'] === 'string';
 
@@ -108,10 +125,26 @@ interface BatchContext {
   service: string | undefined;
   skips: Skips;
   dropped: Dropped;
+  /** Set with `--shapes`: each snapshot's request body shape goes here, by its server span. */
+  bodies?: SpanBodies[];
 }
 
-const snapshotSpans = (raw: unknown, index: string, { service, skips, dropped }: BatchContext): ObservedSpan[] => {
-  dropped.outside(raw, NESTJS_OBSERVE_READS.snapshot);
+/**
+ * The shape of the body a snapshot captured (P113): `rq.body` as the SDK
+ * parsed it, or its text when it kept text, walked and dropped here.
+ */
+const requestShape = (raw: unknown, { skips, dropped }: BatchContext): Shape | undefined => {
+  const { rq } = only(raw, NESTJS_OBSERVE_READS.shapesSnapshot);
+  if (!isObject(rq)) return undefined;
+  dropped.outside(rq, NESTJS_OBSERVE_READS.capturedRequest);
+  const { body } = only(rq, NESTJS_OBSERVE_READS.capturedRequest);
+  if (body === undefined || body === null) return undefined;
+  return typeof body === 'string' ? shapeOfText(body, undefined, skips) : shapeOf(body);
+};
+
+const snapshotSpans = (raw: unknown, index: string, context: BatchContext): ObservedSpan[] => {
+  const { service, skips, dropped } = context;
+  dropped.outside(raw, context.bodies === undefined ? NESTJS_OBSERVE_READS.snapshot : [...NESTJS_OBSERVE_READS.snapshot, ...NESTJS_OBSERVE_READS.shapesSnapshot]);
   const snapshot = only(raw, NESTJS_OBSERVE_READS.snapshot);
   const traceId = text(snapshot['ti']);
   if (traceId === undefined) {
@@ -150,6 +183,10 @@ const snapshotSpans = (raw: unknown, index: string, { service, skips, dropped }:
     },
   );
   const spans: ObservedSpan[] = [root];
+  if (context.bodies !== undefined) {
+    const request = requestShape(raw, context);
+    if (request !== undefined) context.bodies.push({ traceId, spanId: rootId, request });
+  }
   walkTree(snapshot['t'], { traceId, rootId, service, at, spans, skips, dropped });
   return spans;
 };
@@ -193,6 +230,7 @@ const batchesOf = (document: unknown, dropped: Dropped): Json[] => {
 
 export const nestjsObserveReader: TraceReader = {
   name: 'nestjs-observe',
+  carriesBodies: true,
   sniff: (document) => isBatchSeries(document) || isBatch(document) || isSnapshotArray(document),
   read: (document, fallbackService, options) => {
     const skips = new Skips();
@@ -200,8 +238,14 @@ export const nestjsObserveReader: TraceReader = {
     // A document after the first of a file, or a post after the first a listener took (P109), says which,
     // so two posts' jobs, which have no trace id of their own, stay two traces.
     const part = options?.part === undefined || options.part === 0 ? '' : `${options.part}/`;
+    const bodies: SpanBodies[] | undefined = options?.shapes === true ? [] : undefined;
     const spans = batchesOf(document, dropped).flatMap((batch, at) => {
-      const context = { service: text(batch['serviceId']) ?? fallbackService, skips, dropped };
+      const context: BatchContext = {
+        service: text(batch['serviceId']) ?? fallbackService,
+        skips,
+        dropped,
+        ...(bodies === undefined ? {} : { bodies }),
+      };
       // The first batch's spans keep the ids they always had; a later batch's say which batch.
       const key = (index: number): string => `${part}${at === 0 ? String(index) : `${at}.${index}`}`;
       return [
@@ -209,6 +253,6 @@ export const nestjsObserveReader: TraceReader = {
         ...list(batch['jobs']).flatMap((job, index) => jobSpans(job, key(index), context)),
       ];
     });
-    return { spans, skipped: skips.list(), droppedAttributes: dropped.count };
+    return { spans, skipped: skips.list(), droppedAttributes: dropped.count, ...(bodies === undefined ? {} : { bodies }) };
   },
 };

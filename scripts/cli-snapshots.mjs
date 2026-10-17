@@ -185,6 +185,19 @@ const onObservedCopy = async (io, run) => {
     rmSync(copy, { recursive: true, force: true });
   }
 };
+/**
+ * `observe --shapes` (P113) over the same traces and the HAR, with the
+ * configuration so the HAR's origins name their services: the summary, the
+ * file itself (the observed file the shapes MCP suite answers from), and
+ * `contracts` beside it, whose `traffic` section compares each route's
+ * bodies with its code, for the gateway the front end calls.
+ */
+const SHAPED = [...TRACES, ...HAR];
+const contractsOnShapedCopy = (io) =>
+  onObservedCopy(io, async ({ db, out }, said) => {
+    runObserve(SHAPED, { db, config, now: OBSERVE_NOW, shapes: true, reset: true, print: () => {} });
+    runContracts({ config, db, out, format: 'json', service: 'gateway' }, said);
+  });
 const deadOnObservedCopy = (io, options) =>
   onObservedCopy(io, async ({ db }, out) => {
     const { lines } = await runDead({ config, db, ...options });
@@ -241,6 +254,9 @@ const CASES = [
   ['observe.zipkin.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.zipkin.json'), {}]])],
   ['observe.jaeger.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.jaeger.json'), {}]])],
   ['observe.har.txt', (io) => observeOnCopy(io, [[HAR, { config }]])],
+  ['observe.shapes.txt', (io) => observeOnCopy(io, [[SHAPED, { config, shapes: true }]])],
+  ['observe.shapes.json', (io) => observeOnCopy(io, [[SHAPED, { config, shapes: true, format: 'json' }]])],
+  ['contracts.traffic.json', contractsOnShapedCopy],
   ['accept.unreadable.txt', acceptUnreadable],
   ['flow.get-orders.tree.l0.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '0' }, io)],
   ['flow.get-orders.tree.l1.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree' }, io)],

@@ -285,6 +285,21 @@ describe('observed', () => {
     expect(bare.confirmed(guess)).toBe(0);
     expect(bare.never(entry)).toBeNull();
   });
+
+  it('says how many fields a way in’s bodies differ from its code in, and which (P113)', () => {
+    const data = pack();
+    const entry = data.entryIds[nodes[0]!.id]!;
+    data.observed = {
+      joins: {},
+      entries: {},
+      unmatched: [],
+      drift: { [nodes[0]!.id]: [2, ['request giftNote', '200 owner']], 'entry:nowhere:http:GET:/x': [1, ['request x']] },
+    };
+    const seen = createSeen(data);
+    expect(seen.drift(entry)).toEqual({ fields: 2, paths: ['request giftNote', '200 owner'] });
+    expect(seen.drift(entry + 1)).toBeNull();
+    expect(createSeen(pack()).drift(entry)).toBeNull();
+  });
 });
 
 describe('prompt', () => {

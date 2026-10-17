@@ -143,9 +143,25 @@ export function createPageContext(data) {
         .join('<span aria-hidden="true">·</span>') + '</span>';
   };
   const scheduleSay = (schedule) => schedule.expression + (schedule.zone ? ' · ' + schedule.zone : '');
+  /* Bodies traffic carried that differ from what the code declares (P113),
+     the paths in the title. A run-time figure like a way in's p95 and error
+     rate (P111): the Steps header shows it as a chip, the Ways in row beside
+     its time. */
+  const driftSay = (drift) => `traffic differs: ${drift.fields} ${drift.fields === 1 ? 'field' : 'fields'}`;
+  const driftTitle = (drift) => 'Traffic carried these differently from what the code declares: ' + drift.paths.join(', ') +
+    '. Seen in one window of traffic, so never a break on its own: flowatlas contracts says how often.';
+  const driftChipHtml = (i) => {
+    const drift = seen.drift(i);
+    return drift ? `<span class="fail-chips"><span class="fail-chip is-drift" title="${esc(driftTitle(drift))}">${esc(driftSay(drift))}</span></span>` : '';
+  };
+  /* The same, in a Ways in row's meta line, after its p95 and error rate. */
+  const driftRowHtml = (i) => {
+    const drift = seen.drift(i);
+    return drift ? ` &middot; <span class="row-drift" title="${esc(driftTitle(drift))}">${esc(driftSay(drift))}</span>` : '';
+  };
   const entryHeadHtml = (i) => {
     const schedule = scheduleOf(model, i);
-    return (schedule ? `<span class="hint">fires <span class="sched">${esc(scheduleSay(schedule))}</span></span>` : '') + failChipsHtml(i);
+    return (schedule ? `<span class="hint">fires <span class="sched">${esc(scheduleSay(schedule))}</span></span>` : '') + failChipsHtml(i) + driftChipHtml(i);
   };
   const accepted = data.accepted || { rows: [], ids: {}, notes: {} };
   const acceptedRows = new Set(accepted.rows);
@@ -249,7 +265,7 @@ export function createPageContext(data) {
   const store = createStore({ current: null, view: null, shown: new Set(repos) });
 
   return { CROSSES, FL, GLYPH, KD, LB, LN, MT, RP, TY, accepted, acceptedNote,
-    acceptedRows, acceptedRule, confidences, copyText, data, edgeTypes, entryHeadHtml, entryIx, esc, failChipsHtml,
+    acceptedRows, acceptedRule, confidences, copyText, data, driftRowHtml, edgeTypes, entryHeadHtml, entryIx, esc, failChipsHtml,
     files, flash, graphLink, guards, hueOf, keys, kinds, model, nodes, opener, plural, reachesCrossing, reasons,
     repoName, repos, rowKind, rowPlace, rowRisk, rowService, rowTone, scheduleSay, seen, store, trustHtml, typeName, types, wheelHint,
     wordHtml };

@@ -2381,6 +2381,10 @@ kbd {
 .w-label .s-mark { flex: none; }
 .row-time { font-family: var(--f-mono); color: var(--ink); }
 .row-errors { font-family: var(--f-mono); color: var(--bad); }
+/* Bodies traffic carried unlike the code (P113), beside the time and the
+   errors: a state, so its edge is the 3:1 warn and never the rule (P142). */
+.fail-chip.is-drift { color: var(--warn); border-color: var(--warn); }
+.row-drift { font-family: var(--f-mono); color: var(--warn); }
 .built-seen { white-space: nowrap; }
 
 /* A step the traffic measured no time for, on a waterfall in time: a

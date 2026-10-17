@@ -2,8 +2,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createContractChecker, type ContractFinding } from '@flowatlas/contracts';
-import { loadConfig, type LoadedConfig } from '@flowatlas/core';
+import { compareTraffic, createContractChecker, type ContractFinding, type TrafficComparison } from '@flowatlas/contracts';
+import { loadConfig, type EntryShapes, type GraphEdge, type LoadedConfig } from '@flowatlas/core';
 import { testPatternText } from '../patterns/test.js';
 import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
@@ -154,6 +154,20 @@ export const contractsHook = (
 };
 
 /**
+ * A route's traffic shapes against its code, for `check_contract` and
+ * `get_flow` (P113): the server does not depend on the contracts package, so
+ * it is handed this, as it is the contract checker.
+ */
+export const trafficHook =
+  (open: () => GraphDb | undefined) =>
+  (input: { entry: string; shapes: EntryShapes; caller?: GraphEdge }): TrafficComparison | undefined => {
+    const db = open();
+    return db === undefined
+      ? undefined
+      : compareTraffic(input.entry, input.shapes, db, input.caller === undefined ? {} : { caller: input.caller });
+  };
+
+/**
  * What `doctor` says about every reason it knows, for the server's
  * `flowatlas://reasons` (P96 D4): the server does not depend on the CLI, so the
  * catalogue is handed in, as the contracts checker is.
@@ -241,6 +255,10 @@ export const registerMcp = (program: Command): void => {
           ...where,
           reasonCatalog: reasonCatalog(),
           contractChecker: contractsHook(() => {
+            const opened = handle.open();
+            return 'error' in opened ? undefined : opened.db;
+          }),
+          trafficChecker: trafficHook(() => {
             const opened = handle.open();
             return 'error' in opened ? undefined : opened.db;
           }),

@@ -54,6 +54,18 @@ export type {
   UncheckedEdge,
   UncheckedReason,
 } from './types.js';
+export { compareTraffic, TRAFFIC_KINDS, TRAFFIC_MIN_SAMPLES, TRAFFIC_UNCHECKED, trafficPaths, trafficReport } from './traffic.js';
+export type {
+  TrafficReport,
+  TrafficAgainst,
+  TrafficComparison,
+  TrafficDiff,
+  TrafficKind,
+  TrafficOptions,
+  TrafficSide,
+  TrafficUnchecked,
+  TrafficUncheckedReason,
+} from './traffic.js';
 export { uncheckedNote } from './unchecked.js';
 export type { UncheckedNote } from './unchecked.js';
 export {

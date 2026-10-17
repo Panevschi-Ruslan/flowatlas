@@ -78,6 +78,24 @@ describe('the ways in', () => {
     expect(heightAt(0).height).toBe('80px');
   });
 
+  it('says beside a way in’s time that its traffic differs from its code, as the Steps header does (P113)', () => {
+    const id = 'entry:orders:http:POST:/orders';
+    const traced = {
+      ...data,
+      observed: { entries: { [id]: { hits: 4, p95: 120 } }, joins: {}, drift: { [id]: [2, ['request note', '200 owner']] } },
+    } as any;
+    const { page, document } = mountPage(traced, { upTo: createWays });
+    createWays(page).drawEntries();
+    const at = traced.entryIds[id];
+    const row = document.querySelector(`#entries button.row[data-entry="${at}"]`)!;
+    const meta = row.querySelector('.row-meta')!;
+    expect(textOf(meta)).toMatch(/p95 120 ms · traffic differs: 2 fields/);
+    expect(meta.querySelector('.row-drift')!.getAttribute('title')).toContain('request note, 200 owner');
+    expect(page.entryHeadHtml(at)).toContain('<span class="fail-chip is-drift"');
+    expect(page.entryHeadHtml(at)).toContain('traffic differs: 2 fields');
+    expect(document.querySelectorAll('#entries .row-drift')).toHaveLength(1);
+  });
+
   it('picks a way in and opens its steps, from any tab but the graph', () => {
     const { page, document } = mountPage(data, { upTo: createWays });
     const opened: string[] = [];

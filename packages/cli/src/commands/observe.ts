@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { basename, dirname, extname } from 'node:path';
 import { gunzipSync } from 'node:zlib';
+import { asLookup, trafficPaths, trafficReport, type TrafficComparison } from '@flowatlas/contracts';
 import {
   describeObservedProblem,
   loadConfig,
@@ -45,6 +46,7 @@ import {
   type FrontEndContext,
   type ReaderOptions,
   type SkippedPart,
+  type SpanBodies,
   TraceFileError,
 } from '../observe/readers/index.js';
 import type { ObservedSpan } from '../observe/span.js';
@@ -71,6 +73,12 @@ export interface ObserveOptions extends DbOptions {
   accessLogKeys?: string;
   /** How long to wait for a listener's lock on the observed file (default five seconds); tests shorten it. */
   lockWaitMs?: number;
+  /**
+   * `--shapes` (P113): read the JSON bodies a HAR or a @nestjs/observe batch
+   * carries for their shape only - key names and JSON types, never a value -
+   * and compare them with the types the code declares.
+   */
+  shapes?: boolean;
 }
 
 export interface ObserveRun {
@@ -89,6 +97,10 @@ export interface ObserveRun {
   notes: string[];
   /** The version of the file this run upgraded, when it was older. */
   upgradedFrom?: number;
+  /** With `--shapes` (P113): exchanges whose bodies were placed on a route, and on none. */
+  bodies?: { placed: number; unplaced: number };
+  /** With `--shapes`: every route the file holds shapes for, compared with its code, most differing first. */
+  traffic?: TrafficComparison[];
 }
 
 const messageOf = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
@@ -180,6 +192,8 @@ export interface TraceFiles {
   repeated: string[];
   /** What the readers said about the files, each sentence once (P112). */
   notes: string[];
+  /** With `--shapes` (P113): the shapes of the bodies the files carried, by span. */
+  bodies?: SpanBodies[];
 }
 
 /** How each flag a format takes is spelled on the command line. */
@@ -246,7 +260,9 @@ export const readTraceFiles = (files: readonly string[], service?: string, optio
     ...(options.function === undefined ? {} : { function: options.function }),
     ...(options.accessLogKeys === undefined ? {} : { accessLogKeys: options.accessLogKeys }),
     ...(options.frontEnd === undefined ? {} : { frontEnd: options.frontEnd }),
+    ...(options.shapes === true ? { shapes: true } : {}),
   };
+  const bodies: SpanBodies[] = [];
   for (const file of files) {
     const { bytes, sha256 } = bytesOf(file);
     if (known.has(sha256)) {
@@ -260,6 +276,9 @@ export const readTraceFiles = (files: readonly string[], service?: string, optio
       if (reader === undefined) throw cannotRun(`${file} is none of the formats observe reads: ${FORMATS_SAID}`);
       formats[file] = reader.name;
       checkFlags(file, reader.name, reader.takes ?? [], said);
+      if (said.shapes === true && reader.carriesBodies !== true) {
+        notes.add(`${reader.name} files carry no bodies, so --shapes read nothing of them`);
+      }
       let result;
       try {
         result = reader.read(document, service, { ...said, part, source: sha256 });
@@ -270,6 +289,7 @@ export const readTraceFiles = (files: readonly string[], service?: string, optio
         throw cause;
       }
       for (const note of result.notes ?? []) notes.add(note);
+      bodies.push(...(result.bodies ?? []));
       spans.push(...result.spans);
       read += result.spans.length;
       droppedAttributes += result.droppedAttributes;
@@ -282,14 +302,58 @@ export const readTraceFiles = (files: readonly string[], service?: string, optio
     }
     sources.push({ sha256, format: formats[file] ?? 'empty', spans: read, readAt });
   }
-  return { spans, formats, skipped: [...skipped.values()], sources, droppedAttributes, repeated, notes: [...notes] };
+  return {
+    spans,
+    formats,
+    skipped: [...skipped.values()],
+    sources,
+    droppedAttributes,
+    repeated,
+    notes: [...notes],
+    ...(said.shapes === true ? { bodies } : {}),
+  };
 };
 
 const LISTED = 20;
 /** Entries named under the slowest and the failing most. */
 const RANKED = 5;
 
-const skippedSaid = (part: SkippedPart): string => `${part.count} ${part.noun}${part.count === 1 ? '' : 's'} ${part.why}`;
+/** Nouns whose plural is not the noun and an `s`. */
+const PLURALS: Readonly<Record<string, string>> = { body: 'bodies' };
+
+const skippedSaid = (part: SkippedPart): string =>
+  `${part.count} ${part.count === 1 ? part.noun : (PLURALS[part.noun] ?? `${part.noun}s`)} ${part.why}`;
+
+/** Routes with drift the summary names, and paths named on each. */
+const DRIFT_LISTED = 5;
+const DRIFT_PATHS = 3;
+
+/** What `--shapes` found, in the summary (P113): how many bodies, and the routes whose traffic differs from their code. */
+const shapesSaid = (run: ObserveRun, name: (id: string) => string): string[] => {
+  if (run.bodies === undefined || run.traffic === undefined) return [];
+  const { placed, unplaced } = run.bodies;
+  const lines = [
+    `bodies read for shape only (key names and JSON types, no value): ${placed} exchange${placed === 1 ? '' : 's'} placed on a route` +
+      (unplaced > 0 ? `, ${unplaced} on none (no single route fits the call)` : ''),
+  ];
+  const drifting = run.traffic.filter((comparison) => comparison.differs > 0);
+  const unchecked = run.traffic.filter((comparison) => comparison.request === undefined && comparison.responses === undefined).length;
+  if (drifting.length === 0) {
+    lines.push(`traffic agrees with the code on the ${run.traffic.length - unchecked} route(s) it could be compared on`);
+  } else {
+    lines.push(`traffic differs from the code on ${drifting.length} route(s):`);
+    for (const comparison of drifting.slice(0, DRIFT_LISTED)) {
+      const paths = trafficPaths(comparison);
+      const more = paths.length > DRIFT_PATHS ? ` and ${paths.length - DRIFT_PATHS} more` : '';
+      lines.push(
+        `  ${name(comparison.entry)}  ${comparison.differs} field${comparison.differs === 1 ? '' : 's'}: ${paths.slice(0, DRIFT_PATHS).join(', ')}${more}`,
+      );
+    }
+    if (drifting.length > DRIFT_LISTED) lines.push(`  ... ${drifting.length - DRIFT_LISTED} more; flowatlas contracts lists every one`);
+  }
+  if (unchecked > 0) lines.push(`${unchecked} route(s) carried bodies the code declares no type for, so there was nothing to compare them with`);
+  return lines;
+};
 
 const msSaid = (ms: number | undefined): string => (ms === undefined ? '-' : `${ms}ms`);
 const rateSaid = (rate: number | undefined): string =>
@@ -352,6 +416,7 @@ const summary = (run: ObserveRun, labels: ReadonlyMap<string, string>): string[]
     lines.push('failing most:');
     for (const [id, seen] of failing) lines.push(rankedLine(name(id), seen));
   }
+  lines.push(...shapesSaid(run, name));
   lines.push(windowSaid(run));
   lines.push(run.path);
   return lines;
@@ -427,6 +492,9 @@ const observeLocked = (
   let run: Observed;
   let labels: Map<string, string>;
   let read: TraceFiles;
+  let bodies: ObserveRun['bodies'];
+  let observed: Observed;
+  let traffic: TrafficComparison[] | undefined;
   try {
     const nodes = db.allNodes();
     labels = labelsOf(nodes);
@@ -439,21 +507,27 @@ const observeLocked = (
       ...(accessLogKeys === undefined ? {} : { accessLogKeys }),
       // Read only when a HAR asks: the configuration and its repositories' setting files.
       frontEnd: () => (frontEnd ??= frontEndContextOf(nodes, projectOf(options))),
+      ...(options.shapes === true ? { shapes: true } : {}),
     });
     run = matchSpans(indexGraph(nodes, db.allEdges()), read.spans, {
       sources: read.sources,
       droppedAttributes: read.droppedAttributes,
       now,
+      ...(read.bodies === undefined
+        ? {}
+        : { bodies: read.bodies, onBodies: (placed: number, unplaced: number) => (bodies = { placed, unplaced }) }),
     });
+    observed = mergeObserved(previous, run, {
+      ...(since === undefined ? {} : { since }),
+      ...(options.reset === true ? { reset: true } : {}),
+      ...(options.samples === false ? { samples: false } : {}),
+      now,
+    });
+    // Every route the file holds shapes for, against its code, while the graph is open (P113).
+    if (options.shapes === true) traffic = trafficReport(observed.shapes ?? {}, observed.window, asLookup(db)).entries;
   } finally {
     db.close();
   }
-  const observed = mergeObserved(previous, run, {
-    ...(since === undefined ? {} : { since }),
-    ...(options.reset === true ? { reset: true } : {}),
-    ...(options.samples === false ? { samples: false } : {}),
-    now,
-  });
   const path = saveObserved(dbPath, observed);
   const result: ObserveRun = {
     path,
@@ -466,6 +540,8 @@ const observeLocked = (
     ...(previous !== undefined && previous.observedFormatVersion < OBSERVED_FORMAT_VERSION
       ? { upgradedFrom: previous.observedFormatVersion }
       : {}),
+    ...(bodies === undefined ? {} : { bodies }),
+    ...(traffic === undefined ? {} : { traffic }),
   };
   return { result, labels, observed };
 };
@@ -505,6 +581,7 @@ const FILE_ONLY: ReadonlyArray<[keyof ListenCliOptions, string]> = [
   ['function', '--function'],
   ['accessLogKeys', '--access-log-keys'],
   ['format', '--format'],
+  ['shapes', '--shapes'],
 ];
 
 /** Listen-only flags, given to a run over files. */
@@ -643,6 +720,10 @@ export const registerObserve = (program: Command): void => {
     .option('--since <dur>', 'keep only the hours inside this window (2h, 24h, 7d), kept for later runs; all stops cutting')
     .option('--reset', 'start the observed file again instead of adding to it')
     .option('--no-samples', 'keep no sample requests, and remove the ones the file holds: then it holds no trace id')
+    .option(
+      '--shapes',
+      'read the JSON bodies a HAR or a @nestjs/observe batch carries for their shape only (key names and JSON types, never a value) and compare them with the declared types',
+    )
     .option('--format <kind>', 'json or table (default: table)')
     .option('--listen [port]', `instead of files, take OTLP/HTTP and @nestjs/observe posts on this port (default ${LISTEN_PORT}) until Ctrl-C`)
     .option('--host <addr>', `address --listen binds (default ${LISTEN_HOST}); not loopback needs --allow-remote`)

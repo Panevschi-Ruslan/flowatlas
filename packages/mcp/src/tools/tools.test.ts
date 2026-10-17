@@ -164,6 +164,11 @@ describe('the tools a session is offered', () => {
    * The two lines met once more (P122 on one side; P108 to P110, P134, P142 and
    * P143 on the other): twenty-four tools, 12,212 and 31,175, each ceiling
    * the measured size rounded up to the next 50.
+   *
+   * And again (P113 on one side, whose `check_contract` takes an entry id and
+   * says it carries `traffic`, 16 characters; P111, P122, P134 and P142 on the
+   * other): twenty-four tools, 12,228 and 31,191, each ceiling the measured
+   * size rounded up to the next 50, so neither moves.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
