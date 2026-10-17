@@ -526,13 +526,74 @@ types such a stand-in supplied says so on its edge in `get_flow`: `because:
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke | `service`, `offset` |
+| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke; with `verdict`, whether it is safe to merge and why | `service`, `verdict`, `offset` |
 
 It reads the `diff.json` that `flowatlas diff <base-ref>` writes rather than
 building two revisions inside a tool call; run the command to refresh it. At
 `detail: 0` a changed node is its id and a way in its id, type and the changed
 node it `reaches`; at 1 they add service and label (and a way in its kind and
 confidence); at 2 a changed node adds the `fields` that changed.
+
+`base` and `head` are `{ ref, label }`: `label` is `working tree` where no ref
+was read, and otherwise the ref with the commit each service was read at
+(`main (billing 392089da, orders 08ad86ef; gateway from the working tree)`).
+`counts` are the lengths of the lists below before `maxNodes` cut them, so a
+count beside a shorter list shows the cut; under `service` every count is that
+service's (types by the service in their id), and a service the diff does not
+name answers zeros and `note: "no such service in the diff"`. `counts.gaps`
+and `counts.lostJoins` count the gap ids the branch added and removed and the
+calls that stopped joining.
+
+**The verdict.** `what_changed({verdict: true})` adds `verdict` - `safe`,
+`unsafe` or `unknown` - and `because`, one sentence per reason, unsafe ones
+first. The rule is fixed, so a reviewer can disagree with a reason rather than
+with a score:
+
+- **unsafe**: a new contract error; a call whose target went (it joined a
+  route on the base side and joins nothing now), or a channel left with no
+  producer or no consumer; a removed way in that another service still calls.
+- **unknown**: a service the base ref could not be read for (read from its
+  working tree on both sides, so reported unchanged without being compared); a
+  new gap on a path from a changed node back to a way in, which the reading
+  cannot see past; a `diff.json` of format 1, which holds no gap rows ("rerun
+  flowatlas diff for new gaps").
+- **safe** otherwise.
+
+Beside it: `newGaps` (gap ids the head has and the base does not, each with
+the method it is in, `onChangedPath: true` where it makes the verdict
+unknown, and `next`), `vanishedTargets` (`{ caller, target, now }`, `now` what
+the head side says instead, such as `target-route-not-found`), `retest` (the
+ways in that reach a change, ranked by how many changed nodes each reaches and
+then by `observed` traffic; it takes the place of `entries`) and `newFindings`
+(likely N+1s, unguarded routes and contract warnings the branch introduced,
+which never decide the verdict). One `offset` pages these with the rest.
+`next` traces the first way in to retest, checks the first break, reads the
+method of the first new gap and asks who calls the first caller that lost its
+target.
+
+### Prompts and resources
+
+Three prompts write out the calls a common review takes, with the ids already
+resolved. They are text that names calls - the client runs them - and each
+call is written by the same functions `next` writes with.
+
+| Prompt | Arguments | Writes |
+|---|---|---|
+| `before-rename` | `symbol` | `who_calls` and `impact` on it (`type_usage` for a type), `check_contract` on each crossing it is on, and what else must be renamed with it |
+| `pr-review` | `base?` | `what_changed({verdict: true})` and how to follow its `next`; or, when `diff.json` is missing, older than the database or of another base, the `flowatlas diff` to run first |
+| `trace-route` | `route` | `get_flow` on it, `check_contract` on each crossing of the walk, `cant_follow` for the services where it stops, `describe_for_prompt` to hand it on |
+
+A name that answers to several things is listed with each candidate's id, and
+the prompt asks which.
+
+| Resource | Holds |
+|---|---|
+| `flowatlas://reasons` | every reason a row of the reading can give: its kind (gap, note, finding), the cause it is counted under, and the sentence `doctor` heads it with |
+| `flowatlas://services` | the services the graph holds, each with its resource |
+| `flowatlas://services/{name}` | one service: what `start_here` says of it, its crossings to and from every other service with how each checks, and its top findings |
+
+Resources read the same database as the tools: without one, a service reads as
+the same `graph.db not found … run flowatlas build` the tools answer.
 
 ### Source
 
@@ -568,6 +629,7 @@ Some prompts that work as they are:
 - *"Follow POST /orders and tell me every settings key it needs."*
 - *"What can POST /orders fail with, and which guard is in front of it?"*
 - *"Why does the flow from GET /reports stop? Use cant_follow."*
+- *"Is this branch safe to merge? Use the pr-review prompt."*
 
 ---
 

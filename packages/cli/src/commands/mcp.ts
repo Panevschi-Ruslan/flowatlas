@@ -6,6 +6,7 @@ import { createContractChecker, type ContractFinding } from '@flowatlas/contract
 import { loadConfig } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
+import { KNOWN_REASONS, kindHint } from '../doctor/hints.js';
 import { ownBin } from '../own-path.js';
 
 export const MCP_FILE = '.mcp.json';
@@ -152,6 +153,17 @@ export const contractsHook = (
 };
 
 /**
+ * What `doctor` says about every reason it knows, for the server's
+ * `flowatlas://reasons` (P96 D4): the server does not depend on the CLI, so the
+ * catalogue is handed in, as the contracts checker is.
+ */
+export const reasonCatalog = (): Array<{ reason: string; hint?: string }> =>
+  KNOWN_REASONS.map((reason) => {
+    const hint = kindHint(reason);
+    return hint === undefined ? { reason } : { reason, hint };
+  });
+
+/**
  * Serves the graph to an editor over stdin and stdout, or registers itself.
  *
  * Registration only for the serving half: the server lives in its own package
@@ -197,6 +209,7 @@ export const registerMcp = (program: Command): void => {
         const handle = new DbHandle(where);
         await startStdioServer({
           ...where,
+          reasonCatalog: reasonCatalog(),
           contractChecker: contractsHook(() => {
             const opened = handle.open();
             return 'error' in opened ? undefined : opened.db;

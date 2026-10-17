@@ -74,8 +74,31 @@ export type { Carries, EdgeUse, EntryUse, TypeUses } from './tools/type-usage.js
 export { crossingsBetween } from './tools/contract.js';
 export { runSearch, SEARCH_KINDS } from './tools/search.js';
 export type { GapHit, SearchKind, TypeHit } from './tools/search.js';
-export { summariseChanges, readDiff } from './tools/changes.js';
-export type { ChangedEntry, WhatChanged } from './tools/changes.js';
+export { diffState, readDiff, serviceInId, sideLabel, summariseChanges, verdictOf, VERDICTS } from './tools/changes.js';
+export type {
+  ChangedEntry,
+  NewFinding,
+  NewGap,
+  RetestEntry,
+  SideSaid,
+  VanishedTarget,
+  Verdict,
+  VerdictOptions,
+  VerdictWord,
+  WhatChanged,
+} from './tools/changes.js';
+export { beforeRename, prReview, traceRoute, MAX_CROSSING_CHECKS, PROMPT_NAMES } from './prompts.js';
+export type { PromptName } from './prompts.js';
+export {
+  reasonCatalogOf,
+  serviceSummaryOf,
+  REASONS_URI,
+  SERVICES_URI,
+  SERVICE_TEMPLATE,
+  SERVICE_TOP_FINDINGS,
+} from './resources.js';
+export type { ReasonEntry, ReasonHint } from './resources.js';
+export { startSummaryOf } from './tools/start.js';
 export { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen, joinIdOf } from './query/observed.js';
 export type { ObservedCounts, TreeDirection } from './query/observed.js';
 export { cantFollowFor } from './tools/cant-follow.js';

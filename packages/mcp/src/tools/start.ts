@@ -2,7 +2,7 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { nextFor, withNext } from '../query/next.js';
-import { START_LIMITS, summariseProject } from '../query/start.js';
+import { START_LIMITS, summariseProject, type StartSummary } from '../query/start.js';
 import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
 
 /** A reason, how often, where, and the first place it was seen: one row of `topGaps` or `topFindings`. */
@@ -58,6 +58,23 @@ const channelEnds = (db: GraphDb): Map<string, { producers: string[]; consumers:
   return ends;
 };
 
+/**
+ * What `start_here` answers, for one service or all of them: read here once
+ * so the `flowatlas://services/{name}` resource (P96) says the same numbers.
+ */
+export const startSummaryOf = (db: GraphDb, service?: string, perService: number = START_LIMITS.perService): StartSummary =>
+  summariseProject(
+    {
+      nodes: db.allNodes(),
+      channelEnds: channelEnds(db),
+      // A finding's symbol is often source text rather than a node; only an id
+      // another tool would take is handed on.
+      unresolved: db.allUnresolved().map((row) => (row.node === null || db.node(row.node) !== undefined ? row : { ...row, node: null })),
+      ...(service === undefined ? {} : { service }),
+    },
+    { ...START_LIMITS, perService },
+  );
+
 export const registerStart = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'start_here',
@@ -73,19 +90,7 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
-        const summary = summariseProject(
-          {
-            nodes: db.allNodes(),
-            channelEnds: channelEnds(db),
-            // A finding's symbol is often source text rather than a node; only an id
-            // another tool would take is handed on.
-            unresolved: db.allUnresolved().map((row) =>
-              row.node === null || db.node(row.node) !== undefined ? row : { ...row, node: null },
-            ),
-            ...(input.service === undefined ? {} : { service: input.service }),
-          },
-          { ...START_LIMITS, perService: input.perService },
-        );
+        const summary = startSummaryOf(db, input.service, input.perService);
         const lonely = summary.channels.noConsumers[0] ?? summary.channels.noProducers[0];
         return withNext(
           summary,

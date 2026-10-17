@@ -11,6 +11,11 @@
  * Three `describe_for_prompt` answers are also written as Markdown under
  * `fixtures/multi-repo/expected.prompt/` (P97): the page's "Copy as prompt"
  * must write exactly those files too, and the CLI's parity test checks it.
+ *
+ * The questions about a branch (P96) are asked of `fixtures/multi-repo-diff`,
+ * made into a project with history, built and diffed first
+ * (`diff-fixture.mjs`); so are the prompts and resources the server lists. A
+ * case whose tool starts with `#` asks the client that, not a tool.
  */
 import { isDeepStrictEqual } from 'node:util';
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -19,6 +24,8 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer } from '@flowatlas/mcp';
+import { reasonCatalog } from '../packages/cli/dist/index.js';
+import { diffFixtureProject } from './diff-fixture.mjs';
 import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -155,6 +162,44 @@ const PLUMBING_CASES = [
 ];
 
 /**
+ * A branch (P96): five edits to a project of three services - a required
+ * field the gateway does not send, an import split over lines, a method
+ * removed, a drift annotated, and a route renamed that the gateway still asks
+ * for beside a method that now picks its receiver at run time. Asked for the
+ * verdict, for one service, without the verdict, and the prompts and
+ * resources that start such a review.
+ */
+const DIFF_CASES = [
+  ['what_changed.verdict', 'what_changed', { verdict: true }],
+  ['what_changed.by-service', 'what_changed', { verdict: true, service: 'orders' }],
+  ['what_changed.plain', 'what_changed', { service: 'billing' }],
+  ['what_changed.no-such-service', 'what_changed', { verdict: true, service: 'shipping' }],
+  ['prompts.list', '#listPrompts', {}],
+  ['prompt.before-rename', '#getPrompt', { name: 'before-rename', arguments: { symbol: 'entry:orders:http:POST:/orders' } }],
+  ['prompt.before-rename-ambiguous', '#getPrompt', { name: 'before-rename', arguments: { symbol: 'POST /orders' } }],
+  ['prompt.pr-review', '#getPrompt', { name: 'pr-review', arguments: {} }],
+  ['prompt.pr-review-other-base', '#getPrompt', { name: 'pr-review', arguments: { base: 'main' } }],
+  ['prompt.trace-route', '#getPrompt', { name: 'trace-route', arguments: { route: 'entry:gateway:http:POST:/orders' } }],
+  ['prompt.trace-route-stops', '#getPrompt', { name: 'trace-route', arguments: { route: 'GET /orders/:param/shipment' } }],
+  ['resources.list', '#listResources', {}],
+  ['resources.templates', '#listResourceTemplates', {}],
+  ['resource.services', '#readResource', { uri: 'flowatlas://services' }],
+  ['resource.service-orders', '#readResource', { uri: 'flowatlas://services/orders' }],
+];
+
+/**
+ * What a client asks besides a tool, by the name a case gives it, and the
+ * document recorded: the listing as it comes, a resource's JSON read back.
+ */
+const CLIENT_ASKS = {
+  '#listPrompts': (client) => client.listPrompts(),
+  '#getPrompt': (client, args) => client.getPrompt(args),
+  '#listResources': (client) => client.listResources(),
+  '#listResourceTemplates': (client) => client.listResourceTemplates(),
+  '#readResource': async (client, args) => JSON.parse((await client.readResource(args)).contents[0].text),
+};
+
+/**
  * The Markdown of three answers above, written out as the prompt snapshots
  * (P97): the page's "Copy as prompt" test and the server's test both read
  * them, so one file is what both sides must write.
@@ -186,6 +231,13 @@ const SUITES = [
     outDir: join(root, 'fixtures', 'multi-repo-plumbing', 'expected.mcp'),
     cases: PLUMBING_CASES,
   },
+  {
+    outDir: join(root, 'fixtures', 'multi-repo-diff', 'expected.mcp'),
+    cases: DIFF_CASES,
+    // Made, built and diffed each run, and removed after: the fixture is two revisions as files.
+    setup: () => diffFixtureProject(root),
+    options: { reasonCatalog: reasonCatalog() },
+  },
 ];
 
 const problems = [];
@@ -193,8 +245,10 @@ let compared = 0;
 let written = 0;
 
 for (const suite of SUITES) {
+  const made = suite.setup === undefined ? undefined : await suite.setup();
+  const configPath = made?.config ?? join(suite.fixture, 'flowatlas.config.json');
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-  const server = createFlowatlasServer({ configPath: join(suite.fixture, 'flowatlas.config.json') });
+  const server = createFlowatlasServer({ configPath, ...(suite.options ?? {}) });
   await server.connect(serverSide);
   const client = new Client({ name: 'snapshots', version: '0' });
   await client.connect(clientSide);
@@ -212,11 +266,15 @@ for (const suite of SUITES) {
   }
 
   for (const [name, tool, args] of suite.cases) {
-    const response = await client.callTool({ name: tool, arguments: args });
-    const parsed = JSON.parse(response.content[0].text);
-    // The text and structuredContent are one document; an error carries isError instead.
-    if (response.isError === true ? response.structuredContent !== undefined : !isDeepStrictEqual(response.structuredContent, parsed)) {
-      problems.push(`${name}: structuredContent is not the document the text holds`);
+    let parsed;
+    if (tool.startsWith('#')) parsed = await CLIENT_ASKS[tool](client, args);
+    else {
+      const response = await client.callTool({ name: tool, arguments: args });
+      parsed = JSON.parse(response.content[0].text);
+      // The text and structuredContent are one document; an error carries isError instead.
+      if (response.isError === true ? response.structuredContent !== undefined : !isDeepStrictEqual(response.structuredContent, parsed)) {
+        problems.push(`${name}: structuredContent is not the document the text holds`);
+      }
     }
     const actual = `${JSON.stringify(parsed, null, 2)}\n`;
     const path = join(suite.outDir, `${name}.json`);
@@ -263,6 +321,7 @@ for (const suite of SUITES) {
   }
 
   await client.close();
+  if (made !== undefined) rmSync(made.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 }
 
 if (problems.length > 0) {

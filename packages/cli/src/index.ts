@@ -103,7 +103,7 @@ export { runExtract, summarise } from './commands/extract.js';
 export { runInit, scanCandidates } from './commands/init.js';
 export { linkRepos, unlinkRepos } from './commands/link.js';
 export type { LinkOptions, LinkResult, UnlinkResult } from './commands/link.js';
-export { installMcp, serverEntry, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
+export { installMcp, reasonCatalog, serverEntry, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
 export { runChannel } from './commands/channel.js';
 export { runObserve, readTraceFiles } from './commands/observe.js';
 export type { ObserveOptions, ObserveRun } from './commands/observe.js';

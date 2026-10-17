@@ -3,6 +3,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 
 import { OrdersController } from './orders/orders.controller';
 import { OrdersService } from './orders/orders.service';
+import { ShipmentsController } from './shipments/shipments.controller';
+import { ShipmentsService } from './shipments/shipments.service';
 
 @Module({
   imports: [
@@ -10,7 +12,7 @@ import { OrdersService } from './orders/orders.service';
       { name: 'EVENTS_CLIENT', transport: Transport.TCP, options: { host: 'localhost', port: 4001 } },
     ]),
   ],
-  controllers: [OrdersController],
-  providers: [OrdersService],
+  controllers: [OrdersController, ShipmentsController],
+  providers: [OrdersService, ShipmentsService],
 })
 export class AppModule {}

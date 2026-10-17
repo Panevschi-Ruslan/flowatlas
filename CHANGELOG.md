@@ -380,6 +380,30 @@ only one of them moved.
   answered for the methods of it something calls, where they had answered
   nothing, since calls point at methods; each caller named the method it calls
   (`calls`), and `impact` said how many methods it answered for (`forMethods`).
+- **A verdict on what a branch changed (P96).** `what_changed({verdict:
+  true})` answered `safe`, `unsafe` or `unknown` with one sentence per reason
+  under `because`: unsafe for a new contract error, a call whose target went or
+  a channel left with one end, and a removed way in another service still
+  calls; unknown for a service the base ref could not be read for, a new gap on
+  a path from a change to a way in, or a `diff.json` too old to hold gaps. It
+  listed `newGaps` by gap id with the method each is in, `vanishedTargets`
+  (`{ caller, target, now }`), the ways in to `retest` ranked by the changed
+  nodes each reaches and then by observed traffic, and `newFindings`, which
+  never decide it (`fixtures/multi-repo-diff`, whose fifth edit renames a route
+  the gateway still asks for and adds a gap in a changed method).
+- **Calls that stopped joining, and gaps by id, in `flowatlas diff` (P96).**
+  The document gained two sections: each request that joined a route on the
+  base side and joins nothing now, with what the head side says instead, and
+  each channel left with no producer or no consumer; and the gap ids and
+  findings the head has and the base does not. `lostJoins(base, head)` in the
+  linker computes the first, for any two graphs.
+- **Prompts and resources in the MCP server (P96).** `before-rename`,
+  `pr-review` and `trace-route` wrote out the calls those reviews take, ids
+  resolved, with the same call strings `next` uses; a name answering to
+  several listed each candidate. `flowatlas://reasons` listed every reason with
+  its kind, cause and `doctor`'s sentence, `flowatlas://services` the services,
+  and `flowatlas://services/{name}` one service's summary, crossings and top
+  findings.
 
 ### Changed
 
@@ -390,6 +414,17 @@ only one of them moved.
   `verdict` and `evidence`, and P91's `nearMiss` moved to `evidence.couldHit`.
   Infrastructure, stream and declared routes were `unknown`, with `outside`
   saying why; a class in a service with unresolved injects was `likely-dead`.
+- **`diff.json` became format 2 (P96).** It gained `unresolved` (the gap ids
+  and findings each side has that the other does not) and `joins.lost`. A file
+  of format 1 is still read, without them; one from a newer flowatlas is
+  refused by name.
+- **`what_changed` said `base` and `head` as objects (P96).** Each became
+  `{ ref, label }`, `label` `working tree` where no ref was read and the ref
+  with each service's commit otherwise: `head: null` had read as "no head".
+  This changes the answer's shape. Its `counts` became those of the service
+  asked about (they had been the whole diff's beside filtered lists), types
+  were filtered by the service in their id, and `counts` gained `gaps` and
+  `lostJoins`.
 - **The MCP tool list grew to eighteen (P95).** The test's ceilings were
   raised from 8,000 to 9,700 characters for the part a model reads and from
   21,000 to 27,500 for the whole list (9,595 and 27,382 with the new tools),

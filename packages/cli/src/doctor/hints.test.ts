@@ -308,3 +308,13 @@ describe('what kind of row each reason is (P81)', () => {
     ).toBe('3 likely N+1s, 1 route with no guard');
   });
 });
+
+describe('the catalogue the MCP server is handed (P96)', () => {
+  it('holds every reason doctor knows, each with the sentence a group of it is headed with', async () => {
+    const { reasonCatalog } = await import('../commands/mcp.js');
+    const catalogue = reasonCatalog();
+    expect(catalogue.map((entry) => entry.reason)).toEqual([...KNOWN_REASONS]);
+    for (const entry of catalogue) expect(entry.hint, entry.reason).toBe(kindHint(entry.reason));
+    expect(catalogue.every((entry) => (entry.hint ?? '').length > 0)).toBe(true);
+  });
+});

@@ -1,0 +1,63 @@
+{
+  "base": {
+    "ref": "HEAD~1",
+    "label": "HEAD~1 (billing 392089da, orders 08ad86ef; gateway from the working tree)"
+  },
+  "head": {
+    "ref": null,
+    "label": "working tree"
+  },
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "counts": {
+    "nodes": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0,
+      "moved": 0
+    },
+    "edges": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0
+    },
+    "types": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0
+    },
+    "entries": 0,
+    "contracts": {
+      "new": 0,
+      "breaks": 0,
+      "fixed": 0
+    },
+    "gaps": {
+      "added": 0,
+      "removed": 0
+    },
+    "lostJoins": 0
+  },
+  "nodes": {
+    "added": [],
+    "removed": [],
+    "changed": []
+  },
+  "types": {
+    "added": [],
+    "removed": [],
+    "changed": []
+  },
+  "breaks": [],
+  "warnings": [
+    "gateway: ref HEAD~1 not found, so it was read as it stands and assumed unchanged"
+  ],
+  "note": "no such service in the diff",
+  "verdict": "unknown",
+  "because": [
+    "no such service in the diff: `shipping`"
+  ],
+  "newGaps": [],
+  "vanishedTargets": [],
+  "retest": [],
+  "newFindings": []
+}

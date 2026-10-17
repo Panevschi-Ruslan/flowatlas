@@ -1,6 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { registerPrompts } from './prompts.js';
 import { DbHandle, type DbHandleOptions } from './query/db.js';
+import { registerResources, type ReasonHint } from './resources.js';
 import { registerCantFollow } from './tools/cant-follow.js';
 import { registerChanges } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
@@ -45,12 +47,19 @@ export const INSTRUCTIONS = [
   '`maxNodes` is the most rows an answer holds. A list that was cut says `total` and `nextOffset`: ask the same call again with `offset: nextOffset` for the next page, and `next` writes that call first.',
   'get_flow writes each node once: met again it is `{id, ref: true, seenAt}`, seenAt the row its subtree is under. It stops at `maxNodes` (60) or about `maxChars` (12000) characters, says which in `stoppedBy`, and lists the crossings it did not follow in `crossingsLeft`: ask get_flow on one.',
   'who_calls says `stoppedBy` and the `frontier` ids when depth cut it, and `topOfChain` with `gapsInFile` on a node nothing calls: dead, or called from behind a gap (dead({id}) says which it is likely to be). On a class it answers for its methods. A route said aloud (`GET /orders/123`) resolves to the most specific route, naming the others under `alsoAnswers`. A failed call is `isError` and names the nearest under `suggestions`.',
+  'Prompts before-rename, pr-review and trace-route write out the calls those reviews take, ids resolved; resources flowatlas://reasons (why a step was not followed) and flowatlas://services/{name} read without asking. what_changed({verdict: true}) says safe, unsafe or unknown, and why.',
   '`detail` is 0 for ids only, 1 (the default) adds file:line, service and kind, 2 adds what the reader knows about each row; 3 is answered at 2.',
 ].join('\n');
 
 export interface ServerOptions extends DbHandleOptions {
   /** Field-level contract rules, when the contracts package is installed. */
   contractChecker?: ContractChecker;
+  /**
+   * What `doctor` says about each reason, from the CLI, which this package
+   * does not depend on (P96 D4): `flowatlas://reasons` reads it, and falls
+   * back on core's cause sentences without it.
+   */
+  reasonCatalog?: readonly ReasonHint[];
   version?: string;
 }
 
@@ -90,6 +99,8 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   registerDead(server, context);
   registerFindings(server, context);
   registerTypeUsage(server, context);
+  registerPrompts(server, context);
+  registerResources(server, context, options.reasonCatalog);
 
   return server;
 };

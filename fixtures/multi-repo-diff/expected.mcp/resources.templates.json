@@ -1,0 +1,11 @@
+{
+  "resourceTemplates": [
+    {
+      "name": "service",
+      "title": "One service",
+      "uriTemplate": "flowatlas://services/{name}",
+      "description": "One service's summary: counts, gaps and findings, its crossings to and from the others, its top findings.",
+      "mimeType": "application/json"
+    }
+  ]
+}

@@ -59,8 +59,20 @@ export type {
   DiffWarning,
   DiffWarningReason,
 } from './diff/report.js';
-export { graphDiffSchema, parseGraphDiff } from './diff/schema.js';
-export { DIFF_FORMAT_VERSION, TYPE_FIELD_CHANGES, edgeKeyOf } from './diff/types.js';
+export { graphDiffSchema, graphDiffSchemaV1, parseGraphDiff } from './diff/schema.js';
+export {
+  DIFF_FORMAT_VERSION,
+  DIFF_SECTIONS,
+  GAP_REF_KINDS,
+  LOST_JOIN_KINDS,
+  TYPE_FIELD_CHANGES,
+  edgeKeyOf,
+  sectionsMissing,
+} from './diff/types.js';
+export { diffUnresolved, gapRefsOf } from './diff/gap-refs.js';
+export type { GapGraph } from './diff/gap-refs.js';
+export { lostJoins, NO_EDGE, REQUEST_JOIN_EDGES } from './diff/lost-joins.js';
+export type { JoinGraph } from './diff/lost-joins.js';
 export type {
   BlastEntry,
   BlastOptions,
@@ -70,8 +82,13 @@ export type {
   EdgeChange,
   EdgeDiff,
   EdgeRef,
+  GapRef,
+  GapRefKind,
   GraphCounts,
   GraphDiff,
+  JoinDiff,
+  LostJoin,
+  LostJoinKind,
   NodeChange,
   NodeDiff,
   TypeChange,
@@ -79,6 +96,7 @@ export type {
   TypeFieldChange,
   TypeFieldChangeKind,
   UnresolvedCount,
+  UnresolvedDiff,
 } from './diff/types.js';
 export { GraphDb, GraphStore, openGraphDb } from './db/reader.js';
 export { acceptedSplitOf } from './db/accepted-split.js';

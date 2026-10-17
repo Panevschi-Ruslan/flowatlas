@@ -262,6 +262,8 @@ export const runDiff = async (
       edges: diff.edges,
       types: diff.types,
       counts: diff.counts,
+      unresolved: diff.unresolved,
+      joins: diff.joins,
       impact: impact.rows,
       contracts,
       warnings,

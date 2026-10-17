@@ -1,0 +1,105 @@
+{
+  "service": "orders",
+  "summary": {
+    "services": [
+      {
+        "service": "orders",
+        "nodes": 17,
+        "entries": 3,
+        "entriesByKind": {
+          "http": 3
+        },
+        "gaps": 2
+      }
+    ],
+    "counts": {
+      "gaps": 3,
+      "sites": 3,
+      "notes": 0,
+      "findings": 0,
+      "nothing": 0
+    },
+    "topGaps": [
+      {
+        "reason": "di-token-unknown",
+        "count": 1,
+        "services": [
+          "orders"
+        ],
+        "example": {
+          "message": "OrdersService.constructor[0]",
+          "service": "orders",
+          "loc": "src/orders/orders.service.ts:15"
+        }
+      },
+      {
+        "reason": "module-import-dynamic",
+        "count": 1,
+        "services": [
+          "orders"
+        ],
+        "example": {
+          "message": "AppModule imports ClientsModule",
+          "service": "orders",
+          "loc": "src/app.module.ts:11"
+        }
+      }
+    ],
+    "topFindings": [],
+    "channels": {
+      "noConsumers": [],
+      "noProducers": []
+    },
+    "startFrom": [
+      {
+        "id": "entry:orders:http:GET:/orders/:param",
+        "type": "entry",
+        "label": "GET /orders/:param",
+        "loc": "src/orders/orders.controller.ts:28",
+        "service": "orders",
+        "kind": "http"
+      },
+      {
+        "id": "entry:orders:http:GET:/shipments/:param/status",
+        "type": "entry",
+        "label": "GET /shipments/:param/status",
+        "loc": "src/shipments/shipments.controller.ts:17",
+        "service": "orders",
+        "kind": "http"
+      },
+      {
+        "id": "entry:orders:http:POST:/orders",
+        "type": "entry",
+        "label": "POST /orders",
+        "loc": "src/orders/orders.controller.ts:23",
+        "service": "orders",
+        "kind": "http"
+      }
+    ]
+  },
+  "crossings": {
+    "out": [
+      {
+        "from": "producer:orders#src/orders/orders.service.ts:20:5",
+        "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "type": "emits",
+        "via": "channel:order.created",
+        "status": "unchecked",
+        "check": "check_contract({from: \"producer:orders#src/orders/orders.service.ts:20:5\", to: \"channel:order.created\"})"
+      }
+    ],
+    "into": [
+      {
+        "from": "http_out:gateway#src/clients/orders.client.ts:21:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls",
+        "status": "hash_differs",
+        "check": "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:21:12\", to: \"entry:orders:http:POST:/orders\"})"
+      }
+    ]
+  },
+  "findings": {
+    "total": 0,
+    "top": []
+  }
+}

@@ -8,8 +8,33 @@
  */
 import type { Confidence, TypeEntry } from '@flowatlas/core';
 
-/** Version of `diff.json`, independent of the graph schema. */
-export const DIFF_FORMAT_VERSION = 1;
+/**
+ * Version of `diff.json`, independent of the graph schema.
+ *
+ * 2 (P96) added `unresolved` (the gaps and findings each side has that the
+ * other does not, by gap id) and `joins` (the calls that stopped joining).
+ * Every bump adds its sections to `DIFF_SECTIONS` and a lift in `schema.ts`, so
+ * a document an older flowatlas wrote is still read.
+ */
+export const DIFF_FORMAT_VERSION = 2;
+
+/**
+ * The sections of `diff.json` by the format that introduced them.
+ *
+ * A document of an older format is read with these sections empty; this says
+ * which of them it never had, so a reader can say "not computed" rather than
+ * "nothing" (I3).
+ */
+export const DIFF_SECTIONS: Readonly<Record<string, number>> = Object.freeze({
+  unresolved: 2,
+  joins: 2,
+});
+
+/** The sections a document of this format predates, in `DIFF_SECTIONS` order. */
+export const sectionsMissing = (report: { diffFormatVersion: number }): string[] =>
+  Object.entries(DIFF_SECTIONS)
+    .filter(([, since]) => since > report.diffFormatVersion)
+    .map(([section]) => section);
 
 /** `from|type|to`, the identity of an edge. The same key P10 keys findings on. */
 export const edgeKeyOf = (edge: { from: string; type: string; to: string }): string =>
@@ -120,10 +145,85 @@ export interface GraphCounts {
   unresolved: UnresolvedCount;
 }
 
+/** What a row of the unresolved list is about, as a diff tells them apart (P81). */
+export const GAP_REF_KINDS = ['gap', 'finding'] as const;
+export type GapRefKind = (typeof GAP_REF_KINDS)[number];
+
+/**
+ * One gap id on one side: every row of one reason in one file (P96).
+ *
+ * Gaps (places the reader missed) and findings (something said about the
+ * code); notes, and gaps with no edge to draw, are not places to look and are
+ * left out. `line` is the first row's, `node` the method that row is in when
+ * the graph draws one, and `sites` the places the rows stand for.
+ */
+export interface GapRef {
+  /** `gap:<service>|<file>|<reason>`, what `flowatlas accept` and the tools take. */
+  id: string;
+  kind: GapRefKind;
+  service: string;
+  file: string;
+  line?: number;
+  reason: string;
+  node?: string;
+  sites: number;
+}
+
+/** Gap ids the head has and the base does not (`added`), and the other way round. */
+export interface UnresolvedDiff {
+  added: GapRef[];
+  removed: GapRef[];
+}
+
+/**
+ * How a join stopped (P96).
+ *
+ * `target-gone` a request that joined a route on the base side joins nothing
+ * on the head side · `no-producer` a channel whose consumers are still there
+ * lost the last thing that published it · `no-consumer` a channel still
+ * published lost the last thing that handled it.
+ */
+export const LOST_JOIN_KINDS = ['target-gone', 'no-producer', 'no-consumer'] as const;
+export type LostJoinKind = (typeof LOST_JOIN_KINDS)[number];
+
+/**
+ * A join the base side made and the head side does not, from the end that is
+ * still there: the request, or the channel's remaining producer or consumer.
+ */
+export interface LostJoin {
+  kind: LostJoinKind;
+  /** The node left behind: the request, a consumer, a producer. */
+  caller: string;
+  /** What it joined on the base side: the route, or the channel. */
+  target: string;
+  /** The edge the base side joined by: `http_calls`, `hits`, `consumes`, `emits`. */
+  edge: string;
+  /** Whose the caller is. */
+  service: string;
+  /** Whose the target was; null for a channel, which is nobody's. */
+  targetService: string | null;
+  /**
+   * What the head side says instead: the reason of the row it wrote on the
+   * caller (`target-route-not-found`), `no-edge` when it wrote none, or the
+   * kind for a channel.
+   */
+  now: string;
+  /** True when the target is gone from the head graph, not only the join. */
+  targetRemoved: boolean;
+}
+
+export interface JoinDiff {
+  lost: LostJoin[];
+}
+
 export interface GraphDiff {
   nodes: NodeDiff;
   edges: EdgeDiff;
   types: TypeDiff;
+  /** Gap ids added and removed (P96). */
+  unresolved: UnresolvedDiff;
+  /** The joins the base side made that the head side does not (P96). */
+  joins: JoinDiff;
   /** How big each side is, so a report can say what the deltas are a share of. */
   counts: { base: GraphCounts; head: GraphCounts };
 }

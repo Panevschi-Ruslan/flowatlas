@@ -82,6 +82,8 @@ const diff: DiffReport = {
   },
   edges: { added: [{ from: SERVICE, to: CHANNEL, type: 'emits' }], removed: [], changed: [] },
   types: { added: [], removed: [], changed: [] },
+  unresolved: { added: [], removed: [] },
+  joins: { lost: [] },
   counts: {
     base: { nodes: 5, edges: 2, types: 1, unresolved: { rows: 2, sites: 2 } },
     head: { nodes: 6, edges: 3, types: 1, unresolved: { rows: 2, sites: 2 } },
@@ -254,7 +256,7 @@ describe('what_changed', () => {
   it('reads the last diff back, cut to what a session asks next', async () => {
     writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
     const changes = await call('what_changed');
-    expect(changes.base).toBe('main');
+    expect(changes.base).toEqual({ ref: 'main', label: 'main' });
     expect(changes.counts.nodes).toEqual({ added: 1, removed: 1, changed: 1, moved: 0 });
     expect(changes.entries).toEqual([
       expect.objectContaining({ id: ROUTE, reaches: SERVICE, confidence: 'static' }),
@@ -292,5 +294,176 @@ describe('what_changed', () => {
     expect(first.next[0]).toBe('what_changed({maxNodes: 1, offset: 1})');
     expect((await call('what_changed', { maxNodes: 1, offset: 1 })).nodes.added).toEqual([CHANNEL]);
     writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
+  });
+
+  it('says head and base in words: "working tree" where no ref was read (P96)', async () => {
+    const changes = await call('what_changed');
+    expect(changes.head).toEqual({ ref: null, label: 'working tree' });
+    const read = {
+      ...diff,
+      base: {
+        ref: 'main',
+        services: {
+          orders: { sha: '0123456789abcdef', ref: 'main', cached: false, nodeModules: 'present' as const },
+          billing: { sha: null, ref: null, cached: false, nodeModules: 'present' as const },
+        },
+      },
+    };
+    writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(read));
+    expect((await call('what_changed')).base.label).toBe('main (orders 01234567; billing from the working tree)');
+    writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
+  });
+
+  it('counts only the service asked about, every list before it is cut (P96)', async () => {
+    const mixed: DiffReport = {
+      ...diff,
+      nodes: {
+        added: [TABLE, 'billing#src/invoices.ts:Invoices.issue'],
+        removed: ['orders:OrdersService.legacy', 'entry:billing:http:GET:/invoices'],
+        changed: [...diff.nodes.changed, { id: 'billing#src/invoices.ts:Invoices.void', service: 'billing', label: 'Invoices.void', fields: [] }],
+        moved: ['billing#src/invoices.ts:Invoices'],
+      },
+      edges: {
+        added: [{ from: SERVICE, to: CHANNEL, type: 'emits' }, { from: 'billing#src/invoices.ts:Invoices.issue', to: TABLE, type: 'queries' }],
+        removed: [],
+        changed: [],
+      },
+      types: { added: ['type:orders#PlaceOrderDto', 'type:billing#InvoiceDto'], removed: [], changed: [] },
+    };
+    writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(mixed));
+    const all = await call('what_changed');
+    expect(all.counts.nodes).toEqual({ added: 2, removed: 2, changed: 2, moved: 1 });
+    const billing = await call('what_changed', { service: 'billing', maxNodes: 1 });
+    expect(billing.counts.nodes).toEqual({ added: 1, removed: 1, changed: 1, moved: 1 });
+    expect(billing.counts.edges).toEqual({ added: 1, removed: 0, changed: 0 });
+    expect(billing.counts.types).toEqual({ added: 1, removed: 0, changed: 0 });
+    expect(billing.types.added).toEqual(['type:billing#InvoiceDto']);
+    expect(billing.nodes.removed).toEqual(['entry:billing:http:GET:/invoices']);
+    const none = await call('what_changed', { service: 'shipping' });
+    expect(none.counts.nodes).toEqual({ added: 0, removed: 0, changed: 0, moved: 0 });
+    expect(none.note).toBe('no such service in the diff');
+    writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
+  });
+
+  describe('the verdict (P96)', () => {
+    const withDiff = async (over: Partial<DiffReport>, args: Record<string, unknown> = {}): Promise<any> => {
+      writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...diff, ...over }));
+      try {
+        return await call('what_changed', { verdict: true, ...args });
+      } finally {
+        writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
+      }
+    };
+    const party = (service: string) => ({ service, typeId: null, symbol: 'x' });
+    const finding = (severity: 'error' | 'warning') => ({
+      severity,
+      kind: 'missing_required' as const,
+      edge: { from: 'http_out:gateway#src/c.ts:3:1', to: ROUTE, type: 'http_calls' },
+      edgeKey: `http_out:gateway#src/c.ts:3:1|http_calls|${ROUTE}`,
+      direction: 'request' as const,
+      sender: party('gateway'),
+      receiver: party('orders'),
+      typeId: 'type:orders#PlaceOrderDto',
+      field: 'channel',
+      expected: 'string',
+      actual: null,
+      rule: null,
+      message: 'receiver orders requires `channel`; sender gateway does not send it',
+      ignored: false,
+      ignoredBy: null,
+    });
+
+    it('is safe when nothing broke, nothing lost its target and no new gap hides a change', async () => {
+      const answer = await withDiff({});
+      expect(answer.verdict).toBe('safe');
+      expect(answer.because).toEqual([expect.stringMatching(/^no new contract error/)]);
+      expect(answer.entries).toBeUndefined();
+      expect(answer.retest[0]).toMatchObject({ id: ROUTE, changed: 1, observed: 7 });
+    });
+
+    it('is unsafe for a new contract error, and hands on check_contract for it', async () => {
+      const answer = await withDiff({ contracts: { new: [finding('error')], fixed: [], preexisting: [], ignored: [] } });
+      expect(answer.verdict).toBe('unsafe');
+      expect(answer.because[0]).toMatch(/^1 new contract error: receiver orders requires/);
+      expect(answer.next).toContain(`check_contract({from: "http_out:gateway#src/c.ts:3:1", to: ${JSON.stringify(ROUTE)}})`);
+      // A warning is a finding, listed and not deciding.
+      const warned = await withDiff({ contracts: { new: [finding('warning')], fixed: [], preexisting: [], ignored: [] } });
+      expect(warned.verdict).toBe('safe');
+      expect(warned.newFindings).toEqual([expect.objectContaining({ kind: 'contract-break', service: 'gateway', to: ROUTE })]);
+    });
+
+    it('is unsafe for a caller whose target went, and says what the head side says instead', async () => {
+      const lost = {
+        kind: 'target-gone' as const,
+        caller: 'http_out:gateway#src/c.ts:9:1',
+        target: 'entry:orders:http:GET:/orders/:param',
+        edge: 'http_calls',
+        service: 'gateway',
+        targetService: 'orders',
+        now: 'target-route-not-found',
+        targetRemoved: true,
+      };
+      const answer = await withDiff({ joins: { lost: [lost] } });
+      expect(answer.verdict).toBe('unsafe');
+      expect(answer.vanishedTargets).toEqual([{ caller: lost.caller, target: lost.target, now: 'target-route-not-found' }]);
+      expect(answer.because).toEqual([
+        expect.stringMatching(/^1 call lost its target/),
+        expect.stringMatching(/^1 removed way in is still called from another service/),
+      ]);
+      // Asked about the service whose route it was, the loss is still that service's.
+      expect((await withDiff({ joins: { lost: [lost] } }, { service: 'orders' })).verdict).toBe('unsafe');
+    });
+
+    it('is unknown when a service was read from its working tree on both sides', async () => {
+      const answer = await withDiff({
+        warnings: [{ reason: 'ref-not-found', service: 'orders', message: 'orders: ref main not found', hint: '' }],
+      });
+      expect(answer.verdict).toBe('unknown');
+      expect(answer.because[0]).toMatch(/^orders was not read at the base ref/);
+    });
+
+    it('is unknown for a new gap on a path from a change to a way in, and reads its method next', async () => {
+      const gap = { id: 'gap:orders|src/orders.controller.ts|call-dynamic-receiver', kind: 'gap' as const, service: 'orders', file: 'src/orders.controller.ts', line: 4, reason: 'call-dynamic-receiver', node: HANDLER, sites: 1 };
+      const off = { ...gap, id: 'gap:orders|src/basket.ts|call-dynamic-receiver', file: 'src/basket.ts', node: 'orders:Basket.add' };
+      const answer = await withDiff({ unresolved: { added: [off, gap], removed: [] } });
+      expect(answer.verdict).toBe('unknown');
+      expect(answer.newGaps.map((row: { id: string; onChangedPath?: true }) => [row.id, row.onChangedPath])).toEqual([
+        [gap.id, true],
+        [off.id, undefined],
+      ]);
+      expect(answer.next).toContain(`get_source({symbol: ${JSON.stringify(HANDLER)}})`);
+      // Off every changed path, a new gap is listed and the branch is safe.
+      expect((await withDiff({ unresolved: { added: [off], removed: [] } })).verdict).toBe('safe');
+    });
+
+    it('reads a diff.json of format 1, and says it is too old to know the gaps', async () => {
+      const { unresolved: _unresolved, joins: _joins, ...old } = diff;
+      writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...old, diffFormatVersion: 1 }));
+      try {
+        const answer = await call('what_changed', { verdict: true });
+        expect(answer.verdict).toBe('unknown');
+        expect(answer.because[0]).toMatch(/format 1.*rerun flowatlas diff for new gaps/);
+      } finally {
+        writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
+      }
+    });
+
+    it('ranks the ways in to retest by how many changed nodes each reaches, then by traffic', async () => {
+      const other = 'orders:entry:GET /orders';
+      const row = (node: string, entries: string[]) => ({
+        ...diff.impact[0]!,
+        node,
+        entries: entries.map((id) => ({ ...diff.impact[0]!.entries[0]!, id, label: id })),
+      });
+      const answer = await withDiff({
+        impact: [row(SERVICE, [other, ROUTE]), row(HANDLER, [ROUTE])],
+        nodes: { ...diff.nodes, changed: [...diff.nodes.changed, { id: HANDLER, service: 'orders', label: 'OrdersController.create', fields: [] }] },
+      });
+      expect(answer.retest.map((entry: { id: string; changed: number }) => [entry.id, entry.changed])).toEqual([
+        [ROUTE, 2],
+        [other, 1],
+      ]);
+      expect(answer.next[0]).toBe(`get_flow({entry: ${JSON.stringify(ROUTE)}})`);
+    });
   });
 });

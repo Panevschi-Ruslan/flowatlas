@@ -79,6 +79,11 @@ export interface DiffTiming {
 }
 
 export interface DiffReport {
+  /**
+   * The format the document was written in. A document of an older format is
+   * read into this shape with the sections it predates empty; `sectionsMissing`
+   * says which (P96).
+   */
   diffFormatVersion: number;
   schemaVersion: number;
   /** ISO-8601. Stripped before any comparison, like every other artefact's. */
@@ -89,6 +94,10 @@ export interface DiffReport {
   edges: GraphDiff['edges'];
   types: GraphDiff['types'];
   counts: GraphDiff['counts'];
+  /** Gap ids added and removed, gaps and findings (format 2, P96). */
+  unresolved: GraphDiff['unresolved'];
+  /** Calls and channel ends that stopped joining (format 2, P96). */
+  joins: GraphDiff['joins'];
   /** One row per changed or removed node, in the order they should be read. */
   impact: BlastRow[];
   contracts: DiffContracts;

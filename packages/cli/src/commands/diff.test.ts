@@ -47,7 +47,7 @@ beforeAll(async () => {
     git(repo, 'add', '-A');
     git(repo, 'commit', '-q', '-m', 'base');
   }
-  // The head revision, laid over the base as four files.
+  // The head revision, laid over the base as six files.
   cpSync(join(FIXTURE, 'head'), project, { recursive: true });
   for (const repo of EDITED) {
     git(repo, 'add', '-A');
@@ -104,6 +104,35 @@ describe('what a revision changed, across four repositories', () => {
     // is declared five lines lower and not one of them changed.
     const labels = run.report.impact.map((row) => row.label);
     expect(labels.some((label) => label.includes('OrdersController'))).toBe(false);
+  });
+
+  it('says which call lost its target when the route it asks for was renamed (P96)', () => {
+    // The gateway was not touched, and still asks for the old path. Nothing
+    // on either side fails to compile; the join is what broke.
+    expect(run.report.joins.lost).toEqual([
+      expect.objectContaining({
+        kind: 'target-gone',
+        service: 'gateway',
+        target: 'entry:orders:http:GET:/shipments/:param',
+        targetService: 'orders',
+        now: 'target-route-not-found',
+        targetRemoved: true,
+      }),
+    ]);
+    expect(run.text).toContain('## Calls that stopped joining');
+  });
+
+  it('names a gap the revision added, in the method it changed, by gap id (P96)', () => {
+    expect(run.report.diffFormatVersion).toBe(2);
+    expect(run.report.unresolved.added).toContainEqual(
+      expect.objectContaining({
+        id: 'gap:orders|src/shipments/shipments.service.ts|call-dynamic-receiver',
+        kind: 'gap',
+        node: 'orders#src/shipments/shipments.service.ts:ShipmentsService.track',
+      }),
+    );
+    expect(run.report.nodes.changed.map((change) => change.id)).toContain('orders#src/shipments/shipments.service.ts:ShipmentsService.track');
+    expect(run.report.unresolved.removed).toEqual([]);
   });
 
   it('stops a build on a break this revision introduced, when asked to', async () => {

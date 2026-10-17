@@ -1,0 +1,12 @@
+{
+  "description": "Review the branch against main",
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "type": "text",
+        "text": "# Review this branch\n\nThe last `diff.json` compared against `HEAD~1`, not `main`.\n\nRun `flowatlas diff main` in the project, then use this prompt again.\nIt builds the graph at both revisions in detached checkouts and writes `diff.json` beside the database; `what_changed({verdict: true})` reads it.\n"
+      }
+    }
+  ]
+}

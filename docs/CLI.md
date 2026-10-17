@@ -1712,6 +1712,24 @@ ref: the run says so in Warnings, the verdict names it, and
 `--fail-on-contract-break` refuses rather than passing a comparison that did not
 cover it.
 
+Besides the impact and the contracts, the document says two things a renamed
+route breaks that no compiler on either side sees. **Calls that stopped
+joining** lists each request that joined a route on the base side and joins
+nothing now, with what the head side says instead (`target-route-not-found`,
+or `no-edge`), and each channel left with a consumer and no producer or the
+other way round. **Gaps and findings** lists, by gap id
+(`gap:<service>|<file>|<reason>`), the places the reading cannot follow and the
+findings that the head has and the base does not, each with the method it is
+in. The MCP server's `what_changed({verdict: true})` reads both.
+
+`diff.json` is format 2 (`diffFormatVersion`): format 1 plus `unresolved`
+(`{ added, removed }`, each row `{ id, kind, service, file, line?, reason,
+node?, sites }`, `kind` `gap` or `finding`) and `joins` (`{ lost }`, each
+`{ kind, caller, target, edge, service, targetService, now, targetRemoved }`,
+`kind` `target-gone`, `no-producer` or `no-consumer`). A file of format 1 is
+still read, without those sections; one from a newer flowatlas is refused by
+name.
+
 ### `flowatlas cache <action>`
 
 The graphs `diff` keeps per commit, so comparing the same base twice reads it

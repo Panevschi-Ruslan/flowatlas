@@ -1,0 +1,179 @@
+{
+  "base": {
+    "ref": "HEAD~1",
+    "label": "HEAD~1 (billing 392089da, orders 08ad86ef; gateway from the working tree)"
+  },
+  "head": {
+    "ref": null,
+    "label": "working tree"
+  },
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "counts": {
+    "nodes": {
+      "added": 1,
+      "removed": 2,
+      "changed": 2,
+      "moved": 11
+    },
+    "edges": {
+      "added": 1,
+      "removed": 3,
+      "changed": 1
+    },
+    "types": {
+      "added": 0,
+      "removed": 0,
+      "changed": 1
+    },
+    "entries": 5,
+    "contracts": {
+      "new": 1,
+      "breaks": 1,
+      "fixed": 0
+    },
+    "gaps": {
+      "added": 2,
+      "removed": 0
+    },
+    "lostJoins": 1
+  },
+  "nodes": {
+    "added": [
+      "entry:orders:http:GET:/shipments/:param/status"
+    ],
+    "removed": [
+      "entry:orders:http:GET:/shipments/:param",
+      "orders#src/orders/orders.service.ts:OrdersService.legacy"
+    ],
+    "changed": [
+      {
+        "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "service": "billing",
+        "label": "InvoicesConsumer.onOrderCreated"
+      },
+      {
+        "id": "orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+        "service": "orders",
+        "label": "ShipmentsService.track"
+      }
+    ]
+  },
+  "types": {
+    "added": [],
+    "removed": [],
+    "changed": [
+      "type:orders#CreateOrderDto"
+    ]
+  },
+  "breaks": [
+    {
+      "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:21:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "field": "channel"
+    }
+  ],
+  "warnings": [
+    "gateway: ref HEAD~1 not found, so it was read as it stands and assumed unchanged"
+  ],
+  "verdict": "unsafe",
+  "because": [
+    "1 new contract error: receiver orders requires `channel: string`; sender gateway does not send it",
+    "1 call lost its target: `http_out:gateway#src/clients/orders.client.ts:26:12` joined `entry:orders:http:GET:/shipments/:param` and is now target-route-not-found",
+    "1 removed way in is still called from another service: `entry:orders:http:GET:/shipments/:param` (called from gateway)",
+    "gateway was not read at the base ref, so it is reported unchanged without being compared",
+    "1 new gap on a path from a change to a way in, which the reading cannot see past: call-dynamic-receiver in `orders#src/shipments/shipments.service.ts:ShipmentsService.track`"
+  ],
+  "newGaps": [
+    {
+      "id": "gap:orders|src/shipments/shipments.service.ts|call-dynamic-receiver",
+      "reason": "call-dynamic-receiver",
+      "service": "orders",
+      "file": "src/shipments/shipments.service.ts",
+      "line": 21,
+      "node": "orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+      "sites": 1,
+      "onChangedPath": true,
+      "next": "get_source({symbol: \"orders#src/shipments/shipments.service.ts:ShipmentsService.track\"})"
+    },
+    {
+      "id": "gap:gateway|src/clients/orders.client.ts|target-route-not-found",
+      "reason": "target-route-not-found",
+      "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 26,
+      "node": "http_out:gateway#src/clients/orders.client.ts:26:12",
+      "sites": 1,
+      "next": "get_source({symbol: \"http_out:gateway#src/clients/orders.client.ts:26:12\"})"
+    }
+  ],
+  "vanishedTargets": [
+    {
+      "caller": "http_out:gateway#src/clients/orders.client.ts:26:12",
+      "target": "entry:orders:http:GET:/shipments/:param",
+      "now": "target-route-not-found"
+    }
+  ],
+  "retest": [
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "kind": "event",
+      "label": "event order.created",
+      "service": "billing",
+      "confidence": "static",
+      "reaches": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "changed": 1
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "kind": "http",
+      "label": "POST /orders",
+      "service": "orders",
+      "confidence": "static",
+      "reaches": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "changed": 1
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders",
+      "type": "entry",
+      "kind": "http",
+      "label": "POST /orders",
+      "service": "gateway",
+      "confidence": "static",
+      "reaches": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "changed": 1
+    },
+    {
+      "id": "entry:orders:http:GET:/shipments/:param/status",
+      "type": "entry",
+      "kind": "http",
+      "label": "GET /shipments/:param/status",
+      "service": "orders",
+      "confidence": "static",
+      "reaches": "orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+      "changed": 1
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param/shipment",
+      "type": "entry",
+      "kind": "http",
+      "label": "GET /orders/:param/shipment",
+      "service": "gateway",
+      "confidence": "static",
+      "reaches": "entry:orders:http:GET:/shipments/:param",
+      "changed": 1
+    }
+  ],
+  "newFindings": [],
+  "next": [
+    "get_flow({entry: \"entry:billing:event:order.created\"})",
+    "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:21:12\", to: \"entry:orders:http:POST:/orders\"})",
+    "get_source({symbol: \"orders#src/shipments/shipments.service.ts:ShipmentsService.track\"})",
+    "who_calls({symbol: \"http_out:gateway#src/clients/orders.client.ts:26:12\"})"
+  ]
+}

@@ -15,6 +15,8 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { compareDeclarations } from './compare-declarations.js';
+import { diffUnresolved } from './gap-refs.js';
+import { lostJoins } from './lost-joins.js';
 import {
   changedEdgeFields,
   changedNodeFields,
@@ -227,6 +229,8 @@ export const diffGraphs = (
   nodes: diffNodes(base, head),
   edges: diffEdges(base, head),
   types: diffTypes(base, head, options),
+  unresolved: diffUnresolved(base, head),
+  joins: { lost: lostJoins(base, head) },
   counts: { base: countsOf(base), head: countsOf(head) },
 });
 

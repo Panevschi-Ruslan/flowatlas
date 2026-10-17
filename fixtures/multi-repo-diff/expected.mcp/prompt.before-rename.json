@@ -1,0 +1,12 @@
+{
+  "description": "Before renaming entry:orders:http:POST:/orders",
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "type": "text",
+        "text": "# Before renaming POST /orders\n\n`entry:orders:http:POST:/orders` — entry in orders at `src/orders/orders.controller.ts:23`.\n\nAsk, in this order:\n\n1. `get_flow({entry: \"entry:orders:http:POST:/orders\"})` — what it reaches, crossing by crossing.\n2. `impact({symbol: \"entry:orders:http:POST:/orders\"})` — the ways in that reach it, which are what to retest.\n3. `who_calls({symbol: \"entry:orders:http:POST:/orders\"})` — who calls it, in every service: a caller in another service is a place the change has to reach.\n\nIt is on crossings between services. For each, whether both sides still agree:\n\n- `check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:21:12\", to: \"entry:orders:http:POST:/orders\"})`\n\nThen say what else must be renamed with it, and where: each caller in another service (a request names a route by its path, a client method by its name), each copy of its shape in another repository, the annotations that spell it (`@CallsService`, `@flowatlas-calls`, `@Emits`), and the ways in to retest. Name ids; do not paste code.\n"
+      }
+    }
+  ]
+}

@@ -7,7 +7,7 @@
  */
 import type { Confidence, GraphNode } from '@flowatlas/core';
 import type { ContractFinding } from '@flowatlas/contracts';
-import type { BlastEntry, BlastRow, DiffReport, TypeChange } from '@flowatlas/linker';
+import type { BlastEntry, BlastRow, DiffReport, LostJoin, TypeChange } from '@flowatlas/linker';
 import { groupEntries, reachableSummary } from '../query/callers.js';
 
 export interface DiffMarkdownOptions {
@@ -228,6 +228,58 @@ const contractLines = (report: DiffReport, options: DiffMarkdownOptions & { maxR
   return lines;
 };
 
+/** How each kind of lost join is said in the table's last column. */
+const LOST_SAY: Readonly<Record<LostJoin['kind'], (lost: LostJoin) => string>> = {
+  'target-gone': (lost) => `${lost.targetRemoved ? 'its target is gone' : 'joins nothing'}; now ${code(lost.now)}`,
+  'no-producer': () => 'nothing publishes it any more',
+  'no-consumer': () => 'nothing handles it any more',
+};
+
+/**
+ * The calls this revision left with nothing to join (P96): the one thing a
+ * renamed route breaks that no compiler on either side sees.
+ */
+const joinLines = (report: DiffReport, options: DiffMarkdownOptions & { maxRows: number }): string[] => {
+  const lost = report.joins.lost;
+  if (lost.length === 0) return [];
+  const shown = cut(lost, options.maxRows);
+  return [
+    '## Calls that stopped joining',
+    '',
+    row(['caller', 'joined', 'what happened']),
+    row(['---', '---', '---']),
+    ...shown.rows.map((item) => row([code(item.caller), code(item.target), LOST_SAY[item.kind](item)])),
+    '',
+    ...more(shown.dropped, 'lost joins', options.file),
+  ];
+};
+
+/** Gap ids the head has and the base does not (P96): places the reader can no longer see past. */
+const gapLines = (report: DiffReport, options: DiffMarkdownOptions & { maxRows: number }): string[] => {
+  const added = report.unresolved.added;
+  const removed = report.unresolved.removed;
+  if (added.length === 0 && removed.length === 0) return [];
+  const lines = ['## Gaps and findings', '', `${added.length} new, ${removed.length} gone`, ''];
+  if (added.length > 0) {
+    const shown = cut(added, options.maxRows);
+    lines.push(
+      row(['kind', 'reason', 'where', 'in']),
+      row(['---', '---', '---', '---']),
+      ...shown.rows.map((ref) =>
+        row([
+          ref.kind,
+          code(ref.reason),
+          code(`${ref.service} ${ref.file}${ref.line === undefined ? '' : `:${ref.line}`}`),
+          ref.node === undefined ? '—' : code(ref.node),
+        ]),
+      ),
+      '',
+      ...more(shown.dropped, 'new gaps', options.file),
+    );
+  }
+  return lines;
+};
+
 /** What an empty field diff on a differing hash actually means. */
 const typeNote = (change: TypeChange): string =>
   change.fieldDiff.length > 0
@@ -360,6 +412,8 @@ export const renderDiffMarkdown = (report: DiffReport, options: DiffMarkdownOpti
     ...warningLines(report),
     ...impactLines(report, settings),
     ...contractLines(report, settings),
+    ...joinLines(report, settings),
+    ...gapLines(report, settings),
     ...typeLines(report, settings),
     ...graphLines(report),
     ...footer(report),
@@ -375,6 +429,7 @@ export const summariseDiff = (report: DiffReport): string => {
     ` (${nodes.moved.length} moved) · edges +${edges.added.length}/-${edges.removed.length}/~${edges.changed.length}` +
     ` · types +${types.added.length}/-${types.removed.length}/~${types.changed.length}` +
     ` · contracts ${contracts.new.length} new, ${contracts.fixed.length} fixed, ${contracts.preexisting.length} already there` +
+    ` · lost joins ${report.joins.lost.length} · gaps +${report.unresolved.added.length}/-${report.unresolved.removed.length}` +
     ` · impact ${report.impact.length} node(s)`
   );
 };

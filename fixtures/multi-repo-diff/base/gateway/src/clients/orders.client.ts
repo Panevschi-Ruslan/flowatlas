@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 
-import type { CreateOrderDto, OrderDto } from './dto';
+import type { CreateOrderDto, OrderDto, ShipmentDto } from './dto';
 
 /**
  * The call `flowatlas.config.json` ties to `orders` through `ORDERS_URL`.
@@ -19,6 +19,11 @@ export class OrdersClient {
 
   create(body: CreateOrderDto) {
     return this.http.post<OrderDto>(`${this.config.get('ORDERS_URL')}/orders`, body);
+  }
+
+  /** Asks for a route the head revision of `orders` renames. */
+  shipment(id: string) {
+    return this.http.get<ShipmentDto>(`${this.config.get('ORDERS_URL')}/shipments/${id}`);
   }
 }
 
