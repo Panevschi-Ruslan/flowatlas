@@ -1,5 +1,7 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readGraphFile, resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
@@ -77,6 +79,118 @@ describe('the tools a session is offered', () => {
     const { tools } = await client.listTools();
     for (const tool of tools) expect(tool.description?.length ?? 0).toBeGreaterThan(40);
   });
+
+  it('are all read-only, closed-world and idempotent, each with a title', async () => {
+    const { tools } = await client.listTools();
+    for (const tool of tools) {
+      expect(tool.annotations, tool.name).toEqual({ readOnlyHint: true, openWorldHint: false, idempotentHint: true });
+      expect(tool.title, tool.name).toBeTruthy();
+    }
+  });
+
+  /**
+   * What an assistant reads before its first call (P93): each tool's name,
+   * description and input schema, which is what a client hands the model.
+   * Output schemas, titles and annotations are for the client and go in the
+   * second, wider ceiling, so neither part can creep back unnoticed.
+   */
+  it('cost less to read than they did', async () => {
+    const { tools } = await client.listTools();
+    const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
+    expect(read.length).toBeLessThan(8000);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(21000);
+  });
+
+  it('declare an output schema where the shape of the answer is settled', async () => {
+    const { tools } = await client.listTools();
+    expect(tools.filter((tool) => tool.outputSchema !== undefined).map((tool) => tool.name).sort()).toEqual([
+      'cant_follow',
+      'find_symbol',
+      'get_source',
+      'get_type',
+      'list_entries',
+      'search',
+      'start_here',
+      'who_consumes',
+      'who_emits',
+    ]);
+  });
+
+  /** Every recorded answer, of every suite, against the schema of the tool that gave it. */
+  it('answer every snapshot in the shape their output schema declares', async () => {
+    const { tools } = await client.listTools();
+    const validator = new AjvJsonSchemaValidator();
+    const schemas = new Map(tools.flatMap((tool) => (tool.outputSchema === undefined ? [] : [[tool.name, validator.getValidator(tool.outputSchema)] as const])));
+    let checked = 0;
+    for (const suite of ['multi-repo', 'nest-check-through-helper', 'loops-worth-fixing']) {
+      const dir = join(ROOT, 'fixtures', suite, 'expected.mcp');
+      for (const file of readdirSync(dir)) {
+        const validate = schemas.get(file.split('.')[0]!);
+        const answer = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+        if (validate === undefined || 'error' in answer) continue;
+        const result = validate(answer);
+        expect(result.valid, `${suite}/${file}: ${result.errorMessage ?? ''}`).toBe(true);
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(10);
+    // Strict, so a field nobody declared fails rather than slipping through.
+    expect(schemas.get('list_entries')!({ entries: [], total: 0, extra: 1 }).valid).toBe(false);
+  });
+
+  it('carry the answer as structuredContent too, the same document as the text', async () => {
+    const reply = (await client.callTool({ name: 'list_entries', arguments: { maxNodes: 2 } })) as {
+      content: Array<{ text: string }>;
+      structuredContent?: unknown;
+    };
+    expect(reply.content[0]!.text).not.toContain('\n');
+    expect(reply.structuredContent).toEqual(JSON.parse(reply.content[0]!.text));
+  });
+});
+
+describe('reading a list a page at a time', () => {
+  it('says where the next page starts, and that page holds the next rows', async () => {
+    const all = await call('list_entries', {});
+    const first = await call('list_entries', { maxNodes: 2 });
+    expect(first.nextOffset).toBe(2);
+    expect(first.total).toBe(all.total);
+    expect(first.next[0]).toBe('list_entries({maxNodes: 2, offset: 2})');
+    const second = await call('list_entries', { maxNodes: 2, offset: 2 });
+    expect(second.entries.map((entry: { id: string }) => entry.id)).toEqual(
+      all.entries.slice(2, 4).map((entry: { id: string }) => entry.id),
+    );
+    expect(second.nextOffset).toBe(4);
+  });
+
+  it('answers a page past the end with no rows, the total, and no next page', async () => {
+    const past = await call('list_entries', { offset: 500 });
+    expect(past.entries).toEqual([]);
+    expect(past.total).toBeGreaterThan(0);
+    expect(past.nextOffset).toBeUndefined();
+    expect(past.truncated).toBeUndefined();
+  });
+
+  it('pages find_symbol, impact and the ends of a channel the same way', async () => {
+    const found = await call('find_symbol', { query: 'orders', maxNodes: 1 });
+    expect(found.nextOffset).toBe(1);
+    expect((await call('find_symbol', { query: 'orders', maxNodes: 1, offset: 1 })).matches[0].id).not.toBe(found.matches[0].id);
+    const symbol = 'orders#src/orders/orders.service.ts:OrdersService.findOne';
+    const impact = await call('impact', { symbol, maxNodes: 1 });
+    expect(impact).toMatchObject({ total: 2, nextOffset: 1 });
+    expect(impact.next[0]).toBe(`impact({symbol: ${JSON.stringify(symbol)}, maxNodes: 1, offset: 1})`);
+    const emits = await call('who_emits', { channel: 'order.created', offset: 1 });
+    expect(emits).toMatchObject({ producers: [], total: 1 });
+  });
+
+  it('pages search by kind, asking again only for the kinds that had more', async () => {
+    const first = await call('search', { query: 'orders', limit: 1 });
+    const cut = Object.keys(first.counts).filter((kind) => first.counts[kind] > 1);
+    expect(cut.length).toBeGreaterThan(0);
+    expect(first.nextOffset).toBe(1);
+    expect(first.next[0]).toBe(`search({query: "orders", kinds: ${JSON.stringify(cut)}, limit: 1, offset: 1})`);
+    const second = await call('search', { query: 'orders', limit: 1, offset: 1, kinds: cut });
+    expect(second.results[cut[0]!][0].id).not.toBe(first.results[cut[0]!][0].id);
+  });
 });
 
 describe('finding a way in', () => {
@@ -103,7 +217,7 @@ describe('finding a way in', () => {
   it('says how many it left out', async () => {
     const listed = await call('list_entries', { maxNodes: 2 });
     expect(listed.entries).toHaveLength(2);
-    expect(listed.truncated).toMatch(/^\d+ more nodes, increase depth or narrow scope$/);
+    expect(listed.truncated).toBe(`${listed.total - 2} more; next page offset 2`);
     expect(listed.total).toBeGreaterThan(2);
   });
 
@@ -276,7 +390,7 @@ describe('channels', () => {
 
 describe('types', () => {
   it('reads a type by its full id', async () => {
-    const answer = await call('get_type', { type: 'type:@fx/contracts#OrderDto' });
+    const answer = await call('get_type', { type: 'type:@fx/contracts#OrderDto', detail: 2 });
     expect(answer.type.name).toBe('OrderDto');
     expect(answer.type.meta.sharedPackage).toBe('@fx/contracts');
   });
@@ -397,13 +511,15 @@ describe('answers that hand on the id the next question needs', () => {
       service: 'gateway',
     });
     const services = new Set<string>();
-    const walk = (nodes: FlowNode[]): void => {
+    // A row under a parent of its own service leaves `service` to the parent (P93).
+    const walk = (nodes: FlowNode[], parent: string | undefined): void => {
       for (const item of nodes) {
-        if (item.children.length === 0) services.add(String(item.node.service));
-        walk(item.children);
+        const own = item.node.service ?? parent;
+        if (item.children.length === 0) services.add(String(own));
+        walk(item.children, own);
       }
     };
-    walk(callers.callers);
+    walk(callers.callers, callers.target.service);
     expect([...services]).toEqual(['gateway']);
     const impact = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', service: 'orders' });
     expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param']);

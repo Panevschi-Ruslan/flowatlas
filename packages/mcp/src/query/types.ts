@@ -112,5 +112,11 @@ export interface CommonInput {
   maxNodes: number;
 }
 
-export const truncationMessage = (count: number, exact: boolean): Truncation =>
-  `${exact ? '' : '≥'}${count} more nodes, increase depth or narrow scope`;
+/**
+ * What a cut says. A list that pages names the offset of its next page (P93);
+ * a walk, which does not page, says how to see more of it.
+ */
+export const truncationMessage = (count: number, exact: boolean, nextOffset?: number): Truncation =>
+  nextOffset === undefined
+    ? `${exact ? '' : '≥'}${count} more nodes, increase depth or narrow scope`
+    : `${exact ? '' : '≥'}${count} more; next page offset ${nextOffset}`;

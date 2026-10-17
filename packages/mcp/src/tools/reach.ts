@@ -8,7 +8,8 @@ import { truncationMessage, type FlowNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
 import { nextFor, withNext } from '../query/next.js';
 import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
-import { bound, commonInput, inService, serviceInput, withDb, type ToolContext } from './common.js';
+import { slimForest } from '../query/wire.js';
+import { bound, commonInput, inService, pagedNext, pageInput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
 
 /** Accepts an id, or a name close enough to identify one thing. */
 const findTarget = (db: GraphDb, symbol: string): GraphNode | GraphNode[] => {
@@ -110,14 +111,14 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     'who_calls',
     {
       title: 'Who calls this',
-      description:
-        'Everything that reaches a symbol, following calls backward across repositories: direct callers, the routes that handle them, and requests from other services.',
+      description: 'What reaches a symbol, walked back across repositories.',
       inputSchema: {
-        symbol: z.string().describe('a node id, or a name close enough to identify one'),
-        depth: z.number().int().positive().max(16).default(3).describe('how many hops back'),
+        symbol: z.string().describe('node id or name'),
+        depth: z.number().int().min(1).max(16).default(3).describe('hops back'),
         service: serviceInput,
         ...commonInput,
       },
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
@@ -143,7 +144,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
               ...(seen === undefined ? {} : { observed: seen }),
               ...(unsure === undefined ? {} : { seenAmbiguous: unsure }),
             },
-            callers,
+            callers: slimForest(callers, found.repo === '' ? undefined : found.repo),
             ...(walked.truncated === undefined ? {} : { truncated: walked.truncated }),
             ...(note === undefined ? {} : { note }),
           },
@@ -156,13 +157,14 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     'impact',
     {
       title: 'Blast radius',
-      description:
-        'Every entry point that can reach a symbol, which services they belong to, and which services the chain runs into without an entry point above them. What would have to be retested if this changed.',
+      description: 'Every entry that reaches a symbol, by service: what to retest if it changes.',
       inputSchema: {
-        symbol: z.string().describe('a node id, or a name close enough to identify one'),
+        symbol: z.string().describe('node id or name'),
         service: serviceInput,
         ...commonInput,
+        ...pageInput,
       },
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
@@ -204,10 +206,14 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           .sort();
 
         entries.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-        const { items, truncated } = truncate(entries, maxNodes);
+        const { items, total, truncated, nextOffset } = truncate(entries, maxNodes, input.offset);
+        const args = { symbol: found.id, service: input.service, detail: input.detail, maxNodes };
+        const notes = [...(reach.truncated ? ['reachability stopped at the walk limit'] : []), ...(note === undefined ? [] : [note])];
         return withNext({
           target: projectDetail(found, detail),
           entries: items.map((entry) => projectDetail(entry, detail)),
+          total,
+          ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
           // How many things reach it at all, so no entry points is telling
           // rather than indistinguishable from nothing reaching it.
           reached,
@@ -215,10 +221,9 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           reachedByService,
           servicesWithoutEntry,
           channels: [...channels].sort(),
-          ...(truncated === undefined ? {} : { truncated }),
-          ...(reach.truncated ? { note: 'reachability stopped at the walk limit' } : {}),
-          ...(note === undefined ? {} : { note }),
-        }, nextFor(items[0]));
+          // Both said when both apply: the clamp's note used to overwrite the walk's (P132).
+          ...(notes.length === 0 ? {} : { note: notes.join('; ') }),
+        }, pagedNext({ tool: 'impact', args, nextOffset }, nextFor(items[0])));
       }),
   );
 };

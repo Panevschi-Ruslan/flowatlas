@@ -247,4 +247,27 @@ describe('what_changed', () => {
     const cut = await call('what_changed', { maxNodes: 1 });
     expect(cut.nodes.added).toHaveLength(1);
   });
+
+  it('applies detail: ids at 0, whose and what at 1, the changed fields at 2 (P93)', async () => {
+    const bare = await call('what_changed', { detail: 0 });
+    expect(bare.nodes.changed).toEqual([{ id: SERVICE }]);
+    expect(bare.entries).toEqual([{ id: ROUTE, type: 'entry', reaches: SERVICE }]);
+    const usual = await call('what_changed');
+    expect(usual.nodes.changed).toEqual([{ id: SERVICE, service: 'orders', label: 'OrdersService.place' }]);
+    const full = await call('what_changed', { detail: 2 });
+    expect(full.nodes.changed).toEqual([{ id: SERVICE, service: 'orders', label: 'OrdersService.place', fields: ['meta.returns'] }]);
+  });
+
+  it('pages every list at once from one offset', async () => {
+    const page = await call('what_changed', { maxNodes: 1, offset: 1 });
+    expect(page.nodes.added).toEqual([]);
+    expect(page.nextOffset).toBeUndefined();
+    const two = { ...diff, nodes: { ...diff.nodes, added: [TABLE, CHANNEL] } };
+    writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(two));
+    const first = await call('what_changed', { maxNodes: 1 });
+    expect(first).toMatchObject({ nextOffset: 1, truncated: '1 more; next page offset 1' });
+    expect(first.next[0]).toBe('what_changed({maxNodes: 1, offset: 1})');
+    expect((await call('what_changed', { maxNodes: 1, offset: 1 })).nodes.added).toEqual([CHANNEL]);
+    writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
+  });
 });

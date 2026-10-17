@@ -8,6 +8,7 @@
       "service": "gateway"
     }
   ],
+  "total": 1,
   "next": [
     "who_calls({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",
     "impact({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",

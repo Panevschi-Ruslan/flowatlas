@@ -3,7 +3,23 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { withNext } from '../query/next.js';
-import { bound, commonInput, withDb, type ToolContext } from './common.js';
+import { commonInput, READ_ONLY, withDb, type ContractFinding, type ToolContext } from './common.js';
+
+/**
+ * A finding as it goes out (P93): what disagrees and how. The checker's own
+ * finding names the edge, its key and both parties on every row, and the
+ * answer names the edge once at the top.
+ */
+export const wireFinding = (finding: ContractFinding): ContractFinding => ({
+  severity: finding.severity,
+  kind: finding.kind,
+  direction: finding.direction,
+  field: finding.field,
+  expected: finding.expected,
+  actual: finding.actual,
+  message: finding.message,
+  ...(finding.ignored === true ? { ignored: true } : {}),
+});
 
 /**
  * How well the two ends of an edge agree about what crosses it.
@@ -101,18 +117,18 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
     'check_contract',
     {
       title: 'Check a contract',
-      description:
-        'Compare what one side of a cross-service edge sends against what the other side expects. Identifies an edge by its two ends, or by "from -http_calls-> to".',
+      description: 'Whether what one side of a crossing sends is what the other side expects.',
       inputSchema: {
         edge: z.string().optional().describe('"<from> -http_calls-> <to>"'),
-        from: z.string().optional().describe('the calling node'),
-        to: z.string().optional().describe('the node it reaches'),
+        from: z.string().optional(),
+        to: z.string().optional(),
         // `maxNodes` only. This answers about one crossing, so there is no tree
         // to thin and `detail` had nothing to apply itself to — it was declared,
         // ignored, and answered `detail: 3` with a note saying the level had
         // been clamped. A knob accepted and not read is worse than one absent.
         maxNodes: commonInput.maxNodes,
       },
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
@@ -146,7 +162,7 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
             ...(hash(response.right) === undefined ? {} : { right: hash(response.right)! }),
           }) ?? [];
 
-        const shown = findings.slice(0, input.maxNodes);
+        const shown = findings.slice(0, input.maxNodes).map(wireFinding);
         const shapes = [request.left, request.right, response.left, response.right].filter(
           (id): id is string => typeof id === 'string' && id.startsWith('type:'),
         );

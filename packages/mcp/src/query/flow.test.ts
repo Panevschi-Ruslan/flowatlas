@@ -423,13 +423,30 @@ describe('saying only as much as was asked for', () => {
     expect(projectDetail(sample, 2).meta).toEqual({ module: 'AppModule' });
   });
 
-  it('counts exactly what it left out', () => {
-    const { items, truncated } = truncate([1, 2, 3, 4, 5], 2);
+  it('counts exactly what it left out, and where the next page starts', () => {
+    const { items, truncated, nextOffset, total } = truncate([1, 2, 3, 4, 5], 2);
     expect(items).toEqual([1, 2]);
-    expect(truncated).toBe('3 more nodes, increase depth or narrow scope');
+    expect(truncated).toBe('3 more; next page offset 2');
+    expect(nextOffset).toBe(2);
+    expect(total).toBe(5);
+  });
+
+  it('reads on from an offset, and says nothing more on the last page', () => {
+    expect(truncate([1, 2, 3, 4, 5], 2, 2)).toEqual({
+      items: [3, 4],
+      total: 5,
+      truncated: '1 more; next page offset 4',
+      nextOffset: 4,
+    });
+    expect(truncate([1, 2, 3, 4, 5], 2, 4)).toEqual({ items: [5], total: 5 });
+  });
+
+  it('answers an offset past the end with an empty page and the total', () => {
+    expect(truncate([1, 2], 5, 9)).toEqual({ items: [], total: 2 });
   });
 
   it('says nothing about truncation when nothing was cut', () => {
     expect(truncate([1, 2], 5).truncated).toBeUndefined();
+    expect(truncate([1, 2], 5).nextOffset).toBeUndefined();
   });
 });

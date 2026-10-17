@@ -8,7 +8,7 @@ import { withNext } from '../query/next.js';
 import { describeForPrompt, PROMPT_LIMITS } from '../prompt/describe.js';
 import { gatherPromptSubject } from '../prompt/gather.js';
 import { rankMatches } from './entries.js';
-import { withDb, type ToolContext } from './common.js';
+import { READ_ONLY, withDb, type ToolContext } from './common.js';
 
 /**
  * The node an id names: as it is, as a channel without its prefix, or as an
@@ -31,19 +31,13 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
     'describe_for_prompt',
     {
       title: 'Describe for a prompt',
-      description:
-        'One entry, channel or symbol as Markdown to paste into a prompt: the chain in call order with repo-relative file:line, the shapes in and out, the gaps on the way with their reasons, and the ids to ask about next. Bounded; no source code.',
+      description: 'An entry, channel or symbol as Markdown to hand on; no code.',
       inputSchema: {
-        id: z.string().describe('any id a list tool returned, a channel name, or an entry such as "POST /orders"'),
-        maxSteps: z.number().int().min(1).max(200).default(PROMPT_LIMITS.maxSteps).describe('most chain steps written'),
-        maxChars: z
-          .number()
-          .int()
-          .min(500)
-          .max(40000)
-          .default(PROMPT_LIMITS.maxChars)
-          .describe('the ceiling on the Markdown, in characters'),
+        id: z.string().describe('any id, channel or "POST /orders"'),
+        maxSteps: z.number().int().min(1).max(200).default(PROMPT_LIMITS.maxSteps).describe('chain steps'),
+        maxChars: z.number().int().min(500).max(40000).default(PROMPT_LIMITS.maxChars),
       },
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {

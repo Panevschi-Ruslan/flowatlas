@@ -6,28 +6,21 @@ import { buildFlowTree } from '../query/flow.js';
 import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
 import { rankMatches } from './entries.js';
 import { withNext } from '../query/next.js';
-import { bound, commonInput, withDb, type ToolContext } from './common.js';
+import { slimTree } from '../query/wire.js';
+import { bound, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
 
 export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'get_flow',
     {
       title: 'Trace an entry point',
-      description:
-        'Follow one entry point through every repository it reaches: handlers, calls, queries, channels and the routes it calls in other services. Returns a nested tree in call order, with the guard chain on each entry.',
+      description: 'One entry followed across repositories, as a call-order tree with guards.',
       inputSchema: {
-        entry: z
-          .string()
-          .describe('an entry: "POST /orders", "bot:order_confirm", or the id any list tool returns'),
-        depth: z
-          .number()
-          .int()
-          .positive()
-          .max(32)
-          .optional()
-          .describe('how many hops to follow; by default 8, and one more per step of a workflow'),
+        entry: z.string().describe('"POST /orders" or an entry id'),
+        depth: z.number().int().min(1).max(32).optional().describe('hops; default 8, +1 per workflow step'),
         ...commonInput,
       },
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
@@ -63,7 +56,7 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
         const id = JSON.stringify(ref.id);
         return withNext(
           {
-            root: flow.root,
+            root: slimTree(flow.root),
             unresolvedOnPath: flow.unresolvedOnPath,
             ...(flow.truncated === undefined ? {} : { truncated: flow.truncated }),
             ...(note === undefined ? {} : { note }),

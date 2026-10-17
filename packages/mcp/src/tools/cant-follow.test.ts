@@ -60,9 +60,38 @@ describe('cant_follow', () => {
   it('names the method a place is written in, so get_source can open it', async () => {
     const answer = await call({ cause: 'dynamic-member' });
     const [place] = answer.causes[0].packages[0].samples;
-    expect(place).toMatchObject({ service: 'storefront', loc: 'src/orders/orders.service.ts:19' });
-    expect(place.id).toBe('storefront#src/orders/orders.service.ts:OrdersService.place');
+    // Said once (P93): no file and line beside the loc that is both, no
+    // symbol where it is the id, no service where the cause has one.
+    expect(answer.causes[0].services).toEqual(['storefront']);
+    // The symbol is the text of the call here, not the id, so it stays.
+    expect(place).toEqual({
+      loc: 'src/orders/orders.service.ts:19',
+      id: 'storefront#src/orders/orders.service.ts:OrdersService.place',
+      symbol: 'OrdersService.place -> this.steps[sku]',
+    });
+    const places = (await call()).causes.flatMap((cause: { packages: Array<{ samples: unknown[] }> }) =>
+      cause.packages.flatMap((pkg) => pkg.samples),
+    ) as Array<Record<string, unknown>>;
+    expect(places.length).toBeGreaterThan(0);
+    for (const each of places) {
+      expect(each).not.toHaveProperty('file');
+      expect(each).not.toHaveProperty('line');
+      expect(each).not.toHaveProperty('coveredBy');
+      expect(each.symbol === undefined || each.symbol !== each.id).toBe(true);
+    }
     expect(answer.next[0]).toBe(`get_source({symbol: ${JSON.stringify(place.id)}})`);
+  });
+
+  it('reads its causes a page at a time (P93)', async () => {
+    const all = await call();
+    const first = await call({ top: 2 });
+    expect(first.causes.map((cause: { cause: string }) => cause.cause)).toEqual(all.causes.slice(0, 2).map((cause: { cause: string }) => cause.cause));
+    expect(first.total.causes).toBe(all.total.causes);
+    expect(first.nextOffset).toBe(2);
+    expect(first.next[0]).toBe('cant_follow({top: 2, offset: 2})');
+    const second = await call({ top: 2, offset: 2 });
+    expect(second.causes.map((cause: { cause: string }) => cause.cause)).toEqual(all.causes.slice(2, 4).map((cause: { cause: string }) => cause.cause));
+    expect(second.total).toEqual(first.total);
   });
 
   it('narrows to one package, and to one service', async () => {
@@ -70,7 +99,7 @@ describe('cant_follow', () => {
     expect(ledger.total.sites).toBe(4);
     expect(ledger.causes.every((cause: { services: string[] }) => cause.services.join() === 'payments')).toBe(true);
     const elsewhere = await call({ service: 'storefront', package: '@shopkit/ledger' });
-    expect(elsewhere.total).toEqual({ rows: 0, sites: 0 });
+    expect(elsewhere.total).toEqual({ rows: 0, sites: 0, causes: 0 });
   });
 });
 

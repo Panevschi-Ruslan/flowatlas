@@ -8,93 +8,6 @@
       "service": "lending",
       "kind": "http"
     },
-    "children": [
-      {
-        "node": {
-          "id": "lending#src/desk/desk.controller.ts:DeskController.renew",
-          "type": "method",
-          "label": "DeskController.renew",
-          "loc": "src/desk/desk.controller.ts:20",
-          "service": "lending"
-        },
-        "edge": {
-          "type": "handles",
-          "confidence": "static",
-          "params": [
-            "string",
-            "type:lending#Loan"
-          ],
-          "returns": "type:lending#Loan"
-        },
-        "children": [
-          {
-            "node": {
-              "id": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
-              "type": "method",
-              "label": "LibrarianAuth.verify",
-              "loc": "src/auth/librarian-auth.ts:13",
-              "service": "lending"
-            },
-            "edge": {
-              "type": "calls",
-              "confidence": "static",
-              "params": [
-                "string"
-              ],
-              "returns": "type:lending#LibrarianCheck"
-            },
-            "children": []
-          },
-          {
-            "node": {
-              "id": "lending#src/desk/loans.service.ts:LoansService.renew",
-              "type": "method",
-              "label": "LoansService.renew",
-              "loc": "src/desk/loans.service.ts:16",
-              "service": "lending"
-            },
-            "edge": {
-              "type": "calls",
-              "confidence": "static",
-              "params": [
-                "type:lending#Loan"
-              ],
-              "returns": "type:lending#Loan"
-            },
-            "children": [
-              {
-                "node": {
-                  "id": "db_query:lending#src/desk/loans.service.ts:17:12",
-                  "type": "db_query",
-                  "label": "write loans",
-                  "loc": "src/desk/loans.service.ts:17",
-                  "service": "lending"
-                },
-                "edge": {
-                  "type": "calls",
-                  "confidence": "static"
-                },
-                "children": [
-                  {
-                    "node": {
-                      "id": "table:lending#loans",
-                      "type": "table",
-                      "label": "loans",
-                      "service": "lending"
-                    },
-                    "edge": {
-                      "type": "queries",
-                      "confidence": "static"
-                    },
-                    "children": []
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "fails": [
       {
         "exception": "toHttpError",
@@ -119,6 +32,88 @@
         "sites": 1,
         "at": "lending#src/desk/desk.controller.ts:DeskController.renew",
         "loc": "src/desk/desk.controller.ts:23"
+      }
+    ],
+    "children": [
+      {
+        "node": {
+          "id": "lending#src/desk/desk.controller.ts:DeskController.renew",
+          "type": "method",
+          "label": "DeskController.renew",
+          "loc": "src/desk/desk.controller.ts:20"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "string",
+            "type:lending#Loan"
+          ],
+          "returns": "type:lending#Loan"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
+              "type": "method",
+              "label": "LibrarianAuth.verify",
+              "loc": "src/auth/librarian-auth.ts:13"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string"
+              ],
+              "returns": "type:lending#LibrarianCheck"
+            },
+            "children": []
+          },
+          {
+            "node": {
+              "id": "lending#src/desk/loans.service.ts:LoansService.renew",
+              "type": "method",
+              "label": "LoansService.renew",
+              "loc": "src/desk/loans.service.ts:16"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "type:lending#Loan"
+              ],
+              "returns": "type:lending#Loan"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "db_query:lending#src/desk/loans.service.ts:17:12",
+                  "type": "db_query",
+                  "label": "write loans",
+                  "loc": "src/desk/loans.service.ts:17"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "table:lending#loans",
+                      "type": "table",
+                      "label": "loans"
+                    },
+                    "edge": {
+                      "type": "queries",
+                      "confidence": "static"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },

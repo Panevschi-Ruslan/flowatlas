@@ -8,6 +8,7 @@
  * which is what every later phase renders from. A change here is a change other
  * packages will see, so it should be read before it is accepted.
  */
+import { isDeepStrictEqual } from 'node:util';
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -107,6 +108,9 @@ for (const suite of SUITES) {
   await server.connect(serverSide);
   const client = new Client({ name: 'snapshots', version: '0' });
   await client.connect(clientSide);
+  // Listing the tools first makes the client check every answer below against
+  // its tool's outputSchema (P93), so a snapshot can only hold a declared shape.
+  await client.listTools();
 
   if (update) {
     rmSync(suite.outDir, { recursive: true, force: true });
@@ -115,7 +119,12 @@ for (const suite of SUITES) {
 
   for (const [name, tool, args] of suite.cases) {
     const response = await client.callTool({ name: tool, arguments: args });
-    const actual = `${JSON.stringify(JSON.parse(response.content[0].text), null, 2)}\n`;
+    const parsed = JSON.parse(response.content[0].text);
+    // The text and structuredContent are one document; an error carries isError instead.
+    if (response.isError === true ? response.structuredContent !== undefined : !isDeepStrictEqual(response.structuredContent, parsed)) {
+      problems.push(`${name}: structuredContent is not the document the text holds`);
+    }
+    const actual = `${JSON.stringify(parsed, null, 2)}\n`;
     const path = join(suite.outDir, `${name}.json`);
 
     if (update) {

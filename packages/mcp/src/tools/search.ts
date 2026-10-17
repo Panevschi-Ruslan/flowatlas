@@ -18,11 +18,23 @@ import {
 import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { projectDetail } from '../query/detail.js';
-import { nextFor, withNext, type Identified } from '../query/next.js';
+import { projectDetail, truncate } from '../query/detail.js';
+import { MAX_NEXT, nextFor, withNext, type Identified } from '../query/next.js';
 import type { CompactNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
-import { bound, commonInput, inService, serviceInput, withDb, type Bounded, type ToolContext } from './common.js';
+import {
+  bound,
+  callOf,
+  commonInput,
+  inService,
+  nextOutput,
+  pageInput,
+  READ_ONLY,
+  serviceInput,
+  withDb,
+  type Bounded,
+  type ToolContext,
+} from './common.js';
 
 /**
  * One search box over everything a question starts from (P72).
@@ -92,29 +104,33 @@ interface SearchQuery {
   text: string;
   service: string | undefined;
   limit: number;
+  /** Where each kind's page starts (P93): one offset pages every kind at once. */
+  offset: number;
   bounded: Bounded;
   accepted: AcceptedRead;
 }
 
 type Finder = (query: SearchQuery) => { rows: Hit[]; total: number };
 
-const cut = <T>(rows: readonly T[], limit: number): { rows: T[]; total: number } => ({
-  rows: rows.slice(0, limit),
-  total: rows.length,
-});
+/** One page of a kind's rows, and how many it has in all. */
+const cut = <T>(rows: readonly T[], limit: number, offset: number): { rows: T[]; total: number } => {
+  const page = truncate(rows, limit, offset);
+  return { rows: page.items, total: page.total };
+};
 
 const nodesOf =
   (types: readonly string[]): Finder =>
-  ({ db, text, service, limit, bounded }) => {
+  ({ db, text, service, limit, offset, bounded }) => {
     const pool: GraphNode[] = types.flatMap((type) => db.nodesByType(type)).filter(inService(service));
     const ranked = rankMatches(pool, text);
     return cut(
       ranked.map((match) => projectDetail(match.node, bounded.detail)),
       limit,
+      offset,
     );
   };
 
-const types: Finder = ({ db, text, service, limit }) => {
+const types: Finder = ({ db, text, service, limit, offset }) => {
   const wanted = text.toLowerCase();
   const rows = db
     .allTypes(service === undefined ? {} : { repo: service })
@@ -126,13 +142,13 @@ const types: Finder = ({ db, text, service, limit }) => {
       label: entry.name,
       service: entry.declaredIn.split('#')[0] ?? '',
     }));
-  return cut(rows, limit);
+  return cut(rows, limit, offset);
 };
 
 const gapText = (row: AnchoredUnresolvedRow): string =>
   `${row.reason} ${row.file ?? ''} ${row.message}`.toLowerCase();
 
-const gaps: Finder = ({ db, text, service, limit, accepted }) => {
+const gaps: Finder = ({ db, text, service, limit, offset, accepted }) => {
   const wanted = text.toLowerCase();
   const seen = new Set<string>();
   const rows: GapHit[] = [];
@@ -176,7 +192,7 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
   });
   // New gaps first: an accepted one is the least likely to be the question.
   rows.sort((a, b) => Number(a.accepted === true) - Number(b.accepted === true));
-  return cut(rows, limit);
+  return cut(rows, limit, offset);
 };
 
 /**
@@ -184,7 +200,7 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
  * (P68). One hit per route, naming the first answer that matched and how many
  * more did (P87).
  */
-const fails: Finder = ({ db, text, service, limit }) => {
+const fails: Finder = ({ db, text, service, limit, offset }) => {
   const wanted = text.toLowerCase();
   const rows: FailHit[] = [];
   for (const node of db.nodesByType('entry').filter(inService(service))) {
@@ -210,7 +226,7 @@ const fails: Finder = ({ db, text, service, limit }) => {
     });
   }
   rows.sort((a, b) => (a.exception < b.exception ? -1 : a.exception > b.exception ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  return cut(rows, limit);
+  return cut(rows, limit, offset);
 };
 
 const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
@@ -226,53 +242,106 @@ const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
 /** The hint for a gap row: what reaches the place, read off the node it names. */
 const anchorOf = (hit: Hit): Identified | undefined => (hit.type === 'gap' ? undefined : hit);
 
+/** What search answers: per kind, how many match in all and one page of them. */
+export const searchOutput = {
+  query: z.string(),
+  counts: z.record(z.string(), z.number()),
+  results: z.record(
+    z.string(),
+    z.array(
+      z.object({
+        id: z.string(),
+        type: z.string(),
+        label: z.string().optional(),
+        loc: z.string().optional(),
+        service: z.string().optional(),
+        kind: z.string().optional(),
+        meta: z.record(z.string(), z.unknown()).optional(),
+        reason: z.string().optional(),
+        message: z.string().optional(),
+        accepted: z.literal(true).optional(),
+        note: z.string().optional(),
+        acceptedBy: z.string().optional(),
+        severity: z.string().optional(),
+        waysIn: z.number().optional(),
+        exception: z.string().optional(),
+        status: z.number().optional(),
+        assumed: z.literal(true).optional(),
+        sites: z.number().optional(),
+        more: z.number().optional(),
+      }),
+    ),
+  ),
+  truncated: z.string().optional(),
+  nextOffset: z.number().optional(),
+  note: z.string().optional(),
+  next: nextOutput,
+};
+
 export const runSearch = (
   db: GraphDb,
-  input: { query: string; kinds?: readonly SearchKind[]; service?: string; limit: number },
+  input: { query: string; kinds?: readonly SearchKind[]; service?: string; limit: number; offset?: number },
   bounded: Bounded,
   accepted: AcceptedRead,
-): { results: Partial<Record<SearchKind, Hit[]>>; counts: Partial<Record<SearchKind, number>>; next: string[] } => {
+): {
+  results: Partial<Record<SearchKind, Hit[]>>;
+  counts: Partial<Record<SearchKind, number>>;
+  next: string[];
+  /** Kinds with rows past this page, and how many each has left. */
+  more: Partial<Record<SearchKind, number>>;
+} => {
   const text = input.query.trim();
+  const offset = input.offset ?? 0;
   const kinds = input.kinds === undefined || input.kinds.length === 0 ? SEARCH_KINDS : input.kinds;
   const results: Partial<Record<SearchKind, Hit[]>> = {};
   const counts: Partial<Record<SearchKind, number>> = {};
+  const more: Partial<Record<SearchKind, number>> = {};
   const firsts: Array<Identified | undefined> = [];
   for (const kind of kinds) {
-    const found = FINDERS.get(kind)!({ db, text, service: input.service, limit: input.limit, bounded, accepted });
+    const found = FINDERS.get(kind)!({ db, text, service: input.service, limit: input.limit, offset, bounded, accepted });
     if (found.total === 0) continue;
     results[kind] = found.rows;
     counts[kind] = found.total;
-    firsts.push(anchorOf(found.rows[0]!));
+    const left = found.total - Math.min(offset, found.total) - found.rows.length;
+    if (left > 0) more[kind] = left;
+    if (found.rows[0] !== undefined) firsts.push(anchorOf(found.rows[0]));
   }
-  return { results, counts, next: nextFor(...firsts) };
+  return { results, counts, more, next: nextFor(...firsts) };
 };
+
+/** The defaults a hint for the next page leaves out. */
+const SEARCH_DEFAULTS: Readonly<Record<string, unknown>> = { limit: 10, detail: 1, maxNodes: 150, offset: 0 };
 
 export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'search',
     {
       title: 'Search everything',
-      description:
-        'One query across routes and other entry points, channels, tables, types, gaps, what ways in can fail with (an exception name or status) and classes. Rows are grouped by kind and carry the id the next tool takes; a gap id is what `flowatlas accept` takes, and accepted gaps say so.',
+      description: 'One query over routes, channels, tables, types, gaps, failures and classes.',
       inputSchema: {
-        query: z.string().min(1).describe('a word, a path fragment, a reason, or a name'),
-        kinds: z.array(z.enum(SEARCH_KINDS)).optional().describe('only these kinds; all by default'),
-        limit: z.number().int().positive().max(100).default(10).describe('most rows per kind'),
+        query: z.string().min(1),
+        kinds: z.array(z.enum(SEARCH_KINDS)).optional(),
+        limit: z.number().int().min(1).max(100).default(10).describe('rows per kind'),
         service: serviceInput,
         ...commonInput,
+        ...pageInput,
       },
+      outputSchema: searchOutput,
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
         const bounded = bound(input);
         const accepted = readAccepted(ctx.handle.path);
-        const { results, counts, next } = runSearch(
+        const limit = Math.min(input.limit, bounded.maxNodes);
+        const { results, counts, more, next } = runSearch(
           db,
           {
             query: input.query,
             ...(input.kinds === undefined ? {} : { kinds: input.kinds }),
             ...(input.service === undefined ? {} : { service: input.service }),
-            limit: Math.min(input.limit, bounded.maxNodes),
+            limit,
+            offset: input.offset,
           },
           bounded,
           accepted,
@@ -283,7 +352,30 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
           ...(bounded.note === undefined ? [] : [bounded.note]),
           ...(accepted.problem === undefined || counts.gaps === undefined ? [] : [`${describeAcceptedProblem(accepted.problem)}.`]),
         ];
-        return withNext({ query: input.query, counts, results, ...(notes.length === 0 ? {} : { note: notes.join(' ') }) }, next);
+        // One offset pages every kind; the next page asks again for the kinds that have more.
+        const cutKinds = Object.keys(more) as SearchKind[];
+        const nextOffset = input.offset + limit;
+        const paging =
+          cutKinds.length === 0
+            ? {}
+            : {
+                truncated: `${cutKinds.map((kind) => `${kind} ${more[kind]!} more`).join(', ')}; next page offset ${nextOffset}`,
+                nextOffset,
+              };
+        const page =
+          cutKinds.length === 0
+            ? []
+            : [
+                callOf(
+                  'search',
+                  { query: input.query, kinds: cutKinds, limit: input.limit, service: input.service, detail: input.detail, maxNodes: input.maxNodes, offset: nextOffset },
+                  SEARCH_DEFAULTS,
+                ),
+              ];
+        return withNext(
+          { query: input.query, counts, results, ...paging, ...(notes.length === 0 ? {} : { note: notes.join(' ') }) },
+          [...page, ...next].slice(0, MAX_NEXT),
+        );
       }),
   );
 };

@@ -3,7 +3,43 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { nextFor, withNext } from '../query/next.js';
 import { START_LIMITS, summariseProject } from '../query/start.js';
-import { serviceInput, withDb, type ToolContext } from './common.js';
+import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
+
+/** What start_here answers (`StartSummary`, with `next`). */
+export const startOutput = {
+  services: z.array(
+    z.object({
+      service: z.string(),
+      nodes: z.number(),
+      entries: z.number(),
+      entriesByKind: z.record(z.string(), z.number()),
+      gaps: z.number(),
+    }),
+  ),
+  counts: z.object({
+    gaps: z.number(),
+    sites: z.number(),
+    notes: z.number(),
+    findings: z.number(),
+    nothing: z.number(),
+  }),
+  topGaps: z.array(
+    z.object({
+      reason: z.string(),
+      count: z.number(),
+      services: z.array(z.string()),
+      example: z.object({
+        service: z.string().optional(),
+        loc: z.string().optional(),
+        message: z.string(),
+        id: z.string().optional(),
+      }),
+    }),
+  ),
+  channels: z.object({ noConsumers: z.array(z.string()), noProducers: z.array(z.string()) }),
+  startFrom: z.array(nodeOutput),
+  next: nextOutput,
+};
 
 /** The services at each end of every channel, read once. */
 const channelEnds = (db: GraphDb): Map<string, { producers: string[]; consumers: string[] }> => {
@@ -23,18 +59,13 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
     'start_here',
     {
       title: 'Start here',
-      description:
-        'The first question of a session: how many entry points and nodes each service has, the unresolved rows counted by kind (gaps the reading could not follow, notes on how a join was made, findings about the code), the most common gaps, channels with one end missing, and a few entry ids to pass to get_flow. Bounded.',
+      description: 'Begin here: counts and gaps per service, rows by kind, one-ended channels, entry ids.',
       inputSchema: {
         service: serviceInput,
-        perService: z
-          .number()
-          .int()
-          .min(1)
-          .max(20)
-          .default(START_LIMITS.perService)
-          .describe('entry ids to start from, per service'),
+        perService: z.number().int().min(1).max(20).default(START_LIMITS.perService).describe('entry ids per service'),
       },
+      outputSchema: startOutput,
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {

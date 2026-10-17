@@ -12,8 +12,7 @@
         "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
         "type": "method",
         "label": "OrdersController.findOne",
-        "loc": "src/orders/orders.controller.ts:25",
-        "service": "orders"
+        "loc": "src/orders/orders.controller.ts:25"
       },
       "edge": {
         "type": "calls",
@@ -30,7 +29,6 @@
             "type": "entry",
             "label": "GET /orders/:param",
             "loc": "src/orders/orders.controller.ts:25",
-            "service": "orders",
             "kind": "http"
           },
           "edge": {
@@ -61,8 +59,7 @@
                     "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
                     "type": "method",
                     "label": "OrdersClient.fetchOne",
-                    "loc": "src/clients/orders.client.ts:32",
-                    "service": "gateway"
+                    "loc": "src/clients/orders.client.ts:32"
                   },
                   "edge": {
                     "type": "calls",
@@ -74,8 +71,7 @@
                         "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
                         "type": "method",
                         "label": "OrdersController.findOne",
-                        "loc": "src/orders/orders.controller.ts:30",
-                        "service": "gateway"
+                        "loc": "src/orders/orders.controller.ts:30"
                       },
                       "edge": {
                         "type": "calls",
@@ -92,7 +88,6 @@
                             "type": "entry",
                             "label": "GET /orders/:param",
                             "loc": "src/orders/orders.controller.ts:30",
-                            "service": "gateway",
                             "kind": "http"
                           },
                           "edge": {

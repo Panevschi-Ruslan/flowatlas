@@ -16,6 +16,7 @@
       "kind": "event"
     }
   ],
+  "total": 1,
   "next": [
     "who_consumes({channel: \"channel:order.created\"})",
     "who_calls({symbol: \"producer:orders#src/orders/orders.service.ts:49:5\"})",

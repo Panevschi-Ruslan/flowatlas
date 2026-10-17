@@ -14,7 +14,7 @@ import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flow
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { MAX_NEXT, withNext } from '../query/next.js';
-import { serviceInput, withDb, type ToolContext } from './common.js';
+import { callOf, nextOutput, pageInput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
 
 /** A place, with the id of the method or function it is written in when the graph draws one. */
 export interface CantFollowPlace extends CantFollowSample {
@@ -62,7 +62,7 @@ export interface CantFollowAnswer extends Omit<CantFollow, 'causes'> {
 export const cantFollowFor = (
   db: GraphDb,
   rows: readonly AnchoredUnresolvedRow[],
-  options: { service?: string; cause?: string; package?: string; top: number; samples: number },
+  options: { service?: string; cause?: string; package?: string; top: number; samples: number; offset?: number },
   coverage: ReadonlyMap<string, PackageCover> = new Map(),
 ): CantFollowAnswer => {
   const grouped = groupCantFollow(
@@ -96,10 +96,116 @@ export const cantFollowFor = (
 };
 
 /**
+ * A place as it goes out (P93): `loc` and the id of what it is in. `file` and
+ * `line` are what `loc` says, `symbol` is said only where it is not the id (a
+ * call text, or a symbol the graph draws no node for), and `service` only
+ * where the cause spans more than one.
+ */
+export interface WirePlace {
+  loc: string;
+  id?: string;
+  symbol?: string;
+  service?: string;
+}
+
+/** A cause's package as it goes out: its places, and what covers it once for all of them. */
+export interface WirePackage {
+  package: string | null;
+  sites: number;
+  samples: WirePlace[];
+  coveredBy?: PackageCover['by'];
+  coveredFrom?: string;
+}
+
+export interface CantFollowWire extends Omit<CantFollowAnswer, 'causes' | 'total'> {
+  total: CantFollowAnswer['total'] & { causes: number };
+  causes: Array<Omit<CantFollowAnswer['causes'][number], 'packages'> & { packages: WirePackage[] }>;
+  nextOffset?: number;
+}
+
+const wirePlace = (place: CantFollowPlace, oneService: boolean): WirePlace => ({
+  loc: place.loc,
+  ...(place.id === undefined ? {} : { id: place.id }),
+  ...(place.symbol === undefined || place.symbol === place.id ? {} : { symbol: place.symbol }),
+  ...(place.service === undefined || oneService ? {} : { service: place.service }),
+});
+
+/**
+ * The answer slimmed for the wire (D4: `cantFollowFor` keeps its shape for the
+ * CLI). A package's label is its cause and its name, both said beside it, so
+ * it is left out too.
+ */
+export const wireCantFollow = (answer: CantFollowAnswer, offset: number): CantFollowWire => {
+  const { total, causes, packages, truncated } = answer;
+  const more = truncated?.causes ?? 0;
+  return {
+    total: { ...total, causes: offset + causes.length + more },
+    causes: causes.map((cause) => ({
+      ...cause,
+      packages: cause.packages.map((pkg) => ({
+        package: pkg.package,
+        sites: pkg.sites,
+        samples: pkg.samples.map((place) => wirePlace(place, cause.services.length <= 1)),
+        ...(pkg.coveredBy === undefined ? {} : { coveredBy: pkg.coveredBy }),
+        ...(pkg.coveredFrom === undefined ? {} : { coveredFrom: pkg.coveredFrom }),
+      })),
+    })),
+    packages,
+    ...(truncated === undefined ? {} : { truncated }),
+    ...(more > 0 ? { nextOffset: offset + causes.length } : {}),
+  };
+};
+
+const placeOutput = z.object({
+  loc: z.string(),
+  id: z.string().optional(),
+  symbol: z.string().optional(),
+  service: z.string().optional(),
+});
+
+/** What cant_follow answers: causes, one page at a time, then the packages they point into. */
+export const cantFollowOutput = {
+  total: z.object({ rows: z.number(), sites: z.number(), causes: z.number() }),
+  causes: z.array(
+    z.object({
+      cause: z.string(),
+      label: z.string(),
+      sites: z.number(),
+      reasons: z.array(z.string()),
+      hint: z.string(),
+      services: z.array(z.string()),
+      packages: z.array(
+        z.object({
+          package: z.string().nullable(),
+          sites: z.number(),
+          samples: z.array(placeOutput),
+          coveredBy: z.enum(['repo', 'shape']).optional(),
+          coveredFrom: z.string().optional(),
+        }),
+      ),
+      truncated: z.number().optional(),
+    }),
+  ),
+  packages: z.array(
+    z.object({
+      package: z.string(),
+      sites: z.number(),
+      causes: z.array(z.object({ cause: z.string(), sites: z.number() })),
+    }),
+  ),
+  truncated: z.object({ causes: z.number().optional(), packages: z.number().optional() }).optional(),
+  nextOffset: z.number().optional(),
+  accepted: z.object({ rows: z.number(), sites: z.number() }).optional(),
+  apart: z.object({ notes: z.number(), findings: z.number() }).optional(),
+  note: z.string().optional(),
+  next: nextOutput,
+};
+
+/**
  * The calls that take what this answer named: the code at the first place,
  * then one cause and one package to narrow to.
  */
-const nextOf = (answer: CantFollowAnswer, asked: { cause?: string; package?: string }): string[] => {
+const nextOf = (answer: CantFollowWire, asked: { cause?: string; package?: string }): string[] => {
   const hints: string[] = [];
   const first = answer.causes[0];
   const place = first?.packages.flatMap((pkg) => pkg.samples).find((sample) => sample.id !== undefined);
@@ -122,6 +228,9 @@ const nextOf = (answer: CantFollowAnswer, asked: { cause?: string; package?: str
   return hints.slice(0, MAX_NEXT);
 };
 
+/** The defaults a hint for the next page leaves out. */
+const PAGE_DEFAULTS: Readonly<Record<string, unknown>> = { top: 10, samples: 3, offset: 0 };
+
 /** What the configuration reads in place of a missing package, when the server was given one. */
 const coverageOf = (ctx: ToolContext): ReadonlyMap<string, PackageCover> => {
   const { config, configDir } = ctx.handle;
@@ -138,15 +247,17 @@ export const registerCantFollow = (server: McpServer, ctx: ToolContext): void =>
     'cant_follow',
     {
       title: "What the reader couldn't follow",
-      description:
-        'Every step the reading could not follow, grouped by why - a package that is not installed, an import that resolves to nothing, a value typed any, a callback nobody typed, a method picked by key - and by the package it points into, with a few places each. Answers "why does this flow stop" for a whole service at once. Bounded.',
+      description: 'Why flows stop: steps the reading could not follow, by cause and package.',
       inputSchema: {
         service: serviceInput,
-        cause: z.string().optional().describe('only this cause, e.g. module-not-installed'),
-        package: z.string().optional().describe('only what points into this package or module'),
-        top: z.number().int().min(1).max(50).default(10).describe('most causes and packages to list'),
-        samples: z.number().int().min(0).max(20).default(3).describe('places listed per package under a cause'),
+        cause: z.string().optional().describe('e.g. module-not-installed'),
+        package: z.string().optional(),
+        top: z.number().int().min(1).max(50).default(10).describe('most causes and packages'),
+        samples: z.number().int().min(0).max(20).default(3).describe('places per package'),
+        ...pageInput,
       },
+      outputSchema: cantFollowOutput,
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
@@ -155,6 +266,7 @@ export const registerCantFollow = (server: McpServer, ctx: ToolContext): void =>
         const answer = cantFollowFor(db, split.fresh, {
           top: input.top,
           samples: input.samples,
+          offset: input.offset,
           ...(input.service === undefined ? {} : { service: input.service }),
           ...(input.cause === undefined ? {} : { cause: input.cause }),
           ...(input.package === undefined ? {} : { package: input.package }),
@@ -167,7 +279,10 @@ export const registerCantFollow = (server: McpServer, ctx: ToolContext): void =>
           input.service === undefined ? split.fresh : split.fresh.filter((row) => row.service === input.service),
         );
         const apart = notes + findings === 0 ? {} : { apart: { notes, findings } };
-        return withNext({ ...answer, ...accepted, ...apart, ...note }, nextOf(answer, input));
+        const wire = wireCantFollow(answer, input.offset);
+        const args = { service: input.service, cause: input.cause, package: input.package, top: input.top, samples: input.samples };
+        const page = wire.nextOffset === undefined ? [] : [callOf('cant_follow', { ...args, offset: wire.nextOffset }, PAGE_DEFAULTS)];
+        return withNext({ ...wire, ...accepted, ...apart, ...note }, [...page, ...nextOf(wire, input)].slice(0, MAX_NEXT));
       }),
   );
 };

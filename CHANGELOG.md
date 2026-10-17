@@ -332,6 +332,20 @@ only one of them moved.
   the server reader had read no body from a request's own settings at all. A
   body already a string, `body: event.body`, was read as `string`, and
   `contracts` said so (`body-already-serialised`).
+- **MCP lists read a page at a time (P93).** `list_entries`, `find_symbol`,
+  `search` (every kind from one offset), `who_emits`, `who_consumes`,
+  `impact`'s entries, `what_changed`'s lists and `cant_follow`'s causes took
+  `offset`, and a cut answer said `total`, `nextOffset` and `n more; next page
+  offset k`, with that same call first in `next`; an offset past the end was an
+  empty page with the total. The only remedy for a cut had been a larger
+  `maxNodes`. `get_source` took `fromLine` and `maxLines` (at most 400) and said
+  `truncated: "declaration continues past line N; ask with fromLine N+1"` where
+  it had stopped a long declaration at 400 lines with an `endLine` that read as
+  its end. Every answer also went out as `structuredContent`, and `start_here`,
+  `list_entries`, `find_symbol`, `who_emits`, `who_consumes`, `get_type`,
+  `get_source`, `search` and `cant_follow` declared an `outputSchema`; every
+  tool was annotated `readOnlyHint`, `openWorldHint: false` and
+  `idempotentHint`, and an answer that is an error carried `isError`.
 
 ### Changed
 
@@ -527,9 +541,30 @@ only one of them moved.
   walk from every way in over the whole graph; the numbers were the same.
   `HOTSPOT_EDGES` moved to `analysis/hotspots.ts` (still exported from
   `@flowatlas/cli`), so no page module imported a command.
+- **Smaller MCP answers (P93).** Every answer was written as compact JSON, and
+  each fact once: a `cant_follow` place became `{ loc, id?, symbol?,
+  service? }` (no `file` and `line` beside the `loc` that says both, `symbol`
+  only where it is not the id, `service` only where the cause spans more than
+  one service, `coveredBy` once on its package), a `check_contract` finding
+  `{ severity, kind, direction, field, expected, actual, message, ignored? }`
+  without the edge the answer names at its top, a repeat in a tree `{ id, ref:
+  true }`, and a row of `get_flow` or `who_calls` left `service` to a parent of
+  the same service. `get_type` and `what_changed` applied `detail`, which they
+  had taken and ignored: `get_type` at 0 named the type and its fields, at 1
+  (the default) said what each field is and named the nested types, at 2 added
+  the hash, `meta` and the nested declarations; `what_changed` at 0 gave ids,
+  at 1 service and label, at 2 the changed fields. The part of the tool list a
+  model reads (names, descriptions, input schemas) went from about 11,700 to
+  under 8,000 characters, and a test holds it there: one-sentence
+  descriptions, and `detail`, `maxNodes`, `offset` and `service` described once
+  in the server's instructions. The MCP snapshots of `fixtures/multi-repo` came to 38% fewer
+  characters, and to half on the trees.
 
 ### Fixed
 
+- **`impact` said only one of its notes (P132).** An answer whose walk stopped
+  at its limit, asked at `detail: 3`, said only that the level was clamped: the
+  second note overwrote the first. It now says both, the walk's first.
 - **A file's likely N+1 hidden behind its note (P130).** The MCP `search`
   keeps one `query-in-loop` hit per file, and of loops reached alike it kept
   the first; a finding now ranks before a note reached alike, so a file holding

@@ -35,8 +35,10 @@ export const INSTRUCTIONS = [
   '- search({query}) finds a route, channel, table, type, class or gap by name; what_changed reads the last flowatlas diff.',
   "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names.",
   'Rows real traffic went through carry `observed: n` (`seenAmbiguous: n` where requests fit it and other places too, so were counted on none); gaps someone accepted with flowatlas accept carry `accepted: true`.',
-  'describe_for_prompt({id}) writes any of these as Markdown to hand on. Every list tool takes the same optional `service` filter.',
-  'Every answer is bounded; get_source is the only one that returns code.',
+  'describe_for_prompt({id}) writes any of these as Markdown to hand on. Every list tool takes the same optional `service` filter, a service name, to keep only its rows.',
+  'Every answer is bounded; get_source is the only one that returns code, and says `truncated` with the `fromLine` to read on from when a declaration is longer than one answer.',
+  '`maxNodes` is the most rows an answer holds. A list that was cut says `total` and `nextOffset`: ask the same call again with `offset: nextOffset` for the next page, and `next` writes that call first.',
+  '`detail` is 0 for ids only, 1 (the default) adds file:line, service and kind, 2 adds what the reader knows about each row; 3 is answered at 2.',
 ].join('\n');
 
 export interface ServerOptions extends DbHandleOptions {

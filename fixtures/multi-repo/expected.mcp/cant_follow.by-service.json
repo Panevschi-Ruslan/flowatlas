@@ -1,7 +1,8 @@
 {
   "total": {
     "rows": 3,
-    "sites": 3
+    "sites": 3,
+    "causes": 3
   },
   "causes": [
     {
@@ -18,15 +19,11 @@
       "packages": [
         {
           "package": null,
-          "label": "dynamic-http-url",
           "sites": 1,
           "samples": [
             {
-              "service": "gateway",
-              "file": "src/clients/billing.client.ts",
-              "line": 33,
-              "symbol": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i",
-              "loc": "src/clients/billing.client.ts:33"
+              "loc": "src/clients/billing.client.ts:33",
+              "symbol": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i"
             }
           ]
         }
@@ -46,14 +43,9 @@
       "packages": [
         {
           "package": null,
-          "label": "target-route-not-found",
           "sites": 1,
           "samples": [
             {
-              "service": "gateway",
-              "file": "src/clients/orders.client.ts",
-              "line": 44,
-              "symbol": "http_out:gateway#src/clients/orders.client.ts:44:12",
               "loc": "src/clients/orders.client.ts:44",
               "id": "http_out:gateway#src/clients/orders.client.ts:44:12"
             }
@@ -75,14 +67,9 @@
       "packages": [
         {
           "package": null,
-          "label": "unknown-base-url-env",
           "sites": 1,
           "samples": [
             {
-              "service": "gateway",
-              "file": "src/clients/payments.client.ts",
-              "line": 24,
-              "symbol": "http_out:gateway#src/clients/payments.client.ts:24:12",
               "loc": "src/clients/payments.client.ts:24",
               "id": "http_out:gateway#src/clients/payments.client.ts:24:12"
             }

@@ -7,6 +7,7 @@
     "service": "orders"
   },
   "consumers": [],
+  "total": 0,
   "next": [
     "who_emits({channel: \"channel:order.archived\"})"
   ]

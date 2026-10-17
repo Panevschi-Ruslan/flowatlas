@@ -91,6 +91,15 @@ describe('the breakdown', () => {
     expect(groupCantFollow(rows, { top: 1 }).truncated).toEqual({ causes: 2, packages: 1 });
   });
 
+  it('lists the causes from an offset, counting only those past the page as cut (P93)', () => {
+    const page = groupCantFollow(rows, { top: 1, offset: 1 });
+    expect(page.causes.map((cause) => cause.label)).toEqual(['callback-param']);
+    expect(page.truncated?.causes).toBe(1);
+    expect(groupCantFollow(rows, { top: 1, offset: 2 }).truncated?.causes).toBeUndefined();
+    expect(groupCantFollow(rows, { offset: 9 }).causes).toEqual([]);
+    expect(groupCantFollow(rows, { offset: 9 }).total).toEqual(groupCantFollow(rows).total);
+  });
+
   it('narrows to a service and a cause', () => {
     expect(groupCantFollow(rows, { service: 'pay' }).total).toEqual({ rows: 2, sites: 2 });
     expect(groupCantFollow(rows, { cause: 'callback-param' }).total).toEqual({ rows: 1, sites: 1 });

@@ -3,7 +3,20 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
 import { nextFor, withNext } from '../query/next.js';
-import { bound, commonInput, inService, serviceInput, withDb, type ToolContext } from './common.js';
+import {
+  bound,
+  commonInput,
+  inService,
+  nextOutput,
+  nodeOutput,
+  pagedNext,
+  pageInput,
+  pageOutput,
+  READ_ONLY,
+  serviceInput,
+  withDb,
+  type ToolContext,
+} from './common.js';
 
 /** Kinds of entry the model knows about, for filtering. */
 const ENTRY_KINDS = [
@@ -54,19 +67,39 @@ export const rankMatches = (nodes: readonly GraphNode[], query: string): Ranked[
   return ranked.sort((a, b) => a.score - b.score || a.node.label.length - b.node.label.length || cmp(a.node.id, b.node.id));
 };
 
+/** What list_entries answers: one page of entries, and how many there are. */
+export const listEntriesOutput = {
+  entries: z.array(nodeOutput),
+  ...pageOutput,
+  note: z.string().optional(),
+  next: nextOutput,
+};
+
+/** What find_symbol answers: one page of matches, best first. */
+export const findSymbolOutput = {
+  matches: z.array(nodeOutput),
+  total: pageOutput.total.optional(),
+  nextOffset: pageOutput.nextOffset,
+  truncated: pageOutput.truncated,
+  note: z.string().optional(),
+  next: nextOutput,
+};
+
 export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'list_entries',
     {
       title: 'List entry points',
-      description:
-        'Every way into the project: routes, bot commands, scheduled jobs, message handlers. Filter by service, kind or path prefix.',
+      description: 'Every way in: routes, procedures, bot commands, jobs, message handlers.',
       inputSchema: {
         service: serviceInput,
-        kind: z.enum(ENTRY_KINDS).optional().describe('only this kind of entry'),
-        pathPrefix: z.string().optional().describe('only routes whose path starts with this'),
+        kind: z.enum(ENTRY_KINDS).optional(),
+        pathPrefix: z.string().optional().describe('routes under this path'),
         ...commonInput,
+        ...pageInput,
       },
+      outputSchema: listEntriesOutput,
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
@@ -82,15 +115,16 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
           })
           .sort(inReadingOrder);
 
-        const { items, truncated } = truncate(all, maxNodes);
+        const { items, total, truncated, nextOffset } = truncate(all, maxNodes, input.offset);
+        const args = { service: input.service, kind: input.kind, pathPrefix: input.pathPrefix, detail: input.detail, maxNodes };
         return withNext(
           {
             entries: items.map((entry) => projectDetail(entry, detail)),
-            total: all.length,
-            ...(truncated === undefined ? {} : { truncated }),
+            total,
+            ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
             ...(note === undefined ? {} : { note }),
           },
-          nextFor(items[0]),
+          pagedNext({ tool: 'list_entries', args, nextOffset }, nextFor(items[0])),
         );
       }),
   );
@@ -99,15 +133,16 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
     'find_symbol',
     {
       title: 'Find a symbol',
-      description:
-        'Fuzzy search over every node by label and id. Accepts a substring or camel-case initials such as "ocs" for OrderCreationService.',
+      description: 'Any node by part of its name or id, or initials ("ocs": OrderCreationService).',
       inputSchema: {
-        query: z.string().describe('what to look for'),
-        types: z.array(z.string()).optional().describe('only these node types'),
+        query: z.string(),
+        types: z.array(z.string()).optional().describe('node types'),
         service: serviceInput,
-        maxNodes: commonInput.maxNodes,
-        detail: commonInput.detail,
+        ...commonInput,
+        ...pageInput,
       },
+      outputSchema: findSymbolOutput,
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
@@ -116,7 +151,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
 
         const pool = db.search(input.query, {
           ...(input.types === undefined ? {} : { types: input.types }),
-          limit: Math.max(maxNodes * 4, 200),
+          limit: Math.max((input.offset + maxNodes) * 4, 200),
         });
         const wider = pool.length > 0 ? pool : db.nodesByType('method');
         const ranked = rankMatches(
@@ -124,14 +159,16 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
           input.query,
         );
 
-        const { items, truncated } = truncate(ranked, maxNodes);
+        const { items, total, truncated, nextOffset } = truncate(ranked, maxNodes, input.offset);
+        const args = { query: input.query, types: input.types, service: input.service, detail: input.detail, maxNodes };
         return withNext(
           {
             matches: items.map((match) => projectDetail(match.node, detail)),
-            ...(truncated === undefined ? {} : { truncated }),
+            total,
+            ...(nextOffset === undefined ? {} : { truncated, nextOffset }),
             ...(note === undefined ? {} : { note }),
           },
-          nextFor(items[0]?.node),
+          pagedNext({ tool: 'find_symbol', args, nextOffset }, nextFor(items[0]?.node)),
         );
       }),
   );

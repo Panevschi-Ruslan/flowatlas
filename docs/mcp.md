@@ -69,10 +69,49 @@ and let it talk on stdin and stdout.
 
 ## The tools
 
-Every tool takes `detail` (0 to 3, how much of each node comes back) and
-`maxNodes` (the ceiling on the answer), except `get_source`, which takes
-`context` and a line limit instead. Answers are bounded and say when they
-were cut, rather than filling a context window.
+`detail` (0 to 3, how much of each row comes back) is taken by `list_entries`,
+`find_symbol`, `search`, `get_flow`, `who_calls`, `impact`, `who_emits`,
+`who_consumes`, `get_type` and `what_changed`: 0 is ids only, 1 (the default)
+adds `file:line`, service and kind, 2 adds what the reader knows about each
+row, and 3 is answered at 2 and says so. Those tools and `check_contract` take
+`maxNodes`, the most rows an answer holds. `start_here`, `cant_follow`,
+`describe_for_prompt` and `get_source` take neither: they are bounded by their
+own limits (`perService`; `top` and `samples`; `maxSteps` and `maxChars`;
+`maxLines`). Answers are bounded and say when they were cut, rather than
+filling a context window.
+
+### Answers
+
+Every answer is one compact JSON document, in the text content and again as
+`structuredContent`, so a client reads whichever it prefers. `start_here`,
+`list_entries`, `find_symbol`, `who_emits`, `who_consumes`, `get_type`,
+`get_source`, `search` and `cant_follow` declare an `outputSchema`, and a
+client can check every answer against it; the tree tools follow once their
+shape is settled. An answer that is an error (`{ "error": … }`) carries
+`isError: true` and no `structuredContent`. Every tool is annotated
+`readOnlyHint: true`, `openWorldHint: false` and `idempotentHint: true`: none
+writes anything or reaches outside the project, so a client that asks before
+running a tool that might can skip asking.
+
+A list reads a page at a time. `list_entries`, `find_symbol`, `search`,
+`who_emits`, `who_consumes`, `impact` (its `entries`), `what_changed` (every
+list) and `cant_follow` (its `causes`) take `offset`, 0 by default. An answer
+that was cut says `total`, `nextOffset` and `truncated: "n more; next page
+offset k"`, and `next` starts with the same call from that offset:
+
+```
+list_entries({maxNodes: 2})          → total: 17, nextOffset: 2,
+                                       next: ["list_entries({maxNodes: 2, offset: 2})", …]
+list_entries({maxNodes: 2, offset: 2})
+```
+
+An offset past the end is an empty page that still says `total`. In `search`
+one offset pages every kind, and the next call asks again only for the kinds
+that had more; in `what_changed` it pages every list at once.
+
+Each fact is said once. A tree names a repeated node as `{ id, ref: true }`,
+and says `service` on its root and again only on the row that crosses into
+another service.
 
 ### Ids, `next`, and where to begin
 
@@ -136,9 +175,9 @@ pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix` |
-| `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service` |
-| `search` | one query over routes and other ways in, channels, tables, types, gaps, what ways in can fail with, and classes, grouped by kind | `query` (required), `kinds`, `limit`, `service` |
+| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `offset` |
+| `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service`, `offset` |
+| `search` | one query over routes and other ways in, channels, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit`, `service`, `offset` |
 
 `kind` is one of `http`, `rpc`, `event`, `cron`, `workflow`, `bot_command`,
 `bot_callback`, `bot_event` and `scene_step`. A `workflow` is a state machine,
@@ -171,7 +210,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 |---|---|---|
 | `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` |
-| `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required) |
+| `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `offset` |
 
 `entry` can be named the way you would say it aloud. All three of these mean the
 same route:
@@ -235,19 +274,27 @@ What `get_flow` says beside the chain:
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `who_emits` | everything that publishes on a channel, across every repository | `channel` (required) |
-| `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required) |
+| `who_emits` | everything that publishes on a channel, across every repository | `channel` (required), `offset` |
+| `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required), `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
 | `check_contract` | what one side of a crossing sends against what the other expects | `edge`, or `from` and `to` |
 
+`get_type` at `detail: 0` names the type and its fields (or its members); at 1
+it says what each field is, where the type is declared, and names each type it
+refers to with its fields' names under `nested`, keyed by id; at 2 it adds the
+structural hash, `meta` and the whole declaration of each nested type.
+
 `check_contract` identifies a crossing either by its two ends or by one string:
-`"from -http_calls-> to"`.
+`"from -http_calls-> to"`. Its `findings`, when the contracts checker is
+installed (`flowatlas mcp` installs it), are `{ severity, kind, direction,
+field, expected, actual, message, ignored? }`; the crossing is the answer's
+`edge`.
 
 ### Why a flow stops
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `cant_follow` | every step the reading could not follow, grouped by cause and then by the package it points into, with a few places each and the id of the method each is written in | `service`, `cause`, `package`, `top`, `samples` |
+| `cant_follow` | every step the reading could not follow, grouped by cause and then by the package it points into, with a few places each and the id of the method each is written in | `service`, `cause`, `package`, `top`, `samples`, `offset` |
 
 The same breakdown `flowatlas doctor --unresolved` prints. A cause is what the
 code says about why: `module-not-installed` (with the package), `import-unresolved`
@@ -259,14 +306,16 @@ them and gaps accepted with `flowatlas accept` are left out and counted apart,
 exactly as `doctor --unresolved` does, a route rule included; an `accepted.json`
 that cannot be read leaves nothing out and says so in `note`. Only gaps are
 here: notes and findings are not steps the reading missed, so they are counted
-apart under `apart: { notes, findings }` and listed by `search`. `next` offers
-`get_source` on the first place and the calls that narrow to its cause and its
-package.
+apart under `apart: { notes, findings }` and listed by `search`. A place is
+`{ loc, id?, symbol?, service? }`: `symbol` where it is not the id (the text of
+a call, say), `service` where the cause spans more than one. `total.causes`
+counts every cause, and `offset` pages them. `next` offers `get_source` on the
+first place and the calls that narrow to its cause and its package.
 
 Under `module-not-installed`, a package the configuration as it stands would
 read in its place once rebuilt (P78) - its source in a repository read here, or a
-listed shape file - carries `coveredBy: "repo" | "shape"` and `coveredFrom`, and
-so does each of its places; `next` then says to rebuild. One nothing would read
+listed shape file - carries `coveredBy: "repo" | "shape"` and `coveredFrom`,
+which hold for every place under it; `next` then says to rebuild. One nothing would read
 in its place gets `run: flowatlas shapes --suggest --package <name>` in `next`,
 the command that lists the names the project uses of it. A step drawn through
 types such a stand-in supplied says so on its edge in `get_flow`: `because:
@@ -276,18 +325,24 @@ types such a stand-in supplied says so on its edge in `get_flow`: `because:
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke | `service` |
+| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke | `service`, `offset` |
 
 It reads the `diff.json` that `flowatlas diff <base-ref>` writes rather than
-building two revisions inside a tool call; run the command to refresh it.
+building two revisions inside a tool call; run the command to refresh it. At
+`detail: 0` a changed node is its id and a way in its id, type and the changed
+node it `reaches`; at 1 they add service and label (and a way in its kind and
+confidence); at 2 a changed node adds the `fields` that changed.
 
 ### Source
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_source` | the code of one symbol | `symbol` (required), `context` |
+| `get_source` | the code of one symbol | `symbol` (required), `context`, `fromLine`, `maxLines` |
 
-The only tool that returns source, deliberately. A trace never drags in the body
+At most `maxLines` lines (400, the most there is) per answer. A declaration
+longer than that says `truncated: "declaration continues past line N; ask with
+fromLine N+1"`, and `next` starts with that call; `context` widens only the
+first and the last page. The only tool that returns source, deliberately. A trace never drags in the body
 of every method along it: the agent asks the graph which name to look at, then
 asks for that one name.
 
@@ -351,8 +406,10 @@ contributed no node, or most of a service's ways in were read no further than
 their addresses — and it says which. Every tool will answer truthfully about
 that graph, and the graph is not the project.
 
-**An answer looks cut off.** It was, and it says so. Raise `maxNodes`, or narrow
-with `service` and `depth`.
+**An answer looks cut off.** It was, and it says so. A list says `nextOffset`:
+ask again with `offset` for the next page (`next` writes the call). A tree
+(`get_flow`, `who_calls`) does not page: narrow with `service` and `depth`, or
+raise `maxNodes`.
 
 ---
 

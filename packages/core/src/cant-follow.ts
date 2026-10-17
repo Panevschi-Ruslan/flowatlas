@@ -234,6 +234,8 @@ export interface CantFollowOptions {
   cause?: string;
   /** Only this package. */
   package?: string;
+  /** Causes to skip before the first one listed, to read the list a page at a time (P93). Default 0. */
+  offset?: number;
 }
 
 /**
@@ -351,7 +353,8 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
   }
 
   const ranked = [...causes.values()].sort((a, b) => b.sites - a.sites || cmp(a.cause, b.cause));
-  const listed: CantFollowCause[] = ranked.slice(0, top).map((acc) => {
+  const offset = Math.min(options.offset ?? 0, ranked.length);
+  const listed: CantFollowCause[] = ranked.slice(offset, offset + top).map((acc) => {
     const byPkg = [...acc.packages.values()].sort(
       (a, b) => b.sites - a.sites || cmp(a.package ?? '', b.package ?? ''),
     );
@@ -378,7 +381,8 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
     }))
     .sort((a, b) => b.sites - a.sites || cmp(a.package, b.package));
 
-  const cutCauses = ranked.length - listed.length;
+  // Causes past this page; the ones before it were listed on an earlier one.
+  const cutCauses = ranked.length - offset - listed.length;
   const cutPackages = byPackage.length - Math.min(byPackage.length, top);
   return {
     total: { rows: rowCount, sites: siteCount },

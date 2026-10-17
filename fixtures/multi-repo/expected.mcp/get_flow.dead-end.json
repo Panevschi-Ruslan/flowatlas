@@ -22,7 +22,6 @@
           "type": "method",
           "label": "OrdersController.cancel",
           "loc": "src/orders/orders.controller.ts:35",
-          "service": "gateway",
           "meta": {
             "signature": {
               "params": [
@@ -50,7 +49,6 @@
               "type": "method",
               "label": "OrdersClient.cancel",
               "loc": "src/clients/orders.client.ts:43",
-              "service": "gateway",
               "meta": {
                 "signature": {
                   "params": [
@@ -78,7 +76,6 @@
                   "type": "config_key",
                   "label": "ORDERS_URL",
                   "loc": "src/clients/orders.client.ts:33",
-                  "service": "gateway",
                   "meta": {
                     "key": "ORDERS_URL",
                     "source": "config.get"
@@ -96,7 +93,6 @@
                   "type": "http_out",
                   "label": "POST /orders/:param/cancel",
                   "loc": "src/clients/orders.client.ts:44",
-                  "service": "gateway",
                   "meta": {
                     "method": "POST",
                     "url": "${ORDERS_URL}/orders/${…}/cancel",

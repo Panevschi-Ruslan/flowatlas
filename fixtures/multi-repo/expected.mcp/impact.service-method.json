@@ -24,6 +24,7 @@
       "kind": "http"
     }
   ],
+  "total": 2,
   "reached": 12,
   "entriesByService": {
     "orders": 1,

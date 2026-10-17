@@ -433,10 +433,11 @@ shows `flowatlas`, and a session has these tools, among others:
 Every row carries an `id` the next tool takes as it is, and every answer ends
 with `next`: the calls that take the ids it returned.
 
-Every tool takes `detail` and `maxNodes` except `get_source`, which takes
-`context` and a line limit instead. Source leaves through `get_source` and
-nowhere else, so asking for a trace never drags in the body of every method on
-the path.
+Answers are compact JSON, also sent as `structuredContent`, and every tool is
+read-only. The tools that thin their rows take `detail` and `maxNodes`, and a
+list that was cut says the `offset` of its next page. Source leaves through
+`get_source` and nowhere else, a page of at most 400 lines at a time, so asking
+for a trace never drags in the body of every method on the path.
 
 [**docs/mcp.md**](docs/mcp.md) is the whole thing: setup per client (Claude
 Code, Cursor, VS Code, Claude Desktop), what each tool takes, the order to call

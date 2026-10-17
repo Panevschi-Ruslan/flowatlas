@@ -26,8 +26,10 @@
     }
   ],
   "total": 17,
-  "truncated": "14 more nodes, increase depth or narrow scope",
+  "truncated": "14 more; next page offset 3",
+  "nextOffset": 3,
   "next": [
+    "list_entries({maxNodes: 3, offset: 3})",
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",
     "impact({symbol: \"entry:billing:event:invoice.requested\"})"

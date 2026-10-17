@@ -1,9 +1,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import type { DetailLevel } from '@flowatlas/core';
 import { parseGraphDiff, type BlastEntry, type DiffReport } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { truncationMessage } from '../query/types.js';
 import { withNext } from '../query/next.js';
-import { commonInput, serviceInput, respond, type ToolContext } from './common.js';
+import { bound, commonInput, pagedNext, pageInput, READ_ONLY, respond, serviceInput, type ToolContext } from './common.js';
 
 /**
  * What a branch changed, as `flowatlas diff` last worked it out (P72).
@@ -16,15 +18,27 @@ import { commonInput, serviceInput, respond, type ToolContext } from './common.j
  */
 export const DIFF_FILE = 'diff.json';
 
+/**
+ * A way in a change reaches. At `detail` 0 its id, type and the changed node
+ * it reaches; from 1 what it is and whose (P93).
+ */
 export interface ChangedEntry {
   id: string;
   type: string;
-  kind: string;
-  label: string;
-  service: string;
-  confidence: string;
+  kind?: string;
+  label?: string;
+  service?: string;
+  confidence?: string;
   /** The changed node it reaches, nearest first. */
   reaches: string;
+}
+
+/** A changed node: its id at 0, whose and its label from 1, the fields that changed at 2. */
+export interface ChangedNode {
+  id: string;
+  service?: string;
+  label?: string;
+  fields?: string[];
 }
 
 export interface WhatChanged {
@@ -41,32 +55,51 @@ export interface WhatChanged {
   nodes: {
     added: string[];
     removed: string[];
-    changed: Array<{ id: string; service: string; label: string; fields: string[] }>;
+    changed: ChangedNode[];
   };
   types: { added: string[]; removed: string[]; changed: string[] };
   entries: ChangedEntry[];
   breaks: Array<{ message: string; edge: { from: string; to: string; type: string }; field: string }>;
   warnings: string[];
+  /** Rows left past this page, over every list, and where the next page starts. */
   truncated?: string;
+  /** The `offset` of the next page, which pages every list at once. */
+  nextOffset?: number;
 }
 
-/** The report cut to a service and a bound, with every list counted before it was cut. */
+/**
+ * The report cut to a service, a level and a page, with every list counted
+ * before it was cut.
+ *
+ * One `offset` pages every list at once (P93): the rows a list has past the
+ * page are counted together, and the next page is the same call from
+ * `nextOffset`. `detail` is 2 when not given, the whole row.
+ */
 export const summariseChanges = (
   report: DiffReport,
   options: {
     service?: string;
     maxNodes: number;
+    offset?: number;
+    detail?: DetailLevel;
     /** The service a node belongs to in the current graph, for ids the report names bare. */
     serviceOf?: (id: string) => string | undefined;
   },
 ): WhatChanged => {
   const { service, maxNodes } = options;
+  const offset = options.offset ?? 0;
+  const detail = options.detail ?? 2;
   const keep = (owner: string): boolean => service === undefined || owner === service;
   let cut = 0;
   const bounded = <T>(rows: readonly T[]): T[] => {
-    if (rows.length > maxNodes) cut += rows.length - maxNodes;
-    return rows.slice(0, maxNodes);
+    const page = rows.slice(offset, offset + maxNodes);
+    cut += Math.max(rows.length - offset - page.length, 0);
+    return page;
   };
+  const changedNode = ({ id, service: owner, label, fields }: { id: string; service: string; label: string; fields: string[] }): ChangedNode =>
+    detail <= 0 ? { id } : detail === 1 ? { id, service: owner, label } : { id, service: owner, label, fields };
+  const changedEntry = (entry: ChangedEntry): ChangedEntry =>
+    detail <= 0 ? { id: entry.id, type: entry.type, reaches: entry.reaches } : entry;
 
   const changed = report.nodes.changed.filter((change) => keep(change.service));
   const impact = report.impact.filter((row) => service === undefined || row.services.includes(service));
@@ -124,18 +157,21 @@ export const summariseChanges = (
     nodes: {
       added: bounded(byService(report.nodes.added)),
       removed: bounded(byService(report.nodes.removed)),
-      changed: bounded(changed).map(({ id, service: owner, label, fields }) => ({ id, service: owner, label, fields })),
+      changed: bounded(changed).map(changedNode),
     },
     types: {
       added: bounded(report.types.added),
       removed: bounded(report.types.removed),
       changed: bounded(report.types.changed.map((change) => change.id)),
     },
-    entries: bounded([...entries.values()]),
+    entries: bounded([...entries.values()]).map(changedEntry),
     breaks: bounded(breaks).map((finding) => ({ message: finding.message, edge: finding.edge, field: finding.field })),
     warnings: report.warnings.map((warning) => warning.message),
   };
-  if (cut > 0) result.truncated = `${cut} more rows, raise maxNodes or narrow with service`;
+  if (cut > 0) {
+    result.truncated = truncationMessage(cut, true, offset + maxNodes);
+    result.nextOffset = offset + maxNodes;
+  }
   return result;
 };
 
@@ -170,23 +206,33 @@ export const registerChanges = (server: McpServer, ctx: ToolContext): void => {
     'what_changed',
     {
       title: 'What a branch changed',
-      description:
-        'The last `flowatlas diff` read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke. Run `flowatlas diff <base-ref>` to refresh it.',
+      description: 'The last `flowatlas diff`: what changed, the ways in it reaches, contracts broken.',
       inputSchema: {
         service: serviceInput,
         ...commonInput,
+        ...pageInput,
       },
+      annotations: READ_ONLY,
     },
     (input) => {
       const read = readDiff(ctx.handle.path);
       if ('error' in read) return respond({ error: read.error });
+      const { detail, maxNodes, note } = bound(input);
       const opened = ctx.handle.open();
       const changes = summariseChanges(read.report, {
         ...(input.service === undefined ? {} : { service: input.service }),
         ...('db' in opened ? { serviceOf: (id: string) => opened.db.node(id)?.repo } : {}),
-        maxNodes: input.maxNodes,
+        maxNodes,
+        offset: input.offset,
+        detail,
       });
-      return respond(withNext(changes, nextOf(changes)));
+      const args = { service: input.service, detail: input.detail, maxNodes };
+      return respond(
+        withNext(
+          { ...changes, ...(note === undefined ? {} : { note }) },
+          pagedNext({ tool: 'what_changed', args, nextOffset: changes.nextOffset }, nextOf(changes)),
+        ),
+      );
     },
   );
 };

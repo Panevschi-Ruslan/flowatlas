@@ -8,14 +8,26 @@
       "service": "lending",
       "kind": "http"
     },
+    "fails": [
+      {
+        "exception": "reject",
+        "via": "helper",
+        "family": "auth",
+        "sources": [
+          "throw"
+        ],
+        "sites": 1,
+        "at": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+        "loc": "src/desk/desk.controller.ts:41"
+      }
+    ],
     "children": [
       {
         "node": {
           "id": "lending#src/desk/desk.controller.ts:DeskController.overdue",
           "type": "method",
           "label": "DeskController.overdue",
-          "loc": "src/desk/desk.controller.ts:39",
-          "service": "lending"
+          "loc": "src/desk/desk.controller.ts:39"
         },
         "edge": {
           "type": "handles",
@@ -31,8 +43,7 @@
               "id": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
               "type": "method",
               "label": "LibrarianAuth.verify",
-              "loc": "src/auth/librarian-auth.ts:13",
-              "service": "lending"
+              "loc": "src/auth/librarian-auth.ts:13"
             },
             "edge": {
               "type": "calls",
@@ -49,8 +60,7 @@
               "id": "lending#src/desk/desk.controller.ts:DeskController.reject",
               "type": "method",
               "label": "DeskController.reject",
-              "loc": "src/desk/desk.controller.ts:52",
-              "service": "lending"
+              "loc": "src/desk/desk.controller.ts:52"
             },
             "edge": {
               "type": "calls",
@@ -67,8 +77,7 @@
               "id": "lending#src/desk/loans.service.ts:LoansService.overdue",
               "type": "method",
               "label": "LoansService.overdue",
-              "loc": "src/desk/loans.service.ts:24",
-              "service": "lending"
+              "loc": "src/desk/loans.service.ts:24"
             },
             "edge": {
               "type": "calls",
@@ -81,8 +90,7 @@
                   "id": "db_query:lending#src/desk/loans.service.ts:25:12",
                   "type": "db_query",
                   "label": "read loans",
-                  "loc": "src/desk/loans.service.ts:25",
-                  "service": "lending"
+                  "loc": "src/desk/loans.service.ts:25"
                 },
                 "edge": {
                   "type": "calls",
@@ -93,8 +101,7 @@
                     "node": {
                       "id": "table:lending#loans",
                       "type": "table",
-                      "label": "loans",
-                      "service": "lending"
+                      "label": "loans"
                     },
                     "edge": {
                       "type": "queries",
@@ -107,19 +114,6 @@
             ]
           }
         ]
-      }
-    ],
-    "fails": [
-      {
-        "exception": "reject",
-        "via": "helper",
-        "family": "auth",
-        "sources": [
-          "throw"
-        ],
-        "sites": 1,
-        "at": "lending#src/desk/desk.controller.ts:DeskController.overdue",
-        "loc": "src/desk/desk.controller.ts:41"
       }
     ]
   },
