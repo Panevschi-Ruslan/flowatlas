@@ -1,44 +1,36 @@
-import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import {
+  AMBIGUOUS_CANDIDATES,
+  joinIdOf,
+  observedOf,
+  type AmbiguousKind,
+  type AmbiguousSpan,
+  type GraphEdge,
+  type GraphNode,
+  type Observed,
+  type Seen,
+  type UnmatchedSpan,
+} from '@flowatlas/core';
 import { VALUE, type ObservedSpan } from './span.js';
+
+export { OBSERVED_FORMAT_VERSION, type Observed } from '@flowatlas/core';
 
 /**
  * Spans laid over the graph: which joins, entries, symbols and channels real
  * traffic went through, and what ran that the code does not show.
  *
  * Pure: the graph and the spans in, the answer out. Nothing is read or written
- * here, so the same trace over the same graph gives the same file.
+ * here, so the same trace over the same graph gives the same file. The file's
+ * shape is core's (`observed.ts`).
+ *
+ * A span is credited to a place only when exactly one place fits it (P85). One
+ * that fits several - two routes tied for its path, two calls from the caller
+ * into the entry, two methods of one name - is credited to none of them and
+ * counted under `ambiguous` with the places it could be: a count on a join
+ * says that join ran, and spreading one request over several makes each look
+ * busier than it is.
  */
-export const OBSERVED_FORMAT_VERSION = 1;
-
-export interface Seen {
-  count: number;
-  lastSeen: string | null;
-}
-
-export interface UnmatchedSpan {
-  service?: string;
-  kind: 'http' | 'client' | 'messaging' | 'code' | 'db' | 'rpc';
-  name: string;
-  count: number;
-}
-
-export interface Observed {
-  observedFormatVersion: number;
-  spans: number;
-  /** By edge id, see `edgeIdOf`. A join is an edge between two places: a call, a hit, an emit, a consume. */
-  joins: Record<string, Seen>;
-  /** By entry node id. */
-  entries: Record<string, { hits: number; lastSeen: string | null }>;
-  /** By node id of a method, handler, http call or table a span named. */
-  symbols: Record<string, { hits: number }>;
-  /** By channel node id. */
-  channels: Record<string, { hits: number }>;
-  /** Seen at run time, not found in code. */
-  unmatched: UnmatchedSpan[];
-}
-
 export const edgeIdOf = (edge: Pick<GraphEdge, 'from' | 'to' | 'type'>): string =>
-  `${edge.from} -${edge.type}-> ${edge.to}`;
+  joinIdOf(edge.from, edge.type, edge.to);
 
 // --- routes ------------------------------------------------------------------
 
@@ -183,13 +175,14 @@ const matchRoute = (rows: readonly Routed[], span: ObservedSpan, keep: (node: Gr
   );
 };
 
-/** Accumulates counts; one span counts once per thing it names. */
+/** Accumulates counts; one span counts once, on the one thing it names. */
 class Tally {
   readonly joins = new Map<string, Seen>();
   readonly entries = new Map<string, { hits: number; lastSeen: string | null }>();
   readonly symbols = new Map<string, { hits: number }>();
   readonly channels = new Map<string, { hits: number }>();
   readonly unmatched = new Map<string, UnmatchedSpan>();
+  readonly ambiguous = new Map<string, AmbiguousSpan>();
 
   join(edge: GraphEdge, at: string | undefined): void {
     const id = edgeIdOf(edge);
@@ -216,16 +209,32 @@ class Tally {
     const key = `${span.service ?? ''}\u0000${kind}\u0000${name}`;
     const seen = this.unmatched.get(key);
     if (seen !== undefined) seen.count += 1;
-    else {
-      this.unmatched.set(key, {
-        ...(span.service === undefined ? {} : { service: span.service }),
-        kind,
-        name,
-        count: 1,
-      });
+    else this.unmatched.set(key, { ...serviceOf(span), kind, name, count: 1 });
+  }
+
+  /** A span that fits every one of `candidates` equally, credited to none of them. */
+  unsure(span: ObservedSpan, kind: AmbiguousKind, name: string, candidates: readonly string[]): void {
+    const all = [...new Set(candidates)].sort();
+    const key = `${span.service ?? ''}\u0000${kind}\u0000${name}\u0000${all.join('\u0000')}`;
+    const seen = this.ambiguous.get(key);
+    if (seen !== undefined) {
+      seen.count += 1;
+      return;
     }
+    const more = all.length - AMBIGUOUS_CANDIDATES;
+    this.ambiguous.set(key, {
+      ...serviceOf(span),
+      kind,
+      name,
+      candidates: all.slice(0, AMBIGUOUS_CANDIDATES),
+      ...(more > 0 ? { more } : {}),
+      count: 1,
+    });
   }
 }
+
+const serviceOf = (span: ObservedSpan): { service?: string } =>
+  span.service === undefined ? {} : { service: span.service };
 
 const later = (a: string | null, b: string | undefined): string | null =>
   b === undefined ? a : a === null || b > a ? b : a;
@@ -235,6 +244,25 @@ const nameOf = (span: ObservedSpan): string =>
 
 const sorted = <V>(map: ReadonlyMap<string, V>): Record<string, V> =>
   Object.fromEntries([...map.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+
+const byCount = (
+  a: { count: number; service?: string; kind: string; name: string },
+  b: { count: number; service?: string; kind: string; name: string },
+): number =>
+  b.count - a.count ||
+  (a.service ?? '').localeCompare(b.service ?? '') ||
+  a.kind.localeCompare(b.kind) ||
+  a.name.localeCompare(b.name);
+
+/** The join edges among `edges`, each once. */
+const joinsAmong = (edges: Iterable<GraphEdge>): GraphEdge[] => {
+  const once = new Map<string, GraphEdge>();
+  for (const edge of edges) if (JOINS.has(edge.type)) once.set(edgeIdOf(edge), edge);
+  return [...once.values()];
+};
+
+/** What a client span was found to be: the call site the far side confirmed, or none it could single out. */
+type Confirmed = string | null;
 
 export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[]): Observed => {
   const tally = new Tally();
@@ -251,15 +279,39 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[]): O
     }
     return outs;
   };
-  const confirmedClients = new Set<ObservedSpan>();
+  const confirmedClients = new Map<ObservedSpan, Confirmed>();
 
-  const countEdges = (edges: Iterable<GraphEdge>, at: string | undefined): void => {
-    const once = new Map<string, GraphEdge>();
-    for (const edge of edges) if (JOINS.has(edge.type)) once.set(edgeIdOf(edge), edge);
-    for (const edge of once.values()) tally.join(edge, at);
+  /** Credits the one join among `edges`, or tells the tally it could be any; the edge credited, if one. */
+  const countJoin = (span: ObservedSpan, edges: readonly GraphEdge[], name: string): GraphEdge | undefined => {
+    const joins = joinsAmong(edges);
+    if (joins.length === 1) {
+      tally.join(joins[0]!, span.at);
+      return joins[0];
+    }
+    if (joins.length > 1) tally.unsure(span, 'join', name, joins.map(edgeIdOf));
+    return undefined;
   };
 
-  /** A server span: its entry, and the join from the caller in another service. */
+  /** Credits the one node among `nodes` with `credit`, or tells the tally it could be any. */
+  const countOne = (
+    span: ObservedSpan,
+    kind: AmbiguousKind,
+    name: string,
+    nodes: readonly GraphNode[],
+    credit: (node: GraphNode) => void,
+  ): void => {
+    const ids = [...new Set(nodes.map((node) => node.id))];
+    if (ids.length === 1) credit(nodes[0]!);
+    else if (ids.length > 1) tally.unsure(span, kind, name, ids);
+  };
+
+  /**
+   * A server span: its entry, and the join from the caller in another service.
+   *
+   * The join is the one the caller's own call names (`narrowed`), else the one
+   * edge from the caller's service into the entry; two of either credit none.
+   * A route tie is settled only by that one join, never by guessing.
+   */
   const server = (span: ObservedSpan): void => {
     if (span.method === undefined || routeOf(span) === undefined) return;
     const entries = matchRoute(index.httpEntries, span, inService(index, span.service));
@@ -267,18 +319,28 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[]): O
       tally.miss(span, 'http', nameOf(span));
       return;
     }
-    for (const entry of entries) tally.entry(entry.id, span.at);
     const parent = parentOf(span);
-    if (parent === undefined || parent.service === span.service) return;
-    const outs = parent.kind === 'client' ? new Set(clientOuts(parent).map((node) => node.id)) : new Set<string>();
-    const into = entries.flatMap((entry) => index.to.get(entry.id) ?? []);
-    const fromCaller = into.filter((edge) => {
-      const source = index.nodes.get(edge.from);
-      return source !== undefined && inService(index, parent.service)(source);
-    });
-    const narrowed = fromCaller.filter((edge) => outs.has(edge.from));
-    countEdges(narrowed.length > 0 ? narrowed : fromCaller, span.at);
-    if (parent.kind === 'client') confirmedClients.add(parent);
+    let credited: GraphEdge | undefined;
+    if (parent !== undefined && parent.service !== span.service) {
+      const outs = parent.kind === 'client' ? new Set(clientOuts(parent).map((node) => node.id)) : new Set<string>();
+      const into = joinsAmong(entries.flatMap((entry) => index.to.get(entry.id) ?? []));
+      const fromCaller = into.filter((edge) => {
+        const source = index.nodes.get(edge.from);
+        return source !== undefined && inService(index, parent.service)(source);
+      });
+      const narrowed = fromCaller.filter((edge) => outs.has(edge.from));
+      const unique = narrowed.length === 1 ? narrowed : narrowed.length === 0 && entries.length === 1 ? fromCaller : [];
+      if (unique.length === 1) {
+        credited = unique[0]!;
+        tally.join(credited, span.at);
+      } else if (fromCaller.length > 1 || narrowed.length > 1) {
+        tally.unsure(span, 'join', nameOf(span), (narrowed.length > 1 ? narrowed : fromCaller).map(edgeIdOf));
+      }
+      if (parent.kind === 'client') confirmedClients.set(parent, credited?.from ?? null);
+    }
+    if (entries.length === 1) tally.entry(entries[0]!.id, span.at);
+    else if (credited !== undefined) tally.entry(credited.to, span.at);
+    else tally.unsure(span, 'entry', nameOf(span), entries.map((entry) => entry.id));
   };
 
   const messaging = (span: ObservedSpan, edgeType: 'emits' | 'consumes'): void => {
@@ -294,15 +356,18 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[]): O
       edgeType === 'emits'
         ? (index.to.get(channel.id) ?? []).filter((edge) => edge.type === 'emits')
         : (index.from.get(channel.id) ?? []).filter((edge) => edge.type === 'consumes');
-    countEdges(
+    countJoin(
+      span,
       touching.filter((edge) => {
         const other = index.nodes.get(edgeType === 'emits' ? edge.from : edge.to);
         return other !== undefined && keep(other);
       }),
-      span.at,
+      destination,
     );
     if (edgeType === 'consumes') {
-      for (const entry of (index.eventEntries.get(destination) ?? []).filter(keep)) tally.entry(entry.id, span.at);
+      countOne(span, 'entry', destination, (index.eventEntries.get(destination) ?? []).filter(keep), (entry) =>
+        tally.entry(entry.id, span.at),
+      );
     }
   };
 
@@ -313,14 +378,14 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[]): O
       if (name.includes('.')) tally.miss(span, 'code', name);
       return;
     }
-    for (const node of found) tally.hit(tally.symbols, node.id);
+    countOne(span, 'symbol', name, found, (node) => tally.hit(tally.symbols, node.id));
   };
 
   const table = (span: ObservedSpan): void => {
     const name = span.collection as string;
     const found = (index.tables.get(name.toLowerCase()) ?? []).filter(inService(index, span.service));
     if (found.length === 0) tally.miss(span, 'db', name);
-    for (const node of found) tally.hit(tally.symbols, node.id);
+    else countOne(span, 'table', name, found, (node) => tally.hit(tally.symbols, node.id));
   };
 
   const rpc = (span: ObservedSpan): void => {
@@ -330,7 +395,29 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[]): O
       .filter(([pattern]) => pattern === name || pattern === method)
       .flatMap(([, nodes]) => nodes.filter(inService(index, span.service)));
     if (found.length === 0) tally.miss(span, 'rpc', name);
-    for (const node of found) tally.entry(node.id, span.at);
+    else countOne(span, 'entry', name, found, (node) => tally.entry(node.id, span.at));
+  };
+
+  /**
+   * A client span: the call it was. When the far side was read, the server
+   * span already counted the join and may have singled the call out; when it
+   * was not, the call itself says which join ran, if it names one.
+   */
+  const client = (span: ObservedSpan): void => {
+    const outs = clientOuts(span);
+    const confirmed = confirmedClients.get(span);
+    if (confirmed !== undefined && confirmed !== null) {
+      tally.hit(tally.symbols, confirmed);
+      return;
+    }
+    if (outs.length === 0) {
+      tally.miss(span, 'client', nameOf(span));
+      return;
+    }
+    countOne(span, 'client', nameOf(span), outs, (node) => {
+      tally.hit(tally.symbols, node.id);
+      if (confirmed === undefined) countJoin(span, index.from.get(node.id) ?? [], nameOf(span));
+    });
   };
 
   // Server spans first, so a client span knows whether its far side was seen.
@@ -341,30 +428,16 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[]): O
     else if (span.rpc !== undefined && span.kind === 'server') rpc(span);
     if (span.symbol !== undefined) symbol(span);
     if (span.collection !== undefined) table(span);
-    if (span.kind === 'client' && span.method !== undefined && routeOf(span) !== undefined) {
-      const outs = clientOuts(span);
-      for (const node of outs) tally.hit(tally.symbols, node.id);
-      if (outs.length === 0) tally.miss(span, 'client', nameOf(span));
-      else if (!confirmedClients.has(span)) {
-        // The far side is not in the file: the call itself still says which join ran.
-        countEdges(outs.flatMap((node) => index.from.get(node.id) ?? []), span.at);
-      }
-    }
+    if (span.kind === 'client' && span.method !== undefined && routeOf(span) !== undefined) client(span);
   }
 
-  return {
-    observedFormatVersion: OBSERVED_FORMAT_VERSION,
+  return observedOf({
     spans: spans.length,
     joins: sorted(tally.joins),
     entries: sorted(tally.entries),
     symbols: sorted(tally.symbols),
     channels: sorted(tally.channels),
-    unmatched: [...tally.unmatched.values()].sort(
-      (a, b) =>
-        b.count - a.count ||
-        (a.service ?? '').localeCompare(b.service ?? '') ||
-        a.kind.localeCompare(b.kind) ||
-        a.name.localeCompare(b.name),
-    ),
-  };
+    unmatched: [...tally.unmatched.values()].sort(byCount),
+    ambiguous: [...tally.ambiguous.values()].sort(byCount),
+  });
 };

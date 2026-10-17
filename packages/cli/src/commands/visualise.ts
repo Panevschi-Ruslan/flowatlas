@@ -1,11 +1,11 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
-import { describeAcceptedProblem, loadConfig, readAccepted } from '@flowatlas/core';
+import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted } from '@flowatlas/core';
 import { acceptedSplitOf } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
 import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
-import { loadObserved } from '../observe/store.js';
+import { readObservedBeside } from '../observe/store.js';
 import { EDITOR_NAMES } from '../visualise/graph.js';
 import { packGraph, type PackInput } from '../visualise/pack.js';
 import { packChanges, type PackedChanges } from '../visualise/changes.js';
@@ -131,7 +131,8 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
   const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
   const editor = editorFor(options);
   const db = openDbFromOptions(options);
-  const observed = loadObserved(dbPathFor(options));
+  const seen = readObservedBeside(dbPathFor(options));
+  const observed = seen.observed;
   const read = readAccepted(dbPathFor(options));
   let packed;
   let counts;
@@ -172,6 +173,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
 
   const result = { path, bytes: Buffer.byteLength(page), ...counts };
   if (read.problem !== undefined) print(`warning: ${describeAcceptedProblem(read.problem)}`);
+  if (seen.problem !== undefined) print(`warning: ${describeObservedProblem(seen.problem)}`);
   print(
     `${result.nodes.toLocaleString()} nodes, ${result.edges.toLocaleString()} edges, ` +
       `${Math.round(result.bytes / 1024)}KB`,

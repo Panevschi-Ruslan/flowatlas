@@ -350,6 +350,27 @@ only one of them moved.
 
 ### Fixed
 
+- **`observe` read the real @nestjs/observe format, and counted a request once
+  (P85).** The @nestjs/observe reader had been written against keys the SDK
+  does not send, so a real telemetry batch joined nothing and left `lastSeen`
+  empty. It now reads the batch the SDK (0.3.x) posts — `serviceId`,
+  `snapshots` with `ct`, `p`, `op`, `a.m`, `a.sc`, `a.ou` and the span tree in
+  `t` (nodes need `o`, `c`, `m`; `n` is optional), outgoing `http` nodes as
+  client spans and `mongodb` / `pg` / `mysql2` nodes by collection — plain or
+  gzipped, and a bare snapshot array as before. Each reader copies only the
+  fields of its allow-list: no header, body, user id, query string, host,
+  statement, tag, error message or log line reaches `observed.json`, the page
+  or an MCP answer. Snapshots of another protocol, nodes the contract refuses
+  and jobs without a tree are counted in the summary (`not read: ...`) instead
+  of dropped unsaid. A span that fits several joins, routes, calls, methods or
+  tables is no longer credited to all of them: it is credited to none and
+  listed under the new `ambiguous` (`observedFormatVersion: 2`), which the
+  summary, `--format json`, the page (*could be more than one place*) and the
+  graph server (`seenAmbiguous: n`) show. Counts on joins that used to be
+  shared between candidates drop accordingly. The file's name, version, join
+  id and reader (`readObserved`) are defined once, in `@flowatlas/core`; the
+  page and the graph server still read a version-1 file.
+
 - **A cached graph went stale when what stood in for a package moved (P83).**
   A shape file added under a listed `shapes` glob, a package directory whose
   `name` answered an import nothing had, and one of two directories claiming a

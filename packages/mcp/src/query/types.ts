@@ -86,8 +86,10 @@ export interface FlowNode {
   node: CompactNode;
   edge?: FlowEdge;
   guards?: GuardRef[];
-  /** Times real traffic went through this row, from `observed.json` (P72); absent when nothing saw it. */
+  /** Times real traffic went through this row, from the observed file (P72); absent when nothing saw it. */
   observed?: number;
+  /** Requests that could have been this row and were counted on nothing, fitting other places too (P85). */
+  seenAmbiguous?: number;
   /** What a way in can fail with, on an entry that says (P68). */
   fails?: FailRef[];
   /** Decorators on the handler or its class that let a request past a check (P76). */

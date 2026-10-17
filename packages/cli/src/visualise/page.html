@@ -2058,7 +2058,7 @@ __STEPS_LOGIC__
     const nodes = data.nodes;
     const keys = createKeys(data.keys, nodes.length);
     /* What was seen at run time, when a trace was imported; nothing otherwise. */
-    const seen = createSeen(data, keys);
+    const seen = createSeen(data);
 
     const hueOf = (repoIndex) => `var(--s-${repoIndex % 5})`;
     const repoName = (i) => repos[nodes[i][RP]];
@@ -2380,13 +2380,13 @@ __STEPS_LOGIC__
       appendUnmatched();
     }
 
-    /* A sheet of its own under a table, when a trace saw anything the code does not show. */
+    /* A sheet of its own under a table, when a trace saw anything the code does not show, or could not place. */
     const appendUnmatched = () => {
-      if (seen.unmatched.length === 0) return;
+      if (seen.unmatched.length === 0 && seen.ambiguous.length === 0) return;
       const more = document.createElement('div');
       more.className = 'sheet is-padded';
       more.id = 'unmatched';
-      more.innerHTML = unmatchedHtml();
+      more.innerHTML = (seen.unmatched.length > 0 ? unmatchedHtml() : '') + ambiguousHtml();
       walkEl.append(more);
     };
 
@@ -2399,6 +2399,29 @@ __STEPS_LOGIC__
         'or code that is not in the repositories read.</p><ul class="s-unmatched">' +
         list.slice(0, UNMATCHED_LIMIT).map((item) => `<li><span class="tag">${esc(item.kind)}</span> ${esc(item.name)}` +
           (item.service ? ` <span class="hint">${esc(item.service)}</span>` : '') + '</li>').join('') +
+        (list.length > UNMATCHED_LIMIT ? `<li class="hint">${(list.length - UNMATCHED_LIMIT).toLocaleString()} more</li>` : '') +
+        '</ul>';
+    };
+
+    /* What a trace saw that fits several places here, counted on none of them (P85). */
+    const ambiguousPlace = (item, k) => {
+      if (item.kind !== 'join') return `${esc(nodes[k][LB])} <span class="hint">${esc(repoName(k))}</span>${graphLink(k)}`;
+      const e = data.edges[k];
+      return `${esc(nodes[e[0]][LB])} &rarr; ${esc(nodes[e[1]][LB])}${graphLink(e[1])}`;
+    };
+    const ambiguousHtml = () => {
+      const list = seen.ambiguous;
+      if (list.length === 0) return '';
+      return `<h4>Seen at run time, could be more than one place &middot; ${list.length.toLocaleString()}</h4>` +
+        '<p class="hint">Each fits several places equally, so none of them is counted: one request is never spread over guesses.</p>' +
+        '<ul class="s-unmatched">' +
+        list.slice(0, UNMATCHED_LIMIT).map((item) => {
+          const places = item.places.map((k) => ambiguousPlace(item, k));
+          if (item.unnamed > 0) places.push(`${item.unnamed.toLocaleString()} more`);
+          return `<li><span class="tag">${esc(item.kind)}</span> ${esc(item.name)}` +
+            (item.service ? ` <span class="hint">${esc(item.service)}</span>` : '') +
+            ` &middot; seen ${item.count.toLocaleString()} ${item.count === 1 ? 'time' : 'times'}, could be any of ${places.join(', ')}</li>`;
+        }).join('') +
         (list.length > UNMATCHED_LIMIT ? `<li class="hint">${(list.length - UNMATCHED_LIMIT).toLocaleString()} more</li>` : '') +
         '</ul>';
     };
@@ -4114,7 +4137,7 @@ __STEPS_LOGIC__
         [repoName(item.node), item.unjoined ? 'joined nothing' : '', reasonsAt(item.node)].filter(Boolean).join(' · ')));
       return '<p>Where to look first. A problem is a row of <b>Not joined</b> that names a node or sits at its ' +
         'line; a node carrying one is badged with the count.</p>' +
-        (seen.unmatched.length > 0 ? unmatchedHtml() : '') +
+        (seen.unmatched.length > 0 ? unmatchedHtml() : '') + ambiguousHtml() +
         listHtml('ways', 'Ways in with problems', ways, 'Every way in has a handler that was read, and no row.') +
         listHtml('crossings', 'Crossings with problems', crossed, 'No crossing has a row at either end.') +
         listHtml('calls', 'Calls that did not join, or carry rows', unjoined, 'Every call joined, and none carries a row.');
@@ -6120,13 +6143,15 @@ __STEPS_LOGIC__
     if (seen.any) {
       const total = [...entryIx].reduce((sum, i) => sum + seen.entry(i), 0);
       stat('Seen at run time', total.toLocaleString() + ' hits',
-        seen.unmatched.length.toLocaleString() + ' not found in code', seen.unmatched.length ? 'warn' : 'good');
-      if (seen.unmatched.length > 0) {
+        seen.unmatched.length.toLocaleString() + ' not found in code' +
+          (seen.ambiguous.length ? ', ' + seen.ambiguous.length.toLocaleString() + ' could be several places' : ''),
+        seen.unmatched.length ? 'warn' : 'good');
+      if (seen.unmatched.length > 0 || seen.ambiguous.length > 0) {
         const card = band.lastElementChild;
         card.classList.add('is-link');
         card.tabIndex = 0;
         card.setAttribute('role', 'button');
-        card.title = 'Show what was seen at run time and not found in code';
+        card.title = 'Show what was seen at run time and not found in code, or could be several places';
         const open = () => { showView('missing'); document.getElementById('unmatched')?.scrollIntoView({ block: 'nearest' }); };
         card.addEventListener('click', open);
         card.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });

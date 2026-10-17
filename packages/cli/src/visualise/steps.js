@@ -207,7 +207,7 @@ const placeAmongSiblings = (model, order, k) => {
 };
 
 const NO_SEEN = Object.freeze({
-  any: false, most: 0, unmatched: Object.freeze([]),
+  any: false, most: 0, unmatched: Object.freeze([]), ambiguous: Object.freeze([]),
   join: () => null, entry: () => 0,
 });
 
@@ -216,54 +216,36 @@ export const unmatchedOf = ({ unmatched = [], services, kinds }) =>
   unmatched.map(([s, kind, name]) =>
     ({ ...(s === -1 ? {} : { service: stepWord(services, s) }), kind: stepWord(kinds, kind), name }));
 
+/** What fit several places and was counted on none (P85); `places` are edges for a join, nodes otherwise. */
+export const ambiguousOf = ({ ambiguous = [], services, kinds }) =>
+  ambiguous.map(([s, kind, name, count, places, unnamed = 0]) =>
+    ({ ...(s === -1 ? {} : { service: stepWord(services, s) }), kind: stepWord(kinds, kind), name, count, places, unnamed }));
+
 /**
  * What was seen at run time, from the pack's `observed` (P65), or nothing.
- * A join is named by its edge's position, or by `fromKey>toKey` with an
- * optional `:type`; an entry by its id or its stable key.
+ * A join is named by its edge's position, an entry by its id.
  */
-export const createSeen = (data, keys) => {
+export const createSeen = (data) => {
   const observed = data.observed;
   if (!observed) return NO_SEEN;
-  const { edgeTypes } = data.dicts;
   const joins = new Map();
-  let byEnds = null;
-  const endsIndex = () => {
-    if (byEnds) return byEnds;
-    byEnds = new Map();
-    data.edges.forEach((e, k) => {
-      const id = keys.keyOf(e[0]) + '>' + keys.keyOf(e[1]);
-      byEnds.set(id, [...(byEnds.get(id) || []), k]);
-    });
-    return byEnds;
-  };
-  const add = (k, value) => {
-    const had = joins.get(k);
-    if (!had) joins.set(k, { count: value.count || 0, lastSeen: value.lastSeen || '' });
-    else {
-      had.count += value.count || 0;
-      if ((value.lastSeen || '') > had.lastSeen) had.lastSeen = value.lastSeen;
-    }
-  };
   for (const [id, value] of Object.entries(observed.joins || {})) {
-    if (/^\d+$/.test(id)) {
-      if (Number(id) < data.edges.length) add(Number(id), value);
-      continue;
-    }
-    const [ends, type] = id.split(':');
-    for (const k of endsIndex().get(ends) || []) {
-      if (type === undefined || edgeTypes[data.edges[k][2]] === type) add(k, value);
+    const k = Number(id);
+    if (Number.isInteger(k) && String(k) === id && k < data.edges.length) {
+      joins.set(k, { count: value.count || 0, lastSeen: value.lastSeen || '' });
     }
   }
   const hits = new Map();
   for (const [id, value] of Object.entries(observed.entries || {})) {
-    const at = data.entryIds && data.entryIds[id] !== undefined ? data.entryIds[id] : keys.find(id);
-    if (at >= 0) hits.set(at, (hits.get(at) || 0) + (value.hits || 0));
+    const at = data.entryIds ? data.entryIds[id] : undefined;
+    if (at !== undefined) hits.set(at, value.hits || 0);
   }
   const most = Math.max(0, ...[...joins.values()].map((join) => join.count));
   return {
     any: true,
     most,
     unmatched: Object.freeze(unmatchedOf(observed)),
+    ambiguous: Object.freeze(ambiguousOf(observed)),
     join: (k) => joins.get(k) || null,
     entry: (i) => hits.get(i) || 0,
   };

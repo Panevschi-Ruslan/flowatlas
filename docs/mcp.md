@@ -196,11 +196,15 @@ What `get_flow` says beside the chain:
 - **`observed: n`** on a row real traffic went through, after
   `flowatlas observe` has read a trace file: the count on the join into it, or
   the entry's hits. Absent when nothing saw it.
+- **`seenAmbiguous: n`** on a row that requests could have been, or whose
+  join into it they could have run, but fit other places as well: those are
+  counted on none of them, so `observed` never spreads one request over
+  guesses.
 - **`baseUrlFrom`** and **`baseUrl`** on a request joined by a value read from a
   repository's own files, the code's own fallback or the setting's name, saying
   where the value came from.
 
-`who_calls` rows carry `observed: n` the same way.
+`who_calls` rows carry `observed: n` and `seenAmbiguous: n` the same way.
 
 ### Messages and types
 

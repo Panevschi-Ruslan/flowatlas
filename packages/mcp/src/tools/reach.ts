@@ -7,7 +7,7 @@ import { REVERSE_EDGES, walkBack } from '../query/flow.js';
 import { truncationMessage, type FlowNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
 import { nextFor, withNext } from '../query/next.js';
-import { loadObservedCounts, markObserved, nodeSeen } from '../query/observed.js';
+import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
 import { bound, commonInput, inService, serviceInput, withDb, type ToolContext } from './common.js';
 
 /** Accepts an id, or a name close enough to identify one thing. */
@@ -135,9 +135,14 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
         const counts = loadObservedCounts(ctx.handle.path);
         if (counts !== undefined) markObserved(counts, found.id, callers, 'backward');
         const seen = counts === undefined ? undefined : nodeSeen(counts, found.id);
+        const unsure = counts === undefined ? undefined : nodeAmbiguous(counts, found.id);
         return withNext(
           {
-            target: { ...projectDetail(found, detail), ...(seen === undefined ? {} : { observed: seen }) },
+            target: {
+              ...projectDetail(found, detail),
+              ...(seen === undefined ? {} : { observed: seen }),
+              ...(unsure === undefined ? {} : { seenAmbiguous: unsure }),
+            },
             callers,
             ...(walked.truncated === undefined ? {} : { truncated: walked.truncated }),
             ...(note === undefined ? {} : { note }),

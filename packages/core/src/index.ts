@@ -678,6 +678,27 @@ export type {
   GapLike,
   RoutePattern,
 } from './accepted.js';
+export {
+  AMBIGUOUS_CANDIDATES,
+  describeObservedProblem,
+  joinIdOf,
+  OBSERVED_FILE,
+  OBSERVED_FORMAT_VERSION,
+  OBSERVED_READ_VERSIONS,
+  observedOf,
+  observedPathFor,
+  readObserved,
+} from './observed.js';
+export type {
+  AmbiguousKind,
+  AmbiguousSpan,
+  Observed,
+  ObservedProblem,
+  ObservedProblemKind,
+  ObservedRead,
+  Seen,
+  UnmatchedSpan,
+} from './observed.js';
 export { compileGlob, expandGlob, isGlob, NEVER_WALKED } from './glob.js';
 export type { Glob } from './glob.js';
 export { compareFailures, FAILS_META, FAILURE_SOURCES, failuresOf, settleFailures } from './failures.js';

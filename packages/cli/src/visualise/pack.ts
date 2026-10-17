@@ -172,9 +172,9 @@ export interface PackedGraph {
    * What was seen at run time, when a trace was imported (P65). Absent, the
    * page shows only what the code says.
    *
-   * `joins` is keyed by an edge's position in `edges`, or by `fromKey>toKey`
-   * in the nodes' stable keys; `entries` by an entry's id (as `entryIds`
-   * names it) or its stable key.
+   * `joins` is keyed by an edge's position in `edges`, `entries` by an
+   * entry's id (as `entryIds` names it); `ambiguous` lists what fit several
+   * places (P85). See `observed.ts`.
    */
   observed?: PackedObserved;
   /**
@@ -592,7 +592,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     ...(fails === undefined ? {} : { fails: fails.fails }),
     ...withAccess(packAccess(input.nodes)),
     ...(logs === undefined ? {} : { logs }),
-    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds) }),
+    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds, position) }),
     ...(accepted.packed === undefined ? {} : { accepted: accepted.packed }),
     ...packCantFollow(accepted.fresh, position),
     ...packStandIns(packedEdges),

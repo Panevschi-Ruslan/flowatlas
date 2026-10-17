@@ -1,23 +1,16 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { OBSERVED_FORMAT_VERSION, type Observed } from './match.js';
+import { writeFileSync } from 'node:fs';
+import { observedPathFor, readObserved, type Observed, type ObservedRead } from '@flowatlas/core';
 
-/** Beside `graph.db`, in the output directory. */
-export const OBSERVED_FILE = 'observed.json';
+export { OBSERVED_FILE, observedPathFor } from '@flowatlas/core';
 
-export const observedPathFor = (dbPath: string): string => join(dirname(dbPath), OBSERVED_FILE);
-
-/** The observed file beside a database, or nothing when there is none or it is of another version. */
-export const loadObserved = (dbPath: string): Observed | undefined => {
-  const path = observedPathFor(dbPath);
-  if (!existsSync(path)) return undefined;
-  try {
-    const parsed = JSON.parse(readFileSync(path, 'utf8')) as Observed;
-    return parsed.observedFormatVersion === OBSERVED_FORMAT_VERSION ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
+/** The observed file beside a database, and why there is none when it is there and cannot be read. */
+export const readObservedBeside = (dbPath: string): ObservedRead => {
+  const read = readObserved(observedPathFor(dbPath));
+  return read.problem?.kind === 'missing' ? {} : read;
 };
+
+/** The observed file beside a database, or nothing when there is none or it cannot be read. */
+export const loadObserved = (dbPath: string): Observed | undefined => readObservedBeside(dbPath).observed;
 
 export const saveObserved = (dbPath: string, observed: Observed): string => {
   const path = observedPathFor(dbPath);

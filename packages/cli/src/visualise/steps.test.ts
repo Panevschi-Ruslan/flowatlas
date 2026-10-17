@@ -91,30 +91,39 @@ describe('observed', () => {
   const observed = (data: PackedGraph, keys: ReturnType<typeof createKeys>) => ({
     joins: {
       '2': { count: 5, lastSeen: '2026-01-02' },
-      [`${keys.keyOf(4)}>${keys.keyOf(5)}:emits`]: { count: 3, lastSeen: '2026-01-03' },
+      '4': { count: 3, lastSeen: '2026-01-03' },
+      // A stable-key join is nothing the pack writes, and is not read.
+      [`${keys.keyOf(0)}>${keys.keyOf(1)}:handles`]: { count: 9, lastSeen: '2026-01-04' },
+      '02': { count: 9, lastSeen: '2026-01-04' },
+      [String(data.edges.length)]: { count: 9, lastSeen: '2026-01-04' },
     },
-    entries: { [nodes[0]!.id]: { hits: 7 } },
+    entries: { [nodes[0]!.id]: { hits: 7 }, [keys.keyOf(1)]: { hits: 9 } },
     unmatched: [['shop-api', 'http', 'GET /health']] as Array<[string, string, string]>,
-    _size: data.edges.length,
+    ambiguous: [[-1, 'symbol', 'CartService.add', 2, [1, 2], 3]] as Array<[number, string, string, number, number[], number]>,
   });
 
   it('is nothing when absent', () => {
     const data = pack();
-    const seen = createSeen(data, createKeys(data.keys, data.nodes.length));
+    const seen = createSeen(data);
     expect(seen.any).toBe(false);
+    expect(seen.ambiguous).toEqual([]);
     expect(stepsOf(modelOf(data), 0, { seen }).rows.every((row) => row.seen === 0)).toBe(true);
   });
 
-  it('marks seen joins on the steps, hits on the entry, and keeps what matched nothing', () => {
+  it('marks seen joins on the steps, hits on the entry, and keeps what matched nothing or several', () => {
     const data = pack();
     const keys = createKeys(data.keys, data.nodes.length);
     data.observed = observed(data, keys);
-    const seen = createSeen(data, keys);
+    const seen = createSeen(data);
     const { rows } = stepsOf(modelOf(data), 0, { seen });
     expect(rows[0]!.seen).toBe(7);
     expect(rows.find((row) => row.edge === 2)!.seen).toBe(5);
     expect(rows.find((row) => row.edge === 4)!.seen).toBe(3);
+    expect(seen.join(0)).toBeNull();
+    expect(seen.entry(1)).toBe(0);
+    expect(seen.most).toBe(5);
     expect(seen.unmatched).toEqual([{ service: 'shop-api', kind: 'http', name: 'GET /health' }]);
+    expect(seen.ambiguous).toEqual([{ kind: 'symbol', name: 'CartService.add', count: 2, places: [1, 2], unnamed: 3 }]);
     const map = createMap(data.map);
     const view = mapView(map, { toggled: new Set(), hidden: new Set() }, data.dicts.confidences);
     const total = view.links.reduce((sum, link) => sum + mapSeenCount(map, link, seen.join), 0);

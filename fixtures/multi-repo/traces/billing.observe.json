@@ -1,28 +1,105 @@
-[
-  {
-    "ti": "e1000000000000000000000000000001",
-    "sv": "billing",
-    "p": "/invoices?customer=cus-311",
-    "op": "POST /invoices",
-    "a": { "m": "POST", "h": { "authorization": "Bearer not-a-real-token" } },
-    "ts": 1760600010000,
-    "s": {
-      "n": "InvoicesController.create",
-      "c": "InvoicesController",
-      "m": "create",
-      "d": 6,
-      "ch": [
-        { "n": "InvoicesService.create", "c": "InvoicesService", "m": "create", "d": 3 },
-        { "n": "LedgerClient.post", "c": "LedgerClient", "m": "post", "d": 2, "e": "timeout" }
+{
+  "serviceId": "billing",
+  "serviceVersion": "1.4.2-build.77",
+  "snapshots": [
+    {
+      "ct": "2025-10-16T07:33:30.000Z",
+      "ti": "e1000000000000000000000000000001",
+      "d": 6.4,
+      "p": "http",
+      "op": "/invoices",
+      "a": { "m": "POST", "sc": 201, "ou": "/invoices?customer=cus-311" },
+      "e": null,
+      "u": "user-7781",
+      "rq": {
+        "headers": { "authorization": "Bearer not-a-real-token" },
+        "body": { "orderId": "ord-1043", "amount": 42 }
+      },
+      "tg": { "tenant": "tenant-tag-9" },
+      "t": [
+        {
+          "o": "auto",
+          "c": "InvoicesController",
+          "m": "create",
+          "d": 6,
+          "s": 0,
+          "so": 0,
+          "ch": [
+            {
+              "o": "auto",
+              "c": "InvoicesService",
+              "m": "create",
+              "d": 3,
+              "ch": [
+                {
+                  "o": "auto",
+                  "c": "http",
+                  "m": "GET orders.internal",
+                  "d": 1.2,
+                  "t": {
+                    "http.method": "GET",
+                    "http.url": "http://orders.internal:3000/orders/ord-1043?expand=lines&session=s3cr3t"
+                  }
+                },
+                {
+                  "o": "auto",
+                  "c": "mongodb",
+                  "m": "insert invoices",
+                  "d": 0.8,
+                  "t": { "db.system": "mongodb", "db.statement": "{\"insert\":\"invoices\",\"documents\":[{\"_id\":\"inv-9001\"}]}" }
+                }
+              ]
+            },
+            {
+              "n": "post to ledger",
+              "o": "manual",
+              "c": "LedgerClient",
+              "m": "post",
+              "d": 2,
+              "e": { "message": "timeout from ledger.internal", "stack": "at LedgerClient.post" }
+            }
+          ]
+        }
       ]
+    },
+    {
+      "ct": "2025-10-16T07:33:31.000Z",
+      "ti": "e1000000000000000000000000000002",
+      "d": 1.1,
+      "p": "http",
+      "op": "/invoices/:id",
+      "a": { "m": "GET", "sc": 200, "ou": "/invoices/inv-9001" },
+      "t": [{ "o": "auto", "c": "InvoicesController", "m": "findOne", "d": 1 }]
+    },
+    {
+      "ct": "2025-10-16T07:33:32.000Z",
+      "ti": "e1000000000000000000000000000003",
+      "d": 0.4,
+      "p": "ws",
+      "op": "invoices.watch",
+      "a": { "m": "SUBSCRIBE" },
+      "t": [{ "o": "auto", "c": "InvoicesGateway", "m": "watch", "d": 0.3 }]
+    },
+    {
+      "ct": "2025-10-16T07:33:33.000Z",
+      "ti": "e1000000000000000000000000000004",
+      "d": 0.2,
+      "p": "https",
+      "a": { "m": "GET", "sc": 404, "ou": "/healthz?probe=lb-7" },
+      "t": [{ "n": "a node the contract would refuse", "d": 0.1 }]
     }
-  },
-  {
-    "ti": "e1000000000000000000000000000002",
-    "sv": "billing",
-    "p": "/invoices/inv-9001",
-    "a": { "m": "GET" },
-    "ts": 1760600011000,
-    "s": { "n": "InvoicesController.findOne", "c": "InvoicesController", "m": "findOne", "d": 1 }
-  }
-]
+  ],
+  "jobs": [
+    {
+      "ct": "2025-10-16T07:33:40.000Z",
+      "ti": "e1000000000000000000000000000005",
+      "d": 2.5,
+      "t": [{ "o": "auto", "c": "InvoicesService", "m": "findOne", "d": 0.5 }]
+    },
+    { "ct": "2025-10-16T07:33:41.000Z", "ti": "e1000000000000000000000000000006" }
+  ],
+  "logs": [{ "l": "error", "m": "invoice inv-9001 failed for customer cus-311", "ti": "e1000000000000000000000000000001" }],
+  "objectives": [{ "id": "objective-p99", "target": 250 }],
+  "runtime": { "hostname": "billing-host-3", "pid": 4242 },
+  "custom": { "note": "custom-value-17" }
+}

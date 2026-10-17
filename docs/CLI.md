@@ -1143,7 +1143,9 @@ writes nothing). Below the reasons, *Can't follow* groups what the reader could
 not follow by cause and then by package, as `doctor --unresolved` does: one
 part per cause with its hint and a few places, each with *show in graph*, and a
 table by package. Once `flowatlas observe` has run, *seen at run time, not
-found in code* lists the spans no code accounts for, first in the *Problems*
+found in code* lists the spans no code accounts for, and *seen at run time,
+could be more than one place* the ones that fit several places and were
+counted on none, each with its candidates; both come first in the *Problems*
 answer.
 
 The **Busiest** tab ranks the methods most things lean on, the way
@@ -1169,24 +1171,52 @@ through, how often each way in was hit, and what ran that the code does not
 show. Local only: it reads the files named and sends nothing anywhere.
 
 ```
-flowatlas observe traces/checkout.otlp.json traces/billing.observe.json
+$ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json
+22 spans read from 2 file(s)
+not read: 1 snapshot of protocol ws, 1 node without o, c and m, 1 job without a span tree
+3 joins seen, 6 entries hit, 6 seen at run time but not found in code, 1 that could be more than one place
+  client    billing  GET /orders/:value  (1)
+  code      billing  LedgerClient.post  (1)
+  db        billing  invoices  (1)
+  http      billing  GET /healthz  (1)
+  http      gateway  GET /metrics  (1)
+  messaging orders  order.audited  (1)
+could be more than one place, so counted on none:
+  client    gateway  GET /orders/:value  (1)
+    any of http_out:gateway#src/clients/orders.client.ts:33:12, http_out:gateway#src/clients/orders.client.ts:59:12
+.flowatlas/observed.json
 ```
 
-Two formats, picked by looking at each file:
+Two formats, picked by looking at each file. Either may be gzipped: a file
+that starts with gzip's magic bytes is unpacked first, so a body captured from
+the SDK's POST is read as it is.
 
 - **OTLP/JSON** (`resourceSpans` / `scopeSpans` / `spans`, one document or one
   per line). Read: `service.name`, span kind, `http.request.method` /
   `http.method`, `http.route`, the path of `url.full` / `http.url`,
-  `messaging.destination.name`, `code.namespace` + `code.function` (or
-  `code.function.name`), `db.collection.name`, `rpc.service` / `rpc.method`.
-- **@nestjs/observe** request snapshots: `ti` trace id, `p` path, `op`
-  operation, `a.m` method, and the span tree (`n` name, `c` class, `m` method
-  key, `ch` children). A snapshot names its service with `sv`; otherwise pass
-  `--service`.
+  `http.response.status_code`, `messaging.destination.name`, `code.namespace`
+  + `code.function` (or `code.function.name`), `db.collection.name`,
+  `rpc.service` / `rpc.method`, the start and end time, and whether the status
+  is an error.
+- **@nestjs/observe** telemetry batches, the JSON the SDK (0.3.x) posts to its
+  endpoint: `{ serviceId, snapshots, jobs, ... }`, or a bare array of request
+  snapshots exported by hand. Read: `serviceId` (else `--service`); per
+  snapshot `ti` trace id, `ct` time, `d` duration, `p` protocol, `op` the
+  route the router matched, `a.m` method, `a.sc` status and the path of
+  `a.ou`; and the span tree in `t`, whose nodes need `o`, `c` and `m`. A node
+  of class `http` is an outgoing request (`http.method` and the path of
+  `http.url`); one of class `mongodb`, `pg` or `mysql2` names its collection
+  as the second word of `m`; any other is the method `c.m`. Only `http` and
+  `https` snapshots are read as requests; a job is read for its span tree.
 
-Every other attribute is dropped on read: headers, query strings, user ids,
-message keys, statements. A path segment holding a value (any digit, or a long
-token) becomes `:value`, which only a route parameter matches.
+Each reader works from an allow-list of fields (`allow-list.ts`); everything
+else is dropped on read: headers, bodies, user ids, query strings, hosts,
+statements, tags, error messages (an error is at most *it failed*), log lines,
+and a batch's version, objectives, runtime and custom data. A path segment
+holding a value (any digit, or a long token) becomes `:value`, which only a
+route parameter matches. What a reader saw and did not read is counted in the
+summary, never dropped unsaid:
+`not read: 1 snapshot of protocol ws, 1 node without o, c and m`.
 
 A server span is matched to an entry by method and route template (the most
 literal template wins); a `Class.method` to a handler or method; a messaging
@@ -1194,10 +1224,28 @@ destination to a channel, and to the emits or consumes edge of the span's
 service; a client span to the outbound call with that method and path; and a
 server span whose parent is in another service to the join from that service
 into the entry. What matches nothing is listed as seen at run time, not found
-in code. `visualise` ships the file into the page when it is there, and the
-graph server's `get_flow` and `who_calls` show `observed: n` on the rows it
-counted. Nothing is drawn from a trace: an edge it did not confirm keeps the
-confidence it was read with.
+in code.
+
+**A span counts once.** It is credited to a join, an entry, a method or a
+table only when exactly one fits. When several do — two routes tied for its
+path, two calls from the caller's service into the entry, two outbound calls
+with the same method and path, two methods of one name — none of them is
+credited and the span is listed under `ambiguous` with the places it could be
+(at most five named, `more` counting the rest). The summary lists them as
+*could be more than one place, so counted on none*. When the far side of a
+call was read, the join it confirms settles which call it was.
+
+`visualise` ships the file into the page when it is there; the page shows
+*seen at run time, could be more than one place* with each candidate beside
+the unmatched list. The graph server's `get_flow` and `who_calls` show
+`observed: n` on the rows it counted and `seenAmbiguous: n` on a row that a
+request could have been. Nothing is drawn from a trace: an edge it did not
+confirm keeps the confidence it was read with.
+
+The file is `observedFormatVersion: 2` (version 1 spread a span over every
+candidate and had no `ambiguous`; the page and the graph server still read
+it). A file that cannot be read makes `visualise` say so and show nothing seen
+at run time.
 
 | Flag | Meaning |
 |---|---|

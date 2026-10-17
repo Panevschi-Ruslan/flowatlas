@@ -35,6 +35,29 @@
               ]
             },
             {
+              "traceId": "a1000000000000000000000000000004",
+              "spanId": "b400000000000001",
+              "name": "GET /orders/:id",
+              "kind": 2,
+              "startTimeUnixNano": "1760600006000000000",
+              "attributes": [
+                { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                { "key": "http.route", "value": { "stringValue": "/orders/:id" } }
+              ]
+            },
+            {
+              "traceId": "a1000000000000000000000000000004",
+              "spanId": "b400000000000002",
+              "parentSpanId": "b400000000000001",
+              "name": "GET",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760600006001000000",
+              "attributes": [
+                { "key": "http.method", "value": { "stringValue": "GET" } },
+                { "key": "http.url", "value": { "stringValue": "http://orders.local/orders/ord-2001" } }
+              ]
+            },
+            {
               "traceId": "a1000000000000000000000000000003",
               "spanId": "b300000000000001",
               "name": "GET /metrics",

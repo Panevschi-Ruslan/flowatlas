@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { buildFlowTree } from '../query/flow.js';
-import { loadObservedCounts, markObserved, nodeSeen } from '../query/observed.js';
+import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
 import { rankMatches } from './entries.js';
 import { withNext } from '../query/next.js';
 import { bound, commonInput, withDb, type ToolContext } from './common.js';
@@ -56,6 +56,8 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
         if (counts !== undefined) {
           const seen = nodeSeen(counts, ref.id);
           if (seen !== undefined) flow.root.observed = seen;
+          const unsure = nodeAmbiguous(counts, ref.id);
+          if (unsure !== undefined) flow.root.seenAmbiguous = unsure;
           markObserved(counts, ref.id, flow.root.children, 'forward');
         }
         const id = JSON.stringify(ref.id);

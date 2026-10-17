@@ -52,13 +52,19 @@ export interface Seen {
   any: boolean;
   most: number;
   unmatched: ReadonlyArray<{ service?: string; kind: string; name: string }>;
+  ambiguous: ReadonlyArray<SeenAmbiguous>;
   join(edge: number): { count: number; lastSeen: string } | null;
   entry(node: number): number;
 }
 
-export interface KeysLike {
-  keyOf(i: number): string;
-  find(key: string): number;
+/** A span that fit several places: `places` are edge positions for a `join`, node positions otherwise. */
+export interface SeenAmbiguous {
+  service?: string;
+  kind: string;
+  name: string;
+  count: number;
+  places: number[];
+  unnamed: number;
 }
 
 export interface StepOptions {
@@ -81,8 +87,7 @@ export declare const stepField: (model: GraphModel, i: number, key: string) => u
 export declare const stepKindOf: (model: GraphModel, i: number) => StepKind;
 export declare const stepInline: (model: GraphModel, i: number) => string;
 export declare const createSeen: (
-  data: Pick<PackedGraph, 'edges' | 'dicts'> & Partial<Pick<PackedGraph, 'entryIds' | 'observed'>>,
-  keys: KeysLike,
+  data: Pick<PackedGraph, 'edges'> & Partial<Pick<PackedGraph, 'entryIds' | 'observed'>>,
 ) => Seen;
 export declare const stepsOf: (model: GraphModel, entry: number, options?: StepOptions) => { rows: StepRow[]; more: number };
 export declare const stepBreakOf: (
@@ -108,5 +113,8 @@ export declare const failSay: (fail: PackedFail) => string;
 export declare const unmatchedOf: (
   observed: Pick<NonNullable<PackedGraph['observed']>, 'unmatched' | 'services' | 'kinds'>,
 ) => Array<{ service?: string; kind: string; name: string }>;
+export declare const ambiguousOf: (
+  observed: Pick<NonNullable<PackedGraph['observed']>, 'ambiguous' | 'services' | 'kinds'>,
+) => SeenAmbiguous[];
 export declare const logsOf: (model: GraphModel, i: number) => readonly StepLog[];
 export declare const scheduleOf: (model: GraphModel, i: number) => { expression: string; zone: string } | null;

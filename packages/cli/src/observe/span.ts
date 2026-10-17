@@ -2,9 +2,10 @@
  * One span from a trace file, reduced to what can name a place in the code.
  *
  * Readers build these and nothing else leaves a reader: header values, query
- * strings, ids in a path, message bodies and database statements are never
- * copied in. A path keeps its shape and loses its query; a template keeps its
- * parameters by name only.
+ * strings, hosts, ids in a path, user ids, message bodies, error messages and
+ * database statements are never copied in (each reader's allow-list is in
+ * `allow-list.ts`). A path keeps its shape and loses its query; a template
+ * keeps its parameters by name only.
  */
 export type SpanKind = 'server' | 'client' | 'producer' | 'consumer' | 'internal';
 
@@ -31,6 +32,12 @@ export interface ObservedSpan {
   rpc?: string;
   /** ISO time the span started, when the file says. */
   at?: string;
+  /** HTTP status answered, when the file says (P85). Kept, not matched on. */
+  status?: number;
+  /** How long the span took, in milliseconds (P85). Kept, not matched on. */
+  durationMs?: number;
+  /** The span ended in an error. Never the error itself: no message, no stack. */
+  error?: true;
 }
 
 /** What a path segment that holds a value is replaced with; it matches only a route parameter. */

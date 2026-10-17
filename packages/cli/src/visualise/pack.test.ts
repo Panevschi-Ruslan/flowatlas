@@ -1,4 +1,4 @@
-import type { GraphNode } from '@flowatlas/core';
+import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { stableKeys } from './keys.js';
@@ -6,7 +6,7 @@ import { wordsOf } from './dictionary.js';
 import { createModel, type GraphModel } from './graph.js';
 import { packObserved } from './observed.js';
 import { packGraph, type PackedGraph } from './pack.js';
-import { logsOf, unmatchedOf } from './steps.js';
+import { ambiguousOf, logsOf, unmatchedOf } from './steps.js';
 
 const report = {
   httpOut: {},
@@ -314,12 +314,35 @@ describe('logs and unmatched spans through dictionaries (P84)', () => {
       { kind: 'http', name: 'GET /metrics', count: 2 },
       { service: 'gateway', kind: 'http', name: 'GET /health', count: 1 },
     ];
-    const packed = packObserved({ joins: {}, entries: {}, symbols: {}, channels: {}, unmatched } as never, [], {});
+    const packed = packObserved({ joins: {}, entries: {}, symbols: {}, channels: {}, unmatched } as never, [], {}, new Map());
     expect(packed.services).toEqual(['billing']);
     expect(packed.kinds).toEqual(['code', 'http']);
     expect(packed.unmatched[6]).toEqual([-1, 1, 'GET /metrics']);
     expect(packed.unmatched[7]).toEqual(['gateway', 1, 'GET /health']);
     expect(unmatchedOf(packed)).toEqual(unmatched.map(({ count: _, ...span }) => span));
+  });
+
+  it('reads back what fit several places: edges for a join, nodes otherwise, and how many it does not name', () => {
+    const edges = [{ from: 'a', to: 'b', type: 'calls', confidence: 'static' }] as GraphEdge[];
+    const ambiguous = [
+      { service: 'billing', kind: 'symbol', name: 'LedgerClient.post', candidates: ['a', 'gone'], more: 2, count: 3 },
+      { kind: 'join', name: 'GET /x', candidates: ['a -calls-> b'], count: 1 },
+    ];
+    const packed = packObserved(
+      { joins: {}, entries: {}, symbols: {}, channels: {}, unmatched: [], ambiguous } as never,
+      edges,
+      {},
+      new Map([['a', 4]]),
+    );
+    expect(packed.ambiguous).toEqual([
+      ['billing', 'symbol', 'LedgerClient.post', 3, [4], 3],
+      [-1, 'join', 'GET /x', 1, [0]],
+    ]);
+    expect(ambiguousOf(packed)).toEqual([
+      { service: 'billing', kind: 'symbol', name: 'LedgerClient.post', count: 3, places: [4], unnamed: 3 },
+      { kind: 'join', name: 'GET /x', count: 1, places: [0], unnamed: 0 },
+    ]);
+    expect(packObserved({ joins: {}, entries: {}, symbols: {}, channels: {}, unmatched: [] } as never, [], {}, new Map())).not.toHaveProperty('ambiguous');
   });
 
   it('packs one build to the same bytes twice, with every dictionary sorted', () => {
