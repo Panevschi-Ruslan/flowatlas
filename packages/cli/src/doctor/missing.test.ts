@@ -91,6 +91,22 @@ describe('candidatesFor', () => {
     const lines = sayMissing(missingEntryOf(group('inventory'), [], project));
     expect(lines.at(-1)).toBe('  nothing next to the configured repositories looks like it; if it exists elsewhere, `flowatlas link <path>`');
   });
+
+  it('says each place of traffic with what it reached and the window it was seen in (P144)', () => {
+    const seen = { kind: 'http', places: 6, count: 9, names: ['POST /charges', 'POST /refunds'], window: '2h' };
+    const traffic: MissingGroup = {
+      ...group('payments', 'payment'),
+      kinds: ['traffic'],
+      signals: [{ kind: 'traffic', name: 'payments', token: 'payments', places: [{ service: 'payments', gapId: 'gap:payments||seen-not-in-code', seen }] }],
+    };
+    const entry = missingEntryOf(traffic, [], project);
+    expect(entry.weak).toBe(true);
+    expect(entry.signals[0]?.places[0]?.seen).toEqual(seen);
+    expect(sayMissing(entry, { everyPlace: true, placeSaid: (place) => place.service ?? '' }).slice(1, 3)).toEqual([
+      '  traffic came from payments, which no configured service is: 6 routes, 9 spans in 2h',
+      '    payments: 6 routes, 9 spans in 2h: POST /charges, POST /refunds, and 4 more',
+    ]);
+  });
 });
 
 describe('flowatlas link --suggested (P122)', () => {

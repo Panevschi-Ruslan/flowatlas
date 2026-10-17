@@ -11,6 +11,7 @@ import {
   type ObservedFigures,
   type ObservedWindow,
 } from '@flowatlas/core';
+import type { AnchoredUnresolvedRow } from '@flowatlas/linker';
 import { wordsOf, type Word } from './dictionary.js';
 
 /**
@@ -26,6 +27,7 @@ import { wordsOf, type Word } from './dictionary.js';
  *     confirmed?: [edge],                           // best guesses traffic went through (P110)
  *     ambiguous?: [[service, kind, name, count, places, unnamed?]],  // fit several places (P85)
  *     services?: [name], kinds?: [kind]             // what `service` and `kind` index (P84)
+ *     blind?: [[service, level, message]],          // the blind spots as check rows, for their prompt (P144)
  *   }
  *
  * `lastSeen` is an ISO time or null. A row's `service` is a position in
@@ -80,6 +82,8 @@ export interface PackedObserved {
   ambiguous?: PackedAmbiguous[];
   services?: string[];
   kinds?: string[];
+  /** One per blind-spot row, its gap `gap:<service>||seen-not-in-code` (P144): what its check's prompt says. */
+  blind?: Array<[service: string, level: string, message: string]>;
 }
 
 /** What the command worked out of traffic over the graph (P110), by id: handed in, never computed here. */
@@ -87,6 +91,12 @@ export interface PackTraffic {
   never: { window: string; rows: ReadonlyArray<{ id: string; confidence: 'strong' | 'weak' }> };
   /** Join ids of best guesses traffic went through. */
   confirmed: readonly string[];
+  /**
+   * The blind spots as rows (P110's `blindSpotRows`, split as the server
+   * splits them): what a check's prompt and the repository probably missing
+   * are gathered from on the page, as `describe_for_prompt` gathers them (P144).
+   */
+  blind?: readonly AnchoredUnresolvedRow[];
 }
 
 /** The figures a row measured, each only when it did. */
@@ -156,6 +166,7 @@ export const packObserved = (
       ? [serviceWord(service), kinds.word(kind), name]
       : [serviceWord(service), kinds.word(kind), name, blindSpotNext(kind, name, service)],
   );
+  const blind = (traffic?.blind ?? []).map((row): [string, string, string] => [row.service ?? '', row.level, row.message]);
   const neverRows = (traffic?.never.rows ?? []).flatMap((row): Array<[number, 0 | 1]> => {
     const place = position.get(row.id);
     return place === undefined ? [] : [[place, row.confidence === 'strong' ? 1 : 0]];
@@ -185,5 +196,6 @@ export const packObserved = (
     ...(ambiguous.length === 0 ? {} : { ambiguous }),
     ...(services.list.length === 0 ? {} : { services: services.list }),
     ...(kinds.list.length === 0 ? {} : { kinds: kinds.list }),
+    ...(blind.length === 0 ? {} : { blind }),
   };
 };

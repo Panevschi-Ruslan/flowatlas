@@ -1153,6 +1153,28 @@ const promptCheckSubject = (model, r, walk) => {
   };
 };
 
+/**
+ * What traffic reached in one service and no reader drew, as a check (P110,
+ * P144): the gap `gap:<service>||seen-not-in-code`, one place per blind-spot
+ * row of the service - kind by kind, no file - in the order the server reads
+ * them (by message), and the repository probably missing it is evidence for.
+ * Null when the pack holds none for the service.
+ */
+const promptBlindSubject = (model, service) => {
+  const blind = (model.data.observed && model.data.observed.blind) || [];
+  const same = blind.filter(([s]) => s === service).sort((a, b) => stepCmp(a[2], b[2]));
+  if (same.length === 0) return null;
+  const id = `gap:${service}||seen-not-in-code`;
+  const missing = (model.data.missing || []).find(([, ids]) => ids.includes(id));
+  return {
+    id, label: 'seen-not-in-code', type: 'check',
+    kind: [...new Set(same.map(([, level]) => level))].join(', '),
+    ...(service === '' ? {} : { service }),
+    check: { places: same.map(([, , message]) => ({ message })), ...(missing ? { missing: missing[0] } : {}) },
+    steps: [], stepsCut: 0, gaps: [],
+  };
+};
+
 /* ── Scoped subjects (P95): a class, a file, as the server's `gatherClassSubject` and `gatherFileSubject` ── */
 
 /** The class a method id belongs to: its id up to the last `.`. */
@@ -1437,6 +1459,7 @@ export const promptTargetOf = (asked) => {
   const kind = asked.slice(0, cut);
   const rest = asked.slice(cut + 1);
   if (kind === 'service') return { service: rest };
+  if (kind === 'blind') return { blind: rest };
   if (kind === 'file') {
     const at = rest.indexOf('#');
     return at <= 0 ? null : { file: [rest.slice(0, at), rest.slice(at + 1)] };
@@ -1459,6 +1482,7 @@ export const subjectOf = (model, target, kit) => {
   const at = target[kind];
   const seen = kit.seen || NO_SEEN;
   if (kind === 'row') return model.data.rows && model.data.rows[at] ? promptCheckSubject(model, at, kit.walk) : null;
+  if (kind === 'blind') return typeof at === 'string' ? promptBlindSubject(model, at) : null;
   if (kind === 'file') return Array.isArray(at) && at.length === 2 ? promptFileSubject(model, at[0], at[1], kit.walk) : null;
   if (kind === 'service') return promptIsService(model, at) && kit.limits ? promptServiceSubject(model, at, kit.limits) : null;
   if (kind === 'class') {

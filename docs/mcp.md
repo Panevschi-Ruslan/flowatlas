@@ -586,6 +586,12 @@ count, places, lastSeen, names: [{ name, count, lastSeen }], more?, next }`,
 `next` the call that looks for it (`find_symbol` for a method, `list_entries`
 for a route, `search` for a destination, a table or anything else). A blind
 spot is a question, never an edge; the rows go when a build reads them.
+A service's blind spots are one check, `gap:<service>||seen-not-in-code`, which
+`describe_for_prompt` writes with *How to close it* as the page does (P144):
+the link line, naming the repository probably missing when the service is one
+no configured service is, then finding and describing what it reached. Such a
+service's traffic is also one kind of evidence for `start_here`'s
+`missingRepos`, beside what the code says; weak alone, as in `doctor --missing`.
 
 The same breakdown `flowatlas doctor --unresolved` prints. A cause is what the
 code says about why: `module-not-installed` (with the package), `import-unresolved`

@@ -1,0 +1,108 @@
+{
+  "missingRepos": [
+    {
+      "token": "payments",
+      "score": 4,
+      "places": 6,
+      "kinds": [
+        "setting",
+        "package",
+        "channel",
+        "traffic"
+      ],
+      "weak": false,
+      "signals": [
+        {
+          "kind": "setting",
+          "name": "PAYMENTS_URL",
+          "says": "PAYMENTS_URL is used by gateway (2 requests) and no service claims it",
+          "places": [
+            {
+              "service": "gateway",
+              "file": "src/checkout.controller.ts",
+              "line": 12,
+              "gapId": "gap:gateway|src/checkout.controller.ts|unknown-base-url-env"
+            },
+            {
+              "service": "gateway",
+              "file": "src/checkout.controller.ts",
+              "line": 21,
+              "gapId": "gap:gateway|src/checkout.controller.ts|unknown-base-url-env"
+            }
+          ]
+        },
+        {
+          "kind": "package",
+          "name": "@acme/payments-client",
+          "says": "@acme/payments-client is imported by orders and is not installed",
+          "places": [
+            {
+              "service": "orders",
+              "file": "src/orders.service.ts",
+              "line": 17,
+              "gapId": "gap:orders|src/orders.service.ts|call-dynamic-receiver"
+            }
+          ]
+        },
+        {
+          "kind": "channel",
+          "name": "payment.requested",
+          "says": "channel payment.requested is published by orders and nobody here consumes it",
+          "places": [
+            {
+              "service": "orders",
+              "file": "src/orders.service.ts",
+              "line": 18
+            }
+          ]
+        },
+        {
+          "kind": "traffic",
+          "name": "payments",
+          "says": "traffic came from payments, which no configured service is: 2 methods and 2 routes, 8 spans in 1h",
+          "places": [
+            {
+              "service": "payments",
+              "gapId": "gap:payments||seen-not-in-code",
+              "seen": {
+                "kind": "code",
+                "places": 2,
+                "count": 4,
+                "names": [
+                  "ChargesController.charge",
+                  "ChargesController.refund"
+                ],
+                "window": "1h"
+              }
+            },
+            {
+              "service": "payments",
+              "gapId": "gap:payments||seen-not-in-code",
+              "seen": {
+                "kind": "http",
+                "places": 2,
+                "count": 4,
+                "names": [
+                  "POST /charges",
+                  "POST /refunds"
+                ],
+                "window": "1h"
+              }
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "path": "./payments-api",
+          "name": "@acme/payments-api",
+          "matchedBy": [
+            "package",
+            "directory",
+            "compose"
+          ]
+        }
+      ]
+    }
+  ]
+}

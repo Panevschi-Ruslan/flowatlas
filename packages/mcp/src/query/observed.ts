@@ -1,5 +1,6 @@
 import { statSync } from 'node:fs';
 import {
+  blindSpotRows,
   compareEntryFailures,
   joinIdOf,
   observedPathFor,
@@ -13,6 +14,7 @@ import {
   type ObservedWindow,
   type Seen,
 } from '@flowatlas/core';
+import type { AnchoredUnresolvedRow } from '@flowatlas/linker';
 import type { FlowNode } from './types.js';
 
 export { joinIdOf, OBSERVED_FILE } from '@flowatlas/core';
@@ -85,6 +87,30 @@ export const loadObservedCounts = (dbPath: string): ObservedCounts | undefined =
  * with no timings and no samples.
  */
 export const loadObserved = (dbPath: string): Observed | undefined => held(dbPath)?.observed;
+
+/**
+ * What traffic reached and no reader drew (P110), as the rows the database
+ * holds are read: one per service and kind, file-less, under its own cause.
+ * Doctor counts the same rows; `cant_follow`, a check's prompt and the
+ * repositories probably missing (P144) read them; none without an observed
+ * file. The page packs the same rows from the file it is handed.
+ */
+export const blindSpotsAsRows = (observed: Parameters<typeof blindSpotRows>[0]): AnchoredUnresolvedRow[] =>
+  blindSpotRows(observed).map((row) => ({
+    service: row.service ?? null,
+    file: row.file,
+    line: row.line,
+    reason: row.reason,
+    level: row.level ?? 'info',
+    sites: row.sites ?? 1,
+    message: row.message ?? row.reason,
+    hint: null,
+    node: null,
+    ...(row.meta === undefined ? {} : { meta: row.meta }),
+  }));
+
+/** The blind-spot rows of the observed file beside a database. */
+export const blindSpotsBeside = (dbPath: string): AnchoredUnresolvedRow[] => blindSpotsAsRows(loadObserved(dbPath));
 
 /** The figures a row shows beside `observed` (P105): the p95 and the error rate, each when measured. */
 export const figuresOf = (seen: ObservedFigures | undefined): { p95?: number; errorRate?: number } =>

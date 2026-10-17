@@ -2,9 +2,12 @@ import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import {
   channelToken,
+  missingByGap,
   missingKeyOf,
   missingRepoSignals,
+  missingTokenOfGap,
   rankMissing,
+  saySeen,
   saySignal,
   worthSaying,
   type MissingRow,
@@ -171,5 +174,61 @@ describe('rankMissing', () => {
     expect(worthSaying({ kinds: ['package'] }, 1)).toBe(true);
     expect(worthSaying({ kinds: ['package', 'channel'] })).toBe(true);
     expect(worthSaying({ kinds: ['setting'] })).toBe(true);
+  });
+});
+
+describe('traffic from a service nobody configured (P144)', () => {
+  /** A blind-spot row as P110's `blindSpotRows` writes one: file-less, the group under `meta.seen`. */
+  const blind = (service: string, kind: string, names: Array<[string, number]>): MissingRow => ({
+    reason: 'seen-not-in-code',
+    service,
+    file: '',
+    line: 0,
+    message: `traffic in ${service} reached ...`,
+    sites: names.length,
+    meta: {
+      seen: { service, kind, count: names.reduce((sum, [, count]) => sum + count, 0), places: names.length, lastSeen: null, names: names.map(([name, count]) => ({ name, count, lastSeen: null })), next: [] },
+      window: '2h',
+    },
+  });
+  const routes = blind('payments', 'http', [['POST /charges', 3], ['POST /refunds', 1]]);
+  const methods = blind('payments', 'code', [['ChargesController.charge', 3]]);
+
+  it('reads a blind spot of an unlisted service as traffic, one place per kind, each with what it reached', () => {
+    const [signal, ...rest] = missingRepoSignals({ nodes: [], unresolved: [routes, methods] }, REPORT);
+    expect(rest).toEqual([]);
+    expect([signal?.kind, signal?.name, signal?.token]).toEqual(['traffic', 'payments', 'payments']);
+    expect(signal?.places).toEqual([
+      { service: 'payments', gapId: 'gap:payments||seen-not-in-code', seen: { kind: 'http', places: 2, count: 4, names: ['POST /charges', 'POST /refunds'], window: '2h' } },
+      { service: 'payments', gapId: 'gap:payments||seen-not-in-code', seen: { kind: 'code', places: 1, count: 3, names: ['ChargesController.charge'], window: '2h' } },
+    ]);
+    expect(saySignal(signal!)).toBe('traffic came from payments, which no configured service is: 2 routes and 1 method, 7 spans in 2h');
+    expect(saySeen(signal!.places[0]!.seen!)).toBe('2 routes, 4 spans in 2h: POST /charges, POST /refunds');
+  });
+
+  it("never reads a configured service's blind spots, nor a row that carries no group", () => {
+    const configured = blind('gateway', 'http', [['GET /healthz', 1]]);
+    const bare: MissingRow = { reason: 'seen-not-in-code', service: 'payments', file: '', line: 0, message: 'traffic' };
+    expect(missingRepoSignals({ nodes: [], unresolved: [configured, bare] }, REPORT)).toEqual([]);
+    // A service the configuration lists without a report of it yet (doctor's names) is configured too.
+    expect(missingRepoSignals({ nodes: [], unresolved: [routes], services: [{ name: 'payments' }] }, REPORT)).toEqual([]);
+  });
+
+  it('is one kind among the others, weak alone and worth saying once another kind agrees (D1)', () => {
+    const node = call('http_out:gateway#a', 'gateway', { baseUrlEnv: 'PAYMENTS_URL' });
+    const alone = rankMissing(missingRepoSignals({ nodes: [], unresolved: [routes, methods] }, REPORT), SERVICES);
+    expect(alone.map((group) => [group.token, group.score, group.places, group.kinds])).toEqual([['payments', 1, 2, ['traffic']]]);
+    expect(worthSaying(alone[0]!)).toBe(false);
+    expect(worthSaying(alone[0]!, 1)).toBe(true);
+    const agreed = rankMissing(missingRepoSignals({ nodes: [node], unresolved: [unclaimed(node.id, 'PAYMENTS_URL'), routes] }, REPORT), SERVICES);
+    expect(agreed.map((group) => [group.token, group.score, group.kinds])).toEqual([['payments', 2, ['setting', 'traffic']]]);
+    expect(worthSaying(agreed[0]!)).toBe(true);
+    // A service that names itself as a configured one does, generic words and all, is a join problem.
+    expect(rankMissing(missingRepoSignals({ nodes: [], unresolved: [blind('orders-api', 'http', [['GET /x', 1]])] }, REPORT), SERVICES)).toEqual([]);
+  });
+
+  it('hands the gap of the blind spots to the group, so its check names the repository', () => {
+    const groups = rankMissing(missingRepoSignals({ nodes: [], unresolved: [routes] }, REPORT), SERVICES);
+    expect(missingTokenOfGap(missingByGap(groups), 'gap:payments||seen-not-in-code')).toBe('payments');
   });
 });

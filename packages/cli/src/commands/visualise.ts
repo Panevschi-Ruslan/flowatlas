@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted, type AcceptedRead } from '@flowatlas/core';
 import { acceptedSplitOf, confirmedJoins, neverSeen, type ContractBreak, type GraphDb } from '@flowatlas/linker';
-import { CONTRACT_STATUS_RANK, crossingStatusOf, docsNow, loadContractBreaks, rankedFindingsOf } from '@flowatlas/mcp';
+import { blindSpotsAsRows, CONTRACT_STATUS_RANK, crossingStatusOf, docsNow, loadContractBreaks, rankedFindingsOf } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
 import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
@@ -240,15 +240,18 @@ export const packDatabase = (
   if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
   const split = acceptedSplitOf(db, db.allUnresolved(), read);
   // What traffic says over the graph (P110): never seen, and best guesses it
-  // went through, asked of the database here so the page and the server agree.
+  // went through, asked of the database here so the page and the server agree;
+  // and its blind spots as the rows the server reads them as (P144).
   const traffic: PackTraffic | undefined =
     extra.observed === undefined
       ? undefined
       : (() => {
           const never = neverSeen(db, extra.observed);
+          const blind = acceptedSplitOf(db, blindSpotsAsRows(extra.observed), read).rows;
           return {
             never: { window: never.window.label, rows: never.rows },
             confirmed: confirmedJoins(db, extra.observed).map((join) => join.id),
+            ...(blind.length === 0 ? {} : { blind }),
           };
         })();
   const { contracts = [], ...rest } = extra;

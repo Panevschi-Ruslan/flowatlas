@@ -15,6 +15,7 @@ import {
 } from '@flowatlas/core';
 import { acceptedSplitOf, openGraphDb, type GraphDb } from '@flowatlas/linker';
 import {
+  checkSubjectAt,
   gatherCheckSubject,
   gatherClassSubject,
   gatherFileSubject,
@@ -28,6 +29,7 @@ import {
 } from '@flowatlas/mcp';
 import { describe, expect, it } from 'vitest';
 import { packDatabase } from '../commands/visualise.js';
+import type { PackedGraph } from './pack.js';
 import { createModel, type GraphModel } from './graph.js';
 import { createSeen, promptFor, stepIdOf, subjectOf } from './steps.js';
 
@@ -186,6 +188,70 @@ describe('a way in seen at run time, the same from both sides (P106)', () => {
           expect({ id, page }).toEqual({ id, page: server });
           expect(subjects[1]).toEqual(subjects[0]);
         }
+        // Each service's blind spots are one check, the same from both sides (P110, P144).
+        const blind = blindOf({ db, model, dbPath });
+        expect(blind.length).toBeGreaterThanOrEqual(3);
+        for (const { id, server, page, task } of blind) {
+          expect({ id, page }).toEqual({ id, page: server.plain });
+          expect({ id, task }).toEqual({ id, task: server.task });
+          expect(page).toContain('## How to close it');
+        }
+      } finally {
+        db.close();
+      }
+    } finally {
+      rmSync(copy, { recursive: true, force: true });
+    }
+  });
+});
+
+/**
+ * Each service's blind spots (P110) as `describe_for_prompt` writes their gap
+ * id and as the page writes `blind:<service>`, as a prompt and as a task.
+ */
+const blindOf = ({ db, model, dbPath }: Sides): Array<{ id: string; server: { plain: string; task: string }; page: string; task: string }> =>
+  [...new Set(((model.data as Partial<PackedGraph>).observed?.blind ?? []).map(([service]) => service))].sort().map((service) => {
+    const id = `gap:${service}||seen-not-in-code`;
+    const subject = checkSubjectAt(db, dbPath, id);
+    if (subject === undefined) throw new Error(`the server has no check for ${id}`);
+    return {
+      id,
+      server: { plain: renderPrompt(subject, PROMPT_LIMITS), task: renderPrompt({ ...subject, task: 'close' }, PROMPT_LIMITS) },
+      page: promptFor(model, { blind: service }, kit),
+      task: promptFor(model, { blind: service }, { ...kit, task: 'close' }),
+    };
+  });
+
+/**
+ * Traffic from a service the configuration does not list (P144), beside the
+ * project that is missing its repository: the blind spots are evidence for the
+ * same group, so their check names the repository, on the page as from the
+ * server, and the static gaps still do.
+ */
+describe('traffic that names the missing repository, the same from both sides (P144)', () => {
+  it('writes the blind spots of the unlisted service with the repository to link', () => {
+    const fixture = join(FIXTURES, 'missing-repo');
+    const copy = mkdtempSync(join(tmpdir(), 'flowatlas-parity-missing-traffic-'));
+    try {
+      cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+      const dbPath = join(copy, 'graph.db');
+      copyFileSync(join(fixture, 'expected.cli', 'observe.traffic.json'), observedPathFor(dbPath));
+      const db = openGraphDb(dbPath, { readonly: true });
+      try {
+        const observed = readObserved(observedPathFor(dbPath)).observed!;
+        const model = createModel(packDatabase(db, readAccepted(dbPath), { observed })) as GraphModel;
+        const [payments, ...others] = blindOf({ db, model, dbPath });
+        expect(others).toEqual([]);
+        expect(payments?.id).toBe('gap:payments||seen-not-in-code');
+        expect(payments?.page).toBe(payments?.server.plain);
+        expect(payments?.task).toBe(payments?.server.task);
+        expect(payments?.page).toContain('one for "payments" looks missing here');
+        expect(payments?.page).toContain('`flowatlas link <path>`');
+        expect(payments?.task).toContain('## Task');
+        const setting = 'gap:gateway|src/checkout.controller.ts|unknown-base-url-env';
+        const page = promptFor(model, pageTarget({ db, model, dbPath }, setting), kit);
+        expect(page).toBe(renderPrompt(checkSubjectAt(db, dbPath, setting)!, PROMPT_LIMITS));
+        expect(page).toContain('one for "payments" looks missing here');
       } finally {
         db.close();
       }

@@ -168,6 +168,23 @@ const MISSING_REPO_CASES = [
 ];
 
 /**
+ * The same project with the traffic `cli-snapshots` observed beside it (P144):
+ * the blind spots of `payments`, a service nobody configured, are a check of
+ * their own whose "How to close it" names the repository, and `start_here`
+ * still names one group, with traffic among its evidence.
+ */
+const MISSING_REPO_TRAFFIC_CASES = [
+  ['describe_for_prompt.blind', 'describe_for_prompt', { id: 'gap:payments||seen-not-in-code' }],
+  ['start_here.all', 'start_here', {}],
+];
+const missingRepoTrafficCopy = () => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-mcp-missing-traffic-'));
+  cpSync(join(missingRepo, '.flowatlas'), copy, { recursive: true });
+  copyFileSync(join(missingRepo, 'expected.cli', 'observe.traffic.json'), join(copy, 'observed.json'));
+  return copy;
+};
+
+/**
  * Plumbing every method shares (P92): a logger, a counter and a repository
  * helper under every caller. Each node is written once, the budget goes to the
  * crossings first, and both flows reach billing with the defaults; cut tight,
@@ -328,6 +345,13 @@ const SUITES = [
     fixture: missingRepo,
     outDir: join(missingRepo, 'expected.mcp'),
     cases: MISSING_REPO_CASES,
+    options: missingCandidatesFor(join(missingRepo, 'flowatlas.config.json')),
+  },
+  {
+    fixture: missingRepo,
+    outDir: join(missingRepo, 'expected.mcp.traffic'),
+    cases: MISSING_REPO_TRAFFIC_CASES,
+    copy: missingRepoTrafficCopy,
     options: missingCandidatesFor(join(missingRepo, 'flowatlas.config.json')),
   },
   {

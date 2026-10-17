@@ -57,6 +57,23 @@ only one of them moved.
   ceiling moves from 31,000 to 31,200 characters for `missingRepos` in
   `start_here`'s output schema; the part a model reads stays under 12,250.
 
+- **Traffic names the missing repository (P144).** With an observed file
+  beside the database, a blind spot (`seen-not-in-code`, P110) whose service no
+  configured service is becomes a sixth kind of evidence for the repository
+  probably missing, `traffic`, ranked like the others: one place per
+  blind-spot group, each with what it reached and the window it was seen in.
+  Alone it is weak (a proxy or a collector writes spans under its own name):
+  `doctor` says it in its head only when another kind agrees or a directory
+  fits. `doctor --missing` lists the traffic places with their window;
+  `doctor.json`'s places gain an optional `seen`; `start_here.missingRepos`
+  keeps its shape. A service's blind spots are now a check of their own,
+  `gap:<service>||seen-not-in-code`, that `describe_for_prompt` writes, and the
+  page's *Seen at run time, not found in code* sheet copies it (*Copy as
+  prompt*, *Copy for agent*) in the same words. Its *How to close it* says to
+  link the repository, by name when the blind spots are its evidence, then to
+  find and describe what it reached. Without an observed file every output is
+  as before.
+
 - **`flowatlas doctor --reason <code>` (P141).** Lists the places of one
   reason, or several (repeatable, or a comma list), under every level the
   reason is at, so a reason with hundreds of places can be read on its own:

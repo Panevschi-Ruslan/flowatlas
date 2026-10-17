@@ -360,6 +360,16 @@ export const doctorReportSchema = z.object({
                   file: z.string().optional(),
                   line: z.number().int().positive().optional(),
                   gapId: z.string().optional(),
+                  // A place of traffic (P144): one blind-spot group of a service nobody configured.
+                  seen: z
+                    .object({
+                      kind: z.string(),
+                      places: z.number().int().nonnegative(),
+                      count: z.number().int().nonnegative(),
+                      names: z.array(z.string()),
+                      window: z.string(),
+                    })
+                    .optional(),
                 }),
               ),
             }),

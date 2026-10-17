@@ -594,10 +594,15 @@ const totalsOf = (
 
 const withDocs = (docs: PackedDocs | undefined): Pick<PackedGraph, 'docs'> => (docs === undefined ? {} : { docs });
 
-/** The repositories probably missing, from what the page is packed from: the server's `missingGroupsOf` over the same graph. */
+/**
+ * The repositories probably missing, from what the page is packed from: the
+ * server's `missingGroupsOf` over the same graph, with the blind spots of
+ * traffic beside the rows when an observed file is (P144).
+ */
 const withMissing = (input: PackInput): Pick<PackedGraph, 'missing'> => {
   const services = servicesOfReport(input.report);
-  const groups = rankMissing(missingRepoSignals({ nodes: input.nodes, edges: input.edges, unresolved: input.unresolved, services }, input.report), services);
+  const unresolved = [...input.unresolved, ...(input.traffic?.blind ?? [])];
+  const groups = rankMissing(missingRepoSignals({ nodes: input.nodes, edges: input.edges, unresolved, services }, input.report), services);
   const missing = missingByGap(groups);
   return missing.length === 0 ? {} : { missing };
 };

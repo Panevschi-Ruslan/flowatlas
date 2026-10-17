@@ -272,6 +272,7 @@ export type PromptRemedy =
   | 'flowatlasCalls'
   | 'channelMarker'
   | 'flowEntry'
+  | 'traffic'
   | 'advice';
 export declare const PROMPT_REMEDY_REASONS: Readonly<Record<Exclude<PromptRemedy, 'advice'>, readonly string[]>>;
 /** The ways of closing a reason, in the table's order; `advice` when the table lists none. */
