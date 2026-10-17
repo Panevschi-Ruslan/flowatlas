@@ -10,8 +10,10 @@
  *   stepUnits     the rows laid out in steps, not time: where each starts, how wide
  *   createSeen    what was seen at run time, when the pack carries it
  *   stepIdOf      a node's id, as the graph and the MCP tools name it
- *   subjectOf     a way in, a channel, any node or a check row as the subject of a prompt
+ *   subjectOf     a way in, a channel, any node, a check row, a class, a file or a service as the subject of a prompt
  *   promptFor     the same as Markdown, written by core's renderPrompt, as the MCP server writes it
+ *   promptScopesOf what a node can be copied as: itself, its class, its file, its service (P134)
+ *   promptAskOf   a prompt's target as one word for a control, promptTargetOf the word read back
  *   failsOf       what a way in can fail with, failGroups each answer once, failChips the statuses
  *   failChipsSeen the same chips with what traffic answered beside them (P106), failSeenSay one group's
  *   failChipLines how many lines a chip line wraps to at a width, so a fixed-height row can be tall enough (P137)
@@ -1242,13 +1244,212 @@ const promptFileSubject = (model, service, file, walk) => {
   };
 };
 
+/* ── A service's front (P134), as the server's `gatherServiceSubject` ── */
+
+/** The verdict a crossing is ranked by when the pack names none: unchecked, as `CONTRACT_STATUS_RANK` has it. */
+const PROMPT_UNCHECKED = 2;
+
+/** A list grouped by `keyOf`, the groups in the order met, then most first and by name. */
+const promptMostFirst = (list, keyOf) => {
+  const groups = new Map();
+  for (const item of list) {
+    const key = keyOf(item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  return [...groups].sort((a, b) => b[1].length - a[1].length || stepCmp(a[0], b[0]));
+};
+
+/**
+ * Every crossing from service `a` into service `b`, worst verdict first, as
+ * `crossingsBetween` lists them: a request into one of b's ways in, and a
+ * publish onto a channel a consumer of b takes. The verdicts were worked out
+ * where the type registry is, and ride in the pack (`overview.verdicts`).
+ */
+const promptCrossingsBetween = (model, a, b) => {
+  const { edgeTypes, types, repos } = model.data.dicts;
+  const verdicts = (model.data.overview && model.data.overview.verdicts) || {};
+  const repoOf = (i) => repos[model.nodes[i][2]];
+  const crossings = [];
+  model.edges.forEach((edge, k) => {
+    const type = edgeTypes[edge[2]];
+    if (repoOf(edge[0]) !== a) return;
+    if (type === 'http_calls' || type === 'hits') {
+      if (types[model.nodes[edge[1]][0]] === 'entry' && repoOf(edge[1]) === b) {
+        crossings.push({ from: edge[0], to: edge[1], type, rank: verdicts[String(k)] ?? PROMPT_UNCHECKED });
+      }
+    } else if (type === 'emits') {
+      for (const c of model.outgoing[edge[1]]) {
+        const consumed = model.edges[c];
+        if (edgeTypes[consumed[2]] !== 'consumes' || repoOf(consumed[1]) !== b) continue;
+        crossings.push({ from: edge[0], to: consumed[1], type: 'emits', rank: verdicts[k + ':' + c] ?? PROMPT_UNCHECKED });
+      }
+    }
+  });
+  const idOf = (i) => stepIdOf(model, i);
+  return crossings.sort((x, y) => y.rank - x.rank || stepCmp(idOf(x.from), idOf(y.from)) || stepCmp(idOf(x.to), idOf(y.to)));
+};
+
+/** The crossings with each other service, counted, the first few of each named. */
+const promptCrossingCounts = (model, crossings, first) =>
+  promptMostFirst(crossings, (hop) => hop.service).map(([service, list]) => ({
+    service,
+    count: list.length,
+    first: list.slice(0, first).map((hop) => ({ from: promptPlaceOf(model, hop.from, 1), to: promptPlaceOf(model, hop.to, 1), type: hop.type })),
+  }));
+
+/** The project's findings in rank order, as the pack carries them: kind, node, service, place, words. */
+const promptFindingsOf = (model) => {
+  const overview = model.data.overview;
+  if (!overview) return [];
+  const { repos } = model.data.dicts;
+  return overview.findings.map(([kind, id, service, loc, message]) => ({
+    kind: overview.kinds[kind],
+    id: typeof id === 'number' ? stepIdOf(model, id) : id,
+    service: typeof service === 'string' ? service : service >= 0 ? repos[service] : '',
+    loc,
+    message,
+  }));
+};
+
+/** Whether a check row is a gap the reading missed, as core's `wasMissed`: not a note or a finding, and not one that says nothing. */
+const promptWasMissed = (model, r) => {
+  const row = model.data.rows[r];
+  const { levels, reasonClass } = model.data.dicts;
+  const kind = (model.data.rowKinds && model.data.rowKinds[String(r)]) || ((reasonClass && reasonClass[row[4]]) || ['gap'])[0];
+  return levels[row[5]] !== 'nothing' && kind === 'gap';
+};
+
+/**
+ * A service as one subject: its ways in by kind, its crossings to and from
+ * each other service, the channels it publishes onto and consumes, its
+ * findings by kind as the `findings` tool ranks them, and its most common
+ * gaps among the rows nobody accepted. `limits` is core's `PROMPT_LIMITS`:
+ * `maxFirst` of each kind named, `maxGaps` reasons.
+ */
+const promptServiceSubject = (model, service, limits) => {
+  const { types, repos, kinds, edgeTypes, files } = model.data.dicts;
+  const first = limits.maxFirst;
+  const positions = model.nodes.map((_, i) => i);
+  const typeIs = (i, type) => types[model.nodes[i][0]] === type;
+  const inService = (i) => repos[model.nodes[i][2]] === service;
+  const byId = (a, b) => stepCmp(stepIdOf(model, a), stepIdOf(model, b));
+
+  const waysIn = promptMostFirst(positions.filter((i) => typeIs(i, 'entry') && inService(i)), (i) => kinds[model.nodes[i][3]] || 'entry')
+    .map(([kind, list]) => ({ kind, count: list.length, first: [...list].sort(byId).slice(0, first).map((i) => promptPlaceOf(model, i, 1)) }));
+
+  const others = (model.data.report.services || []).map((each) => each.name).filter((name) => name !== service).sort();
+  const out = others.flatMap((other) => promptCrossingsBetween(model, service, other).map((hop) => ({ ...hop, service: other })));
+  const into = others.flatMap((other) => promptCrossingsBetween(model, other, service).map((hop) => ({ ...hop, service: other })));
+
+  const channels = positions.filter((i) => typeIs(i, 'channel'));
+  const ends = (list, end, type) => list.some((k) => edgeTypes[model.edges[k][2]] === type && inService(model.edges[k][end]));
+  const channelSteps = (list) => list.map((i) => promptPlaceOf(model, i, 1)).sort((a, b) => stepCmp(a.id, b.id));
+  const publishes = channelSteps(channels.filter((i) => ends(model.incoming[i], 0, 'emits')));
+  const consumes = channelSteps(channels.filter((i) => ends(model.outgoing[i], 1, 'consumes')));
+
+  // In rank order, the kinds as the ranking lists them.
+  const byKind = new Map();
+  for (const row of promptFindingsOf(model)) {
+    if (row.service !== service) continue;
+    if (!byKind.has(row.kind)) byKind.set(row.kind, []);
+    byKind.get(row.kind).push({
+      reason: row.kind, message: row.message, id: row.id, service: row.service, ...(row.loc === null ? {} : { loc: row.loc }),
+    });
+  }
+  const findings = [...byKind].map(([kind, list]) => ({ kind, count: list.length, top: list.slice(0, first) }));
+
+  const accepted = new Set((model.data.accepted && model.data.accepted.rows) || []);
+  const fileOf = (row) => (row[2] >= 0 ? files[row[2]] : '');
+  const missed = (model.data.rows || [])
+    .map((row, r) => r)
+    .filter((r) => !accepted.has(r) && promptRowService(model, model.data.rows[r]) === service && promptWasMissed(model, r))
+    .sort((a, b) => {
+      const [x, y] = [model.data.rows[a], model.data.rows[b]];
+      return stepCmp(fileOf(x), fileOf(y)) || (x[3] || 0) - (y[3] || 0);
+    });
+  const gaps = promptMostFirst(missed, (r) => model.data.dicts.reasons[model.data.rows[r][4]])
+    .slice(0, limits.maxGaps)
+    .map(([reason, list]) => {
+      const row = model.data.rows[list[0]];
+      const gap = promptGapOf(model, list[0], row[0] >= 0 ? stepIdOf(model, row[0]) : undefined);
+      if (gap.id === undefined) delete gap.id;
+      return { reason, count: list.length, first: gap };
+    });
+
+  return {
+    id: service, label: service, type: 'service', scope: 'service', steps: [], stepsCut: 0,
+    overview: {
+      waysIn,
+      crossingsOut: promptCrossingCounts(model, out, first),
+      crossingsIn: promptCrossingCounts(model, into, first),
+      publishes, consumes, findings, gaps,
+    },
+    gaps: [],
+  };
+};
+
+/** Whether a name is one of the project's services: one the report lists, or one a node is in. */
+const promptIsService = (model, name) => typeof name === 'string' && name !== '' &&
+  ((model.data.report.services || []).some((each) => each.name === name) || model.data.dicts.repos.includes(name));
+
+/**
+ * What a node can be copied as (P134), as the server's `scopesFor`: itself
+ * (`node`, as a way in or a channel where it is one), the class it is or
+ * whose method it is (`class`), its file (`file`) and its service
+ * (`service`), each `{ scope, target, name }` with the target `subjectOf`
+ * takes and the name the scope says.
+ */
+export const promptScopesOf = (model, i) => {
+  const { repos, files } = model.data.dicts;
+  const node = model.nodes[i];
+  const type = stepTypeOf(model, i);
+  const repo = repos[node[2]] || '';
+  const file = files[node[4]] || '';
+  const owner = type === 'method' ? stepAtOf(model, promptOwnerOf(stepIdOf(model, i)) || '') : -1;
+  const holder = type === 'provider' ? i : owner >= 0 && stepTypeOf(model, owner) === 'provider' ? owner : -1;
+  return [
+    { scope: 'node', target: { [type === 'entry' || type === 'channel' ? type : 'node']: i }, name: node[1] },
+    ...(holder >= 0 ? [{ scope: 'class', target: { class: holder }, name: model.nodes[holder][1] }] : []),
+    ...(file === '' || repo === '' ? [] : [{ scope: 'file', target: { file: [repo, file] }, name: file }]),
+    ...(repo === '' ? [] : [{ scope: 'service', target: { service: repo }, name: repo }]),
+  ];
+};
+
+/**
+ * A target as one word, for a control's `data-prompt` (P134): `entry:3`,
+ * `class:12`, `file:orders#src/a.ts`, `service:orders`; `promptTargetOf`
+ * reads it back. A file names its service before the first `#`, as the
+ * server's file ids do.
+ */
+export const promptAskOf = (target) => {
+  const [kind] = Object.keys(target);
+  const at = target[kind];
+  return kind + ':' + (kind === 'file' ? at[0] + '#' + at[1] : String(at));
+};
+
+export const promptTargetOf = (asked) => {
+  const cut = asked.indexOf(':');
+  if (cut <= 0) return null;
+  const kind = asked.slice(0, cut);
+  const rest = asked.slice(cut + 1);
+  if (kind === 'service') return { service: rest };
+  if (kind === 'file') {
+    const at = rest.indexOf('#');
+    return at <= 0 ? null : { file: [rest.slice(0, at), rest.slice(at + 1)] };
+  }
+  return rest === '' || !Number.isInteger(Number(rest)) ? null : { [kind]: Number(rest) };
+};
+
 /**
  * What a copied prompt says about a way in, a channel or any node
  * (`{ entry }`, `{ channel }`, `{ node }`: a position), a check row
- * (`{ row }`), a class (`{ class }`: the class's position) or a file
- * (`{ file: [service, path] }`, P95), gathered from the packed model into the subject core's
+ * (`{ row }`), a class (`{ class }`: the class's position), a file
+ * (`{ file: [service, path] }`, P95) or a service (`{ service }`: its name,
+ * P134), gathered from the packed model into the subject core's
  * `renderPrompt` writes; null for a target that names nothing. `kit`:
- * `{ walk, seen? }`, `walk` the bounds of the walk (core's `PROMPT_WALK`).
+ * `{ walk, seen?, limits? }`, `walk` the bounds of the walk (core's
+ * `PROMPT_WALK`), `limits` core's `PROMPT_LIMITS`, which a service needs.
  */
 export const subjectOf = (model, target, kit) => {
   const [kind] = Object.keys(target);
@@ -1256,6 +1457,7 @@ export const subjectOf = (model, target, kit) => {
   const seen = kit.seen || NO_SEEN;
   if (kind === 'row') return model.data.rows && model.data.rows[at] ? promptCheckSubject(model, at, kit.walk) : null;
   if (kind === 'file') return Array.isArray(at) && at.length === 2 ? promptFileSubject(model, at[0], at[1], kit.walk) : null;
+  if (kind === 'service') return promptIsService(model, at) && kit.limits ? promptServiceSubject(model, at, kit.limits) : null;
   if (kind === 'class') {
     return at >= 0 && at < model.nodes.length && stepTypeOf(model, at) === 'provider' ? promptClassSubject(model, at, kit.walk, seen) : null;
   }

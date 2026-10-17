@@ -5,7 +5,7 @@ import { packBusiest } from './busiest.js';
 import { packChanges, placeOfId } from './changes.js';
 import { createModel, findEverything, type GraphModel } from './graph.js';
 import { packGraph, type PackedGraph } from './pack.js';
-import { promptFor, stepBreakOf, stepsOf } from './steps.js';
+import { promptAskOf, promptFor, promptScopesOf, promptTargetOf, stepBreakOf, stepsOf, subjectOf, type PromptTarget } from './steps.js';
 
 /**
  * A synthetic shop for P73's views: a gateway route calls a client whose
@@ -82,6 +82,53 @@ describe('where a chain breaks', () => {
     const model = modelOf(pack());
     const text = promptFor(model, { entry: 0 }, { walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS });
     expect(text).toMatch(/- `target-route-not-found` at shop-gateway `src\/carts.client.ts:9`: target service shop-orders has no route/);
+  });
+});
+
+describe('a node’s wider prompts (P134)', () => {
+  const kit = { walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
+  /** The shop with the class its controller's methods belong to, after every other node. */
+  const withClass = (): GraphModel => modelOf(packGraph({
+    builtAt: '2026-01-01T00:00:00Z',
+    nodes: [...nodes, n('shop-gateway#CartsController', 'provider', 'shop-gateway', { label: 'CartsController' })],
+    edges, unresolved, report,
+  }));
+
+  it('offers a method as itself, its class, its file and its service, as the server’s scopes name them', () => {
+    const model = withClass();
+    const provider = nodes.length;
+    expect(promptScopesOf(model, 1)).toEqual([
+      { scope: 'node', target: { node: 1 }, name: 'CartsController.void' },
+      { scope: 'class', target: { class: provider }, name: 'CartsController' },
+      { scope: 'file', target: { file: ['shop-gateway', 'src/a.ts'] }, name: 'src/a.ts' },
+      { scope: 'service', target: { service: 'shop-gateway' }, name: 'shop-gateway' },
+    ]);
+    // A way in is itself as a way in; a method of no class known has no class scope.
+    expect(promptScopesOf(model, 0)[0]).toEqual({ scope: 'node', target: { entry: 0 }, name: 'POST /carts/:param/void' });
+    expect(promptScopesOf(modelOf(pack()), 1).map(({ scope }) => scope)).toEqual(['node', 'file', 'service']);
+  });
+
+  it('names each target as one word a control carries, and reads it back', () => {
+    const targets: PromptTarget[] = [{ entry: 0 }, { row: 3 }, { class: 9 }, { file: ['shop-gateway', 'src/a#b.ts'] }, { service: 'shop-gateway' }];
+    for (const target of targets) {
+      expect(promptTargetOf(promptAskOf(target))).toEqual(target);
+    }
+    expect(promptAskOf({ file: ['shop-gateway', 'src/a.ts'] })).toBe('file:shop-gateway#src/a.ts');
+    expect(promptTargetOf('entry:')).toBeNull();
+    expect(promptTargetOf('file:no-service')).toBeNull();
+    expect(promptTargetOf('nothing')).toBeNull();
+  });
+
+  it('writes a service’s front: its ways in by kind and its most common gaps', () => {
+    const text = promptFor(withClass(), { service: 'shop-gateway' }, kit);
+    expect(text.startsWith('# Service: shop-gateway\n')).toBe(true);
+    expect(text).toContain('## Ways in · 3\n\n- http · 3: `entry:shop-gateway:http:GET:/carts`, `entry:shop-gateway:http:GET:/health`, ' +
+      '`entry:shop-gateway:http:POST:/carts/:param/void`');
+    expect(text).toContain('- `target-route-not-found` ×1, first at `src/carts.client.ts:9`: target service shop-orders has no route');
+    expect(text).toContain('- `findings({service: "shop-gateway"})`');
+    expect(promptFor(withClass(), { service: 'nobody' }, kit)).toBe('');
+    // A service needs the limits it names its first few by.
+    expect(subjectOf(withClass(), { service: 'shop-gateway' }, { walk: PROMPT_WALK })).toBeNull();
   });
 });
 

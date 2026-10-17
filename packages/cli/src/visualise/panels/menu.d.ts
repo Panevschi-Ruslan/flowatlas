@@ -19,4 +19,4 @@ export interface RowMenuItem {
   copied?: string;
 }
 
-export declare function createMenu(page: Page): Panel<'ROW_MENU_ITEMS' | 'closeMenu' | 'openMenu' | 'rowMenu' | 'toast'>;
+export declare function createMenu(page: Page): Panel<'ROW_MENU_ITEMS' | 'closeMenu' | 'openMenu' | 'promptMenu' | 'rowMenu' | 'toast'>;

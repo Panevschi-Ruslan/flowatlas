@@ -435,6 +435,8 @@ export function createMapUi(page) {
     const actions =
       (box.a >= 0 ? `<a class="tool" href="#graph/${keys.keyOf(box.a)}">Open in Graph</a>` : '') +
       `<button class="tool" data-map-focus="${esc(unit.id)}">${focusing ? 'Whole map' : 'Only this and what it touches'}</button>` +
+      // The service whole, as describe_for_prompt({scope: "service"}) writes it (P134).
+      `<button class="tool" data-prompt="service:${esc(box.n)}" title="Copy this service as Markdown for an assistant">Copy as prompt</button>` +
       (unit.cluster ? `<button class="tool" data-map-toggle="${esc(unit.cluster)}">Close ${esc(clusterLabel(unit.cluster))}</button>` : '');
     return mapHead(box.n, `${esc(COLUMN_SAYS[MAP_COLUMNS[box.c]])}${reported ? ' · ' + esc(reported.type) : ''}`, actions) +
       '<section><dl class="g-meta">' +

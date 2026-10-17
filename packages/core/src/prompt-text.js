@@ -25,9 +25,11 @@
 
 /**
  * How much one text may say: chain steps, gaps, failure lines, a channel's
- * consumers, the members of a class or a file (P95), characters.
+ * consumers, the members of a class or a file (P95), how many of each kind a
+ * service's lines name (the server and the page both gather by it, P134),
+ * characters.
  */
-export const PROMPT_LIMITS = Object.freeze({ maxSteps: 40, maxGaps: 10, maxFails: 12, maxConsumers: 4, maxMembers: 40, maxChars: 8000 });
+export const PROMPT_LIMITS = Object.freeze({ maxSteps: 40, maxGaps: 10, maxFails: 12, maxConsumers: 4, maxMembers: 40, maxFirst: 3, maxChars: 8000 });
 
 /**
  * The walk under a text, the same on both sides: `get_flow`'s, at most

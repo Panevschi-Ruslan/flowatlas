@@ -1,5 +1,5 @@
 import { askNextOf, isGapId, readAccepted, type GraphNode, type PromptSubject } from '@flowatlas/core';
-import { acceptedSplitOf, type GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, type AnchoredUnresolvedRow, type FindingRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
@@ -11,6 +11,7 @@ import { failuresSeen, loadObservedCounts } from '../query/observed.js';
 import { describeForPrompt, PROMPT_LIMITS } from '../prompt/describe.js';
 import {
   fileIdOf,
+  findingGapOf,
   gatherCheckSubject,
   gatherFileSubject,
   gatherPromptSubject,
@@ -26,7 +27,8 @@ import {
 import { nearNames } from './entries.js';
 import { READ_ONLY, withDb, type ToolContext } from './common.js';
 import { crossingsBetween } from './contract.js';
-import { findingsOf } from './findings.js';
+import { rankedFindingsOf } from './findings.js';
+import { loadContractBreaks } from '../query/contracts.js';
 
 /**
  * The node an id names: as it is, as a channel without its prefix, or as an
@@ -80,26 +82,27 @@ const answer = (
 };
 
 /**
- * What the class, file and service scopes read beside the graph (P95): run
- * time counts, the crossings `check_contract` lists between two services, and
- * the findings ranked as the `findings` tool ranks them, so the text and the
- * tools never disagree.
+ * What the class, file and service scopes read beside the graph at `dbPath`
+ * (P95): run time counts, the crossings `check_contract` lists between two
+ * services, the findings ranked as the `findings` tool ranks them, so the
+ * text and the tools never disagree, and the rows nobody accepted (P143).
+ * The page's parity test asks the same (P134).
  */
-const scopeContext = (db: GraphDb, ctx: ToolContext): ScopeContext => {
-  const counts = loadObservedCounts(ctx.handle.path);
+export const promptScopeContext = (db: GraphDb, dbPath: string): ScopeContext => {
+  const counts = loadObservedCounts(dbPath);
+  let fresh: AnchoredUnresolvedRow[] | undefined;
+  const rows = (): AnchoredUnresolvedRow[] => (fresh ??= acceptedSplitOf(db, db.allUnresolved(), readAccepted(dbPath)).fresh);
+  let ranked: FindingRow[] | undefined;
   return {
     ...(counts === undefined ? {} : { counts }),
     crossings: (from, to) => crossingsBetween(db, from, to),
     findings: (service) =>
-      findingsOf(db, ctx, service).ranked.map((row) => ({
-        reason: row.kind,
-        message: row.message,
-        id: row.id,
-        ...(row.service === '' ? {} : { service: row.service }),
-        ...(row.loc === undefined ? {} : { loc: row.loc }),
-      })),
+      (ranked ??= rankedFindingsOf(db, rows(), loadContractBreaks(dbPath))).filter((row) => row.service === service).map(findingGapOf),
+    rows,
   };
 };
+
+const scopeContext = (db: GraphDb, ctx: ToolContext): ScopeContext => promptScopeContext(db, ctx.handle.path);
 
 /** A file said as `service#path`, when nodes are in it. */
 const asFile = (db: GraphDb, ref: string): { service: string; file: string } | undefined => {

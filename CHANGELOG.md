@@ -8,6 +8,19 @@ only one of them moved.
 
 ### Added
 
+- **A class, a file and a service copied as a prompt from the page (P134).**
+  The Graph tab's details panel has *Copy as prompt* on every node, and a
+  `⋯` beside it that copies the node's class, its file or its service; a
+  service's box on the Map copies the service. Each is the text
+  `describe_for_prompt({id, scope})` writes, character for character: the
+  page now gathers the service scope too (its ways in by kind, its crossings
+  to and from each other service worst verdict first, its channels, its
+  findings ranked as the `findings` tool ranks them, its most common gaps),
+  and the parity test compares every service of every built fixture. The pack
+  gained `overview`: the project's findings, ranked where the database is, and
+  the contract verdict of each crossing that is not unchecked (about 2% of the
+  pack over the fixtures).
+
 - **`flowatlas doctor --reason <code>` (P141).** Lists the places of one
   reason, or several (repeatable, or a comma list), under every level the
   reason is at, so a reason with hundreds of places can be read on its own:
@@ -1089,6 +1102,19 @@ only one of them moved.
   in full and cut short.
 
 ### Fixed
+
+- **Controls' edges at 3:1 (P142).** A search box, a select, a tool button, a
+  chip, a tab, a service on the rail, a key and the palette's input were
+  outlined in the colour of the page's rules, about 1.4:1 on their ground; they
+  are drawn in a token of their own, `--edge`, at 3:1 or more on every ground
+  in both themes, while the rules and frames keep theirs. A row focused or
+  picked by a fill alone (a search result, a menu item, the palette's pick)
+  also carries an accent bar along its start. The contrast test holds the edge,
+  the focus rings and the marks at 3:1, and no control's edge in `--rule`.
+- **A service's prompt counted gaps somebody accepted (P143).**
+  `describe_for_prompt({scope: "service"})` listed its most common gaps over
+  every row, accepted ones included, where every other surface leaves them
+  out; it counts the rows nobody accepted now, as the page does.
 
 - **Four page bugs seen in a browser (P137).** A page opened at `#map` (a
   link, a bookmark, a reload) showed the Map tab selected over an empty panel:

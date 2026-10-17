@@ -1,7 +1,11 @@
 /* Every text colour below reads at 4.5:1 or more on --ground, --paper,
    --raise and --accent-soft, in both themes, and so does --raise written on a
    service's hue (a glyph, a badge); `page-css.test.ts` works the ratios out
-   from this file (P102). Text is 12px or more, except inside the drawings,
+   from this file (P102). A control's edge (a search box, a select, a
+   button, a chip, a tab, a key) is --edge, 3:1 or more on --ground, --paper
+   and --raise; --rule and --rule-soft are for the rules and frames that only
+   decorate; a focus or a pick is marked in the accent, never by a fill
+   alone (P142). Text is 12px or more, except inside the drawings,
    which scale with the zoom - and even there a node's or a column's name is
    12px at zoom 1. The only rules allowed smaller:
    small-text: .g-glyph-text | .g-sub | .g-more text | .g-also text | .g-tip | .g-chip text | .g-badge text | .g-sig | .m-sub | .m-badge text | .m-more text */
@@ -16,6 +20,7 @@
   --faint: #5c6560;
   --rule: #cbd3ce;
   --rule-soft: #dde3df;
+  --edge: #78827d;
   --accent: #0d5c55;
   --accent-soft: #d3e5e1;
 
@@ -48,6 +53,7 @@
     --faint: #949e99;
     --rule: #2b3531;
     --rule-soft: #222b27;
+    --edge: #6f7a75;
     --accent: #5ec7bb;
     --accent-soft: #123833;
 
@@ -75,6 +81,7 @@
   --faint: #949e99;
   --rule: #2b3531;
   --rule-soft: #222b27;
+  --edge: #6f7a75;
   --accent: #5ec7bb;
   --accent-soft: #123833;
 
@@ -160,7 +167,7 @@ a { color: var(--accent); }
   display: flex;
   flex-direction: column;
   padding: 3px 10px 4px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-radius: var(--radius);
   background: var(--paper);
   cursor: default;
@@ -270,7 +277,7 @@ a { color: var(--accent); }
   align-items: baseline;
   gap: 8px;
   padding: 6px 11px 6px 9px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-left: 3px solid var(--hue);
   border-radius: var(--radius);
   background: var(--paper);
@@ -288,7 +295,7 @@ a { color: var(--accent); }
 
 /* A service let out of the drawing reads as off without fading its words
    under the contrast text needs (P102): dashed, its colour gone. */
-.ship[aria-pressed='false'] { background: transparent; border-style: dashed; border-left-color: var(--rule); color: var(--muted); }
+.ship[aria-pressed='false'] { background: transparent; border-style: dashed; border-left-color: var(--edge); color: var(--muted); }
 
 .ship b { font-weight: 600; }
 
@@ -436,7 +443,7 @@ select {
   font-size: 13px;
   color: var(--ink);
   background: var(--raise);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-radius: var(--radius);
   padding: 6px 9px;
 }
@@ -516,7 +523,7 @@ input[type='search'] { width: 100%; }
   font-family: inherit;
   font-size: 12px;
   padding: 5px 11px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   background: var(--paper);
   color: var(--muted);
   border-radius: var(--radius);
@@ -751,7 +758,7 @@ tr:hover td { background: var(--raise); }
   font-family: inherit;
   font-size: 12px;
   padding: 5px 10px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   background: var(--paper);
   color: var(--ink);
   border-radius: var(--radius);
@@ -793,7 +800,7 @@ tr:hover td { background: var(--raise); }
   font-size: 12px;
   padding: 2px 7px;
   border-radius: 2px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   background: var(--raise);
   color: var(--muted);
   cursor: pointer;
@@ -1180,7 +1187,7 @@ tr:hover td { background: var(--raise); }
 .g-more-btn {
   margin-top: 3px;
   background: none;
-  border: 1px dashed var(--rule);
+  border: 1px dashed var(--edge);
   border-radius: var(--radius);
   color: var(--muted);
   font: inherit;
@@ -1227,7 +1234,7 @@ tr:hover td { background: var(--raise); }
 .g-type-all {
   margin-left: 6px;
   padding: 0 4px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-radius: var(--radius);
   background: none;
   color: var(--muted);
@@ -1410,7 +1417,7 @@ kbd {
   font-family: var(--f-mono);
   font-size: 12px;
   padding: 0 4px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-bottom-width: 2px;
   border-radius: 3px;
   color: var(--muted);
@@ -1489,7 +1496,7 @@ kbd {
   place-items: center;
   color: var(--muted);
   background: var(--paper);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-right: 0;
   border-radius: 6px 0 0 6px;
   cursor: pointer;
@@ -1545,7 +1552,7 @@ kbd {
     left: calc(50% - 24px);
     width: 48px;
     height: 17px;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--edge);
     border-bottom: 0;
     border-radius: 6px 6px 0 0;
   }
@@ -1744,7 +1751,7 @@ kbd {
   left: -17px;
   width: 17px;
   height: 48px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-right: 0;
   border-radius: 6px 0 0 6px;
 }
@@ -1889,7 +1896,7 @@ kbd {
 .finder { position: relative; margin: 14px 0 0; }
 .finder input {
   width: 100%; box-sizing: border-box; padding: 9px 12px; font: inherit; font-size: 14px;
-  color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius);
+  color: var(--ink); background: var(--paper); border: 1px solid var(--edge); border-radius: var(--radius);
 }
 .finder input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .find-out {
@@ -1907,7 +1914,10 @@ kbd {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 5px 12px;
   color: var(--ink); text-decoration: none; min-width: 0;
 }
-.find-out a:hover, .find-out a:focus { background: var(--raise); outline: none; }
+.find-out a:hover { background: var(--raise); }
+/* A fill alone is under 3:1 on the panel: the focused or picked row also
+   carries a bar in the accent (P142). */
+.find-out a:focus { background: var(--raise); outline: none; box-shadow: inset 3px 0 0 var(--accent); }
 .find-out .find-label { font-family: var(--f-mono); font-size: 12.5px; overflow-wrap: anywhere; }
 .find-out .find-sub { font-family: var(--f-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 .find-out .find-more, .find-out .find-none { padding: 3px 12px; font-size: 12px; color: var(--muted); }
@@ -1984,7 +1994,7 @@ kbd {
   font: inherit; font-size: 15px; line-height: 1; width: 28px; height: 24px; padding: 0;
   border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--muted); cursor: pointer;
 }
-.row-menu-btn:hover, .row-menu-btn[aria-expanded='true'] { color: var(--ink); border-color: var(--rule); background: var(--raise); }
+.row-menu-btn:hover, .row-menu-btn[aria-expanded='true'] { color: var(--ink); border-color: var(--edge); background: var(--raise); }
 .row-menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .g-row-menu { float: right; margin: -2px 0 0 6px; }
 .row-menu {
@@ -1999,7 +2009,7 @@ kbd {
 }
 .row-menu-list [role='menuitem'] small { font-family: var(--f-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 .row-menu-list [role='menuitem']:hover { background: var(--raise); }
-.row-menu-list [role='menuitem']:focus { background: var(--accent-soft); outline: none; }
+.row-menu-list [role='menuitem']:focus { background: var(--accent-soft); outline: none; box-shadow: inset 3px 0 0 var(--accent); }
 .row-menu-foot { display: flex; flex-direction: column; gap: 3px; margin: 4px 0 0; padding: 6px 12px 4px;
   border-top: 1px solid var(--rule-soft); font-size: 12px; color: var(--muted); }
 .row-menu-foot[hidden] { display: none; }
@@ -2235,7 +2245,7 @@ kbd {
 }
 .link-button:hover { text-decoration-color: var(--accent); }
 .colophon-keys kbd, .find-key {
-  font-family: var(--f-mono); font-size: 12px; padding: 0 5px; border: 1px solid var(--rule);
+  font-family: var(--f-mono); font-size: 12px; padding: 0 5px; border: 1px solid var(--edge);
   border-radius: 3px; color: var(--muted); background: var(--raise);
 }
 
@@ -2243,7 +2253,7 @@ kbd {
 .finder input { padding-right: 34px; }
 .finder .find-key { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
 .finder input:focus + .find-key, .finder input:not(:placeholder-shown) + .find-key { display: none; }
-.find-out [aria-selected='true'] > a, .find-out [aria-selected='true'] > button { background: var(--accent-soft); }
+.find-out [aria-selected='true'] > a, .find-out [aria-selected='true'] > button { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
 .find-out .find-tail { border-top: 1px solid var(--rule-soft); margin-top: 6px; padding-top: 4px; }
 .find-out .find-filter button {
   display: block; width: 100%; text-align: left; font: inherit; font-size: 12.5px; padding: 6px 12px;
@@ -2312,12 +2322,12 @@ kbd {
   outline: none;
 }
 .palette-box input {
-  font: inherit; font-size: 15px; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--rule-soft);
+  font: inherit; font-size: 15px; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--edge);
   background: transparent; color: var(--ink); outline: none;
 }
 .palette-list { list-style: none; margin: 0; padding: 6px 0; overflow-y: auto; }
 .palette-list [role='option'] { padding: 7px 14px; font-size: 13px; cursor: pointer; }
-.palette-list [role='option'][aria-selected='true'] { background: var(--accent-soft); }
+.palette-list [role='option'][aria-selected='true'] { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
 .palette-list [role='option']:hover { background: var(--raise); }
 .palette-none { padding: 7px 14px; font-size: 13px; color: var(--muted); }
 .keys-box { width: min(720px, 100%); padding: 12px 16px 16px; overflow-y: auto; }
@@ -2331,7 +2341,7 @@ kbd {
 .keys-list dl { margin: 0; }
 .keys-row { display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 8px; padding: 3px 0; font-size: 12.5px; }
 .keys-row dt kbd {
-  font-family: var(--f-mono); font-size: 12px; padding: 1px 6px; border: 1px solid var(--rule);
+  font-family: var(--f-mono); font-size: 12px; padding: 1px 6px; border: 1px solid var(--edge);
   border-bottom-width: 2px; border-radius: 3px; background: var(--raise); white-space: nowrap;
 }
 .keys-row dd { margin: 0; color: var(--muted); }
