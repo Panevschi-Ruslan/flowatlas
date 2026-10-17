@@ -399,6 +399,8 @@ export const doctorReportSchema = z.object({
                       count: z.number().int().nonnegative(),
                       names: z.array(z.string()),
                       window: z.string(),
+                      // The place's service called the name by its peer.service (P146).
+                      called: z.literal(true).optional(),
                     })
                     .optional(),
                 }),

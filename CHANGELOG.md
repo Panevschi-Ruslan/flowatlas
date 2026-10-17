@@ -8,6 +8,24 @@ only one of them moved.
 
 ### Added
 
+- **A call's `peer.service` as evidence for a missing repository (P146).**
+  `observe` reads OpenTelemetry's `peer.service` on client and producer spans
+  (OTLP, Zipkin and Jaeger alike) into a new kept span field, `peerName`: a
+  name only, an address (a port, a dotted host, an IP) dropped as every host
+  is, a value-like name masked as `:value`. A name that is not one of the
+  map's services, once separators, generic words and the plural are taken off
+  as `doctor`'s missing-repository groups take them (`orders-api` is
+  `orders`), is counted in `observed.json` as an unmatched row of the new kind
+  `peer`, by the calling service, beside whatever else the span matched. It
+  shows in the summary and among the blind spots (*peer services*). Nothing
+  is matched by it. `privacy.kept` lists `peerName`; the format version is
+  unchanged. Each name is `traffic` evidence for the repository probably
+  missing (P144), one place per calling service: `doctor --missing` says
+  `gateway: called payments-api, 6 spans in 1h (peer.service)`, a name the
+  spans of an unconfigured service also give is one signal said in one line,
+  and `doctor.json`'s traffic places gain an optional `seen.called`. A peer
+  blind-spot row carries every name under `meta.peers` when it lists only five.
+
 - **A class, a file and a service copied as a prompt from the page (P134).**
   The Graph tab's details panel has *Copy as prompt* on every node, and a
   `⋯` beside it that copies the node's class, its file or its service; a
@@ -1364,6 +1382,23 @@ only one of them moved.
 
 ### Fixed
 
+- **Time axes that read cleanly (P145).** On the Steps waterfall in time and
+  on the Traces tab the last tick label (`500 ms`) wrapped at the right edge,
+  its figure pushed above the axis and clipped. Every tick label is now one
+  line; the first is written from its place and a last one at the edge up to
+  it, so none runs off the axis. The waterfall's caption said its bars were
+  laid end to end in call order; it now says what is drawn: what a step calls
+  sits inside its bar, from where it starts, one call after another and
+  side-by-side ones together.
+- **A route traffic carried bodies to was never seen (P148).** With
+  `observe --shapes`, a browser call that fit several call sites was credited
+  to none (P85) while its bodies went on the one route of the service its
+  origin named, so the page said on one row that traffic carried that route's
+  bodies differently from the code and that traffic never touched it. A way in
+  that holds shapes from the window is now seen, and so is its handler: it is
+  out of `never_seen`, the page's *not seen in* mark and `dead`'s never-seen
+  evidence (`dead` says it is alive, seen as many times as bodies reached
+  it). Its hits and joins stay what the spans said.
 - **Controls' edges at 3:1 (P142).** A search box, a select, a tool button, a
   chip, a tab, a service on the rail, a key and the palette's input were
   outlined in the colour of the page's rules, about 1.4:1 on their ground; they

@@ -96,6 +96,8 @@ export const OBSERVED_KEPT = [
   'thirdParty',
   // A span from a source with no tree, never a sample (P108).
   'sampleable',
+  // What a client span's OTel peer.service names (P146): a name only, an address dropped, a value-like one masked.
+  'peerName',
 ] as const;
 
 /**
@@ -135,7 +137,10 @@ export const OBSERVED_DROPPED: readonly string[] = [
  * base URL of the front end names, a third party, by its host only (P112).
  * `join` is a send, an invoke or a start whose target the map has, from a
  * place the map has, along a join the map does not draw (P110): named by the
- * target only.
+ * target only. `peer` is a client or producer span whose OTel `peer.service`
+ * names a service the map has none of (P146), by that name only (a value-like
+ * name masked as `:value`), whatever else the span matched: the evidence a
+ * repository is missing, not a place in the code.
  */
 export type UnmatchedKind =
   | 'http'
@@ -150,7 +155,8 @@ export type UnmatchedKind =
   | 'table'
   | 'cloud'
   | 'external'
-  | 'join';
+  | 'join'
+  | 'peer';
 
 /** The figures `summarise` gives, beside a roll-up row's count. Optional: a version-1 or 2 file has none. */
 export interface ObservedFigures {

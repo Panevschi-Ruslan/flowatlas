@@ -1,0 +1,115 @@
+{
+  "missingRepos": [
+    {
+      "token": "payments",
+      "score": 4,
+      "places": 6,
+      "kinds": [
+        "setting",
+        "package",
+        "channel",
+        "traffic"
+      ],
+      "weak": false,
+      "signals": [
+        {
+          "kind": "setting",
+          "name": "PAYMENTS_URL",
+          "says": "PAYMENTS_URL is used by gateway (2 requests) and no service claims it",
+          "places": [
+            {
+              "service": "gateway",
+              "file": "src/checkout.controller.ts",
+              "line": 12,
+              "gapId": "gap:gateway|src/checkout.controller.ts|unknown-base-url-env"
+            },
+            {
+              "service": "gateway",
+              "file": "src/checkout.controller.ts",
+              "line": 21,
+              "gapId": "gap:gateway|src/checkout.controller.ts|unknown-base-url-env"
+            }
+          ]
+        },
+        {
+          "kind": "package",
+          "name": "@acme/payments-client",
+          "says": "@acme/payments-client is imported by orders and is not installed",
+          "places": [
+            {
+              "service": "orders",
+              "file": "src/orders.service.ts",
+              "line": 17,
+              "gapId": "gap:orders|src/orders.service.ts|call-dynamic-receiver"
+            }
+          ]
+        },
+        {
+          "kind": "channel",
+          "name": "payment.requested",
+          "says": "channel payment.requested is published by orders and nobody here consumes it",
+          "places": [
+            {
+              "service": "orders",
+              "file": "src/orders.service.ts",
+              "line": 18
+            }
+          ]
+        },
+        {
+          "kind": "traffic",
+          "name": "payments",
+          "says": "orders called payments by its peer.service, which no configured service is: 1 span in 1h",
+          "places": [
+            {
+              "service": "orders",
+              "gapId": "gap:orders||seen-not-in-code",
+              "seen": {
+                "kind": "peer",
+                "places": 1,
+                "count": 1,
+                "names": [
+                  "payments"
+                ],
+                "window": "1h",
+                "called": true
+              }
+            }
+          ]
+        },
+        {
+          "kind": "traffic",
+          "name": "payments-api",
+          "says": "gateway called payments-api by its peer.service, which no configured service is: 6 spans in 1h",
+          "places": [
+            {
+              "service": "gateway",
+              "gapId": "gap:gateway||seen-not-in-code",
+              "seen": {
+                "kind": "peer",
+                "places": 1,
+                "count": 6,
+                "names": [
+                  "payments-api"
+                ],
+                "window": "1h",
+                "called": true
+              }
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "path": "./payments-api",
+          "name": "@acme/payments-api",
+          "matchedBy": [
+            "package",
+            "directory",
+            "compose"
+          ]
+        }
+      ]
+    }
+  ]
+}

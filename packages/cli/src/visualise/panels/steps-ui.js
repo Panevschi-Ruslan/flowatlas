@@ -1,6 +1,6 @@
 import { answersOf } from '../graph.js';
 import { PROMPT_LIMITS, PROMPT_WALK, promptMsSay, promptRateSay, renderPrompt } from '../../../../core/src/prompt-text.js';
-import { STEP_BOUNDS, STEP_KINDS, STEP_MODES, STEP_TIMES, failSay, promptFor, promptTargetOf, stepsOf, timeTicks } from '../steps.js';
+import { STEP_BOUNDS, STEP_KINDS, STEP_MODES, STEP_TIMES, failSay, promptFor, promptTargetOf, stepsOf, tickPlaces, timeTicks } from '../steps.js';
 import { wordFor } from '../frame.js';
 
 /* The Steps tab and the steps above the drawing: a way in in call order,
@@ -190,9 +190,10 @@ export function createStepsUi(page) {
      one wide and a parent as wide as its children, so the drawing shows what
      runs inside what and beside what, never how long: its axis says so. In
      time (P111), each step is as long as its typical figure - p50 or p95 of
-     every request through it - laid end to end in call order: a shape, not
-     one request, and the axis says that too. A step with no figure keeps a
-     small hatched stand-in. */
+     every request through it - and what it calls sits inside its bar, from
+     where it starts, one call after another and side-by-side ones together:
+     a shape of typical times, not one request, and the axis says that too.
+     A step with no figure keeps a small hatched stand-in. */
   const ticksOf = (total) => {
     const step = Math.max(1, Math.ceil(total / 8));
     const ticks = [];
@@ -203,7 +204,7 @@ export function createStepsUi(page) {
   /* What a bar's length is, in its tooltip: a figure, the steps under it, or a stand-in. */
   const TIME_SAYS = {
     own: (row, by) => `${by} ${promptMsSay(row.ms)}`,
-    inside: (row, by) => (row.timed ? `${by} ${promptMsSay(row.ms)}, drawn as long as the steps under it laid end to end`
+    inside: (row, by) => (row.timed ? `${by} ${promptMsSay(row.ms)}, drawn as long as the steps inside it`
       : 'no time of its own measured: drawn as long as the steps under it'),
     'stand-in': () => 'no time measured: drawn at a stand-in width, not to scale',
     mark: () => 'a mark, not a step',
@@ -228,10 +229,13 @@ export function createStepsUi(page) {
     p50: timeScale('p50'),
     p95: timeScale('p95'),
   };
+  /* An axis's tick labels, each on one line: the first written from its
+     place, a last one at the right edge up to its place (P145). */
+  const ticksHtml = (ticks, total, tick) => tickPlaces(ticks, total).map(({ n, at, align }) =>
+    `<span class="w-tick${align === 'middle' ? '' : ' is-' + align}" style="left:${at}%">${esc(tick(n))}</span>`).join('');
   const axisHtml = (total, scale) =>
     `<div class="w-axis" aria-hidden="true"><span class="w-axis-say">${esc(scale.say)}</span>` +
-    `<span class="w-ticks">${scale.ticks(total).map((n) =>
-      `<span class="w-tick" style="left:${(n / total) * 100}%">${esc(scale.tick(n))}</span>`).join('')}</span></div>`;
+    `<span class="w-ticks">${ticksHtml(scale.ticks(total), total, scale.tick)}</span></div>`;
   const waterfallRowHtml = (row, at, total, scale) => {
     const v = row.node;
     const { start, span } = scale.of(row);
@@ -305,7 +309,8 @@ export function createStepsUi(page) {
     waterfall: 'a bar per step, laid out in steps, not time.',
   };
   const modeNote = (found) => (mode === 'waterfall' && found.timed > 0
-    ? `a bar per step, as long as its typical time (${timeBy}) and laid end to end in call order: not one request.`
+    ? `a bar per step, as long as its typical time (${timeBy}); what a step calls sits inside its bar, from where it starts, ` +
+      'one call after another and side-by-side ones together: typical times, not one request.'
     : MODE_NOTES[mode]);
   function drawSteps() {
     if (store.get('current') === null) return;
@@ -450,5 +455,5 @@ export function createStepsUi(page) {
   });
 
   return { drawSteps, lightSteps, promptOf, setStepMode, setStepTime, stepMode, stepRowHtml, stepTime, stepsInGraph, stepsView,
-    waterfallHtml };
+    ticksHtml, waterfallHtml };
 }

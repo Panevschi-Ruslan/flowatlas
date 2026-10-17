@@ -58,6 +58,15 @@ the hour it was seen in. Their check, `gap:payments||seen-not-in-code`, names
 the repository to link, on the page and from `describe_for_prompt` alike. The
 gateway's own calls match its call sites, so they are no blind spot.
 
+`traces/peer.otlp.json` is the calls side (P146): the gateway's pay and refund
+requests say `peer.service` `payments-api`, an orders call says `payments`, one
+names a configured service (`orders-api`, not counted), one an address
+(dropped) and one an instance (masked as `:value`). `observe` counts the first
+two as `peer` blind spots of their callers, and `doctor --missing` reads each as
+traffic to the same group: `gateway: called payments-api, 6 spans in 1h
+(peer.service)`. Beside `payments.otlp.json`, the orders call and the spans
+`payments` wrote itself are one signal, said in one line.
+
 Recorded: `expected.cli/doctor.txt` (the group at the head),
 `doctor.missing.txt` and `.json` (every place), `doctor.github.txt` (a
 `::notice` at the configuration), `link.suggested.txt` (`--dry-run`) and
@@ -66,4 +75,6 @@ Recorded: `expected.cli/doctor.txt` (the group at the head),
 it" names the repository. With the traces: `expected.cli/observe.traffic.json`
 (the observed file), `doctor.traffic.txt`, `doctor.missing.traffic.txt` and
 `.json`, and `expected.mcp.traffic/` (`describe_for_prompt` on the blind spots'
-gap id, `start_here`).
+gap id, `start_here`); with the peer traces, `observe.peer.txt` and `.json`,
+`doctor.missing.peer.txt` and `.json`, and `doctor.missing.traffic-peer.txt`
+(both trace files).

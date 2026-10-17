@@ -30,6 +30,7 @@ import {
   type UnmatchedAgg,
   type UnmatchedKind,
 } from '@flowatlas/core';
+import { missingKeyOf } from '@flowatlas/linker';
 import { channelLabelOf } from './aws.js';
 import { matchAws } from './match-aws.js';
 import type { SpanBodies } from './readers/index.js';
@@ -659,6 +660,22 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
     return routes.length === 1 ? routes[0]!.id : undefined;
   };
 
+  /**
+   * A call whose instrumentation named the service it went to (OTel's
+   * `peer.service`, P146) and the map has no such service: counted as `peer`
+   * under that name, beside whatever else the span matched, as evidence a
+   * repository is missing. A name is the map's when it groups with one of its
+   * services the way P122 groups names (`orders-api` is `orders`); a masked
+   * name is counted as `:value`.
+   */
+  const mapKeys = new Set([...index.services].filter((service) => service !== '').map(missingKeyOf));
+  const peer = (span: ObservedSpan): void => {
+    const name = span.peerName as string;
+    if (name === span.service) return;
+    if (name !== VALUE && (index.services.has(name) || mapKeys.has(missingKeyOf(name)))) return;
+    tally.miss(span, 'peer', name);
+  };
+
   const childrenOf = new Map<ObservedSpan, ObservedSpan[]>();
   for (const span of spans) {
     const parent = parentOf(span);
@@ -684,6 +701,7 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
     if (span.collection !== undefined && span.tables === undefined) table(span);
     // An SDK call is sent as HTTP to the service's endpoint: that request is the call, not one of the code's.
     if (span.kind === 'client' && span.awsOp === undefined && span.method !== undefined && routeOf(span) !== undefined) client(span);
+    if (span.peerName !== undefined && (span.kind === 'client' || span.kind === 'producer')) peer(span);
   }
 
   if (options.bodies !== undefined) {

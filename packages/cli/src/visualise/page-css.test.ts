@@ -121,6 +121,14 @@ describe('the page’s chip rows (P137)', () => {
     expect(declared('.list li.v-row .fail-chip').get('white-space')).toBe('nowrap');
     expect(rules.some((rule) => rule.selector.endsWith('.fail-chips') && /flex-wrap:\s*nowrap/.test(rule.body))).toBe(false);
   });
+
+  it('write a time axis’s tick labels on one line, the ends inside the axis (P145)', () => {
+    // An absolute label at the right edge has no width to wrap into: "500 ms" broke in two, "500" above the axis.
+    expect(declared('.w-tick').get('white-space')).toBe('nowrap');
+    expect(declared('.w-tick').get('transform')).toBe('translateX(-50%)');
+    expect(declared('.w-tick.is-start').get('transform')).toBe('none');
+    expect(declared('.w-tick.is-end').get('transform')).toBe('translateX(-100%)');
+  });
 });
 
 describe('the page’s control edges (P142)', () => {

@@ -519,6 +519,21 @@ export const timeTicks = (total) => {
   return ticks;
 };
 
+/** How near the right edge, as a share of the axis, a last tick is written to the left of its place rather than centred on it. */
+export const END_TICK_SHARE = 0.9;
+
+/**
+ * Where each tick's label sits on an axis `total` wide (P145): `{ n, at, align }`,
+ * `at` a percentage. The first is written from its place (`start`), a last one
+ * near the right edge up to its place (`end`), so neither runs off the axis, and
+ * the rest centred on theirs (`middle`). The page writes every label on one line.
+ */
+export const tickPlaces = (ticks, total) => ticks.map((n, i) => {
+  const share = total > 0 ? n / total : 0;
+  const align = i === 0 ? 'start' : i === ticks.length - 1 && share >= END_TICK_SHARE ? 'end' : 'middle';
+  return { n, at: share * 100, align };
+});
+
 /** Which figure a waterfall in time draws a step with: the median, or the slow tail. */
 export const STEP_TIMES = Object.freeze(['p50', 'p95']);
 

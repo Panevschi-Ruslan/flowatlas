@@ -29,6 +29,7 @@ import {
   stepsOf,
   stepTimes,
   stepUnits,
+  tickPlaces,
   timeTicks,
   traceRowsOf,
   observedPeriodSay,
@@ -693,6 +694,11 @@ describe('run time', () => {
     expect(timeTicks(310)).toEqual([0, 50, 100, 150, 200, 250, 300]);
     expect(timeTicks(7)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
     expect(timeTicks(0)).toEqual([0]);
+    // The ends are written inside the axis; a last tick far from the edge stays centred (P145).
+    expect(tickPlaces(timeTicks(500), 500).map((t) => t.align)).toEqual(['start', 'middle', 'middle', 'middle', 'middle', 'end']);
+    expect(tickPlaces([0, 50, 100], 140).map((t) => t.align)).toEqual(['start', 'middle', 'middle']);
+    expect(tickPlaces([0, 100], 100).map((t) => t.at)).toEqual([0, 100]);
+    expect(tickPlaces([0], 0)).toEqual([{ n: 0, at: 0, align: 'start' }]);
     expect(observedPeriodSay({ from: '2026-01-01T08:00:00.000Z', to: '2026-01-01T09:00:00.000Z' })).toBe('seen 2026-01-01 08:00 to 09:00 UTC');
     expect(observedPeriodSay({ from: '2026-10-10T00:00:00.000Z', to: '2026-10-18T00:00:00.000Z' })).toBe('seen 2026-10-10 to 2026-10-17');
     expect(observedPeriodSay({ from: '2026-10-16T20:00:00.000Z', to: '2026-10-17T00:00:00.000Z' })).toBe('seen 2026-10-16 20:00 to 24:00 UTC');

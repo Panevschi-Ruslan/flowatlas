@@ -231,4 +231,44 @@ describe('traffic from a service nobody configured (P144)', () => {
     const groups = rankMissing(missingRepoSignals({ nodes: [], unresolved: [routes] }, REPORT), SERVICES);
     expect(missingTokenOfGap(missingByGap(groups), 'gap:payments||seen-not-in-code')).toBe('payments');
   });
+
+  describe('calls whose peer.service names it (P146)', () => {
+    const fromGateway = blind('gateway', 'peer', [['payments-api', 6], [':value', 1]]);
+    const fromOrders = blind('orders', 'peer', [['payments', 1]]);
+
+    it('reads each peer a configured service called as traffic to that name, by caller, a masked name left out', () => {
+      const signals = missingRepoSignals({ nodes: [], unresolved: [fromGateway, fromOrders] }, REPORT);
+      expect(signals.map((signal) => [signal.kind, signal.name, signal.token])).toEqual([
+        ['traffic', 'payments', 'payments'],
+        ['traffic', 'payments-api', 'payments'],
+      ]);
+      const api = signals[1]!;
+      expect(api.places).toEqual([
+        { service: 'gateway', gapId: 'gap:gateway||seen-not-in-code', seen: { kind: 'peer', places: 1, count: 6, names: ['payments-api'], window: '2h', called: true } },
+      ]);
+      expect(saySignal(api)).toBe('gateway called payments-api by its peer.service, which no configured service is: 6 spans in 2h');
+      expect(saySeen(api.places[0]!.seen!)).toBe('called payments-api, 6 spans in 2h (peer.service)');
+    });
+
+    it('groups with the spans of the service itself, one kind of evidence, both said in one sentence', () => {
+      const groups = rankMissing(missingRepoSignals({ nodes: [], unresolved: [routes, fromGateway, fromOrders] }, REPORT), SERVICES);
+      expect(groups.map((group) => [group.token, group.score, group.places, group.kinds])).toEqual([['payments', 1, 3, ['traffic']]]);
+      const both = groups[0]!.signals.find((signal) => signal.name === 'payments')!;
+      expect(saySignal(both)).toBe('traffic came from payments, which no configured service is: 2 routes, 4 spans in 2h; orders called it by its peer.service: 1 span in 2h');
+      // Each caller's blind spots hand on to the group, so a check on them names the repository.
+      expect(missingTokenOfGap(missingByGap(groups), 'gap:gateway||seen-not-in-code')).toBe('payments');
+    });
+
+    it('reads every peer a group holds, not only the five it lists, and never a configured service by alias', () => {
+      const names: Array<[string, number]> = ['ledger', 'payments', 'refunds', 'risk', 'search', 'tax'].map((name, at) => [name, 10 - at]);
+      const cut = blind('gateway', 'peer', names.slice(0, 5));
+      const row = { ...cut, meta: { ...cut.meta, peers: names.map(([name, count]) => ({ name, count, lastSeen: null })) } };
+      expect(missingRepoSignals({ nodes: [], unresolved: [row] }, REPORT).map((signal) => signal.name)).toContain('tax');
+      const aliased = rankMissing(missingRepoSignals({ nodes: [], unresolved: [blind('orders', 'peer', [['billing', 2]])] }, REPORT), [
+        ...SERVICES,
+        { name: 'invoices', aliases: ['billing'] },
+      ]);
+      expect(aliased).toEqual([]);
+    });
+  });
 });

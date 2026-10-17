@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blindSpotMessage, blindSpotNext, blindSpotsOf, SEEN_NOT_IN_CODE } from './blind-spots.js';
+import { blindSpotMessage, blindSpotNext, blindSpotRows, blindSpotsOf, SEEN_NOT_IN_CODE } from './blind-spots.js';
 import { groupCantFollow, hintForCause } from './cant-follow.js';
 import { durationLabel, observedOver } from './observed.js';
 import type { UnmatchedSpan } from './observed.js';
@@ -50,6 +50,20 @@ describe('blind spots', () => {
     expect(blindSpotMessage(spot!, '2h')).toBe(
       'traffic in billing reached 7 routes no reader drew, 7 spans in 2h: GET /r0 (1), GET /r1 (1), GET /r2 (1), and 4 more',
     );
+  });
+
+  it('carry every peer a peer group holds when it lists only some, the evidence of a missing repository (P146)', () => {
+    const peers = Array.from({ length: 7 }, (_, i) => row('gateway', 'peer', `peer-${i}`, 7 - i));
+    const routes = Array.from({ length: 7 }, (_, i) => row('gateway', 'http', `GET /r${i}`, 1));
+    const window = { from: '2026-01-01T00:00:00.000Z', to: '2026-01-01T02:00:00.000Z' };
+    const rows = blindSpotRows({ unmatched: [...peers, ...routes], buckets: [], window });
+    const kindOf = (each: (typeof rows)[number]): string => (each.meta?.['seen'] as { kind: string }).kind;
+    const peer = rows.find((each) => kindOf(each) === 'peer');
+    expect((peer?.meta?.['seen'] as { names: unknown[] }).names).toHaveLength(5);
+    expect((peer?.meta?.['peers'] as Array<{ name: string }>).map((name) => name.name)).toEqual(peers.map((each) => each.name));
+    // Another kind, or a peer group that lists every name, carries none.
+    expect(rows.find((each) => kindOf(each) === 'http')?.meta?.['peers']).toBeUndefined();
+    expect(blindSpotRows({ unmatched: peers.slice(0, 2), buckets: [], window })[0]?.meta?.['peers']).toBeUndefined();
   });
 
   it('stand under their own cause in the breakdown, with groups in place of packages', () => {

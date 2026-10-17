@@ -23,8 +23,9 @@ import type { LinkReport } from './report.js';
  * comes from - and the signals that point at one word are put together and
  * ranked, first by how many kinds of evidence agree, then by how many places.
  * Traffic is one more kind (P144): spans from a service the configuration
- * does not list, read from the blind-spot rows P110 makes of what `observe`
- * matched to nothing, so the file is read by whoever counts the rows.
+ * does not list, and calls whose OTel `peer.service` names a service the map
+ * lacks (P146), both read from the blind-spot rows P110 makes of what
+ * `observe` matched to nothing, so the file is read by whoever counts the rows.
  *
  * Pure: the graph and the link report in, nothing read from anywhere. A guess
  * is all this is (I3): no edge is drawn and nothing is configured from it; what
@@ -71,6 +72,11 @@ export interface MissingSeen {
   names: string[];
   /** The window, said in words: `2h`. */
   window: string;
+  /**
+   * The place's service called the name rather than being it (P146): a `peer`
+   * row, one name, whose calls said in `peer.service` where they went.
+   */
+  called?: true;
 }
 
 /** One piece of evidence: what it names, the word it points at, and where. */
@@ -265,6 +271,22 @@ const seenOfRow = (row: MissingRow): MissingSeen | undefined => {
   return { kind, places, count, names: listed, window };
 };
 
+/** How `observe` masks a value-like peer name (P146 D4). */
+const PEER_VALUE = ':value';
+
+/**
+ * The names a `peer` blind-spot row says its service called (P146), with
+ * their spans: every name when the group listed only some (`meta.peers`), a
+ * masked one (`:value`) left out, since it names no repository.
+ */
+const peersOfRow = (row: MissingRow): Array<{ name: string; count: number }> => {
+  const listed = row.meta?.['peers'] ?? (row.meta?.['seen'] as { names?: unknown } | undefined)?.names;
+  return (Array.isArray(listed) ? listed : []).flatMap((entry: unknown): Array<{ name: string; count: number }> => {
+    const { name, count } = (entry !== null && typeof entry === 'object' ? entry : {}) as { name?: unknown; count?: unknown };
+    return typeof name === 'string' && name !== '' && name !== PEER_VALUE && typeof count === 'number' ? [{ name, count }] : [];
+  });
+};
+
 /** Collects signals by kind and name, so one setting used in seven places is one signal of seven places. */
 class Signals {
   readonly #by = new Map<string, MissingSignal>();
@@ -280,7 +302,8 @@ class Signals {
         seen.file === place.file &&
         seen.line === place.line &&
         seen.gapId === place.gapId &&
-        seen.seen?.kind === place.seen?.kind,
+        seen.seen?.kind === place.seen?.kind &&
+        seen.seen?.called === place.seen?.called,
     );
     if (!same) signal.places.push(place);
   }
@@ -406,6 +429,21 @@ export const missingRepoSignals = (project: MissingRepoProject, report?: Pick<Li
     if (service !== undefined && seen !== undefined) signals.add('traffic', service, tokenOf(service), { ...placeOfRow(row), seen });
   }
 
+  // Traffic to a service no configured service is (P146): a client or
+  // producer span's `peer.service` that `observe` found no service of the map
+  // for, kept as a `peer` blind spot under the calling service. One place per
+  // caller and name, the caller configured or not; a name that is a
+  // configured service's (by alias, host or package too) is dropped by the
+  // ranking, as every other kind's is.
+  for (const row of project.unresolved) {
+    const seen = row.reason === SEEN_NOT_IN_CODE ? seenOfRow(row) : undefined;
+    if (seen?.kind !== 'peer') continue;
+    for (const peer of peersOfRow(row)) {
+      const one: MissingSeen = { kind: 'peer', places: 1, count: peer.count, names: [peer.name], window: seen.window, called: true };
+      signals.add('traffic', peer.name, tokenOf(peer.name), { ...placeOfRow(row), seen: one });
+    }
+  }
+
   return signals.all();
 };
 
@@ -493,23 +531,42 @@ const SAYS: { readonly [K in MissingKind]: (signal: MissingSignal, by: string) =
     signal.lacks === 'producer'
       ? `channel ${signal.name} is consumed by ${by} and nothing here publishes it`
       : `channel ${signal.name} is published by ${by} and nobody here consumes it`,
-  traffic: (signal) => `traffic came from ${signal.name}, which no configured service is: ${saySeenAll(signal.places)}`,
+  traffic: (signal) => {
+    // Spans of the name's own (P144), and calls that named it as their peer (P146): one sentence, both halves when both are there.
+    const own = signal.places.filter((place) => place.seen?.called !== true);
+    const called = signal.places.filter((place) => place.seen?.called === true);
+    const callers = andList([...new Set(called.map((place) => place.service ?? 'traffic'))].sort(cmp));
+    const said = own.length === 0 ? [] : [`traffic came from ${signal.name}, which no configured service is: ${saySeenAll(own)}`];
+    if (called.length > 0) {
+      said.push(
+        own.length === 0
+          ? `${callers} called ${signal.name} by its peer.service, which no configured service is: ${saySpans(called)}`
+          : `${callers} called it by its peer.service: ${saySpans(called)}`,
+      );
+    }
+    return said.join('; ');
+  },
 };
 
 const seenOf = (places: readonly MissingPlace[]): MissingSeen[] =>
   places.flatMap((place) => (place.seen === undefined ? [] : [place.seen]));
 
-/** What every blind-spot group of a signal reached, together: `2 routes and 2 methods, 8 spans in 2h`. */
-const saySeenAll = (places: readonly MissingPlace[]): string => {
+/** The spans of a signal's places, over their window when they share one: `8 spans in 2h`. */
+const saySpans = (places: readonly MissingPlace[]): string => {
   const seen = seenOf(places);
   const spans = seen.reduce((sum, one) => sum + one.count, 0);
   const windows = [...new Set(seen.map((one) => one.window))];
-  const over = windows.length === 1 ? ` in ${windows[0]}` : '';
-  return `${andList(seen.map((one) => blindSpotPlaces(one.kind, one.places)))}, ${plural(spans, 'span')}${over}`;
+  return `${plural(spans, 'span')}${windows.length === 1 ? ` in ${windows[0]}` : ''}`;
 };
+
+/** What every blind-spot group of a signal reached, together: `2 routes and 2 methods, 8 spans in 2h`. */
+const saySeenAll = (places: readonly MissingPlace[]): string =>
+  `${andList(seenOf(places).map((one) => blindSpotPlaces(one.kind, one.places)))}, ${saySpans(places)}`;
 
 /** One blind-spot group, as `doctor --missing` says the place: `2 routes, 4 spans in 2h: POST /charges, POST /refunds`. */
 export const saySeen = (seen: MissingSeen): string => {
+  // A call by peer.service (P146): `called payments-api, 6 spans in 2h (peer.service)`.
+  if (seen.called === true) return `called ${seen.names.join(', ')}, ${plural(seen.count, 'span')} in ${seen.window} (peer.service)`;
   const more = seen.places - seen.names.length;
   const listed = seen.names.length === 0 ? '' : `: ${seen.names.join(', ')}${more > 0 ? `, and ${more} more` : ''}`;
   return `${blindSpotPlaces(seen.kind, seen.places)}, ${plural(seen.count, 'span')} in ${seen.window}${listed}`;

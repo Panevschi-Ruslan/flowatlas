@@ -373,6 +373,8 @@ const SHAPES_CASES = [
   ['check_contract.traffic-undeclared', 'check_contract', { edge: 'entry:gateway:http:POST:/orders/:param/refund' }],
   ['check_contract.traffic-none', 'check_contract', { edge: 'entry:orders:http:POST:/orders' }],
   ['get_flow.traffic-differs', 'get_flow', { entry: 'POST /orders/:id/invoice', maxNodes: 5 }],
+  // A route bodies reached is seen though its call was counted on none (P148): POST /orders/:param/invoice is not listed.
+  ['never_seen.shapes-gateway', 'never_seen', { service: 'gateway' }],
 ];
 
 /** A copy of the fixture's output with the shapes file beside it. */

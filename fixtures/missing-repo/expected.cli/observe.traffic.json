@@ -29,7 +29,8 @@
       "transport",
       "peerService",
       "thirdParty",
-      "sampleable"
+      "sampleable",
+      "peerName"
     ],
     "dropped": [
       "request and response headers",

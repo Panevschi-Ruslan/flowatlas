@@ -56,6 +56,9 @@ export const OTLP_READS = {
     'db.sql.table',
     'rpc.service',
     'rpc.method',
+    // The service a call went to, as its instrumentation names it (P146): a
+    // name only, read through `peerNameOf` (an address is dropped, a value masked).
+    'peer.service',
     // A deployed function or workflow and the cloud calls it makes (P107),
     // read in `aws.ts`. An ARN or a URL is cut to the name inside it there,
     // and no request parameter (`Key`, `Item`, `MessageBody`, `Input`) is read.

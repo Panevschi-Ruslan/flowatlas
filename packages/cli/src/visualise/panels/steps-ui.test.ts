@@ -180,12 +180,31 @@ describe('the steps with run time', () => {
     expect(textOf(document.querySelector('#s-list .w-axis-say'))).toBe('typical time per step (p50), not one request');
     expect(document.querySelectorAll('#s-list .w-tick').map((tick) => textOf(tick))).toContain('10 ms');
     expect(textOf(document.getElementById('s-note'))).toMatch(/p95 310 ms · 10% errors · a bar per step, as long as its typical time \(p50\)/);
+    // The caption says what is drawn: calls sit inside their caller's bar, not end to end (P145).
+    expect(textOf(document.getElementById('s-note'))).toContain('what a step calls sits inside its bar, from where it starts');
+    expect(textOf(document.getElementById('s-note'))).not.toContain('end to end');
     // A step no traffic timed is a hatched stand-in, and says so.
     const untimed = document.querySelector('#s-list .w-row.is-untimed .w-bar')!;
     expect(untimed.getAttribute('title')).toContain('no time measured: drawn at a stand-in width, not to scale');
     // A failing step keeps its chip on the waterfall.
     expect(textOf(document.querySelector('#s-list .w-row .s-mark.is-errors'))).toBe('10% errors');
     expect(document.getElementById('s-times')!.hidden).toBe(false);
+  });
+
+  it('writes the first tick from its place and a last one at the right edge up to it, so none runs off the axis (P145)', () => {
+    const { document } = waterfall();
+    const ticks = document.querySelectorAll('#s-list .w-tick');
+    expect(ticks[0]!.getAttribute('class')).toBe('w-tick is-start');
+    const placeOf = (tick: any) => Number(/left:([\d.]+)%/.exec(tick.getAttribute('style'))![1]);
+    const last = ticks[ticks.length - 1]!;
+    // Written up to its place only near the edge; further in, centred like the rest.
+    expect(last.getAttribute('class')).toBe(placeOf(last) >= 90 ? 'w-tick is-end' : 'w-tick');
+    expect(ticks.slice(1, -1).every((tick) => tick.getAttribute('class') === 'w-tick')).toBe(true);
+    // The Steps tab's own waterfall uses the same rule: one whose last tick is at the edge writes it inward.
+    const { page } = waterfall();
+    const html = page.ticksHtml([0, 250, 500], 500, (n: number) => `${n} ms`);
+    expect(html).toContain('class="w-tick is-end" style="left:100%">500 ms');
+    expect(html).toContain('class="w-tick is-start" style="left:0%">0 ms');
   });
 
   it('switches to p95, and keeps the choice for the next visit', () => {

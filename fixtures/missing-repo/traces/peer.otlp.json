@@ -1,0 +1,631 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "gateway"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "http"
+          },
+          "spans": [
+            {
+              "traceId": "c7000000000000000000000000000001",
+              "spanId": "d700000000000010",
+              "name": "POST /checkout/:id/pay",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602260000000000",
+              "endTimeUnixNano": "1760602260040000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/pay"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-31/pay"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000001",
+              "spanId": "d700000000000011",
+              "parentSpanId": "d700000000000010",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602260002000000",
+              "endTimeUnixNano": "1760602260030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/charges?order=ord-31"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "payments-api"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000002",
+              "spanId": "d700000000000020",
+              "name": "POST /checkout/:id/pay",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602320000000000",
+              "endTimeUnixNano": "1760602320040000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/pay"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-32/pay"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000002",
+              "spanId": "d700000000000021",
+              "parentSpanId": "d700000000000020",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602320002000000",
+              "endTimeUnixNano": "1760602320030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/charges?order=ord-32"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "payments-api"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000003",
+              "spanId": "d700000000000030",
+              "name": "POST /checkout/:id/pay",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602380000000000",
+              "endTimeUnixNano": "1760602380040000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/pay"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-33/pay"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000003",
+              "spanId": "d700000000000031",
+              "parentSpanId": "d700000000000030",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602380002000000",
+              "endTimeUnixNano": "1760602380030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/charges?order=ord-33"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "payments-api"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000004",
+              "spanId": "d700000000000040",
+              "name": "POST /checkout/:id/pay",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602440000000000",
+              "endTimeUnixNano": "1760602440040000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/pay"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-34/pay"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000004",
+              "spanId": "d700000000000041",
+              "parentSpanId": "d700000000000040",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602440002000000",
+              "endTimeUnixNano": "1760602440030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/charges?order=ord-34"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "payments-api"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000005",
+              "spanId": "d700000000000050",
+              "name": "POST /checkout/:id/refund",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602500000000000",
+              "endTimeUnixNano": "1760602500040000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/refund"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-35/refund"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000005",
+              "spanId": "d700000000000051",
+              "parentSpanId": "d700000000000050",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602500002000000",
+              "endTimeUnixNano": "1760602500030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/refunds"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "payments-api"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000006",
+              "spanId": "d700000000000060",
+              "name": "POST /checkout/:id/refund",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602560000000000",
+              "endTimeUnixNano": "1760602560040000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/refund"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-36/refund"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000006",
+              "spanId": "d700000000000061",
+              "parentSpanId": "d700000000000060",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602560002000000",
+              "endTimeUnixNano": "1760602560030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/refunds"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "payments-api"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000008",
+              "spanId": "d700000000000081",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602680002000000",
+              "endTimeUnixNano": "1760602680030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://orders.example.test/orders/ord-37/confirm"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "orders-api"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 200
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000009",
+              "spanId": "d700000000000091",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602740002000000",
+              "endTimeUnixNano": "1760602740030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/charges"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "10.0.4.2:8443"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c700000000000000000000000000000a",
+              "spanId": "d7000000000000a1",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602800002000000",
+              "endTimeUnixNano": "1760602800030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/charges"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "payments-5d8f7"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "orders"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "http"
+          },
+          "spans": [
+            {
+              "traceId": "c7000000000000000000000000000007",
+              "spanId": "d700000000000070",
+              "name": "POST /orders/:id/confirm",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602620000000000",
+              "endTimeUnixNano": "1760602620040000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/orders/:id/confirm"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/orders/ord-31/confirm"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 200
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "c7000000000000000000000000000007",
+              "spanId": "d700000000000071",
+              "parentSpanId": "d700000000000070",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602620002000000",
+              "endTimeUnixNano": "1760602620030000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "https://payments.example.test/authorizations"
+                  }
+                },
+                {
+                  "key": "peer.service",
+                  "value": {
+                    "stringValue": "payments"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

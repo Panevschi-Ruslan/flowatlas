@@ -1,0 +1,13 @@
+17 spans read from 1 file(s)
+0 joins seen, 3 entries hit, 5 seen at run time but not found in code, 0 that could be more than one place
+  peer      gateway  payments-api  (6)
+  client    gateway  POST /orders/:value/confirm  (1)
+  peer      gateway  :value  (1)
+  client    orders  POST /authorizations  (1)
+  peer      orders  payments  (1)
+slowest entries (p95):
+  gateway POST /checkout/:param/pay  count 4  p50 40ms  p95 40ms  max 40ms  errors 0%
+  gateway POST /checkout/:param/refund  count 2  p50 40ms  p95 40ms  max 40ms  errors 0%
+  orders POST /orders/:param/confirm  count 1  p50 40ms  p95 40ms  max 40ms  errors 0%
+window 2025-10-16T08:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
+<copy>/observed.json

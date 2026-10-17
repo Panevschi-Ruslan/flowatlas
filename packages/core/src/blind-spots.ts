@@ -135,6 +135,7 @@ const KIND_WORDS: Readonly<Record<string, readonly [string, string]>> = {
   cloud: ['cloud call', 'cloud calls'],
   join: ['join', 'joins'],
   external: ['outside host', 'outside hosts'],
+  peer: ['peer service', 'peer services'],
 };
 
 /** `2 routes`, `1 cloud call`; a kind with no words of its own is said as itself. */
@@ -158,10 +159,19 @@ export const blindSpotMessage = (spot: BlindSpot, window: string): string => {
  * count them: a gap at `info` with no file (D3), standing for as many places
  * as the group has names, carrying the group under `meta.seen`. Over the
  * file's whole window; none without a file.
+ *
+ * A `peer` group whose names are more than the group lists carries every name
+ * under `meta.peers` too: each is a service the calls went to and the map
+ * lacks, which missing-repo evidence reads one by one (P146 into P144).
  */
 export const blindSpotRows = (observed: Pick<Observed, 'unmatched' | 'buckets' | 'window'> | undefined): Unresolved[] => {
   if (observed === undefined) return [];
   const window = observedOver(observed).window.label;
+  const peersOf = (spot: BlindSpot): { peers?: BlindSpotName[] } => {
+    if (spot.kind !== 'peer' || spot.more === undefined) return {};
+    const peers = observed.unmatched.filter((row) => row.kind === 'peer' && row.service === spot.service);
+    return { peers: blindSpotsOf(peers, { names: peers.length })[0]?.names ?? [] };
+  };
   return blindSpotsOf(observed.unmatched).map(
     (spot): Unresolved => ({
       file: '',
@@ -171,7 +181,7 @@ export const blindSpotRows = (observed: Pick<Observed, 'unmatched' | 'buckets' |
       sites: spot.places,
       ...(spot.service === undefined ? {} : { service: spot.service }),
       message: blindSpotMessage(spot, window),
-      meta: { seen: spot, window },
+      meta: { seen: spot, window, ...peersOf(spot) },
     }),
   );
 };

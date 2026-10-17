@@ -876,6 +876,7 @@ const HOUSE_CASES = [
  * output, where the joins are made and no group is left.
  */
 const missingRepoPlain = plainFor('missing-repo');
+const missingRepoDir = join(root, 'fixtures', 'missing-repo');
 const missingRepoLinked = join(root, 'fixtures', 'missing-repo', 'variants', 'linked', 'flowatlas.config.json');
 let missingRepoLinkedBuilt;
 const missingRepoLinkedOnce = async () => {
@@ -890,16 +891,21 @@ const missingRepoLinkedOnce = async () => {
  * list. `observe` matches its routes and methods to nothing, and those blind
  * spots are a fourth kind of evidence for the same group. The observed file
  * is also what the MCP snapshots of the traffic answer from.
+ *
+ * And the calls whose OTel peer.service names it (P146): gateway calling
+ * `payments-api` and orders calling `payments`, kept as `peer` blind spots
+ * under the configured callers, read by P144 as traffic to the same group;
+ * alone, and beside the spans `payments` wrote itself.
  */
-const missingRepoDir = join(root, 'fixtures', 'missing-repo');
 const MISSING_REPO_TRAFFIC = [join(missingRepoDir, 'traces', 'payments.otlp.json')];
-const missingRepoTraffic = (run) => async (io) => {
+const MISSING_REPO_PEER = [join(missingRepoDir, 'traces', 'peer.otlp.json')];
+const missingRepoTraffic = (run, traces = MISSING_REPO_TRAFFIC) => async (io) => {
   const copy = mkdtempSync(join(tmpdir(), 'flowatlas-missing-traffic-'));
   const said = (text) => text.split(copy).join('<copy>');
   try {
     cpSync(join(missingRepoDir, '.flowatlas'), copy, { recursive: true });
     const db = join(copy, 'graph.db');
-    runObserve(MISSING_REPO_TRAFFIC, { db, now: OBSERVE_NOW, print: () => {} });
+    runObserve(traces, { db, now: OBSERVE_NOW, print: () => {} });
     await run({ config: missingRepoPlain.config, db, out: copy }, { ...io, out: (text) => io.out(said(text)) });
   } finally {
     rmSync(copy, { recursive: true, force: true });
@@ -918,6 +924,15 @@ const MISSING_REPO_CASES = [
   ['link.suggested.txt', (io) => linkSuggested({ config: missingRepoPlain.config, dryRun: true, print: (line) => io.out(`${line}\n`) })],
   ['doctor.linked.txt', async (io) => runDoctorCommand({ config: await missingRepoLinkedOnce() }, io)],
   ['doctor.missing.linked.txt', async (io) => runMissingCommand({ config: await missingRepoLinkedOnce() }, io)],
+  // Calls whose OTel peer.service names the unconfigured repository (P146): counted as `peer`, the evidence P144 reads.
+  ['observe.peer.txt', (io) => observeOnCopy(io, [[MISSING_REPO_PEER, {}]], missingRepoDir)],
+  ['observe.peer.json', (io) => observeOnCopy(io, [[MISSING_REPO_PEER, { format: 'json' }]], missingRepoDir)],
+  ['doctor.missing.peer.txt', missingRepoTraffic((options, io) => runMissingCommand(options, io), MISSING_REPO_PEER)],
+  ['doctor.missing.peer.json', missingRepoTraffic((options, io) => runMissingCommand({ ...options, json: true }, io), MISSING_REPO_PEER)],
+  [
+    'doctor.missing.traffic-peer.txt',
+    missingRepoTraffic((options, io) => runMissingCommand(options, io), [...MISSING_REPO_TRAFFIC, ...MISSING_REPO_PEER]),
+  ],
 ];
 
 /**
