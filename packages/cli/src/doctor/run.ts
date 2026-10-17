@@ -7,7 +7,7 @@
  * runs over one graph say the same thing, so a difference in CI is a difference
  * in the project.
  */
-import { countsOf, kindOfRow, type GraphNode, type Unresolved } from '@flowatlas/core';
+import { countsOf, kindOfRow, waysInOf, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
 import { withAnsweredDemoted, type GraphDb, type ServiceReport } from '@flowatlas/linker';
@@ -371,6 +371,19 @@ const cut = <T>(all: readonly T[], max: number): { rows: T[]; truncated?: number
 };
 
 /**
+ * The order a reason's rows are listed in, where it is not the order they
+ * were read in: a loop reached from more ways in first (P89), then by place.
+ * A strategy per reason, so a reason with no entry keeps reading order.
+ */
+const ROW_ORDER: ReadonlyMap<string, (a: Unresolved, b: Unresolved) => number> = new Map([
+  [
+    'query-in-loop',
+    (a: Unresolved, b: Unresolved) =>
+      (waysInOf(b) ?? 0) - (waysInOf(a) ?? 0) || cmp(a.file ?? '', b.file ?? '') || (a.line ?? 0) - (b.line ?? 0),
+  ],
+]);
+
+/**
  * Every row of one reason, grouped, with the advice they share.
  *
  * Actionable reasons come first and the biggest within each half, because the
@@ -410,7 +423,9 @@ const groupByReason = (
     const known = isKnownReason(reason);
     if (!known && !seen.has(reason)) unknown.push(reason);
     seen.add(reason);
-    const drawn: DoctorRow[] = list.map((row) => ({
+    const order = ROW_ORDER.get(reason);
+    const ordered = order === undefined ? list : [...list].sort(order);
+    const drawn: DoctorRow[] = ordered.map((row) => ({
       service: row.service ?? '',
       file: row.file,
       line: row.line,
@@ -419,6 +434,7 @@ const groupByReason = (
       sites: row.sites ?? 1,
       message: row.message ?? reason,
       hint: hintFor(row, contextOf(row)),
+      ...(waysInOf(row) === undefined ? {} : { waysIn: waysInOf(row) }),
     }));
     const bounded = cut(drawn, maxNodes);
     groups.push({
@@ -443,8 +459,14 @@ const groupByReason = (
   }
 
   const loudness = { action: 0, info: 1, nothing: 2 } as const;
+  // One reason under two headings (P89's loops): what is worth fixing first.
+  const kindOrder = { gap: 0, finding: 1, note: 2 } as const;
   groups.sort(
-    (a, b) => loudness[a.level] - loudness[b.level] || b.sites - a.sites || cmp(a.reason, b.reason),
+    (a, b) =>
+      loudness[a.level] - loudness[b.level] ||
+      b.sites - a.sites ||
+      cmp(a.reason, b.reason) ||
+      kindOrder[a.kind] - kindOrder[b.kind],
   );
   return { groups, unknown: unknown.sort(cmp) };
 };

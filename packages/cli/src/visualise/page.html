@@ -2456,8 +2456,23 @@ __STEPS_LOGIC__
             `<th class="num">Own / total</th><th class="hide-narrow"></th></tr></thead><tbody>${lines}</tbody></table>` +
             (busiest.ranked > busiest.rows.length
               ? `<p class="hint">${(busiest.ranked - busiest.rows.length).toLocaleString()} more methods have a caller; ` +
-                '<code>flowatlas hotspots --type method</code> lists them all.</p>' : ''));
+                '<code>flowatlas hotspots --type method</code> lists them all.</p>' : '')) +
+        loopsHtml();
       walkEl.replaceChildren(sheet);
+    }
+    /* The likely N+1 loops, reached from the most ways in first, as doctor lists them (P89). */
+    function loopsHtml() {
+      const loops = busiest.loops || [];
+      if (loops.length === 0) return '';
+      const items = loops.map(([r, waysIn]) => {
+        const row = data.rows[r];
+        const file = row[ROW.file] >= 0 ? files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : '';
+        return `<tr><td class="mono">${row[ROW.repo] >= 0 ? esc(repos[row[ROW.repo]]) + ' &middot; ' : ''}${esc(file)}` +
+          `${row[ROW.node] >= 0 ? ' ' + graphLink(row[ROW.node]) : ''}<div>${esc(row[ROW.message])}</div></td>` +
+          `<td class="num">${waysIn.toLocaleString()}</td></tr>`;
+      }).join('');
+      return '<h4>Likely N+1 loops</h4><table class="busiest-table"><thead><tr><th>Loop</th><th class="num">Ways in</th></tr></thead>' +
+        `<tbody>${items}</tbody></table>`;
     }
 
     /* ── changes: what a branch did, from flowatlas diff (P73) ───────── */

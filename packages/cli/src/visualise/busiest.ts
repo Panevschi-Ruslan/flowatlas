@@ -1,4 +1,4 @@
-import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import { kindOfRow, waysInOf, type GraphEdge, type GraphNode, type KindedRow } from '@flowatlas/core';
 import { inDegree } from '../analysis/degree.js';
 import { buildGraph } from '../analysis/graph.js';
 import { HOTSPOT_EDGES } from '../analysis/hotspots.js';
@@ -21,7 +21,31 @@ export interface PackedBusiest {
   rows: BusiestRow[];
   /** How many methods have anything pointing at them, of which `rows` are the first. */
   ranked: number;
+  /**
+   * The likely N+1 loops (P89), `[row, waysIn]`: `row` a position in the
+   * packed rows, reached from the most ways in first, then by place. A loop
+   * that is per item on purpose (a note) is not among them.
+   */
+  loops: Array<[row: number, waysIn: number]>;
 }
+
+/** A row as the pack is handed it, as far as ranking a loop needs. */
+type LoopRow = KindedRow & { file?: string | null; line?: number | null };
+
+const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/** The likely N+1 rows, by position, the way doctor lists them (P89). */
+export const likelyLoops = (rows: readonly LoopRow[]): PackedBusiest['loops'] =>
+  rows
+    .flatMap((row, index) => (row.reason === 'query-in-loop' && kindOfRow(row) === 'finding' ? [index] : []))
+    .sort((a, b) => {
+      const ra = rows[a] as LoopRow;
+      const rb = rows[b] as LoopRow;
+      return (
+        (waysInOf(rb) ?? 0) - (waysInOf(ra) ?? 0) || cmp(ra.file ?? '', rb.file ?? '') || (ra.line ?? 0) - (rb.line ?? 0)
+      );
+    })
+    .map((index) => [index, waysInOf(rows[index] as LoopRow) ?? 0]);
 
 /** What a waterfall follows from a way in: what runs next, not what is imported. */
 const REACHES: ReadonlySet<string> = new Set(['handles', 'calls', 'http_calls', 'hits', 'emits', 'consumes', 'triggers']);
@@ -86,6 +110,7 @@ export const packBusiest = (
   nodes: readonly GraphNode[],
   edges: readonly GraphEdge[],
   position: ReadonlyMap<string, number>,
+  rows: readonly LoopRow[] = [],
   limit = BUSIEST_LIMIT,
 ): PackedBusiest => {
   const wanted = new Set<string>(HOTSPOT_EDGES);
@@ -98,7 +123,7 @@ export const packBusiest = (
   const ranked = inDegree(graph, { types: BUSIEST_TYPES });
   const shown = ranked.slice(0, limit);
   const reach = reachOfRows(shown.map((row) => row.id), nodes, edges);
-  const rows = shown.map((row): BusiestRow => {
+  const methods = shown.map((row): BusiestRow => {
     const { ways, depth } = reach.get(row.id) as { ways: number; depth: number };
     const own = (graph.in.get(row.id) ?? []).filter((edge) => graph.nodes.get(edge.from)?.service === row.service).length;
     return [
@@ -110,5 +135,5 @@ export const packBusiest = (
       depth,
     ];
   });
-  return { rows, ranked: ranked.length };
+  return { rows: methods, ranked: ranked.length, loops: likelyLoops(rows) };
 };

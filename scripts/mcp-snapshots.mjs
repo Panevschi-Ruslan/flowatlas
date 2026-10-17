@@ -74,12 +74,26 @@ const HELPER_CASES = [
   ['search.fails-423', 'search', { query: '423', kinds: ['fails'] }],
 ];
 
+/**
+ * Loops that run a query per item (P89): searched busiest first, each saying
+ * how sure it is, and written into the prompt with the ways in that reach it.
+ */
+const LOOPS_CASES = [
+  ['search.query-in-loop', 'search', { query: 'query-in-loop', kinds: ['gaps'] }],
+  ['describe_for_prompt.labels', 'describe_for_prompt', { id: 'GET /parcels/labels' }],
+];
+
 const SUITES = [
   { fixture, outDir, cases: CASES },
   {
     fixture: join(root, 'fixtures', 'nest-check-through-helper'),
     outDir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.mcp'),
     cases: HELPER_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'loops-worth-fixing'),
+    outDir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.mcp'),
+    cases: LOOPS_CASES,
   },
 ];
 

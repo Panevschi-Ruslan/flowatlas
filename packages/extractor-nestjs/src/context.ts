@@ -8,6 +8,7 @@ import {
   makeSymbolId,
   moduleFunctions,
   TypeCollector,
+  type BoundedBy,
   type ClassMethod,
   type ExtractContext,
   type GraphNode,
@@ -40,6 +41,13 @@ export interface NestStats extends RepoStats {
    * them. Written only when there were any.
    */
   receiversExplainedByEdge?: number;
+  /**
+   * Loops that run a query per item and are bounded on purpose, by why (P89):
+   * chunks, pages, cursors, retries, literal lists, batch calls, migrations.
+   * Not rows: counted so the loops set aside are seen. Written only when there
+   * were any, each reason only when it has a loop.
+   */
+  loopsBounded?: Partial<Record<BoundedBy, number>>;
 }
 
 /** Node type and `kind` implied by a class's role. */

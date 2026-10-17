@@ -1,4 +1,4 @@
-import { accessOf, type GraphNode } from '@flowatlas/core';
+import { accessOf, rankByReach, waysInOf, type GraphNode } from '@flowatlas/core';
 import type { GraphDb, UnresolvedRow } from '@flowatlas/linker';
 import { projectDetail } from '../query/detail.js';
 import { failsOf } from '../query/fails.js';
@@ -58,13 +58,14 @@ const stepsOf = (root: FlowNode): PromptStep[] => {
   return steps;
 };
 
-const gapOf = (row: UnresolvedRow, id: string): PromptGap => ({
+const gapOf = (row: UnresolvedRow & { meta?: Record<string, unknown> }, id: string): PromptGap => ({
   reason: row.reason,
   message: row.message,
   id,
   ...(row.service === null ? {} : { service: row.service }),
   ...(row.file === null ? {} : { loc: row.line === null ? row.file : `${row.file}:${row.line}` }),
   ...(row.hint === null ? {} : { hint: row.hint }),
+  ...(waysInOf(row) === undefined ? {} : { waysIn: waysInOf(row) }),
 });
 
 /** A node the graph points at and does not hold is a gap too, with a reason. */
@@ -91,6 +92,8 @@ export const gatherPromptSubject = (db: GraphDb, node: GraphNode): PromptSubject
   for (const id of [node.id, ...new Set(steps.map((item) => item.id))]) {
     for (const row of db.unresolvedFor(id)) gaps.push(gapOf(row, id));
   }
+  // A loop reached from more ways in first, among the loops (P89).
+  gaps.splice(0, gaps.length, ...rankByReach(gaps, (gap) => gap.waysIn));
   for (const item of steps) if (item.type === 'missing') gaps.push(missingGap(item));
 
   const producers =

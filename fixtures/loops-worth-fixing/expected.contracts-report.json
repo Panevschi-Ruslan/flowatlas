@@ -1,0 +1,45 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-17T03:49:50.066Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:parcels#src/parcels/dispatch.ts:21:13",
+        "to": "channel:mail",
+        "type": "emits"
+      },
+      "edgeKey": "channel:mail|emits|producer:parcels#src/parcels/dispatch.ts:21:13",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:mail is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:parcels#src/parcels/export.ts:15:13",
+        "to": "channel:sqs/parcel-exports",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/parcel-exports|emits|producer:parcels#src/parcels/export.ts:15:13",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/parcel-exports is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

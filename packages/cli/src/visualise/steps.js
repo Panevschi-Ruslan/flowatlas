@@ -199,13 +199,24 @@ export const scheduleOf = (model, i) => {
 
 const QUERY_IN_LOOP = 'query-in-loop';
 
-/** The lines a query-in-loop row sits at, on the node whose loop it names. */
+/**
+ * The rows that are a likely N+1 (P89): the pack's ranked loops, which leave
+ * out a loop that is per item on purpose. A pack written before it listed
+ * them has every query-in-loop row.
+ */
+const likelyRows = (model) => {
+  const loops = model.data.busiest && model.data.busiest.loops;
+  return loops ? new Set(loops.map(([r]) => r)) : null;
+};
+
+/** The lines a likely N+1 row sits at, on the node whose loop it names. */
 const nPlusOneLines = (model, i) => {
   const { reasons } = model.data.dicts;
+  const likely = likelyRows(model);
   const lines = [];
   for (const r of model.rowsOn.get(i) || []) {
     const row = model.data.rows[r];
-    if (reasons[row[4]] === QUERY_IN_LOOP) lines.push(row[3]);
+    if (reasons[row[4]] === QUERY_IN_LOOP && (likely === null || likely.has(r))) lines.push(row[3]);
   }
   return lines;
 };

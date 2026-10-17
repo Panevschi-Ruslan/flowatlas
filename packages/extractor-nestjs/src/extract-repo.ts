@@ -162,11 +162,17 @@ const foldStats = (existing: unknown, mine: NestStats): Record<string, unknown> 
   const explained =
     (typeof prior['receiversExplainedByEdge'] === 'number' ? prior['receiversExplainedByEdge'] : 0) +
     (mine.receiversExplainedByEdge ?? 0);
+  // Loops set aside are each half's own too, summed by why (P89).
+  const loopsBounded: Record<string, number> = { ...((prior['loopsBounded'] ?? {}) as Record<string, number>) };
+  for (const [by, count] of Object.entries(mine.loopsBounded ?? {})) {
+    loopsBounded[by] = (Object.hasOwn(loopsBounded, by) ? (loopsBounded[by] ?? 0) : 0) + count;
+  }
   return {
     ...mine,
     ...prior,
     skippedExternalCalls,
     ...(explained === 0 ? {} : { receiversExplainedByEdge: explained }),
+    ...(Object.keys(loopsBounded).length === 0 ? {} : { loopsBounded }),
   };
 };
 

@@ -448,6 +448,18 @@ const TABLES_ELSEWHERE_CASES = [
   ['stats.tree.txt', (io) => runStats({ ...tablesElsewherePlain, format: 'tree' }, io)],
 ];
 
+/**
+ * Loops that run a query per item (P89): the likely N+1 loops ranked by the
+ * ways in that reach them, the per-item ones as notes, and the loops set aside
+ * counted by why.
+ */
+const loopsPlain = plainFor('loops-worth-fixing');
+
+const LOOPS_CASES = [
+  ['doctor.txt', (io) => runDoctorCommand({ config: loopsPlain.config }, io)],
+  ['stats.tree.txt', (io) => runStats({ ...loopsPlain, format: 'tree' }, io)],
+];
+
 const STAND_IN_CASES = [
   ['doctor.unresolved.txt', (io) => runCantFollowCommand({ config: standInsPlain.config }, io)],
   ['shapes.suggest.txt', (io) => runShapesSuggest({ config: standInsPlain.config, suggest: true }, io)],
@@ -529,6 +541,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'uninstalled-internal-packages', 'expected.cli'), owned: true, cases: STAND_IN_CASES },
   { dir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.cli'), owned: true, cases: HELPER_CHECK_CASES },
   { dir: join(root, 'fixtures', 'tables-set-elsewhere', 'expected.cli'), owned: true, cases: TABLES_ELSEWHERE_CASES },
+  { dir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.cli'), owned: true, cases: LOOPS_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

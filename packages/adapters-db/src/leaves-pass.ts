@@ -86,6 +86,7 @@ import {
   splitAtParameterIn,
 } from './leaves/trace.js';
 import { sqlOperation, sqlTables } from './sql.js';
+import { perItemMetaOf } from './descriptors/per-item.js';
 
 /** Cache libraries, and what each of their methods does to a key. */
 const CACHE_PACKAGES = ['ioredis', 'cache-manager', '@nestjs/cache-manager', 'redis'];
@@ -1245,6 +1246,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         receiver: receiver.getText().slice(0, 80),
         source: classification.source,
         ...(reach?.from === undefined || classification.table === null ? {} : { tableFrom: reach.from }),
+        // A batch, or a write meant to run per item, for the loop around it (P89).
+        ...perItemMetaOf(descriptor, method, call, classification.op, sql?.complete === true ? sql.text : null),
         ...(classification.entityType === undefined
           ? {}
           : { entityType: classification.entityType }),

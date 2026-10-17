@@ -64,6 +64,7 @@ describe('parseConfig', () => {
         skipGuardDecorators: {},
         markers: { warnAsError: false },
       },
+      callShape: { conditionalWrites: [], perItemHosts: [], boundedCalls: [] },
     });
   });
 

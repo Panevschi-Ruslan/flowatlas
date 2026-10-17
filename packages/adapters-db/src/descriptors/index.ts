@@ -88,6 +88,9 @@ const READ = 'read' as const;
 const WRITE = 'write' as const;
 const DELETE = 'delete' as const;
 
+/** A write's filter written as its first argument: `updateOne({ _id, status }, …)` (P89). */
+const FIRST_ARGUMENT_FILTER = { argument: 0, path: [] } as const;
+
 const typeormDescriptor: DbDescriptor = {
   package: 'typeorm',
   operations: {
@@ -122,6 +125,8 @@ const typeormDescriptor: DbDescriptor = {
     softRemove: DELETE,
     clear: DELETE,
   },
+  // `update({ id, status: 'open' }, …)`: the criteria come first (P89).
+  filters: { update: FIRST_ARGUMENT_FILTER },
 };
 
 const prismaDescriptor: DbDescriptor = {
@@ -145,6 +150,9 @@ const prismaDescriptor: DbDescriptor = {
     delete: DELETE,
     deleteMany: DELETE,
   },
+  batch: ['createMany', 'createManyAndReturn', 'updateMany', 'updateManyAndReturn', 'deleteMany'],
+  // `update({ where: { id, status: 'open' }, data })` (P89).
+  filters: { update: { argument: 0, path: ['where'] } },
 };
 
 const pgDescriptor: DbDescriptor = {
@@ -201,6 +209,7 @@ const localBaseDescriptor: DbDescriptor = {
     'drop*': DELETE,
     'clear*': DELETE,
   },
+  batch: ['bulk*', 'insertMany', 'createMany', 'saveMany', 'updateMany', 'upsertMany', 'deleteMany', 'removeMany'],
 };
 
 /** The driver, used directly rather than through a mapper. */
@@ -227,6 +236,13 @@ const mongodbDescriptor: DbDescriptor = {
     deleteMany: DELETE,
     findOneAndDelete: DELETE,
     drop: DELETE,
+  },
+  batch: ['insertMany', 'updateMany', 'deleteMany', 'bulkWrite'],
+  filters: {
+    updateOne: FIRST_ARGUMENT_FILTER,
+    replaceOne: FIRST_ARGUMENT_FILTER,
+    findOneAndUpdate: FIRST_ARGUMENT_FILTER,
+    findOneAndReplace: FIRST_ARGUMENT_FILTER,
   },
 };
 
@@ -297,6 +313,13 @@ const mongooseDescriptor: DbDescriptor = {
     findByIdAndRemove: DELETE,
     remove: DELETE,
   },
+  batch: ['insertMany', 'updateMany', 'deleteMany', 'bulkWrite'],
+  filters: {
+    updateOne: FIRST_ARGUMENT_FILTER,
+    replaceOne: FIRST_ARGUMENT_FILTER,
+    findOneAndUpdate: FIRST_ARGUMENT_FILTER,
+    findOneAndReplace: FIRST_ARGUMENT_FILTER,
+  },
 };
 
 /**
@@ -329,6 +352,9 @@ const sequelizeDescriptor: DbDescriptor = {
     destroy: DELETE,
     truncate: DELETE,
   },
+  batch: ['bulkCreate'],
+  // `Model.update(values, { where: { id, status: 'open' } })` (P89).
+  filters: { update: { argument: 1, path: ['where'] } },
 };
 
 /**

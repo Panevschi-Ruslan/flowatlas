@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T03:54:47.129Z",
+  "configHash": "374273ef0273",
+  "services": [
+    {
+      "name": "parcels",
+      "repo": "./parcels",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 67,
+      "edges": 61,
+      "types": 4,
+      "unresolved": 2,
+      "durationMs": 632,
+      "packages": {
+        "name": "loops-worth-fixing-parcels",
+        "runtime": [
+          "@aws-sdk/client-sqs",
+          "@nestjs/common",
+          "@nestjs/core",
+          "mongodb",
+          "nodemailer",
+          "typeorm"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 0,
+    "noConsumers": [
+      "channel:mail",
+      "channel:sqs/parcel-exports"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 12,
+    "called": 0,
+    "uncalled": [
+      "entry:parcels:http:GET:/parcels/labels",
+      "entry:parcels:http:GET:/parcels/labels/preview",
+      "entry:parcels:http:GET:/parcels/statuses",
+      "entry:parcels:http:POST:/parcels/:param/delivered",
+      "entry:parcels:http:POST:/parcels/claim",
+      "entry:parcels:http:POST:/parcels/export",
+      "entry:parcels:http:POST:/parcels/export/groups",
+      "entry:parcels:http:POST:/parcels/labels/print",
+      "entry:parcels:http:POST:/parcels/notify",
+      "entry:parcels:http:POST:/parcels/regions/seed",
+      "entry:parcels:http:POST:/parcels/sync",
+      "entry:parcels:http:POST:/parcels/sync/scans"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 67,
+    "edges": 61,
+    "types": 4,
+    "missed": 2,
+    "sites": 2,
+    "notes": 2,
+    "findings": 2,
+    "unresolved": 2
+  }
+}

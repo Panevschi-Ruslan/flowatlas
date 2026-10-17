@@ -369,6 +369,14 @@ export const customProducerSchema = z.strictObject({
    */
   payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
+  /**
+   * The call sends many messages in one round trip, or sends to one recipient
+   * and has no batch form (P89): how a loop around it is read. A loop around
+   * nothing but batches is not listed; one around nothing but per-recipient
+   * sends is a note.
+   */
+  batch: z.boolean().optional(),
+  perItem: z.boolean().optional(),
 }).superRefine((producer, ctx) => {
   const onReceiver = producer.receiverType !== undefined || producer.method !== undefined;
   if (producer.function !== undefined && onReceiver) {
@@ -1119,6 +1127,25 @@ export const flowatlasConfigSchema = z
         maxDepth: z.number().int().min(1).default(DEFAULT_TYPE_MAX_DEPTH),
       })
       .default({ maxDepth: DEFAULT_TYPE_MAX_DEPTH }),
+    /**
+     * What a loop that runs a query per item may do on purpose (P89).
+     *
+     * `conditionalWrites` names the functions or methods of the project's own
+     * that change a row only in the state it is expected in - a guarded
+     * transition, a compare-and-set - which have no batch form: a loop whose
+     * every query goes through one is a note, not a likely N+1.
+     * `perItemHosts` does the same for requests to a host that takes one
+     * recipient per call. `boundedCalls` names helpers that split a list into
+     * chunks, beside the built-in `chunk`, `chunks`, `batches`, `inChunks` and
+     * `splitEvery`: a loop over what one hands back is not listed.
+     */
+    callShape: z
+      .strictObject({
+        conditionalWrites: z.array(z.string().min(1)).default([]),
+        perItemHosts: z.array(z.string().min(1)).default([]),
+        boundedCalls: z.array(z.string().min(1)).default([]),
+      })
+      .default({ conditionalWrites: [], perItemHosts: [], boundedCalls: [] }),
   })
   .superRefine((config, ctx) => {
     const seen = new Set<string>();

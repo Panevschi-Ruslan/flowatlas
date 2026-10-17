@@ -1,4 +1,5 @@
 import { Node, SyntaxKind, type CallExpression, type NewExpression, type SourceFile } from 'ts-morph';
+import { boundedLoopOf, type BoundedBy, type BoundedLoopOptions } from './bounded-loop.js';
 import { startLineOf } from './line-numbers.js';
 
 /**
@@ -23,6 +24,8 @@ export interface LoopShape {
   /** `for`, `for-of`, `for-in`, `while`, `do`, or the array method: `map`, `forEach`, ... */
   kind: string;
   line: number;
+  /** Why the loop runs a bounded number of times on purpose, when it does (P89). */
+  bounded?: BoundedBy;
 }
 
 export interface ConcurrentShape {
@@ -95,7 +98,25 @@ const combinatorOf = (node: Node, child: Node): string | undefined => {
   return `Promise.${method.name}`;
 };
 
-export const callShapeOf = (call: Node): CallShape => {
+/**
+ * A loop found around a call, with why it is bounded when it is. Asked once
+ * per loop: every call in one loop climbs to the same node.
+ */
+const BOUNDED = new WeakMap<object, Map<string, BoundedBy | null>>();
+
+const loopAt = (kind: string, loop: Node, options: BoundedLoopOptions): LoopShape => {
+  const key = (options.boundedCalls ?? []).join('\u0000');
+  let known = BOUNDED.get(loop.compilerNode);
+  if (known === undefined) {
+    known = new Map();
+    BOUNDED.set(loop.compilerNode, known);
+  }
+  if (!known.has(key)) known.set(key, boundedLoopOf(loop, options)?.by ?? null);
+  const bounded = known.get(key);
+  return { kind, line: startLineOf(loop), ...(bounded === null || bounded === undefined ? {} : { bounded }) };
+};
+
+export const callShapeOf = (call: Node, options: BoundedLoopOptions = {}): CallShape => {
   const shape: CallShape = {};
   let child: Node = call;
   let node = call.getParent();
@@ -103,14 +124,14 @@ export const callShapeOf = (call: Node): CallShape => {
     if (Node.isFunctionLikeDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node)) {
       const per = perItemMethod(node);
       if (per === undefined) break;
-      shape.loop ??= { kind: per.kind, line: startLineOf(per.call) };
+      shape.loop ??= loopAt(per.kind, per.call, options);
       child = per.call;
       node = per.call.getParent();
       continue;
     }
     if (shape.loop === undefined) {
       const kind = statementLoop(node, child);
-      if (kind !== undefined) shape.loop = { kind, line: startLineOf(node) };
+      if (kind !== undefined) shape.loop = loopAt(kind, node, options);
     }
     if (shape.concurrent === undefined) {
       const by = combinatorOf(node, child);

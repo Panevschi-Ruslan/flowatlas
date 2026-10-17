@@ -1,5 +1,6 @@
 import { Project, SyntaxKind, type CallExpression, type Node, type SourceFile } from 'ts-morph';
 import { describe, expect, it, vi } from 'vitest';
+import { isMigrationFile } from './bounded-loop.js';
 import { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
 
 const shapeOf = (body: string, name = 'q') => {
@@ -170,5 +171,78 @@ describe('the call index (P79)', () => {
     source.replaceWithText('r(new B());\n');
     expect(kept.calls(1).map((c) => c.getText())).toEqual(['r(new B())']);
     expect(kept.news(1).map((n) => n.getText())).toEqual(['new B()']);
+  });
+});
+
+describe('loops bounded on purpose (P89)', () => {
+  const boundedOf = (body: string, options = {}) => {
+    const source = new Project({ useInMemoryFileSystem: true }).createSourceFile('e.ts', body);
+    const call = source
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .find((c) => c.getExpression().getText() === 'q');
+    if (call === undefined) throw new Error('no call to q');
+    return callShapeOf(call, options).loop?.bounded;
+  };
+
+  it.each([
+    ['chunk', 'a constant step', 'const SIZE = 25; async function f(ids) { for (let i = 0; i < ids.length; i += SIZE) await q(ids.slice(i, i + SIZE)); }'],
+    ['chunk', 'a step written i = i + N', 'async function f(ids) { for (let i = 0; i < ids.length; i = i + 10) await q(i); }'],
+    ['chunk', 'a slice cut off each time round', 'async function f(ids, i) { while (i < ids.length) { await q(ids.slice(i, i + 50)); i += 50; } }'],
+    ['chunk', 'a splice from the front', 'async function f(ids) { while (ids.length > 0) await q(ids.splice(0, 100)); }'],
+    ['chunk', 'a for-of over chunk()', 'declare function chunk<T>(xs: T[], n: number): T[][]; async function f(ids) { for (const part of chunk(ids, 10)) await q(part); }'],
+    ['chunk', 'a map over a const bound to batches()', 'declare function batches<T>(xs: T[]): T[][]; function f(ids) { const parts = batches(ids); return parts.map((p) => q(p)); }'],
+    ['page', 'while (hasMore)', 'async function f() { let hasMore = true; while (hasMore) { const r = await q(); hasMore = r.more; } }'],
+    ['page', 'skip and take handed to the query', 'async function f(skip = 0) { while (skip >= 0) { const rows = await q({ skip, take: 100 }); skip = rows.length ? skip + 100 : -1; } }'],
+    ['page', 'while (true) that stops on a short page', 'async function f() { for (;;) { const rows = await q(); if (rows.length < 100) break; } }'],
+    ['cursor', 'do … while (token)', 'async function f() { let token; do { const r = await q({ NextToken: token }); token = r.NextToken; } while (token); }'],
+    ['cursor', 'while (cursor !== undefined)', 'async function f(cursor) { while (cursor !== undefined) cursor = (await q(cursor)).next; }'],
+    ['retry', 'a constant number of tries, left on success', 'const MAX_ATTEMPTS = 3; async function f() { for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) { try { await q(); break; } catch {} } }'],
+    ['retry', 'while (attempt < MAX) with a return after a check', 'async function f() { let attempt = 0; while (attempt < 5) { const r = await q(); if (r.ok) return r; attempt += 1; } }'],
+    ['literal', 'a for-of over an array literal', "async function f() { for (const kind of ['a', 'b', 'c']) await q(kind); }"],
+    ['literal', 'a const bound to an array literal', "const REGIONS = ['north', 'south'] as const; function f() { REGIONS.forEach((r) => q(r)); }"],
+    ['literal', 'Object.keys of an object literal', 'const LIMITS = { a: 1, b: 2 }; async function f() { for (const k of Object.keys(LIMITS)) await q(k); }'],
+    ['literal', 'an enum', 'enum Region { North, South } async function f() { for (const r in Region) await q(r); }'],
+    ['literal', 'Object.values of an enum', "enum Kind { A = 'a', B = 'b' } function f() { return Object.values(Kind).map((k) => q(k)); }"],
+  ])('reads %s from %s', (by, _, body) => {
+    expect(boundedOf(body)).toBe(by);
+  });
+
+  it('reads a project chunking helper the configuration names', () => {
+    const body = 'declare function inGroups<T>(xs: T[]): T[][]; async function f(ids) { for (const g of inGroups(ids)) await q(g); }';
+    expect(boundedOf(body)).toBeUndefined();
+    expect(boundedOf(body, { boundedCalls: ['inGroups'] })).toBe('chunk');
+  });
+
+  it.each([
+    ['a step of one', 'async function f(ids) { for (let i = 0; i < ids.length; i += 1) await q(ids[i]); }'],
+    ['a step that is a parameter', 'async function f(ids, step) { for (let i = 0; i < ids.length; i += step) await q(ids.slice(i, i + step)); }'],
+    ['a retry whose bound is a parameter', 'async function f(max) { for (let attempt = 0; attempt < max; attempt++) { try { await q(); break; } catch {} } }'],
+    ['a constant count with no exit', 'async function f() { for (let i = 0; i < 3; i++) await q(i); }'],
+    ['a variable array', 'async function f(kinds: string[]) { for (const kind of kinds) await q(kind); }'],
+    ['a let bound to an array literal', "async function f() { let kinds = ['a']; for (const kind of kinds) await q(kind); }"],
+    ['while (cond) with no cursor or page key', 'async function f(cond) { while (cond) { await q({ id: 1 }); cond = false; } }'],
+    ['an index walk with skip and take', 'async function f(ids) { for (let i = 0; i < ids.length; i++) await q({ where: { id: ids[i] }, skip: 0, take: 1 }); }'],
+    ['a while (true) with no short page', 'async function f() { while (true) { await q(); } }'],
+    ['a break inside a nested switch', 'async function f() { for (let a = 0; a < 3; a++) { switch (a) { case 1: break; } await q(); } }'],
+  ])('reads nothing from %s', (_, body) => {
+    expect(boundedOf(body)).toBeUndefined();
+  });
+});
+
+describe('isMigrationFile (P89)', () => {
+  const sourceOf = (text: string) => new Project({ useInMemoryFileSystem: true }).createSourceFile('m.ts', text);
+
+  it('takes a file under a migrations directory', () => {
+    expect(isMigrationFile('src/migrations/1700-backfill.ts')).toBe(true);
+    expect(isMigrationFile('db/Migration/seed.ts')).toBe(true);
+    expect(isMigrationFile('src/orders/migrations.ts')).toBe(false);
+  });
+
+  it('takes a class implementing MigrationInterface, or a module exporting up and down', () => {
+    const migration = sourceOf('export class Backfill implements MigrationInterface { up() {} down() {} }');
+    expect(isMigrationFile('src/a.ts', migration, { interfaces: ['MigrationInterface'] })).toBe(true);
+    expect(isMigrationFile('src/a.ts', migration)).toBe(false);
+    expect(isMigrationFile('src/b.ts', sourceOf('export async function up() {} export async function down() {}'))).toBe(true);
+    expect(isMigrationFile('src/c.ts', sourceOf('export async function up() {}'))).toBe(false);
   });
 });

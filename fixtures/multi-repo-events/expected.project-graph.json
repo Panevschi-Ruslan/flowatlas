@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:07:29.846Z",
+  "builtAt": "2026-10-17T03:50:01.379Z",
   "services": [
     {
       "name": "platform-events",
@@ -638,7 +638,8 @@
           }
         ],
         "channelKind": "topic",
-        "confidence": "static"
+        "confidence": "static",
+        "batch": true
       }
     },
     {
@@ -671,7 +672,8 @@
           }
         ],
         "channelKind": "topic",
-        "confidence": "static"
+        "confidence": "static",
+        "batch": true
       }
     },
     {

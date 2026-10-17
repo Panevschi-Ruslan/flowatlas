@@ -413,10 +413,23 @@ export class GraphDb {
   }
 
   /** Everything recorded against one node, for saying why a walk stops there. */
-  unresolvedFor(id: string): UnresolvedRow[] {
-    return this.#db
-      .prepare('SELECT service, file, line, reason, level, sites, message, hint FROM unresolved WHERE node_id = ?')
-      .all(id) as UnresolvedRow[];
+  /** The rows recorded against one node, each with its meta when it has one (P89: a loop's reach). */
+  unresolvedFor(id: string): Array<UnresolvedRow & { meta?: Record<string, unknown> }> {
+    // As `allUnresolved` reads them: a database older than the meta column still answers.
+    const select = (meta: string): Array<UnresolvedRow & { meta: string }> =>
+      this.#db
+        .prepare(`SELECT service, file, line, reason, level, sites, message, hint, ${meta} AS meta FROM unresolved WHERE node_id = ?`)
+        .all(id) as Array<UnresolvedRow & { meta: string }>;
+    let rows;
+    try {
+      rows = select('meta');
+    } catch {
+      rows = select("'{}'");
+    }
+    return rows.map(({ meta, ...row }) => {
+      const parsed = parse(meta);
+      return Object.keys(parsed).length === 0 ? row : { ...row, meta: parsed };
+    });
   }
 
   /** Findings across the project, newest first is meaningless here, so by place. */

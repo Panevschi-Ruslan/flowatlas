@@ -177,6 +177,18 @@ export interface CallPattern {
    * (`CHANNEL_DECLARED_META`; P51).
    */
   whereDeclared?: boolean;
+  /**
+   * The call sends many messages in one round trip (P89): `meta.batch` on the
+   * producer, so a loop around nothing else is read as the chunking around a
+   * batch rather than an N+1.
+   */
+  batch?: boolean;
+  /**
+   * The call sends to one recipient and has no batch form (P89): a chat
+   * message, a mail. `meta.perItem` on the producer, so a loop of them is
+   * per item on purpose: a note, not a likely N+1.
+   */
+  perItem?: boolean;
 }
 
 /**

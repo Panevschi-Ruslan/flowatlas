@@ -1,4 +1,5 @@
 import {
+  BOUNDED_BY,
   CONFIDENCE_LEVELS,
   countsOf,
   EDGE_TYPES,
@@ -6,6 +7,7 @@ import {
   NODE_TYPES,
   tally,
   wasMissed,
+  type BoundedBy,
   type Confidence,
   type EdgeType,
   type NodeType,
@@ -70,6 +72,12 @@ export interface Stats {
    * queries are read (P88): not listed, and counted here so the drop is seen.
    */
   receiversExplainedByEdge: number;
+  /**
+   * Loops that run a query per item and are bounded on purpose, by why (P89):
+   * not listed by doctor, counted here so what was set aside is seen. Summed
+   * over the repository nodes, in the order `BOUNDED_BY` lists the reasons.
+   */
+  loopsBounded: Partial<Record<BoundedBy, number>>;
   link: LinkSummary;
 }
 
@@ -156,10 +164,18 @@ export const collectStats = (db: GraphDb): Stats => {
   const counted = countsOf(rows);
   // Each reading's own count, on its repository node; absent where none.
   let receiversExplainedByEdge = 0;
+  const bounded = new Map<BoundedBy, number>();
   for (const repo of db.nodesByType('repo')) {
-    const explained = (repo.meta?.['stats'] as Record<string, unknown> | undefined)?.['receiversExplainedByEdge'];
+    const stats = repo.meta?.['stats'] as Record<string, unknown> | undefined;
+    const explained = stats?.['receiversExplainedByEdge'];
     if (typeof explained === 'number') receiversExplainedByEdge += explained;
+    const loops = (stats?.['loopsBounded'] ?? {}) as Record<string, unknown>;
+    for (const by of BOUNDED_BY) {
+      const count = loops[by];
+      if (typeof count === 'number') bounded.set(by, (bounded.get(by) ?? 0) + count);
+    }
   }
+  const loopsBounded = Object.fromEntries(BOUNDED_BY.filter((by) => bounded.has(by)).map((by) => [by, bounded.get(by)]));
 
   const report = db.report();
   const link: LinkSummary =
@@ -192,6 +208,7 @@ export const collectStats = (db: GraphDb): Stats => {
     unresolvedSites: sortedRecord(unresolvedSites),
     nothing,
     receiversExplainedByEdge,
+    loopsBounded,
     link,
   };
 };
@@ -230,6 +247,12 @@ const unresolvedSection = (stats: Stats): string[] => {
   ];
 };
 
+/** `loops set aside: chunk 2 · page 1`, or `none` (P89). */
+const loopsSetAside = (counts: Partial<Record<BoundedBy, number>>): string => {
+  const parts = BOUNDED_BY.filter((by) => (counts[by] ?? 0) > 0).map((by) => `${by} ${counts[by] ?? 0}`);
+  return `loops set aside: ${parts.length === 0 ? 'none' : parts.join(' · ')}`;
+};
+
 export const summariseStats = (stats: Stats): string[] => {
   const { totals, link } = stats;
   // In the build summary's words (P81), from a report however old: a Stats
@@ -255,6 +278,7 @@ export const summariseStats = (stats: Stats): string[] => {
     '',
     ...unresolvedSection(stats),
     `receivers explained by a drawn call: ${stats.receiversExplainedByEdge ?? 0}`,
+    loopsSetAside(stats.loopsBounded ?? {}),
     '',
     'link report',
   ];

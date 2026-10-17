@@ -8,7 +8,9 @@ import {
   gapIdOf,
   isRule,
   kindOfRow,
+  rankByReach,
   readAccepted,
+  waysInOf,
   type AcceptedRead,
   type GraphNode,
   type RowKind,
@@ -53,6 +55,10 @@ export interface GapHit {
   note?: string;
   /** The rule that accepted it, when a rule did rather than an entry for this one place (P76). */
   acceptedBy?: string;
+  /** `likely` or `note`, where the row says how sure it is (P89: a loop that runs a query per item). */
+  severity?: string;
+  /** How many ways in of its service reach the place, where the row says; hits are ranked by it (P89). */
+  waysIn?: number;
 }
 
 export interface TypeHit {
@@ -130,9 +136,12 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
   const wanted = text.toLowerCase();
   const seen = new Set<string>();
   const rows: GapHit[] = [];
-  const candidates = db
-    .allUnresolved()
-    .filter((row) => (service === undefined || row.service === service) && gapText(row).includes(wanted));
+  // Rows reached from more ways in first, among themselves (P89), so the one
+  // hit a file keeps is its busiest, and the hits are ranked the same way.
+  const candidates = rankByReach(
+    db.allUnresolved().filter((row) => (service === undefined || row.service === service) && gapText(row).includes(wanted)),
+    waysInOf,
+  );
   // Which entry took each row, as every other surface decides it (P80).
   const split = acceptedSplitOf(db, candidates, accepted);
   candidates.forEach((row, index) => {
@@ -151,6 +160,8 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
       ...(row.service === null ? {} : { service: row.service }),
       ...(row.file === null ? {} : { loc: row.line === null ? row.file : `${row.file}:${row.line}` }),
       message: row.message,
+      ...(typeof row.meta?.['severity'] === 'string' ? { severity: row.meta['severity'] } : {}),
+      ...(waysInOf(row) === undefined ? {} : { waysIn: waysInOf(row) }),
       ...(entry === undefined
         ? {}
         : {

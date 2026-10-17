@@ -587,7 +587,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     }),
     shapes,
     sites: packSites(packedEdges),
-    busiest: packBusiest(input.nodes, packedEdges, position),
+    busiest: packBusiest(input.nodes, packedEdges, position, rowsIn),
     ...(input.changes === undefined ? {} : { changes: input.changes }),
     ...(fails === undefined ? {} : { fails: fails.fails }),
     ...withAccess(packAccess(input.nodes)),

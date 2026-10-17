@@ -108,6 +108,8 @@ interface Operation {
   readonly kind?: string;
   readonly starts?: Starts;
   readonly whereDeclared?: boolean;
+  /** Many messages or items in one round trip (P89). */
+  readonly batch?: true;
 }
 
 /** One service: its package, its clients, and what it publishes or starts. */
@@ -154,6 +156,7 @@ const sendsTo = (target: MessageTarget['kind'], service: string): Operation[] =>
         ...(event === undefined ? [] : [event.source, event.detailType].map((field) => ({ path: named(field) }))),
       ],
       payload: inEntry(operation.message),
+      ...(operation.batch === true ? { batch: true as const } : {}),
     };
   });
 };
@@ -239,6 +242,7 @@ const writesTo = ({ changes, operations }: WritingService): Operation[] =>
       // A batch or a transaction writes many items, none of them the message (P55).
       ...(operation.message === undefined ? { silent: true } : { payload: operation.message }),
       ...(changes === 'table' ? { whereDeclared: true } : {}),
+      ...(operation.batch === true ? { batch: true as const } : {}),
     };
   });
 
@@ -423,6 +427,7 @@ const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
     kind: operation.kind ?? service.kind,
     ...(operation.starts === undefined ? {} : { starts: startsAt(operation.starts, locate) }),
     ...(operation.whereDeclared === true ? { whereDeclared: true } : {}),
+    ...(operation.batch === true ? { batch: true } : {}),
   }));
 };
 

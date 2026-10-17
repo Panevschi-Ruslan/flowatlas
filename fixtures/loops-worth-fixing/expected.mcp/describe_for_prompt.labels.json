@@ -1,0 +1,10 @@
+{
+  "id": "entry:parcels:http:GET:/parcels/labels",
+  "markdown": "# GET /parcels/labels\n\n`entry:parcels:http:GET:/parcels/labels` — entry / http in parcels at `src/parcels/parcels.controller.ts:21`\n\n## Chain\n\n- **ParcelsController.labels** `parcels#src/parcels/parcels.controller.ts:ParcelsController.labels` — parcels `src/parcels/parcels.controller.ts:21` — handles (static) — takes `string[]`; returns `string[]`\n  - **ParcelsService.labelsFor** `parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor` — parcels `src/parcels/parcels.service.ts:16` — calls (static) — takes `string[]`; returns `string[]`\n    - **read parcels** `db_query:parcels#src/parcels/parcels.service.ts:19:28` — parcels `src/parcels/parcels.service.ts:19` — calls (static)\n      - **parcels** `table:parcels#parcels` — parcels — queries (static)\n    - **read carriers** `db_query:parcels#src/parcels/parcels.service.ts:20:29` — parcels `src/parcels/parcels.service.ts:20` — calls (static)\n      - **carriers** `table:parcels#carriers` — parcels — queries (static)\n\n## Shapes\n\n- in: `string[]`\n- out: `string[]`\n\n## Gaps\n\n- `query-in-loop` at parcels `src/parcels/parcels.service.ts:18`: A `for-of` loop runs 2 database queries once per item: likely N+1. Reached from 3 ways in. Hint: Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.\n\n## Ask next\n\n- `get_flow({entry: \"entry:parcels:http:GET:/parcels/labels\"})`\n- `describe_for_prompt({id: \"entry:parcels:http:GET:/parcels/labels\"})`\n- `impact({symbol: \"entry:parcels:http:GET:/parcels/labels\"})`\n- `who_calls({symbol: \"parcels#src/parcels/parcels.controller.ts:ParcelsController.labels\"})`\n",
+  "next": [
+    "get_flow({entry: \"entry:parcels:http:GET:/parcels/labels\"})",
+    "describe_for_prompt({id: \"entry:parcels:http:GET:/parcels/labels\"})",
+    "impact({symbol: \"entry:parcels:http:GET:/parcels/labels\"})",
+    "who_calls({symbol: \"parcels#src/parcels/parcels.controller.ts:ParcelsController.labels\"})"
+  ]
+}

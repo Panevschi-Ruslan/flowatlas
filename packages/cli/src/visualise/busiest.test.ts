@@ -1,6 +1,6 @@
 import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { packBusiest, reachOfRows } from './busiest.js';
+import { likelyLoops, packBusiest, reachOfRows } from './busiest.js';
 
 const REACHES = new Set(['handles', 'calls', 'http_calls', 'hits', 'emits', 'consumes', 'triggers']);
 const DOORS = new Set(['entry', 'ui_action']);
@@ -88,7 +88,7 @@ describe('Busiest reach, worked out for the rows shown (P84)', () => {
       const { nodes, edges } = generated(seed);
       const position = new Map(nodes.map((node, i) => [node.id, i]));
       const old = oracle(nodes, edges);
-      const { rows, ranked } = packBusiest(nodes, edges, position, 10);
+      const { rows, ranked } = packBusiest(nodes, edges, position, [], 10);
       expect(rows.length).toBe(Math.min(10, ranked));
       for (const [at, , , , ways, depth] of rows) {
         const id = nodes[at]!.id;
@@ -101,5 +101,29 @@ describe('Busiest reach, worked out for the rows shown (P84)', () => {
     const { nodes, edges } = generated(5);
     expect([...reachOfRows(['n3', 'n4'], nodes, edges).keys()]).toEqual(['n3', 'n4']);
     expect(reachOfRows([], nodes, edges).size).toBe(0);
+  });
+});
+
+describe('the likely N+1 loops (P89)', () => {
+  const loop = (file: string, line: number, waysIn: number, severity = 'likely') => ({
+    reason: 'query-in-loop',
+    file,
+    line,
+    meta: { severity, waysIn },
+  });
+
+  it('lists the likely loops reached from the most ways in first, then by place, and leaves the notes out', () => {
+    const rows = [
+      { reason: 'dynamic-table-name', file: 'a.ts', line: 1 },
+      loop('b.ts', 9, 1),
+      loop('a.ts', 4, 1),
+      loop('c.ts', 2, 3),
+      loop('d.ts', 5, 7, 'note'),
+    ];
+    expect(likelyLoops(rows)).toEqual([
+      [3, 3],
+      [2, 1],
+      [1, 1],
+    ]);
   });
 });

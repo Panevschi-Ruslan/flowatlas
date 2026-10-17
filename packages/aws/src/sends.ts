@@ -11,6 +11,11 @@ export interface SendOperation {
   readonly entries?: string;
   /** The field that carries the message: of the input, or of each entry of a batch. */
   readonly message: string;
+  /**
+   * The operation sends many messages in one round trip (P89): a loop around
+   * nothing else is the chunking around a batch, not an N+1.
+   */
+  readonly batch?: true;
 }
 
 /** How one service's input says where a message goes, and the operations that send one. */
@@ -46,7 +51,7 @@ export const SDK_SENDS = {
     addressed: 'input',
     operations: [
       { method: 'sendMessage', command: 'SendMessageCommand', message: 'MessageBody' },
-      { method: 'sendMessageBatch', command: 'SendMessageBatchCommand', entries: 'Entries', message: 'MessageBody' },
+      { method: 'sendMessageBatch', command: 'SendMessageBatchCommand', entries: 'Entries', message: 'MessageBody', batch: true },
     ],
   },
   topic: {
@@ -59,6 +64,7 @@ export const SDK_SENDS = {
         command: 'PublishBatchCommand',
         entries: 'PublishBatchRequestEntries',
         message: 'Message',
+        batch: true,
       },
     ],
   },
@@ -67,7 +73,7 @@ export const SDK_SENDS = {
     addressed: 'entry',
     absent: DEFAULT_EVENT_BUS,
     event: { source: 'Source', detailType: 'DetailType' },
-    operations: [{ method: 'putEvents', command: 'PutEventsCommand', entries: 'Entries', message: 'Detail' }],
+    operations: [{ method: 'putEvents', command: 'PutEventsCommand', entries: 'Entries', message: 'Detail', batch: true }],
   },
 } as const satisfies { readonly [K in MessageTarget['kind']]: SendingService };
 
@@ -90,6 +96,8 @@ export interface WriteOperation {
    * the stream is handed of it either way.
    */
   readonly message?: readonly string[];
+  /** The operation writes many items in one round trip (P89), as {@link SendOperation.batch} says. */
+  readonly batch?: true;
 }
 
 /** One client that writes, and what its writes land on. */
@@ -118,8 +126,8 @@ export const SDK_WRITES = {
       { method: 'putItem', command: 'PutItemCommand', address: [['TableName']], message: ['Item'] },
       { method: 'updateItem', command: 'UpdateItemCommand', address: [['TableName']], message: ['Key'] },
       { method: 'deleteItem', command: 'DeleteItemCommand', address: [['TableName']], message: ['Key'] },
-      { method: 'batchWriteItem', command: 'BatchWriteItemCommand', address: [['RequestItems', EVERY_KEY]] },
-      { method: 'transactWriteItems', command: 'TransactWriteItemsCommand', address: TRANSACTED },
+      { method: 'batchWriteItem', command: 'BatchWriteItemCommand', address: [['RequestItems', EVERY_KEY]], batch: true },
+      { method: 'transactWriteItems', command: 'TransactWriteItemsCommand', address: TRANSACTED, batch: true },
     ],
   },
   document: {
@@ -128,15 +136,16 @@ export const SDK_WRITES = {
       { method: 'put', command: 'PutCommand', address: [['TableName']], message: ['Item'] },
       { method: 'update', command: 'UpdateCommand', address: [['TableName']], message: ['Key'] },
       { method: 'delete', command: 'DeleteCommand', address: [['TableName']], message: ['Key'] },
-      { method: 'batchWrite', command: 'BatchWriteCommand', address: [['RequestItems', EVERY_KEY]] },
-      { method: 'transactWrite', command: 'TransactWriteCommand', address: TRANSACTED },
+      { method: 'batchWrite', command: 'BatchWriteCommand', address: [['RequestItems', EVERY_KEY]], batch: true },
+      { method: 'transactWrite', command: 'TransactWriteCommand', address: TRANSACTED, batch: true },
     ],
   },
   stream: {
     changes: 'stream',
     operations: [
       { method: 'putRecord', command: 'PutRecordCommand', address: [['StreamName'], ['StreamARN']], message: ['Data'] },
-      { method: 'putRecords', command: 'PutRecordsCommand', address: [['StreamName'], ['StreamARN']], message: ['Records', '*', 'Data'] },
+      { method: 'putRecords', command: 'PutRecordsCommand', address: [['StreamName'], ['StreamARN']], message: ['Records', '*', 'Data'], batch: true },
     ],
   },
 } as const satisfies Readonly<Record<string, WritingService>>;
+

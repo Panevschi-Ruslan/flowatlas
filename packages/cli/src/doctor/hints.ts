@@ -461,7 +461,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   's3-write-matches-nothing': () =>
     'A write to a bucket fires an event that none of the bucket\'s notifications takes, by its events or by the start and end of the key. Nothing to fix if the write is meant to notify nobody; otherwise the notification\'s events or filters are not the ones meant.',
   'query-in-loop': () =>
-    'A query, cache call, HTTP call or publish runs once per item of a loop - directly, or through a function the loop calls - so a list of n items costs n round trips (likely N+1). Read every item in one call before the loop, or batch the calls; nothing to fix if the list is known to stay small.',
+    'A loop runs a query, cache call, HTTP call or publish once per item - directly, or through a function it calls - so a list of n items costs n round trips (likely N+1), listed by how many ways in reach it. Read every item in one call before the loop, or batch the calls; nothing to fix if the list is known to stay small. Loops bounded on purpose are set aside and counted in `flowatlas stats`: chunks, pages, cursors, retries, literal lists, loops around nothing but batch calls, migrations. A loop whose every query is a conditional write or a send to one recipient is a note. Name a chunking helper under callShape.boundedCalls, a guarded write under callShape.conditionalWrites, and a one-recipient host under callShape.perItemHosts.',
   'event-pattern-unread': () =>
     'A rule\'s event pattern is not read, so the rule is on no channel. Write it as JSON, a heredoc or jsonencode of what the files settle.',
   'api-body-unread': () =>

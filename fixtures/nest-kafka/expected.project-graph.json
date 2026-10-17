@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:52.903Z",
+  "builtAt": "2026-10-17T03:50:20.136Z",
   "services": [
     {
       "name": "nest-kafka",
@@ -1936,11 +1936,11 @@
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 51,
+      "line": 50,
       "reason": "query-in-loop",
       "level": "info",
       "sites": 1,
-      "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
+      "message": "A `for-of` loop runs 1 publish once per item: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
       "symbol": "nest-kafka#src/orders/orders.service.ts:OrdersService.importAll",
       "meta": {
@@ -1948,7 +1948,16 @@
           "kind": "for-of",
           "line": 50
         },
-        "reaches": "producer:nest-kafka#src/orders/orders.service.ts:51:9"
+        "reaches": [
+          {
+            "id": "producer:nest-kafka#src/orders/orders.service.ts:51:9",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 0,
+        "entries": []
       },
       "service": "nest-kafka"
     },

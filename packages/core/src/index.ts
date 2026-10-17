@@ -301,6 +301,7 @@ export type {
   DbCallInput,
   DbClassification,
   DbDescriptor,
+  DbFilterAt,
   DbOp,
   DbSource,
   TableOverride,
@@ -637,6 +638,9 @@ export {
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
 export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
+export { BOUNDED_BY, boundedLoopOf, isMigrationFile } from './bounded-loop.js';
+export { rankByReach, waysInOf } from './model/row-reach.js';
+export type { BoundedBy, BoundedLoop, BoundedLoopOptions, MigrationMarks } from './bounded-loop.js';
 export { lineAndColumnAt, startLineOf } from './line-numbers.js';
 export type { CallIndex, CallShape, ConcurrentShape, LoopShape } from './call-shape.js';
 export {

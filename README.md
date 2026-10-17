@@ -790,8 +790,12 @@ prove, and the path is given so you can run it.
   status where an exception filter reads it, a guard's 403 only where it can
   say no, and every status that is only a default marked assumed
   (`fixtures/nest-fails-accurate`).
-  A query, request or publish run once per item of a loop is a
-  `query-in-loop` row, calls side by side are marked, and every step carries
+  A loop that runs a query, request or publish once per item is one
+  `query-in-loop` row naming everything it reaches, ranked by how many ways in
+  reach it; loops bounded on purpose (chunks, pages, cursors, retries, literal
+  lists, batch calls, migrations) are set aside and counted, and per-item
+  writes and sends are notes (`fixtures/loops-worth-fixing`). Calls side by
+  side are marked, and every step carries
   the lines it logs as templates, never values (`fixtures/nest-query-loop`,
   `fixtures/nest-jobs-logs`).
 - **Reading with nothing installed.** Built-in declaration shapes stand in for

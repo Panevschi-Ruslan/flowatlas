@@ -447,6 +447,9 @@ export const extractBrokers = (ctx: PassContext): void => {
         ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting, channelKind: spec.channelKind, confidence }),
         // A write only some deployment makes a publish: kept or dropped by the linker.
         ...(pattern.whereDeclared === true ? { [WHERE_DECLARED_META]: true } : {}),
+        // How a loop around it is read (P89): a batch, or a send with none.
+        ...(pattern.batch === true ? { batch: true } : {}),
+        ...(pattern.perItem === true ? { perItem: true } : {}),
       },
     });
     ctx.builder.addEdge({

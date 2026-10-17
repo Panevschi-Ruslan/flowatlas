@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:06:18.133Z",
+  "builtAt": "2026-10-17T03:49:17.497Z",
   "services": [
     {
       "name": "circulation",
@@ -881,7 +881,8 @@
         "kind": "event",
         "adapter": "aws-eventbridge",
         "channelVia": "unresolved",
-        "method": "send"
+        "method": "send",
+        "batch": true
       }
     },
     {
@@ -896,7 +897,8 @@
         "kind": "event",
         "adapter": "aws-eventbridge",
         "channelVia": "literal",
-        "method": "send"
+        "method": "send",
+        "batch": true
       }
     },
     {
@@ -911,7 +913,8 @@
         "kind": "event",
         "adapter": "aws-eventbridge",
         "channelVia": "literal",
-        "method": "send"
+        "method": "send",
+        "batch": true
       }
     },
     {

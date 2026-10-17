@@ -36,6 +36,8 @@ export interface PromptGap {
   hint?: string;
   /** The node the gap is recorded against, when it is one. */
   id?: string;
+  /** How many ways in of its service reach the place, where the row says (P89); written beside it. */
+  waysIn?: number;
 }
 
 export interface PromptSubject {
@@ -103,7 +105,8 @@ const stepLine = (step: PromptStep): string => {
 const gapLine = (gap: PromptGap): string => {
   const place = where(gap);
   const hint = gap.hint === undefined ? '' : ` Hint: ${gap.hint}`;
-  return `- ${code(gap.reason)}${place.length === 0 ? '' : ` at ${place}`}: ${gap.message}.${hint}`.replace(/\.\./g, '.');
+  const ways = gap.waysIn === undefined ? '' : ` Reached from ${gap.waysIn} way${gap.waysIn === 1 ? '' : 's'} in.`;
+  return `- ${code(gap.reason)}${place.length === 0 ? '' : ` at ${place}`}: ${gap.message}.${ways}${hint}`.replace(/\.\./g, '.');
 };
 
 /**

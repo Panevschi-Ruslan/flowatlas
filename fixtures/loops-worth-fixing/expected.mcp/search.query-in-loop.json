@@ -1,0 +1,32 @@
+{
+  "query": "query-in-loop",
+  "counts": {
+    "gaps": 2
+  },
+  "results": {
+    "gaps": [
+      {
+        "id": "gap:parcels|src/parcels/parcels.service.ts|query-in-loop",
+        "type": "gap",
+        "reason": "query-in-loop",
+        "kind": "finding",
+        "service": "parcels",
+        "loc": "src/parcels/parcels.service.ts:18",
+        "message": "A `for-of` loop runs 2 database queries once per item: likely N+1.",
+        "severity": "likely",
+        "waysIn": 3
+      },
+      {
+        "id": "gap:parcels|src/parcels/dispatch.ts|query-in-loop",
+        "type": "gap",
+        "reason": "query-in-loop",
+        "kind": "note",
+        "service": "parcels",
+        "loc": "src/parcels/dispatch.ts:13",
+        "message": "A `for-of` loop runs 1 database query once per item, each a conditional write or a send to one recipient: per item on purpose.",
+        "severity": "note",
+        "waysIn": 1
+      }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:12.404Z",
+  "builtAt": "2026-10-17T03:49:36.315Z",
   "configHash": "65af9ca97546",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 31,
       "types": 5,
       "unresolved": 4,
-      "durationMs": 505,
+      "durationMs": 502,
       "packages": {
         "name": "lending-library-media",
         "runtime": [
@@ -88,7 +88,7 @@
     "missed": 0,
     "sites": 0,
     "notes": 0,
-    "findings": 4,
+    "findings": 2,
     "unresolved": 0
   }
 }

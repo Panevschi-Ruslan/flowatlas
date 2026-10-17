@@ -59,3 +59,15 @@ describe('the forms a deployed name is written inside', () => {
     expect(deployedNameIn('arn:aws:iam::111122223333:role/library')).toBeUndefined();
   });
 });
+
+describe('batches (P89)', () => {
+  it('marks every operation that sends or writes many items in one round trip', async () => {
+    const { SDK_SENDS, SDK_WRITES } = await import('./index.js');
+    const batches = [...Object.values(SDK_SENDS), ...Object.values(SDK_WRITES)]
+      .flatMap((service) => service.operations as readonly { method: string; batch?: true }[])
+      .filter((operation) => operation.batch === true)
+      .map((operation) => operation.method)
+      .sort();
+    expect(batches).toEqual(['batchWrite', 'batchWriteItem', 'publishBatch', 'putEvents', 'putRecords', 'sendMessageBatch', 'transactWrite', 'transactWriteItems']);
+  });
+});

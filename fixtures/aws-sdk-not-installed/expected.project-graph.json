@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:32.190Z",
+  "builtAt": "2026-10-17T03:49:10.221Z",
   "services": [
     {
       "name": "catalogue",
@@ -261,7 +261,8 @@
         "kind": "event",
         "adapter": "aws-eventbridge",
         "channelVia": "literal",
-        "method": "send"
+        "method": "send",
+        "batch": true
       }
     },
     {

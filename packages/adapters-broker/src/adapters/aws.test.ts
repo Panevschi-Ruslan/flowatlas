@@ -133,6 +133,7 @@ const readCall = (file: SourceFile, method: string, specs: readonly BrokerSpec[]
         payloads: elements.map((element) => element.payload?.getText()),
         ...(pattern.starts === undefined ? {} : { starts: pattern.starts }),
         ...(pattern.whereDeclared === undefined ? {} : { whereDeclared: pattern.whereDeclared }),
+        ...(pattern.batch === undefined ? {} : { batch: pattern.batch }),
       };
     }
   }
@@ -157,6 +158,8 @@ events.send(command);`,
       evidence: 'checked',
       names: [eventChannel(undefined, 'library.holds', 'HoldPlaced'), eventChannel('library', 'library.holds', 'HoldQueued')],
       payloads: ['hold', undefined],
+      // Many events in one round trip (P89).
+      batch: true,
     });
   });
 
@@ -168,6 +171,7 @@ const sqs = new SQSClient({});
 sqs.send(new SendMessageCommand({ QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/111122223333/returns', MessageBody: JSON.stringify({ itemId: 'a' }) }));`,
     );
     expect(readCall(file, 'send')).toMatchObject({ adapter: 'aws-sqs', names: [queueChannel('returns')] });
+    expect(readCall(file, 'send')).not.toHaveProperty('batch');
   });
 
   it('reads a batch to one queue as one address carrying the first entry', () => {
@@ -178,7 +182,7 @@ declare const a: { itemId: string };
 const sqs = new SQSClient({});
 sqs.send(new SendMessageBatchCommand({ QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/111122223333/returns', Entries: [{ Id: '1', MessageBody: JSON.stringify(a) }] }));`,
     );
-    expect(readCall(file, 'send')).toMatchObject({ names: [queueChannel('returns')], payloads: ['a'] });
+    expect(readCall(file, 'send')).toMatchObject({ names: [queueChannel('returns')], payloads: ['a'], batch: true });
   });
 
   it('reads a topic by the name inside its ARN', () => {

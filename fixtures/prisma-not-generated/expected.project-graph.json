@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:12:25.600Z",
+  "builtAt": "2026-10-17T03:50:57.039Z",
   "services": [
     {
       "name": "api",
@@ -365,7 +365,8 @@
         "package": "@prisma/client",
         "method": "updateMany",
         "receiver": "db.order",
-        "source": "receiver-prop"
+        "source": "receiver-prop",
+        "batch": true
       }
     },
     {

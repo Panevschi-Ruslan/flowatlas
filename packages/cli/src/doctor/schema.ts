@@ -48,6 +48,11 @@ export interface DoctorRow {
   sites: number;
   message: string;
   hint: string;
+  /**
+   * How many ways in of its service reach the place, where the row says so
+   * (P89: a loop that runs a query per item). The group is ranked by it.
+   */
+  waysIn?: number;
 }
 
 /** Every row of one reason, with the advice they share. */

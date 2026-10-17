@@ -207,7 +207,8 @@ const unresolvedSection = (
     for (const row of group.rows) {
       const place = where(row.service, row.file, row.line, repoDirs);
       const what = shownAs(row, group.reason);
-      lines.push(`      ${place}${what === undefined ? '' : `  ${what}`}`);
+      const ways = row.waysIn === undefined ? '' : `  (${row.waysIn} way${row.waysIn === 1 ? '' : 's'} in)`;
+      lines.push(`      ${place}${what === undefined ? '' : `  ${what}`}${ways}`);
       // The heading says what the kind means; this says what this place is.
       // Marked, because an unmarked sentence between two sites is read as
       // belonging to the one below it (R35), and indentation alone was not

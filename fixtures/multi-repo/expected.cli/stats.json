@@ -69,6 +69,7 @@
     "sites": 0
   },
   "receiversExplainedByEdge": 0,
+  "loopsBounded": {},
   "link": {
     "httpOut": {
       "total": 6,

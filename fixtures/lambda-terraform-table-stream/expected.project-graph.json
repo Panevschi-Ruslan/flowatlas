@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T21:41:18.005Z",
+  "builtAt": "2026-10-17T03:49:45.496Z",
   "services": [
     {
       "name": "shop",
@@ -621,7 +621,8 @@
         ],
         "channelKind": "topic",
         "confidence": "static",
-        "whereDeclared": true
+        "whereDeclared": true,
+        "batch": true
       }
     },
     {
@@ -750,7 +751,8 @@
         "adapter": "aws-dynamodb-document",
         "channelVia": "literal",
         "method": "send",
-        "whereDeclared": true
+        "whereDeclared": true,
+        "batch": true
       }
     },
     {
@@ -766,7 +768,8 @@
         "adapter": "aws-dynamodb-document",
         "channelVia": "literal",
         "method": "send",
-        "whereDeclared": true
+        "whereDeclared": true,
+        "batch": true
       }
     },
     {
@@ -797,7 +800,8 @@
         ],
         "channelKind": "topic",
         "confidence": "static",
-        "whereDeclared": true
+        "whereDeclared": true,
+        "batch": true
       }
     },
     {

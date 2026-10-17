@@ -48,6 +48,7 @@ unresolved by reason, counted by site
   target-route-not-found  3
   unknown-base-url-env    1
 receivers explained by a drawn call: 0
+loops set aside: none
 
 link report
   calls out: 6 total, 2 linked (33%), 1 no route, 1 unknown setting, 0 ambiguous, 1 third party, 1 dynamic

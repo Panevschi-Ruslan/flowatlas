@@ -293,6 +293,32 @@ only one of them moved.
   JSON). A base named in `localBaseClasses` as a bare string had its
   `tableProperty` read off its own queries where they state it
   (`fixtures/nest-mongo-tables`).
+- **N+1 that is worth fixing (P89).** `query-in-loop` became one row per
+  loop, at the loop's line, naming every query, cache call, request and
+  publish it reaches (`meta.reaches: [{id, type, words, via?}]`, nearest
+  first, eight at most with `reachesCut` counting the rest), where it had been
+  one row per call. A loop bounded on purpose wrote no row: chunks (a constant
+  step above one, a `slice`/`splice` of a constant size, a list from `chunk`,
+  `batches` and the like or a helper named under `callShape.boundedCalls`),
+  pages and cursors (`while (hasMore)`, `do … while (token)`, `skip`/`take` or
+  a cursor key handed to the query, a `while (true)` that stops on a short
+  page), retries (a constant number of tries left on success), literal lists,
+  loops around nothing but batch calls, and loops in a migration. Each kept
+  `meta.inLoop.bounded` on its edges and was counted in the repository's
+  `stats.loopsBounded`; `flowatlas stats` printed `loops set aside: chunk 1 ·
+  page 2 · …`. A loop whose every leaf is a conditional write (a filter naming
+  a state besides the id, an SQL `UPDATE … AND col =` or `RETURNING`, a helper
+  named under `callShape.conditionalWrites`) or a send to one recipient (a
+  producer described with `perItem: true`, a request to a host under
+  `callShape.perItemHosts`) was a note (`meta.severity: 'note'`); the rest were
+  `likely` findings. Each row carried `meta.waysIn` and `meta.entries`, the ways
+  in of its service that reach the loop, and doctor, the MCP `search` and
+  `describe_for_prompt`, and the page's Busiest view listed the likely loops
+  most-reached first; the Steps view said *likely N+1* only for those. Query
+  nodes gained `meta.batch` and `meta.conditional`, and producers `meta.batch`
+  (the SDK's batch sends and writes) and `meta.perItem`, from the descriptors.
+  New fixture `fixtures/loops-worth-fixing`; `nest-query-loop`'s rows moved to
+  the loop lines.
 
 - **What a route fails with is what it can answer (P87).** Under a global or
   `@UsePipes` `ValidationPipe`, a route listed the 400 only when its handler

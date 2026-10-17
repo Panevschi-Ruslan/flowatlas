@@ -243,6 +243,21 @@ describe('failures, loops, logs and schedules on the steps (P74)', () => {
     expect(add.perItem).toBe('');
   });
 
+  it('does not call a loop that is per item on purpose a likely N+1 (P89)', () => {
+    const noted = packGraph({
+      builtAt: '2026-01-01T00:00:00Z', nodes: list, edges: linked, report,
+      unresolved: [
+        { service: 'shop-api', file: 'src/a.ts', line: 17, reason: 'query-in-loop', level: 'info', sites: 1,
+          message: 'A `for-of` loop runs 1 database query once per item, each a conditional write or a send to one recipient: per item on purpose.',
+          hint: null, node: list[1]!.id, meta: { severity: 'note', waysIn: 1 } },
+      ] as never,
+    });
+    expect(noted.busiest.loops).toEqual([]);
+    const find = stepsOf(modelOf(noted), 0).rows.find((row) => row.node === 2)!;
+    expect(find.perItem).toBe('for-of');
+    expect(find.nPlusOne).toBe(false);
+  });
+
   it('copies the failures and the logs into the prompt', () => {
     const text = promptFor(model, { entry: 0 }, { keyOf: (i) => 'k' + i });
     expect(text).toContain('## Can fail with 401 · 409 · Error');

@@ -29,6 +29,7 @@ unresolved by reason, counted by site
   dynamic-table-name           7  (listed as 5 rows)
   type-generic-uninstantiated  3  (listed as 1 row)
 receivers explained by a drawn call: 2
+loops set aside: none
 
 link report
   calls out: 0 total, 0 linked (n/a), 0 no route, 0 unknown setting, 0 ambiguous, 0 third party, 0 dynamic

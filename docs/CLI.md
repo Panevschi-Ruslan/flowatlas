@@ -716,7 +716,9 @@ carries them as `totals.missed`, `sites`, `notes` and `findings`, with
 reason lists the missed rows. `receivers explained by a drawn call`
 (`receiversExplainedByEdge` in JSON) counts the calls that looked like data by
 name and are not listed because a `static` call edge into the service's own
-repository method explains them (P88).
+repository method explains them (P88). `loops set aside: chunk 1 · page 2`
+(`loopsBounded` in JSON, `none` when there are none) counts the loops that run a
+query per item and are bounded on purpose, by why (P89).
 
 | Flag | Default | Does |
 |---|---|---|
@@ -1115,7 +1117,9 @@ the tables, addresses and channels they reach, and the next service's way in.
   queue or topic, function, workflow) and its table, address template or channel
   written inline. Calls inside `Promise.all` and its kin are marked *side by
   side*; a call run once per item of a loop is marked *per item*, and a query,
-  request or publish there *likely N+1*. A failure path (`when: failure`, an
+  request or publish there *likely N+1* unless the loop is per item on purpose
+  or bounded (P89). The **Busiest** tab lists the likely N+1 loops under the
+  methods, most-reached first. A failure path (`when: failure`, an
   error answer, a destination on failure) is red, and so is the row where a
   chain breaks: a request that finds no route, a way in with no handler read,
   an address that was not read. A join that was a best guess says so.
@@ -1853,6 +1857,9 @@ worked example of a document that declares routes.
 | `doctor.publicRoutes` | string[] | `[]` | routes public by decision, as `METHOD /path` with `*` for any run of characters (`* /api/health`, `GET /api/public/*`) |
 | `doctor.nonGateWrappers` | string[] | `["ThrottlerGuard"]` | guards that refuse nobody for who they are, so a route behind only these is still `route-unguarded` |
 | `doctor.skipGuardDecorators` | object | `{}` | decorators that switch a guard off for one handler through the reflector, each mapped to the guard classes it switches off (`{"SkipTenantAuth": ["TenantAuthGuard"]}`; `[]` = every guard); a route carrying one is audited as if those guards were absent |
+| `callShape.conditionalWrites` | string[] | `[]` | functions or methods of your own that change a row only in the state it is expected in (a guarded transition, a compare-and-set): a loop whose every query goes through one is a `query-in-loop` note, not a likely N+1 |
+| `callShape.perItemHosts` | string[] | `[]` | hosts that take one recipient per request: a loop whose every request goes to one is a note |
+| `callShape.boundedCalls` | string[] | `[]` | helpers of your own that split a list into chunks, beside the built-in `chunk`, `chunks`, `batches`, `inChunks` and `splitEvery`: a loop over what one returns is set aside |
 
 **A path segment written as a closed set.** A segment whose type is a union of
 string literals — `action: 'ship' | 'refund'` — is a segment that was
@@ -3008,11 +3015,41 @@ A `calls` edge says how the call runs. Inside a `for`, `for…of`, `for…in`,
 `while` or `do` body, or a function handed to `map`, `forEach`, `reduce` and the
 like, it carries `meta.inLoop: {kind, line}`; inside the arguments of
 `Promise.all`, `allSettled`, `race` or `any`, `meta.concurrent: true` and
-`meta.together: {by, line}`. A query, cache call, request or publish reached
-once per item - directly, or through a function the loop calls - is a
-`query-in-loop` row: a likely N+1, one row per place, at level `nothing`. A
-call in the list a loop walks runs once and is not one, and neither is an arrow
-pushed from a loop to run later (`fixtures/nest-query-loop`).
+`meta.together: {by, line}`. A call in the list a loop walks runs once and is
+not in it, and neither is an arrow pushed from a loop to run later
+(`fixtures/nest-query-loop`).
+
+A loop that runs a query, cache call, request or publish once per item -
+directly, or through a function it calls - is one `query-in-loop` row at the
+loop's line, at level `info` (P89). `meta.reaches: [{id, type, words, via?}]`
+names every leaf it reaches, nearest first, eight at most (`reachesCut` counts
+the rest); `meta.waysIn` is how many ways in of the service reach the loop and
+`meta.entries` the first three of them, and doctor, the MCP `search` and
+`describe_for_prompt` and the page's Busiest view list the most-reached first.
+`meta.severity` is `likely` (a finding) or `note`: a loop whose every leaf is a
+conditional write - a filter naming a state besides the id
+(`findOneAndUpdate({ _id, status: 'queued' }, …)`, TypeORM
+`update({ id, status }, …)`, an SQL `UPDATE … AND col =` or `RETURNING`), or a
+helper under `callShape.conditionalWrites` - or a send to one recipient (a
+producer described with `perItem: true`, a request to a host under
+`callShape.perItemHosts`) is per item on purpose, and a note.
+
+A loop bounded on purpose writes no row; its edges keep
+`meta.inLoop.bounded` and the repository's `stats.loopsBounded` counts it by
+why, which `flowatlas stats` prints:
+
+| `bounded` | The loop |
+|---|---|
+| `chunk` | steps by a constant above one (`i += BATCH_SIZE`), cuts `slice(i, i + N)` or `splice(0, N)`, or walks what `chunk`, `chunks`, `batches`, `inChunks`, `splitEvery` or a `callShape.boundedCalls` helper returns |
+| `page` | `while (hasMore)`, `while (hasNext)`; hands its query `take`/`limit` with `skip`/`offset`/`page`; or `while (true)` that stops on an empty or short page |
+| `cursor` | `while (cursor)`, `do … while (token)`; or hands its query `cursor`, `after`, `startAfter`, `NextToken`, `ContinuationToken`, `ExclusiveStartKey`, `LastEvaluatedKey` or `nextPageToken` |
+| `retry` | counts to a constant (`attempt < MAX_ATTEMPTS`) and leaves on success, inside a `try` or after a check |
+| `literal` | walks an array or object written out, a `const` bound to one, `Object.keys/values/entries` of one, or an enum |
+| `batch-call` | reaches nothing but batch operations (`meta.batch` on the leaf: `insertMany`, `bulkWrite`, `createMany`, `bulkCreate`, an SQL `IN (`, `ANY(`, `UNNEST(` or multi-row `VALUES`, `SendMessageBatchCommand`, `PublishBatchCommand`, `PutEventsCommand`, `BatchWriteItemCommand`, `PutRecordsCommand`) |
+| `migration` | is in a `migration`/`migrations` directory, a class implementing `MigrationInterface`, or a module exporting `up` and `down` |
+
+A step of one, or one that is a parameter, is not a chunk; a `while (cond)`
+with no cursor or page key is not a page (`fixtures/loops-worth-fixing`).
 
 A method or function carries `meta.logs: [{level, text, at}]` for each line it
 writes through a logger or the console: the level, and the message as a

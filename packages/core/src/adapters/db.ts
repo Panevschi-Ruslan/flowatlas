@@ -43,6 +43,27 @@ export interface DbDescriptor {
    */
   operations: Record<string, DbOp>;
   tableOverride?: TableOverride;
+  /**
+   * Methods that take many items in one round trip (P89): `insertMany`,
+   * `bulkWrite`. Written like `operations`' keys, exact names or prefixes
+   * ending in `*`. A query made by one is `meta.batch` on its node, and a
+   * loop around nothing else is the chunking around a batch, not an N+1.
+   */
+  batch?: readonly string[];
+  /**
+   * Writes whose filter can name a state besides the row's id, by method:
+   * which argument holds the filter, and where in it (P89). A write whose
+   * filter does - `updateOne({ _id, status: 'open' }, …)` - changes the row
+   * only in the state it is expected in, has no batch form, and is
+   * `meta.conditional` on its node.
+   */
+  filters?: Readonly<Record<string, DbFilterAt>>;
+}
+
+/** Where a write's filter is: the argument, and the keys from it inwards (`[]` is the argument itself). */
+export interface DbFilterAt {
+  argument: number;
+  path: readonly string[];
 }
 
 export interface DbAdapter {
