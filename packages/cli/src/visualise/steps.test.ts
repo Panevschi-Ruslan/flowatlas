@@ -1,4 +1,4 @@
-import { PROMPT_LIMITS, PROMPT_WALK, renderPrompt, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { NODE_TYPES, PROMPT_LIMITS, PROMPT_WALK, renderPrompt, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { createKeys } from './frame.js';
@@ -7,7 +7,8 @@ import { createMap, mapCallOrder, mapSeenCount, mapTopTargets, mapView } from '.
 import { packGraph, type PackedGraph } from './pack.js';
 import { packSites } from './sites.js';
 import {
-  acceptCommandFor,
+  acceptCommandForLike,
+  acceptCommandForPlace,
   accessOf,
   createSeen,
   failChips,
@@ -19,12 +20,19 @@ import {
   likeRoute,
   promptFor,
   scheduleOf,
+  STEP_KINDS,
+  STEP_MODES,
   stepIdOf,
+  stepKindOf,
   stepsOf,
+  stepUnits,
   subjectOf,
 } from './steps.js';
 
-/** What the page hands the prompt: the walk's bounds and core's renderer, as `page.html` does (P97). */
+/**
+ * What the page hands the prompt: the walk's bounds and core's renderer, as the
+ * Steps panel (`panels/steps-ui.js`) does (P97).
+ */
 const kit = { walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
 
 /**
@@ -103,6 +111,93 @@ describe('steps', () => {
     const found = stepsOf(model, 0, { depth: 1 });
     expect(found.rows).toHaveLength(2);
     expect(found.more).toBe(4);
+    expect(found.cut).toEqual({ depth: 4, rows: 0 });
+  });
+
+  it('says what the rows a waterfall holds left out, apart from the depth', () => {
+    const found = stepsOf(modelOf(pack()), 0, { rows: 3 });
+    expect(found.rows).toHaveLength(3);
+    expect(found.cut.depth).toBe(0);
+    expect(found.cut.rows).toBeGreaterThan(0);
+    expect(found.more).toBe(found.cut.rows);
+  });
+});
+
+describe('steps on a waterfall, in steps not time (P99)', () => {
+  const at = (rows: Array<{ node: number; start: number; span: number }>, node: number) => {
+    const row = rows.find((r) => r.node === node)!;
+    return [row.start, row.span];
+  };
+
+  it('gives a step nothing runs under one unit, a parent its children, end to end in call order', () => {
+    const { rows } = stepsOf(modelOf(pack()), 0);
+    // place → insert, publish, guess (side by side, alone in its run), onFail (on failure).
+    expect(at(rows, 0)).toEqual([0, 4]);
+    expect(at(rows, 1)).toEqual([0, 4]);
+    expect(at(rows, 2)).toEqual([0, 1]);
+    expect(at(rows, 3)).toEqual([0, 1]);
+    expect(at(rows, 4)).toEqual([1, 1]);
+    expect(at(rows, 6)).toEqual([1, 1]);
+    expect(at(rows, 7)).toEqual([2, 1]);
+    // A failure path is a step like any other, drawn in the bad tone.
+    expect(rows.find((row) => row.node === 8)).toMatchObject({ failure: true, start: 3, span: 1 });
+  });
+
+  it('starts side-by-side siblings at one x, as wide as the widest', () => {
+    const together = edges.map((edge, k) => (k === 7 ? { ...edge, meta: { ...edge.meta, concurrent: true } } : edge));
+    const data = packGraph({ builtAt: '2026-01-01T00:00:00Z', nodes, edges: together, unresolved: [], report });
+    const { rows } = stepsOf(modelOf(data), 0);
+    expect(at(rows, 7)).toEqual([2, 1]);
+    expect(at(rows, 8)).toEqual([2, 1]);
+    expect(at(rows, 1)).toEqual([0, 3]);
+  });
+
+  it('draws what runs nothing - a loop, a repeat, an answer, a break - as a mark of no width', () => {
+    type UnitRow = Parameters<typeof stepUnits>[0][number];
+    const rows: UnitRow[] = [
+      { parent: -1, kind: 'handler', together: false, again: false, loop: false, start: 0, span: 0 },
+      { parent: 0, kind: 'answer', together: false, again: false, loop: false, start: 0, span: 0 },
+      { parent: 0, kind: 'service', together: false, again: false, loop: false, start: 0, span: 0 },
+      { parent: 2, kind: 'service', together: false, again: false, loop: true, start: 0, span: 0 },
+      { parent: 0, kind: 'service', together: false, again: true, loop: false, start: 0, span: 0 },
+      { parent: 0, kind: 'db', together: false, again: false, loop: false, start: 0, span: 0 },
+    ];
+    expect(stepUnits(rows)).toBe(2);
+    expect(rows.map((row) => [row.start, row.span])).toEqual([[0, 2], [0, 0], [0, 1], [0, 0], [1, 0], [1, 1]]);
+    // A way in with one step draws one bar.
+    const one: UnitRow[] = [{ parent: -1, kind: 'handler', together: false, again: false, loop: false, start: 0, span: 0 }];
+    expect(stepUnits(one)).toBe(1);
+  });
+
+  it('lists a setting a step reads as a leaf under it, each time it is read, and leaves it out when asked', () => {
+    const withConfig = [...nodes, n('config:shop-api:ORDERS_LIMIT', 'config_key', 'shop-api', { label: 'ORDERS_LIMIT', line: 0 })];
+    const reads = [...edges, {
+      from: nodes[1]!.id, to: 'config:shop-api:ORDERS_LIMIT', type: 'reads_config', confidence: 'static', line: 11,
+    } as GraphEdge, { from: nodes[7]!.id, to: 'config:shop-api:ORDERS_LIMIT', type: 'reads_config', confidence: 'static', line: 21 } as GraphEdge];
+    const data = packGraph({ builtAt: '2026-01-01T00:00:00Z', nodes: withConfig, edges: reads, unresolved: [], report });
+    const model = modelOf(data);
+    const { rows } = stepsOf(model, 0);
+    const settings = rows.filter((row) => row.kind === 'config');
+    expect(settings).toHaveLength(2);
+    expect(settings.every((row) => !row.again && !row.loop && row.logs.length === 0)).toBe(true);
+    // Never walked: nothing is listed under a setting.
+    for (const row of settings) expect(rows.some((other) => other.parent === rows.indexOf(row))).toBe(false);
+    expect(rows[rows.indexOf(settings[0]!) - 1]!.node).toBe(1);
+    const lean = stepsOf(model, 0, { config: false }).rows;
+    expect(lean.some((row) => row.kind === 'config')).toBe(false);
+    expect(lean.map((row) => row.node)).toEqual(rows.filter((row) => row.kind !== 'config').map((row) => row.node));
+  });
+
+  it('has a word and a glyph for every kind of step any node is', () => {
+    const every = NODE_TYPES.map((type, i) => n(`${type}:x#${i}`, type, 'shop-api', type === 'entry' ? { kind: 'http' } : {}));
+    every.push(n('entry:x:invoke', 'entry', 'shop-api', { kind: 'invoke' }), n('entry:x:wf', 'entry', 'shop-api', { kind: 'workflow' }),
+      n('fn:x:state', 'function', 'shop-api', { kind: 'state' }));
+    const model = modelOf(packGraph({ builtAt: '2026-01-01T00:00:00Z', nodes: every, edges: [], unresolved: [], report }));
+    const kinds = new Set(every.map((_, i) => stepKindOf(model, i)));
+    for (const kind of kinds) expect(STEP_KINDS, kind).toHaveProperty(kind);
+    expect(kinds).toEqual(new Set(['handler', 'service', 'db', 'http', 'channel', 'view', 'act', 'config', 'other', 'lambda', 'workflow']));
+    expect(new Set(Object.values(STEP_KINDS).map((kind) => kind.glyph)).size).toBe(Object.keys(STEP_KINDS).length);
+    expect(STEP_MODES).toEqual(['compact', 'detailed', 'waterfall']);
   });
 });
 
@@ -372,16 +467,36 @@ describe('who covers a way in, and accepting every gap like one (P76)', () => {
     expect(text).toContain('- @Public on this route, open on purpose; JwtAuthGuard reads it');
   });
 
-  it('writes the accept command for the routes beside one, quoted for a shell', () => {
+  it('writes the accept command for one place: a route by its route, any other row by its file (P100)', () => {
+    const route = { reason: 'route-unguarded', service: 'inventory', file: 'src/levels.controller.ts', line: 14,
+      message: 'GET /levels/:param/low has no guard in front of it.' };
+    expect(acceptCommandForPlace(route)).toBe(
+      "flowatlas accept route-unguarded --service inventory --path 'GET /levels/:param/low' --note '<why this one is fine>'");
+    const place = { reason: 'channel-dynamic', service: 'billing', file: 'src/billing/notify.ts', line: 31, message: 'a channel built at run time' };
+    expect(acceptCommandForPlace(place)).toBe(
+      "flowatlas accept channel-dynamic --service billing --file src/billing/notify.ts --note '<why this one is fine>'");
+    // A row with no single place names only its service.
+    expect(acceptCommandForPlace({ reason: 'service-read-nothing', service: 'billing', file: '' })).toBe(
+      "flowatlas accept service-read-nothing --service billing --note '<why this one is fine>'");
+    // A route reason whose message names no route is taken by its file.
+    expect(acceptCommandForPlace({ ...route, message: 'no route here' })).toContain('--file src/levels.controller.ts');
+    expect(acceptCommandForPlace({ reason: 'r', service: "it's", file: 'a b.ts' })).toBe(
+      "flowatlas accept r --service 'it'\\''s' --file 'a b.ts' --note '<why this one is fine>'");
+  });
+
+  it('writes the accept command for every row like one as a rule that ends in --dry-run (P100)', () => {
     expect(likeRoute({ method: 'GET', path: '/levels/summary' })).toBe('GET /levels/*');
     expect(likeRoute({ method: 'GET', path: '/health' })).toBe('GET /health');
-    expect(
-      acceptCommandFor({ reason: 'route-unguarded', service: 'inventory', message: 'GET /levels/:param/low has no guard in front of it.' }),
-    ).toBe("flowatlas accept route-unguarded --service inventory --path 'GET /levels/:param/*' --note '<why these are fine>'");
-    expect(acceptCommandFor({ reason: 'channel-dynamic', service: 'billing' })).toBe(
-      "flowatlas accept channel-dynamic --service billing --note '<why these are fine>'",
-    );
-    expect(acceptCommandFor({ reason: 'r', service: "it's" })).toContain("--service 'it'\\''s'");
+    const route = { reason: 'route-unguarded', service: 'inventory', file: 'src/levels.controller.ts', line: 14,
+      message: 'GET /levels/:param/low has no guard in front of it.' };
+    expect(acceptCommandForLike(route)).toBe(
+      "flowatlas accept route-unguarded --service inventory --path 'GET /levels/:param/*' --note '<why these are fine>' --dry-run");
+    expect(acceptCommandForLike({ reason: 'channel-dynamic', service: 'billing', file: 'src/billing/notify.ts' })).toBe(
+      "flowatlas accept channel-dynamic --service billing --file 'src/billing/*' --note '<why these are fine>' --dry-run");
+    // No rule takes more than the place: a route one segment deep, a file at the top, no file at all.
+    expect(acceptCommandForLike({ ...route, message: 'GET /health has no guard in front of it.' })).toBeNull();
+    expect(acceptCommandForLike({ reason: 'channel-dynamic', service: 'billing', file: 'main.ts' })).toBeNull();
+    expect(acceptCommandForLike({ reason: 'service-read-nothing', service: 'billing' })).toBeNull();
   });
 });
 

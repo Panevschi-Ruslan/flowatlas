@@ -5,11 +5,14 @@ import {
   gapIdOf,
   isRule,
   kindOfRow,
+  riskOf,
+  ROW_KINDS,
   STEP_OF_META,
   type AcceptedGap,
   type AcceptedProblem,
   type GraphEdge,
   type GraphNode,
+  type Risk,
   type RowKind,
   type TypeEntry,
   waysInOf,
@@ -116,6 +119,26 @@ const packLogs = (nodes: readonly GraphNode[]): { logs?: PackedLogs; logLevels?:
  * indices too. Each block has one expander on the page, so every reader sees
  * the objects it always saw.
  */
+/** A reason's kind and, for a finding, its risk: `['gap']`, `['finding', 'auth']`. */
+export type ReasonClass = [kind: RowKind] | [kind: RowKind, risk: Risk];
+
+/** What a reason is, as the page is told it: the registry's kind, and a finding's risk. */
+const reasonClassOf = (reason: string): ReasonClass => {
+  const kind = ROW_KINDS.get(reason) ?? 'gap';
+  const risk = riskOf(reason);
+  return risk === undefined ? [kind] : [kind, risk];
+};
+
+/** The rows whose own kind (`kindOfRow`, by what they recorded) is not their reason's. */
+const rowKindsOf = (rows: readonly AnchoredUnresolvedRow[]): { rowKinds?: Record<string, RowKind> } => {
+  const out: Record<string, RowKind> = {};
+  rows.forEach((row, index) => {
+    const kind = kindOfRow(row);
+    if (kind !== (ROW_KINDS.get(row.reason) ?? 'gap')) out[String(index)] = kind;
+  });
+  return Object.keys(out).length === 0 ? {} : { rowKinds: out };
+};
+
 export interface PackedGraph {
   builtAt: string;
   dicts: {
@@ -134,6 +157,14 @@ export interface PackedGraph {
     /** The short keys whose value is a list of nodes, by position, the panel jumps to (P50). */
     nodeRefs?: string[];
     reasons: string[];
+    /**
+     * What each reason is, aligned with `reasons` (P100): its row kind (P81)
+     * and, for a finding, its risk. The Not joined tab splits by this, so it
+     * never guesses from the words in a reason. A row whose own kind is not
+     * its reason's is in `rowKinds`. Always written; optional so a graph
+     * packed by hand reads every row as a gap, as the core does.
+     */
+    reasonClass?: ReasonClass[];
     levels: string[];
     hints: string[];
     /**
@@ -159,6 +190,12 @@ export interface PackedGraph {
    * tab lists them under their kind (P81): missed, notes, findings.
    */
   unresolved: Array<{ reason: string; kind: RowKind; count: number; service: string; example: string }>;
+  /**
+   * The rows whose kind is not their reason's (P89's per-item loops, a note
+   * where `query-in-loop` is otherwise a finding), by position in `rows`.
+   * Absent when every row is the kind of its reason.
+   */
+  rowKinds?: Record<string, RowKind>;
   /**
    * Every finding, `[node, repo, file, line, reason, level, sites, message, hint, waysIn?]`.
    *
@@ -636,6 +673,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
       nodeRefs: meta.nodeRefs,
       values: meta.values,
       reasons,
+      reasonClass: reasons.map(reasonClassOf),
       levels,
       hints,
       ...(fails === undefined ? {} : fails.tables),
@@ -646,6 +684,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     edges,
     unresolved: byReason(rowsIn),
     rows,
+    ...rowKindsOf(rowsIn),
     entryIds,
     ids: packIds(input.nodes),
     ...(dangling.length === 0 ? {} : { dangling }),

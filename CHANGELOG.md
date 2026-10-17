@@ -69,7 +69,9 @@ only one of them moved.
   seen at run time* section; the MCP server gained `undeclared_failures`, worst
   first; `flowatlas doctor` gained `failure-seen-undeclared` and
   `failure-declared-unseen` rows at `info`, and `--strict-runtime` to make them
-  count. One pure comparison in core, `compareSeenFailures`
+  count; core's `riskOf` places the first under `wiring`, and `PAGE_WORDS`
+  says both (*status seen but not declared*, *declared failure never seen*).
+  One pure comparison in core, `compareSeenFailures`
   (`fixtures/multi-repo/traces`).
 
 - **How long it took, how it answered, and runs that add up (P105).**
@@ -584,6 +586,114 @@ only one of them moved.
   server's instructions name the run-time tools as chains. The test's ceilings
   were raised from 9,700 to 11,800 characters for the part a model reads and
   from 27,500 to 30,350 for the whole list (11,764 and 30,334 with all five).
+- **The page opened on the product (P98).** The masthead and the band became
+  one strip: the name, then a pill per figure, whose meaning was its title and
+  the line under the strip while it was open; a pill whose total was nought
+  was not drawn, except *Missed* and how many repositories were read. The
+  build's timings folded into *build · <total>ms · <n> services*, slowest
+  first; the sentence under the name moved to the foot of the page. Past
+  twelve services the rail became one *Services* button and a checklist with
+  a search, *All* and *None*. The tabs' row stuck to the top while a tab
+  scrolled, and on a narrow screen the tabs came before the ways in. Every
+  tab gained an address, `#<tab>[/<way in>][/reason=<reason>]` beside the
+  map's and the graph's, which were kept; moving between tabs rewrote it,
+  picking another way in added to the history, and Walk, Steps and the table
+  tabs gained *Copy link*. A first visit offered a *Start here* card naming
+  the busiest way in, the worst gap and, with `--diff`, the latest change,
+  each worked out from the graph and each a link.
+- **The page spoke in words and had one search (P101).** A check row's reason,
+  an edge's type and its trust were said in words - *route not found on the
+  target*, *requests*, *best guess* - from one table (`PAGE_WORDS` in
+  `frame.js`), the code kept in the tooltip, in the details panel beside the
+  row, and in prompts, links and the MCP server. Trust was said only when it was
+  not *read from code*: Steps lost its *certain* mark and Crossings showed the
+  edge's verb with a chip only for a guess or an annotation. The Map said
+  *problems to fix* for *rows to act on*, numbered its call-order columns from
+  *step 1*, and counted a front end's screen actions as its ways in (one with
+  none said how many screens it had). The colophon said the page was read from
+  code, and only with a trace that what was seen at run time was beside it. The
+  global search became the only one: `/` reached it, it gained the Graph tab's
+  *Nodes*, and a hit went to where it was in the tab open - a way in picked and
+  opened on Steps, the Walk or the Map, a node focused on the Graph, a gap on
+  its Not joined row - marking where it landed, else opened the Graph; the Ways
+  in list's filter box and the Graph's node search went, the first kept as the
+  search's *Filter the Ways in list to '…'* and a chip over the list. The Graph's
+  filters and checks moved into *Filters* and *Check* popovers, so its bar was
+  one row. Crossings, Busiest and Changes hid the Ways in list. `?` listed every
+  key from the table the handlers read (`SHORTCUTS`), and ⌘K (Ctrl+K) opened a
+  command list of the tabs, the open tab's actions and a search.
+- **One Steps view (P99).** The Walk tab went: Steps is the page's one view of
+  a way in, and everything that opened the Walk - a way in clicked on the left,
+  *Open in Steps* in the Graph's details, Start here, an old `#walk/<key>`
+  link - opens Steps on the same way in. Steps draws in one vocabulary of step
+  kinds, now with `view` (screen), `act` (user action) and `cfg` (reads
+  config), in a neutral chip, the service being the colour of the row's rule;
+  the legend lists every kind. A crossing into another service is a row of its
+  own again (*→ orders · requests*, trust only when not read from code) in
+  place of the *into orders* mark, and guards are said under the step they
+  stand in front of. A switch on the bar, remembered in the browser, draws the
+  steps *compact* (a line each, the file by its name, only the marks that
+  change the reading), *detailed* (every mark, the full path, logs, and the
+  settings a step reads as leaves) or as a *waterfall*: a bar per step in its
+  service's colour, laid out in steps, not time, on an axis that says so. The
+  steps above the Graph's drawing and the command list follow the switch. The
+  line under a cut list says whether the depth or the 300 rows left steps out,
+  and the second has a button for 300 more. `stepsOf` rows gained `start` and
+  `span` (units on the waterfall) and the result `cut`.
+- **Not joined was split by what a row is (P100).** The tab's one table became
+  three sections, each with its count and a line on what would appear when
+  empty: *Couldn't join* (gaps by reason, with the breakdown by cause and
+  package folded under them), *Risks* (findings, grouped *who may ask*, *likely
+  N+1 and cost*, then *wired wrong or meeting nothing*) and *Accepted* (each
+  rule once, then every accepted row with its note), which replaced the *show
+  accepted* checkbox. The split came from the pack (`dicts.reasonClass`, a
+  reason's row kind and risk, and `rowKinds` for a row of another kind than its
+  reason's), never from the words of a reason, and a row's tone was its risk's.
+  Notes left the tab, with one line saying how many and that `doctor` lists
+  them. A reason row opened to every place it stood for, fifty at most, and
+  each row and place had one `⋯` menu - *Copy as prompt*, *Copy accept command*
+  for that place (a route by its route, another row by its file), and *Copy
+  accept command for every row like this* where a rule took more, always ending
+  in `--dry-run` - in place of the inline *Copy as prompt* and *Accept all like
+  this* buttons; what was copied was shown in a toast. The Graph's details
+  rows gained the same menu. Core gained `riskOf(reason)` (`auth`,
+  `performance`, `wiring`), `RISK_NAMES`, `RISKS` and `findingsWithoutRisk`,
+  and the reasons gate failed on a finding with no risk.
+- **The page on a phone, for the keyboard and a screen reader, and fast
+  (P102).** On a narrow screen the tab row became one line that scrolled
+  sideways inside itself, faded on the side that had more, the open tab kept
+  in sight; under 360px, or when more than two tabs fell past the edge, a
+  *View* select stood in for it. Below 640px the Map tab listed its boxes as
+  cards under their call-order columns (*step 1*, *queues and topics*, …),
+  each with its type, ways in, nodes and problems and what it reached and
+  what reached it as buttons; a card opened the box's details under it, and
+  *Show the drawing* (or full screen) drew the map. Every text colour read at
+  4.5:1 or more on every ground in both themes: `--faint` and `--muted` were
+  darkened in the light theme and lightened in the dark one, `--good`,
+  `--warn` and the service hues darkened in the light theme, and the fifth
+  service hue became an indigo, since a gold dark enough to read was the warn
+  tone's brown; a service let out by the rail was dashed rather than faded.
+  No text was under 12px but inside the drawings, whose node and column names
+  were 12px at zoom 1. The tab row was a tablist the keyboard moved along (one
+  tab in the Tab order, ← → and Home End), each tab tied to its panel; the
+  page said `<html lang="en">`. A *Theme* button in the strip turned the
+  colours from the system's to light to dark, remembered in the browser, and
+  the command list offered it; form controls followed. A plain wheel over the
+  Map or the Graph scrolled the page, saying once in the corner that Ctrl (⌘)
+  and the wheel zoomed; a pinch zoomed, a drag panned, and in full screen the
+  wheel panned as before. Crossings built its rows a hundred at a time while
+  the browser was idle and kept them for the next visit; the Ways in list drew
+  only the rows in sight, so its *N more* cut went, with the picked way in
+  always drawn and the arrows moving between rows; the search waited for a
+  pause in the typing.
+- **The page's source in modules (P103). `page.html` kept only its markup:
+  its styles moved to `page.css` and its script to one module per panel under
+  `src/visualise/panels/`, each a factory handed the page so far, written in
+  through placeholders `PAGE_PARTS` lists in order. The page the command wrote
+  was still one file and drew the same thing on every fixture; the command
+  refused to write one with a part or a placeholder missing, and the built
+  command shipped `page.css` and `panels/` beside it. Every panel gained a
+  test that mounted the page's markup in a small test document.
 - **`flowatlas dead` printed a verdict (P95).** The entries table's
   `confidence` column became `verdict` (`dead`, `likely-dead`, `unknown`), the
   channel and provider tables gained one, and a route a request one segment
@@ -899,6 +1009,9 @@ only one of them moved.
 
 ### Fixed
 
+- **The Crossings tab drew nothing (P140).** Its table reached for the Not
+  joined tab's per-kind sections, which were not in its scope, and stopped on
+  the error before drawing a row; it lists every crossing again.
 - **`impact` said only one of its notes (P132).** An answer whose walk stopped
   at its limit, asked at `detail: 3`, said only that the level was clamped: the
   second note overwrote the first. It now says both: the walk limit under

@@ -419,7 +419,8 @@ export const serviceInside = (data, repo, limits = { ways: 60, classes: 12 }) =>
   data.nodes.forEach((node, i) => {
     if (node[2] !== at) return;
     const type = types[node[0]];
-    if (type === 'entry') ways.push(i);
+    // A front end's screen actions are its ways in, as on the Ways in list (P101).
+    if (type === 'entry' || type === 'ui_action') ways.push(i);
     if (type === 'method' || type === 'function') {
       const label = String(node[1]);
       const dot = label.indexOf('.');
@@ -516,7 +517,7 @@ const ownersOf = (view, hanging, slot) => {
 };
 
 const SLOT_SAYS = (slot) => (slot < 0 ? 'packages' : slot % 2 === 1 ? 'queues and topics'
-  : slot === 0 ? 'start' : 'step ' + (slot / 2 + 1));
+  : 'step ' + (slot / 2 + 1));
 
 /**
  * The map in call order: one column per step from the front ends, left to

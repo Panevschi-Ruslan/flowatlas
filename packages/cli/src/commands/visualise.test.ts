@@ -1,9 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { runVisualise } from './visualise.js';
+import { FakeEvent, installDocument, textOf } from '../visualise/panels/test-dom.js';
+import { runObserve } from './observe.js';
+import { inlined, PAGE_PARTS, runVisualise, template, writeParts } from './visualise.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const CONFIG = join(ROOT, 'fixtures', 'multi-repo', 'flowatlas.config.json');
@@ -13,6 +16,11 @@ afterAll(() => rmSync(scratch, { recursive: true, force: true, maxRetries: 10, r
 
 let page: string;
 let out: string;
+
+const VISUALISE = resolve(import.meta.dirname, '..', 'visualise');
+/** A part as it sits in the source, before the page drops a panel's imports. */
+const sourceOf = (file: string): string =>
+  readFileSync(file === 'prompt-text.js' ? resolve(ROOT, 'packages/core/src/prompt-text.js') : join(VISUALISE, file), 'utf8');
 
 const dataOf = (html: string): Record<string, any> => {
   const opening = '<script type="application/json" id="graph">';
@@ -26,6 +34,161 @@ beforeAll(() => {
   page = readFileSync(out, 'utf8');
 });
 
+describe('the page made of its parts (P103)', () => {
+  /** The page's one module script, as written. */
+  const scriptOf = (html: string): string => {
+    const opening = '<script type="module">';
+    const start = html.indexOf(opening) + opening.length;
+    return html.slice(start, html.indexOf('</script>', start));
+  };
+
+  it('holds its markup and placeholders only, under 400 lines', () => {
+    const html = readFileSync(join(VISUALISE, 'page.html'), 'utf8');
+    expect(html.split('\n').length).toBeLessThan(400);
+    for (const [placeholder] of PAGE_PARTS) expect(html.split(placeholder)).toHaveLength(2);
+  });
+
+  it('writes every part in, as one style, one graph and one module script, with no placeholder left', () => {
+    expect(page.match(/<style>/g)).toHaveLength(1);
+    expect(page.match(/<script type="application\/json" id="graph">/g)).toHaveLength(1);
+    expect(page.match(/<script type="module">/g)).toHaveLength(1);
+    expect(page.match(/<script/g)).toHaveLength(2);
+    expect(page).not.toMatch(/__[A-Z][A-Z_]*__/);
+    for (const [, file] of PAGE_PARTS) expect(page, file).toContain(inlined(file, sourceOf(file)).trim());
+  });
+
+  it('drops a panel’s imports, since the page already holds every name they bring', () => {
+    const script = scriptOf(page);
+    expect(script).not.toMatch(/^import\b/m);
+    expect(inlined('panels/x.js', "import { a,\n  b } from '../graph.js';\nexport function x() {}\n")).toBe('export function x() {}\n');
+    expect(() => inlined('panels/x.js', "import { a as b } from '../graph.js';\n")).toThrow(/under another/);
+    expect(() => inlined('panels/x.js', "import * as all from '../graph.js';\n")).toThrow(/cannot drop/);
+    expect(inlined('graph.js', "import { a } from 'b';\n")).toBe("import { a } from 'b';\n");
+  });
+
+  it('refuses a page with no place for a part, or a place with no part', () => {
+    const html = PAGE_PARTS.map(([placeholder]) => placeholder).join('\n');
+    const read = (): string => 'part';
+    expect(writeParts(html, read)).toBe(PAGE_PARTS.map(() => 'part').join('\n'));
+    expect(() => writeParts(html.replace('__BAND_LOGIC__', ''), read)).toThrow(/no place for its panels\/band\.js/);
+    expect(() => writeParts(html + '\n__LOST_LOGIC__', read)).toThrow(/__LOST_LOGIC__ has no part/);
+    expect(writeParts(html + '\n__TITLE__ __DATA__', read)).toContain('__TITLE__ __DATA__');
+    expect(writeParts(html, () => '$& $1')).toContain('$& $1');
+  });
+
+  it('never has two parts declare one name in the script they share', () => {
+    const owner = new Map<string, string>();
+    const twice: string[] = [];
+    for (const [, file] of PAGE_PARTS.filter(([, name]) => name.endsWith('.js'))) {
+      const text = inlined(file, sourceOf(file));
+      for (const [, name] of text.matchAll(/^(?:export )?(?:const|let|var|class|function\*?|async function) ([A-Za-z_$][\w$]*)/gm)) {
+        if (owner.has(name!)) twice.push(`${name} in ${owner.get(name!)} and ${file}`);
+        owner.set(name!, file);
+      }
+    }
+    expect(twice).toEqual([]);
+  });
+
+  it.skipIf(!existsSync(resolve(import.meta.dirname, '..', '..', 'dist', 'index.js')))(
+    'ships every part beside the built command',
+    () => {
+      const dist = resolve(import.meta.dirname, '..', '..', 'dist', 'visualise');
+      for (const [, file] of PAGE_PARTS) expect(existsSync(join(dist, file)), file).toBe(true);
+      expect(existsSync(join(dist, 'page.html'))).toBe(true);
+    },
+  );
+
+  it('runs, as written, in a document: the band, the ways in and the first view drawn', async () => {
+    const markup = page.slice(page.indexOf('<div class="shell">'), page.indexOf('<script type="module">'));
+    const window = installDocument(markup);
+    const file = join(scratch, 'page-boot.mjs');
+    writeFileSync(file, scriptOf(page));
+    await import(pathToFileURL(file).href);
+    const doc = window.document;
+    expect(doc.querySelectorAll('#band .pill dt').map(textOf)[0]).toBe('Read');
+    const rows = doc.querySelectorAll('#entries button.row').length;
+    expect(rows).toBeGreaterThan(0);
+    // Every way in is listed; the list draws only the rows in sight (P102), so no more than that many.
+    const [listed, all] = textOf(doc.getElementById('entry-count')).split(' of ').map(Number);
+    expect(listed).toBe(all);
+    expect(rows).toBeLessThanOrEqual(all!);
+    expect(doc.getElementById('map-view')!.hidden).toBe(false);
+    expect(doc.querySelectorAll('#m-world .m-unit').length).toBeGreaterThan(0);
+    // Read from code; the run-time sentence only where a trace was imported (P101).
+    expect(textOf(doc.getElementById('colophon'))).toMatch(/^Read from the source code\. A path shown as/);
+    // From the keyboard only (P101): `/`, a word, Enter lands somewhere marked; ⌘K and ? open.
+    doc.body.dispatchEvent(new FakeEvent('keydown', { key: '/' }));
+    const find = doc.getElementById('find')!;
+    expect(doc.activeElement).toBe(find);
+    find.value = 'orders';
+    find.dispatchEvent(new FakeEvent('input'));
+    find.dispatchEvent(new FakeEvent('keydown', { key: 'Enter' }));
+    expect(doc.querySelectorAll('.is-found').length).toBeGreaterThan(0);
+    doc.body.dispatchEvent(new FakeEvent('keydown', { key: 'k', metaKey: true }));
+    expect(doc.getElementById('palette')!.hidden).toBe(false);
+    doc.getElementById('palette-input')!.dispatchEvent(new FakeEvent('keydown', { key: 'Escape' }));
+    doc.body.dispatchEvent(new FakeEvent('keydown', { key: '?' }));
+    expect(doc.getElementById('keys-help')!.hidden).toBe(false);
+    // One Steps tab, three ways to draw it (P99): the first way in leaves a service, so a crossing row shows.
+    expect(doc.querySelector('.tab[data-view="walk"]')).toBeNull();
+    doc.querySelector('.tab[data-view="steps"]')!.click();
+    for (const mode of ['compact', 'detailed', 'waterfall']) {
+      doc.querySelector(`[data-step-mode="${mode}"]`)!.click();
+      expect(doc.querySelectorAll(mode === 'waterfall' ? '#s-list .w-row' : '#s-list .s-row').length, mode).toBeGreaterThan(1);
+      if (mode !== 'waterfall') expect(doc.querySelectorAll('#s-list .s-cross').length, mode).toBeGreaterThan(0);
+    }
+    expect(template()).toBe(template());
+  });
+
+  /* The fixture with its traces observed, so the panels have what traffic
+     answered (P106) beside the docs `flowatlas docs` tied to the flows (P120). */
+  const observedPage = (): string => {
+    const copy = join(scratch, 'observed');
+    cpSync(join(ROOT, 'fixtures', 'multi-repo', '.flowatlas'), copy, { recursive: true });
+    const traces = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json']
+      .map((file) => join(ROOT, 'fixtures', 'multi-repo', 'traces', file));
+    runObserve(traces, { config: CONFIG, db: join(copy, 'graph.db'), now: new Date('2025-10-16T09:00:00.000Z'), print: () => {} });
+    const file = join(copy, 'graph.html');
+    runVisualise({ config: CONFIG, db: join(copy, 'graph.db'), out: file, print: () => {} });
+    return readFileSync(file, 'utf8');
+  };
+  const bootAt = async (html: string, address: string, name: string) => {
+    const markup = html.slice(html.indexOf('<div class="shell">'), html.indexOf('<script type="module">'));
+    const window = installDocument(markup, 'file:///project/graph.html' + address);
+    const file = join(scratch, `${name}.mjs`);
+    writeFileSync(file, scriptOf(html));
+    await import(pathToFileURL(file).href);
+    return window.document;
+  };
+
+  it('says beside each failure what traffic answered, and which docs describe a node, in the panels (P106, P120)', async () => {
+    const html = observedPage();
+    const data = dataOf(html);
+    const at = (id: string): number => data.entryIds[id];
+    // A way in that declares 409 no request answered, and answered a 500 nothing declares.
+    const doc = await bootAt(html, `#graph/${at('entry:billing:http:POST:/invoices')}`, 'page-observed-billing');
+    const details = doc.getElementById('g-details')!;
+    expect(details.hidden).toBe(false);
+    const chips = details.querySelectorAll('.fail-chips .fail-chip').map((chip) => [textOf(chip), chip.getAttribute('class')]);
+    expect(chips).toContainEqual(['409 never seen', 'fail-chip is-never']);
+    expect(chips).toContainEqual(['500 ×1 not declared', 'fail-chip is-undeclared']);
+    expect(textOf(details)).toContain('Run time: 22 hits, 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z.');
+    // The same chips on the Steps header of that way in.
+    details.querySelector('[data-act="open-steps"]')!.click();
+    expect(doc.querySelectorAll('#steps-view .s-head .fail-chip').map(textOf)).toContain('409 never seen');
+    // A declared status traffic answered, and the docs that describe a way in.
+    const orders = await bootAt(html, `#graph/${at('entry:billing:http:GET:/invoices/:param')}`, 'page-observed-invoice');
+    expect(orders.querySelectorAll('#g-details .fail-chip.is-seen').map(textOf)).toContain('404 seen ×1');
+    const described = await bootAt(html, `#graph/${at('entry:orders:http:POST:/orders')}`, 'page-observed-orders');
+    const panel = described.getElementById('g-details')!;
+    expect(panel.querySelectorAll('section h4').map(textOf)).toContain('Described in · 2');
+    expect(panel.querySelectorAll('.doc-list .tag').map(textOf)).toEqual(['up to date', 'stale: the flow changed']);
+    // The way in picked is drawn on the Ways in list with what traffic answered beside its failures.
+    const row = described.querySelector(`#entries button.row[data-entry="${at('entry:orders:http:POST:/orders')}"]`)!;
+    expect(row.querySelectorAll('.fail-chip').map(textOf)).toContain('500 ×1 not declared');
+  });
+});
+
 describe('writing the graph as a page', () => {
   it('is one file with nothing to fetch', () => {
     expect(page).toContain('<script type="application/json" id="graph">');
@@ -37,6 +200,10 @@ describe('writing the graph as a page', () => {
     const head = page.slice(0, 200).toLowerCase();
     expect(head.startsWith('<!doctype html>')).toBe(true);
     expect(head).toContain('<meta charset="utf-8">');
+  });
+
+  it('says what language it is written in, for a screen reader (P102)', () => {
+    expect(page.startsWith('<!doctype html>\n<html lang="en">\n')).toBe(true);
   });
 
   it('carries the whole graph, not a sample of it', () => {

@@ -8,6 +8,7 @@ import {
   formatMapHash,
   serviceInside,
   isOpen,
+  mapCallOrder,
   MAP_BOX,
   MAP_OPEN_UNDER,
   mapCycles,
@@ -166,6 +167,24 @@ describe('the project at the size of its services', () => {
     expect(map.boxes[map.byId.get('service:orders-api')!]!.a).toBe(2);
   });
 
+  it("counts a front end's screen actions as its ways in, and its screens (P101)", () => {
+    const front = [
+      node({ id: 'repo:shop-app', type: 'repo', repo: 'shop-app' }),
+      node({ id: 'ui:shop-app#Cart', type: 'ui_component', repo: 'shop-app', label: 'Cart' }),
+      node({ id: 'ui:shop-app#Cart.pay', type: 'ui_action', repo: 'shop-app', label: 'click pay()' }),
+      node({ id: 'ui:shop-app#Cart.clear', type: 'ui_action', repo: 'shop-app', label: 'click clear()' }),
+      node({ id: 'repo:shop-admin', type: 'repo', repo: 'shop-admin' }),
+      node({ id: 'ui:shop-admin#Home', type: 'ui_component', repo: 'shop-admin', label: 'Home' }),
+    ];
+    const small = packGraph({ builtAt: '2026-10-08T00:00:00.000Z', nodes: front, edges: [], unresolved: [],
+      report: { ...report, services: [service('shop-app'), service('shop-admin')] } as unknown as LinkReport });
+    const boxes = createMap(small.map);
+    const s = (name: string) => boxes.boxes[boxes.byId.get('service:' + name)!]!.s;
+    expect(s('shop-app')).toMatchObject({ ways: 2, actions: 2, screens: 1 });
+    expect(s('shop-admin')).toMatchObject({ ways: 0, screens: 1 });
+    expect(serviceInside(small, 'shop-app').ways.map((i) => small.nodes[i]![1])).toEqual(['click clear()', 'click pay()']);
+  });
+
   it('joins a service to the service publishing the package it depends on, and shares the rest', () => {
     const manifestLinks = map.links
       .filter((link) => link.k === 7)
@@ -280,6 +299,13 @@ describe('where the map puts things', () => {
         expect(Math.abs(a.y - b.y)).toBeGreaterThanOrEqual(a.h);
       }
     }
+  });
+
+  it('numbers the call-order columns from step 1, the queues and topics between (P101)', () => {
+    const view = mapView(map, { toggled: new Set(), hidden: new Set() }, confidences);
+    const labels = mapCallOrder(map, view).columns.map((column) => column.label);
+    // The web app, the API it calls, then the order topic and the worker reading it; a column with nothing in it is left out.
+    expect(labels).toEqual(['step 1', 'step 2', 'queues and topics', 'step 3']);
   });
 
   it('frames an open cluster around its members', () => {

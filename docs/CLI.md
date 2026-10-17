@@ -907,10 +907,37 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
-reconciliation and the Map, lists every way in, follows any one of them across service
+Map with its tabs on screen, lists every way in, follows any one of them across service
 boundaries, and has a tab each for every crossing and for everything that did not
-join. The tabs are Map, Walk, Steps, Crossings, Not joined, Busiest, Changes (only
-with `--diff`) and Graph.
+join. The tabs are Map, Steps, Crossings, Not joined, Busiest, Changes (only
+with `--diff`) and Graph; their row stays at the top of the window while the tab
+scrolls, and on a narrow screen the tabs come before the ways in.
+
+**The strip** at the top is the project's name and a pill per figure: how many
+repositories were read, the graph's size, service calls and browser calls joined,
+routes reached, channels joined, *Missed*, and what was seen at run time once
+`flowatlas observe` has run. A pill's title says what it means, and so does the
+line under the strip while the pill is focused or clicked. A pill whose total is
+nought is not drawn (no "0 / 0 joined" on a project with no front end), except
+*Missed* and what was read, where nought is the news. Beside them, when the page was
+built, and *build · <total>ms · <n> services*, which folds out each service's time,
+slowest first. The sentence that once stood under the name is now at the foot of
+the page.
+
+**The service rail** under the strip hides a service everywhere: its ways in, and
+its nodes on the Graph tab. Up to twelve services it is a chip each; past twelve it
+is one *Services: all* button (*Services: 3 of 30* when some are hidden) opening a
+checklist with a search box, *All* and *None* (for the services the search lists),
+and each service's type, node count and colour.
+
+**Start here.** On a first visit - an address naming no tab - a card above the Map
+names three things worth opening, each worked out from the graph in hand and each a
+link: the *busiest way in* (the one that crosses into other services most often,
+then the one with the most steps; it opens in Steps), the *worst gap* (the gap with
+the most problems to fix; it opens Not joined on that row), and, with `--diff`, the
+*latest change* (a removed route still called, else the first route added). Its
+close button keeps it closed in this browser; *Start here* in the strip brings it
+back.
 
 The graph is packed into the page with every repeated string shipped once:
 node types, files and services, and also a failure that stands in front of many
@@ -919,16 +946,58 @@ record every route it guards points at, and a log line's level and template.
 The page is still one readable file; its data is plain JSON in a `<script>`
 block.
 
-**One search box** above the tabs finds a route or other way in, a channel, a
-table, a type, a gap or a class by name, and under *Fails with* the ways in that
-can fail with an exception or a status (`NotFoundException`, `404`). A hit
-opens in the Graph tab, and a way in it opens becomes the one the list, Walk and
-Steps show. The list's own filter matches a path, a name or a service.
+**One search box**, beside the service rail, finds a route or other way in, a channel, a
+table, a type, a gap (by its message, its reason in words, or the reason's code) or a
+class by name, under *Fails with* the ways in that can fail with an exception or a
+status (`NotFoundException`, `404`), and under *Nodes* every node, by label, type,
+kind, service or file, the way the Graph tab's own search found them (`table orders`
+is the table called `orders`). It is the only search on the page: `/` reaches it from
+anywhere but a field, the arrows move through what it found, Enter goes, and Escape
+clears it and hands the keyboard back. A hit goes to where it is **in the tab that is
+open, when that tab can show it**: a way in is picked on the left, the list scrolls
+to it, and Steps or the Map open it (the Map selects its service); a node
+on the Graph tab is focused there; a gap opens Not joined on its row. Anything else
+opens the Graph on it. Where it lands is marked - a strong ring and an accent ground
+that fade after two seconds - and Back returns from it. Its last item, *Filter the
+Ways in list to '…'*, filters the list by path, name or service, which a chip over
+the list then says (*filtered: orders ×*), with a note when the way in picked is one
+it hides. On the Graph tab the box also picks a path's end (see below).
+
+**Words, not codes.** The page says a check row's reason, an edge's type and how far
+an edge is trusted in words - *route not found on the target*, *requests*, *best
+guess* - with the code in the tooltip, and the details panel prints a row's reason
+code beside it to copy. Copy as prompt, links and the MCP server keep the codes. An
+edge read from code says nothing about its trust; only *annotated*, *declared*, *best
+guess* and *seen at run time* are said. Steps no longer marks every row *certain*, so
+the one guess on a way in stands out.
+
+**Keys and commands.** `?` lists every key the page answers, by where it works, from
+the same table the handlers read. ⌘K (Ctrl+K) opens a command list: every tab, the
+open tab's actions (full screen, Types on or off, SVG and PNG export, copy link, copy
+as prompt for the way in picked, problems, filters), and *Search for '…'*, which hands
+what was typed to the search. Arrows, Enter and Escape work it, and on a phone it is
+a sheet the width of the window. Crossings, Busiest and Changes, which never read the
+way in picked, hide the Ways in list and take the width.
+
+**Keyboard, screen reader, theme.** The tab row is a tablist: Tab reaches the open
+tab, ← and → open the one before or after, Home and End the ends. In the Ways in
+list Tab reaches one row and ↓ ↑ Home End move between them; the list draws only the
+rows in sight, however many ways in there are, and always the one picked. The *Theme*
+button in the strip turns the colours from the system's (*Auto*) to *Light* to *Dark*
+and back, remembered by the browser (where it keeps nothing, each load follows the
+system); the command list offers it too. Every text colour reads at 4.5:1 or more in
+both themes, and no text is under 12px outside the drawings.
+
+**On a phone.** The tab row scrolls sideways inside itself, faded where it goes on;
+under 360px a *View* select stands in for it. The Map tab lists its boxes as cards
+under their call-order columns, each with what it reaches and what reaches it; a card
+opens the box's details under it, and *Show the drawing* draws the map (*Show as a
+list* goes back). Addresses are the same as the drawing's.
 
 The **Map** tab is the whole project at the size of its services:
 
 - **Layout.** *call order*, the default, puts services in columns by how far
-  they sit from the front ends along the calls, with queues and topics as their
+  they sit from the front ends along the calls (*step 1*, *step 2*, …), with queues and topics as their
   own boxes between the columns and each service's stores and outside hosts
   under it, one box per outside host however many call it, capped with
   `+n more`. Hovering a box dims everything it does not touch. *by role* is the
@@ -954,8 +1023,10 @@ The **Map** tab is the whole project at the size of its services:
   *Open all* and *Close all* do every family. Within a column, boxes are ordered
   by where what they touch sits, a few sweeps each way, so the same graph always
   draws the same map.
-- **Details.** A box opens its details: a service's counts, ways in by kind,
-  rows to act on, routes nothing calls, what it reaches and what reaches it,
+- **Details.** A box opens its details: a service's counts, ways in by kind
+  (a front end's screen actions among them, as on the Ways in list; a front end
+  with none read says how many screens it has rather than *0 ways in*),
+  problems to fix, routes nothing calls, what it reaches and what reaches it,
   its ways in (each opening in the Graph tab), its busiest classes, and what it
   is built from. A link lists the edges it stands for, each end opening in the
   Graph tab. *Open in Graph* centres the Graph tab on the box. Double-click, or
@@ -967,11 +1038,13 @@ The **Map** tab is the whole project at the size of its services:
   or more services use is a box, with a link from each; development
   dependencies are drawn on request. A package nobody installed is named the
   same as one that is.
-- **Checks.** *check* marks, per box: rows to act on, channels with one end,
+- **Checks.** *check* marks, per box: problems to fix, channels with one end,
   routes nothing calls, services nothing could read, or services that reach
   each other at run time (a cycle, its links drawn red). The chips hide a kind
   of link.
-- **The frame.** Drag or a wheel pans, ctrl or a pinch zooms, *Fit* shows it
+- **The frame.** Drag pans; ctrl (⌘ on a Mac) and the wheel, or a pinch,
+  zooms; a plain wheel scrolls the page past the map, saying once in the
+  corner how to zoom instead, and pans it only in full screen. *Fit* shows it
   all; `F` or the button is full screen; Escape closes the details, then a
   one-box view, then full screen. The address keeps the view by name -
   `#map/s=<box>&l=<link>&f=<box>&t=<families toggled>&h=<kinds hidden>&m=<check>&p=1&d=1` -
@@ -981,10 +1054,14 @@ The **Map** tab is the whole project at the size of its services:
 The **Graph** tab draws the neighbourhood of one node rather than the whole
 graph, which on a real project is far too many boxes to say anything:
 
-- **Choosing a focus.** Search over every node, by label, type, kind, service or
-  file: `table orders` is the table called `orders`. Every way in on the left,
-  and every node named in the Walk, Crossings and Not joined tabs, has a *show in
-  graph* link beside it.
+- **Choosing a focus.** The one search's *Nodes* finds any node, and on this tab
+  a hit is focused here. Every way in on the left, and every node named in the
+  Steps, Crossings and Not joined tabs, has a *show in graph* link beside it.
+- **The bar is one row.** *Back*, *Forward* and the hops, then *Filters* (edge
+  types, trust and plumbing, the most nodes drawn) and *Check* (*Problems*,
+  *problems only*, a path's ends, its direction and depth) as popovers, each
+  saying how much of it is on (*Filters · 2*, *Check · 1*), then the tools.
+  The answer area under the bar is there only when there is an answer.
 - **The drawing.** The focus in the middle, what reaches it to the left and what
   it reaches to the right, one column per hop (one, two or three; two by
   default). Every service is a faint band across the drawing with its name in
@@ -996,14 +1073,15 @@ graph, which on a real project is far too many boxes to say anything:
   names are shortened in the middle, so a path keeps its verb and its last
   segment; hovering a node gives the full name, its service and `file:line`.
   An edge is solid when it was read from the code (`static`), dashed when it was
-  guessed (`heuristic`), and dotted when an annotation or a document said so
-  (`marker`, `declared`). An edge says its type only when hovered and around the
-  open node, so a busy drawing is lines rather than words.
+  guessed (`heuristic`, *best guess*), and dotted when an annotation or a document said so
+  (`marker`, *annotated*; `declared`). An edge says what it does (*calls*, *requests*,
+  *publishes*) only when hovered and around the open node, so a busy drawing is lines
+  rather than words.
 - **Plumbing is folded.** Guards, interceptors, pipes and middleware are not
   drawn as nodes: a way in carries a chip saying what runs in front of it
   (`2 guards · 3 interceptors · 1 pipe`). Clicking the chip, or `W` on the node,
-  draws that chain beside it and folds it back again; the *plumbing* chip above
-  the drawing draws all of it as ordinary nodes. A guard chosen as the focus
+  draws that chain beside it and folds it back again; the *plumbing* chip under
+  *Filters* draws all of it as ordinary nodes. A guard chosen as the focus
   shows the ways in it stands in front of.
 - **Busy sides are grouped.** More than six neighbours of one type on one side
   of a node (the queries on a table, the publishers on a channel, the callers of
@@ -1102,7 +1180,8 @@ graph, which on a real project is far too many boxes to say anything:
   with every type written out inline (`function create(dto: { // CreateOrder …
   }): { // Order … };`, a route as `type Request` and `type Response`), within
   the same bounds, a type inside itself kept as its name. From it: *Centre here*, *Expand*,
-  *Who else uses this* with its count, *Open in Walk* for a way in, *Path from here*, *Path to here* and
+  *Who else uses this* with its count, *Steps* (above the drawing) and *Open in Steps* for a way in,
+  *Path from here*, *Path to here* and
   *Impact*. Clicking a node in its lists walks on to it.
 - **Problems.** A node carrying rows is badged with the count on its top edge,
   red for rows naming it and amber for rows at its line, counted apart; a group
@@ -1114,8 +1193,8 @@ graph, which on a real project is far too many boxes to say anything:
   rows or with no handler read, the crossings with rows at either end, and the
   calls that joined nothing or carry rows, each with *show in graph*.
 - **A path between two nodes.** Choose the two ends with *Path from here* and
-  *Path to here* in the panel, or with *from* and *to* above the drawing and the
-  search. Every shortest path is drawn, one column per step, with how many there
+  *Path to here* in the panel, or with *from* and *to* under *Check*, which hand
+  the keyboard to the one search: every hit is then a node to end the path on. Every shortest path is drawn, one column per step, with how many there
   are; past the cap one whole path is drawn first. The edges are followed the
   way the calls run unless *either way* is pressed, within 6, 12 or 24 steps,
   through what the filters let through (the two ends always count). With no
@@ -1136,8 +1215,9 @@ graph, which on a real project is far too many boxes to say anything:
   `file://<path>` with no line. Off by default, because it writes each
   repository's absolute local path into the page, which is then no longer one
   to send to somebody else.
-- **Moving around.** Drag or scroll to pan, pinch or ctrl+scroll to zoom, *Fit*
-  to see it all. Double-click centres on a node. Arrow keys move between drawn
+- **Moving around.** Drag to pan, pinch or ctrl+scroll (⌘ on a Mac) to zoom;
+  a plain scroll moves the page, and pans the drawing only in full screen.
+  *Fit* to see it all. Double-click centres on a node. Arrow keys move between drawn
   nodes, a hop at a time to the side and within a column up and down; Enter
   opens a node or a group, `+` expands it, `O` draws who else uses it, `W`
   unfolds its plumbing. On a
@@ -1147,8 +1227,8 @@ graph, which on a real project is far too many boxes to say anything:
 - **Full screen.** *Full screen*, or `F`, gives the drawing the whole window:
   the heading, the numbers, the service rail and the ways in step aside, and the
   details panel lays over the drawing from the right.
-- **Escape closes one thing at a time, nearest first**: the search's list of
-  nodes (or picking a path's end with it), then the details panel - the drawer
+- **Escape closes one thing at a time, nearest first**: an open *Filters* or
+  *Check* popover (or picking a path's end), then the details panel - the drawer
   in full screen - then the *Problems* list, a half-chosen path, and a path or
   impact answer, back to the neighbourhood, and last full screen.
 - **The details panel** widens or narrows by dragging its left edge, or with the
@@ -1184,18 +1264,43 @@ graph, which on a real project is far too many boxes to say anything:
   the page, at twice its size where the browser allows, so nothing is sent
   anywhere. Without the page's typefaces loaded, a picture falls back to the
   system's monospace.
-- **Filters.** The service rail at the top hides a service's nodes here as it
-  does its ways in; chips hide an edge type or a confidence, so the drawing can
+- **Filters.** The service rail at the top (or its checklist, past twelve
+  services) hides a service's nodes here as it does its ways in; chips hide an edge type or a confidence, so the drawing can
   show, for instance, only what was guessed. The line under the drawing says
   which filters are on.
 
 The **Steps** tab is one way in as a list, in the order the code calls things
 (source order, not time), indented by depth: the handler, the services it calls,
 the tables, addresses and channels they reach, and the next service's way in.
+Clicking a way in on the left opens it here from any tab but the Graph. It is
+the page's one view of a way in: an older `#walk/<key>` link opens here on the
+same way in.
 
-- **Rows.** Each step has a kind mark (handler, service, database, request,
-  queue or topic, function, workflow) and its table, address template or channel
-  written inline. Calls inside `Promise.all` and its kin are marked *side by
+- **Compact, detailed, waterfall.** A switch on the bar draws the steps three
+  ways, and the page remembers the choice in this browser (compact when it
+  cannot). *Compact* is a line per step: its kind, its name, the file by its
+  name (the path from the repository root in the tooltip) and only the marks that
+  change the reading - *best guess*, *on failure*, *per item*, *likely N+1*,
+  *throws*, why a chain breaks, *seen ×n*, and *listed above* or *loops back* on a
+  repeat. *Detailed* adds every other mark (*annotated*, *side by side*, a stand-in's
+  types), the full path, the table, address or channel inline, the lines a step
+  logs, and the settings a step reads (`cfg`), each a leaf under the step that
+  reads it. *Waterfall* draws a bar per step in its service's colour, under its
+  parent: a step nothing runs under is one unit wide, a parent as wide as what
+  runs under it, children end to end in call order and side-by-side ones from the
+  same place. Its axis says *steps, not time*: the widths show what runs inside
+  and beside what, never how long. A repeat, a loop, an answer or a break is a
+  mark of no width. The steps above the Graph tab's drawing follow the same
+  switch, and the command list (⌘K) offers it on this tab.
+- **Rows.** Each step has a kind mark - `in` handler, `view` screen, `act` user
+  action, `fn` service, `db` store, `http` outbound call, `ch` queue or topic,
+  `λ` function, `wf` workflow, `cfg` reads config - in one neutral chip, the
+  service being the colour of the rule along the row; the legend lists them all.
+  Where a way in leaves one service for another a row of its own says so between
+  the call and what answers it, in the colour of the service it enters: *→
+  orders · requests*, with the edge's trust only when it is not read from code.
+  Guards are said under the step they stand in front of (*runs first AuthGuard,
+  RolesGuard*). Calls inside `Promise.all` and its kin are marked *side by
   side*; a call run once per item of a loop is marked *per item*, and a query,
   request or publish there *likely N+1* unless the loop is per item on purpose
   or bounded (P89). The **Busiest** tab lists the likely N+1 loops under the
@@ -1220,7 +1325,9 @@ the tables, addresses and channels they reach, and the next service's way in.
 - **Moving around.** Hovering a row lights its node in the Graph tab's
   drawing, where a way in's steps also open above the drawing; a row opens its
   `file:line` and *show in graph*. The depth goes to
-  4, 8, 12 or 24 steps.
+  4, 8, 12 or 24 steps (12 to start); a list holds 300 rows. The line under
+  the last row says which of the two left steps out: *past depth 12: raise the
+  depth*, or *past the first 300 rows* with a button that shows 300 more.
 - **Copy as prompt** copies the way in as Markdown for an assistant: what is in
   front of it, what it can fail with and, with an observed file, what it was
   seen failing with (P106), its schedule, the steps `get_flow` walks
@@ -1231,15 +1338,53 @@ the tables, addresses and channels they reach, and the next service's way in.
   for character (P97): a check row is copied as its gap id, which the tool
   takes.
 
-The **Not joined** tab lists every row by reason, under its kind: *Missed*
-(gaps), *Notes* (how a join or a reading was made) and *Findings* (about the
-code). The stat row above the page says the same figures the build line does:
-*Missed*, with "joined from files" (notes) and "findings" under it, counted from
-the rows, so a database built by 0.5.x still shows them. Rows accepted with
-`flowatlas accept` are left out unless *show accepted* is on, then muted with
-their note and, for a rule, the rule that took them; each reason and each row
-has *Accept all like this*, which copies the command (the page is a file and
-writes nothing). Below the reasons, *Can't follow* groups what the reader could
+The **Not joined** tab is split by what a row is, as the pack says it (P81's
+row kinds and core's `riskOf`), never by the words in a reason. Three
+sections, in this order, each with its count and a sentence on what would
+appear when it is empty:
+
+1. **Couldn't join**: gaps, the calls, imports and addresses the reader could
+   not join to what answers them, by reason. *By cause and package* is folded
+   under them (see below).
+2. **Risks**: findings about the code itself, grouped *who may ask* (auth:
+   `route-unguarded`, `route-shadowed`, a public marker with no reason), then
+   *likely N+1 and cost* (`query-in-loop`), then *wired wrong or meeting
+   nothing* (two declarations of one route, an end nothing meets). A row's
+   tone is its risk's.
+3. **Accepted**: the rows accepted with `flowatlas accept`, each rule once with
+   how many rows it took, then every accepted row with its note (folded past
+   ten rows). The counts above leave them out.
+
+Notes (how a join or a reading was made, with nothing missed) are not listed;
+one line says how many there are, and `flowatlas doctor` lists them. Every row
+is in one section, the accepted list or that line, and a reason is listed once.
+The strip above the page says the same figures the build line does: *Missed*,
+with "joined from files" (notes) and "findings" under it, counted from the
+rows, so a database built by 0.5.x still shows them.
+
+Each reason is a row that opens: the summary is the reason in words (the code
+in its tooltip), its count and its first place; opened, it lists every place
+it stands for (service, `file:line`, message, *show in graph*), fifty at most,
+then `flowatlas doctor --max-nodes <n>` for the rest. Each row and each place
+has one `⋯` menu (keyboard: Enter opens it, the arrows move, Enter runs, Escape
+closes and hands the keyboard back):
+
+- *Copy as prompt*, the row as Markdown for an assistant;
+- *Copy accept command*, the `flowatlas accept` command for this place: a
+  route row by its route exactly (`--path 'GET /orders/:param'`), any other row
+  by its file (`--file`; `accept` matches a file, never a line, so it holds
+  through an edit above it). A row with no single place names only its
+  service, and the menu warns that it then takes the reason across it;
+- *Copy accept command for every row like this*, only where a rule takes more
+  than the place: the routes beside it (`likeRoute`, `GET /orders/*`) or the
+  files beside it (`src/orders/*`). It always ends in `--dry-run`, so run as it
+  is it lists what it would take and writes nothing.
+
+The menu says it copies a command to run in the project; the page is a file
+and writes nothing. What was copied is shown in a toast. The rows a node's
+details panel lists on the Graph tab have the same menu.
+
+*By cause and package*, under Couldn't join, groups what the reader could
 not follow by cause and then by package, as `doctor --unresolved` does: one
 part per cause with its hint and a few places, each with *show in graph*, and a
 table by package. Once `flowatlas observe` has run, *seen at run time, not
@@ -1259,6 +1404,25 @@ new contract findings, and the unresolved count on each side.
 
 What `flowatlas observe` saw is on the page too, when it has run: a seen count
 on each way in and each step, and thicker Map links where traffic went.
+
+**Every tab has an address.** `#map…` and `#graph/…` keep the grammars described
+above; every other tab is `#<tab>`, with the way in for Steps, the one that
+shows one, and where in the tab to go after it:
+
+| Address | Opens |
+|---|---|
+| `#steps/<key>` (and an older `#walk/<key>`) | Steps on the way in whose node key is `<key>` |
+| `#crossings`, `#busiest`, `#changes` | that tab |
+| `#missing`, `#missing/reason=<reason>` | Not joined, at that reason's row, opened to its places |
+| `#graph` | the Graph tab, on the way in picked |
+
+Any of them takes a way in (`#crossings/<key>`), which becomes the one picked.
+Moving between tabs rewrites the address without adding to the browser's history;
+picking another way in adds to it, so *Back* returns to the way in before. *Copy
+link* on Steps and the table tabs copies the address of what is on screen. A
+link naming a tab this page does not have (`#changes` on a page written without
+`--diff`), a way in it does not hold, or a reason with no rows here opens what the
+page has and says so above the tab.
 
 A link carries the page's own address, which for a file on disk is that file's
 path: it opens on the machine that has the file, at that path.
@@ -2441,9 +2605,9 @@ flowatlas accept route-unguarded --service catalog --path 'GET /api/public/*' \
 A rule goes on accepting rows nobody has looked at, so one with `--path` or a
 file glob needs `--note`, and `--dry-run` lists what it would take before
 anything is written. `doctor` leaves the rows out of its counts; the page's
-*Not joined* tab lists them as accepted by that rule, and every row there has
-an *Accept all like this* button that copies the command for its reason, its
-service and the routes beside it. `accepted.json` is written as version 2,
+*Not joined* tab lists them under Accepted, by that rule, and every row there
+has a `⋯` menu that copies the command for that one route, or for the routes
+beside it with `--dry-run`. `accepted.json` is written as version 2,
 which an older `flowatlas` refuses rather than reading the rule as wider than
 it is.
 

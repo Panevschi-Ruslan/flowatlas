@@ -96,8 +96,20 @@ describe('one search over everything', () => {
     expect(found.find((group) => group.key === 'gaps')!.hits[0]).toMatchObject({ node: 3 });
     expect(found.find((group) => group.key === 'classes')!.hits.map((hit) => hit.label))
       .toEqual(['CartsClient', 'CartsController']);
-    expect(findEverything(model, 'cart voided').map((group) => group.key)).toEqual(['channels']);
+    expect(findEverything(model, 'cart voided').map((group) => group.key)).toEqual(['channels', 'nodes']);
     expect(findEverything(model, '   ')).toEqual([]);
+  });
+
+  it('lists the nodes the Graph tab found, and a gap by its reason in words or as its code (P101)', () => {
+    const model = modelOf(pack());
+    const nodes = findEverything(model, 'carts').find((group) => group.key === 'nodes')!;
+    expect(nodes.hits.map((hit) => hit.label)).toContain('GET /carts');
+    expect(nodes.hits.every((hit) => hit.node >= 0 && hit.sub.startsWith('shop-'))).toBe(true);
+    const said = (reason: string) => 'said ' + reason;
+    const fresh = modelOf(pack());
+    const gap = findEverything(fresh, 'carts', 8, said).find((group) => group.key === 'gaps')!.hits[0]!;
+    expect(gap.sub.startsWith('said ' + gap.reason)).toBe(true);
+    expect(findEverything(fresh, gap.reason!).map((group) => group.key)).toContain('gaps');
   });
 
   it('finds the ways in that fail with an exception, by its name or status, and opens the way in', () => {
