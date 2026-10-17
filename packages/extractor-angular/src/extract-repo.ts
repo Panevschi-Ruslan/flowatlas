@@ -11,6 +11,8 @@ import {
   recordApplications,
   closeStandIns,
   reportSkippedTestDirectories,
+  reportPatterns,
+  readPatterns,
   reportStandIns,
   reportUnreadableSources,
   silentLogger,
@@ -219,8 +221,11 @@ const defaultService = (repo: string, rootDir: string): ServiceConfig => ({
 export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGraph> => {
   const { rootDir, repo } = options;
   const logger = options.logger ?? silentLogger;
-  const config = options.config ?? parseConfig({});
   const service = options.service ?? defaultService(repo, rootDir);
+  // The project's own extraction patterns, compiled into the descriptions
+  // every reader below already reads (P121).
+  const patterns = readPatterns({ config: options.config ?? parseConfig({}), service, configDir: options.configDir });
+  const config = patterns.config;
 
   const project = options.project ?? openProject(options);
   // The manifest that answers what this repository can import, which on a
@@ -263,6 +268,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
   reportStandIns(base);
+  reportPatterns(base, patterns);
 
   // Every adapter goes through the registry, this one included: a repository no
   // frontend adapter recognises is read by none of them.

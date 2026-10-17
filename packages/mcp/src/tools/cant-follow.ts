@@ -4,7 +4,9 @@ import {
   countsOf,
   describeAcceptedProblem,
   groupCantFollow,
+  guessPatternKind,
   kindOfRow,
+  PATTERN_CAUSES,
   knownCauses,
   packageCoverage,
   placeIdOf,
@@ -216,6 +218,10 @@ const nextOf = (answer: CantFollowWire, asked: { cause?: string; package?: strin
   const first = answer.causes[0];
   const place = first?.packages.flatMap((pkg) => pkg.samples).find((sample) => sample.id !== undefined);
   if (place?.id !== undefined) hints.push(`get_source({symbol: ${JSON.stringify(place.id)}})`);
+  // A call on a wrapper of the project's own is what a pattern describes
+  // (P121): a draft rule for the first such place, to check with test_pattern.
+  const drafted = first === undefined || !first.reasons.some((reason) => PATTERN_CAUSES.includes(reason)) ? undefined : draftFor(first);
+  if (drafted !== undefined) hints.push(drafted);
   // A package nobody installed is answered by a shape file, or by a rebuild
   // where the configuration already reads something in its place (P78).
   const missing = answer.causes.find((cause) => cause.cause === MISSING)?.packages.find((pkg) => pkg.package !== null);
@@ -232,6 +238,23 @@ const nextOf = (answer: CantFollowWire, asked: { cause?: string; package?: strin
     hints.push(`cant_follow({package: ${JSON.stringify(pkg)}})`, `search({query: ${JSON.stringify(pkg)}})`);
   }
   return hints.slice(0, MAX_NEXT);
+};
+
+/**
+ * A `test_pattern` call with a starter for the first place of a cause whose
+ * calls a pattern may read: the method the place calls, the kind its name
+ * suggests, and `TODO` for what only the code can say - the receiver's type
+ * and where the name is. `flowatlas patterns suggest` writes a fuller one.
+ */
+const draftFor = (cause: CantFollowWire['causes'][number]): string | undefined => {
+  const symbol = cause.packages.flatMap((pkg) => pkg.samples).map((place) => place.symbol).find((each) => each?.includes(' -> ') === true);
+  const callee = symbol?.split(' -> ')[1]?.trim();
+  const method = callee?.match(/\.([A-Za-z_$][\w$]*)$/)?.[1];
+  if (callee === undefined || method === undefined) return undefined;
+  const owner = cause.packages.find((pkg) => pkg.package !== null)?.package ?? '';
+  const kind = guessPatternKind(method, `${callee} ${owner}`);
+  const yaml = `- id: ${method}-starter\n  kind: ${kind}\n  on: { receiverType: TODO }\n  pattern: "$RECV.${method}($$$ARGS)"`;
+  return `test_pattern({yaml: ${JSON.stringify(yaml)}, code: ${JSON.stringify(`${callee}()`)}})`;
 };
 
 /** Whether a row stands for this cause, by the cause it records or by its reason. */

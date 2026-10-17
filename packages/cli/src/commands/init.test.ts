@@ -208,6 +208,7 @@ describe('runInit', () => {
       entry: { registries: [], http: [], procedures: [] },
       broker: { custom: [] },
       starters: [],
+      http: { clients: [] },
       infra: { modules: [] },
       db: { localBaseClasses: [], tables: [] },
       frontend: { localClientClasses: [] },

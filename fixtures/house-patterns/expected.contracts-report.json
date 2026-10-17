@@ -1,0 +1,221 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-17T10:22:10.261Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:catalog#src/books/books.service.ts:20:11",
+        "to": "entry:stock:http:POST:/stock/reserve",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:catalog#src/books/books.service.ts:20:11|http_calls|entry:stock:http:POST:/stock/reserve",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{isbn:string;copies:number}",
+        "symbol": "catalog#src/books/books.service.ts:BooksService.add",
+        "writes": [
+          "copies",
+          "isbn"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#Reservation",
+        "symbol": "stock#src/stock/stock.controller.ts:StockController.reserve"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:catalog#src/books/books.service.ts:23:5",
+        "to": "consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog#src/books/books.service.ts:23:5|emits|consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "type:catalog#Book",
+        "symbol": "catalog#src/books/books.service.ts:BooksService.add"
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#ShelvedBook",
+        "symbol": "stock#src/stock/stock.service.ts:StockService.shelve"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:catalog#src/books/books.service.ts:23:5",
+            "to": "consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+            "type": "emits"
+          },
+          "edgeKey": "producer:catalog#src/books/books.service.ts:23:5|emits|consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+          "direction": "payload",
+          "sender": {
+            "service": "catalog",
+            "typeId": "type:catalog#Book",
+            "symbol": "catalog#src/books/books.service.ts:BooksService.add"
+          },
+          "receiver": {
+            "service": "stock",
+            "typeId": "type:stock#ShelvedBook",
+            "symbol": "stock#src/stock/stock.service.ts:StockService.shelve"
+          },
+          "typeId": "type:stock#ShelvedBook",
+          "field": "addedAt",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender catalog sends `addedAt: string`; receiver stock declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/books/books.ts:20:10",
+        "to": "entry:catalog:http:GET:/books",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/books/books.ts:20:10|hits|entry:catalog:http:GET:/books",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "type:catalog#Book[]",
+        "symbol": "catalog#src/books/books.controller.ts:BooksController.list"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#Book[]",
+        "symbol": "storefront#src/books/books.ts:listBooks"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/books/books.ts:24:10",
+        "to": "entry:catalog:http:POST:/books",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/books/books.ts:24:10|hits|entry:catalog:http:POST:/books",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "storefront",
+        "typeId": "type:storefront#NewBook",
+        "symbol": "storefront#src/books/books.ts:addBook"
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "type:catalog#NewBook",
+        "symbol": "catalog#src/books/books.controller.ts:BooksController.add"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/books/books.ts:24:10",
+        "to": "entry:catalog:http:POST:/books",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/books/books.ts:24:10|hits|entry:catalog:http:POST:/books",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "type:catalog#Book",
+        "symbol": "catalog#src/books/books.controller.ts:BooksController.add"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#Book",
+        "symbol": "storefront#src/books/books.ts:addBook"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:catalog#src/books/books.service.ts:23:5",
+        "to": "consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog#src/books/books.service.ts:23:5|emits|consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+      "direction": "payload",
+      "sender": {
+        "service": "catalog",
+        "typeId": "type:catalog#Book",
+        "symbol": "catalog#src/books/books.service.ts:BooksService.add"
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#ShelvedBook",
+        "symbol": "stock#src/stock/stock.service.ts:StockService.shelve"
+      },
+      "typeId": "type:stock#ShelvedBook",
+      "field": "addedAt",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender catalog sends `addedAt: string`; receiver stock declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:catalog#src/books/books.service.ts:20:11",
+        "to": "entry:stock:http:POST:/stock/reserve",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:catalog#src/books/books.service.ts:20:11|http_calls|entry:stock:http:POST:/stock/reserve",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "catalog#src/books/books.service.ts:BooksService.add declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#src/books/books.ts:20:10",
+        "to": "entry:catalog:http:GET:/books",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#src/books/books.ts:20:10|hits|entry:catalog:http:GET:/books",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/books/books.ts:listBooks declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 5,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 3,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 1,
+    "ignored": 0
+  }
+}

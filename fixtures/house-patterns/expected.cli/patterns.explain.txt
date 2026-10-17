@@ -1,0 +1,9 @@
+catalog/src/books/books.service.ts:23
+  this.bus.emit({ topic: 'book.added', data: added })  (receiver: ShopBus)
+    shop-bus-emit: fits (method, receiver type, receiver, topic in argument 0 of emit(), data in argument 0 of emit())
+    shop-bus-on: stops at method: wants .on, the call is .emit
+    api-client-call: stops at method: wants .call, the call is .emit
+    storefront-send: stops at method: wants .send, the call is .emit
+    shop-bus-emit-again: fits (method, receiver type, receiver, topic in argument 0 of emit())
+    shop-bus-flush: stops at method: wants .flush, the call is .emit
+    shop-bus-later: not tried, the rule is refused: argument 0 of later(): a hole inside a callback ($TOPIC) is not a place in the call; write $HANDLER for the function

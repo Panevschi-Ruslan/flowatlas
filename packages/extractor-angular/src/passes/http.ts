@@ -20,7 +20,11 @@ import {
   verbsAtCallers,
   writtenBodyOutward,
   writtenKeysOf,
+  describedRequestsAt,
+  precedenceOf,
+  precedenceRows,
   type BodyRead,
+  type DescribedRequest,
   type CallFrame,
   type ClassMethod,
   type TypeOrigin,
@@ -93,6 +97,8 @@ interface Spelling {
   readonly typedAnswer: boolean;
   /** What the node records about the client, beside the request itself. */
   readonly client: Readonly<Record<string, unknown>>;
+  /** Where the address is, when it is not an argument at `urlIndex`: a described client's (P121). */
+  readonly url?: (network: CallExpression) => TsNode | undefined;
 }
 
 /**
@@ -434,7 +440,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     site: RequestSite,
     siblings: number,
   ): void => {
-    const urlArg = network.getArguments()[spelling.urlIndex];
+    const urlArg = spelling.url === undefined ? network.getArguments()[spelling.urlIndex] : spelling.url(network);
     if (urlArg === undefined) return;
     for (const request of requestsOf(ctx, urlArg, method, site, siblings)) {
       noteIfUnreferenced(ctx, request.site);
@@ -451,6 +457,42 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     }
   };
 
+  /**
+   * A client the configuration describes (`adapters.http.clients`, P121),
+   * read through the same spelling every request is: its verb, address and
+   * body where the description says.
+   */
+  const describedSpelling = (described: DescribedRequest): Spelling => ({
+    urlIndex: -1,
+    url: () => described.url ?? undefined,
+    verb: () => described.verb,
+    verbWritten: () => undefined,
+    body: () => {
+      const written = described.body;
+      if (written === undefined) return NO_BODY;
+      return { type: ctx.types.collectType(written.getType(), written), ...bodyKeysOf(written) };
+    },
+    typedAnswer: true,
+    client: { package: null, ...(described.client.describedBy === undefined ? {} : { describedBy: described.client.describedBy }) },
+  });
+
+  const { clients } = ctx.config.adapters.http;
+  /** The described client a call is read as, if any, beside whether the framework's own reading has it. */
+  const describedAt = (site: CallExpression, file: string, builtIn: boolean): Spelling | undefined => {
+    if (clients.length === 0) return undefined;
+    const matches = describedRequestsAt(site, clients);
+    if (matches.length === 0) return undefined;
+    const at = { file, line: siteOf(site).line, symbol: site.getExpression().getText().slice(0, 60) };
+    const choice = builtIn
+      ? { chosen: [], shadowed: [...new Set(matches.flatMap((match) => match.client.describedBy ?? []))], ambiguous: [] }
+      : precedenceOf(matches, (match) => match.client.describedBy);
+    for (const row of precedenceRows(choice, at, builtIn ? 'the built-in reading of the request' : 'a client described under adapters.http.clients')) {
+      ctx.report(row);
+    }
+    const chosen = choice.chosen[0];
+    return chosen === undefined ? undefined : describedSpelling(chosen);
+  };
+
   for (const indexed of ctx.classes.all()) {
     if (indexed.role === 'module') continue;
     for (const { declaration: method, body } of methodBodies(indexed.declaration)) {
@@ -461,15 +503,19 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
       forEachCall(body, (site: TsNode) => {
         if (!Node.isCallExpression(site)) return;
         if (isPlatformRequest(site)) {
+          describedAt(site, indexed.file, true);
           found.push({ site, spelling: platformFetch });
           return;
         }
         const callee = site.getExpression();
-        if (!Node.isPropertyAccessExpression(callee)) return;
-        const spelling = httpClient(callee.getName().toLowerCase());
-        if (spelling === undefined) return;
-        if (!isHttpClient(resolveTypeOrigin(callee.getExpression()))) return;
-        found.push({ site, spelling });
+        const spelling = Node.isPropertyAccessExpression(callee) ? httpClient(callee.getName().toLowerCase()) : undefined;
+        if (spelling !== undefined && Node.isPropertyAccessExpression(callee) && isHttpClient(resolveTypeOrigin(callee.getExpression()))) {
+          describedAt(site, indexed.file, true);
+          found.push({ site, spelling });
+          return;
+        }
+        const described = describedAt(site, indexed.file, false);
+        if (described !== undefined) found.push({ site, spelling: described });
       });
       for (const { site, spelling } of found) {
         ctx.ensureMethodNode(method);

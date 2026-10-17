@@ -59,6 +59,10 @@ const NOTES: readonly string[] = [
   'package-from-repo',
   'package-version-differs',
   'shape-file-unmatched',
+  // The project's own extraction patterns (core/patterns, P121): a rule a
+  // written description won over, and one nothing in its services matches
+  'pattern-shadowed',
+  'pattern-unmatched',
   // Joins made by a rule rather than read (linker)
   'base-url-from-files',
   'base-url-from-name',
@@ -113,6 +117,10 @@ const GAPS: readonly string[] = [
   // Stand-ins that could not be used (core/stand-ins.ts)
   'package-source-ambiguous',
   'shape-file-unread',
+  // Pattern files and rules that could not be used (core/patterns, P121)
+  'pattern-file-unread',
+  'pattern-not-expressible',
+  'pattern-ambiguous',
   // Types (core/types)
   'type-unresolved',
   'type-generic-uninstantiated',

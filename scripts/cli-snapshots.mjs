@@ -18,8 +18,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  buildProject,
   runAccept,
   runCantFollowCommand,
+  runPatternsExplain,
+  runPatternsSuggest,
+  runPatternsTest,
   runChannel,
   runContracts,
   runDead,
@@ -500,6 +504,40 @@ const DEAD_ROUTE_CASES = [
   ['doctor.txt', (io) => runDoctorCommand({ config: deadRoutesPlain.config }, io)],
 ];
 
+/**
+ * The project's own extraction patterns (P121): the rules' tests, one that
+ * fails on purpose, starters suggested for the variant that lists no pattern
+ * file, a near miss explained on the variant with two rules on one call, and
+ * what the reader could not follow with the file and without it. The variants
+ * are built into their own output, which nothing else reads.
+ */
+const housePlain = plainFor('house-patterns');
+const houseVariant = (name) => join(root, 'fixtures', 'house-patterns', 'variants', name, 'flowatlas.config.json');
+const builtVariants = new Map();
+const variantBuilt = async (name) => {
+  if (!builtVariants.has(name)) builtVariants.set(name, buildProject({ config: houseVariant(name), builtAt: '1970-01-01T00:00:00.000Z', cache: false }));
+  await builtVariants.get(name);
+  return houseVariant(name);
+};
+
+const HOUSE_CASES = [
+  ['patterns.test.txt', (io) => runPatternsTest([], { config: housePlain.config }, io)],
+  ['patterns.test.json', (io) => runPatternsTest([], { config: housePlain.config, json: true }, io)],
+  ['patterns.test.descriptor.txt', (io) => runPatternsTest([], { config: housePlain.config, rule: 'api-client-call', showDescriptor: true }, io)],
+  [
+    'patterns.test.wrong.txt',
+    (io) => runPatternsTest([join(root, 'fixtures', 'house-patterns', 'variants', 'wrong-expectation.yml')], { config: housePlain.config }, io),
+  ],
+  ['patterns.suggest.txt', async (io) => runPatternsSuggest({ config: await variantBuilt('no-patterns'), minSites: '1' }, io)],
+  [
+    'patterns.explain.txt',
+    async (io) => runPatternsExplain('catalog/src/books/books.service.ts:23', { config: await variantBuilt('ambiguous') }, io),
+  ],
+  ['doctor.unresolved.txt', (io) => runCantFollowCommand({ config: housePlain.config }, io)],
+  ['doctor.unresolved.no-patterns.txt', async (io) => runCantFollowCommand({ config: await variantBuilt('no-patterns') }, io)],
+  ['doctor.ambiguous.txt', async (io) => runDoctorCommand({ config: await variantBuilt('ambiguous') }, io)],
+];
+
 const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
   terraformShape('lambda-terraform-openapi', [
@@ -568,6 +606,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'tables-set-elsewhere', 'expected.cli'), owned: true, cases: TABLES_ELSEWHERE_CASES },
   { dir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.cli'), owned: true, cases: LOOPS_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
+  { dir: join(root, 'fixtures', 'house-patterns', 'expected.cli'), owned: true, cases: HOUSE_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

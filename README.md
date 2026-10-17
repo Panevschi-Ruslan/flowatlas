@@ -287,6 +287,8 @@ flowatlas doctor --service gateway     # narrow every section to one repository
 flowatlas doctor --strict              # exit 1 on a broken annotation or a contract error
 flowatlas doctor --unresolved          # what it could not follow, by cause and package
 flowatlas shapes --suggest             # which missing packages to describe, with the names used of each
+flowatlas patterns suggest             # starter rules for the in-house wrappers it could not follow
+flowatlas patterns test                # run your pattern files' tests before a build reads them
 flowatlas doctor --accept              # write today's numbers as the baseline
 ```
 
@@ -817,6 +819,14 @@ prove, and the path is given so you can run it.
   shape file the project lists under `shapes` when none is;
   `flowatlas shapes --suggest` says which to write and with which names
   (`fixtures/uninstalled-internal-packages`).
+- **Your own extraction patterns.** An in-house bus, HTTP client or data kit is
+  described once in a YAML file of code patterns -
+  `$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })` on a `ShopBus` publishes to
+  `$CHANNEL` - with tests beside each rule. `flowatlas patterns test` runs
+  them by the build's own reader, `explain` shows a near miss part by part, and
+  `suggest` writes starters from the places the reader could not follow; the
+  build compiles each rule into the descriptions it already reads
+  (`fixtures/house-patterns`).
 - **Comparing** what each side of a boundary declares, field by field, with the
   rules of the JSON wire applied so a date meeting a string is not a finding
   (`fixtures/multi-repo-contracts`).

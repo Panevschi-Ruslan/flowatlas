@@ -11,6 +11,7 @@ import {
   causeLabel,
   describeAcceptedProblem,
   groupCantFollow,
+  PATTERN_CAUSES,
   type AcceptedProblem,
   type CantFollow,
   type CantFollowOptions,
@@ -92,6 +93,10 @@ export const renderCantFollowText = (
     lines.push('', `  ${cause.label}: ${plural(cause.sites, 'place')}${services}`, `    ${cause.hint}`);
     const reasons = cause.reasons.filter((reason) => reason !== cause.cause);
     if (reasons.length > 0) lines.push(`    rows: ${reasons.join(', ')}`);
+    // A call on a wrapper of the project's own is what a pattern describes (P121).
+    if (cause.reasons.some((reason) => PATTERN_CAUSES.includes(reason))) {
+      lines.push(`    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause ${cause.cause}`);
+    }
     for (const pkg of cause.packages) {
       const named = cause.packages.length > 1 || (pkg.package !== null && cause.label === cause.cause);
       if (named) lines.push(`    ${causeLabel(cause.cause, pkg.package)}: ${plural(pkg.sites, 'place')}`);

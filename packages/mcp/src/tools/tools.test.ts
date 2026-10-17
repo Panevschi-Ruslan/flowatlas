@@ -54,7 +54,7 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the eighteen the project promises', async () => {
+  it('are exactly the nineteen the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
@@ -70,6 +70,7 @@ describe('the tools a session is offered', () => {
       'list_entries',
       'search',
       'start_here',
+      'test_pattern',
       'type_usage',
       'what_changed',
       'who_calls',
@@ -106,12 +107,16 @@ describe('the tools a session is offered', () => {
    * 9,659 and 27,446, inside both ceilings. Its prompts and resources are
    * listed apart (`prompts/list`, `resources/list`) and cost the tool list
    * nothing.
+   *
+   * Raised again by P121, which added `test_pattern` (three inputs, no output
+   * schema) and one clause of the instructions: about 450 characters read,
+   * about 500 in all. With P96 beside it, 10,100 and 28,037.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(9700);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(27500);
+    expect(read.length).toBeLessThan(10150);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(28050);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

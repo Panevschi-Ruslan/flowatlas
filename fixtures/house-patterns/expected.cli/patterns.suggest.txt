@@ -1,0 +1,60 @@
+places a pattern could fix: 4 over 3 call shape(s); starters for those with at least 1 call(s)
+
+shop-bus-emit: publish, 2 call(s) of ShopBus.emit in catalog
+  at catalog/src/books/books.service.ts:23
+  at catalog/src/books/books.service.ts:29
+  | # A starter for ShopBus.emit: 2 call(s) in catalog the reader could not follow (call-dynamic-receiver).
+  | # Written by flowatlas patterns suggest from the first calls' shapes. Check the kind and fill every TODO;
+  | # then run flowatlas patterns test on this file, and list it under "patterns" in flowatlas.config.json.
+  | - id: shop-bus-emit
+  |   kind: publish
+  |   on:
+  |     receiverType: ShopBus
+  |   pattern: "$RECV.emit({ topic: $TOPIC, data: $DATA })"
+  |   channel: $TOPIC
+  |   payload: $DATA
+  |   tests:
+  |     - code: "this.bus.emit({ topic: 'book.added', data: added })"
+  |       expect:
+  |         channel: book.added
+  |     - code: "this.bus.emit({ topic: topicFor('removed'), data: { isbn } })"
+  |       expect:
+  |         channel: "*"
+
+api-client-call: http-request, 1 call(s) of ApiClient.call in catalog
+  at catalog/src/books/books.service.ts:20
+  | # A starter for ApiClient.call: 1 call(s) in catalog the reader could not follow (call-dynamic-receiver).
+  | # Written by flowatlas patterns suggest from the first calls' shapes. Check the kind and fill every TODO;
+  | # then run flowatlas patterns test on this file, and list it under "patterns" in flowatlas.config.json.
+  | - id: api-client-call
+  |   kind: http-request
+  |   on:
+  |     receiverType: ApiClient
+  |   pattern: $RECV.call($ARG0, $ARG1, $ARG2)
+  |   verb: $ARG0
+  |   url: $ARG1
+  |   body: $ARG2
+  |   tests:
+  |     - code: "this.api.call('POST', `${process.env.STOCK_URL}/stock/reserve`, { isbn: book.isbn, copies: 1 })"
+  |       expect:
+  |         verb: POST
+  |         url: /stock/reserve
+
+shop-bus-on: subscribe, 1 call(s) of ShopBus.on in stock
+  at stock/src/stock/stock.service.ts:21
+  | # A starter for ShopBus.on: 1 call(s) in stock the reader could not follow (call-dynamic-receiver).
+  | # Written by flowatlas patterns suggest from the first calls' shapes. Check the kind and fill every TODO;
+  | # then run flowatlas patterns test on this file, and list it under "patterns" in flowatlas.config.json.
+  | - id: shop-bus-on
+  |   kind: subscribe
+  |   on:
+  |     receiverType: ShopBus
+  |   pattern: $RECV.on($ARG0, $HANDLER)
+  |   channel: $ARG0
+  |   handler: $HANDLER
+  |   tests:
+  |     - code: "this.bus.on('book.added', (book: ShelvedBook) => this.shelve(book))"
+  |       expect:
+  |         channel: book.added
+
+next: flowatlas patterns suggest --out <dir> writes each starter to a file; fill the TODOs, run flowatlas patterns test, and list them under "patterns"

@@ -1,0 +1,59 @@
+# The bookshop's own wrappers, described once (P121). Each rule says what a
+# call of the wrapper is, where its name, address and payload are written, and
+# carries tests that `flowatlas patterns test` runs before the build reads it.
+#
+# A pattern holding `: ` is quoted, because YAML reads an unquoted `: ` as a key.
+
+- id: shop-bus-emit
+  kind: publish
+  on:
+    receiverType: ShopBus
+  pattern: "$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })"
+  channel: $CHANNEL
+  payload: $PAYLOAD
+  note: our bus wraps the broker; one call per event
+  tests:
+    - code: "bus.emit({ topic: 'book.added', data: book })"
+      expect: { channel: book.added }
+    - code: "bus.emit({ topic: topicFor(kind), data })"
+      expect: { channel: '*', row: channel-dynamic }
+    - code: bus.flush()
+      expect: none
+
+- id: shop-bus-on
+  kind: subscribe
+  on:
+    receiverType: ShopBus
+  pattern: $BUS.on($CHANNEL, $HANDLER)
+  channel: $CHANNEL
+  handler: $HANDLER
+  tests:
+    - code: "bus.on('book.added', (book) => shelve(book))"
+      expect: { channel: book.added }
+
+- id: api-client-call
+  kind: http-request
+  on:
+    receiverType: ApiClient
+  pattern: $API.call($VERB, $URL, $BODY)
+  verb: $VERB
+  url: $URL
+  body: $BODY
+  tests:
+    - code: "api.call('POST', '/stock/reserve', { isbn, copies: 1 })"
+      expect: { verb: POST, url: /stock/reserve }
+    - code: api.call(verb, '/stock/reserve', body)
+      expect: { url: /stock/reserve, row: api-method-dynamic }
+
+- id: storefront-send
+  kind: http-request
+  on:
+    factory: useApi
+    module: '@bookshop/api'
+  pattern: "$API.send({ method: $VERB, path: $URL, body: $BODY })"
+  verb: $VERB
+  url: $URL
+  body: $BODY
+  tests:
+    - code: "useApi().send({ method: 'GET', path: '/books' })"
+      expect: { verb: GET, url: /books }

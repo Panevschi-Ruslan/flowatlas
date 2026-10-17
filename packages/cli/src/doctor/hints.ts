@@ -225,6 +225,18 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'shape-file-unmatched': () =>
     'A shape file declares a package that is not read from it here: nothing imports it, it is installed, or its source is read instead. Nothing to do while that holds; remove the block when it is no longer needed.',
 
+  // The project's own extraction patterns (core/patterns, P121)
+  'pattern-file-unread': () =>
+    'A file listed under patterns was not read: it is not there, is not YAML, or is not a list of rules. Fix the path or the glob, or the file; flowatlas patterns test reads it the way the build does.',
+  'pattern-not-expressible': () =>
+    'A rule of a pattern file is not read: the part the row names cannot be said as a place in the call, so nothing of the rule is. Change that part, or describe the call under adapters in flowatlas.config.json; flowatlas patterns test shows the same refusal.',
+  'pattern-ambiguous': () =>
+    'Two rules of the pattern files match this call, so neither is read. Narrow one - its receiver type, a literal the call writes - or remove one; flowatlas patterns explain shows how far each matched.',
+  'pattern-shadowed': () =>
+    'A rule matches a call a written description already reads, and the written one wins. Nothing to do if the call is read right; otherwise check the rule\'s on.receiverType, or remove it.',
+  'pattern-unmatched': () =>
+    'A rule matches nothing in the services it applies to. Check its on.receiverType or function and its pattern against a call (flowatlas patterns explain <file:line>), or remove it.',
+
   // The build itself (cli/commands/build.ts)
   'service-read-nothing': () =>
     'A reader ran over this service and produced no node, so nothing about it is in the graph and every question asked about it answers nothing. Check its type in flowatlas.config.json against what its manifest declares, or write an adapter for the framework it is built on.',

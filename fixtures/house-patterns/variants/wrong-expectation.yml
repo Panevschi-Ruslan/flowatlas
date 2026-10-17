@@ -1,0 +1,12 @@
+# The bus rule with a test that expects the wrong channel on purpose: what a
+# failing test prints, with the holes the pattern filled (exit 1).
+- id: shop-bus-emit
+  kind: publish
+  on:
+    receiverType: ShopBus
+  pattern: "$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })"
+  channel: $CHANNEL
+  payload: $PAYLOAD
+  tests:
+    - code: "bus.emit({ topic: 'book.added', data: book })"
+      expect: { channel: book.removed }

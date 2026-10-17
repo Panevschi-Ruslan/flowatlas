@@ -221,7 +221,15 @@ export const standInsChange = (
   before: StandInsState | undefined,
   after: StandInsState | undefined,
 ): string | undefined => {
-  if (after === undefined) return undefined;
+  if (after === undefined) {
+    // The last shape or pattern file under a glob that is still configured
+    // went (P121, P180): the configuration did not change, and what is read
+    // did. Nothing recorded and nothing now is no change.
+    const shape = Object.keys(before?.shapes ?? {}).sort()[0];
+    if (shape !== undefined) return `stand-ins changed: shape file ${shape} removed`;
+    const gone = Object.keys(before?.patterns ?? {}).sort()[0];
+    return gone === undefined ? undefined : `stand-ins changed: pattern file ${gone} removed`;
+  }
   if (before === undefined) return 'stand-ins not recorded by the last build';
   const files = [...new Set([...Object.keys(before.shapes), ...Object.keys(after.shapes)])].sort();
   for (const file of files) {
@@ -231,6 +239,16 @@ export const standInsChange = (
     if (was === undefined) return `stand-ins changed: shape file ${file} added`;
     if (now === undefined) return `stand-ins changed: shape file ${file} removed`;
     return `stand-ins changed: shape file ${file} changed`;
+  }
+  // A pattern file is compiled into the descriptions every reader reads (P121).
+  const patterns = [...new Set([...Object.keys(before.patterns ?? {}), ...Object.keys(after.patterns ?? {})])].sort();
+  for (const file of patterns) {
+    const was = before.patterns?.[file];
+    const now = after.patterns?.[file];
+    if (was === now) continue;
+    if (was === undefined) return `stand-ins changed: pattern file ${file} added`;
+    if (now === undefined) return `stand-ins changed: pattern file ${file} removed`;
+    return `stand-ins changed: pattern file ${file} changed`;
   }
   for (const name of Object.keys(before.packages).sort()) {
     const was = before.packages[name];

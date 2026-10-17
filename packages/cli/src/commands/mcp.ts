@@ -3,7 +3,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createContractChecker, type ContractFinding } from '@flowatlas/contracts';
-import { loadConfig } from '@flowatlas/core';
+import { loadConfig, type LoadedConfig } from '@flowatlas/core';
+import { testPatternText } from '../patterns/test.js';
 import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { KNOWN_REASONS, kindHint } from '../doctor/hints.js';
@@ -170,6 +171,33 @@ export const reasonCatalog = (): Array<{ reason: string; hint?: string }> =>
  * and is loaded when the command runs, so nothing about it is paid for by the
  * other commands.
  */
+
+/**
+ * The pattern tester `test_pattern` runs (P121): rules as YAML, read beside the
+ * configuration's own descriptions, and a service's program when one is named.
+ */
+const patternTesterFor = (config: string | undefined) => async (input: { yaml: string; code?: string; service?: string }) => {
+  let loaded: LoadedConfig | undefined;
+  try {
+    loaded = loadConfig(config ?? process.cwd(), { checkRepos: false });
+  } catch {
+    loaded = undefined;
+  }
+  const service = input.service === undefined ? undefined : loaded?.config.services.find((each) => each.name === input.service);
+  if (input.service !== undefined && (loaded === undefined || service === undefined)) {
+    return { rules: [], error: `no service named ${JSON.stringify(input.service)}` };
+  }
+  return testPatternText(
+    input,
+    loaded === undefined
+      ? undefined
+      : {
+          config: loaded.config,
+          ...(service === undefined ? {} : { service: { service, repoDir: loaded.repoDir(service), configDir: loaded.rootDir } }),
+        },
+  );
+};
+
 export const registerMcp = (program: Command): void => {
   program
     .command('mcp')
@@ -214,6 +242,7 @@ export const registerMcp = (program: Command): void => {
             const opened = handle.open();
             return 'error' in opened ? undefined : opened.db;
           }),
+          patternTester: patternTesterFor(options.config),
         });
       },
     );

@@ -24,7 +24,8 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer } from '@flowatlas/mcp';
-import { reasonCatalog } from '../packages/cli/dist/index.js';
+import { loadConfig } from '@flowatlas/core';
+import { reasonCatalog, testPatternText } from '../packages/cli/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
 import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
 
@@ -209,8 +210,27 @@ const PROMPTS = {
   files: { 'describe_for_prompt.invoice': 'entry.md', 'describe_for_prompt.channel': 'channel.md', 'describe_for_prompt.gap': 'row.md' },
 };
 
+/**
+ * A draft rule checked before it is suggested (P121): what `test_pattern`
+ * answers for a rule that reads the call, and for one that cannot be said.
+ * The server is handed the command line's own tester, as `flowatlas mcp` is.
+ */
+const housePatterns = join(root, 'fixtures', 'house-patterns');
+const PATTERN_CASES = [
+  ['test_pattern.draft', 'test_pattern', {
+    yaml: '- id: shop-bus-emit\n  kind: publish\n  on: { receiverType: ShopBus }\n  pattern: "$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })"\n  channel: $CHANNEL\n  payload: $PAYLOAD\n',
+    code: "bus.emit({ topic: 'book.added', data: book })",
+  }],
+  ['test_pattern.refused', 'test_pattern', {
+    yaml: '- id: shop-bus-later\n  kind: publish\n  on: { receiverType: ShopBus }\n  pattern: "$BUS.later(() => $TOPIC)"\n  channel: $TOPIC\n',
+  }],
+];
+const patternTester = (input) =>
+  testPatternText(input, { config: loadConfig(join(housePatterns, 'flowatlas.config.json'), { checkRepos: false }).config });
+
 const SUITES = [
   { fixture, outDir, cases: CASES, prompts: PROMPTS },
+  { fixture: housePatterns, outDir: join(housePatterns, 'expected.mcp'), cases: PATTERN_CASES, options: { patternTester } },
   {
     fixture: join(root, 'fixtures', 'nest-check-through-helper'),
     outDir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.mcp'),

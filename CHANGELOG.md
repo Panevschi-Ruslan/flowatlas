@@ -404,8 +404,49 @@ only one of them moved.
   its kind, cause and `doctor`'s sentence, `flowatlas://services` the services,
   and `flowatlas://services/{name}` one service's summary, crossings and top
   findings.
+- **Your own extraction patterns (P121).** A project can write a YAML file of
+  code patterns - `$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })` on a
+  receiver of type `ShopBus` publishes to `$CHANNEL` - with tests beside each
+  rule, and list it under `patterns` (top level or per service). Each rule is
+  compiled into the description the readers already read (`broker.custom`,
+  `starters`, `db.tables`, and the new `adapters.http.clients`), so a Can't
+  follow row for an in-house bus, HTTP client or data kit becomes something the
+  project fixes in one file. A pattern is one TypeScript expression: `$NAME`
+  holes, `$$$NAME` runs, `_`, object keys in any order, chains, constructions,
+  literals that must match. A rule that cannot be said as locators is refused
+  with the part named (`pattern-not-expressible`); a file that cannot be read is
+  `pattern-file-unread`; a written description on the same call wins
+  (`pattern-shadowed`, info); two rules on one call read neither
+  (`pattern-ambiguous`); a rule nothing matches is `pattern-unmatched` (info).
+  Nodes a rule drew carry `meta.describedBy: "pattern:<id>"`, and a call a
+  description now reads loses its `call-dynamic-receiver` row. New commands:
+  `flowatlas patterns test [files...]` runs every rule's tests by the reader the
+  build runs, in memory (exit 1 on a failing test, 2 on a rule that does not
+  compile; `--sample`, `--service`, `--json`), `flowatlas patterns explain
+  <place>` shows how far each rule got at a place and the first part that did
+  not fit, and `flowatlas patterns suggest` writes starter rules for the
+  wrappers the reader could not follow most often (`--min-sites`, `--out`). The
+  MCP server gained `test_pattern({ yaml, code?, service? })`, the same tester,
+  and `cant_follow` offers it with a starter. Pattern files join the stand-ins
+  fingerprint, so an added, edited or removed file reads the services that list
+  it again (`fixtures/house-patterns`).
+- **`adapters.http.clients` (P121).** An HTTP client of the project's own,
+  described by its receiver type, the function that makes it, or its own name,
+  with locators for the address, the body and the verb (or the verb fixed, or
+  the method's own name), read by the server reader and both browser readers.
+  Every description gained `where` (values the call must write) and
+  `describedBy`; a `broker.custom` producer gained `module`.
 
 ### Changed
+
+- **A subscription described in configuration is matched on what the source
+  states (P121).** A `broker.custom` subscriber on a receiver whose type is not
+  installed was read only where the checker resolved it; it is now matched on
+  the annotation or the construction that names the class, as a described
+  publish already was, and its `consumes` edge is `heuristic`. A described
+  table access (`db.tables`) and a described subscription withdraw the
+  `call-dynamic-receiver` row at their call, as a described publish did
+  (`fixtures/data-kit-tables`: seven fewer places).
 
 - **`flowatlas dead` printed a verdict (P95).** The entries table's
   `confidence` column became `verdict` (`dead`, `likely-dead`, `unknown`), the
