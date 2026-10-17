@@ -2,6 +2,7 @@ import { relative, sep } from 'node:path';
 import {
   addressOnly,
   applicationOfFile,
+  classMembersOf,
   localBaseClassNames,
   localBaseTableProperty,
   classifyDbCall,
@@ -298,7 +299,7 @@ const fieldSetterOf = (
 ): { owner: string; readonly: boolean } | undefined => {
   if (declaration === undefined || !Node.isClassDeclaration(declaration)) return undefined;
   for (const owner of classChainOf(declaration)) {
-    const property = owner.getProperty(key);
+    const property = classMembersOf(owner).property(key);
     if (property?.getInitializer() === undefined) continue;
     return { owner: owner.getName() ?? key, readonly: property.isReadonly() };
   }
@@ -461,7 +462,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (known !== undefined) return known ?? undefined;
     const keys = new Set<string>();
     const declares = (key: string): boolean =>
-      classChainOf(declaration).some((owner) => owner.getProperty(key) !== undefined);
+      classChainOf(declaration).some((owner) => classMembersOf(owner).property(key) !== undefined);
     declaration.forEachDescendant((node, traversal) => {
       if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
         traversal.skip();

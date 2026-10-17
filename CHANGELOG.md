@@ -563,8 +563,13 @@ only one of them moved.
   file's calls by line instead, built once per parsed file. Every line and
   column the readers write was found by a lookup in a list of the file's line
   breaks, kept once per parsed file, rather than by counting newlines from the
-  top of the file for each node (P123). The graph was unchanged.
-  `scripts/bench-call-shape.mjs` measured the pass over a generated service.
+  top of the file for each node (P123). The method a call names on a class,
+  and a field or getter a reader looks up there, came from one walk of the
+  class's members kept per class, instead of a walk of every member for each
+  call (P124); whether a node is a conditional write was worked out once per
+  node rather than once per search that visited it (P129). The graph was
+  unchanged. `scripts/bench-call-shape.mjs` measured the pass over a
+  generated service.
 - **Package sources cost a build less (P82).** The index of the package
   sources a service may read in place of an install, and every listed shape
   file, were worked out once by `flowatlas build` and written to

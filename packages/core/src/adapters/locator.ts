@@ -9,6 +9,7 @@ import {
   type Node as TsNode,
   type ObjectLiteralExpression,
 } from 'ts-morph';
+import { classMembersOf } from '../di/class-members.js';
 import { functionOf, methodNamedOn } from '../di/member-call.js';
 import { evaluateExpression } from '../static-value.js';
 import { returnedExpression } from '../trace.js';
@@ -339,7 +340,7 @@ const getterAnswer = (link: TsNode): TsNode | undefined => {
     return undefined;
   }
   for (const owner of classesAround(link)) {
-    const getter = owner.getGetAccessor(link.getName());
+    const getter = classMembersOf(owner).getAccessor(link.getName());
     if (getter === undefined) continue;
     const body = getter.getBody();
     return body === undefined ? undefined : soleReturn(body);
@@ -490,7 +491,7 @@ const classPropertyValue = (
   let current = declaration;
   for (let depth = 0; depth < 8; depth += 1) {
     if (current === undefined || !Node.isClassDeclaration(current)) return undefined;
-    const initialiser = current.getProperty(key)?.getInitializer();
+    const initialiser = classMembersOf(current).property(key)?.getInitializer();
     if (initialiser !== undefined) return initialiser;
     current = current.getBaseClass();
   }

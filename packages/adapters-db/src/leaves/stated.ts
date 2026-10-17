@@ -1,5 +1,6 @@
 import { dirname, join, resolve } from 'node:path';
 import {
+  classMembersOf,
   declarationOf,
   packageOfSpecifier,
   readPackageJson,
@@ -261,7 +262,7 @@ const writtenMember = (
     }
     return undefined;
   }
-  if (Node.isClassDeclaration(declaration)) return declaration.getProperty(key);
+  if (Node.isClassDeclaration(declaration)) return classMembersOf(declaration).property(key);
   return undefined;
 };
 

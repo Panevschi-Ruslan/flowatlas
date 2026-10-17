@@ -369,9 +369,17 @@ export const callShapePass = definePass('call-shape', (ctx: NestExtractContext) 
   for (const edge of calls) mark(edge, shapeOfEdge(edge, open, options));
 
   const guards = new Set(settings.conditionalWrites);
+  // Asked for every node every search visits, and one node is visited by
+  // the search from each loop that reaches it, so it is read once (P129).
+  const guarded = new Map<string, boolean>();
   const reached = leavesReached(callsFrom, (id) => {
-    const name = calleeName(id);
-    return name !== undefined && guards.has(name);
+    let known = guarded.get(id);
+    if (known === undefined) {
+      const name = calleeName(id);
+      known = name !== undefined && guards.has(name);
+      guarded.set(id, known);
+    }
+    return known;
   });
   const entries = new Set(ctx.builder.nodes.filter((node) => node.type === 'entry').map((node) => node.id));
   const ways = waysInto(ctx.builder.edges, entries);

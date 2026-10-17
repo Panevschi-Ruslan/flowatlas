@@ -561,6 +561,8 @@ export {
   resolveReceiver,
 } from './di/member-call.js';
 export type { ClassMethod, ReceiverInfo } from './di/member-call.js';
+export { classMembersOf } from './di/class-members.js';
+export type { ClassMembers } from './di/class-members.js';
 export { DiMap } from './di/types.js';
 export type {
   DiEntry,
