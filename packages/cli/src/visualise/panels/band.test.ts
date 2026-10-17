@@ -238,4 +238,41 @@ describe('Start here', () => {
     expect(blocked.document.getElementById('start')!.hidden).toBe(false);
     expect(() => blocked.document.getElementById('start')!.querySelector('[data-start-close]')!.click()).not.toThrow();
   });
+
+  it('turns the theme from the system’s to light to dark and back, on <html>, and remembers it (P102)', () => {
+    const { page, window, document } = mountPage(data);
+    const html = document.documentElement;
+    const button = document.getElementById('theme')!;
+    expect(html.getAttribute('data-theme')).toBeNull();
+    expect(page.themeMode()).toBe('system');
+    expect(button.getAttribute('aria-label')).toBe('Theme: Auto, as the system sets it');
+    button.click();
+    expect(html.getAttribute('data-theme')).toBe('light');
+    expect(textOf(button)).toBe('Light');
+    expect(window.storage.get('flowatlas.theme')).toBe('light');
+    button.click();
+    expect(html.getAttribute('data-theme')).toBe('dark');
+    expect(button.getAttribute('aria-label')).toBe('Theme: Dark');
+    expect(window.storage.get('flowatlas.theme')).toBe('dark');
+    button.click();
+    expect(html.getAttribute('data-theme')).toBeNull();
+    expect(page.themeMode()).toBe('system');
+    expect(window.storage.has('flowatlas.theme')).toBe(false);
+  });
+
+  it('opens on the theme kept, and follows the system when the browser keeps nothing (P102)', () => {
+    const { page, window } = mountPage(data, { upTo: createBand });
+    window.storage.set('flowatlas.theme', 'dark');
+    createBand(page);
+    expect(window.document.documentElement.getAttribute('data-theme')).toBe('dark');
+
+    const blocked = mountPage(data, { upTo: createBand });
+    const throwing = { getItem: () => { throw new Error('denied'); }, setItem: () => { throw new Error('denied'); },
+      removeItem: () => { throw new Error('denied'); } };
+    Object.defineProperty(globalThis, 'localStorage', { value: throwing, configurable: true, writable: true });
+    const band = createBand(blocked.page);
+    expect(blocked.document.documentElement.getAttribute('data-theme')).toBeNull();
+    expect(() => band.setTheme('light')).not.toThrow();
+    expect(blocked.document.documentElement.getAttribute('data-theme')).toBe('light');
+  });
 });

@@ -576,7 +576,19 @@ export interface FakeWindow {
  * `navigator`, `CSS` and the observers - and returned with what a test may
  * want to look at: the address, what was stored and what was copied.
  */
-export const installDocument = (markup: string, address = 'file:///project/graph.html'): FakeWindow => {
+/**
+ * A media query against a window `width` pixels wide: `(max-width: Npx)` and
+ * `(min-width: Npx)`, joined by `and`; anything else (a colour scheme, reduced
+ * motion) does not match, as on a plain desktop. Listeners are kept and never
+ * called: a test sets the width when it installs the document.
+ */
+const mediaQuery = (width: number) => (query: string) => {
+  const parts = query.split(/\s+and\s+/).map((part) => /\((max|min)-width:\s*(\d+)px\)/.exec(part));
+  const matches = parts.every((part) => part !== null && (part[1] === 'max' ? width <= Number(part[2]) : width >= Number(part[2])));
+  return { matches, media: query, addEventListener(): void {}, removeEventListener(): void {} };
+};
+
+export const installDocument = (markup: string, address = 'file:///project/graph.html', width = 1280): FakeWindow => {
   const doc = new FakeDocument();
   doc.body.append(...parseHtml(doc, markup));
   doc.activeElement = doc.body;
@@ -595,7 +607,7 @@ export const installDocument = (markup: string, address = 'file:///project/graph
     location,
     storage,
     clipboard,
-    innerWidth: 1280,
+    innerWidth: width,
     innerHeight: 800,
     devicePixelRatio: 1,
     prompt: () => null,
@@ -647,6 +659,7 @@ export const installDocument = (markup: string, address = 'file:///project/graph
     MutationObserver: class { observe(): void {} disconnect(): void {} },
     ResizeObserver: class { observe(): void {} disconnect(): void {} },
     requestAnimationFrame: (done: () => void) => setTimeout(done, 0),
+    matchMedia: mediaQuery(width),
     getComputedStyle: () => ({ display: '', visibility: '', backgroundColor: '', getPropertyValue: () => '' }),
     XMLSerializer: class { serializeToString(node: FakeNode): string { return serialize(node); } },
   };

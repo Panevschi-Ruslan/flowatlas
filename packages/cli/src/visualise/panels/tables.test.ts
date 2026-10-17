@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import type { PackedGraph } from '../pack.js';
 import { createTables } from './tables.js';
 import { textOf } from './test-dom.js';
 import { mountPage, testPack } from './test-page.js';
@@ -39,5 +40,34 @@ describe('the table tabs', () => {
     createTables(page).drawChanges();
     expect(document.getElementById('tab-sheet')!.childNodes).toHaveLength(0);
     expect(document.getElementById('tab-changes')!.hidden).toBe(true);
+  });
+
+  /** `data` with its one crossing copied until there are `count`, so the table is long. */
+  const withCrossings = (count: number): PackedGraph => {
+    const crossing = data.edges.find((e) => data.dicts.edgeTypes[e[2]!] === 'http_calls')!;
+    return { ...data, edges: [...data.edges, ...Array.from({ length: count - 1 }, () => [...crossing])] };
+  };
+
+  it('draws the first hundred crossings at once and the rest while the browser is idle (P102)', () => {
+    vi.useFakeTimers();
+    try {
+      const { page, document } = mountPage(withCrossings(350), { upTo: createTables });
+      const tables = createTables(page);
+      tables.drawCrossings();
+      const rows = () => document.querySelectorAll('#tab-sheet tbody tr').length;
+      expect(rows()).toBe(tables.CROSSINGS_CHUNK);
+      vi.advanceTimersToNextTimer();
+      expect(rows()).toBe(200);
+      vi.runAllTimers();
+      expect(rows()).toBe(350);
+      // Built once: opening the tab again draws the same rows at once.
+      const sheet = document.querySelector('#tab-sheet .sheet');
+      tables.drawBusiest();
+      tables.drawCrossings();
+      expect(document.querySelector('#tab-sheet .sheet')).toBe(sheet);
+      expect(rows()).toBe(350);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

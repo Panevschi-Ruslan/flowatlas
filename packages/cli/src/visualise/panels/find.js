@@ -164,6 +164,8 @@ export function createFind(page) {
     drawFind();
   };
   const leaveFind = () => {
+    // A search still waiting on the typing is not drawn after the box is left.
+    if (typedTimer !== null) { clearTimeout(typedTimer); typedTimer = null; }
     if (picking()) page.stopPicking();
     findEl.value = '';
     closeFind();
@@ -174,9 +176,32 @@ export function createFind(page) {
     else findEl.blur();
   };
 
-  findEl.addEventListener('input', drawFind);
+  /* Typing is heard at most every TYPED_WAIT ms (P102): the first key at
+     once, a run of keys once it pauses, so a fast typist on a large project
+     never waits on a search per key. A key that acts on what was found -
+     the arrows, Enter - first catches the search up. */
+  const TYPED_WAIT = 120;
+  let typedAt = -Infinity;
+  let typedTimer = null;
+  const catchUp = () => {
+    if (typedTimer === null) return;
+    clearTimeout(typedTimer);
+    typedTimer = null;
+    drawFind();
+  };
+  const typed = () => {
+    const now = Date.now();
+    const quiet = now - typedAt >= TYPED_WAIT;
+    typedAt = now;
+    if (typedTimer !== null) clearTimeout(typedTimer);
+    typedTimer = null;
+    if (quiet) { drawFind(); return; }
+    typedTimer = setTimeout(() => { typedTimer = null; drawFind(); }, TYPED_WAIT);
+  };
+  findEl.addEventListener('input', typed);
   findEl.addEventListener('focus', drawFind);
   findEl.addEventListener('keydown', (event) => {
+    if (pressed('find.move', event) || pressed('find.go', event)) catchUp();
     if (pressed('find.move', event)) {
       event.preventDefault();
       if (findOut.hidden) { drawFind(); return; }

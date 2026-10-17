@@ -18,7 +18,15 @@ export interface StartCard {
   offer(): void;
 }
 
-export declare function createBand(page: Page): Panel<'startCard' | 'startHere'> & {
+/** The page's colours (P102): as the system sets them, or light or dark whatever it says. */
+export type ThemeMode = 'system' | 'light' | 'dark';
+
+export declare function createBand(page: Page): Panel<'nextTheme' | 'setTheme' | 'startCard' | 'startHere' | 'themeMode'> & {
   startCard: StartCard;
   startHere: (model: GraphModel, data: PackedGraph) => StartPick[];
+  /** Sets `data-theme` on <html> (none for the system's) and, unless `keep` is false, remembers it. */
+  setTheme: (mode: ThemeMode, keep?: boolean) => void;
+  themeMode: () => ThemeMode;
+  /** The mode the button turns to next: system, light, dark, then system again. */
+  nextTheme: () => ThemeMode;
 };

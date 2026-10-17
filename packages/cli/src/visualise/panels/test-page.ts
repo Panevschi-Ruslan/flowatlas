@@ -66,6 +66,8 @@ export interface MountOptions {
   upTo?: (page: Page) => Record<string, unknown>;
   /** The address the page is opened at, hash and all. */
   address?: string;
+  /** How wide the window is, for the media queries the page asks (P102); 1280 by default. */
+  width?: number;
 }
 
 /**
@@ -73,7 +75,7 @@ export interface MountOptions {
  * page boots, or only the panels before `upTo`.
  */
 export const mountPage = (data: PackedGraph, options: MountOptions = {}): MountedPage => {
-  const window = installDocument(options.markup ?? pageMarkup(), options.address);
+  const window = installDocument(options.markup ?? pageMarkup(), options.address, options.width);
   const page = createPageContext(data);
   for (const create of PANELS) {
     if (create === options.upTo) return { page, window, document: window.document };
@@ -95,4 +97,23 @@ export const withServices = (data: PackedGraph, count: number): PackedGraph => {
   const services = names.map((name, i) => report.services.find((service) => service.name === name) ??
     { name, type: i % 3 === 0 ? 'express' : 'nestjs', nodes: 3 + i, edges: 2, unresolved: 0, durationMs: 10 + i, skipped: null });
   return { ...data, dicts: { ...data.dicts, repos: names }, report: { ...report, services } };
+};
+
+/**
+ * `data` with `count` more ways in (P102): copies of its first entry, routed
+ * `GET /bulk/0001`… and joined to nothing, so a test can see the Ways in list
+ * hold thousands without building a project that large.
+ */
+export const withWays = (data: PackedGraph, count: number): PackedGraph => {
+  const types = data.dicts.types as readonly string[];
+  const first = data.nodes.find((node) => types[node[0] as number] === 'entry');
+  if (first === undefined) throw new Error('the test graph has no way in to copy');
+  const copies = Array.from({ length: count }, (_, n) => {
+    const path = '/bulk/' + String(n + 1).padStart(4, '0');
+    const copy = [...first];
+    copy[1] = 'GET ' + path;
+    copy[6] = { ...(first[6] as object | null ?? {}), m: 'GET', p: path };
+    return copy;
+  });
+  return { ...data, nodes: [...data.nodes, ...copies] };
 };

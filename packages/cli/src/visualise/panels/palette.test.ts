@@ -75,7 +75,8 @@ describe('the command list', () => {
     const listed = document.querySelectorAll('#keys-list [data-shortcut]').map((row: any) => row.dataset.shortcut);
     expect(listed.sort()).toEqual(SHORTCUTS.map((shortcut) => shortcut.id).sort());
     expect(document.querySelectorAll('#keys-list h4').map(textOf)).toEqual(
-      ['Anywhere', 'In the search', 'On the Graph tab', 'On the Map tab', 'In the command list or a row menu']);
+      ['Anywhere', 'On the tab row', 'In the Ways in list', 'In the search', 'On the Graph tab', 'On the Map tab',
+        'In the command list or a row menu']);
     key(help.querySelector('.keys-box'), { key: 'Escape' });
     expect(help.hidden).toBe(true);
     // Not from a field, where ? is typed.
@@ -91,5 +92,17 @@ describe('the command list', () => {
     key(document.body, { key: '?' });
     key(document.querySelector('.keys-box'), { key: 'f' });
     expect(document.documentElement.classList.contains('is-full')).toBe(false);
+  });
+
+  it('turns the theme from the keyboard, to the mode the strip’s button would (P102)', () => {
+    const { page, document } = mountPage(data);
+    key(document.body, { key: 'k', metaKey: true });
+    const input = document.getElementById('palette-input')! as any;
+    input.value = 'theme';
+    input.dispatchEvent(new FakeEvent('input'));
+    expect(offered(document)[0]).toBe('Theme: light');
+    key(input, { key: 'Enter' });
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(page.themeMode()).toBe('light');
   });
 });

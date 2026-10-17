@@ -150,6 +150,10 @@ describe('writing the graph as a page', () => {
     expect(head).toContain('<meta charset="utf-8">');
   });
 
+  it('says what language it is written in, for a screen reader (P102)', () => {
+    expect(page.startsWith('<!doctype html>\n<html lang="en">\n')).toBe(true);
+  });
+
   it('carries the whole graph, not a sample of it', () => {
     const data = dataOf(page);
     expect(data.nodes.length).toBeGreaterThan(50);

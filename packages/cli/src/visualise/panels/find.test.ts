@@ -159,4 +159,28 @@ describe('the search over everything', () => {
     expect(document.getElementById('search')).toBeNull();
     expect(document.getElementById('g-search')).toBeNull();
   });
+
+  it('searches on the first key at once, and on a run of keys once it pauses; Enter catches up (P102)', () => {
+    vi.useFakeTimers();
+    try {
+      const { page, document } = mountPage(data, { upTo: createFind });
+      createFind(page);
+      const out = document.getElementById('find-out')!;
+      type(document, 'invoice');
+      expect(out.hidden).toBe(false);
+      const first = textOf(out);
+      type(document, 'zzzz-nothing-here');
+      // Still the first search: the second key came too soon after it.
+      expect(textOf(out)).toBe(first);
+      vi.advanceTimersByTime(120);
+      expect(textOf(out)).not.toBe(first);
+      const input = type(document, 'invoice');
+      vi.advanceTimersByTime(10);
+      input.dispatchEvent(new FakeEvent('keydown', { key: 'ArrowDown' }));
+      // The arrow acted on the search typed, not the one before it.
+      expect(textOf(out)).toBe(first);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

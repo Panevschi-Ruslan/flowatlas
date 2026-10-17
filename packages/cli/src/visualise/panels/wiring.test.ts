@@ -197,6 +197,69 @@ describe('the wiring', () => {
     }
   });
 
+  it('is a tab row the keyboard moves along: one tab in the Tab order, the arrows round the ends, Home and End (P102)', () => {
+    const { page, document } = mountPage(data);
+    const tabs = document.querySelectorAll('.tab').filter((tab) => !tab.hidden);
+    const views = tabs.map((tab: any) => tab.dataset.view);
+    const inTabOrder = () => document.querySelectorAll('.tab').filter((tab) => tab.getAttribute('tabindex') === '0')
+      .map((tab: any) => tab.dataset.view);
+    expect(inTabOrder()).toEqual(['map']);
+    const press = (key: string) => document.activeElement!.dispatchEvent(new FakeEvent('keydown', { key }));
+    tabs[0]!.focus();
+    press('ArrowRight');
+    expect(page.store.get('view')).toBe(views[1]);
+    expect((document.activeElement as any).dataset.view).toBe(views[1]);
+    expect(inTabOrder()).toEqual([views[1]]);
+    press('End');
+    expect(page.store.get('view')).toBe(views.at(-1));
+    press('ArrowRight');
+    expect(page.store.get('view')).toBe(views[0]);
+    press('ArrowLeft');
+    expect(page.store.get('view')).toBe(views.at(-1));
+    press('Home');
+    expect(page.store.get('view')).toBe(views[0]);
+    // Changes is not on this page, so the arrows pass it over.
+    expect(views).not.toContain('changes');
+  });
+
+  it('ties each tab to the panel it shows, and names the shared sheet by the table tab open (P102)', () => {
+    const { page, document } = mountPage(data);
+    for (const tab of document.querySelectorAll('.tab')) {
+      const panel = document.getElementById(tab.getAttribute('aria-controls')!);
+      expect(panel, (tab as any).dataset.view).not.toBeNull();
+      expect(panel!.getAttribute('role')).toBe('tabpanel');
+      expect(tab.getAttribute('id')).toBe('tab-' + (tab as any).dataset.view);
+    }
+    for (const id of ['map-view', 'steps-view', 'graph-view']) {
+      const labelled = document.getElementById(id)!.getAttribute('aria-labelledby')!;
+      expect(document.getElementById(labelled)!.getAttribute('aria-controls')).toBe(id);
+    }
+    page.showView('busiest');
+    expect(document.getElementById('tab-sheet')!.getAttribute('aria-labelledby')).toBe('tab-busiest');
+    page.showView('missing');
+    expect(document.getElementById('tab-sheet')!.getAttribute('aria-labelledby')).toBe('tab-missing');
+  });
+
+  it('offers a View select with every tab the row shows, kept in step with it (P102)', () => {
+    const { page, document } = mountPage(data);
+    const select = document.getElementById('view-select')! as any;
+    expect(select.querySelectorAll('option').map((o: any) => o.value))
+      .toEqual(document.querySelectorAll('.tab').filter((tab) => !tab.hidden).map((tab: any) => tab.dataset.view));
+    expect(textOf(document.getElementById('view-pick')!.querySelector('span'))).toBe('View');
+    page.showView('crossings');
+    expect(select.value).toBe('crossings');
+    select.value = 'graph';
+    select.dispatchEvent(new FakeEvent('change'));
+    expect(page.store.get('view')).toBe('graph');
+    // On a desktop the row fits, and the select stays away.
+    expect(document.querySelector('#views > .panel-head')!.classList.contains('is-select')).toBe(false);
+  });
+
+  it('puts the select in place of the row under 360px (P102)', () => {
+    const { document } = mountPage(data, { width: 340 });
+    expect(document.querySelector('#views > .panel-head')!.classList.contains('is-select')).toBe(true);
+  });
+
   it('says what was read and, only with a trace, what was seen running (P101)', () => {
     const { document } = mountPage(data);
     const said = textOf(document.getElementById('colophon'));

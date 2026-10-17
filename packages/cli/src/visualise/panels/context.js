@@ -222,10 +222,28 @@ export function createPageContext(data) {
     }, 1600));
   };
 
+  /* The first plain wheel over a drawing scrolls the page (P102), and says
+     once, in the drawing's corner, how to zoom instead: Ctrl, or ⌘ on a Mac.
+     Each drawing says it the first time only. */
+  const onMac = /Mac|iPhone|iPad/.test((typeof navigator !== 'undefined' && (navigator.platform || navigator.userAgent)) || '');
+  const WHEEL_HINT = (onMac ? '⌘' : 'Ctrl') + ' + scroll to zoom';
+  const wheelHint = (canvas) => {
+    if (canvas.dataset.wheelHinted !== undefined) return null;
+    canvas.dataset.wheelHinted = '';
+    const hint = document.createElement('p');
+    hint.className = 'g-wheel-hint';
+    hint.setAttribute('aria-hidden', 'true');
+    hint.textContent = WHEEL_HINT;
+    canvas.append(hint);
+    setTimeout(() => hint.remove(), 1500);
+    return hint;
+  };
+
   const store = createStore({ current: null, view: 'map', shown: new Set(repos) });
 
   return { CROSSES, FL, GLYPH, KD, LB, LN, MT, RP, TY, accepted, acceptedNote,
     acceptedRows, acceptedRule, confidences, copyText, data, edgeTypes, entryHeadHtml, entryIx, esc, failChipsHtml,
     files, flash, graphLink, guards, hueOf, keys, kinds, model, nodes, opener, plural, reachesCrossing, reasons,
-    repoName, repos, rowKind, rowPlace, rowRisk, rowService, rowTone, scheduleSay, seen, store, trustHtml, typeName, types, wordHtml };
+    repoName, repos, rowKind, rowPlace, rowRisk, rowService, rowTone, scheduleSay, seen, store, trustHtml, typeName, types, wheelHint,
+    wordHtml };
 }

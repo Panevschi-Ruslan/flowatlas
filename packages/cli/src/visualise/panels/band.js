@@ -123,6 +123,44 @@ export function createBand(page) {
     });
   }
 
+  /* ── the theme: the system's, light or dark (P102) ───────────────── */
+
+  /* One button, three states, in turn: as the system sets it, light, dark.
+     Light or dark is `data-theme` on <html>, which the style sheet's tokens
+     follow; the system's is no attribute at all. Kept per viewer in the
+     browser where it may be kept; where it may not, each load follows the
+     system. */
+  const THEME_KEY = 'flowatlas.theme';
+  const THEMES = {
+    system: { say: 'Auto', label: 'Theme: Auto, as the system sets it', next: 'light' },
+    light: { say: 'Light', label: 'Theme: Light', next: 'dark' },
+    dark: { say: 'Dark', label: 'Theme: Dark', next: 'system' },
+  };
+  const themeButton = document.getElementById('theme');
+  let theme = 'system';
+  const setTheme = (mode, keep = true) => {
+    theme = Object.hasOwn(THEMES, mode) ? mode : 'system';
+    const html = document.documentElement;
+    if (theme === 'system') html.removeAttribute('data-theme'); else html.setAttribute('data-theme', theme);
+    const { say, label, next } = THEMES[theme];
+    themeButton.dataset.themeMode = theme;
+    themeButton.setAttribute('aria-label', label);
+    themeButton.title = `${label}. Click for ${THEMES[next].say.toLowerCase()}`;
+    themeButton.querySelector('.theme-say').textContent = say;
+    if (!keep) return;
+    try {
+      if (theme === 'system') localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // Not kept: the next load follows the system.
+    }
+  };
+  const themeMode = () => theme;
+  const nextTheme = () => THEMES[theme].next;
+  themeButton.addEventListener('click', () => setTheme(nextTheme()));
+  let keptTheme = null;
+  try { keptTheme = localStorage.getItem(THEME_KEY); } catch { keptTheme = null; }
+  setTheme(keptTheme || 'system', false);
+
   /* ── service rail, doubling as the filter ────────────────────────── */
 
   /* Twelve chips fit in two lines on a desktop; past that the rail would cost
@@ -344,5 +382,5 @@ export function createBand(page) {
     startEl.scrollIntoView({ block: 'nearest' });
   });
 
-  return { startCard, startHere };
+  return { nextTheme, setTheme, startCard, startHere, themeMode };
 }

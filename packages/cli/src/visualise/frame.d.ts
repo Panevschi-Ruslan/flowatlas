@@ -91,7 +91,7 @@ export declare const wordFor: (kind: 'reason' | 'edge' | 'trust' | 'risk', code:
 /** A key the page answers, where, and what it does; `keys` empty for a gesture. */
 export interface Shortcut {
   id: string;
-  where: 'anywhere' | 'find' | 'graph' | 'map' | 'menu';
+  where: 'anywhere' | 'tabs' | 'list' | 'find' | 'graph' | 'map' | 'menu';
   keys: readonly string[];
   mod?: boolean;
   say: string;
@@ -103,3 +103,12 @@ export declare const pressed: (
   id: string,
   event: { key: string; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean },
 ) => boolean;
+
+/** What a wheel over a drawing does: zoom with Ctrl or ⌘ (a pinch), pan in full screen, else scroll the page. */
+export declare const wheelIntent: (
+  event: { ctrlKey?: boolean; metaKey?: boolean },
+  full: boolean,
+) => 'zoom' | 'pan' | 'page';
+
+/** The WCAG contrast ratio of two `#rgb`/`#rrggbb` colours, 1 to 21. */
+export declare const contrastOf: (fg: string, bg: string) => number;

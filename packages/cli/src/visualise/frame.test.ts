@@ -3,12 +3,14 @@ import { CONFIDENCE_LEVELS, EDGE_TYPES, RISK_NAMES } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { KNOWN_REASONS } from '../doctor/hints.js';
 import {
+  contrastOf,
   createKeys,
   DRAWER,
   PAGE_WORDS,
   pressed,
   SHORTCUT_PLACES,
   SHORTCUTS,
+  wheelIntent,
   wordFor,
   drawerWidth,
   formatHash,
@@ -365,5 +367,23 @@ describe('the keys (P101)', () => {
     expect(SHORTCUTS.filter((shortcut) => shortcut.keys.length > 0 && !asked.has(shortcut.id)).map((s) => s.id)).toEqual([]);
     // No handler asks a key by its name any more; every key goes through the table.
     expect(code.match(/event\.key === '(?:[a-zA-Z+?/*]|Escape|Enter)'/g)).toBeNull();
+  });
+});
+
+describe('the wheel and the colours (P102)', () => {
+  it('scrolls the page with a plain wheel, zooms with Ctrl or ⌘ (a pinch), and pans only in full screen', () => {
+    expect(wheelIntent({}, false)).toBe('page');
+    expect(wheelIntent({ ctrlKey: true }, false)).toBe('zoom');
+    expect(wheelIntent({ metaKey: true }, true)).toBe('zoom');
+    expect(wheelIntent({}, true)).toBe('pan');
+  });
+
+  it('works out a contrast ratio as WCAG does, either way round', () => {
+    expect(contrastOf('#000000', '#ffffff')).toBeCloseTo(21, 5);
+    expect(contrastOf('#fff', '#000')).toBeCloseTo(21, 5);
+    expect(contrastOf('#5c6560', '#5c6560')).toBe(1);
+    // The grey that famously just misses AA on white.
+    expect(contrastOf('#777777', '#ffffff')).toBeCloseTo(4.48, 2);
+    expect(() => contrastOf('red', '#fff')).toThrow('not a colour');
   });
 });

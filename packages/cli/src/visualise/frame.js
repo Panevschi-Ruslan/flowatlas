@@ -17,6 +17,8 @@
  *                 type and its trust, the code kept for the tooltip
  *   SHORTCUTS, pressed   every key the page answers, which the handlers and
  *                 the `?` overlay both read
+ *   wheelIntent   what a wheel over a drawing does: scroll the page, pan, zoom
+ *   contrastOf    how far apart two colours read, as WCAG counts it
  */
 
 /** Hops a view may ask for. More than three is most of any graph. */
@@ -517,6 +519,9 @@ export const SHORTCUTS = Object.freeze([
   { id: 'help', where: 'anywhere', keys: ['?'], say: '?', what: 'these keys' },
   { id: 'press', where: 'anywhere', keys: ['Enter', ' '], say: 'Enter or Space', what: 'press what the keyboard is on: a pill, a box, a button' },
   { id: 'close', where: 'anywhere', keys: ['Escape'], say: 'Escape', what: 'close the note, list or card that is open' },
+  { id: 'tabs.move', where: 'tabs', keys: ['ArrowLeft', 'ArrowRight'], say: '← →', what: 'the tab before or after, opened' },
+  { id: 'tabs.ends', where: 'tabs', keys: ['Home', 'End'], say: 'Home End', what: 'the first or the last tab, opened' },
+  { id: 'list.move', where: 'list', keys: ['ArrowDown', 'ArrowUp', 'Home', 'End'], say: '↓ ↑ Home End', what: 'the way in below or above, or the first or last one' },
   { id: 'find.move', where: 'find', keys: ['ArrowDown', 'ArrowUp'], say: '↓ ↑', what: 'move through what was found' },
   { id: 'find.go', where: 'find', keys: ['Enter'], say: 'Enter', what: 'go to it, marked' },
   { id: 'find.close', where: 'find', keys: ['Escape'], say: 'Escape', what: 'clear the search, or stop picking a path’s end' },
@@ -533,12 +538,14 @@ export const SHORTCUTS = Object.freeze([
   { id: 'graph.fold', where: 'graph', keys: ['Enter', ' '], say: 'Enter', what: 'on the edge of the details panel: fold it' },
   { id: 'graph.centre', where: 'graph', keys: [], say: 'double-click', what: 'centre on a node' },
   { id: 'graph.zoom', where: 'graph', keys: [], say: 'Ctrl or ⌘ + wheel', what: 'zoom; a pinch on a trackpad or a screen too' },
+  { id: 'graph.pan', where: 'graph', keys: [], say: 'drag', what: 'move the drawing; the wheel scrolls the page, and moves the drawing only in full screen' },
   { id: 'map.move', where: 'map', keys: [], say: 'Tab', what: 'move between boxes' },
   { id: 'map.open', where: 'map', keys: ['Enter', ' '], say: 'Enter', what: 'open a box, or a stacked box’s family' },
   { id: 'map.full', where: 'map', keys: ['f', 'F'], say: 'F', what: 'full screen' },
   { id: 'map.close', where: 'map', keys: ['Escape'], say: 'Escape', what: 'close the nearest: a notice, the details, one box, full screen' },
   { id: 'map.focus', where: 'map', keys: [], say: 'double-click', what: 'draw one box and what it touches' },
   { id: 'map.zoom', where: 'map', keys: [], say: 'Ctrl or ⌘ + wheel', what: 'zoom; a pinch too' },
+  { id: 'map.pan', where: 'map', keys: [], say: 'drag', what: 'move the map; the wheel scrolls the page, and moves the map only in full screen' },
   { id: 'menu.move', where: 'menu', keys: ['ArrowDown', 'ArrowUp'], say: '↓ ↑', what: 'move through the commands' },
   { id: 'menu.run', where: 'menu', keys: ['Enter'], say: 'Enter', what: 'run the command' },
   { id: 'menu.close', where: 'menu', keys: ['Escape'], say: 'Escape', what: 'close it, or this list, back to where you were' },
@@ -546,7 +553,7 @@ export const SHORTCUTS = Object.freeze([
 
 /** The headings the overlay lists the keys under, in its order. */
 export const SHORTCUT_PLACES = Object.freeze({
-  anywhere: 'Anywhere', find: 'In the search', graph: 'On the Graph tab', map: 'On the Map tab', menu: 'In the command list or a row menu',
+  anywhere: 'Anywhere', tabs: 'On the tab row', list: 'In the Ways in list', find: 'In the search', graph: 'On the Graph tab', map: 'On the Map tab', menu: 'In the command list or a row menu',
 });
 
 const SHORTCUT_BY_ID = new Map(SHORTCUTS.map((shortcut) => [shortcut.id, shortcut]));
@@ -561,4 +568,44 @@ export const pressed = (id, event) => {
   if (shortcut === undefined) throw new Error(`no shortcut ${id}`);
   if (event.altKey || Boolean(shortcut.mod) !== Boolean(event.ctrlKey || event.metaKey)) return false;
   return shortcut.keys.includes(event.key);
+};
+
+/**
+ * What a wheel over a drawing does (P102): with Ctrl or ⌘ - which is also how
+ * a browser sends a trackpad pinch - it zooms; otherwise it scrolls the page,
+ * the way a map set in a page does, so a person scrolling past is never
+ * caught in the canvas. In full screen there is no page to scroll, and the
+ * wheel moves the drawing.
+ */
+export const wheelIntent = (event, full) => {
+  if (event.ctrlKey || event.metaKey) return 'zoom';
+  return full ? 'pan' : 'page';
+};
+
+/** `#rgb` or `#rrggbb` as its three channels, 0 to 255; null for anything else. */
+const channelsOf = (colour) => {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(colour).trim());
+  if (hex === null) return null;
+  const digits = hex[1].length === 3 ? [...hex[1]].map((c) => c + c).join('') : hex[1];
+  return [0, 2, 4].map((at) => parseInt(digits.slice(at, at + 2), 16));
+};
+
+/** How bright a colour reads, 0 (black) to 1 (white): WCAG 2's relative luminance. */
+const luminanceOf = (colour) => {
+  const channels = channelsOf(colour);
+  if (channels === null) throw new Error(`not a colour the contrast is worked out for: ${colour}`);
+  const [r, g, b] = channels.map((value) => {
+    const c = value / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+/**
+ * The contrast ratio of two colours, 1 to 21, either way round: 4.5 is what
+ * WCAG AA asks of text, 3 of large text and of a graphic.
+ */
+export const contrastOf = (fg, bg) => {
+  const [light, dark] = [luminanceOf(fg), luminanceOf(bg)].sort((a, b) => b - a);
+  return (light + 0.05) / (dark + 0.05);
 };

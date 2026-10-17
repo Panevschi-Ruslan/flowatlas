@@ -63,6 +63,7 @@ export const PAGE_PARTS: readonly (readonly [placeholder: string, file: string])
   ['__STEPS_LOGIC__', 'steps.js'],
   ['__CONTEXT_LOGIC__', 'panels/context.js'],
   ['__BAND_LOGIC__', 'panels/band.js'],
+  ['__VIRTUAL_LIST_LOGIC__', 'panels/virtual-list.js'],
   ['__WAYS_LOGIC__', 'panels/ways.js'],
   ['__SHEET_LOGIC__', 'panels/sheet.js'],
   ['__TABLES_LOGIC__', 'panels/tables.js'],

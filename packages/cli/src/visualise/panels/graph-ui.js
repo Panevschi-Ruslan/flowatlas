@@ -1,5 +1,5 @@
 import { PATH_DEPTHS, faceOf, layout, panelKeysOf, step } from '../graph.js';
-import { formatHash, pinch, pressed, wordFor } from '../frame.js';
+import { formatHash, pinch, pressed, wheelIntent, wordFor } from '../frame.js';
 
 /* What a person does on the Graph tab: the state changes every control ends
    in, the controls and their Filters and Check popovers, gestures, the keys
@@ -10,7 +10,7 @@ export function createGraphUi(page) {
     confidences, drawDetails, drawDrawing, drawEntries, drawStatus, edgeTypes, faceRows,
     forwardBtn, gCapSel, hopsSel, isGroup, keys, model, nodeCardHtml, nodes,
     paintSelection, panel, repos, state, statusEl, store, svg, titleEl,
-    traceTo, trail, typeCardHtml, unitOf, visibleFocus, wideFor, wrap } = page;
+    traceTo, trail, typeCardHtml, unitOf, visibleFocus, wheelHint, wideFor, wrap } = page;
   const shown = store.get('shown');
 
   /* ── state changes: every control ends in one of these ── */
@@ -262,7 +262,8 @@ export function createGraphUi(page) {
   paintFilters();
 
   /* Pointer: one finger or a mouse drags to pan; two fingers pan and pinch to
-     zoom; a wheel or a trackpad pans, and a trackpad pinch or ctrl+wheel zooms.
+     zoom; a trackpad pinch or ctrl+wheel zooms, and the wheel pans only in
+     full screen.
      Every pointer down is kept by id, in the canvas's own pixels, so a second
      finger joining or one lifting picks up where the gesture is. */
   const fingers = new Map();
@@ -316,9 +317,14 @@ export function createGraphUi(page) {
   };
   wrap.addEventListener('pointerup', lift);
   wrap.addEventListener('pointercancel', lift);
+  /* A plain wheel scrolls the page past the drawing (P102); Ctrl or ⌘, or a
+     trackpad pinch, zooms; in full screen, where there is no page to
+     scroll, the wheel moves the drawing. */
   wrap.addEventListener('wheel', (event) => {
+    const intent = wheelIntent(event, document.documentElement.classList.contains('is-full'));
+    if (intent === 'page') { wheelHint(wrap); return; }
     event.preventDefault();
-    if (event.ctrlKey || event.metaKey) {
+    if (intent === 'zoom') {
       const box = wrap.getBoundingClientRect();
       camera.zoomAt(event.clientX - box.left, event.clientY - box.top, Math.exp(-event.deltaY * 0.004));
     } else camera.pan(-event.deltaX, -event.deltaY);

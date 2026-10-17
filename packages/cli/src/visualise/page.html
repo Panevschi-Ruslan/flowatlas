@@ -1,4 +1,5 @@
 <!doctype html>
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>__TITLE__</title>
@@ -14,6 +15,8 @@ __PAGE_CSS__</style>
     <h1 class="wordmark">__TITLE__</h1>
     <dl class="pills" id="band"></dl>
     <div class="built" id="built"></div>
+    <button class="tool theme-toggle" id="theme" data-theme-mode="system" aria-label="Theme: Auto, as the system sets it">
+      <span class="theme-icon" aria-hidden="true"></span><span class="theme-say">Auto</span></button>
     <p class="pill-note" id="pill-note" aria-live="polite" hidden></p>
   </header>
 
@@ -47,15 +50,25 @@ __PAGE_CSS__</style>
     <section class="panel" id="views">
       <div class="panel-head">
         <h2 id="view-title">The whole project</h2>
-        <div class="tabs" role="tablist">
-          <button class="tab" role="tab" data-view="map" aria-selected="true">Map</button>
-          <button class="tab" role="tab" data-view="steps" aria-selected="false">Steps</button>
-          <button class="tab" role="tab" data-view="crossings" aria-selected="false">Crossings</button>
-          <button class="tab" role="tab" data-view="missing" aria-selected="false">Not joined</button>
-          <button class="tab" role="tab" data-view="busiest" aria-selected="false">Busiest</button>
-          <button class="tab" role="tab" data-view="changes" aria-selected="false" id="tab-changes" hidden>Changes</button>
-          <button class="tab" role="tab" data-view="graph" aria-selected="false">Graph</button>
+        <div class="tabs" id="tabs" role="tablist" aria-label="Views">
+          <button class="tab" role="tab" id="tab-map" data-view="map" aria-selected="true" aria-controls="map-view"
+            tabindex="0">Map</button>
+          <button class="tab" role="tab" id="tab-steps" data-view="steps" aria-selected="false" aria-controls="steps-view"
+            tabindex="-1">Steps</button>
+          <button class="tab" role="tab" id="tab-crossings" data-view="crossings" aria-selected="false" aria-controls="tab-sheet"
+            tabindex="-1">Crossings</button>
+          <button class="tab" role="tab" id="tab-missing" data-view="missing" aria-selected="false" aria-controls="tab-sheet"
+            tabindex="-1">Not joined</button>
+          <button class="tab" role="tab" id="tab-busiest" data-view="busiest" aria-selected="false" aria-controls="tab-sheet"
+            tabindex="-1">Busiest</button>
+          <button class="tab" role="tab" id="tab-changes" hidden data-view="changes" aria-selected="false"
+            aria-controls="tab-sheet" tabindex="-1">Changes</button>
+          <button class="tab" role="tab" id="tab-graph" data-view="graph" aria-selected="false" aria-controls="graph-view"
+            tabindex="-1">Graph</button>
         </div>
+        <label class="view-pick" id="view-pick"><span>View</span>
+          <select id="view-select"></select>
+        </label>
       </div>
       <aside class="start" id="start" aria-labelledby="start-title" hidden></aside>
       <p class="v-notice" id="v-notice" role="status" hidden></p>
@@ -67,8 +80,8 @@ __PAGE_CSS__</style>
           <span>Copy link</span>
         </button>
       </div>
-      <div class="tab-sheet" id="tab-sheet"></div>
-      <div class="steps-view" id="steps-view" hidden>
+      <div class="tab-sheet" id="tab-sheet" role="tabpanel" aria-labelledby="tab-crossings"></div>
+      <div class="steps-view" id="steps-view" role="tabpanel" aria-labelledby="tab-steps" hidden>
         <div class="s-bar">
           <label class="hint">depth
             <select id="s-depth"><option>4</option><option>8</option><option selected>12</option><option>24</option></select>
@@ -93,7 +106,7 @@ __PAGE_CSS__</style>
         <div class="s-head" id="s-head"></div>
         <ol class="s-list" id="s-list" aria-label="Steps, in call order"></ol>
       </div>
-      <div class="map" id="map-view" hidden>
+      <div class="map" id="map-view" role="tabpanel" aria-labelledby="tab-map" hidden>
         <div class="g-bar">
           <span class="hint">links</span>
           <span id="m-kinds" class="g-filters" style="padding:0;border:0"></span>
@@ -120,6 +133,7 @@ __PAGE_CSS__</style>
             <button class="tool" id="m-close-all" title="Close every cluster">Close all</button>
           </span>
           <button class="tool" id="m-whole" hidden>Whole map</button>
+          <button class="tool" id="m-as-list" hidden title="The services as a list, for a narrow screen">Show as a list</button>
           <div class="g-tools">
             <button class="tool" id="m-copy" title="Copy a link to this view">
               <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -140,6 +154,7 @@ __PAGE_CSS__</style>
           </div>
         </div>
         <div class="g-stage" id="m-stage">
+          <div class="m-cards" id="m-cards" hidden></div>
           <div class="g-canvas" id="m-canvas">
             <svg id="m-svg" role="group" aria-roledescription="map of services">
               <defs>
@@ -161,7 +176,7 @@ __PAGE_CSS__</style>
         </div>
         <p class="g-status" id="m-status" role="status"></p>
       </div>
-      <div class="graph" id="graph-view" hidden>
+      <div class="graph" id="graph-view" role="tabpanel" aria-labelledby="tab-graph" hidden>
         <div class="g-bar">
           <button class="tool" id="g-back" disabled>&larr; Back</button>
           <button class="tool" id="g-forward" disabled>Forward &rarr;</button>
@@ -328,6 +343,8 @@ __STEPS_LOGIC__
 __CONTEXT_LOGIC__
 
 __BAND_LOGIC__
+
+__VIRTUAL_LIST_LOGIC__
 
 __WAYS_LOGIC__
 

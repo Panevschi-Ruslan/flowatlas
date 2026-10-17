@@ -1,4 +1,4 @@
-import { formatViewHash, parseHash, parseViewHash } from '../frame.js';
+import { formatViewHash, parseHash, parseViewHash, pressed } from '../frame.js';
 import { parseMapHash } from '../map.js';
 import { STEP_KINDS } from '../steps.js';
 
@@ -16,6 +16,8 @@ export function wirePage(page) {
   const tableBar = document.getElementById('table-bar');
   const legendEl = document.getElementById('legend');
   const tabs = [...document.querySelectorAll('.tab')];
+  const tabsEl = document.getElementById('tabs');
+  const viewSelect = document.getElementById('view-select');
   const mapViewEl = document.getElementById('map-view');
   const workEl = document.querySelector('.work');
 
@@ -122,7 +124,15 @@ export function wirePage(page) {
     store.set('view', name);
     root.classList.toggle('is-map', name === 'map');
     workEl.classList.toggle('is-wide', WIDE.has(name));
-    for (const tab of tabs) tab.setAttribute('aria-selected', String(tab.dataset.view === name));
+    for (const tab of tabs) {
+      // One tab in the keyboard's order, the open one; the arrows move between them (P102).
+      tab.setAttribute('aria-selected', String(tab.dataset.view === name));
+      tab.tabIndex = tab.dataset.view === name ? 0 : -1;
+    }
+    // The table tabs share one sheet: it is named by whichever of them is open.
+    if (TABLES.has(name)) sheetEl.setAttribute('aria-labelledby', 'tab-' + name);
+    viewSelect.value = name;
+    keepTabInView(name);
     tableBar.hidden = !TABLES.has(name);
     sheetEl.hidden = name === 'graph' || name === 'map' || name === 'steps';
     stepsView.hidden = name !== 'steps';
@@ -142,6 +152,63 @@ export function wirePage(page) {
   }
 
   for (const tab of tabs) tab.addEventListener('click', () => showView(tab.dataset.view));
+
+  /* The tab row from the keyboard (P102): Tab reaches the open tab only;
+     ← and → open the one before or after it, round the ends, Home and End
+     the first and the last. A tab the page has not got (Changes without
+     --diff) is passed over. */
+  const shownTabs = () => tabs.filter((tab) => !tab.hidden);
+  tabsEl.addEventListener('keydown', (event) => {
+    const here = shownTabs();
+    const at = here.indexOf(event.target.closest('.tab'));
+    if (at < 0) return;
+    let next = null;
+    if (pressed('tabs.move', event)) next = here[(at + (event.key === 'ArrowRight' ? 1 : -1) + here.length) % here.length];
+    else if (pressed('tabs.ends', event)) next = event.key === 'Home' ? here[0] : here[here.length - 1];
+    if (next === null) return;
+    event.preventDefault();
+    showView(next.dataset.view);
+    next.focus();
+  });
+
+  /* On a phone the row scrolls sideways inside itself, faded on the side that
+     has more, the open tab kept in sight; where even that is too narrow - under
+     360px, or more than two tabs past the edge - a select named View stands in
+     for it (P102). The select lists the tabs the row shows. */
+  viewSelect.innerHTML = shownTabs().map((tab) =>
+    `<option value="${esc(tab.dataset.view)}">${esc(tab.textContent.trim())}</option>`).join('');
+  viewSelect.addEventListener('change', () => showView(viewSelect.value));
+  const headEl = tabsEl.closest('.panel-head');
+  const fadeTabs = () => {
+    const more = tabsEl.scrollWidth - tabsEl.clientWidth;
+    tabsEl.classList.toggle('is-more-before', more > 1 && tabsEl.scrollLeft > 1);
+    tabsEl.classList.toggle('is-more-after', more > 1 && tabsEl.scrollLeft < more - 1);
+  };
+  function keepTabInView(name) {
+    const tab = tabs.find((t) => t.dataset.view === name);
+    if (tab === undefined || !(tabsEl.scrollWidth > tabsEl.clientWidth)) return;
+    const left = tab.offsetLeft - tabsEl.offsetLeft;
+    const pad = 24;
+    if (left - pad < tabsEl.scrollLeft) tabsEl.scrollLeft = Math.max(0, left - pad);
+    else if (left + tab.offsetWidth + pad > tabsEl.scrollLeft + tabsEl.clientWidth) {
+      tabsEl.scrollLeft = left + tab.offsetWidth + pad - tabsEl.clientWidth;
+    }
+    fadeTabs();
+  }
+  const narrow = window.matchMedia ? window.matchMedia('(max-width: 359px)') : null;
+  /* Measured with the row drawn: the select taken off, the row read, and the
+     select put back in one go, so nothing is painted in between. */
+  const fitTabs = () => {
+    headEl.classList.remove('is-select');
+    const over = tabsEl.scrollWidth - tabsEl.clientWidth;
+    const each = shownTabs().length > 0 ? tabsEl.scrollWidth / shownTabs().length : 0;
+    headEl.classList.toggle('is-select', (narrow !== null && narrow.matches) || (each > 0 && over > 2 * each));
+    keepTabInView(store.get('view'));
+    fadeTabs();
+  };
+  tabsEl.addEventListener('scroll', fadeTabs, { passive: true });
+  window.addEventListener('resize', fitTabs);
+  if (narrow !== null && narrow.addEventListener) narrow.addEventListener('change', fitTabs);
 
   /* Copy link on the tabs that have no address of their own to build: Steps
      and the tables. The map and the graph copy theirs. */
@@ -276,6 +343,7 @@ export function wirePage(page) {
      names, and on a first visit - an address naming nothing - offers Start
      here above the map. */
   const start = () => {
+    fitTabs();
     store.set('current', entryIx.find((i) => reachesCrossing[i]) ?? entryIx[0] ?? null);
     drawEntries();
     const first = location.hash === '';

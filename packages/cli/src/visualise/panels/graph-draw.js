@@ -28,6 +28,9 @@ export function createGraphDraw(page) {
 
   /* The drawing's own units. A column is a hop; a row is a node. */
   const BOX = { w: 216, h: 40, column: 284, row: 54, pad: 40, head: 22, laneGap: 14, laneHead: 22 };
+  /* How wide one character of a node's name is drawn: the mono face at the
+     label's 12px (P102: no name under 12px at zoom 1). */
+  const LABEL_CHAR = 7.3;
   /* With Types on, a node is a line taller and the rows open up to match. */
   const BOX_HEIGHTS = { plain: { h: 40, row: 54 }, typed: { h: 54, row: 68 } };
   /* Nodes that have a face to show when one was recorded: the rest say nothing. */
@@ -437,7 +440,7 @@ export function createGraphDraw(page) {
       svgEl('rect', { class: 'g-glyph', x: gx, y: 7, width: gw, height: 13, rx: 2 }),
       svgEl('text', { class: 'g-glyph-text', x: gx + 4, y: 16.5 }, glyph),
       svgEl('text', { class: 'g-label', x: gx + gw + 6, y: 18 },
-        middle(parts.name, fits(BOX.w - gx - gw - 6 - right, 7.1))),
+        middle(parts.name, fits(BOX.w - gx - gw - 6 - right, LABEL_CHAR))),
       svgEl('text', { class: 'g-sub', x: gx, y: 33 }, middle(sub, fits(BOX.w - gx - right, 5.7))),
     );
     // The Types toggle's third line: the whole face, cut in the middle so
@@ -551,7 +554,7 @@ export function createGraphDraw(page) {
     g.append(
       svgEl('rect', { class: 'g-glyph', x: 11, y: 7, width: gw, height: 13, rx: 2 }),
       svgEl('text', { class: 'g-glyph-text', x: 15, y: 16.5 }, glyph),
-      svgEl('text', { class: 'g-label', x: 11 + gw + 6, y: 18 }, middle(name, fits(room, 7.1))),
+      svgEl('text', { class: 'g-label', x: 11 + gw + 6, y: 18 }, middle(name, fits(room, LABEL_CHAR))),
       svgEl('text', { class: 'g-sub', x: 11, y: 33 }, middle(sub, fits(BOX.w - 19 - digits.length * 9.5, 5.7))),
       svgEl('text', { class: 'g-count', x: BOX.w - 10, y: 27 }, digits),
     );

@@ -954,6 +954,21 @@ what was typed to the search. Arrows, Enter and Escape work it, and on a phone i
 a sheet the width of the window. Crossings, Busiest and Changes, which never read the
 way in picked, hide the Ways in list and take the width.
 
+**Keyboard, screen reader, theme.** The tab row is a tablist: Tab reaches the open
+tab, ← and → open the one before or after, Home and End the ends. In the Ways in
+list Tab reaches one row and ↓ ↑ Home End move between them; the list draws only the
+rows in sight, however many ways in there are, and always the one picked. The *Theme*
+button in the strip turns the colours from the system's (*Auto*) to *Light* to *Dark*
+and back, remembered by the browser (where it keeps nothing, each load follows the
+system); the command list offers it too. Every text colour reads at 4.5:1 or more in
+both themes, and no text is under 12px outside the drawings.
+
+**On a phone.** The tab row scrolls sideways inside itself, faded where it goes on;
+under 360px a *View* select stands in for it. The Map tab lists its boxes as cards
+under their call-order columns, each with what it reaches and what reaches it; a card
+opens the box's details under it, and *Show the drawing* draws the map (*Show as a
+list* goes back). Addresses are the same as the drawing's.
+
 The **Map** tab is the whole project at the size of its services:
 
 - **Layout.** *call order*, the default, puts services in columns by how far
@@ -1002,7 +1017,9 @@ The **Map** tab is the whole project at the size of its services:
   routes nothing calls, services nothing could read, or services that reach
   each other at run time (a cycle, its links drawn red). The chips hide a kind
   of link.
-- **The frame.** Drag or a wheel pans, ctrl or a pinch zooms, *Fit* shows it
+- **The frame.** Drag pans; ctrl (⌘ on a Mac) and the wheel, or a pinch,
+  zooms; a plain wheel scrolls the page past the map, saying once in the
+  corner how to zoom instead, and pans it only in full screen. *Fit* shows it
   all; `F` or the button is full screen; Escape closes the details, then a
   one-box view, then full screen. The address keeps the view by name -
   `#map/s=<box>&l=<link>&f=<box>&t=<families toggled>&h=<kinds hidden>&m=<check>&p=1&d=1` -
@@ -1173,8 +1190,9 @@ graph, which on a real project is far too many boxes to say anything:
   `file://<path>` with no line. Off by default, because it writes each
   repository's absolute local path into the page, which is then no longer one
   to send to somebody else.
-- **Moving around.** Drag or scroll to pan, pinch or ctrl+scroll to zoom, *Fit*
-  to see it all. Double-click centres on a node. Arrow keys move between drawn
+- **Moving around.** Drag to pan, pinch or ctrl+scroll (⌘ on a Mac) to zoom;
+  a plain scroll moves the page, and pans the drawing only in full screen.
+  *Fit* to see it all. Double-click centres on a node. Arrow keys move between drawn
   nodes, a hop at a time to the side and within a column up and down; Enter
   opens a node or a group, `+` expands it, `O` draws who else uses it, `W`
   unfolds its plumbing. On a

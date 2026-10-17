@@ -1,6 +1,6 @@
 import { middle } from '../graph.js';
-import { pictureName, pictureScale, pinch, pressed, wordFor } from '../frame.js';
-import { MAP_BOX_KINDS, MAP_COLUMNS, MAP_LINK_KINDS, boxId, clusterId, createMap, formatMapHash,
+import { pictureName, pictureScale, pinch, pressed, wheelIntent, wordFor } from '../frame.js';
+import { MAP_BOX, MAP_BOX_KINDS, MAP_COLUMNS, MAP_LINK_KINDS, boxId, clusterId, createMap, formatMapHash,
   isOpen, mapCallOrder, mapCycles, mapLayout, mapMarks, mapSeenCount, mapTopTargets, mapView,
   openByDefault, serviceInside } from '../map.js';
 
@@ -9,7 +9,7 @@ import { MAP_BOX_KINDS, MAP_COLUMNS, MAP_LINK_KINDS, boxId, clusterId, createMap
    on it. What is drawn comes from map.js; this draws it. */
 export function createMapUi(page) {
   const { FL, KD, LB, LN, PICTURE_PAD, PICTURE_STYLES, SVG_NS, confidences, copyText, data, esc, files,
-    flash, hueOf, keys, kinds, nodes, plural, repos, root, save, seen, store, svgEl, titleEl, typing, wordHtml } = page;
+    flash, hueOf, keys, kinds, nodes, plural, repos, root, save, seen, store, svgEl, titleEl, typing, wheelHint, wordHtml } = page;
 
   /* ── the map ─────────────────────────────────────────────────────── */
 
@@ -256,7 +256,115 @@ export function createMapUi(page) {
       (shown.focus ? ` · only ${unitName(shown.units.get(shown.focus))} and what it touches` : '') +
       (mapState.mark ? ` · ${plural(markCount, 'mark', 'marks')}: ${MARK_SAYS[mapState.mark]}` : '');
     drawMapDetails();
+    placeAsList(shown);
     writeMapHash();
+  }
+
+  /* ── the map on a phone: a list of its boxes (P102) ── */
+
+  /* Below 640px a drawing of the whole project is either unreadable or not
+     whole, so the Map tab lists its boxes instead: one card each, under the
+     call-order column it would be drawn in (step 1, queues and topics, step
+     2…), with what it reaches and what reaches it as buttons. A card opens
+     the same details the drawing's box does, under the card; the drawing is
+     one button away. Same state, same addresses. */
+  const mapStage = document.getElementById('m-stage');
+  const cardsEl = document.getElementById('m-cards');
+  const asListBtn = document.getElementById('m-as-list');
+  const phone = window.matchMedia ? window.matchMedia('(max-width: 640px)') : null;
+  let drawingAsked = false;
+  const LIST_LINKS = 6;
+  const asList = () => phone !== null && phone.matches && !drawingAsked && !mapFull;
+
+  const reportedType = (box) => {
+    if (MAP_BOX_KINDS[box.k] !== 'service') return '';
+    const reported = (data.report.services || []).find((service) => service.name === box.n);
+    return reported ? reported.type : '';
+  };
+  const cardLinks = (say, others) => others.length === 0 ? ''
+    : `<p class="m-card-links"><span class="m-card-say">${say}</span> ` +
+      others.slice(0, LIST_LINKS).map(({ id, text }) => unitButton(id, text)).join(', ') +
+      (others.length > LIST_LINKS ? ` <span class="hint">and ${(others.length - LIST_LINKS).toLocaleString()} more</span>` : '') + '</p>';
+  const mapListHtml = (map, view) => {
+    if (view.units.size === 0) {
+      return '<p class="m-note m-cards-none">No service was read, so the map has nothing to list. ' +
+        '<code>flowatlas doctor</code> says why.</p>';
+    }
+    const laid = mapCallOrder(map, view);
+    const step = MAP_BOX.w + MAP_BOX.column;
+    const columns = laid.columns.map((column) => ({ label: column.label, cards: [] }));
+    for (const [id, at] of laid.placed) columns[Math.floor(at.x / step)]?.cards.push({ id, at });
+    const moreOf = new Map((laid.more || []).map((more) => [more.owner, more.n]));
+    const marks = mapState.mark ? mapMarks(map, view, mapState.mark, mapCycles(view)) : new Map();
+    const others = (id, way) => {
+      const seenIds = new Set();
+      const out = [];
+      for (const link of view.links) {
+        const other = way === 'out' ? (link.from === id ? link.to : null) : (link.to === id ? link.from : null);
+        if (other === null || seenIds.has(other)) continue;
+        seenIds.add(other);
+        out.push({ id: other, text: unitName(view.units.get(other)) });
+      }
+      return out;
+    };
+    const card = ({ id, at }) => {
+      const unit = view.units.get(id);
+      const box = boxOfUnit(unit);
+      const open = mapState.selected === id;
+      const problems = unit.closed ? summed(unit, 'problems') : box.s.problems || 0;
+      const facts = [unit.closed ? '' : reportedType(box), unitSub(unit),
+        MAP_BOX_KINDS[box.k] === 'service' && problems > 0 ? plural(problems, 'problem to fix', 'problems to fix') : '',
+        marks.has(id) ? `${marks.get(id)} ${MARK_SAYS[mapState.mark]}` : ''].filter(Boolean);
+      return `<li class="m-card${open ? ' is-open' : ''}${at.under ? ' is-under' : ''}" data-card="${esc(id)}" style="--hue: ${unitHue(unit)}">` +
+        `<button class="m-card-name" data-card-open="${esc(id)}" aria-expanded="${open}">${esc(unitName(unit))}</button>` +
+        `<p class="m-card-sub">${facts.map(esc).join(' &middot; ')}</p>` +
+        cardLinks('reaches', others(id, 'out')) + cardLinks('reached by', others(id, 'in')) +
+        (moreOf.has(id) ? `<p class="m-card-links hint">${plural(moreOf.get(id), 'more store or host', 'more stores and hosts')} in its details</p>` : '') +
+        '</li>';
+    };
+    return '<div class="m-cards-head"><p class="m-note">The boxes of the map, a column at a time.</p>' +
+      '<button class="tool" data-show-drawing>Show the drawing</button></div>' +
+      columns.filter((column) => column.cards.length > 0).map((column) =>
+        `<section class="m-step"><h3 class="m-step-head">${esc(column.label)} <span class="hint">${column.cards.length}</span></h3>` +
+        `<ul class="m-card-list">${column.cards.sort((a, b) => a.at.y - b.at.y).map(card).join('')}</ul></section>`).join('');
+  };
+
+  /* The list or the drawing, whichever fits; the details go under the card
+     that is open, and back beside the drawing when it is drawn. */
+  const placeAsList = (shown) => {
+    const listed = asList();
+    cardsEl.hidden = !listed;
+    mapWrap.hidden = listed;
+    asListBtn.hidden = listed || phone === null || !phone.matches;
+    if (!listed) {
+      if (mapDetails.parentNode !== mapStage) mapStage.append(mapDetails);
+      mapDetails.hidden = false;
+      return;
+    }
+    // The drawing is fitted again when it is next shown, at its own size.
+    mapFit = true;
+    cardsEl.innerHTML = mapListHtml(mapModel, shown);
+    const open = mapState.selected === null ? null : cardsEl.querySelector(`[data-card="${CSS.escape(mapState.selected)}"]`);
+    mapDetails.hidden = open === null && mapState.link === null;
+    if (open !== null) open.append(mapDetails);
+    else if (mapDetails.parentNode !== mapStage) mapStage.append(mapDetails);
+  };
+
+  cardsEl.addEventListener('click', (event) => {
+    if (event.target.closest('.g-details')) return;
+    const el = event.target.closest('[data-card-open], [data-go-unit], [data-show-drawing]');
+    if (!el) return;
+    if (el.dataset.showDrawing !== undefined) { drawingAsked = true; drawMap(true); return; }
+    const id = el.dataset.cardOpen ?? el.dataset.goUnit;
+    const unit = mapDrawn.view.units.get(id);
+    if (unit && unit.closed) toggleCluster(unit.cluster);
+    else if (el.dataset.cardOpen !== undefined && mapState.selected === id) { mapState.selected = null; drawMap(false); }
+    else selectUnit(id);
+    cardsEl.querySelector(`[data-card-open="${CSS.escape(mapState.selected ?? id)}"]`)?.focus({ preventScroll: true });
+  });
+  asListBtn.addEventListener('click', () => { drawingAsked = false; drawMap(false); });
+  if (phone !== null && phone.addEventListener) {
+    phone.addEventListener('change', () => { if (store.get('view') === 'map' && mapDrawn) drawMap(true); });
   }
 
   /* ── the map's details ── */
@@ -580,6 +688,7 @@ export function createMapUi(page) {
   document.getElementById('m-fit').addEventListener('click', () => mapCamera.fit(mapDrawn.laid));
 
   /* Pan and zoom: a drag, a wheel, two fingers - the Graph tab's gestures. */
+  let mapFull = false;
   const mapFingers = new Map();
   let mapAnchor = null;
   const mapLocal = (event) => {
@@ -618,9 +727,14 @@ export function createMapUi(page) {
   };
   mapWrap.addEventListener('pointerup', mapLift);
   mapWrap.addEventListener('pointercancel', mapLift);
+  /* A plain wheel scrolls the page past the map (P102); Ctrl or ⌘ - and a
+     trackpad pinch, which says the same - zooms; in full screen the wheel
+     moves the map. */
   mapWrap.addEventListener('wheel', (event) => {
+    const intent = wheelIntent(event, mapFull);
+    if (intent === 'page') { wheelHint(mapWrap); return; }
     event.preventDefault();
-    if (event.ctrlKey || event.metaKey) {
+    if (intent === 'zoom') {
       const box = mapWrap.getBoundingClientRect();
       mapCamera.zoomAt(event.clientX - box.left, event.clientY - box.top, Math.exp(-event.deltaY * 0.004));
     } else mapCamera.pan(-event.deltaX, -event.deltaY);
@@ -628,7 +742,6 @@ export function createMapUi(page) {
 
   /* Full screen, the page's own, as on the Graph tab. */
   const mapFullBtn = document.getElementById('m-full');
-  let mapFull = false;
   const setMapFull = (next) => {
     if (next === mapFull) return;
     mapFull = next;
@@ -636,7 +749,10 @@ export function createMapUi(page) {
     mapFullBtn.setAttribute('aria-pressed', String(mapFull));
     mapFullBtn.querySelector('span').textContent = mapFull ? 'Leave full screen' : 'Full screen';
     mapFullBtn.querySelector('kbd').textContent = mapFull ? 'Esc' : 'F';
-    if (mapDrawn) requestAnimationFrame(() => mapCamera.fit(mapDrawn.laid));
+    if (!mapDrawn) return;
+    // Full screen always draws: on a phone it is the way to the drawing too.
+    placeAsList(mapDrawn.view);
+    requestAnimationFrame(() => mapCamera.fit(mapDrawn.laid));
   };
   mapFullBtn.addEventListener('click', () => setMapFull(!mapFull));
   document.addEventListener('keydown', (event) => {
@@ -759,5 +875,5 @@ export function createMapUi(page) {
     },
   };
 
-  return { mapController, setMapFull };
+  return { mapController, mapListHtml, setMapFull };
 }

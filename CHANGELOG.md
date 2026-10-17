@@ -456,6 +456,33 @@ only one of them moved.
   rows gained the same menu. Core gained `riskOf(reason)` (`auth`,
   `performance`, `wiring`), `RISK_NAMES`, `RISKS` and `findingsWithoutRisk`,
   and the reasons gate failed on a finding with no risk.
+- **The page on a phone, for the keyboard and a screen reader, and fast
+  (P102).** On a narrow screen the tab row became one line that scrolled
+  sideways inside itself, faded on the side that had more, the open tab kept
+  in sight; under 360px, or when more than two tabs fell past the edge, a
+  *View* select stood in for it. Below 640px the Map tab listed its boxes as
+  cards under their call-order columns (*step 1*, *queues and topics*, …),
+  each with its type, ways in, nodes and problems and what it reached and
+  what reached it as buttons; a card opened the box's details under it, and
+  *Show the drawing* (or full screen) drew the map. Every text colour read at
+  4.5:1 or more on every ground in both themes: `--faint` and `--muted` were
+  darkened in the light theme and lightened in the dark one, `--good`,
+  `--warn` and the service hues darkened in the light theme, and the fifth
+  service hue became an indigo, since a gold dark enough to read was the warn
+  tone's brown; a service let out by the rail was dashed rather than faded.
+  No text was under 12px but inside the drawings, whose node and column names
+  were 12px at zoom 1. The tab row was a tablist the keyboard moved along (one
+  tab in the Tab order, ← → and Home End), each tab tied to its panel; the
+  page said `<html lang="en">`. A *Theme* button in the strip turned the
+  colours from the system's to light to dark, remembered in the browser, and
+  the command list offered it; form controls followed. A plain wheel over the
+  Map or the Graph scrolled the page, saying once in the corner that Ctrl (⌘)
+  and the wheel zoomed; a pinch zoomed, a drag panned, and in full screen the
+  wheel panned as before. Crossings built its rows a hundred at a time while
+  the browser was idle and kept them for the next visit; the Ways in list drew
+  only the rows in sight, so its *N more* cut went, with the picked way in
+  always drawn and the arrows moving between rows; the search waited for a
+  pause in the typing.
 - **The page's source in modules (P103). `page.html` kept only its markup:
   its styles moved to `page.css` and its script to one module per panel under
   `src/visualise/panels/`, each a factory handed the page so far, written in

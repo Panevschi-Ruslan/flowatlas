@@ -6,7 +6,7 @@ import { STEP_MODES } from '../steps.js';
    whatever was typed - and the list of every key (`?`). Both are dialogs that
    keep the keyboard while open and hand it back when closed. */
 export function createPalette(page) {
-  const { LB, MT, esc, focusFind, nodes, repoName, setStepMode, state, stepMode, store, typing } = page;
+  const { LB, MT, esc, focusFind, nextTheme, nodes, repoName, setStepMode, setTheme, state, stepMode, store, typing } = page;
 
   /* ── a list moved through with the keys (P101) ──────────────────── */
 
@@ -55,6 +55,8 @@ export function createPalette(page) {
     return (meta.m ? `${meta.m} ${meta.p || ''}`.trim() : nodes[i][LB]) + ` (${repoName(i)})`;
   };
 
+  const THEME_SAYS = { system: 'Theme: as the system sets it', light: 'Theme: light', dark: 'Theme: dark' };
+
   /* Every command: what it says, when it is offered, and what it does. A
      list, so a later ticket adds to it (P102's theme). */
   const PALETTE_ACTIONS = [
@@ -82,6 +84,8 @@ export function createPalette(page) {
     { id: 'problems', say: 'Show the problems', when: () => view() === 'graph', run: () => press('g-problems') },
     { id: 'filters', say: 'Open the filters', when: () => view() === 'graph', run: () => press('g-filters-btn') },
     { id: 'keys', say: 'Show every key', run: () => openKeys() },
+    // The strip's theme button, from the keyboard (P102): it turns to the same next mode.
+    { id: 'theme', say: () => THEME_SAYS[nextTheme()], run: () => setTheme(nextTheme()) },
   ];
 
   let offered = [];

@@ -9,31 +9,66 @@ export function createTables(page) {
 
   /* ── crossings: every edge that leaves a service ─────────────────── */
 
-  function drawCrossings() {
-    titleEl.textContent = 'Every crossing';
+  /* A project with many crossings would build every row in one go, a long
+     task each time the tab opened (P102). The rows are sorted once and built
+     in chunks: the first CROSSINGS_CHUNK at once, the rest a chunk at a time
+     while the browser is idle - or as the table's end nears the screen,
+     whichever comes first. What is built is kept for the page's life (the
+     build does not change under it), so opening the tab again draws at once. */
+  const CROSSINGS_CHUNK = 100;
+  const later = typeof requestIdleCallback === 'function'
+    ? (work) => requestIdleCallback(work, { timeout: 200 })
+    : (work) => setTimeout(work, 0);
+  let crossings = null;
+  const crossingRowHtml = (e) => {
+    const from = nodes[e[0]], to = nodes[e[1]];
+    const meta = to[MT] || {};
+    return `<tr><td class="mono"><span class="tag" style="color:${hueOf(from[RP])};border-color:${hueOf(from[RP])}">${esc(repos[from[RP]])}</span> ${esc(files[from[FL]] ? files[from[FL]].split('/').pop() + ':' + from[LN] : from[LB])} ${graphLink(e[0])}</td>` +
+      `<td class="mono"><span class="tag" style="color:${hueOf(to[RP])};border-color:${hueOf(to[RP])}">${esc(repos[to[RP]])}</span></td>` +
+      `<td class="mono">${esc(meta.m || '')} ${esc(meta.p || to[LB])} ${graphLink(e[1])}</td>` +
+      `<td>${wordHtml('edge', edgeTypes[e[2]])} ${trustHtml(confidences[e[3]])}</td></tr>`;
+  };
+  const buildCrossings = () => {
     const rows = data.edges
       .filter((e) => CROSSES.has(edgeTypes[e[2]]))
       .sort((a, b) => repoName(a[0]) < repoName(b[0]) ? -1 : 1);
-
-    const table = document.createElement('table');
-    table.innerHTML = '<thead><tr><th>From</th><th>To</th><th>Route</th><th>How</th></tr></thead>';
-    const body = document.createElement('tbody');
-    for (const e of rows) {
-      const from = nodes[e[0]], to = nodes[e[1]];
-      const meta = to[MT] || {};
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        `<td class="mono"><span class="tag" style="color:${hueOf(from[RP])};border-color:${hueOf(from[RP])}">${esc(repos[from[RP]])}</span> ${esc(files[from[FL]] ? files[from[FL]].split('/').pop() + ':' + from[LN] : from[LB])} ${graphLink(e[0])}</td>` +
-        `<td class="mono"><span class="tag" style="color:${hueOf(to[RP])};border-color:${hueOf(to[RP])}">${esc(repos[to[RP]])}</span></td>` +
-        `<td class="mono">${esc(meta.m || '')} ${esc(meta.p || to[LB])} ${graphLink(e[1])}</td>` +
-        `<td>${wordHtml('edge', edgeTypes[e[2]])} ${trustHtml(confidences[e[3]])}</td>`;
-      body.append(tr);
-    }
-    table.append(body);
     const sheet = document.createElement('div');
     sheet.className = 'sheet';
-    sheet.append(table);
-    sheetEl.replaceChildren(sheet);
+    sheet.innerHTML = '<table><thead><tr><th>From</th><th>To</th><th>Route</th><th>How</th></tr></thead><tbody></tbody></table>';
+    const body = sheet.querySelector('tbody');
+    const built = { sheet, rows, done: 0, waiting: false, sentinel: null, observer: null };
+    const chunk = () => {
+      if (built.done >= rows.length) return;
+      const next = Math.min(rows.length, built.done + CROSSINGS_CHUNK);
+      body.insertAdjacentHTML('beforeend', rows.slice(built.done, next).map(crossingRowHtml).join(''));
+      built.done = next;
+      if (built.done < rows.length && !built.waiting) {
+        // One chunk waits at a time, however many asked for one.
+        built.waiting = true;
+        later(() => { built.waiting = false; chunk(); });
+      } else if (built.done >= rows.length && built.observer !== null) {
+        built.observer.disconnect();
+        built.sentinel.remove();
+      }
+    };
+    chunk();
+    if (built.done < rows.length && typeof IntersectionObserver === 'function') {
+      // The table's end coming near the screen builds the next chunk now.
+      built.sentinel = document.createElement('div');
+      built.sentinel.className = 'sheet-more';
+      built.sentinel.setAttribute('aria-hidden', 'true');
+      sheet.append(built.sentinel);
+      built.observer = new IntersectionObserver((seen) => {
+        if (seen.some((entry) => entry.isIntersecting)) chunk();
+      }, { rootMargin: '400px' });
+      built.observer.observe(built.sentinel);
+    }
+    return built;
+  };
+  function drawCrossings() {
+    titleEl.textContent = 'Every crossing';
+    crossings ??= buildCrossings();
+    sheetEl.replaceChildren(crossings.sheet);
     appendUnmatched();
   }
 
@@ -168,5 +203,5 @@ export function createTables(page) {
   }
   if (changes !== null) document.getElementById('tab-changes').hidden = false;
 
-  return { ambiguousHtml, appendUnmatched, drawBusiest, drawChanges, drawCrossings, unmatchedHtml };
+  return { CROSSINGS_CHUNK, ambiguousHtml, appendUnmatched, drawBusiest, drawChanges, drawCrossings, unmatchedHtml };
 }
