@@ -37,6 +37,8 @@ beforeAll(async () => {
           { name: 'billing', repo: './billing', type: 'nestjs', baseUrlEnv: ['BILLING_URL'] },
         ],
         output: '.flowatlas',
+        // The head side breaks it: billing starts consuming order.gift-wrapped (P114).
+        rules: [{ name: 'billing-stays-out-of-gift-wrapping', forbid: { from: { service: 'billing' }, to: { channel: 'order.gift-*' } } }],
       },
       null,
       2,
@@ -123,7 +125,7 @@ describe('what a revision changed, across four repositories', () => {
   });
 
   it('names a gap the revision added, in the method it changed, by gap id (P96)', () => {
-    expect(run.report.diffFormatVersion).toBe(3);
+    expect(run.report.diffFormatVersion).toBe(4);
     expect(run.report.unresolved.added).toContainEqual(
       expect.objectContaining({
         id: 'gap:orders|src/shipments/shipments.service.ts|call-dynamic-receiver',
@@ -181,6 +183,23 @@ describe('what a revision changed, across four repositories', () => {
       quiet,
     );
     expect(strict.exitCode).toBe(EXIT.failed);
+  }, 300_000);
+
+  it('classifies the rules\' violations by what this revision did to them (P114)', () => {
+    const { rules } = run.report;
+    expect(rules.new.map((item) => [item.rule, item.from, item.to])).toEqual([
+      ['billing-stays-out-of-gift-wrapping', 'consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped', 'channel:order.gift-wrapped'],
+    ]);
+    expect(rules.fixed).toEqual([]);
+    expect(rules.existing).toEqual([]);
+    expect(run.text).toContain('## Rules');
+  });
+
+  it('stops a build on a rule violation this revision introduced, and only when asked to (P114)', async () => {
+    expect(run.exitCode).toBe(EXIT.ok);
+    const strict = await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED, failOnRuleBreak: true }, quiet);
+    expect(strict.exitCode).toBe(EXIT.failed);
+    expect(strict.failedOn).toEqual(['rule']);
   }, 300_000);
 
   it('answers the same twice, whether it read the commits or remembered them', async () => {

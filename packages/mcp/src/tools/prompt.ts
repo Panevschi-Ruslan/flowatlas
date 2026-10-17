@@ -25,6 +25,7 @@ import { nearNames } from './entries.js';
 import { READ_ONLY, withDb, type ToolContext } from './common.js';
 import { crossingsBetween } from './contract.js';
 import { findingsOf } from './findings.js';
+import { ruleBreaksAt, rulesReportOf } from './rules.js';
 
 /**
  * The node an id names: as it is, as a channel without its prefix, or as an
@@ -49,6 +50,20 @@ const checkOf = (db: GraphDb, ctx: ToolContext, gapId: string): PromptSubject | 
   if (rows.length === 0) return undefined;
   const split = acceptedSplitOf(db, rows, readAccepted(ctx.handle.path));
   return gatherCheckSubject(db, gapId, rowsOfGap(split.rows, gapId));
+};
+
+/**
+ * The subject with the rules a violation of runs through it or one of its
+ * steps (P114): one section of the shared renderer. Added here rather than
+ * gathered, since the page's subject carries no rules.
+ */
+const withRules = (db: GraphDb, ctx: ToolContext, subject: PromptSubject): PromptSubject => {
+  const ids =
+    subject.scope === 'service'
+      ? new Set(db.allNodes().filter((node) => node.repo === subject.id && node.type !== 'channel').map((node) => node.id))
+      : new Set([subject.id, ...subject.steps.map((step) => step.id), ...(subject.members ?? []).map((member) => member.id)]);
+  const rules = ruleBreaksAt(rulesReportOf(db, ctx), ids);
+  return rules.length === 0 ? subject : { ...subject, rules };
 };
 
 const answer = (id: string, subject: PromptSubject, input: { maxSteps: number; maxChars: number }, alsoAnswers?: string[]) => {
@@ -144,7 +159,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
           if (scoped !== undefined && 'error' in scoped) {
             return { ...scoped, next: (scoped.scopes ?? []).slice(0, MAX_NEXT).map((scope) => `describe_for_prompt({id: ${JSON.stringify(trimmed)}${scope === 'node' ? '' : `, scope: ${JSON.stringify(scope)}`}})`) };
           }
-          if (scoped !== undefined) return answer(scoped.id, scoped.subject, input);
+          if (scoped !== undefined) return answer(scoped.id, withRules(db, ctx, scoped.subject), input);
         }
         const found = subjectOf(db, input.id);
         if (Array.isArray(found)) {
@@ -157,7 +172,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
                   .map((node) => `describe_for_prompt({id: ${JSON.stringify(node.id)}${input.scope === undefined || input.scope === 'node' ? '' : `, scope: ${JSON.stringify(input.scope)}`}})`),
               );
         }
-        const subject = gatherPromptSubject(db, found.node, loadObservedCounts(ctx.handle.path));
+        const subject = withRules(db, ctx, gatherPromptSubject(db, found.node, loadObservedCounts(ctx.handle.path)));
         return answer(found.node.id, subject, input, found.alsoAnswers);
       }),
   );

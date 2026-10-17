@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { DIFF_WARNINGS } from './report.js';
 import { CONFIDENCE_LEVELS } from '@flowatlas/core';
 import type { DiffReport } from './report.js';
+import { ruleViolationSchema } from '../rules/schema.js';
 import { FLOW_SIDES, PARTICIPANT_KINDS, STEP_KINDS, STEP_STATUSES } from './sequence.js';
 import { DIFF_FORMAT_VERSION, GAP_REF_KINDS, LOST_JOIN_KINDS, TYPE_FIELD_CHANGES } from './types.js';
 
@@ -221,18 +222,37 @@ const formatTwoShape = {
   joins: z.strictObject({ lost: z.array(lostJoinSchema) }),
 };
 
+/** The section format 3 added (P116), which every later format keeps. */
+const formatThreeShape = {
+  flows: z.array(flowChangeSchema),
+};
+
 /** Format 1, as flowatlas wrote it before P96: read, never written. */
 export const graphDiffSchemaV1 = z.strictObject({ diffFormatVersion: z.literal(1), ...formatOneShape });
 
 /** Format 2, as flowatlas wrote it before P116: read, never written. */
 export const graphDiffSchemaV2 = z.strictObject({ diffFormatVersion: z.literal(2), ...formatOneShape, ...formatTwoShape });
 
+/** Format 3, as flowatlas wrote it before P114: read, never written. */
+export const graphDiffSchemaV3 = z.strictObject({
+  diffFormatVersion: z.literal(3),
+  ...formatOneShape,
+  ...formatTwoShape,
+  ...formatThreeShape,
+});
+
 /** The whole document, as `flowatlas diff` writes it: the current format. */
 export const graphDiffSchema = z.strictObject({
   diffFormatVersion: z.literal(DIFF_FORMAT_VERSION),
   ...formatOneShape,
   ...formatTwoShape,
-  flows: z.array(flowChangeSchema),
+  ...formatThreeShape,
+  rules: z.strictObject({
+    new: z.array(ruleViolationSchema),
+    fixed: z.array(ruleViolationSchema),
+    existing: z.array(ruleViolationSchema),
+    excused: z.array(ruleViolationSchema),
+  }),
 });
 
 /**
@@ -249,6 +269,10 @@ const OLDER: Readonly<Record<number, { schema: z.ZodType; lift: (doc: Record<str
   2: {
     schema: graphDiffSchemaV2,
     lift: (doc) => ({ ...doc, flows: [] }),
+  },
+  3: {
+    schema: graphDiffSchemaV3,
+    lift: (doc) => ({ ...doc, rules: { new: [], fixed: [], existing: [], excused: [] } }),
   },
 };
 

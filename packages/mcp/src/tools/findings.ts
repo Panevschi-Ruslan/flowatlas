@@ -10,6 +10,7 @@ import {
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { loadContractBreaks } from '../query/contracts.js';
+import { rulesReportOf } from './rules.js';
 import { truncate } from '../query/detail.js';
 import { nearWords } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
@@ -41,6 +42,8 @@ const SHOWN_BY: Readonly<Record<string, (row: FindingRow) => string>> = {
   'contract-break': (row) => callOf('check_contract', { from: row.id, to: row.to }),
   'one-ended-channel': (row) =>
     callOf(row.message.startsWith('no producer') ? 'who_consumes' : 'who_emits', { channel: row.id }),
+  // The rule's name is the message's first word (P114).
+  rule: (row) => callOf('check_rules', { rule: row.message.slice(0, row.message.indexOf(':')) }),
 };
 
 const lineOf = (loc: string | undefined): number | undefined => {
@@ -82,7 +85,13 @@ export const findingsOf = (
   service?: string,
 ): { ranked: FindingRow[]; notes: Record<string, number>; accepted: number } => {
   const split = acceptedSplitOf(db, db.allUnresolved(), readAccepted(ctx.handle.path));
-  const collected = collectFindings(db, { rows: split.fresh, report: db.report(), contracts: loadContractBreaks(ctx.handle.path) });
+  const rules = rulesReportOf(db, ctx)?.violations;
+  const collected = collectFindings(db, {
+    rows: split.fresh,
+    report: db.report(),
+    contracts: loadContractBreaks(ctx.handle.path),
+    ...(rules === undefined ? {} : { rules }),
+  });
   const inService = <T extends { service: string | null }>(rows: readonly T[]): T[] =>
     service === undefined ? [...rows] : rows.filter((row) => row.service === service);
   return {

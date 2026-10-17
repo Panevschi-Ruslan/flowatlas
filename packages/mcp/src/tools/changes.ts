@@ -204,7 +204,7 @@ export interface VerdictOptions {
 const UNREAD_WARNINGS: ReadonlySet<string> = new Set(['ref-not-found', 'not-a-git-repo', 'base-extract-failed']);
 
 /** The `diff.json` sections the verdict is decided by; a document without one of them is `unknown` (I11). */
-const VERDICT_SECTIONS: ReadonlySet<string> = new Set(['unresolved', 'joins']);
+const VERDICT_SECTIONS: ReadonlySet<string> = new Set(['unresolved', 'joins', 'rules']);
 
 /** How far back from a change the path to a way in is walked: as far as the blast radius goes, bounded (I9). */
 const PATH_WALK = { maxDepth: 25, maxNodes: 5000 } as const;
@@ -264,6 +264,8 @@ interface Scoped {
   entries: Map<string, RetestEntry>;
   fresh: DiffReport['contracts']['new'];
   breaks: DiffReport['contracts']['new'];
+  /** New violations of a rule at error along edges that are not guesses (P114). */
+  ruleBreaks: DiffReport['rules']['new'];
   fixed: number;
   gapsAdded: GapRef[];
   gapsRemoved: GapRef[];
@@ -325,6 +327,10 @@ const scopeOf = (report: DiffReport, service: string | undefined, serviceOf?: (i
     entries,
     fresh,
     breaks: fresh.filter((finding) => finding.severity === 'error'),
+    // A guessed violation is listed by the CLI and never decides a verdict (P114 D4).
+    ruleBreaks: report.rules.new.filter(
+      (item) => item.severity === 'error' && !item.heuristic && (service === undefined || item.fromService === service || item.toService === service),
+    ),
     fixed: report.contracts.fixed.filter(touches).length,
     gapsAdded: report.unresolved.added.filter((ref) => keep(ref.service)),
     gapsRemoved: report.unresolved.removed.filter((ref) => keep(ref.service)),
@@ -369,11 +375,12 @@ const firstOf = <T>(rows: readonly T[], say: (row: T) => string): string => (row
 /**
  * Safe, unsafe or unknown, each for a reason written down (D1).
  *
- * Unsafe: a new contract error; a call whose target went, or a channel end
+ * Unsafe: a new contract error; a new violation of an architecture rule at
+ * `error` along edges that are not guesses (P114); a call whose target went, or a channel end
  * left with nothing at the other end; a removed way in another service still
  * calls. Unknown: a service read from its working tree on both sides (or not
  * read), a new gap on a path from a change to a way in, or a `diff.json` too
- * old to hold gaps and lost joins. Safe otherwise. Every reason is a sentence
+ * old to hold gaps, lost joins and rule violations. Safe otherwise. Every reason is a sentence
  * under `because`, unsafe ones first, so a reviewer disagrees with a reason
  * rather than with a score. Findings are listed and never decide it.
  */
@@ -385,6 +392,11 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
 
   if (scoped.breaks.length > 0) {
     unsafe.push(`${plural(scoped.breaks.length, 'new contract error')}${firstOf(scoped.breaks, (finding) => finding.message)}`);
+  }
+  if (scoped.ruleBreaks.length > 0) {
+    unsafe.push(
+      `${plural(scoped.ruleBreaks.length, 'new violation')} of an architecture rule${firstOf(scoped.ruleBreaks, (item) => `${quoted(item.rule)}: ${item.message}`)}`,
+    );
   }
   const targets = scoped.lost.filter((join) => join.kind === 'target-gone');
   if (targets.length > 0) {
@@ -413,7 +425,7 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
   // less about whether a branch is safe.
   const missing = sectionsMissing(report).filter((section) => VERDICT_SECTIONS.has(section));
   if (missing.length > 0) {
-    unknown.push(`diff.json is format ${report.diffFormatVersion}, which holds no ${missing.join(' or ')}; rerun flowatlas diff for new gaps and lost joins`);
+    unknown.push(`diff.json is format ${report.diffFormatVersion}, which holds no ${missing.join(' or ')}; rerun flowatlas diff for new gaps, lost joins and rule violations`);
   }
   const unread = [
     ...new Set(
@@ -489,7 +501,7 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
   const verdict: VerdictWord = unsafe.length > 0 ? 'unsafe' : unknown.length > 0 ? 'unknown' : 'safe';
   const because = [...unsafe, ...unknown];
   if (verdict === 'safe') {
-    because.push('no new contract error, no call or channel lost what it joined, and no new gap on a path from a change to a way in');
+    because.push('no new contract error, no new violation of an architecture rule, no call or channel lost what it joined, and no new gap on a path from a change to a way in');
     const off = newGaps.length - hidden.length;
     if (off > 0) because.push(`${plural(off, 'new gap')} off every changed path, listed under newGaps`);
   }

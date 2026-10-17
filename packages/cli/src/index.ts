@@ -5,6 +5,7 @@ import { registerBuild } from './commands/build.js';
 import { registerChannel } from './commands/channel.js';
 import { registerConfig } from './commands/config.js';
 import { registerContracts } from './commands/contracts.js';
+import { registerRules } from './commands/rules.js';
 import { registerCycles } from './commands/cycles.js';
 import { registerDead } from './commands/dead.js';
 import { registerDiff } from './commands/diff.js';
@@ -41,6 +42,7 @@ export const createProgram = (): Command => {
   registerChannel(program);
   registerTypes(program);
   registerContracts(program);
+  registerRules(program);
   registerStats(program);
   registerCycles(program);
   registerDead(program);
@@ -120,6 +122,9 @@ export type { Stats } from './commands/stats.js';
 export { runTypes, driftOf, globToRegExp, DRIFT_NOTE } from './commands/types.js';
 export type { Drift } from './commands/types.js';
 export { runContracts, registerContracts, CONTRACTS_FILE, FAIL_LEVELS } from './commands/contracts.js';
+export { narrowRules, registerRules, ruleReportOf, RULES_FORMATS, rulesContextOf, runRules } from './commands/rules.js';
+export type { RulesContext, RulesOptions, RulesRun } from './commands/rules.js';
+export { renderRulesGithub, renderRulesJson, renderRulesList, renderRulesMarkdown, renderRulesText, rulesSummaryLine } from './render/rules.js';
 export type { ContractsFormat, ContractsOptions, ContractsRun, FailLevel } from './commands/contracts.js';
 export {
   byReason,

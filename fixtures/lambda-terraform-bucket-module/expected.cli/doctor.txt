@@ -1,4 +1,4 @@
-unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
 unresolved: 0 to act on · missed: 0 · notes: 0 · findings: 1
   1 finding: 1 bucket write no notification takes

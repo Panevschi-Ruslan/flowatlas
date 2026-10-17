@@ -108,6 +108,8 @@ export interface FlowNode {
   gapsInFile?: number;
   /** On a who_calls row answering for a class (P95): the method of the class this caller calls. */
   calls?: string;
+  /** On a get_flow step (P114): the architecture rules a violation of runs along the hop into it. */
+  violates?: string[];
   children: FlowNode[];
 }
 

@@ -14,7 +14,8 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { loadConfig, readAccepted, type AcceptedProblem, type Unresolved } from '@flowatlas/core';
+import { ConfigInvalidError, loadConfig, readAccepted, type AcceptedProblem, type Unresolved } from '@flowatlas/core';
+import type { RulesReport } from '@flowatlas/linker';
 import type { CheckOptions } from '@flowatlas/contracts';
 import { acceptedSplitOf, type GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
@@ -29,6 +30,7 @@ import { VERSION } from '../version.js';
 import {
   acceptedBy,
   readBaseline,
+  rulesSnapshotOf,
   snapshotOf,
   writeBaseline,
   type Baseline,
@@ -42,6 +44,7 @@ import {
   type CantFollowReport,
 } from '../doctor/cant-follow.js';
 import { runDoctor } from '../doctor/run.js';
+import { ruleReportOf, rulesContextOf, type RulesContext } from './rules.js';
 import {
   BASELINE_FORMAT_VERSION,
   SECTIONS,
@@ -70,6 +73,8 @@ export interface DoctorOptions {
   service?: string;
   /** `false` only when `--no-contracts` was passed. */
   contracts?: boolean;
+  /** `false` only when `--no-rules` was passed (P114). */
+  rules?: boolean;
   maxNodes?: string;
   /** Where to write `doctor.json`. Defaults to the configured output. */
   out?: string;
@@ -345,6 +350,23 @@ const baselinePathFor = (options: DoctorOptions, settings: FromConfig): string |
   return settings.rootDir === undefined ? undefined : join(settings.rootDir, BASELINE_FILE);
 };
 
+/**
+ * The rules this run checks, or undefined when there are none or `--no-rules`
+ * was passed. A rule that fails its schema stops the run (exit 2, naming it):
+ * every other problem with the configuration is the rest of doctor's to
+ * answer around, as it always was.
+ */
+const rulesFor = (options: DoctorOptions): RulesContext | undefined => {
+  if (options.rules === false) return undefined;
+  try {
+    const context = rulesContextOf(options);
+    return context.ruleSet.rules.length === 0 ? undefined : context;
+  } catch (cause) {
+    if (cause instanceof CliError && cause.message.includes('rule-invalid')) throw cause;
+    return undefined;
+  }
+};
+
 /** The numbers this run would accept, ready to be committed. */
 const baselineOf = (
   db: GraphDb,
@@ -353,6 +375,7 @@ const baselineOf = (
   settings: FromConfig,
   now: string,
   who: string,
+  rules: RulesReport | undefined,
 ): Baseline => ({
   baselineFormatVersion: BASELINE_FORMAT_VERSION,
   schemaVersion: db.schemaVersion(),
@@ -372,6 +395,7 @@ const baselineOf = (
     infos: 0,
     ignored: report.contracts.ignored,
   },
+  rules: rules === undefined ? {} : rulesSnapshotOf(rules),
 });
 
 /**
@@ -405,9 +429,11 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   }
 
   const settings = fromConfig(options);
+  const ruleContext = sections.includes('rules') ? rulesFor(options) : undefined;
   const { db, close } = openProjectDb(options);
   try {
     const { rows: raw, note } = rowsFor(db, settings.outputDir);
+    const rulesReport = ruleContext === undefined ? undefined : ruleReportOf(db, ruleContext.ruleSet, dbPathFor(options));
     // How old each declared document is, asked now rather than read off the
     // graph. Both of its dates move whenever anybody commits, so the build
     // records neither and this is the only place the question is answered
@@ -445,6 +471,9 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         sections,
         ...(maxNodes === undefined ? {} : { maxNodes }),
         contracts: options.contracts !== false,
+        ...(rulesReport === undefined || ruleContext === undefined
+          ? {}
+          : { rules: { report: rulesReport, failOnHeuristic: ruleContext.ruleSet.failOnHeuristic, configured: ruleContext.ruleSet.rules.length } }),
         ...(read === undefined ? {} : { baseline: read }),
         baselinePath: wantsBaseline ? (path ?? null) : null,
         ignoreReasons: settings.ignoreReasons,
@@ -487,7 +516,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       }
       writeBaseline(
         path,
-        baselineOf(db, rows, report, settings, report.generatedAt, acceptedBy(settings.rootDir)),
+        baselineOf(db, rows, report, settings, report.generatedAt, acceptedBy(settings.rootDir), rulesReport),
       );
       baselineFile = path;
       exitCode = EXIT.ok;
@@ -500,6 +529,11 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         : format === 'github'
           ? renderDoctorGithub(report, {
               ...(file === undefined ? {} : { file }),
+              // Every annotation's file is relative to its repository; the
+              // checkout sees it under the directory the configuration names
+              // (P191: this was never passed, so annotations named paths that
+              // were not there).
+              repoDir: (service) => settings.repoDirs.get(service),
               serviceAt: (service) => settings.serviceAt.get(service),
             })
           : renderDoctorText(report, {
@@ -512,7 +546,8 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
 
     io.out(text);
     if (baselineFile !== undefined) {
-      io.err(`baseline written to ${baselineFile}: ${report.unresolved.total} places accepted\n`);
+      const ruleKeys = rulesReport === undefined ? 0 : Object.keys(rulesSnapshotOf(rulesReport)).length;
+      io.err(`baseline written to ${baselineFile}: ${report.unresolved.total} places accepted${ruleKeys === 0 ? '' : `, ${ruleKeys} rule violation${ruleKeys === 1 ? '' : 's'}`}\n`);
     }
     return {
       report,
@@ -619,7 +654,7 @@ export const registerDoctor = (program: Command): void => {
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--format <name>', `one of ${FORMATS.join(', ')}`)
-    .option('--strict', 'exit 1 on a broken annotation, a contract error, or growth past the baseline')
+    .option('--strict', 'exit 1 on a broken annotation, a contract error, a rule violation the baseline does not hold, or growth past the baseline')
     .option('--accept', 'write the current numbers to the baseline')
     .option('--baseline <path>', 'where the accepted numbers live (default: <output>/baseline.json)')
     .option('--no-baseline', 'skip the growth check, so --strict asks only about annotations and contracts')
@@ -630,6 +665,7 @@ export const registerDoctor = (program: Command): void => {
     )
     .option('--service <name>', 'narrow every section to one service')
     .option('--no-contracts', 'do not run the contract check')
+    .option('--no-rules', 'do not check the architecture rules')
     .option('--max-nodes <n>', 'most places to print per reason; the file is always complete')
     .option('--out <dir>', 'where to write doctor.json (default: the configured output)')
     .option('--unresolved', "what the reader could not follow, grouped by cause and by package, instead of the report")

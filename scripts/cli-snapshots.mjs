@@ -27,6 +27,7 @@ import {
   runDoctorCommand,
   runFlow,
   runImpact,
+  runRules,
   runShapesSuggest,
   runStats,
   runTypes,
@@ -572,6 +573,22 @@ const TERRAFORM_SHAPE_SUITES = [
   ]),
 ];
 
+const rulesConfig = join(root, 'fixtures', 'multi-repo-rules', 'flowatlas.config.json');
+
+/**
+ * The architecture rules (P114) of the bookshop with tags: three broken once
+ * each, one kept, one naming a service that does not exist - in every format
+ * `flowatlas rules` draws, the list, and what `doctor` says of them.
+ */
+const RULES_CASES = [
+  ['rules.txt', (io) => runRules({ config: rulesConfig }, io)],
+  ['rules.json', (io) => runRules({ config: rulesConfig, format: 'json' }, io)],
+  ['rules.md', (io) => runRules({ config: rulesConfig, format: 'markdown' }, io)],
+  ['rules.github.txt', (io) => runRules({ config: rulesConfig, format: 'github' }, io)],
+  ['rules.list.txt', (io) => runRules({ config: rulesConfig, list: true }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: rulesConfig, baseline: false }, io)],
+];
+
 /**
  * Sets of recordings, in several places.
  *
@@ -608,6 +625,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.cli'), owned: true, cases: LOOPS_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-rules', 'expected.cli'), owned: true, cases: RULES_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

@@ -187,6 +187,18 @@ const DIFF_CASES = [
   ['resource.service-orders', '#readResource', { uri: 'flowatlas://services/orders' }],
 ];
 
+/** The architecture rules of `fixtures/multi-repo-rules` (P114), as an assistant is handed them. */
+const RULES_CASES = [
+  ['check_rules.all', 'check_rules', {}],
+  ['check_rules.by-service', 'check_rules', { service: 'billing' }],
+  ['check_rules.one-rule', 'check_rules', { rule: 'frontends-reach-only-edge' }],
+  ['check_rules.typo', 'check_rules', { rule: 'only-orders-write-orders' }],
+  ['get_flow.violates', 'get_flow', { entry: 'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated' }],
+  ['describe_for_prompt.service', 'describe_for_prompt', { id: 'billing', scope: 'service' }],
+  ['start_here.rules', 'start_here', {}],
+  ['findings.rule', 'findings', { kind: 'rule' }],
+];
+
 /**
  * What a client asks besides a tool, by the name a case gives it, and the
  * document recorded: the listing as it comes, a resource's JSON read back.
@@ -230,6 +242,11 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'multi-repo-plumbing'),
     outDir: join(root, 'fixtures', 'multi-repo-plumbing', 'expected.mcp'),
     cases: PLUMBING_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'multi-repo-rules'),
+    outDir: join(root, 'fixtures', 'multi-repo-rules', 'expected.mcp'),
+    cases: RULES_CASES,
   },
   {
     outDir: join(root, 'fixtures', 'multi-repo-diff', 'expected.mcp'),

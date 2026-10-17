@@ -164,6 +164,34 @@ export {
   serviceNamesOf,
   starterSchema,
 } from './config.js';
+export {
+  DEFAULT_RULE_VIA,
+  forbidRuleSchema,
+  onlyRuleSchema,
+  reachableRuleSchema,
+  RULE_EDGE_KINDS,
+  RULE_NAME,
+  RULE_OPS,
+  RULE_SEVERITIES,
+  RULE_SHAPES,
+  ruleSchema,
+  ruleSetOf,
+  rulesSettingsSchema,
+  SELECTOR_KEYS,
+  selectorSchema,
+  shapeOfRule,
+  tagsRuleSchema,
+} from './rule-config.js';
+export type {
+  RuleConfig,
+  RuleEdgeKind,
+  RuleSelector,
+  RuleSet,
+  RuleSeverity,
+  RuleShape,
+  RulesSettings,
+  SelectorKey,
+} from './rule-config.js';
 export type {
   LocalBaseClass,
   CustomBrokerConfig,
@@ -759,6 +787,7 @@ export type {
   PromptFailGroup,
   PromptFailure,
   PromptGap,
+  PromptRuleBreak,
   PromptLimits,
   PromptLog,
   PromptMarks,

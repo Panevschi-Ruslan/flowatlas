@@ -84,6 +84,7 @@ const diff: DiffReport = {
   },
   impact: [],
   contracts: { new: [], fixed: [], preexisting: [], ignored: [] },
+  rules: { new: [], fixed: [], existing: [], excused: [] },
   warnings: [],
   timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 },
 };

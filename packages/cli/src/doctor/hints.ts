@@ -500,6 +500,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'No service claims the setting a request\'s base address is read from and nothing read gives it a value, and the setting is named after exactly one service (CATALOG_URL for catalog), which was taken. The join is marked heuristic. Add the setting to services[].baseUrlEnv of the service it really is.',
   'route-api-guessed': () =>
     'Several APIs or load balancers serve this address; the one whose name shares the most words with the setting the base URL is read from was taken, and the join is marked heuristic. Annotate the call with @CallsService where that is wrong.',
+  'rule-matches-nothing': () =>
+    'A side of an architecture rule names a service, tag, table, channel or route this graph does not hold, so the rule was not checked: a typo is never a pass. Correct the selector under rules[] in flowatlas.config.json (flowatlas rules --list says how many nodes each side selects).',
+  'rule-invalid': () =>
+    'An architecture rule does not match its schema: two shapes, none, an unknown key or a name that is not kebab-case. The configuration is refused until it is corrected; the message names the rule and the field.',
+  'rule-over-partial-read': () =>
+    'An architecture rule names a service the build read in part (skipped, or with packages not installed), so a crossing it makes may be missing from the answer. Install its dependencies and rebuild for a full answer.',
   'route-unguarded': () =>
     'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".',
   'route-checked-in-body': () =>

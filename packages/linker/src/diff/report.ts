@@ -7,6 +7,7 @@
  * only one section of it.
  */
 import type { ContractFinding } from '@flowatlas/contracts';
+import type { RuleViolation } from '../rules/types.js';
 import type { FlowChange } from './sequence.js';
 import type { BlastRow, GraphDiff } from './types.js';
 
@@ -74,6 +75,19 @@ export interface DiffContracts {
   ignored: ContractFinding[];
 }
 
+/**
+ * The architecture rules' violations of both sides, split by what this
+ * revision did to them (format 4, P114), keyed on `rule|<name>|<from>|<to>`
+ * so a line moving never makes one new. `excused` is the head side's, which
+ * is the side that ships, and never counted against the change.
+ */
+export interface DiffRules {
+  new: RuleViolation[];
+  fixed: RuleViolation[];
+  existing: RuleViolation[];
+  excused: RuleViolation[];
+}
+
 export interface DiffTiming {
   baseMs: number;
   headMs: number;
@@ -110,6 +124,8 @@ export interface DiffReport {
    */
   flows: FlowChange[];
   contracts: DiffContracts;
+  /** The rules' violations, new, fixed, already there and excused (format 4, P114). */
+  rules: DiffRules;
   warnings: DiffWarning[];
   timing: DiffTiming;
 }

@@ -1,4 +1,4 @@
-unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
 unresolved: 4 to act on · missed: 5 over 7 sites · notes: 0 · findings: 0
   3 missed places static reading cannot see, folded into 1 row

@@ -2,12 +2,13 @@
 
 One job, and a decision about how strict to be on the first day.
 
-`flowatlas doctor` reads a graph and answers in five sections. Without `--strict`
+`flowatlas doctor` reads a graph and answers in six sections. Without `--strict`
 it reports and exits 0, because a report is not a failure. With `--strict` it
-fails a build on three things and nothing else:
+fails a build on four things and nothing else:
 
 - an annotation that is wrong,
 - a contract error between two repositories,
+- a violation of an architecture rule at `error` the baseline does not hold,
 - more unresolved places than the project has accepted.
 
 Everything else is printed and costs nothing.
@@ -48,10 +49,10 @@ flowatlas doctor
 The last line says it in one sentence:
 
 ```
-unresolved: total=40 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=1 ignored=0 · exit=0
+unresolved: total=40 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=1 ignored=0 · rules: errors=0 new=0 · exit=0
 ```
 
-Read it as three separate decisions.
+Read it as four separate decisions.
 
 **Annotations.** `markers: errors=0` means every `@CallsService`, `@Emits` and
 `@Consumes` in the project is true. If that is your number, it costs nothing to
@@ -87,6 +88,25 @@ flowatlas doctor --strict --no-contracts
 
 and turn them on by deleting that flag once N is 0.
 
+**Architecture rules.** Write down the rules the team already believes are
+true - a frontend reaching only its gateway, one owner per table - under
+`rules` in `flowatlas.config.json` (the CLI reference has the four shapes), and
+look before anything fails:
+
+```sh
+flowatlas rules --list      # how many nodes each side of each rule selects
+flowatlas rules             # each violation, where it crosses, and why the rule exists
+```
+
+A side that selects nothing is a typo, and is listed as not checked rather than
+passed. Turn them on in this order: first as `severity: "warning"` while the
+violations are read; then accept what is real and planned for, with a note
+(`flowatlas accept rule:<name> --service <name> --note '…'`) or by
+`flowatlas doctor --accept`, which writes their keys into the baseline; then
+`error`, so `doctor --strict` fails on a new one. A violation along a guessed
+edge is shown and never fails a run until `rulesSettings.failOnHeuristic` says
+so - leave it off until the guesses are rare.
+
 ## The job
 
 ```yaml
@@ -116,6 +136,9 @@ jobs:
 
       - run: npx @flowatlas/cli build
       - run: npx @flowatlas/cli doctor --strict --no-contracts --format github
+      # The architecture rules on their own, once they are at error; doctor
+      # --strict already fails on a new violation, so this is for a report.
+      - run: npx @flowatlas/cli rules --format github --fail-on error
 ```
 
 `--format github` prints one `::error file=…,line=…::` per finding, so they
@@ -142,7 +165,8 @@ sequence diagram per changed flow across the services, added steps in green,
 removed ones in red with a cross, a changed request body named in a note, and
 the same steps listed as text under it for a reader whose mail or client does
 not render Mermaid. What the revision did to the contracts, sorted into new,
-fixed, already there and excused. And which types changed shape.
+fixed, already there and excused, and to the architecture rules the same way.
+And which types changed shape.
 
 The comment stays under `--max-chars` (60,000 by default; a GitHub comment
 holds 65,536): the diagrams are dropped from the last one back, then whole
@@ -162,8 +186,12 @@ To see one flow's diagram locally, as the comment draws it without the marks:
 To fail only on a break this branch introduced:
 
 ```sh
-flowatlas diff origin/main --fail-on-contract-break
+flowatlas diff origin/main --fail-on-contract-break --fail-on-rule-break
 ```
+
+The second flag does for the architecture rules what the first does for the
+contracts: the comment's **Rules** section sorts violations into new, fixed,
+already there and excused, and only a new one at `error` fails the build.
 
 A pre-existing error is somebody else's problem and an excused one is nobody's,
 so neither stops the build.

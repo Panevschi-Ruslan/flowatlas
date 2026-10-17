@@ -6,6 +6,7 @@ import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
 import { expandGlob } from './glob.js';
 import { ENTRY_KINDS } from './model/nodes.js';
 import { requestReadingSchema } from './request.js';
+import { ruleSchema, rulesSettingsSchema } from './rule-config.js';
 
 export const CONFIG_FILENAME = 'flowatlas.config.json';
 export const DEFAULT_OUTPUT = '.flowatlas';
@@ -119,6 +120,11 @@ const serviceEntrySchema = z.strictObject({
    * second one starts with the same word.
    */
   aliases: z.array(z.string().min(1)).optional(),
+  /**
+   * Names a rule can select this service by (P114): `frontend`, `edge`,
+   * `domain:payments`. A tag is a name only; nothing is inferred from it.
+   */
+  tags: z.array(z.string().min(1)).optional(),
   /**
    * Which service answers each of those keys, by name.
    *
@@ -1179,8 +1185,26 @@ export const flowatlasConfigSchema = z
           .default({ paths: [], decorators: [], names: [], builtIn: true }),
       })
       .default({ infrastructure: { paths: [], decorators: [], names: [], builtIn: true } }),
+    /**
+     * Who may call, write, publish to or consume what (P114): each rule a name,
+     * a severity, a note and one of four shapes (`forbid`, `only`, `tags`,
+     * `reachable`), checked by `flowatlas rules`, `doctor`, `diff` and the MCP
+     * server over the joined graph. See `rule-config.ts`.
+     */
+    rules: z.array(ruleSchema).default([]),
+    /** How the rules are read: whether a guessed edge can fail a run. */
+    rulesSettings: rulesSettingsSchema.default({ failOnHeuristic: false }),
   })
   .superRefine((config, ctx) => {
+    // A rule's name is the key a baseline and an accept hold it by, so two
+    // rules of one name would be one rule to both.
+    const ruleNames = new Set<string>();
+    config.rules.forEach((rule, index) => {
+      if (ruleNames.has(rule.name)) {
+        ctx.addIssue({ code: 'custom', path: ['rules', index, 'name'], message: `Duplicate rule name ${JSON.stringify(rule.name)}.` });
+      }
+      ruleNames.add(rule.name);
+    });
     const seen = new Set<string>();
     config.services.forEach((service, index) => {
       if (seen.has(service.name)) {
@@ -1293,16 +1317,30 @@ export interface LoadConfigOptions {
   checkRepos?: boolean;
 }
 
-const formatIssues = (error: z.ZodError): string[] =>
+/**
+ * The rule an issue is about, by name, when it is about one (P114): a rule
+ * that fails its schema is refused naming it (`rule-invalid`), since
+ * `rules.3.forbid.from` is a place a reader has to count to.
+ */
+const ruleNamed = (data: unknown, path: readonly PropertyKey[]): string | undefined => {
+  if (path[0] !== 'rules' || typeof path[1] !== 'number') return undefined;
+  const rules = (data as { rules?: unknown } | null)?.rules;
+  const name = Array.isArray(rules) ? (rules[path[1]] as { name?: unknown } | undefined)?.name : undefined;
+  return typeof name === 'string' ? name : undefined;
+};
+
+const formatIssues = (error: z.ZodError, data?: unknown): string[] =>
   error.issues.map((issue) => {
     const path = issue.path.length > 0 ? issue.path.join('.') : '(root)';
-    return `${path}: ${issue.message}`;
+    const rule = ruleNamed(data, issue.path);
+    const about = issue.path[0] === 'rules' && typeof issue.path[1] === 'number' ? ` (rule-invalid${rule === undefined ? '' : `: rule ${JSON.stringify(rule)}`})` : '';
+    return `${path}${about}: ${issue.message}`;
   });
 
 /** Validates an already-parsed object. `source` only labels error messages. */
 export const parseConfig = (data: unknown, source = CONFIG_FILENAME): FlowatlasConfig => {
   const result = flowatlasConfigSchema.safeParse(data);
-  if (!result.success) throw new ConfigInvalidError(source, formatIssues(result.error));
+  if (!result.success) throw new ConfigInvalidError(source, formatIssues(result.error, data));
   return result.data;
 };
 

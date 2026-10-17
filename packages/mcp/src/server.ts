@@ -14,6 +14,7 @@ import { registerFindings } from './tools/findings.js';
 import { registerFlow } from './tools/flow.js';
 import { registerPrompt } from './tools/prompt.js';
 import { registerReach } from './tools/reach.js';
+import { registerRules } from './tools/rules.js';
 import { registerSearch } from './tools/search.js';
 import { registerSource } from './tools/source.js';
 import { registerStart } from './tools/start.js';
@@ -39,7 +40,7 @@ export const INSTRUCTIONS = [
   '- shape: get_type({type: id}) -> type_usage({type: id}): every way in, crossing, channel and call that takes or returns it, and the types holding it; check_contract for whether two services still agree.',
   '- search({query}) finds a route, channel, table, type, class or gap by name; what_changed reads the last flowatlas diff.',
   "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names.",
-  '- findings - a likely N+1, a route with no guard, a contract break, a channel with one end - are not gaps: findings() counts each kind with its top rows, ranked by reach; findings({kind}) lists one, each row with the call that shows it.',
+  '- findings - a likely N+1, a route with no guard, a contract break, a channel with one end, a broken architecture rule (check_rules lists those) - are not gaps: findings() counts each kind with its top rows, ranked by reach; findings({kind}) lists one, each row with the call that shows it.',
   "- dead({id}) says whether a node is dead: `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` (`outside` the project, or a call `oneOff` a segment) or `alive`; dead({service}) lists them, verdict first.",
   'Rows real traffic went through carry `observed: n` (`seenAmbiguous: n` where requests fit it and other places too, so were counted on none); gaps someone accepted with flowatlas accept carry `accepted: true`.',
   'describe_for_prompt({id}) writes any of these as Markdown to hand on; `scope` class, file or service writes the whole of one. Every list tool takes the same optional `service` filter, a service name, to keep only its rows.',
@@ -99,6 +100,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   registerDead(server, context);
   registerFindings(server, context);
   registerTypeUsage(server, context);
+  registerRules(server, context);
   registerPrompts(server, context);
   registerResources(server, context, options.reasonCatalog);
 

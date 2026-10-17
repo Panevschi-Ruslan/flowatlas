@@ -1,5 +1,5 @@
 {
-  "diffFormatVersion": 3,
+  "diffFormatVersion": 4,
   "schemaVersion": 6,
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "base": {
@@ -977,6 +977,44 @@
         "ignoredBy": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
       }
     ]
+  },
+  "rules": {
+    "new": [
+      {
+        "rule": "billing-stays-out-of-gift-wrapping",
+        "shape": "forbid",
+        "severity": "error",
+        "note": "gift wrapping is fulfilment, which orders does",
+        "key": "rule|billing-stays-out-of-gift-wrapping|consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped|channel:order.gift-wrapped",
+        "from": "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+        "to": "channel:order.gift-wrapped",
+        "fromService": "billing",
+        "toService": null,
+        "via": "consumes",
+        "path": [
+          {
+            "from": "channel:order.gift-wrapped",
+            "to": "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+            "type": "consumes",
+            "confidence": "static"
+          }
+        ],
+        "at": {
+          "service": "billing",
+          "file": "src/invoices/gift-wrap.consumer.ts",
+          "line": 15
+        },
+        "confidence": "static",
+        "message": "billing GiftWrapConsumer.onGiftWrapped consumes channel order.gift-wrapped",
+        "heuristic": false,
+        "partial": [
+          "billing"
+        ]
+      }
+    ],
+    "fixed": [],
+    "existing": [],
+    "excused": []
   },
   "warnings": [
     {

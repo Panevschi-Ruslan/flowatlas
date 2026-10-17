@@ -1,6 +1,6 @@
 import type { Confidence, GraphEdge } from '@flowatlas/core';
-import { CONFIDENCE_RANK, NODE_TYPES } from '@flowatlas/core';
-import type { GraphDb } from '@flowatlas/linker';
+import { NODE_TYPES } from '@flowatlas/core';
+import { weakest, type GraphDb } from '@flowatlas/linker';
 
 /** As much of a node as an analysis needs; the rest is fetched by id. */
 export interface AnalysisNode {
@@ -44,11 +44,8 @@ export interface AnalysisGraph {
 
 export const byId = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
-/** Ranked by how much it can be trusted, so a walk can take the weakest hop. */
-export const weakest = (levels: readonly Confidence[]): Confidence =>
-  levels.length === 0
-    ? 'static'
-    : levels.reduce((worst, level) => (CONFIDENCE_RANK[level] < CONFIDENCE_RANK[worst] ? level : worst));
+/** Ranked by how much it can be trusted: moved to the linker beside the rule evaluator (P114). */
+export { weakest };
 
 const sortEdges = (edges: AnalysisEdge[]): AnalysisEdge[] =>
   edges.sort((a, b) => byId(a.to, b.to) || byId(a.from, b.from) || byId(a.type, b.type));

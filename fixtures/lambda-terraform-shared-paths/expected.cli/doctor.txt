@@ -1,4 +1,4 @@
-unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=3 · contracts: errors=0 ignored=0 · exit=0
+unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=3 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
 unresolved: 4 to act on · missed: 4 · notes: 3 · findings: 0
   ambiguous-route-api: 2 rows

@@ -1347,20 +1347,21 @@ at run time.
 ### `flowatlas doctor`
 
 What could not be read, what the annotations get wrong, what has drifted, and
-whether any of it has grown since the baseline. Five sections over one built
-graph; it reads no repository's source, so two runs over one graph say the same
+whether any of it has grown since the baseline, and which architecture rules
+the graph breaks. Six sections over one built graph; it reads no repository's source, so two runs over one graph say the same
 thing. It looks at a repository only to say whether its dependencies are
 installed, and what a service with no way in looks like.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--section <name>` | all five | `unresolved`, `markers`, `desync`, `contracts`, `baseline`; repeatable |
+| `--section <name>` | all six | `unresolved`, `markers`, `desync`, `contracts`, `rules`, `baseline`; repeatable |
 | `--service <name>` | every one | narrow every section to one repository |
-| `--strict` | off | exit 1 on a broken annotation, a contract error, or growth past the baseline |
+| `--strict` | off | exit 1 on a broken annotation, a contract error, a rule violation at `error` the baseline does not hold, or growth past the baseline |
 | `--accept` | off | write today's numbers as the baseline |
 | `--baseline <path>` | `<config dir>/flowatlas.baseline.json` | where the accepted numbers live |
 | `--no-baseline` | off | skip the growth check, so `--strict` asks only about annotations and contracts |
 | `--no-contracts` | off | do not run the contract check |
+| `--no-rules` | off | do not check the architecture rules |
 | `--max-nodes <n>` | 6 per reason | most places named under one reason; the written file is always complete |
 | `--format <name>` | `text` | `text`, `json`, `github` |
 | `--out <dir>` | configured output | where `doctor.json` goes |
@@ -1415,6 +1416,19 @@ file not there, not parsed, or declaring no module) and `shape-file-unmatched`
 (a note: a shape something stronger answered, or one a service's own list
 names and it never imports). The three notes are at level `info`. `flowatlas shapes --suggest` says which packages
 are still worth a shape file.
+
+**Rules.** With `rules[]` in the configuration, the `rules` section lists each
+violation nothing excused (`flowatlas accept rule:<name>`), marked `new` when the
+baseline does not hold its key, with where it crosses and the rule's note, and
+each rule a side of which names nothing (`rule-matches-nothing`). `--strict`
+fails on a new one at `error` - a guessed one only with
+`rulesSettings.failOnHeuristic` - and `--accept` writes every key to the
+baseline's `rules` map (`baselineFormatVersion` 2; a version-1 baseline is read
+as one that accepted no violation). The summary line gains `rules: errors=N
+new=M`; `--format github` annotates each violation at the crossing hop, under
+the directory the configuration gives its repository. A rule that fails its
+schema stops the run with exit 2, naming it (`rule-invalid`). See
+[`flowatlas rules`](#flowatlas-rules).
 
 **Accepted gaps.** A gap accepted with `flowatlas accept` is left out of every
 count, the text says how many accepted gaps were left out, and `doctor.json`
@@ -1593,6 +1607,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info), `iot-action-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread`, `environment-from-files` |
+| Architecture rules (`flowatlas rules`, the `rules` section) | `rule-matches-nothing` (a side of a rule names nothing; never a pass), `rule-invalid` (a rule fails its schema; the configuration is refused), `rule-over-partial-read` (a note: the rule names a service read in part) |
 
 Three of these are worth knowing before they are met, because each is the
 tool declining to guess:
@@ -1615,6 +1630,46 @@ tool declining to guess:
   is enough to refuse it, and so is a service that commits no environment file at
   all (`fixtures/nest-mount-empty`, `fixtures/nest-mount-set`,
   `fixtures/nest-context-path`).
+
+### `flowatlas rules`
+
+Checks the architecture rules the configuration writes down - who may call,
+write, publish to or consume what, by service, tag, table and channel - over
+the joined graph, and says which edges break them. A rule is about the edges
+between repositories that a single repository's import graph never holds: a
+browser requesting a route of another repository, a service writing a table
+another owns, a handler consuming a channel. Nothing is read from source; a
+violation is only drawn along an edge the graph holds.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--format <name>` | `text` | `text`, `json`, `markdown` or `github` (an annotation per violation at the crossing hop) |
+| `--rule <name>` | every rule | only this rule; repeatable |
+| `--service <name>` | every service | only violations this service is on either end of |
+| `--fail-on <level>` | `none` | exit 1 on a violation, or a rule that could not be checked, at this level or worse: `none`, `error`, `warning` |
+| `--max-nodes <n>` | `150` | most violations to print; the file is always complete |
+| `--out <dir>` | the configured output | where to write `rules.json` |
+| `--list` | off | print the configured rules with how many nodes each side selects |
+
+Every run writes the whole report to `<output>/rules.json`
+(`rulesFormatVersion: 1`): each rule with its status (`held`, `broken`,
+`unchecked`) and how many nodes each side selected, every violation, the
+excused ones, the rules that could not be checked and the notes. A violation
+carries the rule, the two ends (`from`, `to`, by node id, and their services),
+the path (each hop's edge type and `confidence`), `at` - the file and line of
+the near end of the hop that crossed, where a fix goes - the weakest confidence
+on the path and `heuristic` when that is a guess. Exit `0` means nothing at or
+above `--fail-on`; `1` means something was; `2` means it could not run (no
+graph, no rules configured, a rule that fails its schema).
+
+A violation along a guessed edge is shown at its rule's severity and marked a
+guess; it fails a run only with `rulesSettings.failOnHeuristic: true`. A rule
+a side of which names a service, tag, table, channel or route the graph does
+not hold is never a pass: it is listed as not checked, with
+`rule-matches-nothing` and the nearest names, and fails at its severity. A rule
+naming a service the build read in part says so on each answer
+(`rule-over-partial-read`). The rules themselves are written under
+[`rules`](#rules) in the configuration.
 
 ### `flowatlas shapes --suggest`
 
@@ -1683,6 +1738,17 @@ graph server's `search` returns it. A reason on its own accepts it everywhere;
 `--service`, `--file` and `--path` narrow it. A target no current gap matches is
 refused, so a typo does not accept nothing silently. Accepting routes by rule
 is described under `doctor` above.
+
+**A rule's violations.** `rule:<name>` accepts violations of one architecture
+rule: `--service` narrows it to those starting in a service, `--file` to those
+crossing in a file (or a glob), `--path` to those with a route pattern at
+either end, and `--note` is always required. `doctor`, `rules`, `diff` and the
+graph server then list them as excused, never counted and never hidden.
+
+```sh
+flowatlas accept rule:only-orders-writes-orders --service billing \
+  --note 'the backfill job, until it is done'
+```
 
 **A file that cannot be read.** An `accepted.json` that is not JSON (a merge
 conflict, a truncated write), is JSON of the wrong shape (an entry without a
@@ -1768,7 +1834,16 @@ has is drawn on that side alone, titled added or removed (a removed one read off
 the base graph). The flows that changed most, across most services, come first;
 ways in whose steps did not change are named on one line.
 
-`diff.json` is format 3 (`diffFormatVersion`). Format 2 added `unresolved`
+**Rules**, after the contracts, applies the head's `rules[]` to both graphs and
+says which violations this revision introduced, fixed, left as they were and had
+excused (the head's `accepted.json`), each keyed `rule|<name>|<from>|<to>` with
+no line in it, so a violation that only moved down a file is the same one. The
+section is left out when no rule has a violation on either side.
+`--fail-on-rule-break` exits 1 on a new violation at `error` along edges that
+are not guesses (with `rulesSettings.failOnHeuristic`, guesses too), and on a
+service neither ref could be read for, as `--fail-on-contract-break` does.
+
+`diff.json` is format 4 (`diffFormatVersion`). Format 2 added `unresolved`
 (`{ added, removed }`, each row `{ id, kind, service, file, line?, reason,
 node?, sites }`, `kind` `gap` or `finding`) and `joins` (`{ lost }`, each
 `{ kind, caller, target, edge, service, targetService, now, targetRemoved }`,
@@ -1779,9 +1854,10 @@ steps, counts, truncated? }`, `side` `both`, `head` or `base`, each participant
 `table`, `store` or `external`) and each step `{ status, kind, from, to, label,
 confidence, file?, line?, params?, returns?, takes?, group?, note? }` (`status`
 `same`, `added`, `removed` or `changed`; `kind` `enters`, `calls`, `http_calls`,
-`hits`, `emits`, `consumes`, `queries`, `caches`, `triggers` or `stop`). Files of
-formats 1 and 2 are still read, without the sections they predate; one from a
-newer flowatlas is refused by name.
+`hits`, `emits`, `consumes`, `queries`, `caches`, `triggers` or `stop`). Format
+4 adds `rules`: `{ new, fixed, existing, excused }`, each a list of violations
+as `rules.json` holds them. Files of formats 1 to 3 are still read, without the
+sections they predate; one from a newer flowatlas is refused by name.
 
 ### `flowatlas cache <action>`
 
@@ -1812,6 +1888,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
 | `aliases` | string[] | `[]` | other names the service is known by: the short name an annotation uses (`@CallsService('catalog', …)` for `catalog-api`), the name its worker is deployed under (a service binding's target), a host. Wherever a service is named — an annotation, `apiTarget`, a binding, a base address's host — an alias is the service. Unique across every name and alias; matched exactly, never by prefix |
+| `tags` | string[] | `[]` | names an architecture rule can select the service by: `frontend`, `edge`, `domain:payments`. A tag is a name only; nothing is inferred from it ([`rules`](#rules)) |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
 | `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi", "path": … }`, path relative to this file |
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
@@ -2031,6 +2108,8 @@ worked example of a document that declares routes.
 | `dead.infrastructure.names` | string[] | `[]` | handler or controller names (`OpsController`, `OpsController.flush`) that mark a route as infrastructure |
 | `dead.infrastructure.builtIn` | boolean | `true` | `false` turns the built-in probe, webhook, callback and well-known rules off; the three lists still apply |
 | `callShape.boundedCalls` | string[] | `[]` | helpers of your own that split a list into chunks, beside the built-in `chunk`, `chunks`, `batches`, `inChunks` and `splitEvery`: a loop over what one returns is set aside |
+| `rules` | object[] | `[]` | architecture rules: who may call, write, publish to or consume what ([`rules`](#rules)) |
+| `rulesSettings.failOnHeuristic` | boolean | `false` | whether a violation along a guessed edge can fail `rules --fail-on`, `doctor --strict` and `diff --fail-on-rule-break`; it is always shown |
 
 **A path segment written as a closed set.** A segment whose type is a union of
 string literals — `action: 'ship' | 'refund'` — is a segment that was
@@ -2215,6 +2294,58 @@ which the client infers from the server's own tree, as
 a `string` and parses it on the next line is another, `body-already-serialised`,
 because that is where the shape was lost rather than an end that disagrees about
 it.
+
+### `rules`
+
+Who may call, write, publish to or consume what, written down so a build fails
+when it stops being true. Each rule has a `name` (kebab-case and unique: the key
+a baseline and an accept use), a `severity` (`error` unless it says `warning`
+or `info`), an optional `note` (why; printed with every violation) and exactly
+one of four shapes:
+
+```json
+{
+  "rules": [
+    { "name": "frontends-reach-only-edge", "note": "the browser talks to the gateway",
+      "tags": { "source": "frontend", "mayReach": ["edge"] } },
+    { "name": "web-not-billing",
+      "forbid": { "from": { "service": "web" }, "to": { "service": "billing" } } },
+    { "name": "only-orders-writes-orders",
+      "only": { "from": { "service": "orders" }, "to": { "table": "orders" }, "op": "write" } },
+    { "name": "only-billing-consumes-invoices",
+      "only": { "from": { "service": "billing" }, "to": { "channel": "invoice.*" }, "via": ["consumes"] } },
+    { "name": "order-created-keeps-a-consumer",
+      "reachable": { "from": { "channel": "order.created" }, "to": { "service": "billing" }, "must": true } }
+  ]
+}
+```
+
+| Shape | Says | Broken by |
+|---|---|---|
+| `forbid: { from, to, via?, reach? }` | `from` must not reach `to` | `reach: "direct"` (default): one hop from a node `from` selects to one `to` selects. `"transitive"`: any path forward, through calls and channels, reported where it first enters `to` |
+| `only: { from, to, via?, op? }` | nothing outside `from` may reach `to` | a hop into `to` from a node `from` does not select; `op` (`read`, `write`, `delete`) narrows a table's queries |
+| `tags: { source, mayReach, via? }` | a service tagged `source` may join only services carrying one of `mayReach` (`*` any) | a hop from such a service into one carrying none of them; a consume joins the services that publish onto the channel, a publish joins nobody in particular |
+| `reachable: { from, to, must }` | with `must: true`, a path from `from` to `to` must exist | `true`: no path any more (one violation, with no hop to point at). `false`: every path that does |
+
+A **selector** is `{ service?, tag?, entry?, table?, channel?, route?, type? }`,
+every key optional and all of them ANDed; `*` (and `**`) is any run of
+characters. `service` and `tag` select the nodes of a service (a channel belongs
+to none), `entry` a way in by id or label, `table` and `channel` by name,
+`route` an HTTP way in as `METHOD /path` (`GET /orders/*`, matched as
+`doctor.publicRoutes` is), `type` a node type (`ui_api_call`, `method`, …).
+
+The **edges** a rule can name in `via`: `http_calls` (one service's request to
+another), `hits` (a browser's request), `emits`, `consumes`, `queries` (a
+table read or write), `triggers` (a workflow or a function started by name) and
+`calls` (inside one service, only when named). Without `via` a rule reads every
+kind but `calls`, and a hop inside one service - a service reading its own
+table - is read only when the rule's `to` names a `table` or its `via` names the
+hop's kind. A consume is read the way a dependency runs: the handler depends on
+the channel.
+
+A rule that fails this schema - two shapes, none, an unknown key, a name that
+is not kebab-case, a name used twice - is refused when the configuration is
+read, naming the rule (`rule-invalid`).
 
 ### `adapters`
 

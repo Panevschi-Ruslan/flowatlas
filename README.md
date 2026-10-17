@@ -274,6 +274,7 @@ read again and the others come from the cache.
 | Command | Answers |
 |---|---|
 | `flowatlas doctor` | what could not be read, what the annotations get wrong, what has drifted |
+| `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
 | `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks |
 | `flowatlas cache <action>` | list, prune or clear the graphs `diff` keeps per commit |
@@ -298,6 +299,23 @@ page and the graph server leave it out of what to act on:
 ```sh
 flowatlas accept channel-dynamic --service billing --note 'one channel per tenant'
 flowatlas accept route-unguarded --path 'GET /api/public/*' --note 'public catalogue' --dry-run
+```
+
+Who may call, write, publish to or consume what can be written down as rules
+in the configuration - "the browser reaches only the gateway", "only orders
+writes the orders table", "only billing consumes `invoice.*`" - by service, tag,
+table and channel, and `flowatlas rules` says which joins break one, at the
+line where the fix goes. They are checked over the edges between repositories,
+which a single repository's import rules never see; `doctor --strict` and
+`diff --fail-on-rule-break` fail on a new violation, and a rule naming a service
+that does not exist is never a pass:
+
+```json
+"rules": [
+  { "name": "frontends-reach-only-edge", "tags": { "source": "frontend", "mayReach": ["edge"] } },
+  { "name": "only-orders-writes-orders",
+    "only": { "from": { "service": "orders" }, "to": { "table": "orders" }, "op": "write" } }
+]
 ```
 
 Some graphs are not worth a verdict, and `doctor` refuses them with exit 2

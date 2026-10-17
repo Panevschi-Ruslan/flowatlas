@@ -422,6 +422,31 @@ only one of them moved.
   as the same Mermaid sequence diagram `diff` draws, without the marks, walked
   16 hops unless `--depth` says; `--sequence-detail class` drew a participant
   per class.
+- **Architecture rules across services (P114).** `flowatlas.config.json`
+  gained `services[].tags` and a top-level `rules` list: each rule a `name`, a
+  `severity` (`error` by default), a `note` and one of four shapes - `forbid`
+  (`from` must not reach `to`, in one hop or `transitive`ly), `only` (nothing
+  outside `from` may reach `to`, a table's `op` too), `tags` (a service tagged
+  `source` joins only services carrying one of `mayReach`) and `reachable`
+  (a path that `must` exist, or must not) - over selectors by service, tag,
+  way in, table, channel, route and node type, along the edges between
+  repositories (`hits`, `http_calls`, `emits`, `consumes`, `queries`,
+  `triggers`; `calls` when named). New command `flowatlas rules` (`--format
+  text|json|markdown|github`, `--rule`, `--service`, `--fail-on`, `--max-nodes`,
+  `--out`, `--list`) writes `rules.json` (`rulesFormatVersion: 1`); each
+  violation carries its path, the crossing hop's `file:line` and the weakest
+  confidence, and one along a guessed edge fails a run only with
+  `rulesSettings.failOnHeuristic`. A rule naming nothing is listed as not
+  checked (`rule-matches-nothing`), never passed; one over a service read in
+  part says so (`rule-over-partial-read`); one that fails its schema is refused
+  naming it (`rule-invalid`). `doctor` gained a `rules` section (`--no-rules`;
+  `--strict` fails on a new violation at `error`), `flowatlas accept
+  rule:<name>` excuses violations, `flowatlas diff` gained a "Rules" section
+  and `--fail-on-rule-break`, and the MCP server a `check_rules` tool,
+  `violates` on `get_flow` steps, a "Rules it breaks" section in
+  `describe_for_prompt`, `rules` counts on `start_here`, a `rule` kind in
+  `findings` and a verdict that is `unsafe` on a new rule violation
+  (`fixtures/multi-repo-rules`).
 - **`what_changed` said what each changed flow does now (P116).** A way in
   under `entries` or `retest` whose flow changed gained `flow: { side, added,
   removed, changed, steps }`, `steps` the changed steps as text from detail 1
@@ -445,6 +470,16 @@ only one of them moved.
   or `changed`. Files of formats 1 and 2 are still read, without the sections
   they predate; the verdict reads no flows, so a format-2 file is not
   `unknown` for lacking them.
+- **`diff.json` became format 4 (P114).** It gained `rules: { new, fixed,
+  existing, excused }`. Files of formats 1 to 3 are still read, without the
+  sections they predate; a file without `rules` makes the verdict `unknown`.
+- **`flowatlas.baseline.json` became format 2 (P114).** It gained `rules`, the
+  keys of the rule violations accepted; a version-1 baseline is still read, as
+  one that accepted none. `doctor`'s summary line gained `rules: errors=N
+  new=M`, and `--section` a sixth value, `rules`.
+- **The MCP tool list grew past its ceilings (P114).** `check_rules` and
+  `start_here`'s `rules` brought the part a model reads to 10,063 characters
+  and the whole list to 28,200; the test's ceilings went to 10,100 and 28,300.
 - **`flowatlas diff`'s documented defaults (P190).** `docs/CLI.md` said
   `--max-entries` 20 and `--max-nodes` 50; the command has always used 150 and
   100, which the reference now says.
@@ -744,6 +779,11 @@ only one of them moved.
 
 ### Fixed
 
+- **`doctor --format github` annotated paths that were not there (P191).** An
+  annotation's file was the one inside its repository (`src/x.ts`), and the
+  checkout sees it under the directory the configuration gives the repository;
+  the mapping existed and was never passed. Annotations now name
+  `billing/src/x.ts`.
 - **`impact` said only one of its notes (P132).** An answer whose walk stopped
   at its limit, asked at `detail: 3`, said only that the level was clamped: the
   second note overwrote the first. It now says both: the walk limit under

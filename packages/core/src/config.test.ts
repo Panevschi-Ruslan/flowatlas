@@ -12,6 +12,7 @@ import { localBaseClassNames, localBaseTableProperty,
   serviceNamesOf,
 } from './config.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
+import { ruleSetOf } from './rule-config.js';
 
 const temporary: string[] = [];
 
@@ -67,6 +68,8 @@ describe('parseConfig', () => {
       },
       callShape: { conditionalWrites: [], perItemHosts: [], boundedCalls: [] },
       dead: { infrastructure: { paths: [], decorators: [], names: [], builtIn: true } },
+      rules: [],
+      rulesSettings: { failOnHeuristic: false },
     });
   });
 
@@ -428,5 +431,29 @@ describe("a project's own request helpers, described (P30)", () => {
   it('refuses a helper that answers with a status no response has', () => {
     const answers = [{ ...request.answers[0], statusArg: undefined, status: 1200 }];
     expect(() => parseConfig({ adapters: { entry: { request: { answers } } } })).toThrow();
+  });
+});
+
+describe('architecture rules in the configuration (P114)', () => {
+  const service = { name: 'web', repo: '.', type: 'browser', tags: ['frontend'] };
+  const forbid = { from: { service: 'web' }, to: { service: 'billing' } };
+
+  it('reads tags and rules, every rule at error unless it says otherwise', () => {
+    const config = parseConfig({ services: [service], rules: [{ name: 'web-not-billing', forbid }] });
+    expect(config.services[0]?.tags).toEqual(['frontend']);
+    expect(config.rules[0]?.severity).toBe('error');
+    expect(config.rulesSettings).toEqual({ failOnHeuristic: false });
+    expect(ruleSetOf(config)).toEqual({ rules: config.rules, tags: { web: ['frontend'] }, failOnHeuristic: false });
+  });
+
+  it('refuses a rule that fails its schema, naming it as rule-invalid', () => {
+    expect(() => parseConfig({ services: [service], rules: [{ name: 'two', forbid, reachable: { ...forbid, must: true } }] })).toThrow(
+      /rules\.0 \(rule-invalid: rule "two"\): a rule has exactly one shape, and this one has forbid and reachable/,
+    );
+    expect(() => parseConfig({ services: [service], rules: [{ name: 'x', forbid: { ...forbid, sideways: true } }] })).toThrow(/rule-invalid: rule "x"/);
+  });
+
+  it('refuses two rules of one name: the name is the key a baseline holds it by', () => {
+    expect(() => parseConfig({ services: [service], rules: [{ name: 'a', forbid }, { name: 'a', forbid }] })).toThrow(/Duplicate rule name "a"/);
   });
 });

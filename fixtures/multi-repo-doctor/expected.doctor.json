@@ -10,6 +10,7 @@
     "markers",
     "desync",
     "contracts",
+    "rules",
     "baseline"
   ],
   "note": null,
@@ -766,6 +767,21 @@
     "errorCount": 4,
     "ignored": 1,
     "unchecked": 4
+  },
+  "rules": {
+    "status": "skipped",
+    "note": "no rules are configured",
+    "configured": 0,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "new": 0,
+    "failing": 0,
+    "heuristic": 0,
+    "excused": 0,
+    "violations": [],
+    "unchecked": [],
+    "notes": []
   },
   "baseline": {
     "status": "ok",

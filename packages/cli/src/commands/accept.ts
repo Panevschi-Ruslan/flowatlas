@@ -16,6 +16,14 @@
  * A rule goes on accepting rows nobody has looked at, so it must say why
  * (`--note`), and `--dry-run` lists what it would take before it is written.
  *
+ * A violation of an architecture rule (P114) is accepted by the rule's name,
+ * `rule:<name>`, narrowed by `--service` (the service it starts in), `--file`
+ * (the file it crosses in) or `--path` (a route at either end), and always
+ * with `--note`: `doctor`, `rules` and `diff` then list it as excused.
+ *
+ *   flowatlas accept rule:only-orders-writes-orders --service billing \
+ *     --note 'the migration job, until the backfill is done'
+ *
  * A file that cannot be read is never written over (P80): adding and
  * `--remove` refuse, naming the file and what is wrong with it, and `--list`
  * and `--dry-run` say so first. Reading it as empty and saving one entry used
@@ -39,9 +47,11 @@ import {
   type AcceptedProblem,
   type GapLike,
 } from '@flowatlas/core';
+import { ruleGapOf, type GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { dbPathFor, openDbFromOptions, type DbOptions } from '../db.js';
 import { cannotRun } from '../exit.js';
+import { ruleReportOf, rulesContextOf } from './rules.js';
 
 export interface AcceptOptions extends DbOptions {
   service?: string;
@@ -128,22 +138,20 @@ export const runAccept = (argument: string | undefined, options: AcceptOptions =
     note: options.note ?? '',
     acceptedAt: options.acceptedAt ?? new Date().toISOString(),
   };
+  const isRuleTarget = target.reason.startsWith(RULE_PREFIX);
   const db = openDbFromOptions(options);
-  let matchedRows: ReturnType<typeof db.allUnresolved>;
+  let matched: string[];
   try {
-    const rule = compileAccepted([entry]);
-    matchedRows = db.allUnresolved().filter((row) => rule.match(row) !== undefined);
+    matched = isRuleTarget ? ruleViolationsMatched(db, options, entry) : unresolvedMatched(db, entry);
   } finally {
     db.close();
   }
-  const covered = matchedRows.length;
+  const covered = matched.length;
+  const noun = (count: number): string => `${count} ${isRuleTarget ? 'violation' : 'gap'}${count === 1 ? '' : 's'}`;
 
   if (options.dryRun === true) {
     if (problem !== undefined) print(`${describeAcceptedProblem(problem)}; writing this would be refused.`);
-    const matched = matchedRows.map(
-      (row) => `${row.service ?? ''}  ${row.file ?? ''}${row.line === null ? '' : `:${row.line}`}  ${row.message}`,
-    );
-    print(`would accept: ${describeAccepted(target)} (${covered} gap${covered === 1 ? '' : 's'})`);
+    print(`would accept: ${describeAccepted(target)} (${noun(covered)})`);
     for (const line of matched.slice(0, DRY_RUN_LIMIT)) print(`  ${line}`);
     if (matched.length > DRY_RUN_LIMIT) print(`  ... and ${matched.length - DRY_RUN_LIMIT} more`);
     return { path: null, accepted: current, covered, matched, ...withProblem };
@@ -153,10 +161,20 @@ export const runAccept = (argument: string | undefined, options: AcceptOptions =
     const next = withoutAccepted(current, target);
     if (next.length === current.length) throw cannotRun(`${acceptedKeyOf(target)} is not accepted`);
     const path = saveAccepted(dbPath, next);
-    print(`no longer accepted: ${describe(target)} (${covered} gap${covered === 1 ? '' : 's'} show again)`);
+    print(`no longer accepted: ${describe(target)} (${noun(covered)} show again)`);
     return { path, accepted: next, covered };
   }
 
+  if (covered === 0 && isRuleTarget) {
+    throw cannotRun(`no violation in this graph matches ${describeAccepted(target)}`, [
+      'Run flowatlas rules to see the violations, each with the service it starts in and the file it crosses in.',
+    ]);
+  }
+  if (isRuleTarget && (options.note ?? '').trim() === '') {
+    throw cannotRun('a rule violation is accepted for a reason: add --note "<why>"', [
+      `It would excuse ${covered} violation${covered === 1 ? '' : 's'} today; --dry-run lists them.`,
+    ]);
+  }
   if (covered === 0) {
     throw cannotRun(`no gap in this graph matches ${describeAccepted(target)}`, [
       'Run flowatlas doctor to see the reasons, or search({kinds: ["gaps"]}) in the MCP for gap ids.',
@@ -170,16 +188,49 @@ export const runAccept = (argument: string | undefined, options: AcceptOptions =
   }
   const next = withAccepted(current, entry);
   const path = saveAccepted(dbPath, next);
-  print(`accepted: ${describe(target)} (${covered} gap${covered === 1 ? '' : 's'})`);
+  print(`accepted: ${describe(target)} (${noun(covered)})`);
   print(path);
   return { path, accepted: next, covered };
+};
+
+/** What an accept of a rule's violations is written as: `rule:<name>`. */
+const RULE_PREFIX = 'rule:';
+
+/** The rows one entry covers, as a dry run lists them: `service  file:line  message`. */
+const unresolvedMatched = (db: GraphDb, entry: AcceptedGap): string[] => {
+  const rule = compileAccepted([entry]);
+  return db
+    .allUnresolved()
+    .filter((row) => rule.match(row) !== undefined)
+    .map((row) => `${row.service ?? ''}  ${row.file ?? ''}${row.line === null ? '' : `:${row.line}`}  ${row.message}`);
+};
+
+/**
+ * The violations of one rule an entry covers (P114), checked over the graph
+ * with nothing excused, so the count is what this entry would excuse.
+ */
+const ruleViolationsMatched = (db: GraphDb, options: AcceptOptions, entry: AcceptedGap): string[] => {
+  const name = entry.reason.slice(RULE_PREFIX.length);
+  const { ruleSet } = rulesContextOf(options);
+  const rule = ruleSet.rules.find((each) => each.name === name);
+  if (rule === undefined) {
+    throw cannotRun(`no rule named ${JSON.stringify(name)} is configured`, [
+      ruleSet.rules.length === 0 ? 'Add rules[] to flowatlas.config.json first.' : `Configured rules: ${ruleSet.rules.map((each) => each.name).join(', ')}.`,
+    ]);
+  }
+  const report = ruleReportOf(db, { ...ruleSet, rules: [rule] });
+  const nodes = new Map(db.allNodes().map((node) => [node.id, node]));
+  const test = compileAccepted([entry]);
+  return report.violations
+    .filter((violation) => test.match(ruleGapOf(violation, nodes)) !== undefined)
+    .map((violation) => `${violation.fromService}  ${violation.at === undefined ? '' : `${violation.at.file}${violation.at.line === undefined ? '' : `:${violation.at.line}`}`}  ${violation.message}`);
 };
 
 export const registerAccept = (program: Command): void => {
   program
     .command('accept')
     .description('accept a known gap by reason or gap id, or every gap like one by rule, so doctor and the checks show only new ones')
-    .argument('[reason-or-id]', 'a reason such as channel-dynamic, or a gap id gap:<service>|<file>|<reason>')
+    .argument('[reason-or-id]', 'a reason such as channel-dynamic, a gap id gap:<service>|<file>|<reason>, or rule:<name> for a rule\'s violations')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--service <name>', 'accept the reason only in this service')

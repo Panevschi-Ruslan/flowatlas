@@ -17,6 +17,7 @@ import {
   type DiffReport,
   type FlowChange,
   type LostJoin,
+  type RuleViolation,
   type TypeChange,
 } from '@flowatlas/linker';
 import { groupEntries, reachableSummary } from '../query/callers.js';
@@ -372,6 +373,59 @@ const contractLines = (report: DiffReport, options: DiffMarkdownOptions & { maxR
   return lines;
 };
 
+const ruleRows = (violations: readonly RuleViolation[]): string[] => [
+  row(['rule', 'severity', 'what crossed', 'where', 'confidence']),
+  row(['---', '---', '---', '---', '---']),
+  ...violations.map((item) => {
+    const place = item.at === undefined ? '—' : code(`${item.at.service} ${item.at.file}${item.at.line === undefined ? '' : `:${item.at.line}`}`);
+    return row([code(item.rule), item.severity, escape(item.message), place, `${item.confidence}${item.heuristic ? ' (guess)' : ''}`]);
+  }),
+  '',
+];
+
+/**
+ * The architecture rules (P114): what this revision broke, fixed, left as it
+ * was and had excused. Left out when no rule has a violation on either side.
+ */
+const ruleLines = (report: DiffReport, options: DiffMarkdownOptions & { maxRows: number }): string[] => {
+  const { rules } = report;
+  if (rules.new.length + rules.fixed.length + rules.existing.length + rules.excused.length === 0) return [];
+  const lines = [
+    '## Rules',
+    '',
+    `${rules.new.length} new, ${rules.fixed.length} fixed, ${rules.existing.length} already there, ${rules.excused.length} excused`,
+    '',
+  ];
+  if (rules.new.length === 0) lines.push('This revision breaks no architecture rule it did not already break.', '');
+  else {
+    const shown = cut(rules.new, options.maxRows);
+    lines.push('### New', '', ...ruleRows(shown.rows), ...more(shown.dropped, 'new violations', options.file));
+    const why = [...new Map(shown.rows.filter((item) => item.note !== undefined).map((item) => [item.rule, item.note as string])).entries()];
+    if (why.length > 0) lines.push(...why.map(([rule, note]) => `- ${code(rule)}: ${escape(note)}`), '');
+  }
+  if (rules.fixed.length > 0) {
+    const shown = cut(rules.fixed, options.maxRows);
+    lines.push('### Fixed', '', ...ruleRows(shown.rows), ...more(shown.dropped, 'fixed violations', options.file));
+  }
+  if (rules.existing.length > 0) {
+    const shown = cut(rules.existing, options.maxRows);
+    lines.push('### Already there', '', 'Not introduced by this revision, and not counted against it.', '', ...ruleRows(shown.rows), ...more(shown.dropped, 'violations already there', options.file));
+  }
+  if (rules.excused.length > 0) {
+    const shown = cut(rules.excused, options.maxRows);
+    lines.push(
+      '### Excused',
+      '',
+      '`flowatlas accept rule:<name>` says this one is known. Never counted, never hidden.',
+      '',
+      ...shown.rows.map((item) => `- ${code(item.rule)}: ${escape(item.message)} — ${escape(item.excusedBy ?? 'accepted')}`),
+      '',
+      ...more(shown.dropped, 'excused violations', options.file),
+    );
+  }
+  return lines;
+};
+
 /** How each kind of lost join is said in the table's last column. */
 const LOST_SAY: Readonly<Record<LostJoin['kind'], (lost: LostJoin) => string>> = {
   'target-gone': (lost) => `${lost.targetRemoved ? 'its target is gone' : 'joins nothing'}; now ${code(lost.now)}`,
@@ -565,6 +619,7 @@ export const renderDiffMarkdown = (report: DiffReport, options: DiffMarkdownOpti
       ...impactLines(report, settings),
       ...flowLines(report, settings, room),
       ...contractLines(report, settings),
+      ...ruleLines(report, settings),
       ...joinLines(report, settings),
       ...gapLines(report, settings),
       ...typeLines(report, settings),
@@ -593,6 +648,7 @@ export const summariseDiff = (report: DiffReport): string => {
     ` · contracts ${contracts.new.length} new, ${contracts.fixed.length} fixed, ${contracts.preexisting.length} already there` +
     ` · lost joins ${report.joins.lost.length} · gaps +${report.unresolved.added.length}/-${report.unresolved.removed.length}` +
     ` · impact ${report.impact.length} node(s)` +
-    ` · flows ${report.flows.filter(flowChanged).length} changed`
+    ` · flows ${report.flows.filter(flowChanged).length} changed` +
+    ` · rules ${report.rules.new.length} new, ${report.rules.fixed.length} fixed`
   );
 };

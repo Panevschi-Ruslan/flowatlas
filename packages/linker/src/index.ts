@@ -53,13 +53,40 @@ export { DIFF_WARNINGS } from './diff/report.js';
 export type {
   DiffContracts,
   DiffReport,
+  DiffRules,
   DiffSide,
   DiffSource,
   DiffTiming,
   DiffWarning,
   DiffWarningReason,
 } from './diff/report.js';
-export { graphDiffSchema, graphDiffSchemaV1, graphDiffSchemaV2, parseGraphDiff } from './diff/schema.js';
+export { graphDiffSchema, graphDiffSchemaV1, graphDiffSchemaV2, graphDiffSchemaV3, parseGraphDiff } from './diff/schema.js';
+export {
+  DEFAULT_RULE_WALK,
+  evaluateRules,
+  RULE_FAIL_LEVELS,
+  ruleFailures,
+  ruleGapOf,
+  ruleKeyOf,
+  saySelector,
+  stableNodeKey,
+} from './rules/evaluate.js';
+export type { EvaluateOptions, RuleFailLevel } from './rules/evaluate.js';
+export { partialServicesOf, ruleGraphOf } from './rules/graph.js';
+export { parseRulesReport, ruleHopSchema, rulesReportSchema, ruleUncheckedSchema, ruleViolationSchema } from './rules/schema.js';
+export { RULE_REASONS, RULE_STATUSES, RULES_FILE, RULES_FORMAT_VERSION } from './rules/types.js';
+export type {
+  RuleGraph,
+  RuleHop,
+  RuleNote,
+  RulePlace,
+  RuleResult,
+  RulesReport,
+  RuleStatus,
+  RulesSummary,
+  RuleUnchecked,
+  RuleViolation,
+} from './rules/types.js';
 export {
   countSteps,
   diffSequences,
@@ -190,7 +217,7 @@ export type {
   RouteClass,
   RouteFacts,
 } from './analysis/dead.js';
-export { methodsByOwner, methodsOf, ownerOf } from './analysis/graph.js';
+export { methodsByOwner, methodsOf, ownerOf, weakest } from './analysis/graph.js';
 export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, rankFindings } from './analysis/findings.js';
 export type {
   CollectedFindings,

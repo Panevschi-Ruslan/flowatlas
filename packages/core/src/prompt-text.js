@@ -433,6 +433,22 @@ const promptGapLine = (gap) => {
   return `- ${promptCode(gap.reason)}${place.length === 0 ? '' : ` at ${place}`}: ${gap.message}.${ways}${hint}`.replace(/\.\./g, '.');
 };
 
+/* ── Rules it breaks (P114) ── */
+
+/** One broken rule: its name and severity, what crossed, where, and why the rule exists. */
+const promptRuleLine = (item) => {
+  const place = promptWhere(item);
+  const guess = PROMPT_CERTAIN.has(item.confidence) ? '' : ' (best guess)';
+  const why = item.note === undefined ? '' : ` Why: ${item.note}`;
+  return `- ${promptCode(item.rule)} · ${item.severity}${guess}: ${item.message}${place.length === 0 ? '' : ` at ${place}`}.${why}`.replace(/\.\./g, '.');
+};
+
+const promptRuleLines = (rules, limits) => {
+  const lines = rules.slice(0, limits.maxGaps).map(promptRuleLine);
+  if (rules.length > limits.maxGaps) lines.push(`- … ${rules.length - limits.maxGaps} more; check_rules lists them all`);
+  return lines;
+};
+
 /* ── Sections ── */
 
 const promptSection = (title, lines) => (lines.length === 0 ? [] : ['', `## ${title}`, '', ...lines]);
@@ -634,6 +650,7 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
     ...head,
     ...promptSection('In front of it', promptAccessLines(subject.access)),
     ...(fails.length === 0 ? [] : promptSection(`Can fail with ${promptFailChips(fails).join(' · ')}`, promptFailLines(fails, bounds))),
+    ...promptSection(`Rules it breaks · ${(subject.rules ?? []).length}`, promptRuleLines(subject.rules ?? [], bounds)),
     ...(isChannel
       ? promptSection(
           `Published by · ${producers.length}`,

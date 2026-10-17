@@ -1,6 +1,7 @@
 import { kindOfRow, waysInOf, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
+import type { RuleViolation } from '../rules/types.js';
 import { deadChannels } from './dead.js';
 import { byId } from './graph.js';
 
@@ -12,9 +13,11 @@ import { byId } from './graph.js';
  * P89), a route nothing guards (`route-unguarded`, P76), a field two services
  * disagree about (the contracts report's errors and warnings) and a channel
  * with one end. Every other reason core classes a finding (P81) is listed under
- * its reason, so a finding added later is listed without a change here.
+ * its reason, so a finding added later is listed without a change here. A
+ * broken architecture rule (P114) is a finding too, though no row records it:
+ * kind `rule`, ranked by severity, then by the ways in reaching where it starts.
  */
-export const FINDING_KINDS = ['n-plus-one', 'unguarded', 'contract-break', 'one-ended-channel'] as const;
+export const FINDING_KINDS = ['n-plus-one', 'unguarded', 'contract-break', 'one-ended-channel', 'rule'] as const;
 export type FindingKindName = (typeof FINDING_KINDS)[number];
 
 /** The reasons whose rows are listed under a name of their own. */
@@ -70,11 +73,16 @@ export interface ContractBreak {
 /** Severities a contract finding is listed at, worst first; `info` is a remark, not a break. */
 const SEVERITY_RANK: Readonly<Record<string, number>> = { error: 0, warning: 1 };
 
+/** A rule's severities, worst first: an `info` rule is still a rule somebody wrote down. */
+const RULE_SEVERITY_RANK: Readonly<Record<string, number>> = { error: 0, warning: 1, info: 2 };
+
 export interface FindingSources {
   /** The rows to read, already split from the accepted ones. */
   rows: readonly AnchoredUnresolvedRow[];
   report?: LinkReport;
   contracts?: readonly ContractBreak[];
+  /** The violations `evaluateRules` found, excused ones left out (P114). */
+  rules?: readonly RuleViolation[];
 }
 
 export interface CollectedFindings {
@@ -179,6 +187,20 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
       rank: 0,
     });
   }
+  for (const violation of sources.rules ?? []) {
+    const loc = violation.at === undefined ? undefined : violation.at.line === undefined ? violation.at.file : `${violation.at.file}:${violation.at.line}`;
+    findings.push({
+      kind: 'rule',
+      id: violation.from,
+      to: violation.to,
+      service: violation.fromService,
+      ...(loc === undefined ? {} : { loc }),
+      message: `${violation.rule}: ${violation.message}`,
+      severity: violation.severity,
+      reach: {},
+      rank: 0,
+    });
+  }
   return { findings, notes };
 };
 
@@ -228,6 +250,14 @@ const RANKERS: Readonly<Record<string, Ranker>> = {
     measure: (db, row) => ({ callers: waysInto(db, row.id) }),
     order: (a, b) =>
       (SEVERITY_RANK[a.severity ?? ''] ?? 9) - (SEVERITY_RANK[b.severity ?? ''] ?? 9) ||
+      most(a.reach.callers, b.reach.callers) ||
+      byPlace(a, b) ||
+      byId(a.to ?? '', b.to ?? ''),
+  },
+  rule: {
+    measure: (db, row) => ({ callers: waysInto(db, row.id) }),
+    order: (a, b) =>
+      (RULE_SEVERITY_RANK[a.severity ?? ''] ?? 9) - (RULE_SEVERITY_RANK[b.severity ?? ''] ?? 9) ||
       most(a.reach.callers, b.reach.callers) ||
       byPlace(a, b) ||
       byId(a.to ?? '', b.to ?? ''),

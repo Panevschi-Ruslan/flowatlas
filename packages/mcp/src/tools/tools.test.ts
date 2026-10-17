@@ -59,6 +59,7 @@ describe('the tools a session is offered', () => {
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
       'check_contract',
+      'check_rules',
       'dead',
       'describe_for_prompt',
       'find_symbol',
@@ -106,12 +107,19 @@ describe('the tools a session is offered', () => {
    * 9,659 and 27,446, inside both ceilings. Its prompts and resources are
    * listed apart (`prompts/list`, `resources/list`) and cost the tool list
    * nothing.
+   *
+   * Raised by P114, which adds the tool its ticket asks for, `check_rules`
+   * (inputs `rule`, `service`, `maxNodes`, `offset`, a one-line description),
+   * and the optional `rules` counts on `start_here`'s output schema: 10,063
+   * and 28,200 after, from 9,659 and 27,446, ceilings set about a hundred over
+   * as before. A tool cannot be added inside 41 characters, and nothing in
+   * the others could give back 400 without losing a parameter's meaning.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(9700);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(27500);
+    expect(read.length).toBeLessThan(10100);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(28300);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

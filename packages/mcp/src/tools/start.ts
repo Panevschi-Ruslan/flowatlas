@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { nextFor, withNext } from '../query/next.js';
 import { START_LIMITS, summariseProject, type StartSummary } from '../query/start.js';
 import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
+import { rulesReportOf } from './rules.js';
 
 /** A reason, how often, where, and the first place it was seen: one row of `topGaps` or `topFindings`. */
 const reasonOutput = z
@@ -42,6 +43,8 @@ export const startOutput = {
   topFindings: z.array(reasonOutput),
   channels: z.object({ noConsumers: z.array(z.string()), noProducers: z.array(z.string()) }),
   startFrom: z.array(nodeOutput),
+  /** The architecture rules' violations by severity, and rules not checked (P114); absent with no rules. */
+  rules: z.object({ errors: z.number(), warnings: z.number(), unchecked: z.number() }).optional(),
   next: nextOutput,
 };
 
@@ -92,12 +95,24 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
       withDb(ctx.handle, (db) => {
         const summary = startSummaryOf(db, input.service, input.perService);
         const lonely = summary.channels.noConsumers[0] ?? summary.channels.noProducers[0];
+        const report = rulesReportOf(db, ctx);
+        const touches = (item: { fromService: string; toService: string | null }): boolean =>
+          input.service === undefined || item.fromService === input.service || item.toService === input.service;
+        const broken = report?.violations.filter(touches) ?? [];
+        const rules =
+          report === undefined
+            ? undefined
+            : {
+                errors: broken.filter((item) => item.severity === 'error').length,
+                warnings: broken.filter((item) => item.severity === 'warning').length,
+                unchecked: report.unchecked.length,
+              };
         return withNext(
-          summary,
-          nextFor(
-            summary.startFrom[0],
-            lonely === undefined ? undefined : { id: lonely, type: 'channel' },
-          ).slice(0, 3),
+          { ...summary, ...(rules === undefined ? {} : { rules }) },
+          [
+            ...(rules !== undefined && rules.errors > 0 ? [`check_rules(${input.service === undefined ? '' : `{service: ${JSON.stringify(input.service)}}`})`] : []),
+            ...nextFor(summary.startFrom[0], lonely === undefined ? undefined : { id: lonely, type: 'channel' }),
+          ].slice(0, 3),
         );
       }),
   );

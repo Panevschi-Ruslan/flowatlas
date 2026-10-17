@@ -74,6 +74,12 @@ export interface Baseline {
   markers: { warnings: number };
   /** The same for contracts: recorded for a reader, never compared. */
   contracts: { warnings: number; infos: number; ignored: number };
+  /**
+   * The rule violations accepted, by key (`rule|<name>|<from>|<to>`, or
+   * `rule|<name>|unchecked|<side>`), version 2 (P114). Keys carry no line
+   * (D5). A version-1 baseline reads as `{}`: nothing accepted.
+   */
+  rules?: Record<string, 1>;
 }
 
 const counts = z.record(z.string(), z.number().int().nonnegative());
@@ -112,7 +118,12 @@ export const baselineSchema = z.object({
     infos: z.number().int().nonnegative(),
     ignored: z.number().int().nonnegative(),
   }),
+  rules: z.record(z.string(), z.literal(1)).default({}),
 });
+
+/** The rule keys a run would accept: every violation nothing excused, and every rule that could not be checked. */
+export const rulesSnapshotOf = (report: { violations: ReadonlyArray<{ key: string }>; unchecked: ReadonlyArray<{ key: string }> }): Record<string, 1> =>
+  Object.fromEntries([...report.violations, ...report.unchecked].map((item) => item.key).sort().map((key) => [key, 1 as const]));
 
 /**
  * The symbol as a key can hold it: one line, and not an essay.

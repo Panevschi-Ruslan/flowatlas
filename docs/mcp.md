@@ -73,8 +73,8 @@ and let it talk on stdin and stdout.
 `find_symbol`, `search`, `get_flow`, `who_calls`, `impact`, `who_emits`,
 `who_consumes`, `get_type`, `type_usage` and `what_changed`: 0 is ids only, 1 (the default)
 adds `file:line`, service and kind, 2 adds what the reader knows about each
-row, and 3 is answered at 2 and says so. Those tools, `check_contract`, `dead`
-and `findings` take
+row, and 3 is answered at 2 and says so. Those tools, `check_contract`, `dead`,
+`findings` and `check_rules` take
 `maxNodes`, the most rows an answer holds: 150 by default, 60 for `get_flow`,
 which also stops at about `maxChars` characters (12,000). `start_here`, `cant_follow`,
 `describe_for_prompt` and `get_source` take neither: they are bounded by their
@@ -104,7 +104,7 @@ running a tool that might can skip asking.
 A list reads a page at a time. `list_entries`, `find_symbol`, `search`,
 `who_emits`, `who_consumes`, `impact` (its `entries`), `what_changed` (every
 list), `cant_follow` (its `causes`), `dead` (its `rows`), `findings` (one kind's
-`rows`) and `type_usage` (every group at once) take `offset`, 0 by default. An answer
+`rows`), `check_rules` (its `violations`) and `type_usage` (every group at once) take `offset`, 0 by default. An answer
 that was cut says `total`, `nextOffset` and `truncated: "n more; next page
 offset k"`, and `next` starts with the same call from that offset:
 
@@ -149,7 +149,7 @@ all take the same optional `service` filter.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
+| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, a few entry ids to start from, and with rules configured `rules: { errors, warnings, unchecked }` (`next` then starts with `check_rules()`) | `service`, `perService` |
 | `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars` |
 
 `describe_for_prompt` and the page's *Copy as prompt* write the same text
@@ -163,6 +163,11 @@ same for every subject:
 - *In front of it* (the checks and opt-outs, P76) and *Can fail with* with the
   statuses in the heading, one line per status and exception with how many
   places raise it (P87).
+- *Rules it breaks · n* (P114): each architecture rule a violation of runs
+  through the subject or one of its steps (for a service, any of its nodes),
+  with its severity, what crossed, where, `(best guess)` along a guessed edge
+  and the rule's note. The server writes it; the page's *Copy as prompt* has no
+  rules to read and leaves it out.
 - For a channel, *Published by · n* and *Consumed by · n*, each consumer with
   the steps under it; for a check, *Where · n*, every row of the gap id at its
   line with the node it is on; for a symbol or a check, *Reached from*, the
@@ -247,7 +252,15 @@ pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
 | Tool | Answers | Takes |
 |---|---|---|
 | `dead` | whether one node is dead, with what could make that wrong; or, without `id`, every row `flowatlas dead` lists, verdict first | `id`, or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `offset` |
-| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, or a finding's reason), `service`, `offset` |
+| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `offset` |
+| `check_rules` | the architecture rules of the configuration (P114), checked over the graph: each rule's status (`held`, `broken`, `unchecked`), each violation with its two ends, where it crosses (`loc`), the edge kind, the weakest confidence, `heuristic` for a guess, the rule's note and `next` (`get_flow` on the way in it starts behind, `get_source` on the crossing), the rules that could not be checked (`rule-matches-nothing`) and how many an accept excused | `rule`, `service`, `maxNodes`, `offset` |
+
+`check_rules` calls the function `flowatlas rules` calls (the linker's
+`evaluateRules`), with `accepted.json`'s `rule:<name>` entries excusing what
+they cover, so the two list the same violations. A `get_flow` step whose hop a
+violation runs along carries `violates: [rule names]`, and a broken rule is a
+`findings` kind of its own (`rule`, ranked by severity, then by the ways in
+reaching where it starts, shown by `check_rules({rule})`).
 
 `dead` reads the same functions `flowatlas dead` does (the linker's), so the
 two cannot disagree; a test compares them on three fixtures. A **verdict** is
@@ -553,22 +566,24 @@ order - `+ orders → billing POST /invoices`, `- gateway → orders GET
 (required))`, `+ gateway stops here: target-route-not-found` - at most 12 of
 them and a line counting the rest. The same steps `flowatlas diff` draws as a
 sequence diagram; an agent gets the text, never the diagram. A `diff.json` of
-format 2 has no flows, and says nothing less about the verdict.
+format 2 has no flows; the verdict does not read them.
 
 **The verdict.** `what_changed({verdict: true})` adds `verdict` - `safe`,
 `unsafe` or `unknown` - and `because`, one sentence per reason, unsafe ones
 first. The rule is fixed, so a reviewer can disagree with a reason rather than
 with a score:
 
-- **unsafe**: a new contract error; a call whose target went (it joined a
+- **unsafe**: a new contract error; a new violation of an architecture rule at
+  `error` along edges that are not guesses (P114); a call whose target went (it joined a
   route on the base side and joins nothing now), or a channel left with no
   producer or no consumer; a removed way in that another service still calls.
 - **unknown**: a service the base ref could not be read for (read from its
   working tree on both sides, so reported unchanged without being compared); a
   new gap on a path from a changed node back to a way in, which the reading
-  cannot see past; a `diff.json` of format 1, which holds no gap rows ("rerun
-  flowatlas diff for new gaps"). A format-2 file, which holds no flows, is read
-  as it is: the verdict does not read flows.
+  cannot see past; a `diff.json` older than format 4, which holds no rule
+  violations (format 1 no gap rows either: "rerun flowatlas diff for new gaps,
+  lost joins and rule violations"). The verdict does not read flows, so their
+  absence decides nothing.
 - **safe** otherwise.
 
 Beside it: `newGaps` (gap ids the head has and the base does not, each with

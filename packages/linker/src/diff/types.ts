@@ -14,10 +14,12 @@ import type { Confidence, TypeEntry } from '@flowatlas/core';
  * 2 (P96) added `unresolved` (the gaps and findings each side has that the
  * other does not, by gap id) and `joins` (the calls that stopped joining).
  * 3 (P116) added `flows`: each way in the impact reaches, walked on both
- * sides and compared step by step. Every bump adds its sections to `DIFF_SECTIONS` and a lift in `schema.ts`, so
- * a document an older flowatlas wrote is still read.
+ * sides and compared step by step. 4 (P114) added `rules`: the architecture
+ * rules' violations new, fixed, already there and excused. Every bump adds its
+ * sections to `DIFF_SECTIONS` and a lift in `schema.ts`, so a document an
+ * older flowatlas wrote is still read.
  */
-export const DIFF_FORMAT_VERSION = 3;
+export const DIFF_FORMAT_VERSION = 4;
 
 /**
  * The sections of `diff.json` by the format that introduced them.
@@ -30,6 +32,7 @@ export const DIFF_SECTIONS: Readonly<Record<string, number>> = Object.freeze({
   unresolved: 2,
   joins: 2,
   flows: 3,
+  rules: 4,
 });
 
 /** The sections a document of this format predates, in `DIFF_SECTIONS` order. */

@@ -1,0 +1,105 @@
+{
+  "rules": [
+    {
+      "name": "frontends-reach-only-edge",
+      "shape": "tags",
+      "severity": "error",
+      "status": "broken",
+      "violations": 1,
+      "note": "the browser talks to the gateway, never to a domain service"
+    },
+    {
+      "name": "only-orders-writes-orders",
+      "shape": "only",
+      "severity": "error",
+      "status": "broken",
+      "violations": 1,
+      "note": "orders owns its table; everyone else asks orders"
+    },
+    {
+      "name": "only-billing-consumes-order-events",
+      "shape": "only",
+      "severity": "error",
+      "status": "broken",
+      "violations": 1,
+      "note": "order events are billing's to act on"
+    },
+    {
+      "name": "order-created-keeps-a-consumer",
+      "shape": "reachable",
+      "severity": "error",
+      "status": "held",
+      "violations": 0,
+      "note": "an order nobody invoices is lost money"
+    },
+    {
+      "name": "typo-rule",
+      "shape": "forbid",
+      "severity": "error",
+      "status": "unchecked",
+      "violations": 0,
+      "note": "names a service that does not exist, so it is never a pass"
+    }
+  ],
+  "violations": [
+    {
+      "rule": "frontends-reach-only-edge",
+      "severity": "error",
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:34:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "service": "web",
+      "loc": "src/app/orders-api.service.ts:34",
+      "via": "hits",
+      "confidence": "static",
+      "message": "web (frontend) requests orders GET /orders/:param, and orders carries none of edge",
+      "note": "the browser talks to the gateway, never to a domain service",
+      "next": [
+        "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:34:12\"})"
+      ]
+    },
+    {
+      "rule": "only-billing-consumes-order-events",
+      "severity": "error",
+      "from": "consumer:gateway#src/audit/order-audit.consumer.ts:OrderAuditConsumer.onOrderCreated",
+      "to": "channel:order.created",
+      "service": "gateway",
+      "loc": "src/audit/order-audit.consumer.ts:14",
+      "via": "consumes",
+      "confidence": "static",
+      "message": "gateway OrderAuditConsumer.onOrderCreated consumes channel order.created, which only service billing may",
+      "note": "order events are billing's to act on",
+      "next": [
+        "get_flow({entry: \"consumer:gateway#src/audit/order-audit.consumer.ts:OrderAuditConsumer.onOrderCreated\"})",
+        "get_source({symbol: \"consumer:gateway#src/audit/order-audit.consumer.ts:OrderAuditConsumer.onOrderCreated\"})"
+      ]
+    },
+    {
+      "rule": "only-orders-writes-orders",
+      "severity": "error",
+      "from": "db_query:billing#src/invoices/invoices.service.ts:33:11",
+      "to": "table:billing#orders",
+      "service": "billing",
+      "loc": "src/invoices/invoices.service.ts:33",
+      "via": "queries",
+      "confidence": "static",
+      "message": "billing writes table orders (billing), which only service orders may",
+      "note": "orders owns its table; everyone else asks orders",
+      "next": [
+        "get_flow({entry: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})",
+        "get_source({symbol: \"db_query:billing#src/invoices/invoices.service.ts:33:11\"})"
+      ]
+    }
+  ],
+  "total": 3,
+  "unchecked": [
+    {
+      "rule": "typo-rule",
+      "reason": "rule-matches-nothing",
+      "message": "not checked (to): service \"biling\" names nothing in this graph; did you mean billing?"
+    }
+  ],
+  "next": [
+    "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:34:12\"})",
+    "get_flow({entry: \"consumer:gateway#src/audit/order-audit.consumer.ts:OrderAuditConsumer.onOrderCreated\"})"
+  ]
+}

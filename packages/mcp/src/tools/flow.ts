@@ -9,6 +9,20 @@ import { nearNames } from './entries.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { slimTree } from '../query/wire.js';
 import { bound, callOf, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
+import { rulesReportOf, violatedHops } from './rules.js';
+
+/** Marks each step whose hop in a violation of an architecture rule runs along (P114). */
+const markViolations = (root: FlowNode, hops: ReadonlyMap<string, string[]>): void => {
+  if (hops.size === 0) return;
+  const visit = (row: FlowNode): void => {
+    for (const child of row.children) {
+      const rules = hops.get(`${row.node.id}|${child.node.id}`) ?? hops.get(`${child.node.id}|${row.node.id}`);
+      if (rules !== undefined && child.node.ref !== true) child.violates = rules;
+      visit(child);
+    }
+  };
+  visit(root);
+};
 
 /**
  * What `get_flow` shows when nobody says (P92 D4): a tree, not a list, so fewer
@@ -86,6 +100,7 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           maxChars: input.maxChars,
           detail,
         });
+        markViolations(flow.root, violatedHops(rulesReportOf(db, ctx)));
         const counts = loadObservedCounts(ctx.handle.path);
         if (counts !== undefined) {
           const seen = nodeSeen(counts, ref.id);

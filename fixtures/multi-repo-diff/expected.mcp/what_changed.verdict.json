@@ -97,6 +97,7 @@
   "verdict": "unsafe",
   "because": [
     "1 new contract error: receiver orders requires `channel: string`; sender gateway does not send it",
+    "1 new violation of an architecture rule: `billing-stays-out-of-gift-wrapping`: billing GiftWrapConsumer.onGiftWrapped consumes channel order.gift-wrapped",
     "1 call lost its target: `http_out:gateway#src/clients/orders.client.ts:26:12` joined `entry:orders:http:GET:/shipments/:param` and is now target-route-not-found",
     "1 removed way in is still called from another service: `entry:orders:http:GET:/shipments/:param` (called from gateway)",
     "gateway was not read at the base ref, so it is reported unchanged without being compared",

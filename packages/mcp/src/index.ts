@@ -8,6 +8,7 @@
 export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS } from './server.js';
 export type { ServerOptions } from './server.js';
 export { DbHandle } from './query/db.js';
+export { ruleBreaksAt, rulesReportOf, violatedHops } from './tools/rules.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';
 export { resolveEntryRef, resolveSymbol, isResolved } from './query/entry-ref.js';
 export type { EntryRef, Resolved } from './query/entry-ref.js';

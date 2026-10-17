@@ -107,4 +107,39 @@ describe('findings', () => {
       '3 b warns 0',
     ]);
   });
+  it('lists a broken architecture rule as kind rule, errors first, then the busier start (P114)', () => {
+    const db = buildTestDb({
+      nodes: [route('entry:web:http:GET:/a'), node('web#src/a.ts:A.call'), node('web#src/b.ts:B.call')],
+      edges: [edge('entry:web:http:GET:/a', 'web#src/b.ts:B.call', { type: 'handles' })],
+      unresolved: [],
+    });
+    const violation = (from: string, severity: 'error' | 'warning', line: number) => ({
+      rule: severity === 'error' ? 'web-not-billing' : 'web-quiet',
+      shape: 'forbid' as const,
+      severity,
+      key: `rule|x|${from}|to`,
+      from,
+      to: 'entry:billing:http:POST:/invoices',
+      fromService: 'web',
+      toService: 'billing',
+      via: 'hits',
+      path: [],
+      at: { service: 'web', file: 'src/a.ts', line },
+      confidence: 'static' as const,
+      heuristic: false,
+      message: 'web requests billing POST /invoices',
+    });
+    const { findings } = collectFindings(db, {
+      rows: [],
+      rules: [violation('web#src/a.ts:A.call', 'warning', 3), violation('web#src/a.ts:A.call', 'error', 4), violation('web#src/b.ts:B.call', 'error', 5)],
+    });
+    const ranked = rankFindings(db, findings);
+    db.close();
+    expect(ranked.map((row) => `${row.kind} ${row.rank} ${row.id} ${row.severity} ${row.loc}`)).toEqual([
+      'rule 1 web#src/b.ts:B.call error src/a.ts:5',
+      'rule 2 web#src/a.ts:A.call error src/a.ts:4',
+      'rule 3 web#src/a.ts:A.call warning src/a.ts:3',
+    ]);
+    expect(ranked[0]?.message).toBe('web-not-billing: web requests billing POST /invoices');
+  });
 });

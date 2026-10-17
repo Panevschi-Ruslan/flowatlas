@@ -8,13 +8,14 @@
  *
  * This is the phase where the graph stops describing and starts deciding: with
  * `--fail-on-contract-break` a pipeline blocks a merge on a boundary this branch
- * broke — and only on the ones it broke.
+ * broke — and only on the ones it broke. `--fail-on-rule-break` does the same
+ * for the architecture rules (P114): a violation this branch introduced.
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
-import { loadConfig, SCHEMA_VERSION, type LoadedConfig } from '@flowatlas/core';
+import { loadConfig, ruleSetOf, SCHEMA_VERSION, type LoadedConfig } from '@flowatlas/core';
 import {
   blastRadius,
   diffGraphs,
@@ -37,6 +38,8 @@ import { processIo, type QueryIo } from '../query/answer.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
 import { DIFF_MARKDOWN_DEFAULTS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
 import { flowChanges } from '../report/flow-changes.js';
+import { classifyRules, ruleBreaks } from '../report/rule-delta.js';
+import { ruleReportOf } from './rules.js';
 import { sequenceDetailOf } from './flow.js';
 import { registerCache } from './cache.js';
 
@@ -54,6 +57,8 @@ export interface DiffOptions {
   /** Where to write what was printed. The JSON document is always written too. */
   output?: string;
   failOnContractBreak?: boolean;
+  /** Exit 1 when this revision introduces a violation of an architecture rule at `error` (P114). */
+  failOnRuleBreak?: boolean;
   maxEntries?: string;
   /** Most changed nodes to walk backwards from. The rest are counted (I9). */
   maxNodes?: string;
@@ -87,6 +92,8 @@ export interface DiffRun {
   exitCode: number;
   /** Services neither ref could be read for, when there were any. */
   unread?: string[];
+  /** What a failing run failed on: a new contract error, a new rule violation, or both. */
+  failedOn?: Array<'contract' | 'rule'>;
 }
 
 const oneOf = <T extends string>(
@@ -273,9 +280,14 @@ export const runDiff = async (
       depth: settings.depth,
       disableRules: settings.rules.disable,
     });
-    const { impact, flows } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
+    // The head's rules on both sides, excused by the head's accepted.json: the
+    // question is what this revision does to the rules the project has now.
+    const ruleSet = ruleSetOf(loaded.config);
+    const acceptedBeside = join(loaded.outputDir, 'graph.db');
+    const { impact, flows, rules } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
       const rows = impactOf(dbs, diff, { maxEntries, maxNodes });
       return {
+        rules: classifyRules(ruleReportOf(dbs.base, ruleSet, acceptedBeside), ruleReportOf(dbs.head, ruleSet, acceptedBeside)),
         impact: rows,
         flows: flowChanges({ impact: rows.rows, nodes: diff.nodes, types: diff.types }, dbs, {
           maxFlows,
@@ -327,6 +339,7 @@ export const runDiff = async (
       impact: impact.rows,
       flows: flows.flows,
       contracts,
+      rules,
       warnings,
       timing: {
         baseMs: builtBase.ms,
@@ -376,13 +389,20 @@ export const runDiff = async (
         .map((warning) => warning.service ?? '')
         .filter((name) => name !== ''),
     );
-    const refused = options.failOnContractBreak === true && (breaks.length > 0 || unread.size > 0);
+    const ruleBroken = ruleBreaks(rules, ruleSet.failOnHeuristic);
+    const refusedContracts = options.failOnContractBreak === true && (breaks.length > 0 || unread.size > 0);
+    const refusedRules = options.failOnRuleBreak === true && (ruleBroken.length > 0 || unread.size > 0);
+    const failedOn = [
+      ...(refusedContracts && breaks.length > 0 ? ['contract' as const] : []),
+      ...(refusedRules && ruleBroken.length > 0 ? ['rule' as const] : []),
+    ];
     return {
       report,
       text,
       file,
-      exitCode: refused ? EXIT.failed : EXIT.ok,
+      exitCode: refusedContracts || refusedRules ? EXIT.failed : EXIT.ok,
       ...(unread.size === 0 ? {} : { unread: [...unread] }),
+      ...(failedOn.length === 0 ? {} : { failedOn }),
     };
   } finally {
     if (options.keepWorktrees === true) io.err(`work kept: ${workDir}\n`);
@@ -403,6 +423,7 @@ export const registerDiff = (program: Command): void => {
     .option('--format <name>', `one of ${FORMATS.join(', ')}`)
     .option('--output <file>', 'write what was printed to this file as well')
     .option('--fail-on-contract-break', 'exit 1 when this revision introduces a contract error')
+    .option('--fail-on-rule-break', 'exit 1 when this revision introduces a violation of an architecture rule at error')
     .option('--max-entries <n>', 'most ways in to list per changed node')
     .option('--max-nodes <n>', 'most changed nodes to walk backwards from')
     .option('--max-flows <n>', `most ways in to walk for their flows (default ${DEFAULT_MAX_FLOWS})`)
@@ -416,11 +437,12 @@ export const registerDiff = (program: Command): void => {
     .option('--no-cache', 'read every commit again rather than believing the cache')
     .option('--keep-worktrees', 'leave the detached checkouts on disk, for debugging')
     .action(async (baseRef: string, headRef: string | undefined, options: DiffOptions) => {
-      const { exitCode, unread } = await runDiff(baseRef, headRef, options);
+      const { exitCode, unread, failedOn } = await runDiff(baseRef, headRef, options);
       if (exitCode !== EXIT.ok) {
+        const said = { contract: 'a contract error', rule: 'a violation of an architecture rule' } as const;
         throw new CliError(
           unread === undefined
-            ? 'this revision introduces a contract error'
+            ? `this revision introduces ${(failedOn ?? ['contract']).map((what) => said[what]).join(' and ')}`
             : `${unread.join(', ')} could not be read at either ref, so this comparison does not cover ${unread.length === 1 ? 'it' : 'them'}`,
           EXIT.failed,
         );
