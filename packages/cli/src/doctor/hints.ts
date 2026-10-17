@@ -676,6 +676,39 @@ export const hintFor = (row: Unresolved, context: HintContext = {}): string => {
 /** Whether the catalogue knows this reason at all. */
 export const isKnownReason = (reason: string): boolean => entryOf(HINTS, reason) !== undefined;
 
+/** Single-character edits between two words: insertions, deletions, substitutions. */
+const editsBetween = (a: string, b: string): number => {
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i++) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j++) {
+      const swap = (previous[j - 1] as number) + (a[i - 1] === b[j - 1] ? 0 : 1);
+      current.push(Math.min((previous[j] as number) + 1, (current[j - 1] as number) + 1, swap));
+    }
+    previous = current;
+  }
+  return previous[b.length] as number;
+};
+
+/**
+ * The reasons somebody probably meant by one nobody registered (P141): the
+ * ones that contain it, or that it contains, then the ones a few edits away,
+ * closest first. At most `limit`; none when nothing is close.
+ */
+export const nearestReasons = (text: string, known: readonly string[] = KNOWN_REASONS, limit = 5): string[] => {
+  const wanted = text.toLowerCase();
+  const near = Math.max(2, Math.floor(wanted.length / 3));
+  return known
+    .map((reason) => {
+      const contains = reason.includes(wanted) || wanted.includes(reason);
+      return { reason, score: contains ? 0 : editsBetween(wanted, reason) };
+    })
+    .filter((entry) => entry.score <= near)
+    .sort((a, b) => a.score - b.score || (a.reason < b.reason ? -1 : a.reason > b.reason ? 1 : 0))
+    .slice(0, limit)
+    .map((entry) => entry.reason);
+};
+
 /**
  * What one finding is, in a few words, one and many (P81).
  *

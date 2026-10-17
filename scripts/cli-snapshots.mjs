@@ -250,6 +250,12 @@ const DOCTOR_CASES = [
     (io) =>
       runDoctorCommand({ config: doctorConfig, baseline: doctorBaseline, format: 'github' }, io),
   ],
+  // One reason on its own (P141), every place of it: the nine the report
+  // above lists six of.
+  [
+    'expected.doctor.reason.txt',
+    (io) => runDoctorCommand({ config: doctorConfig, reason: ['unknown-db-package'], maxNodes: '20' }, io),
+  ],
 ];
 
 const foldedFixture = join(root, 'fixtures', 'folded-channels');

@@ -1529,13 +1529,14 @@ installed, and what a service with no way in looks like.
 |---|---|---|
 | `--section <name>` | all five | `unresolved`, `markers`, `desync`, `contracts`, `baseline`; repeatable |
 | `--service <name>` | every one | narrow every section to one repository |
+| `--reason <code>` | every one | only the places of this reason, at every level it is at; repeatable, or a comma list. The sections default to `unresolved` and `desync`, the two made of rows that carry a reason. A reason neither the catalogue nor any row knows stops with exit 2 and the nearest names; `--accept` refuses it. With `--unresolved`, narrows the breakdown the same way |
 | `--strict` | off | exit 1 on a broken annotation, a contract error, or growth past the baseline |
 | `--strict-runtime` | off | exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered (with an observed file) |
 | `--accept` | off | write today's numbers as the baseline |
 | `--baseline <path>` | `<config dir>/flowatlas.baseline.json` | where the accepted numbers live |
 | `--no-baseline` | off | skip the growth check, so `--strict` asks only about annotations and contracts |
 | `--no-contracts` | off | do not run the contract check |
-| `--max-nodes <n>` | 6 per reason | most places named under one reason; the written file is always complete |
+| `--max-nodes <n>` | 6 per reason, 150 per section | most places named under one reason, and rows in each other section; what is printed (text, `github`, and `--format json` with its `truncated` counts) is cut, and the written `doctor.json` is always complete: every row of every reason and section, with no `truncated` field |
 | `--format <name>` | `text` | `text`, `json`, `github` |
 | `--out <dir>` | configured output | where `doctor.json` goes |
 | `--unresolved` | off | instead of the report, what the reader could not follow, grouped by cause and by package |
@@ -1562,7 +1563,8 @@ with no finer cause counts under its own reason, so the total is always the
 report's `sites`. Most places first, each cause with what to do and a few
 `file:line` to open, then the packages on their own: "install this one" is a
 question about a package. Accepted gaps are left out and counted apart, as in
-the report. `--json` prints the same as data (`cantFollowFormatVersion: 1`).
+the report. `--json` prints the same as data (`cantFollowFormatVersion: 1`;
+`reasons` is the `--reason` list it was narrowed to, or `null`).
 
 **What stands in for a package nobody installed.** A clone with nothing
 installed still has, one directory over, the source of the internal packages it

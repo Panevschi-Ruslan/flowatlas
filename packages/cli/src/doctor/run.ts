@@ -68,7 +68,15 @@ export interface DoctorSettings {
   sections?: readonly Section[];
   /** Narrow everything to one service. */
   service?: string;
-  /** Most rows printed per section; the file on disk is always complete (I9). */
+  /**
+   * Narrow the rows to these reasons (`--reason`, P141), as `service` narrows
+   * them to a service: every spelling, already expanded by the caller.
+   */
+  reasons?: readonly string[];
+  /**
+   * Most rows `runDoctor` keeps per section, and per reason; the file on disk
+   * is always complete (I9), because the command writes `runDoctorComplete`.
+   */
   maxNodes?: number;
   /** False for `--no-contracts`. */
   contracts?: boolean;
@@ -414,7 +422,6 @@ const groupByReason = (
   rows: readonly Unresolved[],
   contextOf: (row: Unresolved) => HintContext,
   ignore: ReadonlySet<string>,
-  maxNodes: number,
 ): { groups: ReasonGroup[]; unknown: string[] } => {
   // Keyed by reason *and* level, so a group's level is every member's and not
   // its loudest member's. One reason can hold both: a call whose address is
@@ -456,7 +463,6 @@ const groupByReason = (
       hint: hintFor(row, contextOf(row)),
       ...(waysInOf(row) === undefined ? {} : { waysIn: waysInOf(row) }),
     }));
-    const bounded = cut(drawn, maxNodes);
     groups.push({
       reason,
       level,
@@ -473,8 +479,7 @@ const groupByReason = (
       // that asserted one member's symbol over all of them, and left the
       // sentence it belonged to floating below somebody else's site (R35).
       hint: unanimous(drawn.map((row) => row.hint)) ?? kindHint(reason) ?? genericHint(reason),
-      rows: bounded.rows,
-      ...(bounded.truncated === undefined ? {} : { truncated: bounded.truncated }),
+      rows: drawn,
     });
   }
 
@@ -495,8 +500,7 @@ const groupByReason = (
 const desyncOf = (
   rows: readonly Unresolved[],
   contextOf: (row: Unresolved) => HintContext,
-  maxNodes: number,
-): { rows: DesyncRow[]; truncated?: number } => {
+): { rows: DesyncRow[] } => {
   const found: DesyncRow[] = [];
   for (const row of rows) {
     if (!DESYNC_REASONS.has(row.reason)) continue;
@@ -519,47 +523,89 @@ const desyncOf = (
   found.sort(
     (a, b) => cmp(a.service, b.service) || cmp(a.file, b.file) || a.line - b.line || cmp(a.call, b.call),
   );
-  return cut(found, maxNodes);
+  return { rows: found };
 };
 
 const onService = (row: Unresolved, service: string): boolean => (row.service ?? '') === service;
+
+/** The rows a run is about: one service's, some reasons', or every one. */
+const narrowed = (rows: readonly Unresolved[], settings: DoctorSettings): readonly Unresolved[] => {
+  const reasons = settings.reasons === undefined ? undefined : new Set(settings.reasons);
+  if (settings.service === undefined && reasons === undefined) return rows;
+  return rows.filter(
+    (row) =>
+      (settings.service === undefined || onService(row, settings.service)) &&
+      (reasons === undefined || reasons.has(row.reason)),
+  );
+};
 
 /** Moved to the linker (P80), so every surface demotes the same rows; re-exported for the callers that found it here. */
 export { withAnsweredDemoted };
 
 /**
- * Runs the check over an opened graph.
+ * The report as it is printed: `runDoctorComplete` with each list cut.
  *
  * Pure in the sense that matters: it opens nothing, writes nothing and spawns
  * nothing. The command around it decides where the graph came from and what to
  * do with the exit code; everything that decides the exit code is here, so a
  * test can ask for a verdict without a file system.
  */
-export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): DoctorReport => {
+export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): DoctorReport =>
+  boundDoctorReport(runDoctorComplete(input, settings), settings.maxNodes);
+
+/**
+ * A report cut for printing, every cut said by a `truncated` count (I9).
+ *
+ * Applied after the check rather than inside it, so the report the command
+ * writes to `doctor.json` is the same report with nothing left out (P192):
+ * every count here was taken over the whole list before the cut.
+ *
+ * How many places of one reason to name before saying how many more: the
+ * other sections are tables with a row each; this one is a list of locations,
+ * and one reason can hold hundreds of them. A real project answered `doctor`
+ * with a long run of `db-receiver-name-only` rows, all saying the same
+ * sentence, and the command the README calls "the one to run after a first
+ * build" was a wall of lines nobody reads. What a reader needs from a reason is
+ * the advice, how many places it covers, and enough of them to recognise the
+ * shape; `--max-nodes` is there for the rest, and the written file always has
+ * all of it.
+ */
+export const boundDoctorReport = (report: DoctorReport, maxNodes?: number): DoctorReport => {
+  const perSection = maxNodes ?? 150;
+  const perReason = maxNodes ?? 6;
+  const issues = cut(report.markers.issues, perSection);
+  const desync = cut(report.desync.rows, perSection);
+  const errors = cut(report.contracts.errors, perSection);
+  return {
+    ...report,
+    unresolved: {
+      ...report.unresolved,
+      byReason: report.unresolved.byReason.map((group) => {
+        const bounded = cut(group.rows, perReason);
+        return { ...group, rows: bounded.rows, ...truncatedOf(bounded) };
+      }),
+    },
+    markers: { ...report.markers, issues: issues.rows, ...truncatedOf(issues) },
+    desync: { ...report.desync, rows: desync.rows, ...truncatedOf(desync) },
+    contracts: { ...report.contracts, errors: errors.rows, ...truncatedOf(errors) },
+  };
+};
+
+const truncatedOf = (bounded: { truncated?: number }): { truncated?: number } =>
+  bounded.truncated === undefined ? {} : { truncated: bounded.truncated };
+
+/**
+ * Runs the check over an opened graph, and keeps every row it found: what the
+ * command writes to `doctor.json` (P192). `runDoctor` is the same cut.
+ */
+export const runDoctorComplete = (input: DoctorInput, settings: DoctorSettings = {}): DoctorReport => {
   const sections = [...(settings.sections ?? SECTIONS)];
   const wanted = new Set<Section>(sections);
-  const maxNodes = settings.maxNodes ?? 150;
-  /**
-   * How many places of one reason to name before saying how many more.
-   *
-   * The other sections are tables with a row each; this one is a list of
-   * locations, and one reason can hold hundreds of them. A real project
-   * answered `doctor` with a long run of `db-receiver-name-only` rows, all saying
-   * the same sentence, and the command the README calls "the one to run after a
-   * first build" was a wall of lines nobody reads. What a reader needs from a
-   * reason is the advice, how many places it covers, and enough of them to
-   * recognise the shape; `--max-nodes` is there for the rest, and the written
-   * file always has all of it.
-   */
-  const perReason = settings.maxNodes ?? 6;
   const strict = settings.strict === true;
   const ignore = new Set(settings.ignoreReasons ?? []);
   const { db } = input;
 
-  const rows =
-    settings.service === undefined
-      ? input.unresolved
-      : input.unresolved.filter((row) => onService(row, settings.service as string));
+  const rows = narrowed(input.unresolved, settings);
 
   const skipped = (): { status: SectionStatus } => ({ status: 'skipped' });
 
@@ -601,7 +647,7 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
 
   const snapshot: UnresolvedSnapshot = snapshotOf(levelled, { ignoreReasons: [...ignore] });
   const grouped = wanted.has('unresolved')
-    ? groupByReason(levelled, contextOf, ignore, perReason)
+    ? groupByReason(levelled, contextOf, ignore)
     : { groups: [], unknown: [] };
   const excludedSites = levelled
     .filter((row) => (row.level ?? 'action') === 'action' && ignore.has(row.reason))
@@ -649,15 +695,13 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
                 finding.sender.service === settings.service ||
                 finding.receiver.service === settings.service,
             );
-      const bounded = cut(errors, maxNodes);
       contracts = {
         status: 'ok',
         note: null,
-        errors: bounded.rows,
+        errors,
         errorCount: errors.length,
         ignored: summary.ignored,
         unchecked: summary.unchecked,
-        ...(bounded.truncated === undefined ? {} : { truncated: bounded.truncated }),
       };
     } catch (cause) {
       // A check that cannot run is not a project that is broken, so it says so
@@ -688,7 +732,6 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
       ...(settings.envOwners === undefined ? {} : { envOwners: settings.envOwners }),
       ...(settings.aliases === undefined ? {} : { aliases: settings.aliases }),
     }).filter((issue) => settings.service === undefined || issue.service === settings.service);
-    const bounded = cut(found, maxNodes);
     const annotated = db.allNodes().some((node) => Array.isArray(node.meta?.['markers']));
     markers = {
       status: 'ok',
@@ -699,14 +742,13 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
         : 'no annotation is recorded on any symbol in this graph, so nothing was checked',
       errors: found.filter((issue) => issue.severity === 'error').length,
       warnings: found.filter((issue) => issue.severity === 'warning').length,
-      issues: bounded.rows,
-      ...(bounded.truncated === undefined ? {} : { truncated: bounded.truncated }),
+      issues: found,
     };
   }
 
   // ---- desync -----------------------------------------------------------
   const desync: DoctorReport['desync'] = wanted.has('desync')
-    ? { status: 'ok', ...desyncOf(rows, contextOf, maxNodes) }
+    ? { status: 'ok', ...desyncOf(rows, contextOf) }
     : { ...skipped(), rows: [] };
 
   // ---- baseline ---------------------------------------------------------

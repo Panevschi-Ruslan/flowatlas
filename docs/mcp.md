@@ -5,7 +5,7 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Nineteen tools. Only one of them returns code.
+Twenty-three tools. Only one of them returns code.
 
 ---
 
