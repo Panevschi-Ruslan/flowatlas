@@ -2,8 +2,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted, type AcceptedRead } from '@flowatlas/core';
-import { acceptedSplitOf, type GraphDb } from '@flowatlas/linker';
-import { docsNow } from '@flowatlas/mcp';
+import { acceptedSplitOf, type ContractBreak, type GraphDb } from '@flowatlas/linker';
+import { CONTRACT_STATUS_RANK, crossingStatusOf, docsNow, loadContractBreaks, rankedFindingsOf } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
 import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
@@ -223,15 +223,22 @@ const withDocsOf = (docs: NonNullable<PackInput['docs']>): Pick<PackInput, 'docs
  * rows as every other surface counts them - demoted where an annotation
  * answered them, and split by what was accepted, once (P80). The prompt
  * parity test packs through here too, so it reads what the page reads (P97).
+ *
+ * The service prompt's findings and crossing verdicts (P134) are worked out
+ * here by the MCP server's own code: the findings ranked over the rows nobody
+ * accepted and `contracts`, the breaks the last `flowatlas contracts` wrote.
  */
 export const packDatabase = (
   db: GraphDb,
   read: AcceptedRead,
-  extra: Partial<Pick<PackInput, 'observed' | 'editor' | 'changes' | 'routes' | 'docs'>> = {},
+  extra: Partial<Pick<PackInput, 'observed' | 'editor' | 'changes' | 'routes' | 'docs'>> & {
+    contracts?: readonly ContractBreak[];
+  } = {},
 ): PackedGraph => {
   const report = db.report();
   if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
   const split = acceptedSplitOf(db, db.allUnresolved(), read);
+  const { contracts = [], ...rest } = extra;
   return packGraph({
     builtAt: report.builtAt,
     nodes: db.allNodes(),
@@ -240,7 +247,11 @@ export const packDatabase = (
     report,
     typeOf: (id) => db.type(id),
     accepted: split,
-    ...extra,
+    overview: {
+      findings: rankedFindingsOf(db, split.fresh, contracts),
+      verdictOf: (edge, consumed) => CONTRACT_STATUS_RANK[crossingStatusOf(db, edge, consumed)],
+    },
+    ...rest,
   });
 };
 
@@ -276,6 +287,8 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       ...withRoutes(routeRulesFor(options)),
       // The pages that describe a node (P120), from `flowatlas docs`, checked against this graph.
       ...withDocsOf(docsNow(db, dbPathFor(options))),
+      // What a service's prompt ranks its contract breaks from (P134).
+      contracts: loadContractBreaks(dbPathFor(options)),
     });
     const totals = db.counts();
     counts = { nodes: totals.nodes, edges: totals.edges };

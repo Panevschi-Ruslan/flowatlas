@@ -1,6 +1,6 @@
 import { answersOf } from '../graph.js';
 import { PROMPT_LIMITS, PROMPT_WALK, renderPrompt } from '../../../../core/src/prompt-text.js';
-import { STEP_BOUNDS, STEP_KINDS, STEP_MODES, failSay, promptFor, stepsOf } from '../steps.js';
+import { STEP_BOUNDS, STEP_KINDS, STEP_MODES, failSay, promptFor, promptTargetOf, stepsOf } from '../steps.js';
 import { wordFor } from '../frame.js';
 
 /* The Steps tab and the steps above the drawing: a way in in call order,
@@ -319,11 +319,12 @@ export function createStepsUi(page) {
 
   /* Copy as prompt: one handler for every button that asks, on any tab, in
      the words describe_for_prompt answers with (P97). `promptOf('row:<at>')`
-     is the same text for a row menu (P100). */
+     is the same text for a row menu (P100); `class:<at>`, `file:<service>#<path>`
+     and `service:<name>` write the scopes the server writes (P134). */
   const promptKit = { seen, walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
   const promptOf = (asked) => {
-    const [kind, at] = asked.split(':');
-    return promptFor(model, { [kind]: Number(at) }, promptKit);
+    const target = promptTargetOf(asked);
+    return target === null ? '' : promptFor(model, target, promptKit);
   };
   const copyPrompt = async (button, asked) => {
     const text = promptOf(asked);

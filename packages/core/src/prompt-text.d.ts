@@ -18,6 +18,8 @@ export interface PromptLimits {
   maxConsumers: number;
   /** Most methods of a class, or nodes of a file, written (P95). */
   maxMembers: number;
+  /** How many of each kind a service's lines name by id: ways in, crossings, findings (P95, P134). */
+  maxFirst: number;
   /** The ceiling on the whole text, in characters. */
   maxChars: number;
 }

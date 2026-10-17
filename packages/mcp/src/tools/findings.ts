@@ -4,6 +4,8 @@ import {
   collectFindings,
   compareFindingKinds,
   rankFindings,
+  type AnchoredUnresolvedRow,
+  type ContractBreak,
   type FindingRow,
   type GraphDb,
 } from '@flowatlas/linker';
@@ -70,6 +72,18 @@ const wireFinding = (row: FindingRow): Record<string, unknown> => ({
 });
 
 /**
+ * Every finding of the project ranked by reach (P95), from the rows nobody
+ * accepted (`fresh`), the channels with one end and the contract breaks
+ * handed in. The page packs the same list for its service prompt (P134), so
+ * the `findings` tool, `describe_for_prompt` and the page rank alike.
+ */
+export const rankedFindingsOf = (
+  db: GraphDb,
+  fresh: readonly AnchoredUnresolvedRow[],
+  contracts: readonly ContractBreak[],
+): FindingRow[] => rankFindings(db, collectFindings(db, { rows: fresh, report: db.report(), contracts }).findings);
+
+/**
  * Every finding of the project, ranked (P95): the rows nobody accepted, the
  * channels with one end, and the contract breaks the last `flowatlas
  * contracts` wrote beside the database. Ranked over the whole project, then
@@ -82,12 +96,11 @@ export const findingsOf = (
   service?: string,
 ): { ranked: FindingRow[]; notes: Record<string, number>; accepted: number } => {
   const split = acceptedSplitOf(db, db.allUnresolved(), readAccepted(ctx.handle.path));
-  const collected = collectFindings(db, { rows: split.fresh, report: db.report(), contracts: loadContractBreaks(ctx.handle.path) });
   const inService = <T extends { service: string | null }>(rows: readonly T[]): T[] =>
     service === undefined ? [...rows] : rows.filter((row) => row.service === service);
   return {
-    ranked: inService(rankFindings(db, collected.findings)),
-    notes: service === undefined ? collected.notes : collectFindings(db, { rows: inService(split.fresh) }).notes,
+    ranked: inService(rankedFindingsOf(db, split.fresh, loadContractBreaks(ctx.handle.path))),
+    notes: collectFindings(db, { rows: inService(split.fresh) }).notes,
     accepted: collectFindings(db, { rows: inService(split.accepted) }).findings.length,
   };
 };

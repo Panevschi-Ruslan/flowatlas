@@ -35,6 +35,7 @@ import { dictionary, wordsOf, type Word } from './dictionary.js';
 import { packAccess, type PackedAccess } from './access.js';
 import { packCantFollow, type PackedCantFollow } from './cant-follow.js';
 import { packIds } from './node-ids.js';
+import { packOverview, type OverviewInput, type PackedOverview } from './overview.js';
 
 export type { PackedAccess };
 
@@ -312,6 +313,12 @@ export interface PackedGraph {
    * `via` and `packages`. Absent when no edge was.
    */
   standIns?: { via: string[]; packages: string[]; edges: Record<string, [number, number]> };
+  /**
+   * What a service's prompt reads beside the graph (P134): the findings
+   * ranked by reach, and the contract verdicts of the crossings. Absent when
+   * there are no findings and every crossing is unchecked. See `overview.ts`.
+   */
+  overview?: PackedOverview;
   report: unknown;
 }
 
@@ -491,6 +498,8 @@ export interface PackInput {
   routes?: MapInput['routes'];
   /** The doc blocks of `docs.json` that name a node, checked against this graph (P120). */
   docs?: readonly PackDoc[];
+  /** The ranked findings and the crossings' verdicts, for the service prompt (P134). */
+  overview?: OverviewInput;
 }
 
 /** The split, as the page needs it: `byEntry` lines up with the rows packed. */
@@ -712,6 +721,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     ...(accepted.packed === undefined ? {} : { accepted: accepted.packed }),
     ...packCantFollow(accepted.fresh, position),
     ...packStandIns(packedEdges),
+    ...packOverview(input.overview ?? {}, input.nodes, packedEdges, position, repoIx),
     ...(input.editor === undefined
       ? {}
       : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),

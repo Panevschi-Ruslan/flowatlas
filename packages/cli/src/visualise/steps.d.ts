@@ -104,7 +104,16 @@ export type PromptTarget =
   | { node: number }
   | { row: number }
   | { class: number }
-  | { file: [service: string, path: string] };
+  | { file: [service: string, path: string] }
+  | { service: string };
+
+/** What a node can be copied as (P134): itself, its class, its file, its service. */
+export interface PromptScope {
+  scope: 'node' | 'class' | 'file' | 'service';
+  target: PromptTarget;
+  /** What the scope is called: the node's or the class's label, the file's path, the service's name. */
+  name: string;
+}
 
 export declare const stepField: (model: GraphModel, i: number, key: string) => unknown;
 export declare const stepKindOf: (model: GraphModel, i: number) => StepKind;
@@ -126,7 +135,11 @@ export declare const stepBreakOf: (
   i: number,
 ) => { say: string; reason: string; message: string } | null;
 export declare const stepIdOf: (model: GraphModel, i: number) => string | null;
-export declare const subjectOf: (model: GraphModel, target: PromptTarget, kit: Pick<PromptKit, 'walk' | 'seen'>) => PromptSubject | null;
+/** `kit.limits` is needed for a service (its `maxFirst` and `maxGaps`); without it a service names nothing. */
+export declare const subjectOf: (model: GraphModel, target: PromptTarget, kit: Pick<PromptKit, 'walk' | 'seen' | 'limits'>) => PromptSubject | null;
+export declare const promptScopesOf: (model: GraphModel, i: number) => PromptScope[];
+export declare const promptAskOf: (target: PromptTarget) => string;
+export declare const promptTargetOf: (asked: string) => PromptTarget | null;
 export declare const promptFor: (model: GraphModel, target: PromptTarget, kit: PromptKit) => string;
 export declare const failsOf: (model: GraphModel, entry: number) => readonly PackedFail[];
 export declare const ACCESS_WHERE_SAY: Readonly<Record<'global' | 'module' | 'controller' | 'route', string>>;

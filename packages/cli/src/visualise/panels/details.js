@@ -10,7 +10,7 @@ export function createDetails(page) {
   const { ALSO_SAYS, DOORS, FILE_LIMIT, FL, GROUP_LIMIT, KD, LB, LN, LOOK_SAYS, RP, SHAPED,
     TYPE_KIND_SAYS, acceptedNote, acceptedRows, acceptedRule, card, confidences,
     contextOf, data, edgeTypes, esc, failChipsHtml, files, glyphOf, graphLink, hueOf, kinds, lookOf,
-    metaOf, metaValueHtml, model, nodes, opener, panel, placeOf, plural, reasons, repoName, rowMenu, rowTone,
+    metaOf, metaValueHtml, model, nodes, opener, panel, placeOf, plural, promptMenu, reasons, repoName, rowMenu, rowTone,
     scheduleSay, seen, stage, state, typeOf, wordHtml } = page;
 
   /* ── the details panel ── */
@@ -301,9 +301,10 @@ export function createDetails(page) {
         (DOORS.has(t) ? '<button class="tool" data-act="steps" aria-controls="g-steps" ' +
           'title="This way in\u2019s steps, in call order, above the drawing">Steps</button>' : '') +
         (DOORS.has(t) ? '<button class="tool" data-act="open-steps" title="This way in on the Steps tab">Open in Steps</button>' : '') +
-        (DOORS.has(t) || t === 'channel'
-          ? `<button class="tool" data-prompt="${t === 'channel' ? 'channel' : 'entry'}:${v}" title="Copy as Markdown for an assistant">Copy as prompt</button>`
-          : '') +
+        // Any node as a prompt, as describe_for_prompt writes it; its class, file and service behind the `⋯` (P134).
+        `<button class="tool" data-prompt="${DOORS.has(t) ? 'entry' : t === 'channel' ? 'channel' : 'node'}:${v}" ` +
+          'title="Copy as Markdown for an assistant">Copy as prompt</button>' +
+        promptMenu(v) +
       '</div>' +
       (context
         ? `<p class="hint">Not in the flow: drawn as context, it ${esc(ALSO_SAYS[context.look].mark(context.of))}. ` +

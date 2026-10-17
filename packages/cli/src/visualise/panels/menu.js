@@ -1,4 +1,4 @@
-import { acceptCommandForLike, acceptCommandForPlace, likeRoute, routeOfMessage } from '../steps.js';
+import { acceptCommandForLike, acceptCommandForPlace, likeRoute, promptAskOf, promptScopesOf, routeOfMessage } from '../steps.js';
 
 /* One overflow menu per row (P100): a `⋯` button that opens a short list of
    what can be copied from a check row - the row as a prompt, the accept
@@ -6,9 +6,11 @@ import { acceptCommandForLike, acceptCommandForPlace, likeRoute, routeOfMessage 
    row of inline buttons. The page reads and never writes: every item copies
    text, a command says it is one, and what was copied is shown in a toast.
    One menu element serves every row; the keys are the command list's
-   (`menuKeys`, P101), so the arrows, Enter and Escape mean the same in both. */
+   (`menuKeys`, P101), so the arrows, Enter and Escape mean the same in both.
+   The same menu offers a node's wider prompts (P134): its class, its file
+   and its service, as describe_for_prompt's scopes write them. */
 export function createMenu(page) {
-  const { acceptedRows, copyText, esc, rowPlace } = page;
+  const { acceptedRows, copyText, esc, model, rowPlace } = page;
 
   const menuEl = document.getElementById('row-menu');
   const listEl = document.getElementById('row-menu-list');
@@ -82,6 +84,29 @@ export function createMenu(page) {
   const rowMenu = (r, label = 'this row') =>
     `<button type="button" class="row-menu-btn" data-row-menu="${r}" aria-haspopup="menu" aria-expanded="false" ` +
     `aria-controls="row-menu" aria-label="Copy from ${esc(label)}" title="Copy from ${esc(label)}">&#8943;</button>`;
+
+  /* ── a node's wider prompts (P134) ─────────────────────────────────── */
+
+  /* Each scope wider than the node itself, and what it says: the class it is
+     or whose method it is, its file, its service. */
+  const PROMPT_SCOPE_SAYS = {
+    class: (v, one) => (one.target.class === v ? 'Copy this class as a prompt' : 'Copy its class as a prompt'),
+    file: () => 'Copy its file as a prompt',
+    service: () => 'Copy its service as a prompt',
+  };
+  const promptScopes = (v) => promptScopesOf(model, v).filter((one) => PROMPT_SCOPE_SAYS[one.scope] !== undefined);
+
+  /* The `⋯` button beside a node's Copy as prompt, '' where it has no wider scope. */
+  const promptMenu = (v) => (promptScopes(v).length === 0 ? ''
+    : `<button type="button" class="row-menu-btn" data-prompt-menu="${v}" aria-haspopup="menu" aria-expanded="false" ` +
+      'aria-controls="row-menu" aria-label="Copy its class, file or service as a prompt" ' +
+      'title="Copy its class, file or service as a prompt">&#8943;</button>');
+
+  const openPromptMenu = (button, v) => openMenu(button, promptScopes(v).map((one) => ({
+    say: PROMPT_SCOPE_SAYS[one.scope](v, one),
+    sub: one.name,
+    run: () => copyAndSay(page.promptOf(promptAskOf(one.target)), { copied: 'Copied as a prompt.' }),
+  })));
 
   /* ── the menu ───────────────────────────────────────────────────── */
 
@@ -161,19 +186,21 @@ export function createMenu(page) {
     if (item) run(Number(item.dataset.n));
   });
   document.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-row-menu]');
+    const button = event.target.closest('[data-row-menu], [data-prompt-menu]');
     if (!button) return;
     event.preventDefault();
     if (from === button) { closeMenu(); return; }
-    openRowMenu(button, Number(button.dataset.rowMenu));
+    if (button.dataset.rowMenu !== undefined) openRowMenu(button, Number(button.dataset.rowMenu));
+    else openPromptMenu(button, Number(button.dataset.promptMenu));
   });
   document.addEventListener('pointerdown', (event) => {
-    if (menuEl.hidden || menuEl.contains(event.target) || (event.target.closest && event.target.closest('[data-row-menu]') === from)) return;
+    if (menuEl.hidden || menuEl.contains(event.target) ||
+      (event.target.closest && event.target.closest('[data-row-menu], [data-prompt-menu]') === from)) return;
     closeMenu(false);
   });
   // A menu kept on the page would drift from its row on a scroll; it closes instead.
   window.addEventListener('scroll', (event) => { if (!menuEl.contains(event.target)) closeMenu(false); }, true);
   window.addEventListener('resize', () => closeMenu(false));
 
-  return { ROW_MENU_ITEMS, closeMenu, openMenu, rowMenu, toast };
+  return { ROW_MENU_ITEMS, closeMenu, openMenu, promptMenu, rowMenu, toast };
 }

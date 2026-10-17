@@ -122,3 +122,77 @@ describe('the page’s chip rows (P137)', () => {
     expect(rules.some((rule) => rule.selector.endsWith('.fail-chips') && /flex-wrap:\s*nowrap/.test(rule.body))).toBe(false);
   });
 });
+
+describe('the page’s control edges (P142)', () => {
+  const rules = [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map(([, selector, body]) => ({ selector: selector!.trim().replace(/\s+/g, ' '), body: body! }));
+  const ruleOf = (selector: string): { selector: string; body: string } => {
+    const rule = rules.find((one) => one.selector === selector);
+    if (rule === undefined) throw new Error(`page.css has no rule for ${selector}`);
+    return rule;
+  };
+  /** What a control is drawn as: the last part of one of its selectors names it. */
+  const CONTROL = /^(?:input(?!\[type=.(?:checkbox|radio).\])|select|kbd|\.(?:tool|chip|tab|ship|pill|find-key|g-more-btn|g-type-all|g-fold|row-menu-btn))(?![\w-])/;
+  const isControl = (selector: string): boolean =>
+    selector.split(',').some((one) => CONTROL.test(one.trim().split(/[\s>+~]+/).pop()!));
+  /** The colours an edge, a ring or a mark may be drawn in, each held at 3:1 below. */
+  const EDGES = ['edge', 'accent', 'faint', 'ink'];
+  /** A border or outline property, its radius aside. */
+  const BORDER = /border(?:-(?![\w-]*radius)[\w-]+)?|outline(?:-color)?/;
+  /** The tokens named by the declarations of `body` whose property matches `property`. */
+  const tokensIn = (body: string, property: RegExp): string[] =>
+    [...body.matchAll(new RegExp(`(?:^|[;\\s])(?:${property.source})\\s*:([^;]*)`, 'g'))]
+      .flatMap(([, value]) => [...value!.matchAll(/var\(--([\w-]+)/g)].map(([, name]) => name!));
+
+  for (const [theme, tokens] of Object.entries(THEMES)) {
+    const colour = (name: string): string => {
+      const value = tokens.get(name);
+      if (value === undefined) throw new Error(`the ${theme} theme has no --${name}`);
+      return value;
+    };
+
+    it(`are 3:1 or more on --ground, --paper and --raise, as are rings and marks, in the ${theme} theme`, () => {
+      const low = EDGES.flatMap((edge) => ['ground', 'paper', 'raise'].map((bg) => ({ edge, bg, ratio: contrastOf(colour(edge), colour(bg)) })))
+        .filter(({ ratio }) => ratio < 3)
+        .map(({ edge, bg, ratio }) => `--${edge} on --${bg}: ${ratio.toFixed(2)}`);
+      expect(low).toEqual([]);
+      // The accent bar marks a pick on its soft fill as well.
+      expect(contrastOf(colour('accent'), colour('accent-soft'))).toBeGreaterThanOrEqual(3);
+      // The rules stay quiet: the edge, louder than them, is what tells a control.
+      expect(contrastOf(colour('edge'), colour('paper'))).toBeGreaterThan(contrastOf(colour('rule'), colour('paper')));
+    });
+  }
+
+  it('draw every control’s edge in --edge, a state in a 3:1 colour, and never in --rule', () => {
+    const controls = rules.filter(({ selector }) => isControl(selector));
+    expect(controls.length).toBeGreaterThan(10);
+    const drawn = controls.flatMap(({ selector, body }) =>
+      tokensIn(body, BORDER).map((token) => ({ selector, token })));
+    // A service's hue (--hue), a kind of link's (--kind, a hue, --muted, --faint or the accent)
+    // and --good are held at 3:1 by the tones test.
+    expect(drawn.filter(({ token }) => !EDGES.includes(token) && !['hue', 'kind', 'good'].includes(token))).toEqual([]);
+    for (const control of ["input[type='search'], select", '.tool', '.chip', '.tab', '.ship', 'kbd', '.pill', '.finder input']) {
+      expect(tokensIn(ruleOf(control).body, BORDER), control).toContain('edge');
+    }
+    // The frames and rules that only decorate keep --rule.
+    expect(tokensIn(ruleOf('.panel').body, BORDER)).toEqual(['rule']);
+  });
+
+  it('ring a focus in the accent, and mark a focus or a pick that has no ring with an accent bar', () => {
+    const outlines = rules.flatMap(({ selector, body }) => [...body.matchAll(/(?:^|[;\s])outline\s*:([^;]*)/g)]
+      .map(([, value]) => ({ selector, value: value!.trim() })))
+      .filter(({ value }) => value !== 'none');
+    expect(outlines.length).toBeGreaterThan(5);
+    expect(outlines.filter(({ value }) => !/^\d+px solid var\(--accent\)$/.test(value))).toEqual([]);
+    expect(ruleOf(':focus-visible').body).toMatch(/outline:\s*2px solid var\(--accent\)/);
+    // A row focused or picked by a fill alone reads at under 3:1 on its panel: every
+    // focus or pick without a ring draws the accent, the rows as a bar along their start.
+    const filled = rules.filter(({ selector, body }) =>
+      /:focus\b|\[aria-selected='true'\]/.test(selector) && /background\s*:/.test(body) &&
+      !/(?:^|[;\s])outline\s*:\s*\d/.test(body));
+    expect(filled.filter(({ body }) => !/var\(--accent\)/.test(body)).map(({ selector }) => selector)).toEqual([]);
+    const bars = filled.filter(({ body }) => /box-shadow:\s*inset 3px 0 0 var\(--accent\)/.test(body)).map(({ selector }) => selector);
+    expect(bars).toEqual(expect.arrayContaining(['.find-out a:focus', ".row-menu-list [role='menuitem']:focus", ".palette-list [role='option'][aria-selected='true']"]));
+    expect(tokensIn(ruleOf(".tab[aria-selected='true']").body, /border-color/)).toEqual(['accent']);
+  });
+});

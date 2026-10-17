@@ -2,9 +2,30 @@ import { copyFileSync, cpSync, existsSync, mkdtempSync, readdirSync, readFileSyn
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { observedPathFor, PROMPT_LIMITS, PROMPT_WALK, readAccepted, readObserved, renderPrompt, type GraphNode, type PromptSubject } from '@flowatlas/core';
+import {
+  observedPathFor,
+  PROMPT_LIMITS,
+  PROMPT_WALK,
+  readAccepted,
+  readObserved,
+  renderPrompt,
+  saveAccepted,
+  type GraphNode,
+  type PromptSubject,
+} from '@flowatlas/core';
 import { acceptedSplitOf, openGraphDb, type GraphDb } from '@flowatlas/linker';
-import { gatherCheckSubject, gatherClassSubject, gatherFileSubject, gatherPromptSubject, loadObservedCounts, rowsOfGap } from '@flowatlas/mcp';
+import {
+  gatherCheckSubject,
+  gatherClassSubject,
+  gatherFileSubject,
+  gatherPromptSubject,
+  gatherServiceSubject,
+  loadContractBreaks,
+  loadObservedCounts,
+  promptScopeContext,
+  rowsOfGap,
+  serviceInputOf,
+} from '@flowatlas/mcp';
 import { describe, expect, it } from 'vitest';
 import { packDatabase } from '../commands/visualise.js';
 import { createModel, type GraphModel } from './graph.js';
@@ -17,7 +38,8 @@ import { createSeen, promptFor, stepIdOf, subjectOf } from './steps.js';
  * characters. The three subjects of `fixtures/multi-repo` - a way in, a
  * channel, a check - are snapshots both packages' tests read; every other
  * subject of every fixture whose graph is built is checked for parity alone,
- * and so is every class and every file written whole (P95).
+ * and so is every class and every file written whole (P95), and every
+ * service (P134).
  */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -41,7 +63,8 @@ interface Sides {
 const open = (folder: string): Sides => {
   const dbPath = join(folder, '.flowatlas', 'graph.db');
   const db = openGraphDb(dbPath, { readonly: true });
-  const model = createModel(packDatabase(db, readAccepted(dbPath))) as GraphModel;
+  // Packed as the command packs it, with the contracts report beside the database (P134).
+  const model = createModel(packDatabase(db, readAccepted(dbPath), { contracts: loadContractBreaks(dbPath) })) as GraphModel;
   return { db, model, dbPath };
 };
 
@@ -168,8 +191,33 @@ describe('a way in seen at run time, the same from both sides (P106)', () => {
 });
 
 /**
+ * Every service of a fixture as `describe_for_prompt({id, scope: "service"})`
+ * gathers it - the crossings, the findings ranked as the `findings` tool
+ * ranks them, the rows nobody accepted - and as the page gathers it from the
+ * pack (P134): both subjects, and both texts.
+ */
+const servicesOf = (sides: Sides): Array<{ id: string; server: string; page: string; subjects: [PromptSubject, PromptSubject | null] }> => {
+  const { db, model, dbPath } = sides;
+  const context = promptScopeContext(db, dbPath);
+  return db
+    .services()
+    .map((service) => service.name)
+    .sort()
+    .map((name) => {
+      const server = gatherServiceSubject(db, name, serviceInputOf(db, name, context));
+      return {
+        id: `service ${name}`,
+        server: renderPrompt(server, PROMPT_LIMITS),
+        page: promptFor(model, { service: name }, kit),
+        subjects: [server, subjectOf(model, { service: name }, kit)],
+      };
+    });
+};
+
+/**
  * Every class and every file of a fixture, as the server's class and file
- * scopes write them and as the page gathers them (P95): `[server, page]`.
+ * scopes write them and as the page gathers them (P95): `[server, page]`;
+ * and every service, walked in full (P134).
  */
 const scopedOf = (sides: Sides, walk = PROMPT_WALK): Array<{ id: string; server: string; page: string }> => {
   const { db, model } = sides;
@@ -189,7 +237,7 @@ const scopedOf = (sides: Sides, walk = PROMPT_WALK): Array<{ id: string; server:
         page: promptFor(model, { file: [service, file] }, { ...kit, walk }),
       };
     });
-  return [...classes, ...files];
+  return [...classes, ...files, ...(walk === PROMPT_WALK ? servicesOf(sides) : [])];
 };
 
 describe('a class and a file written whole, the same from both sides (P95)', () => {
@@ -206,6 +254,58 @@ describe('a class and a file written whole, the same from both sides (P95)', () 
       expect(compared).toBeGreaterThan(20);
     } finally {
       sides.db.close();
+    }
+  });
+});
+
+describe('a service written whole, the same from both sides (P134)', () => {
+  it('gathers every service of the fixture into the same subject and the same text', () => {
+    const sides = open(MULTI_REPO);
+    try {
+      const services = servicesOf(sides);
+      expect(services.length).toBeGreaterThanOrEqual(4);
+      for (const { id, server, page, subjects } of services) {
+        expect({ id, page }).toEqual({ id, page: server });
+        expect(subjects[1]).toEqual(subjects[0]);
+      }
+      // The fixture has something in every section between them: crossings both ways, channels, findings, gaps.
+      const all = services.map(({ page }) => page).join('\n');
+      for (const heading of ['Calls into other services', 'Called from other services', 'Channels', 'Findings', 'Most common gaps']) {
+        expect(all).toContain(`## ${heading}`);
+      }
+    } finally {
+      sides.db.close();
+    }
+  });
+
+  it('counts a service’s gaps among the rows nobody accepted, on both sides (P143)', () => {
+    const copy = mkdtempSync(join(tmpdir(), 'flowatlas-parity-accepted-'));
+    try {
+      cpSync(join(MULTI_REPO, '.flowatlas'), copy, { recursive: true });
+      const dbPath = join(copy, 'graph.db');
+      /** The gateway's service prompt from both sides, over the copy as it is now. */
+      const gateway = (): ReturnType<typeof servicesOf>[number] => {
+        const db = openGraphDb(dbPath, { readonly: true });
+        try {
+          const model = createModel(packDatabase(db, readAccepted(dbPath), { contracts: loadContractBreaks(dbPath) })) as GraphModel;
+          const [found] = servicesOf({ db, model, dbPath }).filter(({ id }) => id === 'service gateway');
+          expect({ page: found!.page }).toEqual({ page: found!.server });
+          expect(found!.subjects[1]).toEqual(found!.subjects[0]);
+          return found!;
+        } finally {
+          db.close();
+        }
+      };
+      expect(gateway().page).toContain('`unknown-base-url-env` ×1');
+      saveAccepted(dbPath, [{
+        reason: 'unknown-base-url-env', service: 'gateway', file: 'src/clients/payments.client.ts',
+        note: 'set at deploy time', acceptedAt: '2026-01-01T00:00:00Z',
+      }]);
+      const after = gateway().page;
+      expect(after).not.toContain('unknown-base-url-env');
+      expect(after).toContain('`target-route-not-found` ×1');
+    } finally {
+      rmSync(copy, { recursive: true, force: true });
     }
   });
 });

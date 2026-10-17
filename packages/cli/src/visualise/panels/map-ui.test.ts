@@ -1,4 +1,7 @@
+import { PROMPT_LIMITS, PROMPT_WALK, renderPrompt } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
+import { createModel, type GraphModel } from '../graph.js';
+import { promptFor } from '../steps.js';
 import { FakeEvent, textOf } from './test-dom.js';
 import { mountPage, testPack } from './test-page.js';
 
@@ -18,6 +21,20 @@ describe('the map', () => {
     expect(textOf(document.querySelector('#m-details h3'))).toBe('gateway');
     document.querySelector('#m-details [data-map-close]')!.click();
     expect(textOf(document.querySelector('#m-details h3'))).toBe('The whole project');
+  });
+
+  it('copies a service box as the service prompt describe_for_prompt writes (P134)', async () => {
+    const { page, document, window } = mountPage(data);
+    page.showView('map');
+    const gateway = document.querySelectorAll('#m-world .m-unit').find((unit) => textOf(unit.querySelector('.m-name')) === 'gateway')!;
+    gateway.click();
+    const copy = document.querySelector('#m-details [data-prompt]') as any;
+    expect(copy.getAttribute('data-prompt')).toBe('service:gateway');
+    copy.click();
+    await new Promise((done) => setTimeout(done, 0));
+    const kit = { walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
+    expect(window.clipboard.at(-1)).toBe(promptFor(createModel(data) as GraphModel, { service: 'gateway' }, kit));
+    expect(window.clipboard.at(-1)).toMatch(/^# Service: gateway\n[\s\S]*## Ways in · /);
   });
 
   it('opens what a link names, and writes it back into the address', () => {

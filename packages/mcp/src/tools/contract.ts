@@ -72,13 +72,15 @@ export const classify = (
   };
 };
 
-/** The worse of two verdicts, so one number says whether to look closer. */
-const RANK: Record<ContractStatus, number> = {
+/** The worse of two verdicts, so one number says whether to look closer; the page reads the same order (P134). */
+export const CONTRACT_STATUS_RANK: Readonly<Record<ContractStatus, number>> = {
   shared: 0,
   identical: 1,
   unchecked: 2,
   hash_differs: 3,
 };
+
+const RANK = CONTRACT_STATUS_RANK;
 
 const worse = (a: ContractStatus, b: ContractStatus): ContractStatus => (RANK[a] >= RANK[b] ? a : b);
 
@@ -117,7 +119,19 @@ export interface Crossing {
 }
 
 /** The edges that cross by a request, from a call site to an entry. */
-const REQUEST_EDGES = ['http_calls', 'hits'] as const;
+export const REQUEST_EDGES = ['http_calls', 'hits'] as const;
+
+/**
+ * The verdict on one crossing: a request edge by both halves, as
+ * `check_contract` judges it, or a publish by what the publisher sends
+ * against what the consumer's subscription (`consumed`) reads. The page
+ * ships it for the crossings it lists (P134), since it holds no registry.
+ */
+export const crossingStatusOf = (db: GraphDb, edge: GraphEdge, consumed?: GraphEdge): ContractStatus => {
+  if (consumed !== undefined) return classify(db, edge.params?.[0], consumed.params?.[0]).status;
+  const { request, response } = sidesOf(db, edge);
+  return worse(request.status, response.status);
+};
 
 const byWorstThenId = (a: Crossing, b: Crossing): number =>
   RANK[b.status] - RANK[a.status] || (a.from < b.from ? -1 : a.from > b.from ? 1 : a.to < b.to ? -1 : a.to > b.to ? 1 : 0);
@@ -138,12 +152,11 @@ export const crossingsBetween = (db: GraphDb, a: string, b: string): Crossing[] 
     if (isRequest) {
       const target = db.node(edge.to);
       if (target?.type !== 'entry' || target.repo !== b) continue;
-      const { request, response } = sidesOf(db, edge);
       crossings.push({
         from: edge.from,
         to: edge.to,
         type: edge.type,
-        status: worse(request.status, response.status),
+        status: crossingStatusOf(db, edge),
         check: callOf('check_contract', { from: edge.from, to: edge.to }),
       });
     } else if (edge.type === 'emits') {
@@ -154,7 +167,7 @@ export const crossingsBetween = (db: GraphDb, a: string, b: string): Crossing[] 
           to: consumed.to,
           type: 'emits',
           via: edge.to,
-          status: classify(db, edge.params?.[0], consumed.params?.[0]).status,
+          status: crossingStatusOf(db, edge, consumed),
           check: callOf('check_contract', { from: edge.from, to: edge.to }),
         });
       }

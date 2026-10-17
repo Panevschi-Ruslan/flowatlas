@@ -36,6 +36,7 @@ import {
   ownerOf,
   withAnsweredDemoted,
   type AnchoredUnresolvedRow,
+  type FindingRow,
   type GraphDb,
   type UnresolvedRow,
 } from '@flowatlas/linker';
@@ -526,8 +527,8 @@ export const gatherFileSubject = (db: GraphDb, service: string, file: string): P
   };
 };
 
-/** How many of each kind are written out as ids on a service's lines. */
-const OVERVIEW_FIRST = 3;
+/** How many of each kind are written out as ids on a service's lines; the page gathers by the same (P134). */
+const OVERVIEW_FIRST = PROMPT_LIMITS.maxFirst;
 
 /** The requests between a service and each other one, by the other's name. */
 const crossingCounts = (db: GraphDb, crossings: ReadonlyArray<{ service: string; from: string; to: string; type: string }>): PromptCrossing[] => {
@@ -555,16 +556,38 @@ export interface ServiceCrossing {
   service: string;
 }
 
+/** A row's symbol when it is the id of a node the graph holds: the only id the page can name too (P143). */
+const heldNode = (db: GraphDb, id: string | null): string | undefined => (id !== null && db.node(id) !== undefined ? id : undefined);
+
+/** What a service's subject reads beside the graph: crossings, ranked findings, and the rows nobody accepted. */
+export interface ServiceInput {
+  out: readonly ServiceCrossing[];
+  into: readonly ServiceCrossing[];
+  findings: readonly PromptGap[];
+  rows?: readonly AnchoredUnresolvedRow[];
+}
+
+/** A finding row as a service subject lists it (P95, P134): its kind as the reason, where it is and what it says. */
+export const findingGapOf = (row: FindingRow): PromptGap => ({
+  reason: row.kind,
+  message: row.message,
+  id: row.id,
+  ...(row.service === '' ? {} : { service: row.service }),
+  ...(row.loc === undefined ? {} : { loc: row.loc }),
+});
+
 /**
  * A service's front as one subject (P95): its ways in by kind, its crossings
  * to and from the others (`crossingsBetween` for each pair, handed in), its
  * channels, its findings ranked by reach (handed in, as the `findings` tool
- * ranks them) and its most common gaps.
+ * ranks them) and its most common gaps: of `input.rows`, the rows nobody
+ * accepted, as every other surface counts gaps (P143); every row when none
+ * are handed in.
  */
 export const gatherServiceSubject = (
   db: GraphDb,
   service: string,
-  input: { out: readonly ServiceCrossing[]; into: readonly ServiceCrossing[]; findings: readonly PromptGap[] },
+  input: ServiceInput,
 ): PromptSubject => {
   const entries = db.nodesByType('entry').filter((node) => node.repo === service);
   const kinds = new Map<string, GraphNode[]>();
@@ -594,8 +617,7 @@ export const gatherServiceSubject = (
   const findingKinds = new Map<string, PromptGap[]>();
   for (const gap of input.findings) findingKinds.set(gap.reason, [...(findingKinds.get(gap.reason) ?? []), gap]);
 
-  const missed = db
-    .allUnresolved()
+  const missed = (input.rows ?? db.allUnresolved())
     .filter((row) => row.service === service && wasMissed(row))
     .sort((a, b) => ((a.file ?? '') < (b.file ?? '') ? -1 : (a.file ?? '') > (b.file ?? '') ? 1 : (a.line ?? 0) - (b.line ?? 0)));
   const reasons = new Map<string, typeof missed>();
@@ -603,7 +625,7 @@ export const gatherServiceSubject = (
   const gaps = [...reasons]
     .sort((a, b) => b[1].length - a[1].length || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
     .slice(0, PROMPT_LIMITS.maxGaps)
-    .map(([reason, list]) => ({ reason, count: list.length, first: gapOf(list[0]!, list[0]!.node ?? undefined) }));
+    .map(([reason, list]) => ({ reason, count: list.length, first: gapOf(list[0]!, heldNode(db, list[0]!.node)) }));
 
   return {
     id: service,
@@ -634,6 +656,8 @@ export interface ScopeContext {
   counts?: ObservedCounts;
   crossings?: (from: string, to: string) => ReadonlyArray<{ from: string; to: string; type: string }>;
   findings?: (service: string) => readonly PromptGap[];
+  /** The rows nobody accepted, which the service scope counts its gaps from (P143). */
+  rows?: () => readonly AnchoredUnresolvedRow[];
 }
 
 /** The scopes a node can be written at: always itself, its method, class, file and service where it has them. */
@@ -672,7 +696,7 @@ export const serviceInputOf = (
   db: GraphDb,
   service: string,
   context: ScopeContext,
-): { out: ServiceCrossing[]; into: ServiceCrossing[]; findings: readonly PromptGap[] } => {
+): ServiceInput => {
   const others = db
     .services()
     .map((each) => each.name)
@@ -683,5 +707,6 @@ export const serviceInputOf = (
     out: others.flatMap((other) => between(service, other).map((hop) => ({ ...hop, service: other }))),
     into: others.flatMap((other) => between(other, service).map((hop) => ({ ...hop, service: other }))),
     findings: context.findings?.(service) ?? [],
+    ...(context.rows === undefined ? {} : { rows: context.rows() }),
   };
 };

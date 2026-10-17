@@ -1336,7 +1336,10 @@ same way in.
   next. No source code. The same button is on a channel and on a check row,
   and the graph server's `describe_for_prompt` writes the same text, character
   for character (P97): a check row is copied as its gap id, which the tool
-  takes.
+  takes. The details panel copies any node, and its `⋯` the node's class,
+  file or service; a service's box on the Map copies the service: the
+  `class`, `file` and `service` scopes of `describe_for_prompt`, the same
+  text again (P134).
 
 The **Not joined** tab is split by what a row is, as the pack says it (P81's
 row kinds and core's `riskOf`), never by the words in a reason. Three
