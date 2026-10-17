@@ -133,7 +133,7 @@ describe('following an entry across services', () => {
     const ids = flatten(flow.root).map((item) => item.node.id);
 
     expect(ids).toContain('entry:orders:http:GET:/orders/:param');
-    expect(ids).toContain('table:orders#Order');
+    expect(ids).toContain('table:orders#orders');
     expect(flow.unresolvedOnPath).toBe(0);
   });
 
@@ -231,7 +231,7 @@ describe('working backwards', () => {
   it('answers what would break if a table changed', () => {
     // A table, a channel and a setting were all dead ends to the reverse walk,
     // so this used to return nothing at all (R03).
-    return call('impact', { symbol: 'table:orders#Order' }).then((answer) => {
+    return call('impact', { symbol: 'table:orders#orders' }).then((answer) => {
       expect(answer.reached).toBeGreaterThan(0);
       expect(answer.entries.length).toBeGreaterThan(0);
     });

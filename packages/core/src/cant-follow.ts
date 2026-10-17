@@ -266,7 +266,7 @@ const CAUSE_HINTS: ReadonlyMap<string, (pkg: string | undefined) => string> = ne
   ['container-lookup', () => 'Resolved through the container at run time; inject the class instead.'],
   ['token-not-provided', () => 'No module of this repository provides the token; register a provider for it.'],
   ['token-ambiguous', () => 'More than one class is registered for the token; which one is in effect depends on module order.'],
-  ['data-layer-unnamed', () => 'Looks like a data layer of this repository by name; name its base under adapters.db.localBaseClasses.'],
+  ['data-layer-unnamed', () => 'Looks like a data layer of this repository by name; name its base under adapters.db.localBaseClasses. A call the graph already draws into a repository method of this repository is not listed.'],
 ]);
 
 /** Whether the catalogue has a sentence for this cause. */

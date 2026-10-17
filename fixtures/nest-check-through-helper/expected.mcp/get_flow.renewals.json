@@ -66,7 +66,7 @@
                 "node": {
                   "id": "db_query:lending#src/desk/loans.service.ts:17:12",
                   "type": "db_query",
-                  "label": "write Loan",
+                  "label": "write loans",
                   "loc": "src/desk/loans.service.ts:17",
                   "service": "lending"
                 },
@@ -77,9 +77,9 @@
                 "children": [
                   {
                     "node": {
-                      "id": "table:lending#Loan",
+                      "id": "table:lending#loans",
                       "type": "table",
-                      "label": "Loan",
+                      "label": "loans",
                       "service": "lending"
                     },
                     "edge": {

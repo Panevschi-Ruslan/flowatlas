@@ -437,6 +437,17 @@ const CANT_FOLLOW_CASES = [
  */
 const standInsPlain = plainFor('uninstalled-internal-packages');
 
+/**
+ * Tables written down one step away from the query (P88): what is still a gap
+ * once the three shapes are read, and the calls an edge explains, counted.
+ */
+const tablesElsewherePlain = plainFor('tables-set-elsewhere');
+
+const TABLES_ELSEWHERE_CASES = [
+  ['doctor.txt', (io) => runDoctorCommand({ config: tablesElsewherePlain.config }, io)],
+  ['stats.tree.txt', (io) => runStats({ ...tablesElsewherePlain, format: 'tree' }, io)],
+];
+
 const STAND_IN_CASES = [
   ['doctor.unresolved.txt', (io) => runCantFollowCommand({ config: standInsPlain.config }, io)],
   ['shapes.suggest.txt', (io) => runShapesSuggest({ config: standInsPlain.config, suggest: true }, io)],
@@ -517,6 +528,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'cant-follow', 'expected.cli'), owned: true, cases: CANT_FOLLOW_CASES },
   { dir: join(root, 'fixtures', 'uninstalled-internal-packages', 'expected.cli'), owned: true, cases: STAND_IN_CASES },
   { dir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.cli'), owned: true, cases: HELPER_CHECK_CASES },
+  { dir: join(root, 'fixtures', 'tables-set-elsewhere', 'expected.cli'), owned: true, cases: TABLES_ELSEWHERE_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 

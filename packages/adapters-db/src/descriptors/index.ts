@@ -7,7 +7,7 @@ import {
 } from '@flowatlas/core';
 import type { SourceFile } from 'ts-morph';
 import { isGeneratedPrismaClient, prismaTableOf } from '../leaves/prisma-schema.js';
-import type { TableLocator } from './table.js';
+import type { EntityDecorator, TableLocator } from './table.js';
 
 /**
  * How one library's table name is read.
@@ -589,6 +589,45 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
       // made a table called `Document` of every untyped collection (R165).
       locators: [{ kind: 'chain-call', method: 'collection', index: 0 }],
       entityInTypeArgs: false,
+    },
+  ],
+]);
+
+/**
+ * How a library that maps classes to tables names them (P88).
+ *
+ * A mapper whose repository is typed by its entity, `Repository<Rating>`, names
+ * the table through the type argument; its manager takes the entity class as an
+ * argument instead, `manager.find(Rating, …)`, and the class is the same fact
+ * written in a value. Both are read through the class's decorator when it states
+ * a name, so one table never reads as `Rating` from one call and `ratings` from
+ * the next.
+ *
+ * `managers` are the receivers whose calls take the class, by the name of their
+ * type; a repository of one entity is not among them, because its first argument
+ * is the options of the query. `locators` say where in such a call the class is
+ * written, in order: the call's own first argument, and for a builder made
+ * without one, the `from` of its chain. A string, a sub-query or nothing at all
+ * there names no class, and the call keeps the row it had.
+ *
+ * A `Map`, for the reason every table keyed by a package name here is one (R130).
+ */
+export interface EntityNaming extends EntityDecorator {
+  readonly managers: ReadonlySet<string>;
+  readonly locators: readonly TableLocator[];
+}
+
+export const entityNamings: ReadonlyMap<string, EntityNaming> = new Map([
+  [
+    'typeorm',
+    {
+      decorator: 'Entity',
+      key: 'name',
+      managers: new Set(['EntityManager', 'MongoEntityManager', 'DataSource', 'Connection']),
+      locators: [
+        { kind: 'argument', index: 0 },
+        { kind: 'chain-call', method: 'from', index: 0 },
+      ],
     },
   ],
 ]);

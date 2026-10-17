@@ -1,12 +1,17 @@
 import {
   Node,
+  SyntaxKind,
   VariableDeclarationKind,
   type CallExpression,
+  type ClassDeclaration,
   type Decorator,
   type NewExpression,
   type Node as TsNode,
   type ObjectLiteralExpression,
 } from 'ts-morph';
+import { functionOf, methodNamedOn } from '../di/member-call.js';
+import { evaluateExpression } from '../static-value.js';
+import { returnedExpression } from '../trace.js';
 
 /**
  * Where a library writes the name of the thing a call is addressed to.
@@ -232,14 +237,21 @@ const chainTop = (call: CallExpression): TsNode => {
 const chainCalls = (call: CallExpression): CallExpression[] => {
   const calls: CallExpression[] = [];
   let current: TsNode = chainTop(call);
+  // One helper per chain: what a helper hands out is read, and a helper that
+  // hands out another helper's answer is further than this follows (P88).
+  let stepped = false;
   for (let depth = 0; depth < MOST_LINKS; depth += 1) {
     if (Node.isCallExpression(current)) {
       calls.push(current);
-      current = current.getExpression();
+      const handed: TsNode | undefined = stepped ? undefined : helperAnswer(current);
+      stepped ||= handed !== undefined;
+      current = handed ?? current.getExpression();
       continue;
     }
     if (Node.isPropertyAccessExpression(current)) {
-      current = current.getExpression();
+      const handed: TsNode | undefined = stepped ? undefined : getterAnswer(current);
+      stepped ||= handed !== undefined;
+      current = handed ?? current.getExpression();
       continue;
     }
     // A link kept in a constant is still a link of the chain:
@@ -255,6 +267,84 @@ const chainCalls = (call: CallExpression): CallExpression[] => {
     return calls;
   }
   return calls;
+};
+
+/** The class a node is written in, and each class it extends, nearest first. */
+const classesAround = (node: TsNode): ClassDeclaration[] => {
+  const chain: ClassDeclaration[] = [];
+  let current = node.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+  while (current !== undefined && chain.length < 8) {
+    chain.push(current);
+    current = current.getBaseClass();
+  }
+  return chain;
+};
+
+/** Whether an expression mentions any of a function's parameters. */
+const mentionsParameter = (expression: TsNode, parameters: readonly TsNode[]): boolean =>
+  parameters.length > 0 &&
+  [expression, ...expression.getDescendantsOfKind(SyntaxKind.Identifier)].some((node) => {
+    const declaration = node.getSymbol()?.getDeclarations()[0];
+    return declaration !== undefined && parameters.includes(declaration);
+  });
+
+/**
+ * What a same-class helper called as a link of a chain hands out: the one
+ * expression `this.coll()` returns, so that `this.coll().find()` is read as
+ * `this.db.collection(COMMENTS).find()` is (P88).
+ *
+ * A helper with no arguments is `returnedExpression`'s case. One handed only
+ * constants is read too, when what it returns mentions none of its
+ * parameters: then the arguments cannot change the answer. A helper that
+ * builds its answer from a parameter - `coll(name)` - is a table chosen by its
+ * caller, and nothing is handed out.
+ */
+const helperAnswer = (link: CallExpression): TsNode | undefined => {
+  const callee = link.getExpression();
+  if (!Node.isPropertyAccessExpression(callee) || !Node.isThisExpression(callee.getExpression())) {
+    return undefined;
+  }
+  const written = link.getArguments();
+  if (written.length === 0) return returnedExpression(link) ?? undefined;
+  if (!written.every((argument) => evaluateExpression(argument).resolved)) return undefined;
+  for (const owner of classesAround(link)) {
+    const method = methodNamedOn(owner, callee.getName());
+    const fn = method === undefined ? undefined : functionOf(method);
+    if (fn === undefined) continue;
+    const body = fn.getBody();
+    if (body === undefined) continue;
+    const answer = Node.isBlock(body) ? soleReturn(body) : body;
+    if (answer === undefined) return undefined;
+    return mentionsParameter(answer, fn.getParameters()) ? undefined : answer;
+  }
+  return undefined;
+};
+
+/** The expression a body returns when its only statement is that return. */
+const soleReturn = (body: TsNode): TsNode | undefined => {
+  if (!Node.isBlock(body)) return undefined;
+  const [only, ...rest] = body.getStatements();
+  if (only === undefined || rest.length > 0 || !Node.isReturnStatement(only)) return undefined;
+  return only.getExpression();
+};
+
+/**
+ * What a getter of the same class read as a link of a chain hands out:
+ * `this.collection.find()` over `get collection() { return
+ * this.db.collection(COMMENTS) }` (P88). Only a getter whose body is that one
+ * return; a field is a value somebody else may assign.
+ */
+const getterAnswer = (link: TsNode): TsNode | undefined => {
+  if (!Node.isPropertyAccessExpression(link) || !Node.isThisExpression(link.getExpression())) {
+    return undefined;
+  }
+  for (const owner of classesAround(link)) {
+    const getter = owner.getGetAccessor(link.getName());
+    if (getter === undefined) continue;
+    const body = getter.getBody();
+    return body === undefined ? undefined : soleReturn(body);
+  }
+  return undefined;
 };
 
 /** What a name was bound to, when it is an unannotated `const` bound once. */

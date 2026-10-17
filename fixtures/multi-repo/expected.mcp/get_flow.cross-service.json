@@ -123,7 +123,7 @@
                                 "node": {
                                   "id": "db_query:orders#src/orders/orders.service.ts:26:23",
                                   "type": "db_query",
-                                  "label": "read Order",
+                                  "label": "read orders",
                                   "loc": "src/orders/orders.service.ts:26",
                                   "service": "orders"
                                 },
@@ -134,9 +134,9 @@
                                 "children": [
                                   {
                                     "node": {
-                                      "id": "table:orders#Order",
+                                      "id": "table:orders#orders",
                                       "type": "table",
-                                      "label": "Order",
+                                      "label": "orders",
                                       "service": "orders"
                                     },
                                     "edge": {

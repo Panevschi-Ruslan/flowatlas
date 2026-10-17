@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:11:16.078Z",
+  "builtAt": "2026-10-17T03:01:00.913Z",
   "services": [
     {
       "name": "catalog",
@@ -257,135 +257,142 @@
     {
       "id": "db_query:catalog#src/products/products.service.ts:14:12",
       "type": "db_query",
-      "label": "read Product",
+      "label": "read products",
       "repo": "catalog",
       "file": "src/products/products.service.ts",
       "line": 14,
       "meta": {
         "op": "read",
-        "table": "Product",
+        "table": "products",
         "tables": [
-          "Product"
+          "products"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.products",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Product"
       }
     },
     {
       "id": "db_query:catalog#src/products/products.service.ts:18:12",
       "type": "db_query",
-      "label": "read Product",
+      "label": "read products",
       "repo": "catalog",
       "file": "src/products/products.service.ts",
       "line": 18,
       "meta": {
         "op": "read",
-        "table": "Product",
+        "table": "products",
         "tables": [
-          "Product"
+          "products"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.products",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Product"
       }
     },
     {
       "id": "db_query:catalog#src/products/products.service.ts:22:12",
       "type": "db_query",
-      "label": "read Product",
+      "label": "read products",
       "repo": "catalog",
       "file": "src/products/products.service.ts",
       "line": 22,
       "meta": {
         "op": "read",
-        "table": "Product",
+        "table": "products",
         "tables": [
-          "Product"
+          "products"
         ],
         "package": "typeorm",
         "method": "count",
         "receiver": "this.products",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Product"
       }
     },
     {
       "id": "db_query:inventory#src/stock/stock.service.ts:14:12",
       "type": "db_query",
-      "label": "read StockItem",
+      "label": "read stock_items",
       "repo": "inventory",
       "file": "src/stock/stock.service.ts",
       "line": 14,
       "meta": {
         "op": "read",
-        "table": "StockItem",
+        "table": "stock_items",
         "tables": [
-          "StockItem"
+          "stock_items"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.items",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "StockItem"
       }
     },
     {
       "id": "db_query:inventory#src/stock/stock.service.ts:18:12",
       "type": "db_query",
-      "label": "write StockItem",
+      "label": "write stock_items",
       "repo": "inventory",
       "file": "src/stock/stock.service.ts",
       "line": 18,
       "meta": {
         "op": "write",
-        "table": "StockItem",
+        "table": "stock_items",
         "tables": [
-          "StockItem"
+          "stock_items"
         ],
         "package": "typeorm",
         "method": "save",
         "receiver": "this.items",
         "source": "type-arg",
+        "entityType": "StockItem",
         "entityTypeId": "type:inventory#StockItem"
       }
     },
     {
       "id": "db_query:ledger#src/entries/entries.service.ts:14:12",
       "type": "db_query",
-      "label": "read LedgerEntry",
+      "label": "read entries",
       "repo": "ledger",
       "file": "src/entries/entries.service.ts",
       "line": 14,
       "meta": {
         "op": "read",
-        "table": "LedgerEntry",
+        "table": "entries",
         "tables": [
-          "LedgerEntry"
+          "entries"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.entries",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "LedgerEntry"
       }
     },
     {
       "id": "db_query:ledger#src/entries/entries.service.ts:18:12",
       "type": "db_query",
-      "label": "write LedgerEntry",
+      "label": "write entries",
       "repo": "ledger",
       "file": "src/entries/entries.service.ts",
       "line": 18,
       "meta": {
         "op": "write",
-        "table": "LedgerEntry",
+        "table": "entries",
         "tables": [
-          "LedgerEntry"
+          "entries"
         ],
         "package": "typeorm",
         "method": "save",
         "receiver": "this.entries",
         "source": "type-arg",
+        "entityType": "LedgerEntry",
         "entityTypeId": "type:ledger#LedgerEntry"
       }
     },
@@ -1340,21 +1347,21 @@
       }
     },
     {
-      "id": "table:catalog#Product",
+      "id": "table:catalog#products",
       "type": "table",
-      "label": "Product",
+      "label": "products",
       "repo": "catalog"
     },
     {
-      "id": "table:inventory#StockItem",
+      "id": "table:inventory#stock_items",
       "type": "table",
-      "label": "StockItem",
+      "label": "stock_items",
       "repo": "inventory"
     },
     {
-      "id": "table:ledger#LedgerEntry",
+      "id": "table:ledger#entries",
       "type": "table",
-      "label": "LedgerEntry",
+      "label": "entries",
       "repo": "ledger"
     }
   ],
@@ -1486,7 +1493,7 @@
     },
     {
       "from": "db_query:catalog#src/products/products.service.ts:14:12",
-      "to": "table:catalog#Product",
+      "to": "table:catalog#products",
       "type": "queries",
       "confidence": "static",
       "file": "src/products/products.service.ts",
@@ -1494,7 +1501,7 @@
     },
     {
       "from": "db_query:catalog#src/products/products.service.ts:18:12",
-      "to": "table:catalog#Product",
+      "to": "table:catalog#products",
       "type": "queries",
       "confidence": "static",
       "file": "src/products/products.service.ts",
@@ -1502,7 +1509,7 @@
     },
     {
       "from": "db_query:catalog#src/products/products.service.ts:22:12",
-      "to": "table:catalog#Product",
+      "to": "table:catalog#products",
       "type": "queries",
       "confidence": "static",
       "file": "src/products/products.service.ts",
@@ -1510,7 +1517,7 @@
     },
     {
       "from": "db_query:inventory#src/stock/stock.service.ts:14:12",
-      "to": "table:inventory#StockItem",
+      "to": "table:inventory#stock_items",
       "type": "queries",
       "confidence": "static",
       "file": "src/stock/stock.service.ts",
@@ -1518,7 +1525,7 @@
     },
     {
       "from": "db_query:inventory#src/stock/stock.service.ts:18:12",
-      "to": "table:inventory#StockItem",
+      "to": "table:inventory#stock_items",
       "type": "queries",
       "confidence": "static",
       "file": "src/stock/stock.service.ts",
@@ -1526,7 +1533,7 @@
     },
     {
       "from": "db_query:ledger#src/entries/entries.service.ts:14:12",
-      "to": "table:ledger#LedgerEntry",
+      "to": "table:ledger#entries",
       "type": "queries",
       "confidence": "static",
       "file": "src/entries/entries.service.ts",
@@ -1534,7 +1541,7 @@
     },
     {
       "from": "db_query:ledger#src/entries/entries.service.ts:18:12",
-      "to": "table:ledger#LedgerEntry",
+      "to": "table:ledger#entries",
       "type": "queries",
       "confidence": "static",
       "file": "src/entries/entries.service.ts",
@@ -2074,7 +2081,7 @@
       "file": "src/stock/levels.controller.ts",
       "line": 15,
       "reason": "route-unguarded",
-      "message": "GET /levels/summary has no guard in front of it and reaches StockItem.",
+      "message": "GET /levels/summary has no guard in front of it and reaches stock_items.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /levels/summary"
     },
@@ -2083,7 +2090,7 @@
       "file": "src/stock/levels.controller.ts",
       "line": 20,
       "reason": "route-unguarded",
-      "message": "GET /levels/low has no guard in front of it and reaches StockItem.",
+      "message": "GET /levels/low has no guard in front of it and reaches stock_items.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /levels/low"
     },
@@ -2093,7 +2100,7 @@
       "line": 14,
       "reason": "route-checked-in-body",
       "level": "info",
-      "message": "POST /receipts reaches StockItem with no guard in front of it, and refuses a request in its own code: UnauthorizedException (401) in ReceiptsController.requireSignature, src/stock/receipts.controller.ts:21.",
+      "message": "POST /receipts reaches stock_items with no guard in front of it, and refuses a request in its own code: UnauthorizedException (401) in ReceiptsController.requireSignature, src/stock/receipts.controller.ts:21.",
       "hint": "Nothing is missing if that check runs before the data is read, and this cannot tell the order. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
       "symbol": "POST /receipts"
     },
@@ -2111,7 +2118,7 @@
       "line": 21,
       "reason": "route-guard-skipped",
       "level": "info",
-      "message": "POST /entries/webhook reaches LedgerEntry with no guard in front of it, because ApiKeyGuard (skipped by @SkipApiKey).",
+      "message": "POST /entries/webhook reaches entries with no guard in front of it, because ApiKeyGuard (skipped by @SkipApiKey).",
       "hint": "Decided on purpose, so nothing is missing. Check that the decision still holds; a handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.",
       "symbol": "POST /entries/webhook"
     }

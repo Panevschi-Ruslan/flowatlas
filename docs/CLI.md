@@ -713,7 +713,10 @@ the reconciliation from the last build. The first line counts the unresolved row
 as `build` does (`missed: 9 · notes: 0 · findings: 4`), and `--format json`
 carries them as `totals.missed`, `sites`, `notes` and `findings`, with
 `totals.unresolved` equal to `missed` for one more version. The breakdown by
-reason lists the missed rows.
+reason lists the missed rows. `receivers explained by a drawn call`
+(`receiversExplainedByEdge` in JSON) counts the calls that looked like data by
+name and are not listed because a `static` call edge into the service's own
+repository method explains them (P88).
 
 | Flag | Default | Does |
 |---|---|---|
@@ -2164,9 +2167,48 @@ c.find(…)` in `ProductRepository` is a query on `products`. A query written in
 the base itself runs for every class that extends it, so it has no one table; it
 is an `info` row saying so, and each call through a subclass carries that
 subclass's table. A base named as a plain string
-keeps working as before, and a query through it whose table is not read carries
-a row naming `tableProperty` as the key that would read it
+keeps working as before; where its own queries say which property its classes
+set (below), that property is read, and otherwise a query through it whose table
+is not read carries a row naming `tableProperty` as the key that would read it
 (`fixtures/nest-mongo-tables`).
+
+**Tables set one step away, read without configuration (P88).** Three shapes
+are read with no `adapters.db` entry at all:
+
+- *A field each class sets for its base.* A query in an abstract base, or one
+  something extends, that hands `this.<key>` to the library's own table
+  argument - `db.collection(this.collectionName)`, `knex(this.table)` - says
+  where its classes name their table, exactly as `tableProperty` would. Every
+  call through a class under it is read on the table that class sets; the
+  query in the base keeps its `info` row; a class that sets the field to
+  something unreadable gets a `dynamic-table-name` row naming that class. A
+  configured `tableProperty` still wins. The query carries
+  `meta.tableFrom: "inferred-property"`, and is `heuristic` when the field is
+  not `readonly`.
+- *A helper that hands out the collection.* `this.coll().find()` and
+  `this.collection.find()`, where `coll()` or the getter `collection` of the
+  same class (or a base) returns one expression - `db.collection(COMMENTS)` -
+  is read through that expression, one level deep (`tableFrom: "helper"`). A
+  helper whose table is its own parameter, `coll(name)`, stays a gap.
+- *An entity class handed to a manager.* On TypeORM's `EntityManager` and
+  `DataSource`, `find(Rating, ...)`, `save(Badge, ...)`,
+  `createQueryBuilder(Reviewer, 'r')` and a builder's `from(Rating, 'r')` name
+  the table by the class: what `@Entity('ratings')` or
+  `@Entity({ name: 'ratings' })` states, else the class name
+  (`source: "entity-arg"`). `getRepository(Rating)` hands out a
+  `Repository<Rating>`, read as one.
+
+The type-argument path reads `@Entity(...)` the same way, so a
+`Repository<Rating>` over `@Entity('ratings')` is on `ratings`, not `Rating`:
+one table, one name, whichever call reaches it. A sub-query, a builder with no
+entity, and SQL built at run time stay `dynamic-table-name`.
+
+A call that reads as data only by the receiver's name -
+`this.searchRepository.lookup(term)` - and that the graph already draws as a
+`static` call into a method of the service's own is no longer a
+`db-receiver-name-only` row: the queries are read where that method writes
+them. `flowatlas stats` counts these as `receivers explained by a drawn call`
+(`fixtures/tables-set-elsewhere`).
 
 #### Tables named in configuration
 

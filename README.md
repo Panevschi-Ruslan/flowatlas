@@ -871,7 +871,12 @@ Known gaps in what it can read:
   with `tableProperty` saying which property of each class states its table.
   Until it is named, those calls are rows saying so, naming the workspace package
   the class comes from where it comes from one, rather than queries nobody
-  checked.
+  checked. Three shapes need no naming: a base whose own queries hand
+  `this.<field>` to the library's table argument, a helper of the class that
+  hands out the collection, and a TypeORM entity class handed to a manager
+  (`manager.find(Rating)`, named by its `@Entity(...)`). A call the graph already
+  draws into a repository method of the service's own is not a row: its queries
+  are read where the method writes them, and `flowatlas stats` counts it.
 - An address built entirely at run time, where no part of it is written down,
   and a route whose address begins with a part read from a setting that some
   committed environment file sets, or that no committed environment file

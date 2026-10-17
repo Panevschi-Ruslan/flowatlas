@@ -142,8 +142,8 @@ ui_action:web#src/app/checkout.component.ts:15:22   (click)="checkout()"
   --http_calls->         entry:orders:http:GET:/orders/:param
   --handles-->  orders   OrdersController.findOne      orders.controller.ts:26
   --calls-->    orders   OrdersService.findOne         orders.service.ts:25
-  --calls-->    orders   db_query read Order           orders.service.ts:26
-  --queries-->  table:orders#Order
+  --calls-->    orders   db_query read orders          orders.service.ts:26
+  --queries-->  table:orders#orders
 ```
 
 Twelve hops from the button, so `traverse({ from, direction: 'out' })` needs

@@ -26,6 +26,10 @@ import {
   type TypeOrigin,
   type BodyRead,
   lineAndColumnAt,
+  declarationOf,
+  locatedExpressions,
+  type GraphEdge,
+  type GraphNode,
 } from '@flowatlas/core';
 import {
   definePass,
@@ -46,20 +50,23 @@ import type {
   Node as TsNode,
   ParameterDeclaration,
   SourceFile,
+  Type,
 } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import {
   dataNameHints,
   dbAdapters,
   descriptorAliases,
+  entityNamings,
   handedOverIn,
   clientCallbacks,
   handovers,
   schemaTables,
   tableReadings,
+  type EntityNaming,
   type TableReading,
 } from './descriptors/index.js';
-import { locateTable } from './descriptors/table.js';
+import { entityTableName, locateTable, locateTableAt, statedEntityTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
 import { loadedSettings, type LoadedSetting } from './leaves/config-load.js';
 import { configuredAccessOf, repositoryExports } from './leaves/configured.js';
@@ -219,6 +226,138 @@ const siteOf = (ctx: NestExtractContext, node: TsNode, file: string): Site => {
 };
 
 /**
+ * Whether a call the data reader would list is already explained by an edge
+ * (P88 D3).
+ *
+ * `this.loansRepository.findOpen()` reads as data by the receiver's name alone,
+ * and the graph has already drawn it as a `static` call into
+ * `LoansRepository.findOpen`, a method of this repository whose queries are
+ * read where they are written. That edge is a stronger fact than the name, so
+ * the row saying "this looks like data" is not written beside it; it is counted
+ * instead (`receiversExplainedByEdge`). A `heuristic` edge is not enough, and
+ * neither is an edge into another repository's code or into a function.
+ *
+ * Made from the edges once, when the first such row asks: the calls pass has
+ * drawn every edge into a method by then, and the leaves pass draws none.
+ */
+export const explainedByEdge = (
+  edges: readonly GraphEdge[],
+  nodeOf: (id: string) => GraphNode | undefined,
+  repo: string,
+): ((holder: string, file: string, line: number, method: string) => boolean) => {
+  const key = (holder: string, file: string, line: number, method: string): string =>
+    `${holder}\u0000${file}\u0000${String(line)}\u0000${method}`;
+  const drawn = new Set<string>();
+  for (const edge of edges) {
+    if (edge.type !== 'calls' || edge.confidence !== 'static') continue;
+    if (edge.file === undefined || edge.line === undefined) continue;
+    const target = nodeOf(edge.to);
+    if (target?.type !== 'method' || target.repo !== repo) continue;
+    drawn.add(key(edge.from, edge.file, edge.line, target.label.slice(target.label.lastIndexOf('.') + 1)));
+  }
+  return (holder, file, line, method) => drawn.has(key(holder, file, line, method));
+};
+
+/** The property of `this` an argument reads, `this.collectionName`, when it is one. */
+const thisPropertyOf = (argument: TsNode): string | undefined => {
+  let current = argument;
+  while (
+    Node.isParenthesizedExpression(current) ||
+    Node.isAsExpression(current) ||
+    Node.isNonNullExpression(current)
+  ) {
+    current = current.getExpression();
+  }
+  return Node.isPropertyAccessExpression(current) && Node.isThisExpression(current.getExpression())
+    ? current.getName()
+    : undefined;
+};
+
+/** The class a node is written in, and each class it extends, nearest first. */
+const classChainOf = (declaration: ClassDeclaration | undefined): ClassDeclaration[] => {
+  const chain: ClassDeclaration[] = [];
+  let current = declaration;
+  while (current !== undefined && chain.length < 8) {
+    chain.push(current);
+    current = current.getBaseClass();
+  }
+  return chain;
+};
+
+/** The class nearest a declaration that writes a value for a property, and whether it may change. */
+const fieldSetterOf = (
+  declaration: TsNode | undefined,
+  key: string,
+): { owner: string; readonly: boolean } | undefined => {
+  if (declaration === undefined || !Node.isClassDeclaration(declaration)) return undefined;
+  for (const owner of classChainOf(declaration)) {
+    const property = owner.getProperty(key);
+    if (property?.getInitializer() === undefined) continue;
+    return { owner: owner.getName() ?? key, readonly: property.isReadonly() };
+  }
+  return undefined;
+};
+
+/** The nearest function a node is written in. */
+const functionAround = (node: TsNode): TsNode | undefined =>
+  node.getFirstAncestor(
+    (ancestor) =>
+      Node.isMethodDeclaration(ancestor) ||
+      Node.isGetAccessorDeclaration(ancestor) ||
+      Node.isFunctionDeclaration(ancestor) ||
+      Node.isArrowFunction(ancestor) ||
+      Node.isFunctionExpression(ancestor) ||
+      Node.isConstructorDeclaration(ancestor),
+  );
+
+/**
+ * How a table name was reached, when it was not written in the call's own
+ * chain (P88): through the field a class sets for its base (`inferred-property`
+ * when the base was read without configuration), or through a helper of the
+ * class the chain stepped into (`helper`). `changeable` when the field is not
+ * `readonly`, so another assignment could change it (I4).
+ */
+interface TableReach {
+  from?: 'inferred-property' | 'helper';
+  changeable: boolean;
+}
+
+const reachOf = (call: CallExpression, expression: TsNode, keyInferred: boolean | undefined): TableReach => {
+  const parent = expression.getParent();
+  if (parent !== undefined && Node.isPropertyDeclaration(parent) && parent.getInitializer() === expression) {
+    return { ...(keyInferred === true ? { from: 'inferred-property' as const } : {}), changeable: !parent.isReadonly() };
+  }
+  // In a method or getter the call is not itself written in: a helper the
+  // chain stepped into. A `const` in an outer function the call closes over is
+  // still the call's own body.
+  const holder = functionAround(expression);
+  const helper =
+    holder !== undefined &&
+    (Node.isMethodDeclaration(holder) || Node.isGetAccessorDeclaration(holder)) &&
+    !call.getAncestors().includes(holder);
+  return { ...(helper ? { from: 'helper' as const } : {}), changeable: false };
+};
+
+/** The entity class a manager's call names in its arguments, by the library's locators (P88). */
+const entityClassAt = (call: CallExpression, naming: EntityNaming): ClassDeclaration | undefined => {
+  for (const expression of locatedExpressions(call, naming.locators)) {
+    const declaration = Node.isIdentifier(expression) ? declarationOf(expression) : undefined;
+    if (declaration === undefined || !Node.isClassDeclaration(declaration)) continue;
+    if (declaration.getSourceFile().getFilePath().includes('/node_modules/')) continue;
+    return declaration;
+  }
+  return undefined;
+};
+
+/** The table an entity type argument's own class states, when it states one (P88 D1). */
+const statedTableOfType = (type: Type | undefined, naming: EntityNaming): string | undefined => {
+  const declaration = (type?.getSymbol() ?? type?.getAliasSymbol())?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isClassDeclaration(declaration)) return undefined;
+  if (declaration.getSourceFile().getFilePath().includes('/node_modules/')) return undefined;
+  return statedEntityTable(declaration, naming) ?? undefined;
+};
+
+/**
  * The thing a leaf hangs off, and how to put it in the graph.
  *
  * A method and a module-level function hold a query the same way; the only
@@ -261,21 +400,135 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   }
 
   /**
-   * Where a library writes the name of its table, and for a repository base the
-   * configuration names, where its subclasses do (R165).
-   *
-   * A base of the project's own has no description to carry the fact, so the
-   * configuration states it: the property each subclass sets to its table. With
-   * it, a call through `productRepository` reads the table the class it is typed
-   * as states; without it, the base is read as before and the row that says the
-   * table is unread names the key that would read it.
+   * Classes some class of this repository extends, by name, read the first
+   * time it is asked. A base whose classes state their table is shared, and
+   * only an abstract or a shared class is read as one (P88).
    */
+  let extendedNames: Set<string> | undefined;
+  const isExtended = (name: string): boolean => {
+    if (extendedNames === undefined) {
+      extendedNames = new Set();
+      for (const source of repoFiles()) {
+        for (const declaration of source.getClasses()) {
+          const written = declaration.getExtends()?.getExpression().getText();
+          if (written !== undefined) extendedNames.add(written.split('.').pop() ?? written);
+        }
+      }
+    }
+    return extendedNames.has(name);
+  };
+
+  /**
+   * Whether `this.<key>` handed to a call is that library's own table
+   * argument: the argument a described library's locators read the table
+   * from, in a call whose result is that library's (P88 D2). A wrapper of the
+   * project's own counts when it hands back the library's collection, as
+   * `this.mongo.collection(name)` does.
+   */
+  const isTableArgument = (call: CallExpression, index: number): boolean => {
+    const descriptor = descriptorFor(resolveTypeOrigin(call));
+    const reading = descriptor === undefined ? undefined : tableReadings.get(descriptor.package);
+    if (descriptor === undefined || reading === undefined) return false;
+    const callee = call.getExpression();
+    const name = Node.isPropertyAccessExpression(callee) ? callee.getName() : undefined;
+    const isOperation = name !== undefined && operationOf(descriptor, name) !== null;
+    const inChain = reading.locators.some((locator) => locator.kind === 'chain-call' && locator.method === name);
+    return reading.locators.some(
+      (locator) =>
+        (locator.kind === 'chain-call' && locator.method === name && locator.index === index) ||
+        (locator.kind === 'argument' && locator.index === index && isOperation) ||
+        (locator.kind === 'chain-root-argument' && locator.index === index && !isOperation && !inChain),
+    );
+  };
+
+  /**
+   * The property a class's own queries name their table by, when they hand
+   * `this.<key>` to the library's table argument: `db.collection(this.collectionName)`
+   * says, without configuration, what `{ "tableProperty": "collectionName" }`
+   * says by hand (P88). Only a field the class or a base declares, and only one:
+   * a class whose queries name two fields has no one property to read.
+   */
+  const inferredKeys = new Map<ClassDeclaration, string | null>();
+  const inferredTableProperty = (declaration: ClassDeclaration): string | undefined => {
+    const known = inferredKeys.get(declaration);
+    if (known !== undefined) return known ?? undefined;
+    const keys = new Set<string>();
+    const declares = (key: string): boolean =>
+      classChainOf(declaration).some((owner) => owner.getProperty(key) !== undefined);
+    declaration.forEachDescendant((node, traversal) => {
+      if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+        traversal.skip();
+        return;
+      }
+      if (!Node.isCallExpression(node)) return;
+      node.getArguments().forEach((argument, index) => {
+        const key = thisPropertyOf(argument);
+        if (key !== undefined && declares(key) && isTableArgument(node, index)) keys.add(key);
+      });
+    });
+    const [only] = keys;
+    const key = keys.size === 1 ? only : undefined;
+    inferredKeys.set(declaration, key ?? null);
+    return key;
+  };
+
+  /**
+   * Where the classes under a base name their table: the configured
+   * `tableProperty` first, which wins wherever it is written, and else the
+   * property the base's own queries read, for a base that is abstract or that
+   * something extends. Nearest class first (P88).
+   */
+  const tableKeyAbove = (
+    holder: ClassDeclaration | undefined,
+  ): { key: string; base: string; inferred: boolean } | undefined => {
+    for (const current of classChainOf(holder)) {
+      const name = current.getName();
+      if (name === undefined) continue;
+      const configured = localBaseTableProperty(configuredBases, name);
+      if (configured !== undefined) return { key: configured, base: name, inferred: false };
+      if (!current.isAbstract() && !isExtended(name)) continue;
+      const inferred = inferredTableProperty(current);
+      if (inferred !== undefined) return { key: inferred, base: name, inferred: true };
+    }
+    return undefined;
+  };
+
+  /** The property a base the origin names says its table in, configured or inferred. */
+  const baseKeyOf = (origin: TypeOrigin | null): { key: string; inferred: boolean } | undefined => {
+    const base = origin?.package?.startsWith('local:') === true ? origin.package.slice(6) : undefined;
+    if (base === undefined) return undefined;
+    const configured = localBaseTableProperty(configuredBases, base);
+    if (configured !== undefined) return { key: configured, inferred: false };
+    const declaration = origin?.declaration;
+    const holder = declaration !== undefined && Node.isClassDeclaration(declaration) ? declaration : undefined;
+    const found = classChainOf(holder).find((current) => current.getName() === base);
+    const inferred = found === undefined ? undefined : inferredTableProperty(found);
+    return inferred === undefined ? undefined : { key: inferred, inferred: true };
+  };
+
+  /**
+   * What a receiver's type is, with the bases read without configuration among
+   * the configured ones: a class under a base whose queries name their table by
+   * a field is read as the configured base's classes are (P88).
+   */
+  const resolveOrigin = (node: TsNode): TypeOrigin | null => {
+    const found = resolveTypeOrigin(node, { localBaseClasses });
+    const declaration = found?.declaration;
+    if (found === null || !found.isLocal || found.package !== null) return found;
+    if (declaration === undefined || !Node.isClassDeclaration(declaration)) return found;
+    const base = tableKeyAbove(declaration);
+    if (base === undefined || !base.inferred) return found;
+    return resolveTypeOrigin(node, { localBaseClasses: [...localBaseClasses, base.base] });
+  };
+
   /**
    * What to say about a query whose table was not read.
    *
    * Through a repository base the configuration names, the table is the one the
    * receiver's class states, and the only thing missing is which property says
-   * it; naming the call directly is not advice anybody could take there.
+   * it; naming the call directly is not advice anybody could take there. Where
+   * the property is known and the receiver's class sets it to something that
+   * cannot be read, that class is the one to name (P88).
    */
   const unreadTableHint = (
     receiver: string,
@@ -283,53 +536,46 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     origin: TypeOrigin | null,
     call: TsNode,
   ): string => {
-    const base =
-      origin?.package?.startsWith('local:') === true
-        ? origin.package.slice(6)
-        : unnamedBaseAround(call);
-    if (base !== undefined && localBaseTableProperty(configuredBases, base) === undefined) {
+    const throughOrigin =
+      origin?.package?.startsWith('local:') === true ? origin.package.slice(6) : undefined;
+    const base = throughOrigin ?? unnamedBaseAround(call);
+    const key = throughOrigin === undefined ? undefined : baseKeyOf(origin);
+    if (base !== undefined && key === undefined) {
       return `${receiver}.${method} goes through ${base}, whose classes name their table somewhere the configuration has not said. Write the base as { "name": "${base}", "tableProperty": "<property>" } under adapters.db.localBaseClasses, naming the property each class sets to its table.`;
+    }
+    const setter = key === undefined ? undefined : fieldSetterOf(origin?.declaration, key.key);
+    if (base !== undefined && key !== undefined && setter !== undefined) {
+      return `${setter.owner} sets ${key.key}, the property ${base} names its table by, to a value that is not a literal or a constant, so the table ${receiver}.${method} touches cannot be read. Set it to a literal or a constant, or annotate the call.`;
     }
     return `The table ${receiver}.${method} touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.`;
   };
 
   /**
-   * The configured repository base a call is written inside, when that base
-   * says which property its classes name their table in.
+   * The repository base a call is written inside, when that base says which
+   * property its classes name their table in, configured or read off its own
+   * queries (P88).
    */
   const configuredBaseAround = (call: TsNode): string | undefined => {
     const holder = classAround(call);
+    const found = tableKeyAbove(holder);
+    if (holder === undefined || found === undefined) return undefined;
     // A class that states its table is not generic: a query in it that still
     // has none is a real gap, and gets the ordinary row.
-    const key = tablePropertyAbove(holder);
-    if (
-      holder !== undefined &&
-      key !== undefined &&
-      locateTable(call as CallExpression, [{ kind: 'receiver-type-property', key }], {
-        typeDeclaration: holder,
-      }) !== null
-    ) {
-      return undefined;
-    }
-    let current = holder;
-    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
-      const name = current.getName();
-      if (name !== undefined && localBaseTableProperty(configuredBases, name) !== undefined) return name;
-      current = current.getBaseClass();
-    }
-    return undefined;
+    const stated = locateTable(call as CallExpression, [{ kind: 'receiver-type-property', key: found.key }], {
+      typeDeclaration: holder,
+    });
+    return stated === null ? found.base : undefined;
   };
 
-  /** A base configured without `tableProperty` that a call is written inside. */
+  /**
+   * A base configured without `tableProperty` that a call is written inside,
+   * when nothing it queries says the property either.
+   */
   const unnamedBaseAround = (call: TsNode): string | undefined => {
-    const holder = call.getFirstAncestor((node) => Node.isClassDeclaration(node));
-    let current = holder !== undefined && Node.isClassDeclaration(holder) ? holder : undefined;
-    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
+    for (const current of classChainOf(classAround(call))) {
       const name = current.getName();
-      if (name !== undefined && localBaseClasses.includes(name)) {
-        return localBaseTableProperty(configuredBases, name) === undefined ? name : undefined;
-      }
-      current = current.getBaseClass();
+      if (name === undefined || !localBaseClasses.includes(name)) continue;
+      return tableKeyAbove(current) === undefined ? name : undefined;
     }
     return undefined;
   };
@@ -338,18 +584,6 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   const classAround = (call: TsNode): ClassDeclaration | undefined => {
     const holder = call.getFirstAncestor((node) => Node.isClassDeclaration(node));
     return holder !== undefined && Node.isClassDeclaration(holder) ? holder : undefined;
-  };
-
-  /** The property the configured base a class extends names its table in. */
-  const tablePropertyAbove = (holder: ClassDeclaration | undefined): string | undefined => {
-    let current = holder;
-    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
-      const name = current.getName();
-      const key = name === undefined ? undefined : localBaseTableProperty(configuredBases, name);
-      if (key !== undefined) return key;
-      current = current.getBaseClass();
-    }
-    return undefined;
   };
 
   /** Whether an expression is reached from `this`, through calls, accesses and awaits. */
@@ -389,12 +623,18 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
   /** The table the class a `this` query is written in states, when it states one. */
-  const ownTableOf = (call: CallExpression, receiver: TsNode): string | null => {
+  const ownTableOf = (
+    call: CallExpression,
+    receiver: TsNode,
+  ): { name: string; expression: TsNode; inferred: boolean } | null => {
     if (!madeThroughThis(receiver)) return null;
     const holder = classAround(call);
-    const key = tablePropertyAbove(holder);
-    if (holder === undefined || key === undefined) return null;
-    return locateTable(call, [{ kind: 'receiver-type-property', key }], { typeDeclaration: holder });
+    const found = tableKeyAbove(holder);
+    if (holder === undefined || found === undefined) return null;
+    const located = locateTableAt(call, [{ kind: 'receiver-type-property', key: found.key }], {
+      typeDeclaration: holder,
+    });
+    return located === null ? null : { ...located, inferred: found.inferred };
   };
 
   const readingFor = (
@@ -403,11 +643,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   ): TableReading | undefined => {
     if (descriptor === undefined) return undefined;
     if (descriptor.package !== 'local') return tableReadings.get(descriptor.package);
-    const base = origin?.package?.startsWith('local:') === true ? origin.package.slice(6) : undefined;
-    const key = base === undefined ? undefined : localBaseTableProperty(configuredBases, base);
+    const key = baseKeyOf(origin);
     return key === undefined
       ? undefined
-      : { locators: [{ kind: 'receiver-type-property', key }], entityInTypeArgs: false };
+      : { locators: [{ kind: 'receiver-type-property', key: key.key }], entityInTypeArgs: false };
   };
 
   const descriptorFor = (origin: TypeOrigin | null): DbDescriptor | undefined => {
@@ -607,7 +846,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     fromSource: boolean;
     statedIn?: SourceFile;
   } => {
-    const resolved = resolveTypeOrigin(receiver, { localBaseClasses });
+    const resolved = resolveOrigin(receiver);
     if (descriptorFor(resolved) !== undefined) return { origin: resolved, resolved, fromSource: false };
     const stated = statedOrigin(receiver);
     // Only a library somebody has described. Where nobody has, nothing is known
@@ -664,7 +903,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   const clientOriginOf = (
     value: TsNode,
   ): { origin: TypeOrigin; statedIn?: SourceFile } | null => {
-    const resolved = resolveTypeOrigin(value, { localBaseClasses });
+    const resolved = resolveOrigin(value);
     if (resolved !== null && descriptorFor(resolved) !== undefined) return { origin: resolved };
     const stated = statedOrigin(value);
     return stated !== null && descriptorFor(stated) !== undefined
@@ -741,6 +980,13 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return !(Node.isCallExpression(at) && Node.isPropertyAccessExpression(at.getExpression()));
   };
 
+  /** The static calls into this repository's methods, gathered the first time a row asks (P88). */
+  let drawn: ReturnType<typeof explainedByEdge> | undefined;
+  const drawnCall = (): ReturnType<typeof explainedByEdge> => {
+    drawn ??= explainedByEdge(ctx.builder.edges, (id) => ctx.builder.getNode(id), ctx.repo);
+    return drawn;
+  };
+
   const emitDb = (call: CallExpression, scope: Scope): boolean => {
     const { id: holderId, file, owner } = scope;
     const callee = call.getExpression();
@@ -803,17 +1049,39 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const locatedInCall =
       reading === undefined || descriptor === undefined || statement !== undefined
         ? null
-        : locateTable(call, reading.locators, {
+        : locateTableAt(call, reading.locators, {
             isOperation: (name) => operationOf(descriptor, name) !== null,
             ...(origin?.declaration === undefined ? {} : { typeDeclaration: origin.declaration }),
           });
-    // Inside a class of a configured base, a query made through `this` whose
+    // Inside a class of a repository base, a query made through `this` whose
     // chain names nothing is on the class's own table: `this.coll().find()` in
     // `ProductRepository` is a query on what `ProductRepository` sets its table
     // property to. The chain is asked first, so a collection named outright
     // still wins (R165).
-    const located =
-      locatedInCall ?? (reading === undefined || statement !== undefined ? null : ownTableOf(call, receiver));
+    const own =
+      locatedInCall !== null || reading === undefined || statement !== undefined
+        ? null
+        : ownTableOf(call, receiver);
+    const found = locatedInCall ?? own;
+    const located = found?.name ?? null;
+    // How the name was reached, when it was not in the chain itself: the field
+    // a class sets for a base read without configuration, or a helper the chain
+    // stepped into; and whether a field on the way may be assigned again (P88).
+    const keyInferred = own !== null ? own.inferred : descriptor?.package === 'local' ? baseKeyOf(origin)?.inferred : undefined;
+    const reach = found === null ? undefined : reachOf(call, found.expression, keyInferred);
+    // A manager's call names its entity by the class it is handed, and the
+    // class names the table: `manager.find(Rating, …)` (P88).
+    const naming = descriptor === undefined ? undefined : entityNamings.get(descriptor.package);
+    const entityClass =
+      naming !== undefined &&
+      descriptor !== undefined &&
+      origin !== null &&
+      naming.managers.has(origin.typeName) &&
+      operationOf(descriptor, method) !== null
+        ? entityClassAt(call, naming)
+        : undefined;
+    const entityArgTable =
+      entityClass === undefined || naming === undefined ? null : entityTableName(entityClass, naming);
     // A repository base whose classes state their table is read from what they
     // state, ahead of its type argument, exactly as a described library whose
     // table is in an argument is (R165).
@@ -824,9 +1092,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const effective =
       statement !== undefined
         ? statement.descriptor
-        : reading === undefined || located !== null
-          ? stated
-          : (withoutOverride.get(descriptor?.package ?? '') ?? stated);
+        : entityArgTable !== null && descriptor !== undefined
+          ? { ...descriptor, tableOverride: { kind: 'entity-arg', index: 0 } as const }
+          : reading === undefined || located !== null
+            ? stated
+            : (withoutOverride.get(descriptor?.package ?? '') ?? stated);
+    // The type argument's class, read through its decorator the same way, so a
+    // `Repository<Rating>` and `manager.find(Rating)` name one table (P88 D1).
+    const entityTable =
+      naming === undefined || entityArgTable !== null ? undefined : statedTableOfType(origin?.typeArgs[0], naming);
 
     const fromPackage = entityFromPackage(origin);
     const workspacePackage =
@@ -853,6 +1127,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
           }
         : {}),
       ...(located === null ? {} : { stringArg: located }),
+      ...(entityArgTable === null || entityClass === undefined
+        ? {}
+        : { entityArg: { table: entityArgTable, declared: entityClass.getName() ?? entityArgTable } }),
+      ...(entityTable === undefined ? {} : { entityTable }),
     });
     if (classification === null) {
       // A described handover made on something whose type the source erased:
@@ -875,6 +1153,13 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     /** The row a classification asked for, wherever in this function it asked. */
     const reportUnresolved = (unresolved: { reason: string; hint: string }): void => {
+      // A call into this repository's own repository, already drawn as a
+      // static edge into the method where its queries are read: counted, and
+      // not listed (P88 D3).
+      if (unresolved.reason === 'db-receiver-name-only' && drawnCall()(holderId, file, site.line, method)) {
+        ctx.countExplainedByEdge();
+        return;
+      }
       ctx.report({
         file,
         line: site.line,
@@ -934,9 +1219,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // the shape of every row written through it, which is the same fabrication
     // as reading it as a table, hidden in another field.
     const entityArg =
-      classification.op === 'write' && reading?.entityInTypeArgs !== false
-        ? origin?.typeArgs[0]
-        : undefined;
+      classification.op !== 'write'
+        ? undefined
+        : entityClass !== undefined && entityArgTable !== null
+          ? entityClass.getType()
+          : reading?.entityInTypeArgs !== false
+            ? origin?.typeArgs[0]
+            : undefined;
+    // Lowered where a field on the way to the name may be assigned again (I4).
+    const confidence = reach?.changeable === true ? 'heuristic' : classification.confidence;
     const entityTypeId = entityArg === undefined ? undefined : ctx.types.collectType(entityArg, call);
     ctx.builder.addNode({
       id,
@@ -953,6 +1244,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         method,
         receiver: receiver.getText().slice(0, 80),
         source: classification.source,
+        ...(reach?.from === undefined || classification.table === null ? {} : { tableFrom: reach.from }),
         ...(classification.entityType === undefined
           ? {}
           : { entityType: classification.entityType }),
@@ -975,7 +1267,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       from: holderId,
       to: id,
       type: 'calls',
-      confidence: classification.confidence,
+      confidence,
       file,
       line: site.line,
     });
@@ -987,7 +1279,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         from: id,
         to: tableId,
         type: 'queries',
-        confidence: classification.confidence,
+        confidence,
         file,
         line: site.line,
       });

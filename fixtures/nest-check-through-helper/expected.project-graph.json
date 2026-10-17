@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-17T02:22:05.582Z",
+  "builtAt": "2026-10-17T03:00:37.332Z",
   "services": [
     {
       "name": "lending",
@@ -13,135 +13,142 @@
     {
       "id": "db_query:lending#src/catalogue/catalogue.service.ts:14:12",
       "type": "db_query",
-      "label": "read CatalogueItem",
+      "label": "read catalogue_items",
       "repo": "lending",
       "file": "src/catalogue/catalogue.service.ts",
       "line": 14,
       "meta": {
         "op": "read",
-        "table": "CatalogueItem",
+        "table": "catalogue_items",
         "tables": [
-          "CatalogueItem"
+          "catalogue_items"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.items",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "CatalogueItem"
       }
     },
     {
       "id": "db_query:lending#src/desk/loans.service.ts:17:12",
       "type": "db_query",
-      "label": "write Loan",
+      "label": "write loans",
       "repo": "lending",
       "file": "src/desk/loans.service.ts",
       "line": 17,
       "meta": {
         "op": "write",
-        "table": "Loan",
+        "table": "loans",
         "tables": [
-          "Loan"
+          "loans"
         ],
         "package": "typeorm",
         "method": "save",
         "receiver": "this.loans",
         "source": "type-arg",
+        "entityType": "Loan",
         "entityTypeId": "type:lending#Loan"
       }
     },
     {
       "id": "db_query:lending#src/desk/loans.service.ts:21:12",
       "type": "db_query",
-      "label": "delete Hold",
+      "label": "delete holds",
       "repo": "lending",
       "file": "src/desk/loans.service.ts",
       "line": 21,
       "meta": {
         "op": "delete",
-        "table": "Hold",
+        "table": "holds",
         "tables": [
-          "Hold"
+          "holds"
         ],
         "package": "typeorm",
         "method": "delete",
         "receiver": "this.holds",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Hold"
       }
     },
     {
       "id": "db_query:lending#src/desk/loans.service.ts:25:12",
       "type": "db_query",
-      "label": "read Loan",
+      "label": "read loans",
       "repo": "lending",
       "file": "src/desk/loans.service.ts",
       "line": 25,
       "meta": {
         "op": "read",
-        "table": "Loan",
+        "table": "loans",
         "tables": [
-          "Loan"
+          "loans"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.loans",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Loan"
       }
     },
     {
       "id": "db_query:lending#src/desk/loans.service.ts:29:12",
       "type": "db_query",
-      "label": "read Loan",
+      "label": "read loans",
       "repo": "lending",
       "file": "src/desk/loans.service.ts",
       "line": 29,
       "meta": {
         "op": "read",
-        "table": "Loan",
+        "table": "loans",
         "tables": [
-          "Loan"
+          "loans"
         ],
         "package": "typeorm",
         "method": "count",
         "receiver": "this.loans",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Loan"
       }
     },
     {
       "id": "db_query:lending#src/hours/opening-hours.controller.ts:16:12",
       "type": "db_query",
-      "label": "read OpeningHour",
+      "label": "read opening_hours",
       "repo": "lending",
       "file": "src/hours/opening-hours.controller.ts",
       "line": 16,
       "meta": {
         "op": "read",
-        "table": "OpeningHour",
+        "table": "opening_hours",
         "tables": [
-          "OpeningHour"
+          "opening_hours"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.hours",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "OpeningHour"
       }
     },
     {
       "id": "db_query:lending#src/hours/opening-hours.controller.ts:21:12",
       "type": "db_query",
-      "label": "read OpeningHour",
+      "label": "read opening_hours",
       "repo": "lending",
       "file": "src/hours/opening-hours.controller.ts",
       "line": 21,
       "meta": {
         "op": "read",
-        "table": "OpeningHour",
+        "table": "opening_hours",
         "tables": [
-          "OpeningHour"
+          "opening_hours"
         ],
         "package": "typeorm",
         "method": "findOne",
         "receiver": "this.hours",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "OpeningHour"
       }
     },
     {
@@ -749,34 +756,34 @@
       }
     },
     {
-      "id": "table:lending#CatalogueItem",
+      "id": "table:lending#catalogue_items",
       "type": "table",
-      "label": "CatalogueItem",
+      "label": "catalogue_items",
       "repo": "lending"
     },
     {
-      "id": "table:lending#Hold",
+      "id": "table:lending#holds",
       "type": "table",
-      "label": "Hold",
+      "label": "holds",
       "repo": "lending"
     },
     {
-      "id": "table:lending#Loan",
+      "id": "table:lending#loans",
       "type": "table",
-      "label": "Loan",
+      "label": "loans",
       "repo": "lending"
     },
     {
-      "id": "table:lending#OpeningHour",
+      "id": "table:lending#opening_hours",
       "type": "table",
-      "label": "OpeningHour",
+      "label": "opening_hours",
       "repo": "lending"
     }
   ],
   "edges": [
     {
       "from": "db_query:lending#src/catalogue/catalogue.service.ts:14:12",
-      "to": "table:lending#CatalogueItem",
+      "to": "table:lending#catalogue_items",
       "type": "queries",
       "confidence": "static",
       "file": "src/catalogue/catalogue.service.ts",
@@ -784,7 +791,7 @@
     },
     {
       "from": "db_query:lending#src/desk/loans.service.ts:17:12",
-      "to": "table:lending#Loan",
+      "to": "table:lending#loans",
       "type": "queries",
       "confidence": "static",
       "file": "src/desk/loans.service.ts",
@@ -792,7 +799,7 @@
     },
     {
       "from": "db_query:lending#src/desk/loans.service.ts:21:12",
-      "to": "table:lending#Hold",
+      "to": "table:lending#holds",
       "type": "queries",
       "confidence": "static",
       "file": "src/desk/loans.service.ts",
@@ -800,7 +807,7 @@
     },
     {
       "from": "db_query:lending#src/desk/loans.service.ts:25:12",
-      "to": "table:lending#Loan",
+      "to": "table:lending#loans",
       "type": "queries",
       "confidence": "static",
       "file": "src/desk/loans.service.ts",
@@ -808,7 +815,7 @@
     },
     {
       "from": "db_query:lending#src/desk/loans.service.ts:29:12",
-      "to": "table:lending#Loan",
+      "to": "table:lending#loans",
       "type": "queries",
       "confidence": "static",
       "file": "src/desk/loans.service.ts",
@@ -816,7 +823,7 @@
     },
     {
       "from": "db_query:lending#src/hours/opening-hours.controller.ts:16:12",
-      "to": "table:lending#OpeningHour",
+      "to": "table:lending#opening_hours",
       "type": "queries",
       "confidence": "static",
       "file": "src/hours/opening-hours.controller.ts",
@@ -824,7 +831,7 @@
     },
     {
       "from": "db_query:lending#src/hours/opening-hours.controller.ts:21:12",
-      "to": "table:lending#OpeningHour",
+      "to": "table:lending#opening_hours",
       "type": "queries",
       "confidence": "static",
       "file": "src/hours/opening-hours.controller.ts",
@@ -1271,7 +1278,7 @@
       "file": "src/catalogue/catalogue.controller.ts",
       "line": 15,
       "reason": "route-unguarded",
-      "message": "GET /catalogue/items has no guard in front of it and reaches CatalogueItem.",
+      "message": "GET /catalogue/items has no guard in front of it and reaches catalogue_items.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /catalogue/items"
     },
@@ -1281,7 +1288,7 @@
       "line": 21,
       "reason": "marker-reason-missing",
       "level": "info",
-      "message": "GET /catalogue/new-arrivals has no guard in front of it and reaches CatalogueItem, and is marked @flowatlas-public with no reason given.",
+      "message": "GET /catalogue/new-arrivals has no guard in front of it and reaches catalogue_items, and is marked @flowatlas-public with no reason given.",
       "hint": "Taken as public. Write why after the marker, /** @flowatlas-public <why> */, so whoever reviews the route can check the decision still holds.",
       "symbol": "GET /catalogue/new-arrivals"
     },
@@ -1291,7 +1298,7 @@
       "line": 20,
       "reason": "route-checked-in-body",
       "level": "info",
-      "message": "POST /desk/renewals reaches Loan with no guard in front of it, and refuses a request in its own code through toHttpError(…) (401, 403 or 423, chosen at run time) in DeskController.renew, src/desk/desk.controller.ts:23.",
+      "message": "POST /desk/renewals reaches loans with no guard in front of it, and refuses a request in its own code through toHttpError(…) (401, 403 or 423, chosen at run time) in DeskController.renew, src/desk/desk.controller.ts:23.",
       "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
       "symbol": "POST /desk/renewals"
     },
@@ -1301,7 +1308,7 @@
       "line": 28,
       "reason": "route-checked-in-body",
       "level": "info",
-      "message": "DELETE /desk/holds/:param reaches Hold with no guard in front of it, and refuses a request in its own code through toHttpError(…) (401, 403 or 423, chosen at run time) in DeskController.cancelHold, src/desk/desk.controller.ts:33.",
+      "message": "DELETE /desk/holds/:param reaches holds with no guard in front of it, and refuses a request in its own code through toHttpError(…) (401, 403 or 423, chosen at run time) in DeskController.cancelHold, src/desk/desk.controller.ts:33.",
       "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
       "symbol": "DELETE /desk/holds/:param"
     },
@@ -1311,7 +1318,7 @@
       "line": 39,
       "reason": "route-checked-in-body",
       "level": "info",
-      "message": "GET /desk/overdue reaches Loan with no guard in front of it, and refuses a request in its own code through reject(…) after a check of who is asking (the status it gives was not read) in DeskController.overdue, src/desk/desk.controller.ts:41.",
+      "message": "GET /desk/overdue reaches loans with no guard in front of it, and refuses a request in its own code through reject(…) after a check of who is asking (the status it gives was not read) in DeskController.overdue, src/desk/desk.controller.ts:41.",
       "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
       "symbol": "GET /desk/overdue"
     },
@@ -1320,7 +1327,7 @@
       "file": "src/desk/desk.controller.ts",
       "line": 46,
       "reason": "route-unguarded",
-      "message": "GET /desk/stats has no guard in front of it and reaches Loan.",
+      "message": "GET /desk/stats has no guard in front of it and reaches loans.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /desk/stats"
     },
@@ -1330,7 +1337,7 @@
       "line": 14,
       "reason": "route-public-declared",
       "level": "info",
-      "message": "GET /opening-hours has no guard in front of it and reaches OpeningHour, and is declared public: opening hours are shown to anyone.",
+      "message": "GET /opening-hours has no guard in front of it and reaches opening_hours, and is declared public: opening hours are shown to anyone.",
       "hint": "Decided on purpose, so nothing is missing. Check that the reason still holds.",
       "symbol": "GET /opening-hours"
     },
@@ -1340,7 +1347,7 @@
       "line": 19,
       "reason": "route-public-declared",
       "level": "info",
-      "message": "GET /opening-hours/today has no guard in front of it and reaches OpeningHour, and is declared public: opening hours are shown to anyone.",
+      "message": "GET /opening-hours/today has no guard in front of it and reaches opening_hours, and is declared public: opening hours are shown to anyone.",
       "hint": "Decided on purpose, so nothing is missing. Check that the reason still holds.",
       "symbol": "GET /opening-hours/today"
     }

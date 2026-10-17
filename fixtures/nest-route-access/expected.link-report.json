@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:10.862Z",
+  "builtAt": "2026-10-17T03:01:00.913Z",
   "configHash": "77882f3a6bfe",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 27,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 703,
+      "durationMs": 0,
       "packages": {
         "name": "route-access-catalog",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 21,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 696,
+      "durationMs": 0,
       "packages": {
         "name": "route-access-inventory",
         "runtime": [
@@ -52,7 +52,7 @@
       "edges": 13,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 699,
+      "durationMs": 0,
       "packages": {
         "name": "route-access-ledger",
         "runtime": [
@@ -115,7 +115,7 @@
       "file": "src/stock/levels.controller.ts",
       "line": 15,
       "reason": "route-unguarded",
-      "message": "GET /levels/summary has no guard in front of it and reaches StockItem.",
+      "message": "GET /levels/summary has no guard in front of it and reaches stock_items.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /levels/summary"
     },
@@ -124,7 +124,7 @@
       "file": "src/stock/levels.controller.ts",
       "line": 20,
       "reason": "route-unguarded",
-      "message": "GET /levels/low has no guard in front of it and reaches StockItem.",
+      "message": "GET /levels/low has no guard in front of it and reaches stock_items.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /levels/low"
     },
@@ -134,7 +134,7 @@
       "line": 14,
       "reason": "route-checked-in-body",
       "level": "info",
-      "message": "POST /receipts reaches StockItem with no guard in front of it, and refuses a request in its own code: UnauthorizedException (401) in ReceiptsController.requireSignature, src/stock/receipts.controller.ts:21.",
+      "message": "POST /receipts reaches stock_items with no guard in front of it, and refuses a request in its own code: UnauthorizedException (401) in ReceiptsController.requireSignature, src/stock/receipts.controller.ts:21.",
       "hint": "Nothing is missing if that check runs before the data is read, and this cannot tell the order. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
       "symbol": "POST /receipts"
     },
@@ -144,7 +144,7 @@
       "line": 21,
       "reason": "route-guard-skipped",
       "level": "info",
-      "message": "POST /entries/webhook reaches LedgerEntry with no guard in front of it, because ApiKeyGuard (skipped by @SkipApiKey).",
+      "message": "POST /entries/webhook reaches entries with no guard in front of it, because ApiKeyGuard (skipped by @SkipApiKey).",
       "hint": "Decided on purpose, so nothing is missing. Check that the decision still holds; a handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.",
       "symbol": "POST /entries/webhook"
     }

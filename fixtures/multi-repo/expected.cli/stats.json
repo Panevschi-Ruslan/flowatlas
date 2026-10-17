@@ -68,6 +68,7 @@
     "rows": 0,
     "sites": 0
   },
+  "receiversExplainedByEdge": 0,
   "link": {
     "httpOut": {
       "total": 6,

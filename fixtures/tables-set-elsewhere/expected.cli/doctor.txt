@@ -1,0 +1,67 @@
+unresolved: total=16 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 16 to act on · missed: 8 over 12 sites · notes: 0 · findings: 10
+  6 missed places static reading cannot see, folded into 2 rows
+  10 findings: 10 routes with no guard
+  route-unguarded (finding): 10 rows
+    Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".
+      ratings-api/src/ratings/ratings.controller.ts:8  GET /ratings/best
+      ratings-api/src/ratings/ratings.controller.ts:13  GET /ratings
+      recipes-api/src/recipes/recipes.controller.ts:9  GET /recipes
+      recipes-api/src/recipes/recipes.controller.ts:14  GET /recipes/popular
+      recipes-api/src/recipes/recipes.controller.ts:19  GET /recipes/tags
+      recipes-api/src/recipes/recipes.controller.ts:24  GET /recipes/drafts
+  … 4 more rows; the whole list is in <root>/fixtures/tables-set-elsewhere/.flowatlas/doctor.json
+  dynamic-table-name: 4 rows
+    The table this touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call. Read already without configuration: a field each class sets for a base whose queries use it (this.collectionName), a helper of the class that hands out the collection (this.coll()), and an entity class handed to a manager (manager.find(Rating)).
+      ratings-api/src/ratings/ratings.repository.ts:48  this.em.createQueryBuilder
+        ↳ The table this.em.createQueryBuilder touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.
+      ratings-api/src/ratings/ratings.repository.ts:53  this.em.query
+        ↳ The table this.em.query touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.
+      recipes-api/src/comments/comments.store.ts:37  this.named('comment_flags').insertOne
+        ↳ The table this.named('comment_flags').insertOne touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.
+      recipes-api/src/recipes/recipes.service.ts:37  this.draftsRepository.findAll
+        ↳ DraftsRepository sets collectionName, the property BaseRepository names its table by, to a value that is not a literal or a constant, so the table this.draftsRepository.findAll touches cannot be read. Set it to a literal or a constant, or annotate the call.
+  call-through-token: 1 row
+    Cannot follow a value provided for REVIEWS; provide it with useClass to make calls visible.
+      ratings-api/src/ratings/ratings.service.ts:27  RatingsService.recent -> this.reviewsRepository.recent
+  db-receiver-name-only: 1 row
+    this.reviewsRepository is typed as ReviewsRepositoryPort, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.
+      ratings-api/src/ratings/ratings.service.ts:27  this.reviewsRepository.recent
+  dynamic-table-name (info): 1 row over 3 places
+    BaseRepository declares this query for every class that extends it; the table is each class's own, and is recorded at each call made through one of them.
+      recipes-api/src/db/base.repository.ts:16  this.mongo.database().collection<T>(this.collectionName).find
+  type-generic-uninstantiated (info): 1 row over 3 places
+    The type argument is not known here, so the reference names the parameter.
+      recipes-api/src/db/base.repository.ts:15  T
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 16 now, +16)
+  no baseline at <root>/fixtures/tables-set-elsewhere/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  call-through-token: 0 → 1 (+1)
+  db-receiver-name-only: 0 → 1 (+1)
+  dynamic-table-name: 0 → 4 (+4)
+  route-unguarded: 0 → 10 (+10)
+  new (16):
+    ratings-api|src/ratings/ratings.controller.ts|GET /ratings/best|route-unguarded
+    ratings-api|src/ratings/ratings.controller.ts|GET /ratings|route-unguarded
+    ratings-api|src/ratings/ratings.repository.ts|this.em.createQueryBuilder|dynamic-table-name
+    ratings-api|src/ratings/ratings.repository.ts|this.em.query|dynamic-table-name
+    ratings-api|src/ratings/ratings.service.ts|RatingsService.recent -> this.reviewsRepository.recent|call-through-token
+    ratings-api|src/ratings/ratings.service.ts|this.reviewsRepository.recent|db-receiver-name-only
+    recipes-api|src/comments/comments.store.ts|this.named('comment_flags').insertOne|dynamic-table-name
+    recipes-api|src/recipes/recipes.controller.ts|GET /recipes/cookbooks/newest|route-unguarded
+    recipes-api|src/recipes/recipes.controller.ts|GET /recipes/cookbooks|route-unguarded
+    recipes-api|src/recipes/recipes.controller.ts|GET /recipes/drafts|route-unguarded
+    recipes-api|src/recipes/recipes.controller.ts|GET /recipes/popular|route-unguarded
+    recipes-api|src/recipes/recipes.controller.ts|GET /recipes/search|route-unguarded
+    recipes-api|src/recipes/recipes.controller.ts|GET /recipes/tags|route-unguarded
+    recipes-api|src/recipes/recipes.controller.ts|GET /recipes|route-unguarded
+    recipes-api|src/recipes/recipes.controller.ts|POST /recipes/comments|route-unguarded
+    recipes-api|src/recipes/recipes.service.ts|this.draftsRepository.findAll|dynamic-table-name

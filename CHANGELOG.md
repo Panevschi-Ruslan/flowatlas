@@ -259,8 +259,40 @@ only one of them moved.
   `route-public-declared` row at `info` naming the reason instead; a marker
   with no reason was taken as public and listed as `marker-reason-missing`.
   Nothing else was read as public: not a verb, a path or a name.
+- **Tables named where they are set (P88).** Three shapes of a table written
+  one step away from the query were read with no configuration. A base,
+  abstract or extended, whose queries hand `this.<field>` to the library's own
+  table argument (`db.collection(this.collectionName)`) was read as a
+  `localBaseClasses` entry with that `tableProperty`: each call through a class
+  under it was on the table that class sets, `heuristic` when the field is not
+  `readonly`, and a class setting it to something unreadable got a
+  `dynamic-table-name` row naming the class. A helper of the same class that
+  returns one expression (`this.coll()`, a getter `this.collection`) was
+  followed one level in the chain walk. On TypeORM's `EntityManager` and
+  `DataSource`, the entity class handed to `find`, `save`, `createQueryBuilder`
+  and the like, or to a builder's `from`, named the table
+  (`meta.source: "entity-arg"`). Queries read the first two ways carried
+  `meta.tableFrom: "inferred-property"` or `"helper"`
+  (`fixtures/tables-set-elsewhere`).
 
 ### Changed
+
+- **One table, one name (P88).** A TypeORM entity whose `@Entity('orders')` or
+  `@Entity({ name: 'orders' })` states its table was drawn on that table
+  through `Repository<Order>` too, where it had been the class name `Order`;
+  the class name stayed the default, and the declared name moved to
+  `meta.entityType`. Snapshots of `nest-typeorm`, `nest-query-loop`,
+  `fn-data-layer`, `multi-repo`, `multi-repo-contracts`, `nest-route-access`
+  and `nest-check-through-helper` moved with it.
+- **No row where an edge explains the call (P88).** A call that read as data
+  only by its receiver's name, and that the graph draws as a `static` call into
+  a method of the service's own, was no longer a `db-receiver-name-only` row:
+  its queries are read where that method writes them. Each was counted as
+  `receiversExplainedByEdge` in the repository's stats, and `flowatlas stats`
+  printed `receivers explained by a drawn call` (`receiversExplainedByEdge` in
+  JSON). A base named in `localBaseClasses` as a bare string had its
+  `tableProperty` read off its own queries where they state it
+  (`fixtures/nest-mongo-tables`).
 
 - **What a route fails with is what it can answer (P87).** Under a global or
   `@UsePipes` `ValidationPipe`, a route listed the 400 only when its handler

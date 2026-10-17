@@ -29,10 +29,17 @@ import { createNestFieldMetaReader } from './types/field-meta-reader.js';
  *
  * The shared part is {@link RepoStats}: the files opened, the files read and
  * the difference, plus the tally of calls into installed packages. Only the
- * classes are this reader's own, and this is the whole of what it adds.
+ * classes are this reader's own, and the calls the data reader left to an edge.
  */
 export interface NestStats extends RepoStats {
   classes: number;
+  /**
+   * Calls that only looked like data access by the receiver's name and that
+   * the graph already draws as a `static` call into a method of this
+   * repository, where the queries are read (P88). Not rows: the edge explains
+   * them. Written only when there were any.
+   */
+  receiversExplainedByEdge?: number;
 }
 
 /** Node type and `kind` implied by a class's role. */
@@ -109,6 +116,8 @@ export interface NestExtractContext extends ExtractContext {
 
   report(row: Unresolved): void;
   countExternalCall(pkg: string): void;
+  /** Counts a call the data reader did not list because an edge explains it (P88). */
+  countExplainedByEdge(): void;
 }
 
 export interface CreateContextOptions {
@@ -264,6 +273,10 @@ export const createNestContext = (options: CreateContextOptions): NestExtractCon
 
     countExternalCall: (pkg) => {
       stats.skippedExternalCalls[pkg] = (Object.hasOwn(stats.skippedExternalCalls, pkg) ? (stats.skippedExternalCalls[pkg] ?? 0) : 0) + 1;
+    },
+
+    countExplainedByEdge: () => {
+      stats.receiversExplainedByEdge = (stats.receiversExplainedByEdge ?? 0) + 1;
     },
   };
 };

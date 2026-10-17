@@ -129,7 +129,7 @@ describe('matchSpans over the multi-repo fixture', () => {
     expect(observed.entries['entry:billing:http:POST:/invoices']?.hits).toBe(1);
     expect(observed.entries['entry:billing:http:GET:/invoices/:param']?.hits).toBe(1);
     expect(observed.symbols['orders#src/orders/orders.service.ts:OrdersService.findOne']).toEqual({ hits: 1 });
-    expect(observed.symbols['table:orders#Order']).toEqual({ hits: 1 });
+    expect(observed.symbols['table:orders#orders']).toEqual({ hits: 1 });
   });
 
   it('lists what ran but is not in code', () => {

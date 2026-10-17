@@ -1,4 +1,4 @@
-import { declarationOf, evaluateExpression, locatedExpressions } from '@flowatlas/core';
+import { declarationOf, evaluateExpression, locatedExpressions, stripWrapperSuffix } from '@flowatlas/core';
 import type { LocatorContext, NameLocator } from '@flowatlas/core';
 import {
   Node,
@@ -249,10 +249,64 @@ export const locateTable = (
   call: CallExpression,
   locators: readonly TableLocator[],
   context: TableContext,
-): string | null => {
+): string | null => locateTableAt(call, locators, context)?.name ?? null;
+
+/**
+ * The table a call touches and the expression it was read from.
+ *
+ * Where the expression is says how the name was reached: written in the call's
+ * own chain, in a helper the chain stepped into, or in the field a class sets
+ * (P88). The reader records that, and lowers its confidence where a step went
+ * through something another assignment could change.
+ */
+export const locateTableAt = (
+  call: CallExpression,
+  locators: readonly TableLocator[],
+  context: TableContext,
+): { name: string; expression: TsNode } | null => {
   for (const expression of locatedExpressions(call, locators, context)) {
     const name = nameFromExpression(expression);
-    if (name !== null) return name;
+    if (name !== null) return { name, expression };
   }
   return null;
+};
+
+/**
+ * How a library's entity class states its table: the decorator, and the key of
+ * its options that holds the name when it is not the first argument itself.
+ */
+export interface EntityDecorator {
+  readonly decorator: string;
+  readonly key: string;
+}
+
+/**
+ * The table an entity class states with its decorator, or null when the
+ * decorator states none: `@Entity('ratings')` and `@Entity({ name: 'ratings' })`
+ * name `ratings`, and `@Entity()` names nothing.
+ */
+export const statedEntityTable = (
+  declaration: ClassDeclaration,
+  naming: EntityDecorator,
+): string | null => {
+  const decorator = declaration.getDecorator(naming.decorator);
+  const [first] = decorator?.getArguments() ?? [];
+  if (first === undefined) return null;
+  return Node.isObjectLiteralExpression(first) ? stringProperty(first, [naming.key]) : stringOf(first);
+};
+
+/**
+ * The table an entity class is stored in: what its decorator states, and
+ * otherwise its name, with the persistence suffix taken off exactly as the
+ * type-argument path takes it off (P88 D1). One table is one name whichever way
+ * a call reaches it, `manager.find(Rating)` or a `Repository<Rating>`.
+ */
+export const entityTableName = (
+  declaration: ClassDeclaration,
+  naming: EntityDecorator,
+): string | null => {
+  const stated = statedEntityTable(declaration, naming);
+  if (stated !== null) return stated;
+  const name = declaration.getName();
+  return name === undefined ? null : stripWrapperSuffix(name);
 };

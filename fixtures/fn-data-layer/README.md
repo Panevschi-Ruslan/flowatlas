@@ -15,10 +15,10 @@ project with no data access in it.
 
 | Written as | Call site | `meta.op` | `meta.table` | document recorded |
 |---|---|---|---|---|
-| declared function | `orders.find()` | `read` | `Order` | — |
-| arrow on a const | `orders.save(order)` | `write` | `Order` | `type:fn-data-layer#Order` |
-| function inside a function | `orders.delete(id)` | `delete` | `Order` | — |
-| arrow on a const | `invoices.save(invoice)` | `write` | `Invoice` | `type:fn-data-layer#InvoiceEntity` |
+| declared function | `orders.find()` | `read` | `orders` | — |
+| arrow on a const | `orders.save(order)` | `write` | `orders` | `type:fn-data-layer#Order` |
+| function inside a function | `orders.delete(id)` | `delete` | `orders` | — |
+| arrow on a const | `invoices.save(invoice)` | `write` | `invoices` | `type:fn-data-layer#InvoiceEntity` |
 
 Eight `db_query` nodes from those two files, four from each, and each function gets a node
 of its own exactly as each method does. A body is read whether or not anything calls it:
@@ -36,8 +36,9 @@ one answer a tool like this must never give.
 ## The other half: a document is recorded whether or not the name was trimmed
 
 `Order` and `InvoiceEntity` are the same fact spelled two ways. `meta.entityType` is the
-declared name and is written only when a wrapper suffix was stripped off it, which is
-right — there is nothing to report for `Order`. `meta.entityTypeId`, the document the
+declared name and is written only when the table is named otherwise: a wrapper suffix
+was stripped off it, or, as for both classes here, `@Entity(...)` states the table
+(P88 D1). `meta.entityTypeId`, the document the
 write stores, used to be written in the same place and so inherited that condition: a
 project that does not suffix its entities recorded no document for any write, and
 `stripImpact` answered `unknown` for every field a validation pipe strips off a body

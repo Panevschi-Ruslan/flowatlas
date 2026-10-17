@@ -64,6 +64,12 @@ export interface Stats {
    * reason with no answer; it is a place with no question.
    */
   nothing: PlaceCount;
+  /**
+   * Calls that read as data by the receiver's name alone and that the graph
+   * draws as a `static` call into a method of the service's own, where the
+   * queries are read (P88): not listed, and counted here so the drop is seen.
+   */
+  receiversExplainedByEdge: number;
   link: LinkSummary;
 }
 
@@ -148,6 +154,12 @@ export const collectStats = (db: GraphDb): Stats => {
   }
   const nothing = tally(nothingRows);
   const counted = countsOf(rows);
+  // Each reading's own count, on its repository node; absent where none.
+  let receiversExplainedByEdge = 0;
+  for (const repo of db.nodesByType('repo')) {
+    const explained = (repo.meta?.['stats'] as Record<string, unknown> | undefined)?.['receiversExplainedByEdge'];
+    if (typeof explained === 'number') receiversExplainedByEdge += explained;
+  }
 
   const report = db.report();
   const link: LinkSummary =
@@ -179,6 +191,7 @@ export const collectStats = (db: GraphDb): Stats => {
     unresolvedByReason: sortedRecord(unresolvedByReason),
     unresolvedSites: sortedRecord(unresolvedSites),
     nothing,
+    receiversExplainedByEdge,
     link,
   };
 };
@@ -241,6 +254,7 @@ export const summariseStats = (stats: Stats): string[] => {
     ...section('edges by confidence', stats.edgesByConfidence),
     '',
     ...unresolvedSection(stats),
+    `receivers explained by a drawn call: ${stats.receiversExplainedByEdge ?? 0}`,
     '',
     'link report',
   ];

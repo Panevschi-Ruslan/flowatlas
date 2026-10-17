@@ -1,83 +1,87 @@
 {
   "schemaVersion": 6,
   "repo": "nest-typeorm",
-  "generatedAt": "2026-10-07T14:34:34.928Z",
+  "generatedAt": "2026-10-17T03:01:05.966Z",
   "nodes": [
     {
       "id": "db_query:nest-typeorm#src/orders/orders.service.ts:22:12",
       "type": "db_query",
-      "label": "read Order",
+      "label": "read orders",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.service.ts",
       "line": 22,
       "meta": {
         "op": "read",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:nest-typeorm#src/orders/orders.service.ts:27:12",
       "type": "db_query",
-      "label": "write Order",
+      "label": "write orders",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.service.ts",
       "line": 27,
       "meta": {
         "op": "write",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "save",
         "receiver": "this.orders",
         "source": "type-arg",
+        "entityType": "Order",
         "entityTypeId": "type:nest-typeorm#Order"
       }
     },
     {
       "id": "db_query:nest-typeorm#src/orders/orders.service.ts:32:12",
       "type": "db_query",
-      "label": "delete Order",
+      "label": "delete orders",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.service.ts",
       "line": 32,
       "meta": {
         "op": "delete",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "delete",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:nest-typeorm#src/orders/orders.service.ts:38:12",
       "type": "db_query",
-      "label": "read Order",
+      "label": "read orders",
       "repo": "nest-typeorm",
       "file": "src/orders/orders.service.ts",
       "line": 38,
       "meta": {
         "op": "read",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "createQueryBuilder",
         "receiver": "this.orderCache",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
@@ -368,16 +372,16 @@
       }
     },
     {
-      "id": "table:nest-typeorm#Order",
+      "id": "table:nest-typeorm#orders",
       "type": "table",
-      "label": "Order",
+      "label": "orders",
       "repo": "nest-typeorm"
     }
   ],
   "edges": [
     {
       "from": "db_query:nest-typeorm#src/orders/orders.service.ts:22:12",
-      "to": "table:nest-typeorm#Order",
+      "to": "table:nest-typeorm#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -385,7 +389,7 @@
     },
     {
       "from": "db_query:nest-typeorm#src/orders/orders.service.ts:27:12",
-      "to": "table:nest-typeorm#Order",
+      "to": "table:nest-typeorm#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -393,7 +397,7 @@
     },
     {
       "from": "db_query:nest-typeorm#src/orders/orders.service.ts:32:12",
-      "to": "table:nest-typeorm#Order",
+      "to": "table:nest-typeorm#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -401,7 +405,7 @@
     },
     {
       "from": "db_query:nest-typeorm#src/orders/orders.service.ts:38:12",
-      "to": "table:nest-typeorm#Order",
+      "to": "table:nest-typeorm#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",

@@ -522,7 +522,7 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
       to be retested.</p>
   </div>
   ${rec('05-impact.gif',
-        ["flowatlas impact 'table:orders#Order' --format tree",
+        ["flowatlas impact 'table:orders#orders' --format tree",
          'flowatlas hotspots --type entry --max 5',
          'flowatlas channel order.created --format tree'],
         'impact walking backwards from a table, hotspots, and both ends of a channel')}

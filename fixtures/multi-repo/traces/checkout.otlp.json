@@ -107,7 +107,7 @@
               "name": "mongodb.find",
               "kind": 3,
               "attributes": [
-                { "key": "db.collection.name", "value": { "stringValue": "Order" } },
+                { "key": "db.collection.name", "value": { "stringValue": "orders" } },
                 { "key": "db.query.text", "value": { "stringValue": "{ \"_id\": \"ord-1042\" }" } }
               ]
             },

@@ -233,3 +233,83 @@ describe('a chain continued through a constant (R165)', () => {
     expect(texts(callTo(file, 'updateMany'), COLLECTION)).toEqual([]);
   });
 });
+
+describe('a chain that starts at a helper of the same class (P88)', () => {
+  const COLLECTION: readonly NameLocator[] = [{ kind: 'chain-call', method: 'collection', index: 0 }];
+  const STORE = `const COMMENTS = 'comments';
+declare const db: { collection(name: string): { find(): unknown; insertOne(doc: unknown): unknown } };`;
+
+  it('steps into a helper method with no arguments and reads what it returns', () => {
+    const file = parse(`${STORE}
+class CommentsStore {
+  private coll() { return db.collection(COMMENTS); }
+  add(doc: unknown) { return this.coll().insertOne(doc); }
+}`);
+    expect(texts(callTo(file, 'insertOne'), COLLECTION)).toEqual(['COMMENTS']);
+  });
+
+  it('steps into a getter whose body is one return', () => {
+    const file = parse(`${STORE}
+class CommentsStore {
+  get collection() { return db.collection(COMMENTS); }
+  all() { return this.collection.find(); }
+}`);
+    expect(texts(callTo(file, 'find'), COLLECTION)).toEqual(['COMMENTS']);
+  });
+
+  it('finds a helper a base class declares', () => {
+    const file = parse(`${STORE}
+abstract class Store { protected coll() { return db.collection('notes'); } }
+class NotesStore extends Store { all() { return this.coll().find(); } }`);
+    expect(texts(callTo(file, 'find'), COLLECTION)).toEqual(["'notes'"]);
+  });
+
+  it('refuses a helper that builds its answer from a parameter', () => {
+    const file = parse(`${STORE}
+class AnyStore {
+  private coll(name: string) { return db.collection(name); }
+  all() { return this.coll('comments').find(); }
+}`);
+    expect(texts(callTo(file, 'find'), COLLECTION)).toEqual([]);
+  });
+
+  it('reads a helper handed only constants that its answer does not use', () => {
+    const file = parse(`${STORE}
+class CommentsStore {
+  private coll(_reason: string) { return db.collection(COMMENTS); }
+  all() { return this.coll('listing').find(); }
+}`);
+    expect(texts(callTo(file, 'find'), COLLECTION)).toEqual(['COMMENTS']);
+  });
+
+  it('refuses a helper handed a value that is not a constant', () => {
+    const file = parse(`${STORE}
+class CommentsStore {
+  private coll(_reason: string) { return db.collection(COMMENTS); }
+  all(reason: string) { return this.coll(reason).find(); }
+}`);
+    expect(texts(callTo(file, 'find'), COLLECTION)).toEqual([]);
+  });
+
+  it('follows only one level of helpers', () => {
+    const file = parse(`${STORE}
+class CommentsStore {
+  private inner() { return db.collection(COMMENTS); }
+  private outer() { return this.inner(); }
+  all() { return this.outer().find(); }
+}`);
+    expect(texts(callTo(file, 'find'), COLLECTION)).toEqual([]);
+  });
+
+  it('refuses a helper that may answer two ways', () => {
+    const file = parse(`${STORE}
+class CommentsStore {
+  private coll(): ReturnType<typeof db.collection> {
+    if (Math.random() > 0.5) return db.collection(COMMENTS);
+    return db.collection('archive');
+  }
+  all() { return this.coll().find(); }
+}`);
+    expect(texts(callTo(file, 'find'), COLLECTION)).toEqual([]);
+  });
+});

@@ -158,7 +158,16 @@ const foldStats = (existing: unknown, mine: NestStats): Record<string, unknown> 
   for (const [pkg, count] of Object.entries(mine.skippedExternalCalls)) {
     skippedExternalCalls[pkg] = (Object.hasOwn(skippedExternalCalls, pkg) ? (skippedExternalCalls[pkg] ?? 0) : 0) + count;
   }
-  return { ...mine, ...prior, skippedExternalCalls };
+  // Calls an edge explained are each half's own too, and summed (P88).
+  const explained =
+    (typeof prior['receiversExplainedByEdge'] === 'number' ? prior['receiversExplainedByEdge'] : 0) +
+    (mine.receiversExplainedByEdge ?? 0);
+  return {
+    ...mine,
+    ...prior,
+    skippedExternalCalls,
+    ...(explained === 0 ? {} : { receiversExplainedByEdge: explained }),
+  };
 };
 
 const defaultService = (repo: string, rootDir: string): ServiceConfig => ({

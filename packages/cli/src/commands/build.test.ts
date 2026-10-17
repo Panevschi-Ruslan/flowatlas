@@ -316,7 +316,7 @@ describe('building a project', () => {
     });
     db.close();
     expect(walk.rows.map((row) => row.edgeType)).toContain('hits');
-    expect(walk.rows.map((row) => row.id)).toContain('table:orders#Order');
+    expect(walk.rows.map((row) => row.id)).toContain('table:orders#orders');
   }, 120_000);
 
   /**

@@ -20,14 +20,15 @@ decorator, never a call receiver, so no adapter reads it.
 
 | Call site | file:line | Level / confidence | `meta.op` | `meta.table` | `meta.package` |
 |---|---|---|---|---|---|
-| `this.orders.find()` | `src/orders/orders.service.ts:22` | 1 / `static` | `read` | `Order` | `typeorm` |
-| `this.orders.save(order)` | `src/orders/orders.service.ts:27` | 1 / `static` | `write` | `Order` | `typeorm` |
-| `this.orders.delete(id)` | `src/orders/orders.service.ts:32` | 1 / `static` | `delete` | `Order` | `typeorm` |
-| `this.orderCache.createQueryBuilder('order')` | `src/orders/orders.service.ts:38` | 1 / `static` | `read` | `Order` | `typeorm` |
+| `this.orders.find()` | `src/orders/orders.service.ts:22` | 1 / `static` | `read` | `orders` | `typeorm` |
+| `this.orders.save(order)` | `src/orders/orders.service.ts:27` | 1 / `static` | `write` | `orders` | `typeorm` |
+| `this.orders.delete(id)` | `src/orders/orders.service.ts:32` | 1 / `static` | `delete` | `orders` | `typeorm` |
+| `this.orderCache.createQueryBuilder('order')` | `src/orders/orders.service.ts:38` | 1 / `static` | `read` | `orders` | `typeorm` |
 
 Four call sites → four `db_query` nodes, ops `read` / `write` / `delete` / `read` in
-source order, all `static`, one `table:nest-typeorm#Order` node shared by all four
-`queries` edges (§12 bullet 1).
+source order, all `static`, one `table:nest-typeorm#orders` node shared by all four
+`queries` edges (§12 bullet 1). The table is what `@Entity('orders')` states, and
+`meta.entityType` keeps the class name `Order` (P88 D1).
 
 ## The point of the fixture
 

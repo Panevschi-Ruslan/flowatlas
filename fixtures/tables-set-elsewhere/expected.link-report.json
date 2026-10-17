@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T03:01:25.196Z",
+  "configHash": "07e82fc415fb",
+  "services": [
+    {
+      "name": "ratings-api",
+      "repo": "./ratings-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 38,
+      "edges": 29,
+      "types": 3,
+      "unresolved": 4,
+      "durationMs": 0,
+      "packages": {
+        "name": "@fixture/tables-set-elsewhere-ratings",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "typeorm"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "recipes-api",
+      "repo": "./recipes-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 69,
+      "edges": 67,
+      "types": 4,
+      "unresolved": 4,
+      "durationMs": 0,
+      "packages": {
+        "name": "@fixture/tables-set-elsewhere-recipes",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "mongodb"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 11,
+    "called": 0,
+    "uncalled": [
+      "entry:ratings-api:http:GET:/ratings",
+      "entry:ratings-api:http:GET:/ratings/best",
+      "entry:ratings-api:http:GET:/ratings/recent",
+      "entry:recipes-api:http:GET:/recipes",
+      "entry:recipes-api:http:GET:/recipes/cookbooks",
+      "entry:recipes-api:http:GET:/recipes/cookbooks/newest",
+      "entry:recipes-api:http:GET:/recipes/drafts",
+      "entry:recipes-api:http:GET:/recipes/popular",
+      "entry:recipes-api:http:GET:/recipes/search",
+      "entry:recipes-api:http:GET:/recipes/tags",
+      "entry:recipes-api:http:POST:/recipes/comments"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 8,
+      "reason": "route-unguarded",
+      "message": "GET /ratings/best has no guard in front of it and reaches ratings.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /ratings/best"
+    },
+    {
+      "service": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 13,
+      "reason": "route-unguarded",
+      "message": "GET /ratings has no guard in front of it and reaches ratings.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /ratings"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 9,
+      "reason": "route-unguarded",
+      "message": "GET /recipes has no guard in front of it and reaches recipes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 14,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/popular has no guard in front of it and reaches recipes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/popular"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 19,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/tags has no guard in front of it and reaches tags.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/tags"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 24,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/drafts has no guard in front of it and reaches stored data.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/drafts"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 29,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/cookbooks has no guard in front of it and reaches cookbooks.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/cookbooks"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 34,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/cookbooks/newest has no guard in front of it and reaches cookbooks.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/cookbooks/newest"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 39,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/search has no guard in front of it and reaches search_index.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/search"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 44,
+      "reason": "route-unguarded",
+      "message": "POST /recipes/comments has no guard in front of it and reaches comments.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "POST /recipes/comments"
+    }
+  ],
+  "totals": {
+    "nodes": 107,
+    "edges": 96,
+    "types": 7,
+    "missed": 8,
+    "sites": 12,
+    "notes": 0,
+    "findings": 10,
+    "unresolved": 8
+  }
+}

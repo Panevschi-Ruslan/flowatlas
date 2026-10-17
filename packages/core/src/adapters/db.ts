@@ -11,11 +11,16 @@ export type DbOp = 'read' | 'write' | 'delete';
  * `receiver-prop` — the property the call was made on names the entity.
  * `sql-parse`     — the entity names are inside a query string argument.
  * `string-arg`    — the entity name is a plain string argument.
+ * `entity-arg`    — an argument is the entity class itself, and the class names
+ *                   the table: `manager.find(Order, …)` (P88). Which class it is,
+ *                   and what it states, the caller reads and hands over as
+ *                   `entityArg`; the core knows no decorator and no library.
  */
 export type TableOverride =
   | { kind: 'receiver-prop' }
   | { kind: 'sql-parse'; argIndex: number }
-  | { kind: 'string-arg'; index: number };
+  | { kind: 'string-arg'; index: number }
+  | { kind: 'entity-arg'; index: number };
 
 /**
  * The little that cannot be read out of the type system.
@@ -48,9 +53,17 @@ export interface DbAdapter {
 
 /**
  * Where a table name was found. `configured`: at a call to a function the
- * configuration names under `adapters.db.tables` (P37).
+ * configuration names under `adapters.db.tables` (P37). `entity-arg`: the class
+ * handed to a manager's call (P88).
  */
-export type DbSource = 'type-arg' | 'receiver-prop' | 'sql-parse' | 'string-arg' | 'configured' | 'none';
+export type DbSource =
+  | 'type-arg'
+  | 'receiver-prop'
+  | 'sql-parse'
+  | 'string-arg'
+  | 'entity-arg'
+  | 'configured'
+  | 'none';
 
 export interface DbClassification {
   /**
@@ -77,7 +90,10 @@ export interface DbClassification {
   confidence: Confidence;
   package: string | null;
   source: DbSource;
-  /** Declared name before any persistence suffix was removed. */
+  /**
+   * The stored class's declared name, when the table is named otherwise: before
+   * a persistence suffix was removed, or beside the table its decorator states.
+   */
   entityType?: string;
   unresolved?: { reason: string; hint: string };
 }
@@ -100,6 +116,18 @@ export interface DbCallInput {
   receiverProp?: string;
   /** A literal string argument, when the descriptor asks for that. */
   stringArg?: string;
+  /**
+   * The entity class an argument names, when the descriptor asks for that: the
+   * table the class states (or its name) and the class's declared name.
+   */
+  entityArg?: { table: string; declared: string };
+  /**
+   * The table the entity type argument's own declaration states, when the
+   * caller read one: `Repository<Order>` over a class whose decorator says
+   * `orders`. Supplied by the caller, because reading a decorator is reading a
+   * library's vocabulary, and the type argument's name stands without it (P88).
+   */
+  entityTable?: string;
   /** Patterns the caller uses to recognise a data layer by name. */
   nameHints?: DataNameHints;
   /**
@@ -238,6 +266,10 @@ const tableFromOverride = (
     const tables = [...(input.sqlTables ?? [])];
     return { table: tables[0] ?? null, tables, source: 'sql-parse' };
   }
+  if (override.kind === 'entity-arg') {
+    const name = input.entityArg?.table ?? null;
+    return { table: name, tables: name === null ? [] : [name], source: 'entity-arg' };
+  }
   const name = input.stringArg ?? null;
   return { table: name, tables: name === null ? [] : [name], source: 'string-arg' };
 };
@@ -323,7 +355,9 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
    */
   const declared = origin === null ? null : entityNameOf(origin);
   const rawEntity = input.entityFromPackage === true ? null : declared;
-  const entity = rawEntity === null ? null : stripWrapperSuffix(rawEntity);
+  // What the entity's declaration states wins over its name, so that one table
+  // is one name whichever way a call reaches it (P88 D1).
+  const entity = rawEntity === null ? null : (input.entityTable ?? stripWrapperSuffix(rawEntity));
 
   if (descriptor !== undefined) {
     const { table, tables, source } = tableFromOverride(input, entity);
@@ -337,7 +371,13 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
         table !== null && op !== null && input.originFromSource !== true ? 'static' : 'heuristic',
       package: origin?.package ?? descriptor.package,
       source,
-      ...(rawEntity !== null && rawEntity !== entity ? { entityType: rawEntity } : {}),
+      ...(source === 'entity-arg'
+        ? input.entityArg !== undefined && input.entityArg.declared !== table
+          ? { entityType: input.entityArg.declared }
+          : {}
+        : rawEntity !== null && rawEntity !== entity
+          ? { entityType: rawEntity }
+          : {}),
     };
     if (source === 'sql-parse' && table === null) {
       return {
