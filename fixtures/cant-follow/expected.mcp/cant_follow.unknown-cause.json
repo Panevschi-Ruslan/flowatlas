@@ -21,6 +21,7 @@
     "object-literal",
     "other-type",
     "re-export-missing",
+    "seen-not-in-code",
     "this-outside-class",
     "token-ambiguous",
     "token-not-provided",

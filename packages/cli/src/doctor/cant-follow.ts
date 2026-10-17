@@ -106,6 +106,16 @@ export const renderCantFollowText = (
     if (cause.reasons.some((reason) => PATTERN_CAUSES.includes(reason))) {
       lines.push(`    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause ${cause.cause}`);
     }
+    // What traffic reached and no reader drew (P110): a group per service and
+    // kind, with the names the trace kept and the call that looks for them.
+    for (const spot of cause.seen ?? []) {
+      const names = spot.names.map((name) => `${name.name} (${name.count})`).join(', ');
+      lines.push(
+        `    ${spot.service ?? '(no service)'} ${spot.kind}: ${plural(spot.count, 'span')}, last ${spot.lastSeen ?? 'unknown'}: ${names}` +
+          (spot.more === undefined ? '' : `, and ${spot.more} more`),
+        ...spot.next.map((call) => `      next: ${call}`),
+      );
+    }
     for (const pkg of cause.packages) {
       const named = cause.packages.length > 1 || (pkg.package !== null && cause.label === cause.cause);
       if (named) lines.push(`    ${causeLabel(cause.cause, pkg.package)}: ${plural(pkg.sites, 'place')}`);

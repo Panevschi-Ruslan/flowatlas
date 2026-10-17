@@ -1,0 +1,29 @@
+{
+  "id": "entry:gateway:http:POST:/orders/:param/cancel",
+  "type": "entry",
+  "kind": "http",
+  "service": "gateway",
+  "loc": "src/orders/orders.controller.ts:35",
+  "verdict": "likely-dead",
+  "reason": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it; never seen in 2h while 1 of its 7 neighbours was, the busiest 22 times",
+  "class": "actionable",
+  "evidence": {
+    "oneOff": [
+      {
+        "call": "ui_api_call:web#src/app/orders-api.service.ts:106:12",
+        "asks": "POST /orders/:param/hold",
+        "differs": "hold for cancel",
+        "loc": "src/app/orders-api.service.ts:106"
+      }
+    ],
+    "neverSeen": {
+      "window": "2h",
+      "confidence": "strong"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:106:12\"})",
+    "get_source({symbol: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
+    "cant_follow({service: \"gateway\"})"
+  ]
+}

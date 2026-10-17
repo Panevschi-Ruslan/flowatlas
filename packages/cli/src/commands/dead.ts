@@ -1,4 +1,4 @@
-import { FlowatlasError } from '@flowatlas/core';
+import { FlowatlasError, observedOver, parseDuration } from '@flowatlas/core';
 import type { Command } from 'commander';
 import {
   ENTRY_CLASS_NAMES,
@@ -16,6 +16,7 @@ import { deadFields } from '../analysis/dead.js';
 import { maxRows, openProjectDb, print, wantsJson, type ReadOptions } from '../analysis/open.js';
 import { ANALYTICS_FORMAT_VERSION, type DeadResult } from '../analysis/shapes.js';
 import { moreRows, renderTable, section } from '../format/table.js';
+import { readObservedBeside } from '../observe/store.js';
 
 const KINDS = ['entries', 'channels', 'providers', 'fields', 'all'] as const;
 type Kind = (typeof KINDS)[number];
@@ -25,6 +26,8 @@ export interface DeadCommandOptions extends ReadOptions {
   service?: string;
   /** Only entries of this class: `actionable`, `stream`, `infrastructure` or `declared` (P91). */
   class?: string;
+  /** The window traffic is read over (P110): `7d`; absent, all the observed file holds. */
+  since?: string;
 }
 
 export interface DeadRun {
@@ -40,6 +43,18 @@ const cut = <T>(rows: readonly T[], max: number): { rows: T[]; dropped: number }
 
 const where = (row: { file?: string; line?: number }): string =>
   row.file === undefined ? '' : `${row.file}:${row.line ?? 0}`;
+
+/** What traffic says of a row (P110): `seen ×22`, `never in 7d (strong)`, or nothing it can say. */
+const seenSaid = (row: { evidence?: DeadEntry['evidence'] }): string => {
+  const { seen, neverSeen } = row.evidence ?? {};
+  if (seen !== undefined) return `seen ×${seen.count}`;
+  if (neverSeen !== undefined) return `never in ${neverSeen.window} (${neverSeen.confidence})`;
+  return '—';
+};
+
+/** The seen column, only where an observed file was read: without one every table is as it was. */
+const seenColumn = <T extends { evidence?: DeadEntry['evidence'] }>(traffic: boolean): Array<{ header: string; value: (row: T) => string }> =>
+  traffic ? [{ header: 'seen', value: seenSaid }] : [];
 
 /** What a row says about itself: the rule that put it in its class, and the sentence. */
 const entryWhy = (row: DeadEntry): string => (row.class === 'actionable' ? row.reason : `${row.why}: ${row.reason}`);
@@ -122,16 +137,30 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
     throw new FlowatlasError('bad-argument', `--class must be one of ${ENTRY_CLASS_NAMES.join(', ')}, not ${only}`);
   }
 
-  const { db, close, config } = openProjectDb(options);
+  if (options.since !== undefined && options.since !== 'all' && parseDuration(options.since) === undefined) {
+    throw new FlowatlasError('bad-argument', `--since takes hours, days or weeks (2h, 7d, 2w), not ${options.since}`);
+  }
+
+  const { db, close, config, path } = openProjectDb(options);
   try {
     const max = maxRows(options);
     const publicRoutes = config?.doctor?.publicRoutes ?? [];
     const infrastructure = config?.dead?.infrastructure;
+    // Traffic is evidence for every verdict when an observed file sits beside
+    // the database (P110); without one the answer is exactly the static one.
+    const observed = readObservedBeside(path).observed;
+    if (observed === undefined && options.since !== undefined) {
+      throw new FlowatlasError('bad-argument', '--since reads the observed file beside the database, and there is none', 'Run flowatlas observe <trace files> first.');
+    }
+    const since = options.since === undefined || options.since === 'all' ? undefined : options.since;
     const scope: DeadOptions = {
       ...(options.service === undefined ? {} : { service: options.service }),
       ...(publicRoutes.length === 0 ? {} : { publicRoutes }),
       ...(infrastructure === undefined ? {} : { infrastructure }),
+      ...(observed === undefined ? {} : { observed }),
+      ...(since === undefined ? {} : { since }),
     };
+    const traffic = observed !== undefined;
     const report = db.report();
     const wanted = (name: Kind): boolean => kind === 'all' || kind === name;
 
@@ -182,6 +211,13 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
         `${unresolvedInjects} injects across the project could not be resolved; a provider below may be reached through one`,
       );
     }
+    if (observed !== undefined) {
+      const { window } = observedOver(observed, since);
+      lines.push(
+        `traffic over ${window.label}${window.short ? ` (the file holds less than ${since ?? ''} asked)` : ''}: ` +
+          'seen is alive whatever the code says; never seen is strong only beside a busy neighbour',
+      );
+    }
     lines.push('');
 
     if (allEntries !== undefined) {
@@ -197,6 +233,7 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
             { header: 'id', value: (row) => row.id },
             { header: 'where', value: where },
             { header: 'verdict', value: (row) => row.verdict },
+            ...seenColumn<DeadEntry>(traffic),
             { header: 'why', value: entryWhy },
           ]),
         ),
@@ -214,6 +251,7 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
             { header: 'publishes', value: (row) => row.producers.join(',') || '—' },
             { header: 'handles', value: (row) => row.consumers.join(',') || '—' },
             { header: 'verdict', value: (row) => row.verdict },
+            ...seenColumn<(typeof channels.rows)[number]>(traffic),
             { header: 'why', value: (row) => row.reason },
           ]),
         ),
@@ -283,6 +321,7 @@ export const registerDead = (program: Command): void => {
     .option('--kind <kind>', `one of ${KINDS.join(', ')}`, 'all')
     .option('--class <class>', `only entries of one class: ${ENTRY_CLASS_NAMES.join(', ')}`)
     .option('--service <name>', 'only this service')
+    .option('--since <dur>', 'with an observed file: read traffic over the last 2h, 7d, 2w of it (default: all it holds)')
     .option('--max <n>', 'most rows per section', '150')
     .option('--format <kind>', 'json or table (default: table)')
     .action(async (options: DeadCommandOptions) => {

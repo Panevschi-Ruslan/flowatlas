@@ -69,6 +69,7 @@ describe('the tools a session is offered', () => {
       'hot_paths',
       'impact',
       'list_entries',
+      'never_seen',
       'search',
       'slow_steps',
       'start_here',
@@ -138,12 +139,26 @@ describe('the tools a session is offered', () => {
    * The two lines met (P121 with P120 and P96 beside it on one side, P105
    * and P106 on the other): twenty-three tools, 11,764 and 30,334, each
    * ceiling the measured size rounded up to the next 50.
+   *
+   * Raised by P110, which added one tool (`never_seen`) and the blind-spot
+   * groups `cant_follow` lists under `seen-not-in-code`: 11,259 and 29,649
+   * before, 11,696 and 30,274 after. The tool says one short sentence and
+   * takes the five bounds the ticket names (`since`, `service`, `kind`,
+   * `confidence`, `limit`), with no output schema; `cant_follow`'s schema
+   * gained one loosely typed list (`seen`), and the evidence `dead` adds and
+   * `confirmedBy` on `get_flow` and `who_calls` are in answers, not in the
+   * list. 437 characters of one tool cannot fit in the ninety left, so both
+   * ceilings move by what it costs and the same margin as before.
+   *
+   * The two lines met again (P110 with P109 and P108 on one side; P141, P112
+   * and the docs and page tickets on the other): twenty-four tools, 12,201
+   * and 30,959, each ceiling the measured size rounded up to the next 50.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(11800);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(30350);
+    expect(read.length).toBeLessThan(12250);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(31000);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

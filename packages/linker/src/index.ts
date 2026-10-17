@@ -192,6 +192,22 @@ export type {
   RouteFacts,
 } from './analysis/dead.js';
 export { methodsByOwner, methodsOf, ownerOf } from './analysis/graph.js';
+export {
+  bestGuessCounts,
+  confirmedByTraffic,
+  confirmedJoins,
+  MIN_NEIGHBOUR_HITS,
+  neverSeen,
+  trafficOverlay,
+} from './analysis/never-seen.js';
+export type {
+  NeverSeenAnswer,
+  NeverSeenConfidence,
+  NeverSeenOptions,
+  NeverSeenRow,
+  ObservedInput,
+  TrafficOverlay,
+} from './analysis/never-seen.js';
 export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, rankFindings } from './analysis/findings.js';
 export type {
   CollectedFindings,

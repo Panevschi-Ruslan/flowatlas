@@ -278,7 +278,16 @@ or a call one segment off names it) or `alive`. Its **evidence**:
   `both`) for a channel; `unresolvedInjects` for a class in a service whose
   injects did not all resolve (`likely-dead`); `classReached` for a method
   nothing calls on a class that is used (`likely-dead`); `via` for a handler
-  or controller judged by the way in or route that decided it.
+  or controller judged by the way in or route that decided it;
+- `seen` (`{ count, lastSeen, window }`) and `neverSeen` (`{ window,
+  confidence }`) when an observed file sits beside the graph (P110): seen in
+  the window is `alive` whatever the code says (and a route the build found
+  nobody calls says static reach missed a caller); never seen is `strong`
+  beside a sibling seen 20 times or more, over a window the file holds in
+  full, and `weak` otherwise. A way in nothing in the code reaches that was
+  never seen, strongly, is `likely-dead` rather than `unknown`; a static
+  `dead` keeps its verdict with the silence as corroboration. `dead` reads all
+  the file holds; `never_seen` and `flowatlas dead --since` cut the window.
 
 `dead({id})` takes a way in, a channel (by its bare name too), a class, a
 method or a function, by any name the other tools take; a controller is as
@@ -465,12 +474,16 @@ What `get_flow` says beside the chain:
   join into it they could have run, but fit other places as well: those are
   counted on none of them, so `observed` never spreads one request over
   guesses.
+- **`confirmedBy: "traffic"`** beside `edge.confidence: "heuristic"` on a row
+  joined by a best guess that traffic went through in the window (P110): the
+  join itself was seen. Read beside the confidence, never written into it; the
+  graph on disk does not change, and no edge becomes `runtime`.
 - **`baseUrlFrom`** and **`baseUrl`** on a request joined by a value read from a
   repository's own files, the code's own fallback or the setting's name, saying
   where the value came from.
 
-`who_calls` rows carry `observed: n`, `p95`, `errorRate` and `seenAmbiguous: n`
-the same way. When the observed file holds a sample request of an entry, the
+`who_calls` rows carry `observed: n`, `p95`, `errorRate`, `seenAmbiguous: n`
+and `confirmedBy` the same way. When the observed file holds a sample request of an entry, the
 entry's hints in `get_flow` and `list_entries` name `trace_for` second.
 
 ### What ran
@@ -480,6 +493,7 @@ entry's hints in `get_flow` and `list_entries` name `trace_for` second.
 | `hot_paths` | the ways in real traffic used most, busiest first, each with its p50, p95, max and error rate and the joins it reached most | `service`, `limit` (10), `joins` (5) |
 | `slow_steps` | the joins and methods real traffic was slowest on, each with its count, p50, p95, max, error rate and, for a join, `measuredAt` (`caller` or `callee`) | `entry` (only what it reaches), `service`, `by` (`p95`, `max`, `p50`), `minCount` (5), `limit` (10) |
 | `trace_for` | one slow and one failing request of an entry, as trees of `{ id?, label, service?, kind, ms?, status?, error?, children }`, `id` the node each span was credited to | `entry` (required: an id or a route said aloud), `maxNodes` (60, per tree) |
+| `never_seen` | what the code runs and traffic never touched in the window - ways in (every kind), channels, and the methods ways in reach, in services the window holds a span of - strong first, each `{ id, type, kind?, service, loc?, window, reachableFrom, neighbours: { seen, of, most }, confidence }`; the answer carries the `window` (`{ since?, from, to, label, short? }`) and `notes`, one per service with no span at all | `since` (`7d`; all the file holds without it), `service`, `kind` (a node type or an entry kind), `confidence` (`strong`, `weak`), `limit` (20) |
 | `undeclared_failures` | the ways in whose traffic answered a status no failure in their code declares, worst first (requests answering a 5xx no reason explains, then any status no reason explains, then the largest share), each `{ entry, label, service, hits, undeclared, declaredNeverSeen?, tooFewHits?, next }` with `next` naming `trace_for` for a failing request and `get_source` on the handler; the answer carries the `window` | `service`, `minCount` (1, requests per status), `minHits` (20, the floor for "never seen"), `limit` (20) |
 
 They answer from the observed file `flowatlas observe` writes beside the
@@ -495,6 +509,20 @@ give it one. Each answer is cut at its `limit` or `maxNodes` and says so, and
 → `get_source` on the handler. Only statuses and counts are compared: the
 observed file keeps no exception text, so which exception caused an
 undeclared 500 is never guessed.
+
+`never_seen` (P110) is evidence with a confidence, never a verdict: traffic is
+what was exercised, by whom, in which environment. A row is `strong` when the
+file holds the whole window asked for and one of its siblings - a way in of
+the same service and kind, a method of the same class, a channel of the same
+service - was seen at least 20 times; otherwise the service may simply not
+have been exercised there, and it is `weak`. A handler counts as seen when the
+way in it handles was hit; a method is asked about only where the service's
+spans name methods at all. `since` cuts the file's hours at read time, ending
+where the file does, so `7d` and `30d` differ without the traces at hand; a
+window longer than the file holds says `short: true` and every row is `weak`.
+`reachableFrom` is `code` when something in the graph reaches the node and
+`outside` when only something outside could. `next` names `dead({id})` and
+`get_flow({entry})` (or `who_calls`) on the first row.
 
 ### Messages and types
 
@@ -542,6 +570,15 @@ bounds the list. With none it says so, and how many go the other way.
 |---|---|---|
 | `cant_follow` | every step the reading could not follow, grouped by cause and then by the package it points into, with a few places each and the id of the method each is written in | `service`, `cause`, `package`, `top`, `samples`, `offset` |
 | `test_pattern` | a draft extraction pattern checked before it is suggested: each rule refused with the part named, or its own tests run, and what it draws from the code with the holes it filled | `yaml`, `code`, `service` |
+
+With an observed file beside the graph (P110), what traffic reached and no
+reader drew stands under its own cause, `seen-not-in-code`: one row per
+service and kind of span `observe` matched to nothing, file-less, so the
+cause lists `seen` groups in place of packages, each `{ service?, kind,
+count, places, lastSeen, names: [{ name, count, lastSeen }], more?, next }`,
+`next` the call that looks for it (`find_symbol` for a method, `list_entries`
+for a route, `search` for a destination, a table or anything else). A blind
+spot is a question, never an edge; the rows go when a build reads them.
 
 The same breakdown `flowatlas doctor --unresolved` prints. A cause is what the
 code says about why: `module-not-installed` (with the package), `import-unresolved`

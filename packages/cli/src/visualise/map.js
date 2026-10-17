@@ -667,6 +667,23 @@ export const mapSeenCount = (map, link, seenJoin) => {
   return n;
 };
 
+/**
+ * Whether every best guess behind a drawn link was seen at run time (P110),
+ * from `seen.confirmed` (steps.js): such a link is drawn solid with its seen
+ * mark rather than dashed. A link with no best guess behind it is not one.
+ */
+export const mapGuessesConfirmed = (map, link, isGuess, confirmed) => {
+  let guesses = 0;
+  for (const i of link.links) {
+    for (const e of map.links[i].e || []) {
+      if (!isGuess(e)) continue;
+      guesses += 1;
+      if (!confirmed(e)) return false;
+    }
+  }
+  return guesses > 0;
+};
+
 const encode = (value) => encodeURIComponent(value).replace(/%3A/gi, ':');
 const listOf = (text) => (text ? text.split(',').map((item) => {
   try { return decodeURIComponent(item); } catch { return null; }

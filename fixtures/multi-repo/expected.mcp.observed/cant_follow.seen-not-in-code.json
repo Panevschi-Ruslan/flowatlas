@@ -1,0 +1,133 @@
+{
+  "total": {
+    "rows": 6,
+    "sites": 6,
+    "causes": 1
+  },
+  "causes": [
+    {
+      "cause": "seen-not-in-code",
+      "label": "seen-not-in-code",
+      "sites": 6,
+      "reasons": [
+        "seen-not-in-code"
+      ],
+      "hint": "Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it with the call beside it; a later build that reads it makes the row go away.",
+      "services": [
+        "billing",
+        "gateway",
+        "orders"
+      ],
+      "packages": [],
+      "seen": [
+        {
+          "service": "billing",
+          "kind": "db",
+          "count": 2,
+          "places": 1,
+          "lastSeen": "2025-10-16T08:06:00.000Z",
+          "names": [
+            {
+              "name": "invoices",
+              "count": 2,
+              "lastSeen": "2025-10-16T08:06:00.000Z"
+            }
+          ],
+          "next": [
+            "search({query: \"invoices\"})"
+          ]
+        },
+        {
+          "service": "billing",
+          "kind": "client",
+          "count": 1,
+          "places": 1,
+          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "names": [
+            {
+              "name": "GET /orders/:value",
+              "count": 1,
+              "lastSeen": "2025-10-16T07:33:30.000Z"
+            }
+          ],
+          "next": [
+            "search({query: \"/orders/:value\"})"
+          ]
+        },
+        {
+          "service": "billing",
+          "kind": "code",
+          "count": 1,
+          "places": 1,
+          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "names": [
+            {
+              "name": "LedgerClient.post",
+              "count": 1,
+              "lastSeen": "2025-10-16T07:33:30.000Z"
+            }
+          ],
+          "next": [
+            "find_symbol({query: \"LedgerClient.post\", service: \"billing\"})"
+          ]
+        },
+        {
+          "service": "billing",
+          "kind": "http",
+          "count": 1,
+          "places": 1,
+          "lastSeen": "2025-10-16T07:33:33.000Z",
+          "names": [
+            {
+              "name": "GET /healthz",
+              "count": 1,
+              "lastSeen": "2025-10-16T07:33:33.000Z"
+            }
+          ],
+          "next": [
+            "list_entries({service: \"billing\"})"
+          ]
+        },
+        {
+          "service": "gateway",
+          "kind": "http",
+          "count": 1,
+          "places": 1,
+          "lastSeen": "2025-10-16T07:33:25.000Z",
+          "names": [
+            {
+              "name": "GET /metrics",
+              "count": 1,
+              "lastSeen": "2025-10-16T07:33:25.000Z"
+            }
+          ],
+          "next": [
+            "list_entries({service: \"gateway\"})"
+          ]
+        },
+        {
+          "service": "orders",
+          "kind": "messaging",
+          "count": 1,
+          "places": 1,
+          "lastSeen": "2025-10-16T07:33:23.002Z",
+          "names": [
+            {
+              "name": "order.audited",
+              "count": 1,
+              "lastSeen": "2025-10-16T07:33:23.002Z"
+            }
+          ],
+          "next": [
+            "search({query: \"order.audited\"})"
+          ]
+        }
+      ]
+    }
+  ],
+  "packages": [],
+  "apart": {
+    "notes": 0,
+    "findings": 4
+  }
+}

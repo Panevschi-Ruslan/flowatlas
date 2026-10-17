@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { ALLOW_LISTS, NESTJS_OBSERVE_READS, only } from './allow-list.js';
-import { PLANTED } from './__fixtures__/planted.js';
-import { nestjsObserveReader, otlpReader, readerFor, TRACE_READERS } from './readers.js';
+import { ALLOW_LISTS, NESTJS_OBSERVE_READS, only } from '../allow-list.js';
+import { PLANTED } from '../__fixtures__/planted.js';
+import { nestjsObserveReader, otlpReader, readerFor, TRACE_READERS } from './index.js';
 
-const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures/multi-repo');
+const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../../fixtures/multi-repo');
 const batch = JSON.parse(readFileSync(join(fixture, 'traces/billing.observe.json'), 'utf8')) as Record<string, unknown>;
 
 describe('the @nestjs/observe reader', () => {

@@ -54,7 +54,7 @@ const beside = (options: ReadOptions): FlowatlasConfig | undefined => {
  */
 export const openProjectDb = (
   options: ReadOptions,
-): { db: GraphDb; close: () => void; config: FlowatlasConfig | undefined } => {
+): { db: GraphDb; close: () => void; config: FlowatlasConfig | undefined; path: string } => {
   const settings: DbHandleOptions = {};
   if (options.db !== undefined) settings.dbPath = options.db;
   // The configuration is still worth loading beside an explicit database: it is
@@ -67,7 +67,7 @@ export const openProjectDb = (
   if ('error' in opened) {
     throw new FlowatlasError('no-graph', opened.error, 'Run flowatlas build, then ask again.');
   }
-  return { db: opened.db, close: () => handle.close(), config: handle.config ?? beside(options) };
+  return { db: opened.db, close: () => handle.close(), config: handle.config ?? beside(options), path: handle.path };
 };
 
 /**

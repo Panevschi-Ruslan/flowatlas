@@ -65,6 +65,12 @@ export interface ObservedSpan {
   peerService?: string;
   /** The host of a third party the call went to, when no base URL names its origin; such a call has no path. */
   thirdParty?: string;
+  /**
+   * `false` on a span from a source with no tree (an access log line, a
+   * REPORT line, P108): it is counted on its entry and never made a sample,
+   * since a sample of one span with an id made up for it says nothing.
+   */
+  sampleable?: false;
 }
 
 export type FaasTrigger = 'http' | 'pubsub' | 'datasource' | 'timer' | 'other';

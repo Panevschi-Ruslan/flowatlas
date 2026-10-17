@@ -1,10 +1,10 @@
 import { isInnerHost } from '@flowatlas/core';
-import { HAR_READS, only } from './allow-list.js';
-import { pathOf, type ObservedSpan } from './span.js';
+import { HAR_READS, only } from '../allow-list.js';
+import { pathOf, type ObservedSpan } from '../span.js';
 import {
   Dropped,
   isObject,
-  isoOf,
+  isoOfText,
   msOf,
   Skips,
   text,
@@ -12,8 +12,8 @@ import {
   withFields,
   type FrontEndContext,
   type ReadContext,
-} from './reader-parts.js';
-import type { TraceReader } from './readers.js';
+  type TraceReader,
+} from './shared.js';
 
 /**
  * A browser's HAR file (P112): the Network tab saved as "Save all as HAR",
@@ -143,7 +143,7 @@ const walkEntries = (
     if (answered === 0) entry.error = true;
     const durationMs = msOf(time);
     if (durationMs !== undefined) entry.durationMs = durationMs;
-    const at = isoOf(startedDateTime);
+    const at = isoOfText(startedDateTime);
     if (at !== undefined) entry.at = at;
     visit(entry, { origin: parsed.origin, hostname: parsed.hostname.toLowerCase() });
   });
@@ -208,6 +208,8 @@ const read = (document: unknown, fallbackService?: string, readContext?: ReadCon
           status: entry.status,
           durationMs: entry.durationMs,
           error: entry.error,
+          // One span with an id made up for it, no tree under it: never a sample (P108).
+          sampleable: false,
         },
       ),
     );

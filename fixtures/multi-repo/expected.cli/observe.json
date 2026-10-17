@@ -1,6 +1,6 @@
 {
   "observedFormatVersion": 3,
-  "spans": 70,
+  "spans": 110,
   "privacy": {
     "kept": [
       "traceId",
@@ -28,7 +28,8 @@
       "awsOp",
       "transport",
       "peerService",
-      "thirdParty"
+      "thirdParty",
+      "sampleable"
     ],
     "dropped": [
       "request and response headers",
@@ -82,6 +83,12 @@
       "format": "nestjs-observe",
       "spans": 48,
       "readAt": "2025-10-16T09:00:00.000Z"
+    },
+    {
+      "sha256": "0bf5d013b1c7811a4d05f2c1526bc4748a0a289ea01217c63b12a62570c19f2f",
+      "format": "otlp",
+      "spans": 40,
+      "readAt": "2025-10-16T09:00:00.000Z"
     }
   ],
   "joins": {
@@ -117,6 +124,20 @@
       "p50": 3,
       "p95": 3,
       "max": 3,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "ui_api_call:web#src/app/orders-api.service.ts:73:12 -hits-> entry:gateway:http:GET:/orders/:param": {
+      "count": 20,
+      "lastSeen": "2025-10-16T08:19:30.000Z",
+      "firstSeen": "2025-10-16T08:10:00.000Z",
+      "p50": 72.88,
+      "p95": 79,
+      "max": 79,
+      "statuses": {
+        "200": 20
+      },
       "errors": 0,
       "errorRate": 0,
       "measuredAt": "caller"
@@ -162,14 +183,14 @@
       "errorRate": 0.0455
     },
     "entry:gateway:http:GET:/orders/:param": {
-      "hits": 2,
-      "lastSeen": "2025-10-16T07:33:26.000Z",
+      "hits": 22,
+      "lastSeen": "2025-10-16T08:19:30.002Z",
       "firstSeen": "2025-10-16T07:33:20.000Z",
-      "p50": 47.26,
-      "p95": 520,
+      "p50": 61.29,
+      "p95": 72.88,
       "max": 520,
       "statuses": {
-        "200": 2
+        "200": 22
       },
       "errors": 0,
       "errorRate": 0
@@ -243,14 +264,14 @@
       "errorRate": 0
     },
     "gateway#src/orders/orders.controller.ts:OrdersController.findOne": {
-      "hits": 1,
-      "lastSeen": "2025-10-16T07:33:20.000Z",
+      "hits": 21,
+      "lastSeen": "2025-10-16T08:19:30.002Z",
       "firstSeen": "2025-10-16T07:33:20.000Z",
-      "p50": 520,
-      "p95": 520,
+      "p50": 61.29,
+      "p95": 72.88,
       "max": 520,
       "statuses": {
-        "200": 1
+        "200": 21
       },
       "errors": 0,
       "errorRate": 0
@@ -282,6 +303,32 @@
       "hits": 1,
       "lastSeen": null,
       "firstSeen": null,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "ui_api_call:web#src/app/orders-api.service.ts:73:12": {
+      "hits": 20,
+      "lastSeen": "2025-10-16T08:19:30.000Z",
+      "firstSeen": "2025-10-16T08:10:00.000Z",
+      "p50": 72.88,
+      "p95": 79,
+      "max": 79,
+      "statuses": {
+        "200": 20
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "web#src/app/orders-api.service.ts:OrdersApiService.one": {
+      "hits": 20,
+      "lastSeen": "2025-10-16T08:19:30.000Z",
+      "firstSeen": "2025-10-16T08:10:00.000Z",
+      "p50": 72.88,
+      "p95": 79,
+      "max": 79,
+      "statuses": {
+        "200": 20
+      },
       "errors": 0,
       "errorRate": 0
     }
@@ -689,27 +736,33 @@
           }
         },
         {
-          "traceId": "a1000000000000000000000000000004",
-          "at": "2025-10-16T07:33:26.000Z",
-          "ms": 45,
+          "traceId": "e5000000000000000000000000000014",
+          "at": "2025-10-16T08:19:30.002Z",
+          "ms": 67,
           "status": 200,
-          "spans": 2,
+          "spans": 1,
           "tree": {
             "id": "entry:gateway:http:GET:/orders/:param",
             "label": "GET /orders/:id",
             "service": "gateway",
             "kind": "server",
-            "ms": 45,
-            "status": 200,
-            "children": [
-              {
-                "label": "GET /orders/:value",
-                "service": "gateway",
-                "kind": "client",
-                "ms": 39,
-                "status": 200
-              }
-            ]
+            "ms": 67,
+            "status": 200
+          }
+        },
+        {
+          "traceId": "e5000000000000000000000000000013",
+          "at": "2025-10-16T08:19:00.002Z",
+          "ms": 66,
+          "status": 200,
+          "spans": 1,
+          "tree": {
+            "id": "entry:gateway:http:GET:/orders/:param",
+            "label": "GET /orders/:id",
+            "service": "gateway",
+            "kind": "server",
+            "ms": 66,
+            "status": 200
           }
         }
       ],
@@ -1157,8 +1210,25 @@
     },
     {
       "hour": "2025-10-16T08:00:00.000Z",
-      "spans": 48,
-      "joins": {},
+      "spans": 88,
+      "joins": {
+        "ui_api_call:web#src/app/orders-api.service.ts:73:12 -hits-> entry:gateway:http:GET:/orders/:param": {
+          "count": 20,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:10:00.000Z",
+          "lastSeen": "2025-10-16T08:19:30.000Z",
+          "statuses": {
+            "200": 20
+          },
+          "hist": {
+            "47": 2,
+            "48": 5,
+            "49": 6,
+            "50": 7
+          },
+          "max": 79
+        }
+      },
       "entries": {
         "entry:billing:http:GET:/invoices/:param": {
           "count": 2,
@@ -1198,6 +1268,23 @@
             "43": 1
           },
           "max": 41.5
+        },
+        "entry:gateway:http:GET:/orders/:param": {
+          "count": 20,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:10:00.002Z",
+          "lastSeen": "2025-10-16T08:19:30.002Z",
+          "statuses": {
+            "200": 20
+          },
+          "hist": {
+            "45": 4,
+            "46": 5,
+            "47": 5,
+            "48": 5,
+            "49": 1
+          },
+          "max": 67
         }
       },
       "symbols": {
@@ -1243,6 +1330,55 @@
             "43": 1
           },
           "max": 40.2
+        },
+        "gateway#src/orders/orders.controller.ts:OrdersController.findOne": {
+          "count": 20,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:10:00.002Z",
+          "lastSeen": "2025-10-16T08:19:30.002Z",
+          "statuses": {
+            "200": 20
+          },
+          "hist": {
+            "45": 4,
+            "46": 5,
+            "47": 5,
+            "48": 5,
+            "49": 1
+          },
+          "max": 67
+        },
+        "ui_api_call:web#src/app/orders-api.service.ts:73:12": {
+          "count": 20,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:10:00.000Z",
+          "lastSeen": "2025-10-16T08:19:30.000Z",
+          "statuses": {
+            "200": 20
+          },
+          "hist": {
+            "47": 2,
+            "48": 5,
+            "49": 6,
+            "50": 7
+          },
+          "max": 79
+        },
+        "web#src/app/orders-api.service.ts:OrdersApiService.one": {
+          "count": 20,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:10:00.000Z",
+          "lastSeen": "2025-10-16T08:19:30.000Z",
+          "statuses": {
+            "200": 20
+          },
+          "hist": {
+            "47": 2,
+            "48": 5,
+            "49": 6,
+            "50": 7
+          },
+          "max": 79
         }
       },
       "channels": {},

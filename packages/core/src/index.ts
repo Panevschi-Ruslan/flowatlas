@@ -715,6 +715,7 @@ export {
   AMBIGUOUS_CANDIDATES,
   cutWindow,
   describeObservedProblem,
+  durationLabel,
   HOUR_MS,
   hourOf,
   isJoinEdge,
@@ -731,6 +732,7 @@ export {
   OBSERVED_READ_VERSIONS,
   observedFromParts,
   observedOf,
+  observedOver,
   observedPathFor,
   parseDuration,
   readObserved,
@@ -759,6 +761,7 @@ export type {
   ObservedSample,
   ObservedSource,
   ObservedWindow,
+  ReadWindow,
   Seen,
   TraceTree,
   UnmatchedAgg,
@@ -844,6 +847,16 @@ export type {
   PromptSubject,
 } from './prompt-text.js';
 
+export {
+  BLIND_SPOT_NAMES,
+  blindSpotMessage,
+  blindSpotNext,
+  blindSpotPlaces,
+  blindSpotRows,
+  blindSpotsOf,
+  SEEN_NOT_IN_CODE,
+} from './blind-spots.js';
+export type { BlindSpot, BlindSpotName, BlindSpotOptions } from './blind-spots.js';
 export {
   CAUSE_META,
   CAUSE_SAMPLES,

@@ -1,12 +1,13 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { extname } from 'node:path';
+import { dirname, extname } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import {
   describeObservedProblem,
   loadConfig,
   mergeObserved,
   OBSERVED_FORMAT_VERSION,
+  observedPathFor,
   parseDuration,
   type GraphNode,
   type HitSeen,
@@ -16,13 +17,36 @@ import type { Command } from 'commander';
 import { settingsOfProject } from '../build/settings/index.js';
 import { dbPathFor, openDbFromOptions, type DbOptions } from '../db.js';
 import { cannotRun } from '../exit.js';
+import {
+  describeListenStats,
+  LISTEN_FLUSH_MS,
+  LISTEN_HOST,
+  LISTEN_MAX_BODY,
+  LISTEN_PORT,
+  LISTEN_TRACE_WAIT_MS,
+  parseInterval,
+  parseSize,
+  startListener,
+  type ListenStats,
+} from '../observe/listen.js';
 import { indexGraph, matchSpans, type Observed } from '../observe/match.js';
 import { frontEndContextOf } from '../observe/origins.js';
 import { decodeTraceRequest, ProtobufError } from '../observe/otlp-protobuf.js';
-import { TraceFileError, type FrontEndContext, type ReadContext } from '../observe/reader-parts.js';
-import { OTLP_KEEP, readerFor, type SkippedPart } from '../observe/readers.js';
+import {
+  formatsTaking,
+  NameNeeded,
+  OTLP_KEEP,
+  readerFor,
+  type AccessLogKeys,
+  type AccessLogRole,
+  type ReaderFlag,
+  type FrontEndContext,
+  type ReaderOptions,
+  type SkippedPart,
+  TraceFileError,
+} from '../observe/readers/index.js';
 import type { ObservedSpan } from '../observe/span.js';
-import { readObservedBeside, saveObserved } from '../observe/store.js';
+import { ObservedLocked, readObservedBeside, saveObserved, withObservedLock, type LockOptions } from '../observe/store.js';
 
 export interface ObserveOptions extends DbOptions {
   /** Service a span belongs to when the file does not say; for a HAR, the front end it was saved from. */
@@ -37,6 +61,14 @@ export interface ObserveOptions extends DbOptions {
   print?: (message: string) => void;
   /** The clock, for the window and `readAt`; tests and snapshots fix it. */
   now?: Date;
+  /** `--workflow <name>`: the state machine an execution history is of, when the file does not say (P108). */
+  workflow?: string;
+  /** `--function <name>`: the function REPORT lines are of, when no log group says. */
+  function?: string;
+  /** `--access-log-keys route=<k>,status=<k>,...`: the keys an access log's format uses. */
+  accessLogKeys?: string;
+  /** How long to wait for a listener's lock on the observed file (default five seconds); tests shorten it. */
+  lockWaitMs?: number;
 }
 
 export interface ObserveRun {
@@ -105,9 +137,11 @@ const looksLikeJson = (source: string): boolean => /^\uFEFF?\s*[{[]/.test(source
 /**
  * A trace file is one JSON document, or one per line as the OTLP file
  * exporter writes, or an OTLP protobuf request; any of them may be gzipped. A
- * `.pb` file is tried as protobuf first, anything else as JSON first.
+ * `.pb` file is tried as protobuf first, anything else as JSON first. A text
+ * that is not JSON is one document, the text itself, when a reader reads
+ * text (a CSV export, plain log lines, P108); else it is tried as protobuf.
  */
-const documentsOf = (file: string, bytes: Buffer): unknown[] => {
+export const documentsOf = (file: string, bytes: Buffer, options: ReaderOptions = {}): unknown[] => {
   const protobuf = (): unknown[] => {
     try {
       return [decodeTraceRequest(bytes, OTLP_KEEP)];
@@ -129,6 +163,7 @@ const documentsOf = (file: string, bytes: Buffer): unknown[] => {
   const json = jsonDocuments(source);
   if (json !== undefined) return json;
   if (looksLikeJson(source)) throw cannotRun(`${file} is not JSON`);
+  if (!bytes.includes(0) && readerFor(source, options) !== undefined) return [source];
   return protobuf();
 };
 
@@ -145,19 +180,56 @@ export interface TraceFiles {
   notes: string[];
 }
 
-/** The formats `observe` reads, as a refusal names them. */
-const FORMATS_SAID = 'OTLP (resourceSpans), a @nestjs/observe batch (serviceId, snapshots), Zipkin v2 JSON, Jaeger JSON (data) or a HAR (log.entries)';
+/** How each flag a format takes is spelled on the command line. */
+const FLAGS: Readonly<Record<ReaderFlag, string>> = {
+  workflow: '--workflow',
+  function: '--function',
+  accessLogKeys: '--access-log-keys',
+};
+
+/** A flag given for a file whose format does not take it is an error, not a flag quietly unused. */
+const checkFlags = (file: string, format: string, takes: readonly ReaderFlag[], given: ReaderOptions): void => {
+  for (const flag of Object.keys(FLAGS) as ReaderFlag[]) {
+    if (given[flag] === undefined || takes.includes(flag)) continue;
+    const formats = formatsTaking(flag).join(' and ');
+    throw cannotRun(`${FLAGS[flag]} applies to ${formats} files only; ${file} is ${format}`);
+  }
+};
+
+const ACCESS_LOG_ROLES: readonly AccessLogRole[] = ['route', 'method', 'path', 'status', 'latency', 'time'];
+
+/** `--access-log-keys route=rk,status=st`: each role to the key that holds it. */
+export const parseAccessLogKeys = (said: string | undefined): AccessLogKeys | undefined => {
+  if (said === undefined) return undefined;
+  const keys: Partial<Record<AccessLogRole, string>> = {};
+  for (const pair of said.split(',').map((part) => part.trim()).filter(Boolean)) {
+    const [role, key, ...rest] = pair.split('=').map((part) => part.trim());
+    if (!ACCESS_LOG_ROLES.includes(role as AccessLogRole) || key === undefined || key === '' || rest.length > 0) {
+      throw cannotRun(
+        `--access-log-keys takes <role>=<key> pairs, the roles ${ACCESS_LOG_ROLES.join(', ')}; not ${JSON.stringify(pair)}`,
+      );
+    }
+    keys[role as AccessLogRole] = key;
+  }
+  if (Object.keys(keys).length === 0) throw cannotRun('--access-log-keys names no key');
+  return keys;
+};
 
 /**
- * Reads each file with the reader its contents call for. Only file paths:
- * nothing is fetched. `frontEnd` says where the project's front ends send
- * their calls, asked only when a HAR is read (P112).
+ * What `observe` was told beside the files, as the readers take it.
+ * `frontEnd` says where the project's front ends send their calls, asked only
+ * when a HAR is read (P112).
  */
-export const readTraceFiles = (
-  files: readonly string[],
-  service?: string,
-  options: { known?: ReadonlySet<string>; now?: Date; frontEnd?: () => FrontEndContext } = {},
-): TraceFiles => {
+export type TraceFileOptions = { known?: ReadonlySet<string>; now?: Date } & Omit<ReaderOptions, 'part' | 'source'>;
+
+/** The formats `observe` reads, as a refusal names them. */
+const FORMATS_SAID =
+  'OTLP (resourceSpans), a @nestjs/observe batch (serviceId, snapshots), Zipkin v2 JSON, Jaeger JSON (data), a HAR (log.entries), ' +
+  'X-Ray batch-get-traces output (Traces), a Step Functions execution history (events), ' +
+  'API Gateway access log lines (routeKey, status), or Lambda REPORT lines';
+
+/** Reads each file with the reader its contents call for. Only file paths: nothing is fetched. */
+export const readTraceFiles = (files: readonly string[], service?: string, options: TraceFileOptions = {}): TraceFiles => {
   const spans: ObservedSpan[] = [];
   const formats: Record<string, string> = {};
   const skipped = new Map<string, SkippedPart>();
@@ -167,6 +239,12 @@ export const readTraceFiles = (
   const known = new Set(options.known);
   const readAt = (options.now ?? new Date()).toISOString();
   let droppedAttributes = 0;
+  const said: ReaderOptions = {
+    ...(options.workflow === undefined ? {} : { workflow: options.workflow }),
+    ...(options.function === undefined ? {} : { function: options.function }),
+    ...(options.accessLogKeys === undefined ? {} : { accessLogKeys: options.accessLogKeys }),
+    ...(options.frontEnd === undefined ? {} : { frontEnd: options.frontEnd }),
+  };
   for (const file of files) {
     const { bytes, sha256 } = bytesOf(file);
     if (known.has(sha256)) {
@@ -175,15 +253,16 @@ export const readTraceFiles = (
     }
     known.add(sha256);
     let read = 0;
-    for (const document of documentsOf(file, bytes)) {
-      const reader = readerFor(document);
-      if (reader === undefined) throw cannotRun(`${file} is none of ${FORMATS_SAID}`);
+    for (const [part, document] of documentsOf(file, bytes, said).entries()) {
+      const reader = readerFor(document, said);
+      if (reader === undefined) throw cannotRun(`${file} is none of the formats observe reads: ${FORMATS_SAID}`);
       formats[file] = reader.name;
-      const context: ReadContext = { source: sha256, ...(options.frontEnd === undefined ? {} : { frontEnd: options.frontEnd }) };
+      checkFlags(file, reader.name, reader.takes ?? [], said);
       let result;
       try {
-        result = reader.read(document, service, context);
+        result = reader.read(document, service, { ...said, part, source: sha256 });
       } catch (cause) {
+        if (cause instanceof NameNeeded) throw cannotRun(`${file} ${cause.message}; name it with ${cause.flag} <name>`);
         // A reader's refusal names the format, the record and the field, never the file's contents.
         if (cause instanceof TraceFileError) throw cannotRun(`${file}: ${cause.message}`);
         throw cause;
@@ -309,11 +388,39 @@ export const runObserve = (files: readonly string[], options: ObserveOptions = {
   const since = sinceOf(options.since);
   const now = options.now ?? new Date();
   const dbPath = dbPathFor(options);
+  const lock: LockOptions = options.lockWaitMs === undefined ? {} : { waitMs: options.lockWaitMs };
+  let written: ReturnType<typeof observeLocked>;
+  try {
+    written = withObservedLock(dirname(observedPathFor(dbPath)), () => observeLocked(files, options, dbPath, since, now), lock);
+  } catch (cause) {
+    if (!(cause instanceof ObservedLocked)) throw cause;
+    throw cannotRun(
+      `a listener is running (process ${cause.pid} holds ${cause.path}) and writes ${observedPathFor(dbPath)} until it stops; ` +
+        'stop it, or post the traces to it, before observe <files>',
+    );
+  }
+  const { result, labels, observed } = written;
+  const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
+  if (options.format === 'json') print(JSON.stringify(observed, null, 2));
+  else for (const line of summary(result, labels)) print(line);
+  return result;
+};
+
+/** The read, the match and the write `runObserve` does while it holds the observed file's lock. */
+const observeLocked = (
+  files: readonly string[],
+  options: ObserveOptions,
+  dbPath: string,
+  since: string | undefined,
+  now: Date,
+): { result: ObserveRun; labels: Map<string, string>; observed: Observed } => {
   const before = options.reset === true ? {} : readObservedBeside(dbPath);
   if (before.problem !== undefined) {
     throw cannotRun(`${describeObservedProblem(before.problem)}; run again with --reset to start a new one`);
   }
   const previous = before.observed;
+  // A malformed --access-log-keys is refused before the database is opened.
+  const accessLogKeys = parseAccessLogKeys(options.accessLogKeys);
   const db = openDbFromOptions(options);
   let run: Observed;
   let labels: Map<string, string>;
@@ -325,6 +432,9 @@ export const runObserve = (files: readonly string[], options: ObserveOptions = {
     read = readTraceFiles(files, options.service, {
       known: new Set(previous?.sources.map((source) => source.sha256)),
       now,
+      ...(options.workflow === undefined ? {} : { workflow: options.workflow }),
+      ...(options.function === undefined ? {} : { function: options.function }),
+      ...(accessLogKeys === undefined ? {} : { accessLogKeys }),
       // Read only when a HAR asks: the configuration and its repositories' setting files.
       frontEnd: () => (frontEnd ??= frontEndContextOf(nodes, projectOf(options))),
     });
@@ -355,28 +465,146 @@ export const runObserve = (files: readonly string[], options: ObserveOptions = {
       ? { upgradedFrom: previous.observedFormatVersion }
       : {}),
   };
+  return { result, labels, observed };
+};
+
+// --- observe --listen ------------------------------------------------------------
+
+export interface ListenCliOptions extends ObserveOptions {
+  /** `--listen [port]`: true when no port was given. */
+  listen?: boolean | string;
+  host?: string;
+  allowRemote?: boolean;
+  flush?: string;
+  maxBody?: string;
+  traceWait?: string;
+  quiet?: boolean;
+  /** Resolves when the listener should stop; the command waits for SIGINT or SIGTERM. */
+  until?: Promise<void>;
+}
+
+const portOf = (said: boolean | string | undefined): number => {
+  if (said === undefined || said === true) return LISTEN_PORT;
+  const port = typeof said === 'string' && /^\d+$/.test(said.trim()) ? Number(said.trim()) : NaN;
+  if (Number.isInteger(port) && port >= 0 && port <= 65_535) return port;
+  throw cannotRun(`--listen takes a port from 0 to 65535, not ${JSON.stringify(said)}`);
+};
+
+const intervalOf = (flag: string, said: string | undefined, fallback: number, least: number): number => {
+  if (said === undefined) return fallback;
+  const ms = parseInterval(said);
+  if (ms === undefined || ms < least) throw cannotRun(`${flag} takes a duration such as 500ms, 30s, 5m or 1h, not ${JSON.stringify(said)}`);
+  return ms;
+};
+
+/** Flags that name something about a file, given to a listener, which reads no file. */
+const FILE_ONLY: ReadonlyArray<[keyof ListenCliOptions, string]> = [
+  ['workflow', '--workflow'],
+  ['function', '--function'],
+  ['accessLogKeys', '--access-log-keys'],
+  ['format', '--format'],
+];
+
+/** Listen-only flags, given to a run over files. */
+const LISTEN_ONLY: ReadonlyArray<[keyof ListenCliOptions, string]> = [
+  ['host', '--host'],
+  ['allowRemote', '--allow-remote'],
+  ['flush', '--flush'],
+  ['maxBody', '--max-body'],
+  ['traceWait', '--trace-wait'],
+  ['quiet', '--quiet'],
+];
+
+const signalled = (): Promise<void> =>
+  new Promise((resolve) => {
+    const stop = (): void => {
+      process.off('SIGINT', stop);
+      process.off('SIGTERM', stop);
+      resolve();
+    };
+    process.on('SIGINT', stop);
+    process.on('SIGTERM', stop);
+  });
+
+/**
+ * `observe --listen`: runs the receiver until SIGINT or SIGTERM (or `until`),
+ * then writes what it still holds and says what it took.
+ */
+export const runListen = async (options: ListenCliOptions): Promise<ListenStats> => {
+  for (const [key, flag] of FILE_ONLY) {
+    if (options[key] !== undefined) throw cannotRun(`${flag} applies to trace files, not to --listen`);
+  }
+  const maxBody = options.maxBody === undefined ? LISTEN_MAX_BODY : parseSize(options.maxBody);
+  if (maxBody === undefined) throw cannotRun(`--max-body takes a size such as 512kb or 8mb, not ${JSON.stringify(options.maxBody)}`);
   const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
-  if (options.format === 'json') print(JSON.stringify(observed, null, 2));
-  else for (const line of summary(result, labels)) print(line);
-  return result;
+  const listener = await startListener({
+    ...(options.config === undefined ? {} : { config: options.config }),
+    ...(options.db === undefined ? {} : { db: options.db }),
+    host: options.host ?? LISTEN_HOST,
+    port: portOf(options.listen),
+    ...(options.allowRemote === true ? { allowRemote: true } : {}),
+    flushMs: intervalOf('--flush', options.flush, LISTEN_FLUSH_MS, 100),
+    traceWaitMs: intervalOf('--trace-wait', options.traceWait, LISTEN_TRACE_WAIT_MS, 0),
+    maxBody,
+    ...(options.service === undefined ? {} : { service: options.service }),
+    ...(options.since === undefined ? {} : { since: sinceOf(options.since)! }),
+    ...(options.reset === true ? { reset: true } : {}),
+    ...(options.samples === false ? { samples: false } : {}),
+    ...(options.quiet === true ? { quiet: true } : {}),
+    print,
+    ...(options.now === undefined ? {} : { clock: () => options.now!.getTime() }),
+    ...(options.lockWaitMs === undefined ? {} : { lockWaitMs: options.lockWaitMs }),
+  });
+  const { url } = listener.address;
+  print(
+    `listening on ${url}: OTLP/HTTP traces at ${url}/v1/traces (JSON or protobuf, gzip), @nestjs/observe batches at ` +
+      `${url}/applications/telemetry; metrics and logs are dropped; nothing is forwarded. Writing ${listener.path}; Ctrl-C to stop`,
+  );
+  await (options.until ?? signalled());
+  const stats = await listener.close();
+  print(`stopped: ${describeListenStats(stats)}`);
+  return stats;
 };
 
 export const registerObserve = (program: Command): void => {
   program
     .command('observe')
-    .description('add what real traffic did - which joins ran, how long they took, how they answered - from trace files')
+    .description(
+      'add what real traffic did - which joins ran, how long they took, how they answered - from trace files, ' +
+        'or from exporters posting to --listen',
+    )
     .argument(
-      '<file...>',
-      'OTLP JSON, JSON lines or protobuf, @nestjs/observe batches, Zipkin or Jaeger JSON, or a browser HAR, gzipped or not; nothing is sent anywhere',
+      '[file...]',
+      'OTLP JSON, JSON lines or protobuf, @nestjs/observe batches, Zipkin or Jaeger JSON, a browser HAR, or AWS exports ' +
+        '(X-Ray traces, a Step Functions execution history, API Gateway access logs, Lambda REPORT lines), gzipped or not; ' +
+        'nothing is sent anywhere',
     )
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--service <name>', 'service a span belongs to when the file does not name one; for a HAR, the front end it was saved from')
+    .option('--workflow <name>', 'the state machine a Step Functions execution history is of, when the file does not name it')
+    .option('--function <name>', 'the function Lambda REPORT lines are of, when no log group names it')
+    .option('--access-log-keys <map>', 'the keys an API Gateway access log uses: route=<k>,method=<k>,path=<k>,status=<k>,latency=<k>,time=<k>')
     .option('--since <dur>', 'keep only the hours inside this window (2h, 24h, 7d), kept for later runs; all stops cutting')
     .option('--reset', 'start the observed file again instead of adding to it')
     .option('--no-samples', 'keep no sample requests, and remove the ones the file holds: then it holds no trace id')
     .option('--format <kind>', 'json or table (default: table)')
-    .action((files: string[], options: ObserveOptions) => {
+    .option('--listen [port]', `instead of files, take OTLP/HTTP and @nestjs/observe posts on this port (default ${LISTEN_PORT}) until Ctrl-C`)
+    .option('--host <addr>', `address --listen binds (default ${LISTEN_HOST}); not loopback needs --allow-remote`)
+    .option('--allow-remote', 'let --host bind an address other machines can reach')
+    .option('--flush <dur>', 'how often --listen writes the observed file (default 30s)')
+    .option('--max-body <size>', 'largest body --listen takes, before and after gzip (default 8mb)')
+    .option('--trace-wait <dur>', 'how long --listen holds a trace for more of its spans after its last one (default 30s)')
+    .option('--quiet', 'no line per flush from --listen')
+    .action(async (files: string[], options: ListenCliOptions) => {
+      if (options.listen !== undefined) {
+        if (files.length > 0) throw cannotRun('name trace files or --listen, not both');
+        await runListen(options);
+        return;
+      }
+      for (const [key, flag] of LISTEN_ONLY) {
+        if (options[key] !== undefined) throw cannotRun(`${flag} applies to --listen only`);
+      }
       runObserve(files, options);
     });
 };

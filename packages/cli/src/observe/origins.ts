@@ -1,6 +1,6 @@
 import { hostOf, innerServiceName, type FlowatlasConfig, type GraphNode, type RepoSettings } from '@flowatlas/core';
 import { hostIndexOf } from '@flowatlas/linker';
-import type { FrontEndContext } from './reader-parts.js';
+import type { FrontEndContext } from './readers/index.js';
 
 /**
  * Where a project's front ends send their calls (P112), for the HAR reader:

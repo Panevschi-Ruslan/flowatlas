@@ -86,11 +86,13 @@ export function createTables(page) {
   const UNMATCHED_LIMIT = 100;
   const unmatchedHtml = () => {
     const list = seen.unmatched;
-    return `<h4>Seen at run time, not found in code &middot; ${list.length.toLocaleString()}</h4>` +
+    return `<h4>Seen at run time, not found in code &middot; ${list.length.toLocaleString()}${seen.window ? ' in ' + esc(seen.window) : ''}</h4>` +
       '<p class="hint">Calls a trace recorded that match no join here: a way in, a call or a channel the reading missed, ' +
-      'or code that is not in the repositories read.</p><ul class="s-unmatched">' +
+      'or code that is not in the repositories read. Traffic reached them and no reader drew them; the MCP tool ' +
+      '<code>cant_follow</code> lists them as <code>seen-not-in-code</code>, with the call that looks for each.</p><ul class="s-unmatched">' +
       list.slice(0, UNMATCHED_LIMIT).map((item) => `<li><span class="tag">${esc(item.kind)}</span> ${esc(item.name)}` +
-        (item.service ? ` <span class="hint">${esc(item.service)}</span>` : '') + '</li>').join('') +
+        (item.service ? ` <span class="hint">${esc(item.service)}</span>` : '') +
+        (item.next ? ` <span class="hint">&middot; next <code>${esc(item.next)}</code></span>` : '') + '</li>').join('') +
       (list.length > UNMATCHED_LIMIT ? `<li class="hint">${(list.length - UNMATCHED_LIMIT).toLocaleString()} more</li>` : '') +
       '</ul>';
   };
@@ -147,8 +149,25 @@ export function createTables(page) {
           (busiest.ranked > busiest.rows.length
             ? `<p class="hint">${(busiest.ranked - busiest.rows.length).toLocaleString()} more methods have a caller; ` +
               '<code>flowatlas hotspots --type method</code> lists them all.</p>' : '')) +
-      loopsHtml();
+      loopsHtml() + neverHtml();
     sheetEl.replaceChildren(sheet);
+  }
+  /* What the code runs and traffic never touched in the window (P110), strong first, as never_seen lists them. */
+  const NEVER_LIMIT = 100;
+  function neverHtml() {
+    const list = seen.neverSeen;
+    if (!seen.any || list.length === 0) return '';
+    const strong = list.filter((item) => item.strong).length;
+    const items = list.slice(0, NEVER_LIMIT).map(({ node, strong: sure }) =>
+      `<tr><td class="mono"><span class="tag" style="color:${hueOf(nodes[node][RP])};border-color:${hueOf(nodes[node][RP])}">` +
+      `${esc(repoName(node))}</span> ${esc(nodes[node][LB])} ${graphLink(node)}</td>` +
+      `<td><span class="row-never${sure ? ' is-strong' : ''}">${sure ? 'strong' : 'weak'}</span></td></tr>`).join('');
+    return `<h4>Never seen in ${esc(seen.window)} &middot; ${list.length.toLocaleString()}</h4>` +
+      `<p class="hint">Ways in, channels and methods the code runs that traffic never touched. <b>Strong</b>: a neighbour ` +
+      `was busy, so the silence means something (${strong.toLocaleString()}); <b>weak</b>: nothing beside it was, so it may just ` +
+      'not have been exercised. Evidence, not a verdict: <code>flowatlas dead</code> weighs it.</p>' +
+      `<table class="busiest-table"><thead><tr><th>Never seen</th><th>Evidence</th></tr></thead><tbody>${items}</tbody></table>` +
+      (list.length > NEVER_LIMIT ? `<p class="hint">${(list.length - NEVER_LIMIT).toLocaleString()} more</p>` : '');
   }
   /* The likely N+1 loops, reached from the most ways in first, as doctor lists them (P89). */
   function loopsHtml() {

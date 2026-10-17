@@ -109,14 +109,15 @@ const docsWritten = (io) => {
 };
 
 /**
- * `observe` over the fixture's three trace files (P105), on a copy of the
+ * `observe` over the fixture's four trace files (P105; P110 added the web
+ * one, twenty page loads through a best-guess join), on a copy of the
  * fixture's output so no other snapshot reads the file it writes: the summary,
  * the file itself (`--format json`), and a second run over a file already read.
  * The clock is fixed, so the window and `readAt` are the same every run.
  * `observe.json` is also the observed file the MCP snapshots and tests answer from.
  */
 const OBSERVE_NOW = new Date('2025-10-16T09:00:00.000Z');
-const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json'].map((file) =>
+const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json', 'web.otlp.json'].map((file) =>
   join(fixture, 'traces', file),
 );
 /**
@@ -146,7 +147,7 @@ const observeOnCopy = (io, runs, from = fixture) => {
  * answered and the code does not declare, and declared ones nobody answered,
  * for billing, under `--strict-runtime` so the verdict says them too.
  */
-const doctorObservedOnCopy = (io) => {
+const doctorObservedOnCopy = (io, service = 'billing', extra = { strictRuntime: true }) => {
   const copy = mkdtempSync(join(tmpdir(), 'flowatlas-doctor-observed-'));
   const said = (text) => text.split(copy).join('<copy>');
   try {
@@ -154,13 +155,38 @@ const doctorObservedOnCopy = (io) => {
     const db = join(copy, 'graph.db');
     runObserve(TRACES, { db, now: OBSERVE_NOW, print: () => {} });
     runDoctorCommand(
-      { config, db, out: copy, section: ['unresolved'], service: 'billing', strictRuntime: true },
+      { config, db, out: copy, section: ['unresolved'], service, ...extra },
       { ...io, out: (text) => io.out(said(text)) },
     );
   } finally {
     rmSync(copy, { recursive: true, force: true });
   }
 };
+
+/**
+ * Beside the same file, what traffic says of the map itself (P110): the web
+ * service's best guesses, one of which twenty page loads went through;
+ * `doctor --unresolved` with the blind spots under their own cause; and
+ * `dead` with the seen column, over everything the file holds and over its
+ * last hour.
+ */
+const onObservedCopy = async (io, run) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-traffic-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    runObserve(TRACES, { db, now: OBSERVE_NOW, print: () => {} });
+    await run({ db, out: copy }, { ...io, out: (text) => io.out(said(text)) });
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+const deadOnObservedCopy = (io, options) =>
+  onObservedCopy(io, async ({ db }, out) => {
+    const { lines } = await runDead({ config, db, ...options });
+    out.out(`${lines.join('\n')}\n`);
+  });
 
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
@@ -170,6 +196,14 @@ const CASES = [
   ['docs.check.github.txt', docsAsked({ check: true, format: 'github' })],
   ['docs.list.txt', docsAsked({ list: true })],
   ['doctor.observed.txt', doctorObservedOnCopy],
+  ['doctor.observed.web.txt', (io) => doctorObservedOnCopy(io, 'web', {})],
+  [
+    'doctor.unresolved.observed.txt',
+    (io) => onObservedCopy(io, ({ db }, out) => runCantFollowCommand({ config, db, unresolved: true, cause: 'seen-not-in-code' }, out)),
+  ],
+  ['dead.observed.txt', (io) => deadOnObservedCopy(io, { kind: 'entries' })],
+  ['dead.observed.since-1h.txt', (io) => deadOnObservedCopy(io, { kind: 'entries', since: '1h' })],
+  ['dead.observed.channels.txt', (io) => deadOnObservedCopy(io, { kind: 'channels' })],
   ['observe.txt', (io) => observeOnCopy(io, [[TRACES, {}]])],
   ['observe.json', (io) => observeOnCopy(io, [[TRACES, { format: 'json' }]])],
   ['observe.again.txt', (io) => observeOnCopy(io, [[TRACES.slice(0, 1), { print: () => {} }], [TRACES, {}]])],
@@ -371,9 +405,37 @@ const DEPLOYED_WORKFLOW_CASES = [
  */
 const lambdaTracesFixture = join(root, 'fixtures', 'lambda-traces');
 const LAMBDA_TRACES = [join(lambdaTracesFixture, 'traces', 'adot.otlp.json')];
+/**
+ * The same checkout as the four exports a Lambda team can make without a
+ * collector (P108): X-Ray traces, the workflow's execution history, the API's
+ * access log and the functions' REPORT lines, each read on its own, and all
+ * of them together as the file they make.
+ */
+const lambdaExport = (file) => join(lambdaTracesFixture, 'exports', file);
+const LAMBDA_EXPORTS = {
+  xray: lambdaExport('xray.batch-get-traces.json'),
+  history: lambdaExport('fulfil-order.history.json'),
+  accessLog: lambdaExport('checkout.access-log.jsonl'),
+  reportsJson: lambdaExport('report-lines.insights.json'),
+  reportsCsv: lambdaExport('report-lines.insights.csv'),
+};
 const LAMBDA_TRACE_CASES = [
   ['observe.txt', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { reset: true }]], lambdaTracesFixture)],
   ['observe.json', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { format: 'json', reset: true }]], lambdaTracesFixture)],
+  ['observe.xray.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.xray], { reset: true }]], lambdaTracesFixture)],
+  ['observe.sfn-history.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.history], { reset: true }]], lambdaTracesFixture)],
+  ['observe.apigw-access-log.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.accessLog], { reset: true }]], lambdaTracesFixture)],
+  ['observe.lambda-report.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.reportsJson], { reset: true }]], lambdaTracesFixture)],
+  ['observe.lambda-report.csv.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.reportsCsv], { reset: true }]], lambdaTracesFixture)],
+  [
+    'observe.exports.json',
+    (io) =>
+      observeOnCopy(
+        io,
+        [[[LAMBDA_EXPORTS.xray, LAMBDA_EXPORTS.history, LAMBDA_EXPORTS.accessLog, LAMBDA_EXPORTS.reportsJson], { format: 'json', reset: true }]],
+        lambdaTracesFixture,
+      ),
+  ],
 ];
 
 const multiRepoWorkflowsFixture = join(root, 'fixtures', 'multi-repo-stepfunctions');

@@ -1,4 +1,4 @@
-import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +7,7 @@ import { writeGraphDb, type LinkReport } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
 import { runObserve, type ObserveOptions } from '../commands/observe.js';
 import { PLANTED } from './__fixtures__/planted.js';
+import { acquireObservedLock, OBSERVED_LOCK, ObservedLocked, saveObserved, withObservedLock } from './store.js';
 
 const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures/multi-repo');
 const graph = JSON.parse(readFileSync(join(fixture, 'expected.project-graph.json'), 'utf8')) as ProjectGraph & {
@@ -153,5 +154,61 @@ describe('what the file keeps', () => {
     for (const id of ['a1000000000000000000000000000001', 'b100000000000001', 'e1000000000000000000000000000001']) {
       expect(text).not.toContain(id);
     }
+  });
+});
+
+describe('one writer (P109)', () => {
+  const lockOf = (db: string): string => join(dirname(db), OBSERVED_LOCK);
+
+  it('holds the lock with its pid inside while it runs, and frees it after', () => {
+    const db = freshDb();
+    const held = withObservedLock(dirname(db), () => readFileSync(lockOf(db), 'utf8').trim(), { waitMs: 0 });
+    expect(held).toBe(String(process.pid));
+    expect(existsSync(lockOf(db))).toBe(false);
+    // observe <files> takes it too, and leaves neither it nor a temporary file behind.
+    observe(db, [checkout]);
+    expect(readdirSync(dirname(db)).filter((name) => !name.startsWith('graph.db'))).toEqual(['observed.json']);
+  });
+
+  it('makes observe <files> wait for a running holder, then say a listener is running', () => {
+    const db = freshDb();
+    // This process holds it, and this process is running.
+    const release = acquireObservedLock(dirname(db));
+    try {
+      const started = Date.now();
+      expect(() => observe(db, [checkout], { lockWaitMs: 300 })).toThrow(/a listener is running \(process \d+ holds .*observed\.lock\)/);
+      expect(Date.now() - started).toBeGreaterThanOrEqual(250);
+      expect(existsSync(observedPathFor(db))).toBe(false);
+    } finally {
+      release();
+    }
+    expect(observe(db, [checkout], { lockWaitMs: 0 }).spans).toBeGreaterThan(0);
+  });
+
+  it('takes over a lock whose process is gone, or that holds no pid', () => {
+    const db = freshDb();
+    // A pid no process has: above the largest any system hands out.
+    writeFileSync(lockOf(db), '4194305\n');
+    expect(observe(db, [checkout], { lockWaitMs: 0 }).spans).toBeGreaterThan(0);
+    writeFileSync(lockOf(db), 'not a pid\n');
+    expect(observe(db, [billing], { lockWaitMs: 0 }).spans).toBeGreaterThan(0);
+    expect(existsSync(lockOf(db))).toBe(false);
+  });
+
+  it('never frees a lock another process took over', () => {
+    const db = freshDb();
+    const release = acquireObservedLock(dirname(db));
+    writeFileSync(lockOf(db), '1\n');
+    release();
+    expect(readFileSync(lockOf(db), 'utf8')).toBe('1\n');
+    expect(() => acquireObservedLock(dirname(db), { waitMs: 0 })).toThrow(ObservedLocked);
+  });
+
+  it('writes through a temporary file renamed over the old one', () => {
+    const db = freshDb();
+    const { observed } = observe(db, [checkout]);
+    const path = saveObserved(db, observed);
+    expect(readdirSync(dirname(path)).filter((name) => name.startsWith('observed.json'))).toEqual(['observed.json']);
+    expect(JSON.parse(readFileSync(path, 'utf8'))).toEqual(JSON.parse(JSON.stringify(observed)));
   });
 });

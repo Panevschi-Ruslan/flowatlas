@@ -108,6 +108,7 @@ export function createWays(page) {
       `<span class="row-meta">${esc(repoName(i))} &middot; ${esc(kinds[nodes[i][KD]] || typeName(i))}` +
       (files[nodes[i][FL]] ? ' &middot; ' + esc(files[nodes[i][FL]].split('/').pop()) : '') +
       (seen.entry(i) ? ` &middot; <span class="row-seen" title="Hits seen at run time">seen &times;${seen.entry(i).toLocaleString()}</span>` : '') +
+      (seen.never(i) ? ` &middot; <span class="row-never${seen.never(i).strong ? ' is-strong' : ''}" title="${seen.never(i).strong ? 'Never seen while its neighbours were busy' : 'Never seen, and nothing beside it was busy either'}">not seen in ${esc(seen.never(i).window)}</span>` : '') +
       (scheduleOf(model, i) ? ` &middot; <span class="sched">${esc(scheduleSay(scheduleOf(model, i)))}</span>` : '') +
       '</span>' + (fails(i) ? `<span class="row-meta row-fails">${failChipsHtml(i)}</span>` : '');
     b.addEventListener('click', () => {

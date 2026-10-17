@@ -5,14 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig, type GraphEdge, type GraphNode, type ProjectGraph } from '@flowatlas/core';
 import { writeGraphDb, type LinkReport } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
-import { settingsOfProject } from '../build/settings/index.js';
-import { readTraceFiles, runObserve } from '../commands/observe.js';
-import { frontEndContextOf } from './origins.js';
-import { readerFor } from './readers.js';
-import { harEntries, harReader } from './har-reader.js';
-import { TraceFileError } from './reader-parts.js';
+import { settingsOfProject } from '../../build/settings/index.js';
+import { readTraceFiles, runObserve } from '../../commands/observe.js';
+import { frontEndContextOf } from '../origins.js';
+import { readerFor } from './index.js';
+import { harEntries, harReader } from './har.js';
+import { TraceFileError } from './shared.js';
 
-const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures/multi-repo');
+const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../../fixtures/multi-repo');
 const harFile = join(fixture, 'traces/web.har');
 const har = JSON.parse(readFileSync(harFile, 'utf8')) as { log: { entries: Record<string, unknown>[] } };
 const graph = JSON.parse(readFileSync(join(fixture, 'expected.project-graph.json'), 'utf8')) as ProjectGraph & {
@@ -106,6 +106,7 @@ describe('the HAR reader (P112)', () => {
       at: '2025-10-16T08:10:06.021Z',
       status: 200,
       durationMs: 84.25,
+      sampleable: false,
     });
     // No resource type: a JSON answer is a call.
     expect(read.spans[2]).toMatchObject({ method: 'POST', path: '/orders/:value/refund', peerService: 'gateway' });
@@ -129,6 +130,7 @@ describe('the HAR reader (P112)', () => {
       at: '2025-10-16T08:10:20.070Z',
       status: 204,
       durationMs: 30,
+      sampleable: false,
     });
   });
 

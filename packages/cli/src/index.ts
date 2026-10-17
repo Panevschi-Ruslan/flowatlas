@@ -109,16 +109,59 @@ export { linkRepos, unlinkRepos } from './commands/link.js';
 export type { LinkOptions, LinkResult, UnlinkResult } from './commands/link.js';
 export { installMcp, reasonCatalog, serverEntry, withServer, MCP_FILE, SERVER_KEY } from './commands/mcp.js';
 export { runChannel } from './commands/channel.js';
-export { runObserve, readTraceFiles } from './commands/observe.js';
-export type { ObserveOptions, ObserveRun, TraceFiles } from './commands/observe.js';
+export { documentsOf, parseAccessLogKeys, runListen, runObserve, readTraceFiles } from './commands/observe.js';
+export type { ListenCliOptions, ObserveOptions, ObserveRun, TraceFileOptions, TraceFiles } from './commands/observe.js';
+export {
+  describeListenStats,
+  LISTEN_FLUSH_MS,
+  LISTEN_HOST,
+  LISTEN_MAX_BODY,
+  LISTEN_PORT,
+  LISTEN_TRACE_WAIT_MS,
+  parseInterval,
+  parseSize,
+  startListener,
+} from './observe/listen.js';
+export type { Listener, ListenOptions, ListenStats } from './observe/listen.js';
+export { TraceBuffer, TRACE_BUFFER_SPANS, TRACE_BUFFER_TRACES } from './observe/trace-buffer.js';
+export type { TraceBufferOptions } from './observe/trace-buffer.js';
+export {
+  acquireObservedLock,
+  LOCK_WAIT_MS,
+  OBSERVED_LOCK,
+  ObservedLocked,
+  saveObserved,
+  withObservedLock,
+} from './observe/store.js';
+export type { LockOptions } from './observe/store.js';
 export { indexGraph, matchSpans, edgeIdOf, OBSERVED_FORMAT_VERSION } from './observe/match.js';
 export type { MatchOptions, Observed } from './observe/match.js';
 export { decodeTraceRequest, ProtobufError } from './observe/otlp-protobuf.js';
 export { KEPT_FIELDS, keepAllowed } from './observe/span.js';
 export type { ObservedSpan, SpanKind } from './observe/span.js';
-export { OTLP_KEEP, TRACE_READERS, readerFor } from './observe/readers.js';
-export type { SkippedPart, TraceRead, TraceReader } from './observe/readers.js';
-export { ALLOW_LISTS, NESTJS_OBSERVE_READS, OTLP_READS } from './observe/allow-list.js';
+export { formatsTaking, NameNeeded, OTLP_KEEP, TRACE_READERS, TraceFileError, readerFor } from './observe/readers/index.js';
+export type {
+  AccessLogKeys,
+  FrontEndContext,
+  ReadContext,
+  ReaderFlag,
+  ReaderOptions,
+  SkippedPart,
+  TraceRead,
+  TraceReader,
+} from './observe/readers/index.js';
+export {
+  ALLOW_LISTS,
+  APIGW_ACCESS_LOG_READS,
+  HAR_READS,
+  JAEGER_READS,
+  LAMBDA_REPORT_READS,
+  NESTJS_OBSERVE_READS,
+  OTLP_READS,
+  SFN_HISTORY_READS,
+  XRAY_READS,
+  ZIPKIN_READS,
+} from './observe/allow-list.js';
 export { runFlow, sequenceDetailOf } from './commands/flow.js';
 export type { FlowOptions } from './commands/flow.js';
 export { runImpact } from './commands/impact.js';

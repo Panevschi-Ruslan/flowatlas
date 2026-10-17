@@ -12,7 +12,7 @@ import { packObserved } from '../visualise/observed.js';
 import { ambiguousOf, unmatchedOf } from '../visualise/steps.js';
 import { PLANTED } from './__fixtures__/planted.js';
 import { edgeIdOf, indexGraph, matchSpans, routeScore, templateOf } from './match.js';
-import { nestjsObserveReader, otlpReader, readerFor } from './readers.js';
+import { nestjsObserveReader, otlpReader, readerFor } from './readers/index.js';
 import { pathOf } from './span.js';
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures');
@@ -304,5 +304,112 @@ describe('matchSpans over the lambda-traces fixture (P107)', () => {
     expect(JSON.stringify(seen)).not.toContain('RefundCustomerAcme7');
     expect(JSON.stringify(seen.samples)).toContain('fulfil-order/?');
     expect(JSON.stringify(seen.samples)).toContain('fulfil-order/ReserveStock');
+  });
+});
+
+describe('the AWS exports of the same traffic (P108)', () => {
+  const lambda = join(fixtures, 'lambda-traces');
+  const lambdaGraph = JSON.parse(readFileSync(join(lambda, 'expected.project-graph.json'), 'utf8')) as ProjectGraph & {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+  };
+  const index = indexGraph(lambdaGraph.nodes, lambdaGraph.edges);
+  const observedOf = (file: string, options = {}) => matchSpans(index, readTraceFiles([join(lambda, file)], undefined, options).spans);
+  const otlp = observedOf('traces/adot.otlp.json');
+  const hits = (observed: ReturnType<typeof matchSpans>) =>
+    Object.fromEntries(Object.entries(observed.entries).map(([id, seen]) => [id, [seen.hits, seen.errors ?? 0]]));
+  /** The OTLP trace's figures for the entries an export can see. */
+  const otlpFor = (ids: readonly string[]) => Object.fromEntries(Object.entries(hits(otlp)).filter(([id]) => ids.includes(id)));
+  const INVOKES = ['checkout', 'reserve-stock', 'charge-card', 'ship-order', 'print-label', 'index-orders'].map((fn) => `entry:shop:invoke:${fn}`);
+
+  it('X-Ray gives every entry, join, step, table and channel the OTLP trace gives, and the same two unmatched calls', () => {
+    const xray = observedOf('exports/xray.batch-get-traces.json');
+    expect(hits(xray)).toEqual(hits(otlp));
+    const counted = (rows: Record<string, { count?: number; hits?: number }>) =>
+      Object.fromEntries(Object.entries(rows).map(([id, row]) => [id, row.count ?? row.hits]));
+    expect(counted(xray.joins)).toEqual(counted(otlp.joins));
+    expect(counted(xray.symbols)).toEqual(counted(otlp.symbols));
+    expect(counted(xray.channels)).toEqual(counted(otlp.channels));
+    expect(xray.unmatched.map(({ kind, name }) => `${kind} ${name}`)).toEqual(otlp.unmatched.map(({ kind, name }) => `${kind} ${name}`));
+    expect(xray.ambiguous).toEqual([]);
+    expect(Object.keys(xray.samples).sort()).toEqual(Object.keys(otlp.samples).sort());
+  });
+
+  it("the execution history gives the workflow's run, its steps, and what each step's own task reaches", () => {
+    const history = observedOf('exports/fulfil-order.history.json');
+    expect(hits(history)).toEqual(otlpFor(['entry:shop:workflow:fulfil-order']));
+    // A task's parameters are never read, so a step's call names no target;
+    // the one target of its kind the step reaches on the map is credited (P110,
+    // P108's open item), which is exactly what the OTLP trace gives the steps.
+    const ofTheWorkflow = (id: string): boolean => id.includes('statemachine/fulfil-order.asl.json');
+    expect(Object.keys(history.symbols).sort()).toEqual(Object.keys(otlp.symbols).filter(ofTheWorkflow).concat('table:shop#orders').sort());
+    expect(Object.keys(history.joins).sort()).toEqual(Object.keys(otlp.joins).filter((id) => ofTheWorkflow(id.split(' ')[0]!)).sort());
+    expect(Object.keys(history.channels).sort()).toEqual(['channel:dynamodb/orders', 'channel:sns/receipts']);
+    expect(history.samples['entry:shop:workflow:fulfil-order']?.slow[0]).toMatchObject({ traceId: 'run-0001', ms: 825 });
+    expect(history.unmatched).toEqual([]);
+  });
+
+  it('the access log gives the route, as entries and no joins, with no sample; REPORT lines give every function', () => {
+    const log = observedOf('exports/checkout.access-log.jsonl');
+    expect(hits(log)).toEqual(otlpFor(['entry:shop:http:POST:/checkout']));
+    expect(log.joins).toEqual({});
+    expect(log.samples).toEqual({});
+    expect(log.unmatched.map(({ kind, name }) => `${kind} ${name}`)).toEqual(['http GET /favicon.ico']);
+    for (const file of ['exports/report-lines.insights.json', 'exports/report-lines.insights.csv']) {
+      const reports = observedOf(file);
+      expect(hits(reports), file).toEqual(otlpFor(INVOKES));
+      expect(reports.joins, file).toEqual({});
+      expect(reports.samples, file).toEqual({});
+      expect(reports.entries['entry:shop:invoke:charge-card'], file).toMatchObject({ max: 270, errors: 1 });
+    }
+  });
+
+  it('says which format each file was, and keeps nothing account-, region- or request-shaped in the file', () => {
+    const files = [
+      'exports/xray.batch-get-traces.json',
+      'exports/fulfil-order.history.json',
+      'exports/checkout.access-log.jsonl',
+      'exports/report-lines.insights.csv',
+    ].map((file) => join(lambda, file));
+    const out = mkdtempSync(join(scratch, 'exports-'));
+    const dbPath = join(out, 'graph.db');
+    writeGraphDb(lambdaGraph, JSON.parse(readFileSync(join(lambda, 'expected.link-report.json'), 'utf8')) as LinkReport, dbPath);
+    const run = runObserve(files, { db: dbPath, print: () => {} });
+    expect(Object.values(run.formats)).toEqual(['xray', 'sfn-history', 'apigw-access-log', 'lambda-report']);
+    expect(run.observed.sources.map((source) => source.format)).toEqual(['xray', 'sfn-history', 'apigw-access-log', 'lambda-report']);
+    expect(run.observed.privacy.kept).toContain('sampleable');
+    const file = readFileSync(run.path, 'utf8');
+    const planted = ['planted', '111122223333', 'eu-west-1', 'arn:', 'amazonaws', '203.0.113.7', 'k7x9q2w1ab', 'promo', 'Billed', 'XRAY'];
+    for (const secret of planted) expect(file, secret).not.toContain(secret);
+  });
+
+  it('refuses a history or REPORT lines without the name they need, saying which flag gives it', () => {
+    const bare = join(scratch, 'bare.history.json');
+    writeFileSync(bare, JSON.stringify({ events: [{ id: 1, previousEventId: 0, type: 'ExecutionStarted', timestamp: 1760603400 }] }));
+    expect(() => readTraceFiles([bare])).toThrow(`${bare} names no state machine (merge describe-execution's stateMachineArn into it); name it with --workflow <name>`);
+    expect(readTraceFiles([bare], undefined, { workflow: 'fulfil-order' }).formats).toEqual({ [bare]: 'sfn-history' });
+    const plain = join(scratch, 'report.log');
+    writeFileSync(plain, 'START RequestId: r1\nREPORT RequestId: r1\tDuration: 3.00 ms\nEND RequestId: r1\n');
+    expect(() => readTraceFiles([plain])).toThrow(/report\.log has 1 REPORT line no log group names the function of; name it with --function <name>/);
+    expect(readTraceFiles([plain], undefined, { function: 'checkout' }).spans).toHaveLength(1);
+  });
+
+  it('refuses a flag given for a format that does not take it', () => {
+    const trace = join(lambda, 'traces/adot.otlp.json');
+    expect(() => readTraceFiles([trace], undefined, { workflow: 'fulfil-order' })).toThrow(
+      `--workflow applies to sfn-history files only; ${trace} is otlp`,
+    );
+    expect(() => readTraceFiles([join(lambda, 'exports/report-lines.insights.json')], undefined, { accessLogKeys: { route: 'rk' } })).toThrow(
+      /--access-log-keys applies to apigw-access-log files only; .* is lambda-report/,
+    );
+    expect(() => runObserve([trace], { accessLogKeys: 'route=rk,colour=red', print: () => {} })).toThrow(/--access-log-keys takes <role>=<key> pairs/);
+  });
+
+  it('reads nothing from the network: no reader or the command imports a client', () => {
+    const sources = ['readers/xray.ts', 'readers/sfn-history.ts', 'readers/apigw-access-log.ts', 'readers/lambda-report.ts', 'readers/log-records.ts', '../commands/observe.ts'];
+    for (const source of sources) {
+      const text = readFileSync(join(dirname(fileURLToPath(import.meta.url)), source), 'utf8');
+      expect(text, source).not.toMatch(/node:(https?|net|dgram|tls)|fetch\(|@aws-sdk|XMLHttpRequest/);
+    }
   });
 });

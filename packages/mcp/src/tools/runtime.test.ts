@@ -54,7 +54,8 @@ describe('slow_steps', () => {
     const all = await call('slow_steps', { minCount: 1, limit: 100 });
     const p95s = all.steps.map((step: { p95: number }) => step.p95);
     expect(p95s).toEqual([...p95s].sort((a, b) => b - a));
-    expect(all.steps[0]).toMatchObject({ label: 'OrdersController.findOne', service: 'gateway', p95: 520 });
+    // The gateway's own handler is fast twenty page loads over (P110); the hop to orders is the slowest step.
+    expect(all.steps[0]).toMatchObject({ label: 'gateway GET /orders/:param -> orders GET /orders/:param', service: 'gateway', p95: 500 });
     const hop = all.steps.find((step: { type?: string }) => step.type === 'http_calls');
     expect(hop).toMatchObject({ measuredAt: 'caller', max: 500, label: 'gateway GET /orders/:param -> orders GET /orders/:param' });
     // The call site's own row would say what its join says.
@@ -128,7 +129,7 @@ describe('trace_for', () => {
 describe('run time beside the map', () => {
   it('puts p95 and errorRate beside observed, and trace_for in next, where the file has them', async () => {
     const flow = await call('get_flow', { entry: 'entry:gateway:http:GET:/orders/:param' });
-    expect(flow.root).toMatchObject({ observed: 2, p95: 520, errorRate: 0 });
+    expect(flow.root).toMatchObject({ observed: 22, p95: 72.88, errorRate: 0 });
     expect(flow.next[1]).toBe('trace_for({entry: "entry:gateway:http:GET:/orders/:param"})');
     const entries = await call('list_entries', { service: 'billing', kind: 'http' });
     expect(entries.next).toContain('trace_for({entry: "entry:billing:http:GET:/invoices/:param"})');
@@ -197,5 +198,57 @@ describe('failures on get_flow and describe_for_prompt', () => {
     const bare = await none('describe_for_prompt', { id: 'entry:billing:http:POST:/invoices' });
     expect(bare).not.toHaveProperty('failures');
     expect(bare.markdown).not.toContain('Failures seen at run time');
+  });
+});
+
+describe('never_seen', () => {
+  it('lists what the code runs and traffic never touched, strong first, bounded, with its window', async () => {
+    const all = await call('never_seen', {});
+    expect(all.window).toMatchObject({ label: '2h', from: expect.any(String), to: expect.any(String) });
+    const strength = all.rows.map((row: { confidence: string }) => row.confidence);
+    expect(strength).toEqual([...strength].sort((a: string, b: string) => (a === b ? 0 : a === 'strong' ? -1 : 1)));
+    expect(all.rows[0]).toMatchObject({ confidence: 'strong', service: 'gateway', neighbours: { most: 22 } });
+    expect(all.rows).toHaveLength(20);
+    expect(all.truncated).toContain('larger limit');
+    expect(all.next[0]).toBe(`dead({id: ${JSON.stringify(all.rows[0].id)}})`);
+  });
+
+  it('cuts the window at read time and says a service the window holds nothing of', async () => {
+    const lastHour = await call('never_seen', { since: '1h', limit: 100 });
+    expect(lastHour.window).toMatchObject({ since: '1h', label: '1h' });
+    expect(lastHour.notes).toEqual(['nothing from orders in the window']);
+    expect(lastHour.rows.some((row: { service: string }) => row.service === 'orders')).toBe(false);
+  });
+
+  it('is never strong over a window the file holds less of than asked', async () => {
+    const week = await call('never_seen', { since: '7d', limit: 100 });
+    expect(week.window).toMatchObject({ since: '7d', label: '2h', short: true });
+    expect(week.rows.every((row: { confidence: string }) => row.confidence === 'weak')).toBe(true);
+    expect(await call('never_seen', { since: '30m' })).toEqual({ error: expect.stringContaining('2h, 7d, 2w') });
+    expect(await none('never_seen', {})).toEqual({ error: expect.stringContaining('flowatlas observe') });
+  });
+});
+
+describe('traffic as evidence elsewhere', () => {
+  it('confirms a best guess traffic went through, beside its confidence', async () => {
+    const callers = await call('who_calls', { symbol: 'entry:gateway:http:GET:/orders/:param', depth: 1 });
+    const guess = callers.callers.find((row: { edge: { confidence: string } }) => row.edge.confidence === 'heuristic');
+    expect(guess).toMatchObject({ observed: 20, confirmedBy: 'traffic' });
+    const sure = callers.callers.find((row: { edge: { confidence: string } }) => row.edge.confidence === 'static');
+    expect(sure).not.toHaveProperty('confirmedBy');
+    const bare = await none('who_calls', { symbol: 'entry:gateway:http:GET:/orders/:param', depth: 1 });
+    expect(bare.callers.some((row: object) => 'confirmedBy' in row)).toBe(false);
+  });
+
+  it('weighs dead by what traffic did, and lists the blind spots under their own cause', async () => {
+    expect(await call('dead', { id: 'entry:gateway:http:POST:/orders/:param/cancel' })).toMatchObject({
+      verdict: 'likely-dead',
+      evidence: { neverSeen: { confidence: 'strong' } },
+    });
+    expect((await none('dead', { id: 'entry:gateway:http:POST:/orders/:param/cancel' })).verdict).toBe('unknown');
+    const blind = await call('cant_follow', { cause: 'seen-not-in-code' });
+    expect(blind.causes[0]).toMatchObject({ cause: 'seen-not-in-code', packages: [] });
+    expect(blind.causes[0].seen[0]).toMatchObject({ service: 'billing', kind: 'db', next: ['search({query: "invoices"})'] });
+    expect((await none('cant_follow', { cause: 'seen-not-in-code' })).causes).toEqual([]);
   });
 });

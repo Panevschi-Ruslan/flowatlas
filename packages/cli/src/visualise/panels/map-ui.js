@@ -1,7 +1,7 @@
 import { middle } from '../graph.js';
 import { pictureName, pictureScale, pinch, pressed, wheelIntent, wordFor } from '../frame.js';
 import { MAP_BOX, MAP_BOX_KINDS, MAP_COLUMNS, MAP_LINK_KINDS, boxId, clusterId, createMap, formatMapHash,
-  isOpen, mapCallOrder, mapCycles, mapLayout, mapMarks, mapSeenCount, mapTopTargets, mapView,
+  isOpen, mapCallOrder, mapCycles, mapGuessesConfirmed, mapLayout, mapMarks, mapSeenCount, mapTopTargets, mapView,
   openByDefault, serviceInside } from '../map.js';
 
 /* The Map tab: the whole project at the size of its services, its details
@@ -184,15 +184,21 @@ export function createMapUi(page) {
       const conf = link.worst >= 0 ? confidences[link.worst] : '';
       const seenTimes = seen.any ? mapSeenCount(mapModel, link, seen.join) : 0;
       const width = Math.min(6, 1.2 + Math.log2(link.count)) + (seenTimes > 0 ? Math.min(4, 1.5 + Math.log10(seenTimes)) : 0);
-      const guessed = conf !== '' && conf !== 'static' && conf !== 'marker';
+      // Every best guess behind the link seen at run time (P110): drawn solid, with its seen mark.
+      const confirmedAll = conf === 'heuristic' && seen.any &&
+        mapGuessesConfirmed(mapModel, link, (e) => confidences[data.edges[e][3]] === 'heuristic', (e) => seen.confirmed(e) > 0);
+      const guessed = conf !== '' && conf !== 'static' && conf !== 'marker' && !confirmedAll;
       const cls = ['m-link', 'm-k-' + link.kind,
-        guessed ? 'is-guess' : '', conf === 'heuristic' ? 'is-heuristic' : '', seenTimes > 0 ? 'is-seen' : '',
+        guessed ? 'is-guess' : '', conf === 'heuristic' && !confirmedAll ? 'is-heuristic' : '', confirmedAll ? 'is-confirmed' : '',
+        seenTimes > 0 ? 'is-seen' : '',
         link.kind === 'package' && link.dev ? 'is-dev' : '',
         mapState.mark === 'cycles' && cycles.links.has(link.id) ? 'is-cycle' : '',
         mapState.link === link.id ? 'is-open' : ''].filter(Boolean).join(' ');
       const say = `${unitName(shown.units.get(link.from))} → ${unitName(shown.units.get(link.to))}: ` +
         `${plural(link.count, KIND_SAYS[link.kind] === 'depends on' ? 'package' : 'edge', KIND_SAYS[link.kind] === 'depends on' ? 'packages' : 'edges')}, ${KIND_SAYS[link.kind]}` +
-        (conf && conf !== 'static' ? `, ${wordFor('trust', conf)} at worst` : '') + (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '');
+        (conf && conf !== 'static' ? `, ${wordFor('trust', conf)} at worst` : '') +
+        (confirmedAll ? ', every best guess confirmed by traffic' : '') +
+        (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '');
       const hit = svgEl('path', { class: 'm-hit', d, 'data-link': link.id });
       hit.append(svgEl('title', {}, say));
       linkLayer.append(hit,

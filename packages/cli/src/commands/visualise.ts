@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted, type AcceptedRead } from '@flowatlas/core';
-import { acceptedSplitOf, type GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, confirmedJoins, neverSeen, type GraphDb } from '@flowatlas/linker';
 import { docsNow } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
@@ -10,6 +10,7 @@ import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '..
 import { readObservedBeside } from '../observe/store.js';
 import { EDITOR_NAMES } from '../visualise/graph.js';
 import { packGraph, type PackedGraph, type PackInput } from '../visualise/pack.js';
+import type { PackTraffic } from '../visualise/observed.js';
 import { packChanges, type PackedChanges } from '../visualise/changes.js';
 import { runDiff } from './diff.js';
 import { shipped } from '../own-path.js';
@@ -232,6 +233,18 @@ export const packDatabase = (
   const report = db.report();
   if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
   const split = acceptedSplitOf(db, db.allUnresolved(), read);
+  // What traffic says over the graph (P110): never seen, and best guesses it
+  // went through, asked of the database here so the page and the server agree.
+  const traffic: PackTraffic | undefined =
+    extra.observed === undefined
+      ? undefined
+      : (() => {
+          const never = neverSeen(db, extra.observed);
+          return {
+            never: { window: never.window.label, rows: never.rows },
+            confirmed: confirmedJoins(db, extra.observed).map((join) => join.id),
+          };
+        })();
   return packGraph({
     builtAt: report.builtAt,
     nodes: db.allNodes(),
@@ -241,6 +254,7 @@ export const packDatabase = (
     typeOf: (id) => db.type(id),
     accepted: split,
     ...extra,
+    ...(traffic === undefined ? {} : { traffic }),
   });
 };
 

@@ -1,19 +1,17 @@
-import { only, OTLP_READS, ZIPKIN_READS } from './allow-list.js';
-import type { ObservedSpan, SpanKind } from './span.js';
+import { only, OTLP_READS, ZIPKIN_READS } from '../allow-list.js';
+import type { ObservedSpan, SpanKind } from '../span.js';
+import { fieldsOfAttributes, noAttributes, type Attributes } from './attributes.js';
 import {
   Dropped,
-  fieldsOfAttributes,
-  noAttributes,
   isObject,
   microsToIso,
   microsToMs,
   Skips,
   text,
   withFields,
-  type Attributes,
   type Json,
-} from './reader-parts.js';
-import type { TraceReader } from './readers.js';
+  type TraceReader,
+} from './shared.js';
 
 /**
  * Zipkin v2 JSON (P112): what the Zipkin UI's JSON button and its API give, a

@@ -3,13 +3,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { GraphEdge, GraphNode, ProjectGraph } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { PLANTED } from './__fixtures__/planted.js';
-import { indexGraph, matchSpans } from './match.js';
-import { otlpReader, readerFor } from './readers.js';
-import type { ObservedSpan } from './span.js';
-import { jaegerReader } from './jaeger-reader.js';
+import { PLANTED } from '../__fixtures__/planted.js';
+import { indexGraph, matchSpans } from '../match.js';
+import { otlpReader, readerFor } from './index.js';
+import type { ObservedSpan } from '../span.js';
+import { jaegerReader } from './jaeger.js';
 
-const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures/multi-repo');
+const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../../fixtures/multi-repo');
 const load = (file: string): unknown => JSON.parse(readFileSync(join(fixture, 'traces', file), 'utf8'));
 const graph = JSON.parse(readFileSync(join(fixture, 'expected.project-graph.json'), 'utf8')) as ProjectGraph & {
   nodes: GraphNode[];

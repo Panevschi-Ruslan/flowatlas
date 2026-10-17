@@ -18,6 +18,7 @@ import { isResolved, resolveSymbol } from '../query/entry-ref.js';
 import { nearNames } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import type { DbHandle } from '../query/db.js';
+import { loadObserved } from '../query/observed.js';
 import {
   callOf,
   commonInput,
@@ -42,14 +43,20 @@ const LISTED_BY_DEFAULT: readonly DeadKind[] = ['entries', 'channels', 'provider
 /** The type of node each kind lists, which each row says it is. */
 const TYPE_OF: Readonly<Record<DeadKind, string>> = { entries: 'entry', channels: 'channel', providers: 'provider', methods: 'method' };
 
-/** The rules the CLI's `dead` reads from the configuration, read the same way so the two agree. */
-export const deadOptionsOf = (handle: Pick<DbHandle, 'config'>, service?: string): DeadOptions => {
+/**
+ * The rules the CLI's `dead` reads from the configuration, read the same way
+ * so the two agree, and the observed file beside the database when there is
+ * one: traffic is evidence for every verdict (P110), over all it holds.
+ */
+export const deadOptionsOf = (handle: Pick<DbHandle, 'config'> & { path?: string }, service?: string): DeadOptions => {
   const publicRoutes = handle.config?.doctor?.publicRoutes ?? [];
   const infrastructure = handle.config?.dead?.infrastructure;
+  const observed = handle.path === undefined ? undefined : loadObserved(handle.path);
   return {
     ...(service === undefined ? {} : { service }),
     ...(publicRoutes.length === 0 ? {} : { publicRoutes }),
     ...(infrastructure === undefined ? {} : { infrastructure }),
+    ...(observed === undefined ? {} : { observed }),
   };
 };
 

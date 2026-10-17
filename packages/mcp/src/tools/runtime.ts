@@ -3,13 +3,14 @@ import {
   FAILURE_MIN_HITS,
   isJoinEdge,
   joinOfId,
+  parseDuration,
   type FailureComparison,
   type GraphNode,
   type Observed,
   type ObservedFigures,
   type TraceTree,
 } from '@flowatlas/core';
-import type { GraphDb } from '@flowatlas/linker';
+import { neverSeen, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
@@ -26,6 +27,8 @@ import { callOf, READ_ONLY, serviceInput, withDb, type ToolContext } from './com
  * of an entry, step by step, and the statuses ways in answered that their
  * code never declares (P106). Every answer is bounded (I9) and ends with the
  * calls that take its ids; a row names only places the graph still has.
+ * `never_seen` (P110) is the other way round: what the code runs and traffic
+ * never touched, with how far that silence can be trusted.
  */
 
 const NO_FILE = 'nothing was observed: run flowatlas observe <trace files> beside this graph first';
@@ -227,6 +230,8 @@ const byUndeclaredRank = (a: UndeclaredRow, b: UndeclaredRow): number => {
 /** The handler a way in runs, for a `get_source` hint. */
 const handlerOf = (db: GraphDb, entry: string): string | undefined => db.edgesFrom(entry, ['handles'])[0]?.to;
 
+const SINCE_SAID = 'since takes hours, days or weeks: 2h, 7d, 2w';
+
 export const registerRuntime = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'slow_steps',
@@ -423,6 +428,47 @@ export const registerRuntime = (server: McpServer, ctx: ToolContext): void => {
         return withNext(
           { routes, window: observed.window, ...page },
           top === undefined ? [] : [callOf('get_flow', { entry: top }), callOf('describe_for_prompt', { id: top })],
+        );
+      }),
+  );
+  server.registerTool(
+    'never_seen',
+    {
+      title: 'Never seen at run time',
+      description: 'What the code runs that traffic never touched in the window, strong first.',
+      inputSchema: {
+        since: z.string().optional().describe('e.g. 7d'),
+        service: serviceInput,
+        kind: z.string().optional(),
+        confidence: z.enum(['strong', 'weak']).optional(),
+        limit: z.number().int().min(1).max(100).default(20),
+      },
+      annotations: READ_ONLY,
+    },
+    (input) =>
+      withDb(ctx.handle, (db) => {
+        const observed = loadObserved(ctx.handle.path);
+        if (observed === undefined) return { error: NO_FILE };
+        if (input.since !== undefined && parseDuration(input.since) === undefined) return { error: SINCE_SAID };
+        const answer = neverSeen(db, observed, {
+          ...(input.since === undefined ? {} : { since: input.since }),
+          ...(input.service === undefined ? {} : { service: input.service }),
+          ...(input.kind === undefined ? {} : { kind: input.kind }),
+          ...(input.confidence === undefined ? {} : { confidence: input.confidence }),
+        });
+        const { rows, page } = cut(answer.rows, input.limit, 'rows');
+        const top = rows[0];
+        const { since, from, to } = answer.window;
+        return withNext(
+          {
+            rows,
+            window: { ...(since === undefined ? {} : { since }), from, to, label: answer.window.label, ...(answer.window.short ? { short: true } : {}) },
+            ...page,
+            ...(answer.notes.length === 0 ? {} : { notes: answer.notes }),
+          },
+          top === undefined
+            ? []
+            : [callOf('dead', { id: top.id }), ...(top.type === 'entry' ? [callOf('get_flow', { entry: top.id })] : [callOf('who_calls', { symbol: top.id })])],
         );
       }),
   );

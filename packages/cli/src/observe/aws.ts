@@ -87,8 +87,23 @@ const own = <V>(table: Readonly<Record<string, V>>, key: string | undefined): V 
   key !== undefined && Object.hasOwn(table, key) ? table[key] : undefined;
 
 /** A function as Lambda's `FunctionName` takes it: a name, an ARN, or either with a version or alias. */
-const functionName = (text: string | undefined): string | undefined =>
+export const functionName = (text: string | undefined): string | undefined =>
   deployedName('function', text) ?? (text === undefined ? undefined : nameInForms(text, FUNCTION_NAME_FORMS));
+
+/**
+ * A workflow execution's ARN, standard or express: the workflow it ran and
+ * the execution's own name. The account and the region in it are not kept.
+ */
+const EXECUTION_FORM = /^arn:[^:]+:states:[^:]*:[^:]*:(?:execution|express):([^:]+):([^:]+)(?::[^:]+)?$/;
+
+export const executionIn = (text: string | undefined): { workflow: string; name: string } | undefined => {
+  const found = text === undefined ? null : EXECUTION_FORM.exec(text);
+  return found === null ? undefined : { workflow: found[1]!, name: found[2]! };
+};
+
+/** The workflow a state machine's ARN (an alias or a version cut), an execution's ARN, or a bare name names. */
+export const workflowName = (text: string | undefined): string | undefined =>
+  executionIn(text)?.workflow ?? deployedName('workflow', text);
 
 const first = (attrs: SpanAttributes, keys: readonly string[]): string | undefined => {
   for (const key of keys) {

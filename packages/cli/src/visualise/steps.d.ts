@@ -40,6 +40,10 @@ export interface StepRow {
   loop: boolean;
   crosses: boolean;
   seen: number;
+  /** How often traffic went through the best guess into this step (P110), 0 when it is not one or was not seen. */
+  confirmed: number;
+  /** When this step is a node the code runs and traffic never touched (P110): over which hours, and how sure. */
+  never: { window: string; strong: boolean } | null;
   answer: { kind: string; status: string; ref: number } | null;
   /** The loop this step runs once per item of (`for-of`, `map`), '' when none. */
   perItem: string;
@@ -63,12 +67,19 @@ export interface StepRow {
 export interface Seen {
   any: boolean;
   most: number;
-  unmatched: ReadonlyArray<{ service?: string; kind: string; name: string }>;
+  unmatched: ReadonlyArray<{ service?: string; kind: string; name: string; next?: string }>;
   ambiguous: ReadonlyArray<SeenAmbiguous>;
   join(edge: number): { count: number; lastSeen: string } | null;
   entry(node: number): number;
   /** A way in's statuses against what it declares (P106), or null. */
   failures(node: number): PackedFailuresSeen | null;
+  /** The hours the file holds, in words (`2h`), '' without a file (P110). */
+  window: string;
+  /** What the code runs and traffic never touched (P110), strong ones flagged. */
+  neverSeen: ReadonlyArray<{ node: number; strong: boolean }>;
+  never(node: number): { window: string; strong: boolean } | null;
+  /** How often traffic went through a best guess (P110); 0 when not one, or not seen. */
+  confirmed(edge: number): number;
 }
 
 /** A span that fit several places: `places` are edge positions for a `join`, node positions otherwise. */
@@ -174,7 +185,7 @@ export declare const failSeenSay: (group: PackedFailGroup, compared: PackedFailu
 export declare const failWindowSay: (window: PackedFailuresSeen['window'] | undefined) => string;
 export declare const unmatchedOf: (
   observed: Pick<NonNullable<PackedGraph['observed']>, 'unmatched' | 'services' | 'kinds'>,
-) => Array<{ service?: string; kind: string; name: string }>;
+) => Array<{ service?: string; kind: string; name: string; next?: string }>;
 export declare const ambiguousOf: (
   observed: Pick<NonNullable<PackedGraph['observed']>, 'ambiguous' | 'services' | 'kinds'>,
 ) => SeenAmbiguous[];

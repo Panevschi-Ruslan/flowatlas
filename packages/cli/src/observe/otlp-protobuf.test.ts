@@ -4,101 +4,14 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { afterAll, describe, expect, it } from 'vitest';
+// The protobuf writer the sender script uses too: it writes every field, so the decoder is shown to skip them.
+import { encodeTraceRequest } from '../../../../scripts/otlp-encode.mjs';
 import { readTraceFiles } from '../commands/observe.js';
 import { PLANTED } from './__fixtures__/planted.js';
 import { decodeTraceRequest, ProtobufError } from './otlp-protobuf.js';
-import { OTLP_KEEP, otlpReader } from './readers.js';
-
-/*
- * A protobuf writer for the test only: it writes an OTLP/JSON document as the
- * `ExportTraceServiceRequest` an exporter would send, every field included
- * (span names, status messages, events, attributes off the list), so the
- * decoder is shown to skip them rather than never meeting them.
- */
+import { OTLP_KEEP, otlpReader } from './readers/index.js';
 
 type Json = Record<string, any>;
-
-const varint = (value: bigint | number): number[] => {
-  let rest = BigInt.asUintN(64, BigInt(value));
-  const bytes: number[] = [];
-  do {
-    const low = Number(rest & 0x7fn);
-    rest >>= 7n;
-    bytes.push(rest === 0n ? low : low | 0x80);
-  } while (rest !== 0n);
-  return bytes;
-};
-const tag = (no: number, wire: number): number[] => varint((no << 3) | wire);
-const bytesField = (no: number, bytes: readonly number[]): number[] => [...tag(no, 2), ...varint(bytes.length), ...bytes];
-const textField = (no: number, value: string): number[] => bytesField(no, [...Buffer.from(value, 'utf8')]);
-const varintField = (no: number, value: bigint | number): number[] => [...tag(no, 0), ...varint(value)];
-const fixed64Field = (no: number, value: bigint): number[] => {
-  const view = new DataView(new ArrayBuffer(8));
-  view.setBigUint64(0, value, true);
-  return [...tag(no, 1), ...new Uint8Array(view.buffer)];
-};
-const doubleField = (no: number, value: number): number[] => {
-  const view = new DataView(new ArrayBuffer(8));
-  view.setFloat64(0, value, true);
-  return [...tag(no, 1), ...new Uint8Array(view.buffer)];
-};
-const hexBytes = (hex: string): number[] => [...Buffer.from(hex, 'hex')];
-
-const KINDS: Record<string, number> = {
-  SPAN_KIND_INTERNAL: 1,
-  SPAN_KIND_SERVER: 2,
-  SPAN_KIND_CLIENT: 3,
-  SPAN_KIND_PRODUCER: 4,
-  SPAN_KIND_CONSUMER: 5,
-};
-
-const anyValue = (value: Json): number[] => {
-  if (typeof value['stringValue'] === 'string') return textField(1, value['stringValue']);
-  if (typeof value['boolValue'] === 'boolean') return varintField(2, value['boolValue'] ? 1 : 0);
-  if (value['intValue'] !== undefined) return varintField(3, BigInt(value['intValue']));
-  if (typeof value['doubleValue'] === 'number') return doubleField(4, value['doubleValue']);
-  if (value['arrayValue'] !== undefined) {
-    return bytesField(5, (value['arrayValue']['values'] as Json[]).flatMap((item) => bytesField(1, anyValue(item))));
-  }
-  return [];
-};
-const keyValue = (attribute: Json): number[] => [...textField(1, attribute['key']), ...bytesField(2, anyValue(attribute['value']))];
-
-const span = (raw: Json): number[] => [
-  ...bytesField(1, hexBytes(raw['traceId'])),
-  ...bytesField(2, hexBytes(raw['spanId'])),
-  ...(raw['parentSpanId'] === undefined ? [] : bytesField(4, hexBytes(raw['parentSpanId']))),
-  ...(raw['name'] === undefined ? [] : textField(5, raw['name'])),
-  ...varintField(6, typeof raw['kind'] === 'number' ? raw['kind'] : (KINDS[raw['kind']] ?? 1)),
-  ...(raw['startTimeUnixNano'] === undefined ? [] : fixed64Field(7, BigInt(raw['startTimeUnixNano']))),
-  ...(raw['endTimeUnixNano'] === undefined ? [] : fixed64Field(8, BigInt(raw['endTimeUnixNano']))),
-  ...(raw['attributes'] ?? []).flatMap((attribute: Json) => bytesField(9, keyValue(attribute))),
-  ...(raw['events'] ?? []).flatMap((event: Json) =>
-    bytesField(11, [...textField(3, event['name']), ...(event['attributes'] ?? []).flatMap((a: Json) => bytesField(4, keyValue(a)))]),
-  ),
-  ...(raw['status'] === undefined
-    ? []
-    : bytesField(15, [
-        ...(raw['status']['message'] === undefined ? [] : textField(2, raw['status']['message'])),
-        ...varintField(3, raw['status']['code']),
-      ])),
-];
-
-/** An OTLP/JSON document as protobuf bytes. */
-export const encodeTraceRequest = (document: Json): Uint8Array =>
-  new Uint8Array(
-    (document['resourceSpans'] as Json[]).flatMap((resourceSpans) =>
-      bytesField(1, [
-        ...bytesField(1, (resourceSpans['resource']?.['attributes'] ?? []).flatMap((a: Json) => bytesField(1, keyValue(a)))),
-        ...(resourceSpans['scopeSpans'] as Json[]).flatMap((scope) =>
-          bytesField(2, [
-            ...(scope['scope'] === undefined ? [] : bytesField(1, textField(1, scope['scope']['name']))),
-            ...(scope['spans'] as Json[]).flatMap((raw) => bytesField(2, span(raw))),
-          ]),
-        ),
-      ]),
-    ),
-  );
 
 const fixture = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures/multi-repo/traces/checkout.otlp.json');
 const json = readFileSync(fixture, 'utf8');

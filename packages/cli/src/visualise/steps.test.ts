@@ -3,7 +3,7 @@ import type { LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { createKeys } from './frame.js';
 import { answersOf, createModel, type GraphModel } from './graph.js';
-import { createMap, mapCallOrder, mapSeenCount, mapTopTargets, mapView } from './map.js';
+import { createMap, mapCallOrder, mapGuessesConfirmed, mapSeenCount, mapTopTargets, mapView } from './map.js';
 import { packGraph, type PackedGraph } from './pack.js';
 import { packSites } from './sites.js';
 import {
@@ -244,6 +244,41 @@ describe('observed', () => {
     const view = mapView(map, { toggled: new Set(), hidden: new Set() }, data.dicts.confidences);
     const total = view.links.reduce((sum, link) => sum + mapSeenCount(map, link, seen.join), 0);
     expect(total).toBe(3);
+  });
+
+  it('says a best guess traffic went through, and a way in it never touched (P110)', () => {
+    const data = pack();
+    const guess = data.edges.findIndex((edge) => data.dicts.confidences[edge[3]!] === 'heuristic');
+    const entry = data.entryIds[nodes[0]!.id]!;
+    data.observed = {
+      joins: { [String(guess)]: { count: 4, lastSeen: '2026-01-02' } },
+      entries: {},
+      unmatched: [['shop-api', 'http', 'GET /health', 'list_entries({service: "shop-api"})']],
+      never: { window: '7d', rows: [[entry, 1]] },
+      confirmed: [guess],
+    };
+    const seen = createSeen(data);
+    expect(seen.window).toBe('7d');
+    expect(seen.confirmed(guess)).toBe(4);
+    expect(seen.confirmed(0)).toBe(0);
+    expect(seen.neverSeen).toEqual([{ node: entry, strong: true }]);
+    expect(seen.unmatched[0]).toMatchObject({ next: 'list_entries({service: "shop-api"})' });
+    const { rows } = stepsOf(modelOf(data), entry, { seen });
+    expect(rows[0]!.never).toEqual({ window: '7d', strong: true });
+    expect(rows.find((row) => row.edge === guess)).toMatchObject({ certain: false, seen: 4, confirmed: 4 });
+    expect(rows.filter((row) => row.confirmed > 0)).toHaveLength(1);
+    // The map draws a link solid when every best guess behind it was seen.
+    const map = createMap(data.map);
+    const view = mapView(map, { toggled: new Set(), hidden: new Set() }, data.dicts.confidences);
+    const isGuess = (k: number) => data.dicts.confidences[data.edges[k]![3]!] === 'heuristic';
+    const solid = view.links.filter((link) => mapGuessesConfirmed(map, link, isGuess, (k) => seen.confirmed(k) > 0));
+    const dashed = view.links.filter((link) => mapGuessesConfirmed(map, link, isGuess, () => false));
+    expect(dashed).toEqual([]);
+    expect(solid.length).toBeLessThanOrEqual(1);
+    // Without the file, nothing is confirmed and nothing is never seen.
+    const bare = createSeen(pack());
+    expect(bare.confirmed(guess)).toBe(0);
+    expect(bare.never(entry)).toBeNull();
   });
 });
 

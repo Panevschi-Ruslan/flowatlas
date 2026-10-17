@@ -66,6 +66,9 @@ const evidence = z.object({
   unresolvedInjects: z.number().int().optional(),
   classReached: z.literal(true).optional(),
   via: z.string().optional(),
+  /** Traffic in the window (P110): how often it went through, or that it never did and how far to trust that. */
+  seen: z.object({ count: z.number().int(), lastSeen: z.string().nullable(), window: z.string() }).optional(),
+  neverSeen: z.object({ window: z.string(), confidence: z.enum(['strong', 'weak']) }).optional(),
 });
 
 export const deadResultSchema = z.object({
@@ -90,7 +93,7 @@ export const deadResultSchema = z.object({
         role: z.enum(['probe', 'webhook', 'callback', 'discovery', 'configured']).optional(),
         /** `likely-dead` where a request whose address was read in part could reach it. */
         confidence: z.enum(['dead', 'likely-dead']),
-        /** What `dead` claims (P95): `dead`, `likely-dead` or `unknown`, never `alive` here. */
+        /** What `dead` claims (P95): `dead`, `likely-dead` or `unknown`; `alive` only where traffic was seen (P110). */
         verdict,
         evidence: evidence.optional(),
       }),

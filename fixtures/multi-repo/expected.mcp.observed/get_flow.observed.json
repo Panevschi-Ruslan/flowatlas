@@ -8,11 +8,11 @@
       "service": "gateway",
       "kind": "http"
     },
-    "observed": 2,
-    "p95": 520,
+    "observed": 22,
+    "p95": 72.88,
     "errorRate": 0,
     "failures": {
-      "hits": 2,
+      "hits": 22,
       "window": {
         "from": "2025-10-16T07:00:00.000Z",
         "to": "2025-10-16T09:00:00.000Z"
@@ -36,8 +36,8 @@
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
         },
-        "observed": 1,
-        "p95": 520,
+        "observed": 21,
+        "p95": 72.88,
         "errorRate": 0,
         "children": [
           {

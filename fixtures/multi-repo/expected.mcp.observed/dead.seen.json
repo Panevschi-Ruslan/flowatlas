@@ -1,0 +1,20 @@
+{
+  "id": "entry:billing:http:GET:/invoices/:param",
+  "type": "entry",
+  "kind": "http",
+  "service": "billing",
+  "loc": "src/invoices/invoices.controller.ts:26",
+  "verdict": "alive",
+  "reason": "no http_calls/hits from any repo (may be a public API); seen 3 times in 2h at run time, so something static reach does not see calls it (a blind spot)",
+  "class": "actionable",
+  "evidence": {
+    "seen": {
+      "count": 3,
+      "lastSeen": "2025-10-16T08:05:01.000Z",
+      "window": "2h"
+    }
+  },
+  "next": [
+    "who_calls({symbol: \"entry:billing:http:GET:/invoices/:param\"})"
+  ]
+}

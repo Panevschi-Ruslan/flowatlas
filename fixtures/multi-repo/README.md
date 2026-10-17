@@ -325,7 +325,8 @@ MCP snapshots read.
 describes changes, `docs.check.txt` says so: regenerate the page with
 `node packages/cli/bin/flowatlas.js docs --write --config fixtures/multi-repo/flowatlas.config.json`
 and review it like any other snapshot.
-## Traffic over the map (P65, P85, P105)
+
+## Traffic over the map (P65, P85, P105, P110)
 
 `traces/` holds what `flowatlas observe` reads, written by hand with values
 planted that no reader may keep (`packages/cli/src/observe/__fixtures__/planted.ts`):
@@ -335,11 +336,29 @@ planted that no reader may keep (`packages/cli/src/observe/__fixtures__/planted.
 | `checkout.otlp.json` | OTLP/JSON | a slow `GET /orders/:id` hop from `gateway` to `orders` (500 ms on the caller's span), a `POST /orders` that answers 500 with `status.code: 2`, a publish and its consumer, a call that fits two call sites, and a span with no times |
 | `billing.observe.json` | @nestjs/observe batch | one batch with jobs, a WebSocket snapshot and a node the contract refuses |
 | `billing.batches.observe.json` | @nestjs/observe `{ batches }` | three posts an hour later: two reads (200 and 404), a write that fails with `e` on its nodes, and twenty writes that answer 201 |
+| `web.otlp.json` | OTLP/JSON | twenty page loads of one order (P110): the browser's request, made by `OrdersApiService.one` (`code.function`), and the gateway's answer |
 
 The protobuf copy of `checkout.otlp.json` is written by the test's encoder at
 test time, not checked in. `expected.cli/observe.json` is the observed file
-over all three, and the MCP snapshots in `expected.mcp.observed/` answer from
+over all four, and the MCP snapshots in `expected.mcp.observed/` answer from
 it; regenerate the CLI snapshots before the MCP ones.
+
+What traffic says of the map itself (P110). The twenty page loads go through
+the one best guess traffic can single out: `OrdersApiService.one`'s request
+(line 73), joined `heuristic`, beside `order`'s (line 21, `static`) of the same
+route; the span names the method it ran in, which settles which call it was.
+So `doctor --service web` says `1 of 4 best guesses confirmed by traffic in 2h`
+(`expected.cli/doctor.observed.web.txt`) and `who_calls` on the route marks
+that row `confirmedBy: "traffic"` (`expected.mcp.observed/who_calls.confirmed`).
+With `GET /orders/:param` hit 22 times, the gateway's other ways in are never
+seen beside a busy sibling - `strong` (`never_seen.*`, `dead.observed.txt`,
+where `POST /orders/:param/cancel` turns from `unknown` to `likely-dead`) -
+while `orders`, touched once a route, is `weak`, and over `since: "1h"` says
+`nothing from orders in the window`. `billing`'s `GET /invoices/:id`, which the
+build found nobody calls, was seen three times: `alive`, a blind spot of
+static reach. The six spans that matched nothing are the blind-spot rows of
+`expected.cli/doctor.unresolved.observed.txt` and
+`expected.mcp.observed/cant_follow.seen-not-in-code`.
 
 What the traffic answered against what the code declares (P106):
 `InvoicesService` throws a `NotFoundException` in `findOne` and a

@@ -1,7 +1,14 @@
 unresolved: total=0 (skipped) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=1
 
-unresolved: 0 to act on · missed: 0 · notes: 1 · findings: 1
+unresolved: 0 to act on · missed: 4 · notes: 1 · findings: 1
+  4 missed places static reading cannot see, folded into 4 rows
   1 finding: 1 status seen that the code does not declare
+  seen-not-in-code (info): 4 rows
+    Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it in the map (the MCP tool cant_follow names the call for each), add the service to the configuration if it is missing, and a later build that reads it makes the row go away. Nothing is drawn from it: a blind spot is a question, not an edge.
+      billing  traffic in billing reached 1 collection no reader drew, 2 spans in 2h: invoices (2)
+      billing  traffic in billing reached 1 outbound request no reader drew, 1 span in 2h: GET /orders/:value (1)
+      billing  traffic in billing reached 1 method no reader drew, 1 span in 2h: LedgerClient.post (1)
+      billing  traffic in billing reached 1 route no reader drew, 1 span in 2h: GET /healthz (1)
   failure-declared-unseen (note): 1 row
     The code says the way in can fail with this and no request in the observed window answered it: an error path nothing exercised, or one that cannot happen any more. Traffic differs per environment and per week, so it is a question for a test, not proof the path is dead.
       billing/src/invoices/invoices.service.ts:15  POST /invoices declares 409 ConflictException, and none of its 22 requests from 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z answered it

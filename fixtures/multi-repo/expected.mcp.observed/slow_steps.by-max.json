@@ -4,9 +4,9 @@
       "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
       "label": "OrdersController.findOne",
       "service": "gateway",
-      "count": 1,
-      "p50": 520,
-      "p95": 520,
+      "count": 21,
+      "p50": 61.29,
+      "p95": 72.88,
       "max": 520,
       "errorRate": 0
     },
@@ -35,8 +35,8 @@
       "errorRate": 0
     }
   ],
-  "total": 9,
-  "truncated": "6 more steps; ask with a larger limit",
+  "total": 11,
+  "truncated": "8 more steps; ask with a larger limit",
   "next": [
     "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})"
   ]

@@ -1,9 +1,8 @@
-import { JAEGER_READS, only, OTLP_READS } from './allow-list.js';
-import type { ObservedSpan, SpanKind } from './span.js';
+import { JAEGER_READS, only, OTLP_READS } from '../allow-list.js';
+import type { ObservedSpan, SpanKind } from '../span.js';
+import { fieldsOfAttributes, noAttributes, type Attributes } from './attributes.js';
 import {
   Dropped,
-  fieldsOfAttributes,
-  noAttributes,
   isObject,
   list,
   microsToIso,
@@ -11,10 +10,9 @@ import {
   Skips,
   text,
   withFields,
-  type Attributes,
   type Json,
-} from './reader-parts.js';
-import type { TraceReader } from './readers.js';
+  type TraceReader,
+} from './shared.js';
 
 /**
  * A Jaeger trace as its UI's "Download JSON" and its query API write it

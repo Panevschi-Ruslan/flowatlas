@@ -429,6 +429,7 @@ export const PAGE_WORDS = Object.freeze({
     'route-verb-unread': 'route file exports no verb',
     'route-wildcard-only': 'only a wildcard route answers',
     's3-write-matches-nothing': 'bucket write notifies nothing',
+    'seen-not-in-code': 'seen at run time, not in code',
     'sender-forwards': 'message forwarded',
     'server-action-unread': 'server action not read',
     'service-binding-unknown': 'service binding unknown',

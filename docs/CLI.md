@@ -797,6 +797,7 @@ reading cannot see.
 | `--kind <kind>` | `all` | one of `entries`, `channels`, `providers`, `fields`, `all` |
 | `--class <class>` | every class | only entries of one class: `actionable`, `stream`, `infrastructure`, `declared` |
 | `--service <name>` | every service | narrow to one |
+| `--since <dur>` | all the file holds | with an observed file: read traffic over the last `2h`, `7d`, `2w` of it (`all` for everything) |
 
 A route nothing calls is put in a **class**, which is not the same question as
 whether it is dead, and every row says which rule put it there (`why`):
@@ -859,6 +860,33 @@ json` carries every row (to `--max`) with `class`, `why`, `role`, `confidence`,
 `verdict` and `evidence`. Rows are ordered by what they mean rather than by name — the
 ones nothing explains first — so `--max` cuts the rows that say why they are
 here before it cuts the rows that do not (`fixtures/multi-repo-dead-routes`).
+
+**Traffic as evidence (P110).** With an observed file beside the database
+(`flowatlas observe`), every verdict is read beside what traffic did, and the
+entry and channel tables gain a `seen` column: `seen ×n`, `never in 7d
+(strong)`, `never in 7d (weak)`, or `—` where traffic says nothing (a service
+with no span in the window, or a method of a service whose spans name no
+methods). Seen in the window is `alive`, whatever the static answer, under
+`evidence.seen` (`{ count, lastSeen, window }`); a route the build found nobody
+calls that traffic reached says so — static reach missed a caller, a blind
+spot. Never seen is `evidence.neverSeen` (`{ window, confidence }`): `strong`
+when the file holds the whole window asked for and a sibling (a way in of the
+same service and kind, a method of the same class, a channel of the same
+service) was seen at least 20 times, `weak` otherwise. A way in nothing in the
+code reaches, `unknown` by static reading, that was never seen beside a busy
+neighbour is `likely-dead`; a static `dead` stays `dead`, with the silence as
+corroboration. `--since` cuts the window at read time from the file's hours,
+ending where the file does, so `7d` and `30d` differ without the traces at
+hand; over a window longer than the file holds, every row is `weak` and the
+header says so. Without the file every table is exactly as before. Traffic is
+what was exercised, by whom, in which environment: it is evidence, never a
+reason to delete code.
+
+```
+traffic over 2h: seen is alive whatever the code says; never seen is strong only beside a busy neighbour
+  entry:gateway:http:POST:/orders/pay      src/orders/orders.controller.ts:45      dead   never in 2h (strong)  no http_calls/hits from any repo (may be a public API)
+  entry:billing:http:GET:/invoices/:param  src/invoices/invoices.controller.ts:26  alive  seen ×3               …; seen 3 times in 2h at run time, so something static reach does not see calls it (a blind spot)
+```
 
 `--kind fields` reports a field one side sends and the other does not declare.
 The rows are the ones something happens to: a field the receiver's whitelisting
@@ -1465,9 +1493,11 @@ window 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as 
 .flowatlas/observed.json
 ```
 
-Six ways a file can be written, picked by looking at it, and any of them may
-be gzipped (a file that starts with gzip's magic bytes is unpacked first, so a
-body captured from a POST is read as it is):
+Six ways a trace file can be written, and four AWS exports (see
+[AWS exports](#aws-exports-without-a-collector) below), each picked by looking
+at the file, and any of them may be gzipped (a file that starts with gzip's
+magic bytes is unpacked first, so a body captured from a POST is read as it
+is):
 
 - **OTLP/JSON** (`resourceSpans` / `scopeSpans` / `spans`, one document or one
   per line). Read: `service.name`, span kind, `http.request.method` /
@@ -1679,6 +1709,217 @@ over it unless told `--reset`.
 | `--reset` | start the file again instead of adding to it |
 | `--no-samples` | keep no sample requests and remove the ones the file holds: then it holds no trace id at all |
 | `--format json` | print `observed.json` (format 3) instead of the summary |
+| `--workflow <name>` | the state machine a Step Functions execution history is of, when the file does not name it |
+| `--function <name>` | the function Lambda `REPORT` lines are of, when no log group names it |
+| `--access-log-keys <map>` | the keys an API Gateway access log uses, when they are not the documented ones: `route=<k>,method=<k>,path=<k>,status=<k>,latency=<k>,time=<k>` |
+
+Each of the last three applies only to the format that needs it: given for any
+other file, it is an error (`--workflow applies to sfn-history files only;
+traces/a.json is otlp`), never a flag quietly unused.
+
+#### `observe --listen`: a receiver on this machine
+
+Files are the default, but the shortest loop is *run the service, click
+through, look*. `flowatlas observe --listen` takes what an OpenTelemetry SDK
+and the @nestjs/observe agent post, on `127.0.0.1:4318`, and fills
+`.flowatlas/observed.json` as requests happen: no collector, no file exporter,
+no backend.
+
+```
+$ flowatlas observe --listen
+listening on http://127.0.0.1:4318: OTLP/HTTP traces at http://127.0.0.1:4318/v1/traces (JSON or protobuf, gzip), @nestjs/observe batches at http://127.0.0.1:4318/applications/telemetry; metrics and logs are dropped; nothing is forwarded. Writing .flowatlas/observed.json; Ctrl-C to stop
+70 spans, 3 joins, 6 unmatched since start; dropped: 1 metric post, 1 log post
+^C
+stopped: 70 spans, 3 joins, 6 unmatched since start; dropped: 1 metric post, 1 log post
+```
+
+Point the service's exporter at it, unchanged:
+
+```
+OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf     # or http/json; grpc is not taken
+OTEL_TRACES_EXPORTER=otlp
+```
+
+and the @nestjs/observe agent's endpoint setting at `http://127.0.0.1:4318`
+(it posts its batches to `/applications/telemetry`). What it answers is what
+each sender's own server answers: `200` with an empty
+`ExportTraceServiceResponse` (`{}`, or no bytes for protobuf) on
+`/v1/traces`, `/v1/metrics` and `/v1/logs`, `202` with no body for a batch.
+Metrics and logs are read to their end and dropped unparsed, so an SDK set to
+export everything does not see errors.
+
+Every post is read as `observe` reads a file — the same readers, the same
+allow-lists — inside the request: the body is inflated, decoded and read, and
+only the reduced spans outlive it. A trace's spans are held together, by trace
+id, until nothing was added to it for `--trace-wait`, so a server span meets
+its caller's client span that came in another service's post; the buffer
+holds at most 10,000 spans and 2,000 traces, and a trace pushed out early is
+matched as it is and counted (`1 trace cut short`). Every `--flush` and on
+Ctrl-C, what was matched is merged into the file with the merge a file run
+uses (written to a temporary file and renamed, so the page and the graph
+server never read half a file), so the same traffic gives the same file
+either way. Each flush adds one `sources` entry, `{ format: 'listen', spans,
+readAt }`, known by a hash of the bodies first read in it; a body already
+read (an exporter's retry, or a file read before) is answered and not counted
+again. The graph is read at start and again when `graph.db` changes.
+
+While it runs it holds `.flowatlas/observed.lock` (its pid inside); an
+`observe <files>` run at the same time waits five seconds for it, then says a
+listener is running. A lock whose process is gone is taken over.
+
+**What it will not do.** It binds `127.0.0.1` (or `::1`, `--host ::1`); any
+other address needs `--allow-remote` as well and prints a warning naming it
+(`--host 0.0.0.0` alone is refused). A browser page cannot use it: a request
+whose `Host` is not `127.0.0.1:<port>`, `localhost:<port>` or `[::1]:<port>`
+is `421`, so a site that rebinds its name to this machine cannot post; a
+request with an `Origin` header is `403`; `OPTIONS` is `405` and no CORS
+header is ever sent; `text/plain`, the type a page may post without asking,
+is `415`. A body over `--max-body` is `413` and the connection is cut —
+before inflating and after, so a small gzip body cannot unpack past it.
+Other paths are `404`, other methods `405`, an encoding other than gzip
+`415`, and a body that does not decode `400`. Of the request's headers only
+`Host`, `Content-Type`, `Content-Encoding` and `Content-Length` are read, and
+whether an `Origin` is there: an exporter's credentials (an `Authorization`
+or API key header) are never looked at. It forwards nothing and opens no
+connection. To keep a backend as well, give the service two exporters (the
+SDK's multi-span-processor setup) or run a collector with two.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--listen [port]` | `4318` | take posts instead of files (files and `--listen` are exclusive) |
+| `--host <addr>` | `127.0.0.1` | the address to bind; not loopback needs `--allow-remote` |
+| `--allow-remote` | off | let `--host` be an address other machines can reach |
+| `--flush <dur>` | `30s` | how often the file is written (`500ms`, `30s`, `5m`) |
+| `--trace-wait <dur>` | `30s` | how long a trace is held for more of its spans after its last one |
+| `--max-body <size>` | `8mb` | the largest body taken, before and after gzip |
+| `--quiet` | off | no line per flush |
+| `--service`, `--since`, `--reset`, `--no-samples` | | as for files; `--reset` starts the file again at the first flush; with `--no-samples` a trace id lives only in the buffer, for at most `--trace-wait`, and is never written |
+
+`--workflow`, `--function`, `--access-log-keys` and `--format` name things
+about files and are refused with `--listen`. To try it without a service,
+`node scripts/observe-send.mjs` (in a checkout of this repository) posts
+`fixtures/multi-repo/traces` to it as JSON, protobuf, gzip and
+@nestjs/observe batches.
+
+#### AWS exports, without a collector
+
+A Lambda project often has no OpenTelemetry collector, but it has X-Ray, the
+console's execution history, access logs and a `REPORT` line per invocation.
+`observe` reads four exports of them (P108), each a file the AWS CLI or the
+console writes; it calls no AWS API. What each says becomes the same span
+fields an OTLP span of it gives (*On AWS Lambda* above), so it lands on the
+same nodes, through the same allow-list: every ARN and URL is cut to the name
+inside it, and a JSON string inside a file (an X-Ray `Document`, a log
+`@message`) is parsed, read field by field and dropped. A file that needs a
+name it does not say is refused with the flag that gives it, never counted on
+a guess. Over `fixtures/lambda-traces`, the X-Ray export of the checkout gives
+every entry, join, step, table and channel its OTLP trace gives; each other
+export gives the entries it can see, with the same counts.
+
+| Export | Format name | Gives |
+|---|---|---|
+| X-Ray traces | `xray` | entries, joins, steps, tables, channels, samples |
+| Step Functions execution history | `sfn-history` | the workflow's run, its steps, a step's direct invoke of a function, samples |
+| API Gateway access log | `apigw-access-log` | the route's hits, statuses and latencies; no joins, no samples |
+| Lambda `REPORT` lines | `lambda-report` | each function's runs, durations and errors; no joins, no samples |
+
+**X-Ray traces** (`xray`).
+
+```
+aws xray get-trace-summaries --start-time <t0> --end-time <t1> --query 'TraceSummaries[].Id' --output text
+aws xray batch-get-traces --trace-ids <id> <id> ... > xray.json
+```
+
+One output, an array of outputs, one per line, or a bare array of segment
+documents. Read, of each segment: `id`, `trace_id`, `parent_id`, `start_time`
+and `end_time`, `fault` (the error; `error`, a 4xx, is not one, its status
+is), `http.request.method`, the path of `http.request.url`,
+`http.response.status`, `origin`, `inferred`, `resource_arn`, and of `aws`:
+`operation`, `function_arn`, `function_name`, `table_name`, `resource_names`
+(DynamoDB), `queue_url`, `topic_arn`, `state_machine_arn`, `bucket_name`,
+`stream_name`. `name` is read as a segment's service, a state machine's step
+(its direct subsegments) and an SDK subsegment's AWS service; never a remote
+call's, which is its host. An `AWS::Lambda::Function` segment is the
+function's run; an `AWS::StepFunctions::StateMachine` segment the workflow's,
+its subsegments the steps; an `AWS::ApiGateway::Stage` segment the route,
+the stage cut off the path. A function's trigger is said by what it hangs
+under: a stage, a step, an invoke, or a send or a write a mapping delivered.
+The `AWS::Lambda` segment above a function's own, and subsegments that name no
+call (`Invocation`, `Overhead`, a team's own), are read through, their
+children hung on their parent, and counted in the summary. An inferred segment
+of an AWS service is the callee's side of its call; one of a remote host is
+not read. Never read: `annotations`, `metadata`, `sql`, `user`, `cause`,
+`aws.request_id`, `aws.account_id`, `aws.region`, `aws.xray`,
+`http.request.client_ip`, `user_agent`, `x_forwarded_for`.
+
+**A Step Functions execution history** (`sfn-history`).
+
+```
+aws stepfunctions get-execution-history --execution-arn <arn> > run.history.json
+```
+
+The machine is named by `stateMachineArn` or `executionArn` when the output of
+`aws stepfunctions describe-execution --execution-arn <arn>` is merged into
+the file (`jq -s '.[0] * .[1]' describe.json history.json`), by the version or
+alias ARN an `ExecutionStarted` event carries, else by `--workflow <name>`;
+with none, the file is refused: `run.history.json names no state machine
+(merge describe-execution's stateMachineArn into it); name it with --workflow
+<name>`. The run, from `ExecutionStarted` to `ExecutionSucceeded` / `Failed` /
+`TimedOut` / `Aborted`, is one span on the `workflow` entry, its trace id the
+execution's name (never its ARN). Each `*StateEntered` / `*StateExited` pair,
+by `name` and the chain of `previousEventId`s (so a Map state's iterations are
+one span each), is a step under the step around it; a `TaskFailed`,
+`LambdaFunctionFailed`, `LambdaFunctionTimedOut` or `ExecutionFailed` inside
+it fails it. `LambdaFunctionScheduled.resource` is a call that invokes the
+function; `TaskScheduled` is the service and operation of its `resourceType`
+and `resource` only (`lambda` / `invoke` is `Lambda/Invoke`), and names no
+target, since its `parameters` are not read. Never read: every `input`,
+`output`, `inputDetails`, `outputDetails`, `parameters`, `cause` and `error`
+text, `roleArn`, `taskToken`.
+
+**API Gateway access logs** (`apigw-access-log`), in the JSON format the API
+Gateway docs give as the example, such as
+`{ "requestId":"$context.requestId", "ip":"$context.identity.sourceIp",
+"requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod",
+"routeKey":"$context.routeKey", "status":"$context.status",
+"responseLatency":"$context.responseLatency" }`:
+
+```
+aws logs filter-log-events --log-group-name <access-log-group> --start-time <t0> > access.json
+```
+
+or JSON lines, or a Logs Insights result downloaded as JSON or CSV. Read,
+matched without regard to case: `routeKey` (`POST /checkout`; `ANY` takes the
+request's method), else `httpMethod` + `resourcePath` (a REST API's template);
+`$default` and a missing template fall back to the path of `path`; `status`;
+`responseLatency`, `latency`, `integrationLatency`, the first there;
+`requestTimeEpoch` or `requestTime`; `integrationStatus` of 500 or more is an
+error. A team that named its keys otherwise says them with
+`--access-log-keys route=rk,status=code,latency=took,time=when`. One span a
+line, with no parent: entries only, never a join, and no sample. Never read:
+`ip`, `sourceIp`, `userAgent`, `caller`, `user`, `identity.*`, `authorizer.*`,
+`requestId`, `extendedRequestId`, `domainName`, or any key not named above.
+
+**Lambda `REPORT` lines** (`lambda-report`), from a Logs Insights query over the
+functions' log groups,
+
+```
+filter @type = "REPORT" | fields @timestamp, @message, @log, @logStream, @duration
+```
+
+exported from the console as JSON or CSV (or `aws logs get-query-results`),
+or plain lines starting `REPORT RequestId:` (as `aws logs tail` prints them,
+with `--function`). The function is named by the record's log group
+(`/aws/lambda/<name>`, `@log` being `<account>:<group>`; the account is not
+read) or its stream in a log group of the team's own, each line by its own,
+else by `--function <name>`; lines none of them names refuse the file. Each
+line is one run of the function: `Duration` (or `@duration`), `@timestamp`,
+and an error when the line says `Status: error` or `Status: timeout`. One span
+a line, with no parent, and no sample. Never read: `RequestId`, `Billed
+Duration`, `Memory Size`, `Max Memory Used`, `Init Duration`, the X-Ray
+`TraceId` and `SegmentId` on the line, and every line that is not a `REPORT`
+line (counted: `not read: 2 lines not starting REPORT`).
 
 ---
 
@@ -1834,6 +2075,38 @@ Traffic differs per environment and per week, and a build should not fail
 because nobody hit a 409 on Sunday; `--strict-runtime` is there for a team that
 wants it, and exits 1 on any of these rows but an expected status. `flowatlas
 accept` takes one like any other row.
+
+**What traffic reached and no reader drew (P110).** Beside the same file,
+every span `observe` matched to nothing becomes a blind spot: one
+`seen-not-in-code` row per service and kind (`http`, `client`, `messaging`,
+`code`, `db`, `rpc`, `function`, `workflow`, `state`, `table`, `cloud`, `join`),
+not per span, at `info`, with no file, saying how many places and spans over
+which window and the names the trace kept (`traffic in billing reached 1 route
+no reader drew, 1 span in 2h: GET /healthz (1)`). A route registered at run
+time, a service not in the configuration, or a reader gap; nothing is drawn
+from one. It is a gap, so `doctor --unresolved` lists the same rows under the
+cause `seen-not-in-code`, each group with the call that looks for it in the map
+(`find_symbol` for a method, `list_entries` for a route, `search` for the rest):
+
+```
+  seen-not-in-code: 6 places  3 services
+    billing http: 1 span, last 2025-10-16T07:33:33.000Z: GET /healthz (1)
+      next: list_entries({service: "billing"})
+```
+
+`join` is a send, an invoke or a start the map has the target of, from code the
+map has, along a join it does not draw (`invoke print-label`).
+
+**Best guesses confirmed by traffic (P110).** A `heuristic` join the window
+went through at least once is counted apart from the best guesses, on its own
+line (`1 of 4 best guesses confirmed by traffic in 2h`, narrowed by `--service`
+to the guesses that service's code makes), and the row that explains the guess
+(`base-url-from-name`, `base-url-from-files`, `route-mount-assumed-empty`,
+`route-api-guessed`, `workflow-named-by-file`, `environment-from-files`, at the
+call the join leaves from) is left out while traffic confirms it; `doctor.json`
+says the counts under `traffic` (`{ window, bestGuesses, confirmed, withdrawn
+}`). The edge keeps its confidence: the graph on disk never depends on traffic,
+and a run without the file gives the static answer again.
 
 The exit code is decided by the first of these that applies: a graph that cannot
 be reported on, a baseline that cannot be read, or `--strict` with no baseline

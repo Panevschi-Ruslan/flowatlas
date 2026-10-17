@@ -52,8 +52,14 @@ export function createStepsUi(page) {
   const STEP_MARKS = [
     [(row) => row.kind !== 'answer' && row.edge >= 0 && row.certain && row.confidence !== 'static',
       (row) => ['is-marked', wordFor('trust', row.confidence), `joined ${row.confidence}: an annotation says so`], false],
-    [(row) => row.edge >= 0 && !row.certain && row.confidence !== 'runtime',
-      (row) => ['is-guess', wordFor('trust', row.confidence), `joined ${row.confidence}: inferred, may be wrong`], true],
+    [(row) => row.edge >= 0 && !row.certain && row.confidence !== 'runtime', (row) => row.confirmed > 0
+      // A best guess traffic went through (P110): still a guess, now with the evidence beside it.
+      ? ['is-guess is-confirmed', wordFor('trust', row.confidence) + ', seen ×' + row.confirmed.toLocaleString(),
+        `joined ${row.confidence}: inferred, and traffic went through it ${row.confirmed.toLocaleString()} times in ${seen.window}`]
+      : ['is-guess', wordFor('trust', row.confidence), `joined ${row.confidence}: inferred, may be wrong`], true],
+    [(row) => row.never !== null, (row) => [row.never.strong ? 'is-never is-strong' : 'is-never', 'not seen in ' + row.never.window,
+      row.never.strong ? 'Traffic never touched it while its neighbours were busy: likely unused'
+        : 'Traffic never touched it, and nothing beside it was busy either: it may just not have been exercised'], true],
     [(row) => row.failure && row.kind !== 'break', () => ['is-failure', 'on failure', 'Runs only when what comes before it fails'], true],
     [(row) => row.kind === 'break' && row.reason, (row) => ['is-failure', wordFor('reason', row.reason), `The check row that says why: ${row.reason}`], true],
     [(row) => row.together, () => ['is-together', 'side by side', 'Runs beside its siblings, not after them'], false],
@@ -66,7 +72,7 @@ export function createStepsUi(page) {
       return via === 'shape-file'
         ? ['is-standin', 'shape · ' + pkg, 'Typed by a shape file of the project\'s own, since ' + pkg + ' is not installed: it says what the project wrote, which may not be what runs']
         : ['is-standin', 'source · ' + pkg, 'Typed by the source of ' + pkg + ' in a repository read here, since it is not installed: the source may not be the version that runs']; }, false],
-    [(row) => row.seen > 0, (row) => ['is-seen', 'seen ×' + row.seen.toLocaleString(), 'Seen this many times at run time'], true],
+    [(row) => row.seen > 0 && row.confirmed === 0, (row) => ['is-seen', 'seen ×' + row.seen.toLocaleString(), 'Seen this many times at run time'], true],
     [(row) => row.again, () => ['', 'listed above', 'Reached again; its steps are listed where it first appears'], true],
     [(row) => row.loop, () => ['', 'loops back', 'Already on this path'], true],
   ];
@@ -213,11 +219,13 @@ export function createStepsUi(page) {
   const stepsSaid = (found) => {
     const steps = found.rows.filter((row) => row.kind !== 'break' && row.kind !== 'config').length;
     const settings = found.rows.filter((row) => row.kind === 'config').length;
-    const guesses = found.rows.filter((row) => row.edge >= 0 && !row.certain).length;
+    const guesses = found.rows.filter((row) => row.edge >= 0 && !row.certain && row.confirmed === 0).length;
+    const confirmed = found.rows.filter((row) => row.confirmed > 0).length;
     const failing = found.rows.filter((row) => row.failure && row.kind !== 'break').length;
     const breaks = found.rows.filter((row) => row.kind === 'break').length;
     return [plural(steps, 'step', 'steps'), settings ? plural(settings, 'setting read', 'settings read') : '',
       guesses ? plural(guesses, 'best guess', 'best guesses') : '',
+      confirmed ? plural(confirmed, 'best guess', 'best guesses') + ' confirmed by traffic' : '',
       failing ? failing + ' on failure' : '', breaks ? plural(breaks, 'break', 'breaks') : '', seen.entry(found.rows[0].node) ? 'seen ×' + seen.entry(found.rows[0].node).toLocaleString() : '']
       .filter(Boolean).join(' · ');
   };

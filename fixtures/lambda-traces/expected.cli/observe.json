@@ -28,7 +28,8 @@
       "awsOp",
       "transport",
       "peerService",
-      "thirdParty"
+      "thirdParty",
+      "sampleable"
     ],
     "dropped": [
       "request and response headers",

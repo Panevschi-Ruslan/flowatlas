@@ -409,6 +409,22 @@ export interface MatchOptions {
 }
 
 export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], options: MatchOptions = {}): Observed => {
+  /**
+   * Of the call sites a request's route fits, the ones made by the method the
+   * span names (`code.function`), where it names one and that settles any:
+   * two calls of one route from two methods are told apart by who made them.
+   * A name that fits none of them leaves the route's answer as it was (I3).
+   */
+  const madeBy = (span: ObservedSpan, outs: GraphNode[]): GraphNode[] => {
+    if (span.symbol === undefined || outs.length < 2) return outs;
+    const made = outs.filter((out) =>
+      (index.to.get(out.id) ?? []).some((edge) => {
+        const caller = edge.type === 'calls' ? index.nodes.get(edge.from) : undefined;
+        return caller !== undefined && symbolKey(caller) === span.symbol;
+      }),
+    );
+    return made.length === 0 ? outs : made;
+  };
   const hourFor = hourOfSpan(spans, options.now ?? new Date());
   const tally = new Tally(hourFor);
   const byId = new Map(spans.map((span) => [`${span.traceId}/${span.spanId}`, span]));
@@ -419,7 +435,7 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
   const clientOuts = (span: ObservedSpan): GraphNode[] => {
     let outs = outsOf.get(span);
     if (outs === undefined) {
-      outs = matchRoute(index.httpOuts, span, inService(index, span.service));
+      outs = madeBy(span, matchRoute(index.httpOuts, span, inService(index, span.service)));
       outsOf.set(span, outs);
     }
     return outs;
@@ -748,7 +764,11 @@ const samplesOf = (
     if (span.parentId !== undefined) push(childrenOf, `${span.traceId}/${span.parentId}`, span);
   }
   const byEntry = new Map<string, ObservedSpan[]>();
-  for (const [span, entries] of tally.entryOf) for (const entry of entries) push(byEntry, entry, span);
+  for (const [span, entries] of tally.entryOf) {
+    // A line of an access log or a REPORT line is one span with an id made up for it: no request to show (P108).
+    if (span.sampleable === false) continue;
+    for (const entry of entries) push(byEntry, entry, span);
+  }
   const samples: Record<string, EntrySamples> = {};
   const atOf = (span: ObservedSpan): string => span.at ?? hourFor(span);
   for (const [entry, roots] of [...byEntry.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
