@@ -516,6 +516,32 @@ only one of them moved.
   the head side publishes (`kind: 'no-producer'`, `now: 'never-produced'`), so
   `diff`'s "Calls that stopped joining" and `what_changed`'s verdict say it too.
   `buildAtRef` gained `refFor` (a ref per repository) and `fallback: false`.
+- **`flowatlas spec`: OpenAPI and AsyncAPI documents from the graph (P118).**
+  An OpenAPI 3.1 document of each service's routes (one per application) and
+  an AsyncAPI 3.0 document of each service's channel ends, written to
+  `<output>/spec/` from what the graph read: paths with their parameters'
+  names, query and header values, bodies and answers expanded from the type
+  registry into JSON Schema 2020-12 through the contract check's wire rules,
+  one response per failure status (a helper's choices each under theirs), the
+  guards in front, the public mark, and on every operation where it was read,
+  how surely and who calls it (`x-flowatlas-*`). A delivery's wrapping is
+  `x-flowatlas-envelope`. What could not be read is left out and counted, or
+  `{}` with `x-flowatlas-unread`; each document is read back through the
+  reader of its format before it is written. `--check` fails when a committed
+  copy is out of date; `--inventory` writes one table of every route
+  (guarded, public, callers, tables written, channels published, fails).
+- **`flowatlas spec diff <base> [head]` (P118).** Both sides' documents,
+  written in memory and compared operation by operation, each change one kind
+  of a fixed catalogue modelled on oasdiff's (`endpoint-removed`,
+  `request-property-added-required`, `response-property-removed`,
+  `channel-removed`, ...) with the callers it breaks on the base side; a
+  breaking change no caller in the project reaches, on a route nothing marks
+  public, is a warning saying so. `--fail-on`, `--format text|markdown|json|sarif`
+  (`spec/<kind>` rules), `spec-diff.json`. `flowatlas diff --spec` adds the same
+  table as "API changes".
+- **MCP `get_spec` and `describe_for_prompt({withSpec})` (P118).** A service's
+  document, or one route or channel end with the schemas it uses, as JSON text
+  bounded by `maxChars`; a route's prompt can carry its fragment.
 
 ### Changed
 
@@ -538,6 +564,15 @@ only one of them moved.
 - **`diff.json` became format 4 (P114).** It gained `rules: { new, fixed,
   existing, excused }`. Files of formats 1 to 3 are still read, without the
   sections they predate; a file without `rules` makes the verdict `unknown`.
+- **`diff.json` became format 5 (P118).** It gained `spec`: the API changes
+  with `--spec`, `null` without it. Files of formats 1 to 4 are still read,
+  with `spec` `null`; the verdict does not read it.
+- **The MCP tool list grew past its ceilings again (P118).** `get_spec` and
+  `describe_for_prompt`'s `withSpec` brought the part a model reads to 10,564
+  characters and the whole list to 28,880; the ceilings went to 10,600 and
+  28,900.
+- **The OpenAPI reader takes `2XX` as a success answer (P118).** After every
+  exact 2xx code, so a document flowatlas wrote reads back with its answer.
 - **`flowatlas.baseline.json` became format 2 (P114).** It gained `rules`, the
   keys of the rule violations accepted; a version-1 baseline is still read, as
   one that accepted none. `doctor`'s summary line gained `rules: errors=N

@@ -35,6 +35,8 @@ import {
   runTypes,
   runCheck,
   runDeployedShow,
+  runSpec,
+  runSpecDiff,
 } from '../packages/cli/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
 import { makeDeployedProject, SHIPPED } from './deployed-fixture.mjs';
@@ -317,10 +319,52 @@ const QUEUE_CASES = [
   ['doctor.txt', (io) => runDoctorCommand({ config: queuesPlain.config }, io)],
 ];
 
+/**
+ * What `flowatlas spec` writes (P118), into a directory of its own that is
+ * removed afterwards: one written file, or what the run said, with that
+ * directory written as `<out>`.
+ */
+const specFile = (specConfig, options, file) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-spec-'));
+  try {
+    runSpec({ config: specConfig, out, ...options }, { out() {}, err() {}, tty: false });
+    io.out(readFileSync(join(out, file), 'utf8'));
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+const specSaid = (specConfig, options) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-spec-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    runSpec({ config: specConfig, out, ...options }, { out: (text) => io.out(said(text)), err: (text) => io.err(said(text)), tty: false });
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+
+/**
+ * The bookshop whose services disagree on purpose, as documents (P118): the
+ * routes orders answers, the channel ends of orders and billing, and every
+ * route in one table.
+ */
+const SPEC_CASES = [
+  ['spec.txt', specSaid(contractsConfig, { inventory: true })],
+  ['spec.orders.openapi.yaml', specFile(contractsConfig, {}, 'orders.openapi.yaml')],
+  ['spec.orders.asyncapi.yaml', specFile(contractsConfig, {}, 'orders.asyncapi.yaml')],
+  ['spec.billing.asyncapi.yaml', specFile(contractsConfig, {}, 'billing.asyncapi.yaml')],
+  ['spec.inventory.md', specFile(contractsConfig, { inventory: true, kind: 'openapi' }, 'inventory.md')],
+];
+
 const MULTI_EVENT_CASES = [
   ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...multiEventsPlain, format: 'tree' }, io)],
   ['channel.loan-returned.json', (io) => runChannel('eventbridge/library/library.loans/LoanReturned', { ...multiEventsPlain, format: 'json' }, io)],
   ['doctor.txt', (io) => runDoctorCommand({ config: multiEventsPlain.config }, io)],
+  // The channels as AsyncAPI documents (P118): a publish, a delivery that
+  // forwards, and a consumer handed the message wrapped (`x-flowatlas-envelope`).
+  ['spec.loans.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'loans.asyncapi.yaml')],
+  ['spec.routing.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'routing.asyncapi.yaml')],
+  ['spec.notifications.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'notifications.asyncapi.yaml')],
 ];
 
 /**
@@ -541,6 +585,14 @@ const diffMarkdown = (options) => async (io) => {
   io.out(placed(run.text).replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total'));
 };
 
+/** `flowatlas spec diff HEAD~1`; the summary line it ends with on stderr is kept beside the text only, so a JSON file is JSON. */
+const specDiff = (options) => async (io) => {
+  const { scratch, config: diffConfig } = await diffProjectOnce();
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  const said = options.format === undefined ? (text) => io.err(placed(text)) : () => undefined;
+  await runSpecDiff('HEAD~1', undefined, { config: diffConfig, ...options }, { out: (text) => io.out(placed(text)), err: said, tty: false });
+};
+
 const DIFF_CASES = [
   ['diff.md', diffMarkdown({})],
   ['diff.class.md', diffMarkdown({ sequenceDetail: 'class', maxDiagrams: '1', context: '0' })],
@@ -554,6 +606,13 @@ const DIFF_CASES = [
   ],
   // The new and fixed contract findings and rule violations as SARIF (P115).
   ['diff.sarif.json', diffMarkdown({ format: 'sarif' })],
+  // The API documents' change (P118): under "API changes" with --spec, and
+  // as `flowatlas spec diff` draws it in each format.
+  ['diff.spec.md', diffMarkdown({ spec: true, diagrams: false })],
+  ['spec-diff.txt', specDiff({})],
+  ['spec-diff.md', specDiff({ format: 'markdown' })],
+  ['spec-diff.json', specDiff({ format: 'json' })],
+  ['spec-diff.sarif.json', specDiff({ format: 'sarif' })],
 ];
 
 /**
@@ -658,6 +717,7 @@ const RULES_CASES = [
 const SUITES = [
   { dir: outDir, owned: true, cases: CASES },
   { dir: contractsFixture, owned: false, cases: CONTRACT_CASES },
+  { dir: join(contractsFixture, 'expected.cli'), owned: true, cases: SPEC_CASES },
   { dir: doctorFixture, owned: false, cases: DOCTOR_CASES },
   { dir: foldedFixture, owned: false, cases: FOLDED_CASES },
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },

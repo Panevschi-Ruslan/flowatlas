@@ -35,6 +35,37 @@ export type {
 } from './document/index.js';
 export { readOpenapiDocument } from './openapi/index.js';
 export { readAsyncapiDocument } from './asyncapi/index.js';
+export { OPENAPI_VERSION, proceduresOf, writeOpenapiDocument, writeOpenapiDocuments } from './openapi/write.js';
+export { ASYNCAPI_VERSION, writeAsyncapiDocument } from './asyncapi/write.js';
+export {
+  DEFAULT_SPEC_DEPTH,
+  SCHEMA_REF_PREFIX,
+  shapeWriter,
+  SPEC_UNREAD_REASONS,
+  TYPE_KEY,
+  typeToJsonSchema,
+  UNREAD_KEY,
+  unreadCounts,
+  unreadSchema,
+} from './document/write-shapes.js';
+export type { JsonSchema, ShapeOptions, ShapeRoot, ShapeSource, ShapeWriter, SpecUnreadReason } from './document/write-shapes.js';
+export {
+  applicationOf,
+  publicOf,
+  routeCallers,
+  SPEC_KINDS,
+  SPEC_OMITTED_REASONS,
+  SPEC_VERSION_SAID,
+  specOptionsOf,
+} from './document/written.js';
+export { SPEC_WANTED, writeSpecs } from './document/specs.js';
+export type { SpecWanted } from './document/specs.js';
+export type { SpecCaller, SpecKind, SpecOmittedReason, SpecOperation, SpecOptions, WrittenSpec } from './document/written.js';
+export { verifyWritten } from './document/verify.js';
+export { findOperations, specFragment } from './document/fragment.js';
+export { routeInventory } from './document/inventory.js';
+export type { InventoryRow } from './document/inventory.js';
+export * from './spec-diff/index.js';
 export { surveyChannels, surveyRoutes } from './survey.js';
 export type { ChannelSurvey, RouteSurvey } from './survey.js';
 export { matchesRoutePattern } from './route-audit.js';
@@ -76,6 +107,7 @@ export {
   graphDiffSchemaV1,
   graphDiffSchemaV2,
   graphDiffSchemaV3,
+  graphDiffSchemaV4,
   isCheckDocument,
   parseCheckReport,
   parseGraphDiff,

@@ -66,6 +66,7 @@ describe('the tools a session is offered', () => {
       'findings',
       'get_flow',
       'get_source',
+      'get_spec',
       'get_type',
       'impact',
       'list_entries',
@@ -118,12 +119,21 @@ describe('the tools a session is offered', () => {
    * said so in its description, and `start_here`'s output schema gained
    * `checks`, one line rather than a record because a record does not fit:
    * 10,092 and 28,256.
+   *
+   * Raised by P118, which adds the tool its ticket asks for, `get_spec`
+   * (inputs `service`, `kind`, `path`, `maxChars`, a one-line description, no
+   * output schema: the answer is a document's text, which a schema would only
+   * call a string), and `withSpec` on `describe_for_prompt`: 10,564 and 28,880,
+   * from 10,092 and 28,256, ceilings set just over. What `path` takes is said
+   * once in the instructions rather than on the input. Neither fits inside the
+   * eight characters P117 left, and nothing in the others could give back 470
+   * without losing a parameter's meaning.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(10100);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(28300);
+    expect(read.length).toBeLessThan(10600);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(28900);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

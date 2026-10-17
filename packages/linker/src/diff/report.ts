@@ -9,6 +9,7 @@
 import type { ContractFinding } from '@flowatlas/contracts';
 import type { Confidence, PinSource } from '@flowatlas/core';
 import type { RuleViolation } from '../rules/types.js';
+import type { SpecDiffReport } from '../spec-diff/types.js';
 import type { FlowChange } from './sequence.js';
 import type { BlastRow, GraphDiff } from './types.js';
 
@@ -127,6 +128,11 @@ export interface DiffReport {
   contracts: DiffContracts;
   /** The rules' violations, new, fixed, already there and excused (format 4, P114). */
   rules: DiffRules;
+  /**
+   * The API documents' changes by kind, with the callers each breaks (format
+   * 5, P118); `null` when `--spec` was not asked for.
+   */
+  spec: SpecDiffReport | null;
   warnings: DiffWarning[];
   timing: DiffTiming;
 }

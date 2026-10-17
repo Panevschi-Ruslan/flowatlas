@@ -663,6 +663,9 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
     ...(scoped === undefined ? [] : scoped(subject, bounds, throwsOf)),
     ...(isChannel || isCheck || scoped !== undefined ? [] : promptSection('Steps', chain.length === 0 ? ['- nothing further is recorded from here'] : chain)),
     ...promptSection('Shapes', promptShapes(subject.steps)),
+    ...(subject.spec === undefined
+      ? []
+      : promptSection(`${subject.spec.kind === 'asyncapi' ? 'AsyncAPI' : 'OpenAPI'} · ${subject.spec.operation}`, ['```json', ...subject.spec.text.split('\n'), '```'])),
     ...(isCheck || subject.scope === 'service'
       ? []
       : promptSection('Gaps', gapLines.length === 0 ? [subject.scope === undefined ? '- none recorded on this chain' : `- none recorded in this ${subject.scope}`] : gapLines)),

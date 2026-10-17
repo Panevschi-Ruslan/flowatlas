@@ -1,0 +1,519 @@
+openapi: 3.1.0
+info:
+  title: orders
+  version: unversioned
+  description: The routes of orders, as flowatlas read them from the code. Nothing here was run.
+paths:
+  /deep:
+    post:
+      operationId: DeepController.accept
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeepDto"
+      responses:
+        2XX:
+          description: Success, with no body
+      x-flowatlas-source: src/deep/deep.controller.ts:8
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /deep/categories:
+    post:
+      operationId: DeepController.categories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryDto"
+      responses:
+        2XX:
+          description: Success, with no body
+      x-flowatlas-source: src/deep/deep.controller.ts:13
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders:
+    post:
+      operationId: OrdersController.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderDto"
+      responses:
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDto"
+      x-flowatlas-source: src/orders/orders.controller.ts:13
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+        web: 1
+  /orders/addresses:
+    post:
+      operationId: OrdersController.address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddressDto"
+      responses:
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddressDto"
+      x-flowatlas-source: src/orders/orders.controller.ts:37
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders/drafts:
+    post:
+      operationId: OrdersController.draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDraftDto"
+      responses:
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateDraftDto"
+      x-flowatlas-source: src/orders/orders.controller.ts:49
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 3
+  /orders/drafts/batch:
+    post:
+      operationId: OrdersController.batchDrafts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/CreateDraftDto"
+      responses:
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CreateDraftDto"
+      x-flowatlas-guards:
+        - name: ValidationPipe({"whitelist":true})
+          layer: pipe
+      x-flowatlas-source: src/orders/orders.controller.ts:109
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders/drafts/preview:
+    post:
+      operationId: OrdersController.previewDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDraftDto"
+      responses:
+        "400":
+          description: BadRequestException
+          x-flowatlas-sources:
+            - pipe
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateDraftDto"
+      x-flowatlas-guards:
+        - name: ValidationPipe({"whitelist":true})
+          layer: pipe
+      x-flowatlas-source: src/orders/orders.controller.ts:95
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders/drafts/store:
+    post:
+      operationId: OrdersController.storeDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDraftDto"
+      responses:
+        "400":
+          description: BadRequestException
+          x-flowatlas-sources:
+            - pipe
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateDraftDto"
+      x-flowatlas-guards:
+        - name: ValidationPipe({"whitelist":true})
+          layer: pipe
+      x-flowatlas-source: src/orders/orders.controller.ts:83
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders/drafts/tag:
+    post:
+      operationId: OrdersController.tagDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDraftDto"
+      responses:
+        "400":
+          description: BadRequestException
+          x-flowatlas-sources:
+            - pipe
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateDraftDto"
+      x-flowatlas-guards:
+        - name: ValidationPipe({"whitelist":true})
+          layer: pipe
+      x-flowatlas-source: src/orders/orders.controller.ts:89
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders/drafts/{id}:
+    get:
+      operationId: OrdersController.readDraft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/CreateDraftDto"
+                  - $ref: "#/components/schemas/LockedDraftDto"
+      x-flowatlas-source: src/orders/orders.controller.ts:62
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders/legacy:
+    post:
+      operationId: OrdersController.legacy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderDto"
+      responses:
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDto"
+      x-flowatlas-source: src/orders/orders.controller.ts:68
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders/prices:
+    post:
+      operationId: OrdersController.price
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoneyDto"
+      responses:
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoneyDto"
+      x-flowatlas-source: src/orders/orders.controller.ts:28
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /orders/{id}:
+    get:
+      operationId: OrdersController.findOne
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        2XX:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDto"
+      x-flowatlas-source: src/orders/orders.controller.ts:19
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /wire:
+    post:
+      operationId: WireController.accept
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WireDto"
+      responses:
+        2XX:
+          description: Success, with no body
+      x-flowatlas-source: src/wire/wire.controller.ts:9
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+  /wire/broken:
+    post:
+      operationId: WireController.broken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WireBrokenDto"
+      responses:
+        2XX:
+          description: Success, with no body
+      x-flowatlas-source: src/wire/wire.controller.ts:15
+      x-flowatlas-confidence: static
+      x-flowatlas-callers:
+        gateway: 1
+components:
+  schemas:
+    AddressDto:
+      type: object
+      properties:
+        line1:
+          type: string
+        city:
+          type: string
+        postcode:
+          type: string
+      required:
+        - line1
+        - city
+        - postcode
+      x-flowatlas-type: type:orders#AddressDto
+    CategoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryDto"
+      required:
+        - id
+        - children
+      x-flowatlas-type: type:orders#CategoryDto
+    CreateDraftDto:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+      x-flowatlas-type: type:orders#CreateDraftDto
+    CreateOrderDto:
+      type: object
+      properties:
+        customerId:
+          type: string
+        channel:
+          type: string
+        note:
+          type: string
+        total:
+          $ref: "#/components/schemas/MoneyDto"
+        shipTo:
+          $ref: "#/components/schemas/AddressDto"
+      required:
+        - customerId
+        - channel
+        - note
+        - total
+        - shipTo
+      x-flowatlas-type: type:orders#CreateOrderDto
+    DeepDto:
+      type: object
+      properties:
+        label:
+          type: string
+        next:
+          $ref: "#/components/schemas/DeepL1"
+      required:
+        - label
+        - next
+      x-flowatlas-type: type:orders#DeepDto
+    DeepL1:
+      type: object
+      properties:
+        next:
+          $ref: "#/components/schemas/DeepL2"
+      required:
+        - next
+      x-flowatlas-type: type:orders#DeepL1
+    DeepL2:
+      type: object
+      properties:
+        next:
+          $ref: "#/components/schemas/DeepL3"
+      required:
+        - next
+      x-flowatlas-type: type:orders#DeepL2
+    DeepL3:
+      type: object
+      properties:
+        next:
+          $ref: "#/components/schemas/DeepL4"
+      required:
+        - next
+      x-flowatlas-type: type:orders#DeepL3
+    DeepL4:
+      type: object
+      properties:
+        leaf:
+          type: string
+      required:
+        - leaf
+      x-flowatlas-type: type:orders#DeepL4
+    LockedDraftDto:
+      type: object
+      properties:
+        draft:
+          $ref: "#/components/schemas/CreateDraftDto"
+        lockedBy:
+          type: string
+      required:
+        - draft
+        - lockedBy
+      x-flowatlas-type: type:orders#LockedDraftDto
+    MoneyDto:
+      type: object
+      properties:
+        amount:
+          type: number
+        currency:
+          type: string
+      required:
+        - amount
+        - currency
+      x-flowatlas-type: type:@fx/wire#MoneyDto
+    OrderDto:
+      type: object
+      properties:
+        id:
+          type: string
+        total:
+          type: number
+        placedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - total
+        - placedAt
+      x-flowatlas-type: type:orders#OrderDto
+    WireBrokenDto:
+      type: object
+      properties:
+        placedAt:
+          type: number
+        reference:
+          type: string
+        delivery:
+          const: post
+      required:
+        - placedAt
+        - reference
+        - delivery
+      x-flowatlas-type: type:orders#WireBrokenDto
+    WireDto:
+      type: object
+      properties:
+        placedAt:
+          type: string
+        reference:
+          type: string
+        signature:
+          type: string
+        note:
+          type: string
+        secret:
+          type: string
+        customer_id:
+          type: string
+        coupon:
+          type: number
+        extras:
+          x-flowatlas-unread: any-typed
+        channel:
+          type: string
+          enum:
+            - phone
+            - web
+        tags:
+          type: array
+          items:
+            type: string
+        counts:
+          type: object
+        shipping_city:
+          type: string
+        score:
+          x-flowatlas-unread: transformed
+      required:
+        - placedAt
+        - reference
+        - signature
+        - customer_id
+        - coupon
+        - extras
+        - channel
+        - tags
+        - counts
+        - shipping_city
+        - score
+      x-flowatlas-type: type:orders#WireDto

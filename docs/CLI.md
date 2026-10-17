@@ -1808,6 +1808,7 @@ are new. Markdown by default, because its destination is a pull request comment.
 | `--sequence-detail <level>` | `service` | `service` or `class`: what a participant of a flow's diagram is |
 | `--max-chars <n>` | 60000 | about the most characters of Markdown (a pull-request comment on GitHub holds 65,536): diagrams are dropped from the last one back, then whole flows, each counted, with `diff.json` named |
 | `--no-diagrams` | off | list each changed flow's steps without its Mermaid diagram |
+| `--spec` | off | also write both sides' OpenAPI and AsyncAPI documents in memory and add their changes, by kind, as **API changes** ([`spec diff`](#flowatlas-spec-diff-base-ref-head-ref)) |
 | `--concurrency <n>` | cores | repositories read at once |
 | `--no-cache` | off | read every commit again rather than believing the cache |
 | `--keep-worktrees` | off | leave the detached checkouts on disk, for debugging |
@@ -1857,7 +1858,11 @@ section is left out when no rule has a violation on either side.
 are not guesses (with `rulesSettings.failOnHeuristic`, guesses too), and on a
 service neither ref could be read for, as `--fail-on-contract-break` does.
 
-`diff.json` is format 4 (`diffFormatVersion`). Format 2 added `unresolved`
+With `--spec`, **API changes** follows the contracts: the table `flowatlas spec
+diff` prints, every change of the two sides' documents by kind with the callers
+it breaks.
+
+`diff.json` is format 5 (`diffFormatVersion`). Format 2 added `unresolved`
 (`{ added, removed }`, each row `{ id, kind, service, file, line?, reason,
 node?, sites }`, `kind` `gap` or `finding`) and `joins` (`{ lost }`, each
 `{ kind, caller, target, edge, service, targetService, now, targetRemoved }`,
@@ -1870,12 +1875,127 @@ confidence, file?, line?, params?, returns?, takes?, group?, note? }` (`status`
 `same`, `added`, `removed` or `changed`; `kind` `enters`, `calls`, `http_calls`,
 `hits`, `emits`, `consumes`, `queries`, `caches`, `triggers` or `stop`). Format
 4 adds `rules`: `{ new, fixed, existing, excused }`, each a list of violations
-as `rules.json` holds them. Files of formats 1 to 3 are still read, without the
-sections they predate; one from a newer flowatlas is refused by name.
+as `rules.json` holds them. Format 5 adds `spec`: what `spec-diff.json` holds
+with `--spec`, and `null` without it (not computed, which an empty list would
+not say). Files of formats 1 to 4 are still read, without the sections they
+predate; one from a newer flowatlas is refused by name.
 
 A `no-producer` join whose `now` is `never-produced` is a consumer the head side
 added to a channel nothing on the head side publishes: a join the base side
 never made and the head side cannot make (P117).
+
+### `flowatlas spec`
+
+Writes an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) document of each
+service's routes and an [AsyncAPI 3.0](https://www.asyncapi.com/docs/reference/specification/v3.0.0)
+document of each service's channel ends, from what the graph already read: no
+framework plugin, nothing run. Build first; `spec` reads the graph.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--service <name>` | every one | only this service, repeatable |
+| `--kind <kind>` | `both` | `openapi`, `asyncapi` or `both`: only what each service has |
+| `--out <dir>` | `<output>/spec/` | where the files go; a directory inside a configured repository is refused, except with `--check`, which writes nothing |
+| `--format <name>` | `yaml` | `yaml` or `json` |
+| `--depth <n>` | 8 | named types followed into a shape before it is cut |
+| `--check` | off | write nothing; exit 1 when a file there differs from what would be written now, is missing, or is no longer written |
+| `--inventory` | off | also write `inventory.md` (or `inventory.json`): every route and procedure with its guards, public mark, callers, tables written, channels published and failure statuses |
+| `--no-verify` | off | do not read each document back |
+
+Files are `<service>.openapi.yaml`, `<service>@<application>.openapi.yaml` for
+a service with more than one application (one address space each), and
+`<service>.asyncapi.yaml`. Each is the same bytes every run (keys in a fixed
+order), so a repository can commit one and run `spec --check` in CI.
+
+What goes in, and from where:
+
+| In the document | From |
+|---|---|
+| paths and verbs | every `http` way in; `:param` is written `{name}` with the name the registration wrote (P34) |
+| `parameters` | the path's values, and the query and header values the handler reads (P29) |
+| `requestBody`, the `2XX` response | the request and answer types, expanded from the type registry into `components.schemas` (JSON Schema 2020-12) **through the contract check's wire rules**: a `Date` is a string with `format: date-time`, a field typed `undefined` is not there, `@Exclude()` drops a field, `@Expose({ name })` renames it, `@IsOptional()` on the receiving side accepts `null` |
+| failure responses | `fails` grouped per status (P87); a helper's choices each under their status (P90); an exception whose status is worked out at run time under `default` |
+| `operationId` | the handler's name |
+
+The success answer is `2XX`: which success status a route answers with is not
+something the graph reads. An AsyncAPI document has a `send` operation per
+publish and a `receive` operation per consumer, each with its own message; the
+channel is written by its address, the id without `channel:`.
+
+Nothing unread is written as fact. A route whose path was not read, one that
+answers every verb, and a second route on the same verb and path are left out
+and counted under `x-flowatlas-omitted`; a shape that cannot be said is `{}`
+with `x-flowatlas-unread` and the reason; the run prints both counts per
+document. Every document is read back through flowatlas's own reader of its
+format, which must find the routes and channel ends it was written from; a
+mismatch is a bug in flowatlas, printed as such, and the run exits 2.
+
+The `x-flowatlas-*` extensions:
+
+| Extension | On | Says |
+|---|---|---|
+| `x-flowatlas-source` | operation | `file:line` it was read at, inside the service's repository |
+| `x-flowatlas-confidence` | operation | the weakest of what it was read from (`static`, `declared`, `heuristic`…); a body or answer only a cast states is `heuristic` |
+| `x-flowatlas-callers` | route, `receive` | the requests joined to it, or the publishers of what it receives, counted by service |
+| `x-flowatlas-consumers` | `send` | the consumers of what it publishes, by service |
+| `x-flowatlas-guards` | route | each check in front: `name`, `layer`, `where` (`global`, `module`, `controller`, `route`), `via`, `skippedBy` (P76) |
+| `x-flowatlas-public`, `x-flowatlas-public-by` | route | open on purpose, and what says so: `@flowatlas-public <why>`, a decorator `doctor.publicDecorators` names, or `doctor.publicRoutes` |
+| `x-flowatlas-unread` | schema, response, message | why it is `{}`: `any-typed`, `transformed`, `too-deep`, `type-not-found`, `external-type`, `type-unread`, `generic-unread`, `not-json`, `nothing-sent`, `ref-unparsed`, `answer-unread`, `status-unread`, `payload-unread` |
+| `x-flowatlas-assumed` | response | every site of that status is the framework's default, written nowhere (P87) |
+| `x-flowatlas-sources` | response | `throw`, `guard`, `pipe` |
+| `x-flowatlas-claimed` | body, response | only a cast says the type |
+| `x-flowatlas-unnamed` | path parameter | the name is numbered, not the code's |
+| `x-flowatlas-type` | component | the registry id it was written from |
+| `x-flowatlas-envelope` | `receive` | how a delivery wraps the message: `{ path: 'Records[].body', text: true }` (R172) |
+| `x-flowatlas-forwards-to` | `receive` | the channels a delivery hands the message on to |
+| `x-flowatlas-expects-reply` | `send` | a request that waits for an answer |
+| `x-flowatlas-channel-kind` | channel | `topic`, `queue`, … |
+| `x-flowatlas-omitted` | document | the ends left out, by reason |
+
+Not written: `servers` (a host is configuration, kept out of artefacts),
+security schemes and OAuth flows, examples.
+
+### `flowatlas spec diff <base-ref> [head-ref]`
+
+Builds both revisions through the cache `diff` uses, writes both sides'
+documents in memory and compares them operation by operation. Each change is
+one kind of a fixed catalogue (the kinds are the SARIF `ruleId`s,
+`spec/<kind>`), and carries the callers joined to it on the base side - which
+no document differ can know.
+
+| Flag | Default | Does |
+|---|---|---|
+| `--service <name>` | every one | compare only this service, repeatable |
+| `--format <name>` | `text` | `text`, `markdown`, `json` or `sarif` |
+| `--fail-on <level>` | `error` | `none`, `error` or `warning` |
+| `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead |
+| `--max-rows <n>` | 50 | changes printed; `spec-diff.json` is complete |
+| `--depth <n>` | 8 | named types followed into a shape |
+| `--sarif-root`, `--sarif-level` | | as for [`--format sarif`](#--format-sarif-findings-for-code-scanning) |
+| `--no-cache`, `--keep-worktrees`, `--concurrency`, `--out` | | as for `diff` |
+
+| Level | Kinds |
+|---|---|
+| breaking (`error`) | `endpoint-removed`, `method-removed`, `path-param-added`, `request-property-became-required`, `request-property-added-required`, `request-property-type-changed`, `response-property-removed`, `response-property-type-changed`, `response-property-became-optional`, `response-status-removed` (a success status), `channel-removed` (a publish), `message-property-removed`, `message-property-type-changed`, `message-property-became-optional` |
+| `warning` | `request-property-removed` (callers still send it), `response-status-added` (a failure a caller may not handle), `security-added` (a guard now in front), `channel-consumer-removed` |
+| `info` | `endpoint-added` (a route or a channel end), `optional-property-added`, `description-changed` |
+
+Routes are matched by what a request is matched on, the verb and the path with
+its parameters as `:param`, so renaming a parameter is no change. Fields are
+compared as they go over the wire (both documents are written through the wire
+rules) and to `--depth`; a side written as unread is not compared.
+
+**Callers decide the level.** A breaking change with no caller in the project,
+on a route nothing marks public, is a `warning` saying `no caller in this
+project`; one with callers, or on a public route, stays an `error` with its
+callers listed (service, `file:line`, confidence). Exit 1 when a change is at
+or above `--fail-on`, or when a service could not be read at either ref.
+
+`spec-diff.json` (`specDiffFormatVersion: 1`) is `{ documents: { base, head },
+changes, summary: { errors, warnings, infos, breaking, uncalled } }`, each
+change `{ kind, level, document, format, service, operation, field, base,
+head, message, place, callers, public, note, confidence, key }`, `key`
+`<kind>|<document>|<operation>|<field>`.
 
 ### `flowatlas check --env <name>`
 

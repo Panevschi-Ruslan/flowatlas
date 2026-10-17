@@ -1,5 +1,5 @@
 {
-  "diffFormatVersion": 4,
+  "diffFormatVersion": 5,
   "schemaVersion": 6,
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "base": {
@@ -1016,6 +1016,7 @@
     "existing": [],
     "excused": []
   },
+  "spec": null,
   "warnings": [
     {
       "reason": "ref-not-found",

@@ -1,0 +1,25 @@
+{
+  "service": "gateway",
+  "kind": "openapi",
+  "document": "gateway",
+  "spec": "{\n  \"openapi\": \"3.1.0\",\n  \"info\": {\n    \"title\": \"gateway\",\n    \"version\": \"unversioned\",\n    \"description\": \"The routes of gateway, as flowatlas read them from the code. Nothing here was run.\"\n  },\n  \"paths\": {\n    \"/orders/charge\": {\n      \"post\": {\n        \"operationId\": \"OrdersController.charge\",\n        \"requestBody\": {\n          \"required\": true,\n          \"content\": {\n            \"application/json\": {\n              \"schema\": {\n                \"$ref\": \"#/components/schemas/OrderDto\"\n              }\n            }\n          }\n        },\n        \"responses\": {\n          \"2XX\": {\n           ",
+  "truncated": "600 of 7896 characters",
+  "operations": [
+    "POST /orders/charge",
+    "POST /orders/pay",
+    "GET /orders/{id}",
+    "POST /orders/{id}/cancel",
+    "POST /orders/{id}/invoice",
+    "POST /orders/{id}/refund",
+    "POST /orders/{id}/resume",
+    "POST /orders/{id}/ship"
+  ],
+  "unread": {
+    "any-typed": 1,
+    "external-type": 7
+  },
+  "next": [
+    "get_spec({service: \"gateway\", path: \"POST /orders/charge\"})",
+    "get_spec({service: \"gateway\", path: \"POST /orders/pay\"})"
+  ]
+}

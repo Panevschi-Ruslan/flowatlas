@@ -108,6 +108,14 @@ const CASES = [
   ['describe_for_prompt.wrong-scope', 'describe_for_prompt', { id: 'POST /orders', scope: 'class' }],
   ['who_calls.class', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService', depth: 1 }],
   ['impact.class', 'impact', { symbol: 'OrdersService' }],
+  // The documents `flowatlas spec` writes (P118): a whole one, one route,
+  // one channel end found without its kind, a cut one, and a route's prompt
+  // with its fragment.
+  ['get_spec.orders', 'get_spec', { service: 'orders' }],
+  ['get_spec.one-route', 'get_spec', { service: 'orders', path: 'POST /orders' }],
+  ['get_spec.channel', 'get_spec', { service: 'billing', path: 'order.created' }],
+  ['get_spec.cut', 'get_spec', { service: 'gateway', maxChars: 600 }],
+  ['describe_for_prompt.with-spec', 'describe_for_prompt', { id: 'entry:orders:http:POST:/orders', withSpec: true, maxChars: 20000 }],
 ];
 
 /**

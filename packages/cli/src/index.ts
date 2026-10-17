@@ -21,6 +21,7 @@ import { registerLink } from './commands/link.js';
 import { registerMcp } from './commands/mcp.js';
 import { registerObserve } from './commands/observe.js';
 import { registerShapes } from './commands/shapes.js';
+import { registerSpec } from './commands/spec.js';
 import { registerStats } from './commands/stats.js';
 import { registerTypes } from './commands/types.js';
 import { registerVisualise } from './commands/visualise.js';
@@ -55,6 +56,7 @@ export const createProgram = (): Command => {
   registerVisualise(program);
   registerDiff(program);
   registerCheck(program);
+  registerSpec(program);
   registerDeployed(program);
   registerObserve(program);
   registerAccept(program);
@@ -250,6 +252,21 @@ export { runDiff, registerDiff, DIFF_FILE, DEFAULT_MAX_FLOWS } from './commands/
 export type { DiffFormat, DiffOptions, DiffRun, CompareInput } from './commands/diff.js';
 export { compareBuilt } from './commands/diff.js';
 export { runCheck, registerCheck, checkFileOf, CHECK_FORMATS } from './commands/check.js';
+export { inventoryFileName, registerSpec, runSpec, runSpecDiff, SPEC_DIFF_FORMATS, SPEC_DIR } from './commands/spec.js';
+export type { SpecCommandOptions, SpecDiffOptions, SpecDiffRun, SpecFile, SpecRun } from './commands/spec.js';
+export {
+  renderInventoryJson,
+  renderInventoryMarkdown,
+  renderSpecDiffMarkdown,
+  renderSpecDiffText,
+  renderSpecFile,
+  SPEC_FORMATS,
+  specDiffLines,
+  specFileName,
+  summariseSpecDiff,
+} from './report/spec.js';
+export type { SpecFormat } from './report/spec.js';
+export { specBetween, specsOfGraph } from './report/spec-delta.js';
 export type { CheckCommandOptions, CheckFormat, CheckRun, CheckSection } from './commands/check.js';
 export { runDeployedSet, runDeployedShow, deployedShownOf, renderDeployedText, ageOf, registerDeployed } from './commands/deployed.js';
 export type { DeployedOptions, DeployedShown, PinShown } from './commands/deployed.js';
@@ -314,6 +331,7 @@ export {
   diffFindings,
   doctorFindings,
   ruleFindings,
+  specFindings,
   sarifPathsOf,
   SARIF_LEVELS,
   SARIF_COMMANDS,

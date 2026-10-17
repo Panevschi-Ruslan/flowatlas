@@ -12,6 +12,7 @@ import { CHECK_FORMAT_VERSION, CHECK_REASON_KINDS, CHECK_REFUSALS, CHECK_VERDICT
 import { CONFIDENCE_LEVELS, PIN_SOURCES } from '@flowatlas/core';
 import type { CheckReport, DiffReport } from './report.js';
 import { ruleViolationSchema } from '../rules/schema.js';
+import { specDiffReportSchema } from '../spec-diff/schema.js';
 import { FLOW_SIDES, PARTICIPANT_KINDS, STEP_KINDS, STEP_STATUSES } from './sequence.js';
 import { DIFF_FORMAT_VERSION, GAP_REF_KINDS, LOST_JOIN_KINDS, TYPE_FIELD_CHANGES } from './types.js';
 
@@ -227,6 +228,16 @@ const formatThreeShape = {
   flows: z.array(flowChangeSchema),
 };
 
+/** The section format 4 added (P114), which every later format keeps. */
+const formatFourShape = {
+  rules: z.strictObject({
+    new: z.array(ruleViolationSchema),
+    fixed: z.array(ruleViolationSchema),
+    existing: z.array(ruleViolationSchema),
+    excused: z.array(ruleViolationSchema),
+  }),
+};
+
 /** Format 1, as flowatlas wrote it before P96: read, never written. */
 export const graphDiffSchemaV1 = z.strictObject({ diffFormatVersion: z.literal(1), ...formatOneShape });
 
@@ -241,18 +252,23 @@ export const graphDiffSchemaV3 = z.strictObject({
   ...formatThreeShape,
 });
 
+/** Format 4, as flowatlas wrote it before P118: read, never written. */
+export const graphDiffSchemaV4 = z.strictObject({
+  diffFormatVersion: z.literal(4),
+  ...formatOneShape,
+  ...formatTwoShape,
+  ...formatThreeShape,
+  ...formatFourShape,
+});
+
 /** The whole document, as `flowatlas diff` writes it: the current format. */
 export const graphDiffSchema = z.strictObject({
   diffFormatVersion: z.literal(DIFF_FORMAT_VERSION),
   ...formatOneShape,
   ...formatTwoShape,
   ...formatThreeShape,
-  rules: z.strictObject({
-    new: z.array(ruleViolationSchema),
-    fixed: z.array(ruleViolationSchema),
-    existing: z.array(ruleViolationSchema),
-    excused: z.array(ruleViolationSchema),
-  }),
+  ...formatFourShape,
+  spec: specDiffReportSchema.nullable(),
 });
 
 /**
@@ -273,6 +289,11 @@ const OLDER: Readonly<Record<number, { schema: z.ZodType; lift: (doc: Record<str
   3: {
     schema: graphDiffSchemaV3,
     lift: (doc) => ({ ...doc, rules: { new: [], fixed: [], existing: [], excused: [] } }),
+  },
+  // Not computed, which is what `null` says: format 4 had no `--spec`.
+  4: {
+    schema: graphDiffSchemaV4,
+    lift: (doc) => ({ ...doc, spec: null }),
   },
 };
 

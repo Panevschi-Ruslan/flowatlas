@@ -71,6 +71,7 @@ export { deadOptionsOf, deadRows, DEAD_KINDS } from './tools/dead.js';
 export type { DeadKind } from './tools/dead.js';
 export { findingsOf, FINDINGS_TOP } from './tools/findings.js';
 export { usesOfType, TYPE_USE_GROUPS } from './tools/type-usage.js';
+export { specOfNode, specsFor } from './tools/spec.js';
 export type { Carries, EdgeUse, EntryUse, TypeUses } from './tools/type-usage.js';
 export { crossingsBetween } from './tools/contract.js';
 export { runSearch, SEARCH_KINDS } from './tools/search.js';

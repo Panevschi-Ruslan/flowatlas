@@ -1,0 +1,38 @@
+asyncapi: 3.0.0
+info:
+  title: notifications
+  version: unversioned
+  description: The channels notifications publishes to and consumes from, as flowatlas read them from the code. Nothing here was run.
+channels:
+  sqs_library-loan-digest:
+    address: sqs/library-loan-digest
+    messages:
+      receive.sqs_library-loan-digest:
+        $ref: "#/components/messages/receive.sqs_library-loan-digest"
+    x-flowatlas-channel-kind: queue
+operations:
+  receive.sqs_library-loan-digest:
+    action: receive
+    channel:
+      $ref: "#/channels/sqs_library-loan-digest"
+    messages:
+      - $ref: "#/channels/sqs_library-loan-digest/messages/receive.sqs_library-loan-digest"
+    summary: mapping aws_lambda_event_source_mapping.loan_digest
+    x-flowatlas-envelope:
+      path: Records[].body
+      text: true
+    x-flowatlas-source: infra/main.tf:61
+    x-flowatlas-confidence: static
+    x-flowatlas-callers:
+      routing: 2
+components:
+  messages:
+    receive.sqs_library-loan-digest:
+      name: receive.sqs_library-loan-digest
+      payload:
+        type: object
+        properties:
+          borrowerId:
+            type: string
+        required:
+          - borrowerId

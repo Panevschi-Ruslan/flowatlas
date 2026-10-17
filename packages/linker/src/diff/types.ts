@@ -15,11 +15,13 @@ import type { Confidence, TypeEntry } from '@flowatlas/core';
  * other does not, by gap id) and `joins` (the calls that stopped joining).
  * 3 (P116) added `flows`: each way in the impact reaches, walked on both
  * sides and compared step by step. 4 (P114) added `rules`: the architecture
- * rules' violations new, fixed, already there and excused. Every bump adds its
+ * rules' violations new, fixed, already there and excused. 5 (P118) added
+ * `spec`: the API documents' changes by kind, or `null` when `--spec` was not
+ * asked for (not computed, which an empty list would not say). Every bump adds its
  * sections to `DIFF_SECTIONS` and a lift in `schema.ts`, so a document an
  * older flowatlas wrote is still read.
  */
-export const DIFF_FORMAT_VERSION = 4;
+export const DIFF_FORMAT_VERSION = 5;
 
 /**
  * The sections of `diff.json` by the format that introduced them.
@@ -33,6 +35,7 @@ export const DIFF_SECTIONS: Readonly<Record<string, number>> = Object.freeze({
   joins: 2,
   flows: 3,
   rules: 4,
+  spec: 5,
 });
 
 /** The sections a document of this format predates, in `DIFF_SECTIONS` order. */

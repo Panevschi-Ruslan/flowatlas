@@ -19,7 +19,8 @@ export type LevelSource =
   | { from: 'dead' }
   | { from: 'cycle' }
   | { from: 'rule'; severity: 'error' | 'warning' | 'info' }
-  | { from: 'join' };
+  | { from: 'join' }
+  | { from: 'spec'; level: 'error' | 'warning' | 'info' };
 
 type Source<F extends LevelSource['from']> = Extract<LevelSource, { from: F }>;
 
@@ -50,6 +51,8 @@ const LEVELS: { [F in LevelSource['from']]: (source: Source<F>) => SarifLevel | 
   rule: (source) => SEVERITY[source.severity],
   // A call deploying would leave with nothing to join fails at run time (P117).
   join: () => 'error',
+  // An API change at the level its callers gave it (P118).
+  spec: (source) => SEVERITY[source.level],
 };
 
 export const sarifLevelOf = (source: LevelSource): SarifLevel | undefined =>

@@ -21,6 +21,7 @@ const report = (flows: FlowChange[]): DiffReport => ({
   flows,
   contracts: { new: [], fixed: [], preexisting: [], ignored: [] },
   rules: { new: [], fixed: [], existing: [], excused: [] },
+  spec: null,
   warnings: [],
   timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 },
 });

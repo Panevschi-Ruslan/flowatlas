@@ -5,7 +5,7 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Eighteen tools. Only one of them returns code.
+Twenty tools. Only one of them returns code.
 
 ---
 
@@ -150,7 +150,7 @@ all take the same optional `service` filter.
 | Tool | Answers | Takes |
 |---|---|---|
 | `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, a few entry ids to start from, with rules configured `rules: { errors, warnings, unchecked }` (`next` then starts with `check_rules()`), and with a `check.<env>.json` beside the database `checks`, one line of each environment's verdict (`prod: not deployable · staging: deployable`; `next` then starts with `what_changed` on the first that is not deployable) | `service`, `perService` |
-| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars` |
+| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service. No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars`, `withSpec` (the OpenAPI or AsyncAPI fragment of a route or a channel end, P118) |
 
 `describe_for_prompt` and the page's *Copy as prompt* write the same text
 (P97): each gathers one subject - the server from the database, the page from
@@ -468,6 +468,7 @@ What `get_flow` says beside the chain:
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `offset` |
 | `check_contract` | what one side of a crossing sends against what the other expects | `edge`, or `from` and `to` |
+| `get_spec` | a service's routes as the OpenAPI 3.1 document `flowatlas spec` writes, or its channel ends as AsyncAPI 3.0, as JSON text; with `path`, one operation and only the schemas it uses (P118) | `service` (required), `kind`, `path`, `maxChars` |
 
 `get_type` at `detail: 0` names the type and its fields (or its members); at 1
 it says what each field is, where the type is declared, and names each type it
@@ -498,6 +499,18 @@ would win), it lists every crossing from one into the other: each request
 crossing is `{ from, to, type, via?, status, check }`, worst `status` first,
 `check` the call that checks it in full; `byStatus` counts them and `maxNodes`
 bounds the list. With none it says so, and how many go the other way.
+
+`get_spec` writes the document from the database as it stands, through the
+wire rules, so a schema says what goes over the wire; a shape it could not read
+is `{}` with `x-flowatlas-unread` and the reason, and `unread` and `omitted`
+count them. `path` takes a route as a request would say it (`GET /orders/{id}`
+or `get /orders/:id`; a path alone answers every verb of it), a channel address
+(`order.created`), or an operation's key (`send order.created`); without
+`kind` it looks in both documents. The text is cut at `maxChars` (12,000) and
+says `truncated` with how much there was; a cut whole document lists its
+`operations` and `next` asks for one. `describe_for_prompt` with `withSpec: true`
+adds the route's or channel end's fragment as an *OpenAPI* (or *AsyncAPI*)
+section in a fenced JSON block.
 
 ### Why a flow stops
 

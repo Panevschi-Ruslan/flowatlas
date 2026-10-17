@@ -788,6 +788,7 @@ export type {
   PromptFailure,
   PromptGap,
   PromptRuleBreak,
+  PromptSpec,
   PromptLimits,
   PromptLog,
   PromptMarks,

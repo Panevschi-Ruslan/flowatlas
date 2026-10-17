@@ -26,6 +26,7 @@ import { READ_ONLY, withDb, type ToolContext } from './common.js';
 import { crossingsBetween } from './contract.js';
 import { findingsOf } from './findings.js';
 import { ruleBreaksAt, rulesReportOf } from './rules.js';
+import { specOfNode } from './spec.js';
 
 /**
  * The node an id names: as it is, as a channel without its prefix, or as an
@@ -64,6 +65,16 @@ const withRules = (db: GraphDb, ctx: ToolContext, subject: PromptSubject): Promp
       : new Set([subject.id, ...subject.steps.map((step) => step.id), ...(subject.members ?? []).map((member) => member.id)]);
   const rules = ruleBreaksAt(rulesReportOf(db, ctx), ids);
   return rules.length === 0 ? subject : { ...subject, rules };
+};
+
+/**
+ * The subject with its route's or channel end's part of the written document
+ * (P118), when asked: the same fragment `get_spec` answers with a path.
+ */
+const withSpec = (db: GraphDb, ctx: ToolContext, subject: PromptSubject, node: GraphNode, asked: boolean): PromptSubject => {
+  if (!asked) return subject;
+  const spec = specOfNode(db, ctx, node);
+  return spec === undefined ? subject : { ...subject, spec };
 };
 
 const answer = (id: string, subject: PromptSubject, input: { maxSteps: number; maxChars: number }, alsoAnswers?: string[]) => {
@@ -144,6 +155,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
         scope: z.enum(PROMPT_SCOPES).optional(),
         maxSteps: z.number().int().min(1).max(200).default(PROMPT_LIMITS.maxSteps).describe('chain steps'),
         maxChars: z.number().int().min(500).max(40000).default(PROMPT_LIMITS.maxChars),
+        withSpec: z.boolean().optional(),
       },
       annotations: READ_ONLY,
     },
@@ -172,7 +184,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
                   .map((node) => `describe_for_prompt({id: ${JSON.stringify(node.id)}${input.scope === undefined || input.scope === 'node' ? '' : `, scope: ${JSON.stringify(input.scope)}`}})`),
               );
         }
-        const subject = withRules(db, ctx, gatherPromptSubject(db, found.node, loadObservedCounts(ctx.handle.path)));
+        const subject = withSpec(db, ctx, withRules(db, ctx, gatherPromptSubject(db, found.node, loadObservedCounts(ctx.handle.path))), found.node, input.withSpec === true);
         return answer(found.node.id, subject, input, found.alsoAnswers);
       }),
   );

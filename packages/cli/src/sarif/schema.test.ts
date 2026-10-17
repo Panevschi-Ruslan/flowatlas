@@ -19,6 +19,8 @@ const SNAPSHOTS = [
   'fixtures/multi-repo/expected.cli/cycles.sarif.json',
   'fixtures/multi-repo-rules/expected.cli/rules.sarif.json',
   'fixtures/multi-repo-diff/expected.cli/diff.sarif.json',
+  // P118: the API changes between two revisions.
+  'fixtures/multi-repo-diff/expected.cli/spec-diff.sarif.json',
 ];
 
 describe('the recorded SARIF logs (P115)', () => {

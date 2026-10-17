@@ -108,6 +108,7 @@ const diff: DiffReport = {
   ],
   contracts: { new: [], fixed: [], preexisting: [], ignored: [] },
   rules: { new: [], fixed: [], existing: [], excused: [] },
+  spec: null,
   warnings: [],
   timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 },
 };
@@ -439,7 +440,7 @@ describe('what_changed', () => {
     });
 
     it('reads a diff.json of format 1, and says it is too old to know the gaps', async () => {
-      const { unresolved: _unresolved, joins: _joins, flows: _flows, rules: _rules, ...old } = diff;
+      const { unresolved: _unresolved, joins: _joins, flows: _flows, rules: _rules, spec: _spec, ...old } = diff;
       writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...old, diffFormatVersion: 1 }));
       try {
         const answer = await call('what_changed', { verdict: true });
@@ -451,7 +452,7 @@ describe('what_changed', () => {
     });
 
     it('reads a diff.json of format 2, whose missing flows say nothing and missing rules make it unknown (P116, P114)', async () => {
-      const { flows: _flows, rules: _rules, ...old } = diff;
+      const { flows: _flows, rules: _rules, spec: _spec, ...old } = diff;
       writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...old, diffFormatVersion: 2 }));
       try {
         const answer = await call('what_changed', { verdict: true });

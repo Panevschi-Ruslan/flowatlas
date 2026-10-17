@@ -277,6 +277,7 @@ read again and the others come from the cache.
 | `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
 | `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks |
+| `flowatlas spec` | an OpenAPI document of each service's routes and an AsyncAPI document of its channels, written from the graph; `spec diff <base>` sorts an API change into breaking kinds with the callers each breaks |
 | `flowatlas cache <action>` | list, prune or clear the graphs `diff` keeps per commit |
 
 `doctor` is the one to run after a first build. It groups every finding by
@@ -445,6 +446,7 @@ shows `flowatlas`, and a session has these tools, among others:
 | `get_type` | the shape of a type, with what it refers to |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it |
 | `check_contract` | whether two services still agree about what crosses |
+| `get_spec` | a service's routes as OpenAPI or channels as AsyncAPI, or one operation with the schemas it uses |
 | `find_symbol` | fuzzy search, by substring or camel-case initials |
 | `search` | one query over routes, channels, tables, types, gaps, failures and classes |
 | `what_changed` | the last `flowatlas diff`, read back |

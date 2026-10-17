@@ -32,13 +32,14 @@ import {
 import { DEFAULT_WALK_NODES } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun, CliError, EXIT } from '../exit.js';
-import { buildAtRef, type BuildAtRefResult } from '../git/build-at-ref.js';
+import { buildAtRef, type BuildAtRefOptions, type BuildAtRefResult } from '../git/build-at-ref.js';
 import { isDirty } from '../git/worktree.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
 import { DIFF_MARKDOWN_DEFAULTS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
 import { flowChanges } from '../report/flow-changes.js';
 import { classifyRules, ruleBreaks } from '../report/rule-delta.js';
+import { specBetween } from '../report/spec-delta.js';
 import { ruleReportOf } from './rules.js';
 import { sequenceDetailOf } from './flow.js';
 import {
@@ -100,6 +101,8 @@ export interface DiffOptions {
   diagrams?: boolean;
   /** Most ways in walked for `flows`; the rest are counted in a warning. */
   maxFlows?: string;
+  /** Write both sides' API documents in memory and add their changes as `spec` (P118). */
+  spec?: boolean;
 }
 
 export interface DiffRun {
@@ -244,6 +247,8 @@ export interface CompareInput {
   started: number;
   /** Said beside the two sides' own warnings. */
   warnings?: readonly DiffWarning[];
+  /** Compare the two sides' API documents too (`diff --spec`, P118). */
+  spec?: boolean;
 }
 
 /**
@@ -284,6 +289,7 @@ export const compareBuilt = (input: CompareInput): DiffReport => {
     };
   });
   const contracts = classifyContracts(checkContracts(builtBase.graph, check), checkContracts(builtHead.graph, check));
+  const spec = input.spec === true ? specBetween(loaded, builtBase.graph, builtHead.graph) : null;
   const diffMs = Date.now() - diffStarted;
 
   const warnings: DiffWarning[] = [...builtHead.warnings, ...builtBase.warnings, ...(input.warnings ?? [])];
@@ -320,6 +326,7 @@ export const compareBuilt = (input: CompareInput): DiffReport => {
     flows: flows.flows,
     contracts,
     rules,
+    spec,
     warnings,
     timing: {
       baseMs: builtBase.ms,
@@ -328,6 +335,43 @@ export const compareBuilt = (input: CompareInput): DiffReport => {
       totalMs: Date.now() - input.started,
     },
   };
+};
+
+/** How both sides are read: where, from which cache, and how many at a time. */
+export const sharedBuild = (
+  workDir: string,
+  outputDir: string,
+  options: { cache?: boolean; keepWorktrees?: boolean; concurrency?: string },
+): Omit<BuildAtRefOptions, 'side'> => ({
+  workDir,
+  cacheDir: outputDir,
+  ...(options.cache === false ? { cache: false } : {}),
+  ...(options.keepWorktrees === true ? { keepWorktrees: true } : {}),
+  ...(options.concurrency === undefined ? {} : { concurrency: whole(options.concurrency, 1, '--concurrency') }),
+});
+
+/**
+ * Both sides built, as `diff` and `spec diff` read them (one cache): the head
+ * side first, and in full - it is what ships, it is what the blast radius is
+ * walked on, and it is what a repository the base ref does not reach falls
+ * back to - then the base side of the repositories compared.
+ */
+export const buildSides = async (
+  loaded: LoadedConfig,
+  baseRef: string,
+  headRef: string | null,
+  services: readonly string[],
+  shared: Omit<BuildAtRefOptions, 'side'>,
+): Promise<{ head: BuildAtRefResult; base: BuildAtRefResult }> => {
+  const head = await buildAtRef(loaded, headRef, { ...shared, side: 'head' });
+  const base = await buildAtRef(loaded, baseRef, {
+    ...shared,
+    side: 'base',
+    services,
+    inherit: head.repoGraphs,
+    inheritSources: head.sources,
+  });
+  return { head, base };
 };
 
 /**
@@ -365,28 +409,10 @@ export const runDiff = async (
   mkdirSync(outputDir, { recursive: true });
   const workDir = mkdtempSync(join(tmpdir(), 'flowatlas-diff-'));
 
-  const shared = {
-    workDir,
-    cacheDir: outputDir,
-    ...(options.cache === false ? { cache: false } : {}),
-    ...(options.keepWorktrees === true ? { keepWorktrees: true } : {}),
-    ...(options.concurrency === undefined
-      ? {}
-      : { concurrency: whole(options.concurrency, 1, '--concurrency') }),
-  };
+  const shared = sharedBuild(workDir, outputDir, options);
 
   try {
-    // The head side first, and in full: it is what ships, it is what the blast
-    // radius is walked on, and it is what a repository the base ref does not
-    // reach falls back to.
-    const builtHead = await buildAtRef(loaded, head, { ...shared, side: 'head' });
-    const builtBase = await buildAtRef(loaded, baseRef, {
-      ...shared,
-      side: 'base',
-      services,
-      inherit: builtHead.repoGraphs,
-      inheritSources: builtHead.sources,
-    });
+    const { head: builtHead, base: builtBase } = await buildSides(loaded, baseRef, head, services, shared);
 
     const report = compareBuilt({
       loaded,
@@ -399,6 +425,7 @@ export const runDiff = async (
       generatedAt: options.generatedAt ?? new Date().toISOString(),
       started,
       warnings: await dirtyWarnings(loaded, head),
+      ...(options.spec === true ? { spec: true } : {}),
     });
     const { contracts, rules } = report;
     const ruleSet = ruleSetOf(loaded.config);
@@ -502,6 +529,7 @@ export const registerDiff = (program: Command): void => {
     .option('--sequence-detail <level>', 'one participant per service (default) or per class')
     .option('--max-chars <n>', `about the most characters of Markdown (default ${DIFF_MARKDOWN_DEFAULTS.maxChars})`)
     .option('--no-diagrams', 'list the steps of each changed flow without its Mermaid diagram')
+    .option('--spec', 'compare the two sides\' OpenAPI and AsyncAPI documents too, under "API changes"')
     .option('--concurrency <n>', 'how many repositories to read at once')
     .option('--out <dir>', 'where to write diff.json (default: the configured output)')
     .option('--no-cache', 'read every commit again rather than believing the cache')

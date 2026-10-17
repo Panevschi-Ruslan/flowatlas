@@ -105,7 +105,7 @@
     "notes": []
   },
   "diff": {
-    "diffFormatVersion": 4,
+    "diffFormatVersion": 5,
     "schemaVersion": 6,
     "generatedAt": "2026-01-01T00:00:00.000Z",
     "base": {
@@ -651,6 +651,7 @@
       ],
       "excused": []
     },
+    "spec": null,
     "warnings": [],
     "timing": {
       "baseMs": 0,

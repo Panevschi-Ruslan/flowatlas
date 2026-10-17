@@ -23,6 +23,7 @@ import {
 } from '@flowatlas/linker';
 import { groupEntries, reachableSummary } from '../query/callers.js';
 import { foldSteps, notWalked, renderSequenceDiagram } from '../render/sequence.js';
+import { specDiffLines } from './spec.js';
 
 export interface DiffMarkdownOptions {
   /** Most rows to print in any one table. The file on disk is complete (I9). */
@@ -627,6 +628,7 @@ export const renderDiffMarkdown = (report: DiffReport, options: DiffMarkdownOpti
       ...impactLines(report, settings),
       ...flowLines(report, settings, room),
       ...contractLines(report, settings),
+      ...(report.spec === null ? [] : specDiffLines(report.spec, { maxRows: settings.maxRows, ...(settings.file === undefined ? {} : { file: settings.file }) })),
       ...ruleLines(report, settings),
       ...joinLines(report, settings),
       ...gapLines(report, settings),
@@ -657,6 +659,7 @@ export const summariseDiff = (report: DiffReport): string => {
     ` · lost joins ${report.joins.lost.length} · gaps +${report.unresolved.added.length}/-${report.unresolved.removed.length}` +
     ` · impact ${report.impact.length} node(s)` +
     ` · flows ${report.flows.filter(flowChanged).length} changed` +
-    ` · rules ${report.rules.new.length} new, ${report.rules.fixed.length} fixed`
+    ` · rules ${report.rules.new.length} new, ${report.rules.fixed.length} fixed` +
+    (report.spec === null ? '' : ` · api ${report.spec.summary.errors} breaking, ${report.spec.summary.warnings} to check`)
   );
 };

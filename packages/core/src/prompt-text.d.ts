@@ -133,6 +133,16 @@ export interface PromptGap {
  * severity, what crossed, the crossing's place and the weakest confidence on
  * the violation's path. Gathered by the server from `evaluateRules`.
  */
+/** One operation of a written document, as `describe_for_prompt` hands it on (P118). */
+export interface PromptSpec {
+  /** `openapi` or `asyncapi`. */
+  kind: string;
+  /** `POST /orders/{id}`, `send order.created`. */
+  operation: string;
+  /** The fragment, as JSON text. */
+  text: string;
+}
+
 export interface PromptRuleBreak {
   rule: string;
   severity: string;
@@ -240,6 +250,12 @@ export interface PromptSubject {
   gaps: PromptGap[];
   /** The architecture rules a violation of runs through it (P114); the page leaves it out. */
   rules?: PromptRuleBreak[];
+  /**
+   * The route's or channel end's part of the written document (P118): its
+   * operation and the schemas it uses, as JSON. Asked for with `withSpec`; the
+   * page leaves it out.
+   */
+  spec?: PromptSpec;
   /** A class, a file or a service rather than one node (P95). */
   scope?: PromptScope;
   /** A class's methods, a file's nodes. */

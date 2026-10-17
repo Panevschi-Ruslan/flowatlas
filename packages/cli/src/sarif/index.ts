@@ -25,5 +25,6 @@ export { deadFindings, type DeadRows } from './dead.js';
 export { cycleFinding, cycleFindings } from './cycles.js';
 export { diffFindings } from './diff.js';
 export { checkFindings, type CheckSarifInput } from './check.js';
+export { specFinding, specFindings, specRule } from './spec.js';
 export { lookupOf, namedLines, nodePlace, repoDirsOf, sarifPathsOf, type NodeLookup } from './places.js';
 export { deliverSarif, sarifBound, sarifLevelFlag, sarifSaid, withSarifOptions, type SarifFlags } from './command.js';

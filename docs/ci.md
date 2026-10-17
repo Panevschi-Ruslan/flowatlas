@@ -272,6 +272,41 @@ already there and excused, and only a new one at `error` fails the build.
 A pre-existing error is somebody else's problem and an excused one is nobody's,
 so neither stops the build.
 
+## An API change
+
+`flowatlas spec diff` writes each side's OpenAPI and AsyncAPI documents from
+the graph in memory and sorts the change into kinds - `endpoint-removed`,
+`request-property-added-required`, `response-property-removed`,
+`channel-removed` and the rest ([the catalogue](CLI.md#flowatlas-spec-diff-base-ref-head-ref)) -
+each with the callers in the project it breaks:
+
+```sh
+flowatlas spec diff origin/main --format markdown --output api.md
+```
+
+It exits 1 on a breaking change (`--fail-on error`, the default). A breaking
+change nobody in the project calls, on a route nothing marks public, is a
+warning that says so rather than a failure: removing a route only a forgotten
+test called is not an outage. A route other people call from outside the
+project is public; say so with `/** @flowatlas-public <why> */` on the handler
+or under `doctor.publicRoutes`, and its breaking changes fail the job whoever
+calls it. `--format sarif` uploads each change at the route it is about, its
+callers as related locations. The same table can ride in the `diff` comment
+with `flowatlas diff origin/main --spec`.
+
+A repository that commits its own document can keep it honest. flowatlas never
+writes into a repository it reads, so write the document under the output
+(`flowatlas spec --service orders`, into `<output>/spec/`), copy it into the
+repository yourself, commit it, and fail the job when it is out of date:
+
+```sh
+flowatlas spec --service orders --out orders/api --check
+```
+
+`--check` writes nothing, so it may read the committed copy inside the
+repository, and exits 1 when a file there differs from what would be written
+now, is missing, or is one the run no longer writes.
+
 ## Before a deploy
 
 A pull request is compared with `main`. A deploy should be compared with what

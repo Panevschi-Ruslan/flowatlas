@@ -7,6 +7,8 @@
  */
 export { boundaries, namesAShape } from './boundary.js';
 export type { Exchange } from './boundary.js';
+export { envelopeOf, readThrough } from './envelope.js';
+export type { Reading } from './envelope.js';
 export { bySeverity, checkContracts, errorsOf } from './check.js';
 export { compareTypes, diffRefs, diffTypes, hasWireAnnotation } from './compare.js';
 export type { CompareOptions, CompareResult } from './compare.js';

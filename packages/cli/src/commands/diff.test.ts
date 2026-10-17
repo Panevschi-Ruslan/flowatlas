@@ -1,9 +1,11 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { parseSpecDiff } from '@flowatlas/linker';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { EXIT } from '../exit.js';
 import { runDiff, type DiffRun } from './diff.js';
+import { runSpecDiff } from './spec.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -125,7 +127,7 @@ describe('what a revision changed, across four repositories', () => {
   });
 
   it('names a gap the revision added, in the method it changed, by gap id (P96)', () => {
-    expect(run.report.diffFormatVersion).toBe(4);
+    expect(run.report.diffFormatVersion).toBe(5);
     expect(run.report.unresolved.added).toContainEqual(
       expect.objectContaining({
         id: 'gap:orders|src/shipments/shipments.service.ts|call-dynamic-receiver',
@@ -211,4 +213,34 @@ describe('what a revision changed, across four repositories', () => {
     expect(again.report.counts).toEqual(run.report.counts);
     expect(again.report.flows).toEqual(run.report.flows);
   }, 300_000);
+});
+
+describe('what the revision does to the API documents (P118)', () => {
+  it('reports the new required request field as breaking, naming the gateway call that does not send it', async () => {
+    const spec = await runSpecDiff('HEAD~1', undefined, { config }, quiet);
+    expect(spec.exitCode).toBe(EXIT.failed);
+    expect(spec.report.changes.map((change) => `${change.level} ${change.kind} ${change.document} ${change.operation}${change.field === null ? '' : ` ${change.field}`}`)).toEqual([
+      'error endpoint-removed orders GET /shipments/{id}',
+      'error request-property-added-required orders POST /orders body.channel',
+      'info endpoint-added billing receive order.gift-wrapped',
+      'info endpoint-added orders GET /shipments/{id}/status',
+      'info endpoint-added orders send order.gift-wrapped',
+    ]);
+    const required = spec.report.changes.find((change) => change.kind === 'request-property-added-required')!;
+    expect(required.callers.map((caller) => `${caller.service} ${caller.file}:${caller.line}`)).toEqual(['gateway src/clients/orders.client.ts:21']);
+    // The removed service method answers no route: no operation changed for it.
+    expect(spec.report.changes.some((change) => change.operation.includes('legacy'))).toBe(false);
+    expect(parseSpecDiff(JSON.parse(readFileSync(spec.file, 'utf8')))).toEqual(spec.report);
+    expect(spec.text).toContain('callers: gateway src/clients/orders.client.ts:21 (static)');
+    expect((await runSpecDiff('HEAD~1', undefined, { config, failOn: 'none' }, quiet)).exitCode).toBe(EXIT.ok);
+  });
+
+  it('adds "API changes" to the document and `spec` to diff.json with --spec, and nothing without it', async () => {
+    const withSpec = await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED, spec: true }, quiet);
+    expect(withSpec.report.spec?.summary).toMatchObject({ errors: 2, warnings: 0, infos: 3 });
+    expect(withSpec.text).toContain('## API changes');
+    expect(withSpec.text.indexOf('## API changes')).toBeGreaterThan(withSpec.text.indexOf('## Contract changes'));
+    expect(run.report.spec).toBeNull();
+    expect(run.text).not.toContain('## API changes');
+  });
 });
