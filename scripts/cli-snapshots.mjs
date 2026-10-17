@@ -33,6 +33,7 @@ import {
   runFlow,
   runImpact,
   runObserve,
+  runObserveDiff,
   runShapesSuggest,
   runStats,
   runTypes,
@@ -188,6 +189,31 @@ const deadOnObservedCopy = (io, options) =>
     out.out(`${lines.join('\n')}\n`);
   });
 
+/**
+ * `observe --diff` (P111): the fixture's traffic, then a day later the same
+ * page loads slower and failing now and then (`traces/diff/web.slower.otlp.json`)
+ * and the checkout requests gone (no `checkout.otlp.json`), each read into an observed
+ * file of its own on a copy, and the two compared.
+ */
+const AFTER = [TRACES[1], TRACES[2], join(fixture, 'traces', 'diff', 'web.slower.otlp.json')];
+const observeDiffOnCopy = (io, options = {}) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-observe-diff-'));
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    const keep = (files, name) => {
+      runObserve(files, { db, now: OBSERVE_NOW, reset: true, print: () => {} });
+      cpSync(join(copy, 'observed.json'), join(copy, name));
+      return join(copy, name);
+    };
+    const before = keep(TRACES, 'before.json');
+    const after = keep(AFTER, 'after.json');
+    runObserveDiff([before, after], { print: (line) => io.out(`${line.split(copy).join('<copy>')}\n`), ...options });
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
   ['docs.architecture.md', docsWritten],
@@ -206,6 +232,9 @@ const CASES = [
   ['dead.observed.channels.txt', (io) => deadOnObservedCopy(io, { kind: 'channels' })],
   ['observe.txt', (io) => observeOnCopy(io, [[TRACES, {}]])],
   ['observe.json', (io) => observeOnCopy(io, [[TRACES, { format: 'json' }]])],
+  ['observe.diff.txt', (io) => observeDiffOnCopy(io)],
+  ['observe.diff.json', (io) => observeDiffOnCopy(io, { format: 'json' })],
+  ['observe.diff.min-count.txt', (io) => observeDiffOnCopy(io, { minCount: '2' })],
   ['observe.again.txt', (io) => observeOnCopy(io, [[TRACES.slice(0, 1), { print: () => {} }], [TRACES, {}]])],
   ['observe.zipkin.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.zipkin.json'), {}]])],
   ['observe.jaeger.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.jaeger.json'), {}]])],

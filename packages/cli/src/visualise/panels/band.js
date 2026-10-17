@@ -1,6 +1,6 @@
 import { formatViewHash, pressed, wordFor } from '../frame.js';
 import { ROW } from '../graph.js';
-import { stepsOf } from '../steps.js';
+import { observedPeriodSay, stepsOf } from '../steps.js';
 
 /* The strip at the top (P98): the title, a pill per figure of what was read
    and joined, when it was built with the build's timings folded away, the
@@ -106,6 +106,8 @@ export function createBand(page) {
   const builtEl = document.getElementById('built');
   builtEl.innerHTML =
     '<span class="built-at">built ' + new Date(data.builtAt).toISOString().replace('T', ' ').slice(0, 19) + ' UTC</span>' +
+    // The hours the run-time figures cover (P111), when an observed file was read.
+    (seen.period ? `<span class="built-seen" title="The hours the run-time figures on this page cover">${esc(observedPeriodSay(seen.period))}</span>` : '') +
     (slowest.length === 0 ? '' : '<details class="build-times" id="build-times"><summary>build &middot; ' +
       `${took.toLocaleString()}ms &middot; ${plural(slowest.length, 'service', 'services')}</summary>` +
       '<table><thead><tr><th>Service</th><th class="num">Took</th></tr></thead><tbody>' +

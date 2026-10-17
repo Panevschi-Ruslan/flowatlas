@@ -10,7 +10,11 @@ import {
   isOpen,
   mapCallOrder,
   MAP_BOX,
+  MAP_HEAT_STEPS,
+  MAP_HEATS,
   MAP_OPEN_UNDER,
+  mapHeat,
+  mapHeatStep,
   mapCycles,
   mapLayout,
   mapMarks,
@@ -397,7 +401,15 @@ describe('a map view in the address', () => {
       packages: true,
       dev: true,
       layout: 'calls',
+      heat: null,
     });
+  });
+
+  it('keeps the run-time heat in the address, and drops one it does not know (P111)', () => {
+    expect(formatMapHash({ heat: 'p95' })).toBe('#map/x=p95');
+    expect(parseMapHash('#map/x=traffic')!.heat).toBe('traffic');
+    expect(parseMapHash('#map/x=latency')!.heat).toBeNull();
+    expect(formatMapHash({ heat: null })).toBe('#map');
   });
 
   it('names a link by its two ends and its kind', () => {
@@ -427,5 +439,44 @@ describe('what a manifest says a service is built from', () => {
     ).toEqual({ name: '@shop/api', runtime: ['express', 'react', 'zod'], dev: ['vitest'] });
     expect(packagesOf(undefined)).toBeUndefined();
     expect(packagesOf({})).toEqual({ runtime: [], dev: [] });
+  });
+});
+
+/* ── Run-time heat (P111) ── */
+
+describe('the map’s heat', () => {
+  // Two packed links behind one drawn link, three edges in all; edge 2 measured no time, edge 3 was never seen.
+  const map = { links: [{ e: [0, 1] }, { e: [2, 3] }] } as any;
+  const link = { links: [0, 1] } as any;
+  const counts: Record<number, number> = { 0: 10, 1: 30, 2: 5 };
+  const p95s: Record<number, number> = { 0: 40, 1: 900 };
+  const seen = {
+    join: (e: number) => (counts[e] === undefined ? null : { count: counts[e]! }),
+    stats: (e: number) => (p95s[e] === undefined ? null : { p95: p95s[e] }),
+  };
+  const nothing = { join: () => null, stats: () => null };
+
+  it('sums the traffic through every edge behind a link', () => {
+    expect(mapHeat(map, link, seen, 'traffic')).toEqual({ value: 45, count: 45 });
+  });
+
+  it('takes the slowest edge’s p95, not an average of them (D2)', () => {
+    expect(mapHeat(map, link, seen, 'p95')).toEqual({ value: 900, count: 45 });
+    const quick = { ...seen, stats: () => null };
+    expect(mapHeat(map, link, quick, 'p95')).toBeNull();
+  });
+
+  it('has no heat where nothing was seen, so the link stays neutral', () => {
+    expect(mapHeat(map, link, nothing, 'traffic')).toBeNull();
+    expect(mapHeat(map, link, nothing, 'p95')).toBeNull();
+  });
+
+  it('steps along the ramp on a log scale, the hottest link last', () => {
+    expect(MAP_HEATS).toEqual(['traffic', 'p95']);
+    expect(mapHeatStep(900, 900)).toBe(MAP_HEAT_STEPS - 1);
+    expect(mapHeatStep(0, 900)).toBe(0);
+    expect(mapHeatStep(1, 900)).toBe(0);
+    expect(mapHeatStep(30, 900)).toBeGreaterThan(mapHeatStep(3, 900));
+    expect(mapHeatStep(5, 0)).toBe(0);
   });
 });

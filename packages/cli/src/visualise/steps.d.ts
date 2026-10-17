@@ -6,7 +6,7 @@ import type { GraphModel } from './graph.js';
 import type { PackedGraph } from './pack.js';
 import type { PackedFail } from './fails.js';
 import type { PackedAccessOf } from './access.js';
-import type { PackedFailuresSeen } from './observed.js';
+import type { PackedFailuresSeen, PackedSample } from './observed.js';
 import type { PromptLimits, PromptSubject, PROMPT_WALK } from '@flowatlas/core';
 
 type PromptWalk = typeof PROMPT_WALK;
@@ -24,6 +24,8 @@ export declare const STEP_KINDS: Readonly<Record<StepKind, Readonly<{ glyph: str
 export type StepMode = 'compact' | 'detailed' | 'waterfall';
 export declare const STEP_MODES: readonly StepMode[];
 export declare const STEP_BOUNDS: Readonly<{ depth: number; rows: number }>;
+export type StepTime = 'p50' | 'p95';
+export declare const STEP_TIMES: readonly StepTime[];
 
 export interface StepRow {
   node: number;
@@ -60,8 +62,24 @@ export interface StepRow {
   start: number;
   /** How many units wide it is: one for a step nothing runs under, its children's width otherwise, 0 for a mark. */
   span: number;
-  /** How long it takes, in milliseconds, when run time says so: P111 adds it. */
+  /** How long it takes, in ms, by the figure asked for (p50 by default), when run time measured it (P111). */
   ms?: number;
+  /** Its p95 and the share of its requests that failed, from the same row as `ms`. */
+  p95?: number;
+  errorRate?: number;
+  /** Its place on a waterfall in time (P111, `stepTimes`): start and length in ms, and whether it had a figure of its own. */
+  tStart?: number;
+  tSpan?: number;
+  timed?: boolean;
+  tBy?: 'own' | 'inside' | 'stand-in' | 'mark';
+}
+
+/** What a packed row measured (P111): times in ms, the error rate 0 to 1, each when measured. */
+export interface SeenFigures {
+  p50?: number;
+  p95?: number;
+  max?: number;
+  errorRate?: number;
 }
 
 export interface Seen {
@@ -80,6 +98,18 @@ export interface Seen {
   never(node: number): { window: string; strong: boolean } | null;
   /** How often traffic went through a best guess (P110); 0 when not one, or not seen. */
   confirmed(edge: number): number;
+  /** Whether any join, way in or step measured a time (P111). */
+  timed: boolean;
+  /** The hours the file covers, or null. */
+  period: { from: string; to: string | null } | null;
+  stats(edge: number): SeenFigures | null;
+  entryStats(node: number): SeenFigures | null;
+  nodeStats(node: number): SeenFigures | null;
+  /** A step's figures: the join into it when it was seen, else the step's own. */
+  figuresOf(edge: number, node: number): SeenFigures | null;
+  samples(entry: number): readonly PackedSample[];
+  /** The ways in that have samples, by position. */
+  sampled: readonly number[];
 }
 
 /** A span that fit several places: `places` are edge positions for a `join`, node positions otherwise. */
@@ -99,6 +129,8 @@ export interface StepOptions {
   config?: boolean;
   answersOf?: (model: GraphModel, i: number) => Array<{ kind: string; status: string; ref: number }>;
   seen?: Seen;
+  /** Which figure is a row's `ms` (P111): `p50` by default. */
+  time?: StepTime;
 }
 
 /** What a prompt is gathered and written with (P97): the walk's bounds, what was seen, and core's renderer. */
@@ -129,9 +161,30 @@ export interface StepsFound {
   more: number;
   /** What left them out: the depth, or the rows a waterfall holds. */
   cut: { depth: number; rows: number };
+  /** The whole width of a waterfall in time, in ms; 0 when no step had a figure (P111). */
+  timed: number;
 }
 export declare const stepsOf: (model: GraphModel, entry: number, options?: StepOptions) => StepsFound;
 export declare const stepUnits: (rows: Array<Pick<StepRow, 'parent' | 'kind' | 'together' | 'again' | 'loop'> & { start: number; span: number }>) => number;
+export declare const stepTimes: (rows: Array<Pick<StepRow, 'parent' | 'kind' | 'together' | 'again' | 'loop' | 'ms' | 'tStart' | 'tSpan' | 'timed' | 'tBy'>>) => number;
+/** One span of a sampled request on its own time axis (P111). */
+export interface TraceRow {
+  node: number;
+  label: string;
+  service: string;
+  kind: string;
+  depth: number;
+  parent: number;
+  start: number;
+  ms: number | null;
+  status: number | null;
+  error: boolean;
+  /** False when the span did not say when it began, and was put after the span before it. */
+  placed: boolean;
+}
+export declare const traceRowsOf: (sample: Pick<PackedSample, 'tree' | 'ms' | 'cut'>) => { rows: TraceRow[]; total: number; cut: number };
+export declare const timeTicks: (total: number) => number[];
+export declare const observedPeriodSay: (period: { from: string | null; to?: string | null } | null | undefined) => string;
 export declare const stepBreakOf: (
   model: GraphModel,
   i: number,

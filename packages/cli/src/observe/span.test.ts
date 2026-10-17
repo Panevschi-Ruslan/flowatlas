@@ -9,9 +9,10 @@ import { KEPT_FIELDS, keepAllowed, type ObservedSpan } from './span.js';
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../../../fixtures');
 /** Every trace and export of the fixtures, each document as `observe` hands it to a reader. */
-const documents = ['multi-repo/traces', 'lambda-traces/traces', 'lambda-traces/exports'].flatMap((dir) =>
-  readdirSync(join(fixtures, dir))
-    .filter((file) => !file.endsWith('.pb'))
+const documents = ['multi-repo/traces', 'multi-repo/traces/diff', 'lambda-traces/traces', 'lambda-traces/exports'].flatMap((dir) =>
+  readdirSync(join(fixtures, dir), { withFileTypes: true })
+    .filter((entry) => entry.isFile() && !entry.name.endsWith('.pb'))
+    .map((entry) => entry.name)
     .flatMap((file) => documentsOf(file, readFileSync(join(fixtures, dir, file)))),
 );
 

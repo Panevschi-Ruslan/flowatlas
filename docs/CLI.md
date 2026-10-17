@@ -932,6 +932,8 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 | `--title <name>` | the folder holding the configuration | what to call the project on the page |
 | `--editor-links <editor>` | off | make every `file:line` on the page a link that opens it: `vscode`, `cursor`, `idea` or `file`. **Writes each repository's absolute local path into the page**; needs the configuration |
 | `--diff <ref>` | off | add a Changes tab: what the working tree changes against this ref, read the way `flowatlas diff` reads it |
+| `--observed-diff <a> <b>` | off | add a Run time changes tab comparing two observed files, before then after (read, never written) |
+| `--min-count <n>` | 20 | with `--observed-diff`, the fewest requests both files must have seen before a time or a failure share is compared |
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
@@ -1318,7 +1320,14 @@ same way in.
   runs under it, children end to end in call order and side-by-side ones from the
   same place. Its axis says *steps, not time*: the widths show what runs inside
   and beside what, never how long. A repeat, a loop, an answer or a break is a
-  mark of no width. The steps above the Graph tab's drawing follow the same
+  mark of no width. When `flowatlas observe` measured times, the waterfall is
+  drawn in milliseconds instead: each step as long as its typical figure (the
+  join into it, else its own span), *p50* or *p95* by a switch on the bar (kept
+  in this browser), laid end to end in call order, a parent at least as long as
+  what runs under it. The axis says *typical time per step (p50), not one
+  request*, since medians laid end to end are a shape, not a latency; a step
+  with no figure keeps a small hatched stand-in, and its tooltip says so. A
+  step where more than one request in a hundred failed carries *n% errors*. The steps above the Graph tab's drawing follow the same
   switch, and the command list (⌘K) offers it on this tab.
 - **Rows.** Each step has a kind mark - `in` handler, `view` screen, `act` user
   action, `fn` service, `db` store, `http` outbound call, `ch` queue or topic,
@@ -1434,7 +1443,30 @@ and who calls them, declarations whose shape moved and the fields that moved,
 new contract findings, and the unresolved count on each side.
 
 What `flowatlas observe` saw is on the page too, when it has run: a seen count
-on each way in and each step, and thicker Map links where traffic went.
+on each way in and each step, and thicker Map links where traffic went. With
+P105's timings it also gives each way in and each step its *p95* and its error
+rate (above 1%), the header says the hours the figures cover (*seen 2025-10-16
+07:00 to 09:00 UTC*), and the Map bar gets a *heat* switch: *off*, *traffic*
+(the requests through each link) or *p95* (the slowest edge behind each link,
+never an average). One sequential ramp colours the links in both themes, a key
+under the map gives its two ends and the window, and a link nothing was seen on
+stays quiet. The heat is in the map's address (`#map/x=p95`). The copied prompt
+and `describe_for_prompt` write the same figures beside a step's *seen ×n*.
+
+The **Traces** tab, when the observed file kept samples, lists each way in's
+slowest request and its latest failing one, slowest first, and draws the one
+picked as a tree of its spans on its own time axis: when each began after the
+request did and how long it took. A span the map has a node for links to it; one
+it has not says *not in the map*; spans past the sample's cap are counted. The
+page holds no trace id, span id or time of day, only shapes with timings.
+
+The **Run time changes** tab, with `--observed-diff <a> <b>`, compares two
+observed files: what got slower (p95 up by a tenth and a millisecond), what
+fails more (one request in a hundred more, or a new 5xx), what was seen only in
+the second and what only in the first, each row opening its way in on Steps.
+Both windows are shown; a time or a share is compared only where both files saw
+`--min-count` requests (20), and ids the graph no longer holds are left out and
+counted. `flowatlas observe --diff <a> <b>` prints the same without a page.
 
 **Every tab has an address.** `#map…` and `#graph/…` keep the grammars described
 above; every other tab is `#<tab>`, with the way in for Steps, the one that
@@ -1443,7 +1475,7 @@ shows one, and where in the tab to go after it:
 | Address | Opens |
 |---|---|
 | `#steps/<key>` (and an older `#walk/<key>`) | Steps on the way in whose node key is `<key>` |
-| `#crossings`, `#busiest`, `#changes` | that tab |
+| `#crossings`, `#busiest`, `#traces`, `#changes`, `#runtime` | that tab |
 | `#missing`, `#missing/reason=<reason>` | Not joined, at that reason's row, opened to its places |
 | `#graph` | the Graph tab, on the way in picked |
 
@@ -1709,6 +1741,8 @@ over it unless told `--reset`.
 | `--reset` | start the file again instead of adding to it |
 | `--no-samples` | keep no sample requests and remove the ones the file holds: then it holds no trace id at all |
 | `--format json` | print `observed.json` (format 3) instead of the summary |
+| `--diff <a> <b>` | instead of reading traces, compare two observed files (read, never written): slower, failing more, newly seen, no longer seen, as text or with `--format json` |
+| `--min-count <n>` | with `--diff`, the fewest requests both files must have seen before a time or a failure share is compared (default 20) |
 | `--workflow <name>` | the state machine a Step Functions execution history is of, when the file does not name it |
 | `--function <name>` | the function Lambda `REPORT` lines are of, when no log group names it |
 | `--access-log-keys <map>` | the keys an API Gateway access log uses, when they are not the documented ones: `route=<k>,method=<k>,path=<k>,status=<k>,latency=<k>,time=<k>` |

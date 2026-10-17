@@ -1,6 +1,6 @@
 import { answersOf } from '../graph.js';
-import { PROMPT_LIMITS, PROMPT_WALK, renderPrompt } from '../../../../core/src/prompt-text.js';
-import { STEP_BOUNDS, STEP_KINDS, STEP_MODES, failSay, promptFor, stepsOf } from '../steps.js';
+import { PROMPT_LIMITS, PROMPT_WALK, promptMsSay, promptRateSay, renderPrompt } from '../../../../core/src/prompt-text.js';
+import { STEP_BOUNDS, STEP_KINDS, STEP_MODES, STEP_TIMES, failSay, promptFor, stepsOf, timeTicks } from '../steps.js';
 import { wordFor } from '../frame.js';
 
 /* The Steps tab and the steps above the drawing: a way in in call order,
@@ -38,6 +38,36 @@ export function createStepsUi(page) {
     STEP_MODES.map((m) => `<button class="tool" data-step-mode="${m}" aria-pressed="${m === mode}">${m[0].toUpperCase() + m.slice(1)}</button>`)
       .join('') + '</span>';
 
+  /* Which figure a waterfall in time draws (P111): the typical step or the
+     slow tail, kept per viewer as the mode is. Offered only in waterfall
+     mode on a page whose traffic measured a time. */
+  const TIME_KEY = 'flowatlas.steps.time';
+  const readTime = () => {
+    try {
+      const kept = localStorage.getItem(TIME_KEY);
+      return STEP_TIMES.includes(kept) ? kept : STEP_TIMES[0];
+    } catch {
+      return STEP_TIMES[0];
+    }
+  };
+  let timeBy = readTime();
+  const TIME_TITLES = {
+    p50: 'Each step as long as its median: what a typical request spends there',
+    p95: 'Each step as long as its 95th percentile: the slow tail',
+  };
+  const timesHtml = () => `<span class="g-split s-times" role="group" aria-label="Which time a step is drawn with">` +
+    STEP_TIMES.map((t) => `<button class="tool" data-step-time="${t}" aria-pressed="${t === timeBy}" title="${esc(TIME_TITLES[t])}">${t}</button>`)
+      .join('') + '</span>';
+  const timesEl = document.getElementById('s-times');
+  const syncTimes = () => {
+    if (timesEl) timesEl.hidden = !(seen.timed && mode === 'waterfall');
+    for (const button of document.querySelectorAll('[data-step-time]')) {
+      button.setAttribute('aria-pressed', String(button.dataset.stepTime === timeBy));
+    }
+  };
+  /* A share of failed requests worth a chip of its own: above one in a hundred (P111). */
+  const ERROR_CHIP = 0.01;
+
   /* An edge a stand-in typed (P78): how, and whose types; null for any other. */
   const standInOf = (k) => {
     const marked = data.standIns && data.standIns.edges[String(k)];
@@ -73,6 +103,11 @@ export function createStepsUi(page) {
         ? ['is-standin', 'shape · ' + pkg, 'Typed by a shape file of the project\'s own, since ' + pkg + ' is not installed: it says what the project wrote, which may not be what runs']
         : ['is-standin', 'source · ' + pkg, 'Typed by the source of ' + pkg + ' in a repository read here, since it is not installed: the source may not be the version that runs']; }, false],
     [(row) => row.seen > 0 && row.confirmed === 0, (row) => ['is-seen', 'seen ×' + row.seen.toLocaleString(), 'Seen this many times at run time'], true],
+    // How long it took and how often it failed (P111): the join into the step's figures, else its own span's.
+    [(row) => row.p95 !== undefined, (row) => ['is-time', 'p95 ' + promptMsSay(row.p95),
+      `One request in twenty took ${promptMsSay(row.p95)} or longer here` + (seen.window ? ` in ${seen.window}` : '')], true],
+    [(row) => (row.errorRate ?? 0) > ERROR_CHIP, (row) => ['is-errors', promptRateSay(row.errorRate) + ' errors',
+      `${promptRateSay(row.errorRate)} of the requests through this step failed (an error, or a status of 500 or more)`], true],
     [(row) => row.again, () => ['', 'listed above', 'Reached again; its steps are listed where it first appears'], true],
     [(row) => row.loop, () => ['', 'loops back', 'Already on this path'], true],
   ];
@@ -153,47 +188,80 @@ export function createStepsUi(page) {
 
   /* How a waterfall measures a step. In units, a step nothing runs under is
      one wide and a parent as wide as its children, so the drawing shows what
-     runs inside what and beside what, never how long: its axis says so. P111
-     adds a scale in milliseconds beside it and picks one per drawing. */
-  const WATERFALL_SCALES = {
-    units: {
-      say: 'steps, not time',
-      of: (row) => ({ start: row.start, span: row.span }),
-      tick: (n) => String(n),
-    },
-  };
+     runs inside what and beside what, never how long: its axis says so. In
+     time (P111), each step is as long as its typical figure - p50 or p95 of
+     every request through it - laid end to end in call order: a shape, not
+     one request, and the axis says that too. A step with no figure keeps a
+     small hatched stand-in. */
   const ticksOf = (total) => {
     const step = Math.max(1, Math.ceil(total / 8));
     const ticks = [];
     for (let n = 0; n <= total; n += step) ticks.push(n);
     return ticks;
   };
+  const BAR_SAYS = { answer: 'an answer, not a step', break: 'the chain stops here' };
+  /* What a bar's length is, in its tooltip: a figure, the steps under it, or a stand-in. */
+  const TIME_SAYS = {
+    own: (row, by) => `${by} ${promptMsSay(row.ms)}`,
+    inside: (row, by) => (row.timed ? `${by} ${promptMsSay(row.ms)}, drawn as long as the steps under it laid end to end`
+      : 'no time of its own measured: drawn as long as the steps under it'),
+    'stand-in': () => 'no time measured: drawn at a stand-in width, not to scale',
+    mark: () => 'a mark, not a step',
+  };
+  const timeScale = (by) => ({
+    say: `typical time per step (${by}), not one request`,
+    total: (found) => found.timed,
+    of: (row) => ({ start: row.tStart, span: row.tSpan }),
+    ticks: timeTicks,
+    tick: (n) => (n === 0 ? '0' : promptMsSay(n)),
+    said: (row) => TIME_SAYS[row.tBy](row, by),
+  });
+  const WATERFALL_SCALES = {
+    units: {
+      say: 'steps, not time',
+      total: (found) => found.rows[0].span,
+      of: (row) => ({ start: row.start, span: row.span }),
+      ticks: ticksOf,
+      tick: (n) => String(n),
+      said: (row) => row.span + (row.span === 1 ? ' step' : ' steps'),
+    },
+    p50: timeScale('p50'),
+    p95: timeScale('p95'),
+  };
   const axisHtml = (total, scale) =>
     `<div class="w-axis" aria-hidden="true"><span class="w-axis-say">${esc(scale.say)}</span>` +
-    `<span class="w-ticks">${ticksOf(total).map((n) =>
+    `<span class="w-ticks">${scale.ticks(total).map((n) =>
       `<span class="w-tick" style="left:${(n / total) * 100}%">${esc(scale.tick(n))}</span>`).join('')}</span></div>`;
-  const BAR_SAYS = { answer: 'an answer, not a step', break: 'the chain stops here' };
   const waterfallRowHtml = (row, at, total, scale) => {
     const v = row.node;
     const { start, span } = scale.of(row);
     const mark = span === 0;
     const label = labelOf(row);
-    const said = row.again ? 'listed above' : row.loop ? 'loops back' : BAR_SAYS[row.kind] || (span + (span === 1 ? ' step' : ' steps'));
+    const timeScaled = scale !== WATERFALL_SCALES.units;
+    const said = row.again ? 'listed above' : row.loop ? 'loops back' : BAR_SAYS[row.kind] || scale.said(row);
     const cls = ['w-row', row.failure ? 'is-failure' : '', row.kind === 'break' ? 'is-break' : '', mark ? 'is-mark' : '',
-      row.edge >= 0 && !row.certain ? 'is-guess' : ''].filter(Boolean).join(' ');
+      row.edge >= 0 && !row.certain ? 'is-guess' : '', timeScaled && row.tBy === 'stand-in' ? 'is-untimed' : '',
+      timeScaled && row.tBy === 'inside' && !row.timed ? 'is-spanning' : '']
+      .filter(Boolean).join(' ');
+    const errors = (row.errorRate ?? 0) > ERROR_CHIP
+      ? `<span class="s-mark is-errors" title="${esc(promptRateSay(row.errorRate))} of the requests through this step failed">` +
+        `${esc(promptRateSay(row.errorRate))} errors</span>` : '';
     return `<li class="${cls}" data-node="${v}" data-depth="${row.depth}" data-at="${at}" ` +
       `style="--depth:${row.depth};--hue:${hueOf(nodes[v][RP])};--start:${(start / total) * 100}%;--span:${(span / total) * 100}%">` +
       `<span class="w-label">${glyphHtml(row)}<span class="s-label">${esc(label)}</span>` +
       (row.crosses && row.edge >= 0 ? `<span class="w-cross" title="Leaves one service for another">&rarr; ${esc(repoName(v))}</span>` : '') +
+      errors +
       `</span><span class="w-track"><span class="w-bar" title="${esc(label + ' · ' + said)}"></span></span></li>`;
   };
   /* A way in as a bar per step, in its service's colour, children under
      their parent and side-by-side siblings from one x. */
   const waterfallHtml = (found, scale = WATERFALL_SCALES.units) => {
-    const total = Math.max(1, found.rows[0].span);
+    const total = Math.max(scale === WATERFALL_SCALES.units ? 1 : 0.01, scale.total(found) || 0);
     return `<li class="w-head">${axisHtml(total, scale)}</li>` +
       found.rows.map((row, at) => waterfallRowHtml(row, at, total, scale)).join('');
   };
+  /* The scale a waterfall of these rows is drawn on: time when a step had a figure, units otherwise. */
+  const scaleFor = (found) => (found.timed > 0 ? WATERFALL_SCALES[timeBy] : WATERFALL_SCALES.units);
 
   /* ── a way in's steps, in the mode asked ──────────────────────────── */
 
@@ -211,8 +279,8 @@ export function createStepsUi(page) {
     return said.length === 0 ? '' : `<li class="cut s-cut">${said.join('; ')}; or open it in the graph.</li>`;
   };
   const stepsHtml = (entry, depth, drawMode = mode) => {
-    const found = stepsOf(model, entry, { depth, rows: rowsCapOf(entry), config: drawMode === 'detailed', answersOf, seen });
-    const rows = drawMode === 'waterfall' ? waterfallHtml(found)
+    const found = stepsOf(model, entry, { depth, rows: rowsCapOf(entry), config: drawMode === 'detailed', answersOf, seen, time: timeBy });
+    const rows = drawMode === 'waterfall' ? waterfallHtml(found, scaleFor(found))
       : found.rows.map((row, at) => crossHtml(row) + stepRowHtml(row, at, drawMode) + firstHtml(row)).join('');
     return { found, html: rows + cutHtml(found, entry, depth) };
   };
@@ -226,7 +294,9 @@ export function createStepsUi(page) {
     return [plural(steps, 'step', 'steps'), settings ? plural(settings, 'setting read', 'settings read') : '',
       guesses ? plural(guesses, 'best guess', 'best guesses') : '',
       confirmed ? plural(confirmed, 'best guess', 'best guesses') + ' confirmed by traffic' : '',
-      failing ? failing + ' on failure' : '', breaks ? plural(breaks, 'break', 'breaks') : '', seen.entry(found.rows[0].node) ? 'seen ×' + seen.entry(found.rows[0].node).toLocaleString() : '']
+      failing ? failing + ' on failure' : '', breaks ? plural(breaks, 'break', 'breaks') : '', seen.entry(found.rows[0].node) ? 'seen ×' + seen.entry(found.rows[0].node).toLocaleString() : '',
+      found.rows[0].p95 !== undefined ? 'p95 ' + promptMsSay(found.rows[0].p95) : '',
+      (found.rows[0].errorRate ?? 0) > ERROR_CHIP ? promptRateSay(found.rows[0].errorRate) + ' errors' : '']
       .filter(Boolean).join(' · ');
   };
   const MODE_NOTES = {
@@ -234,6 +304,9 @@ export function createStepsUi(page) {
     detailed: 'in call order, as the source reads; not timed.',
     waterfall: 'a bar per step, laid out in steps, not time.',
   };
+  const modeNote = (found) => (mode === 'waterfall' && found.timed > 0
+    ? `a bar per step, as long as its typical time (${timeBy}) and laid end to end in call order: not one request.`
+    : MODE_NOTES[mode]);
   function drawSteps() {
     if (store.get('current') === null) return;
     titleEl.textContent = nodes[store.get('current')][LB];
@@ -241,7 +314,8 @@ export function createStepsUi(page) {
     stepsList.innerHTML = html;
     stepsList.classList.toggle('is-waterfall', mode === 'waterfall');
     stepsHead.innerHTML = entryHeadHtml(store.get('current'));
-    stepsNote.textContent = stepsSaid(found) + ' · ' + MODE_NOTES[mode];
+    stepsNote.textContent = stepsSaid(found) + ' · ' + modeNote(found);
+    syncTimes();
   }
   stepsDepth.addEventListener('change', drawSteps);
 
@@ -261,13 +335,29 @@ export function createStepsUi(page) {
       // Nothing kept: the mode holds for this visit.
     }
     syncModes();
+    syncTimes();
     if (store.get('view') === 'steps') drawSteps();
     stepsInGraph.redraw();
   };
   const stepMode = () => mode;
+  const setStepTime = (next) => {
+    if (!STEP_TIMES.includes(next)) return;
+    timeBy = next;
+    try {
+      localStorage.setItem(TIME_KEY, next);
+    } catch {
+      // Nothing kept: the figure holds for this visit.
+    }
+    syncTimes();
+    if (store.get('view') === 'steps') drawSteps();
+    stepsInGraph.redraw();
+  };
+  const stepTime = () => timeBy;
   document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-step-mode]');
     if (button) { setStepMode(button.dataset.stepMode); return; }
+    const time = event.target.closest('[data-step-time]');
+    if (time) { setStepTime(time.dataset.stepTime); return; }
     const more = event.target.closest('[data-steps-more]');
     if (more) {
       const entry = Number(more.dataset.stepsMore);
@@ -277,6 +367,7 @@ export function createStepsUi(page) {
     }
   });
   syncModes();
+  syncTimes();
 
   /* Hovering a step lights its node wherever the drawing has it. */
   const lightNode = (v) => {
@@ -309,7 +400,7 @@ export function createStepsUi(page) {
     const draw = () => {
       const { found, html } = stepsHtml(of, STEP_BOUNDS.depth);
       el.innerHTML = `<div class="g-head"><p><b>Steps of ${esc(nodes[of][LB])}</b> · ${esc(stepsSaid(found))}</p>` +
-        `<span>${modesHtml()} <button class="tool" data-prompt="entry:${of}">Copy as prompt</button> ` +
+        `<span>${modesHtml()}${seen.timed && mode === 'waterfall' ? ' ' + timesHtml() : ''} <button class="tool" data-prompt="entry:${of}">Copy as prompt</button> ` +
         '<button class="g-close" data-steps-close aria-label="Close steps" title="Close">&times;</button></span></div>' +
         `<div class="s-head">${entryHeadHtml(of)}</div>` +
         `<ol class="s-list${mode === 'waterfall' ? ' is-waterfall' : ''}">${html}</ol>`;
@@ -349,5 +440,6 @@ export function createStepsUi(page) {
     if (store.get('current') !== null) copyPrompt(event.currentTarget, 'entry:' + store.get('current'));
   });
 
-  return { drawSteps, promptOf, setStepMode, stepMode, stepRowHtml, stepsInGraph, stepsView, waterfallHtml };
+  return { drawSteps, lightSteps, promptOf, setStepMode, setStepTime, stepMode, stepRowHtml, stepTime, stepsInGraph, stepsView,
+    waterfallHtml };
 }

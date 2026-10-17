@@ -122,3 +122,21 @@ describe('the page’s chip rows (P137)', () => {
     expect(rules.some((rule) => rule.selector.endsWith('.fail-chips') && /flex-wrap:\s*nowrap/.test(rule.body))).toBe(false);
   });
 });
+
+describe('the Map’s heat ramp (P111)', () => {
+  for (const [theme, tokens] of Object.entries(THEMES)) {
+    const ramp = [0, 1, 2, 3, 4].map((n) => tokens.get(`heat-${n}`));
+
+    it(`has five steps drawn at 3:1 or more on every ground, in the ${theme} theme`, () => {
+      expect(ramp.every((value) => value !== undefined)).toBe(true);
+      const low = ramp.flatMap((value, n) => ['ground', 'paper', 'raise']
+        .filter((bg) => contrastOf(value!, tokens.get(bg)!) < 3).map((bg) => `--heat-${n} on --${bg}`));
+      expect(low).toEqual([]);
+    });
+
+    it(`gets louder at every step, so hotter always reads as more, in the ${theme} theme`, () => {
+      const against = ramp.map((value) => contrastOf(value!, tokens.get('paper')!));
+      for (let n = 1; n < against.length; n += 1) expect(against[n]!).toBeGreaterThan(against[n - 1]!);
+    });
+  }
+});

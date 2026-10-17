@@ -1,5 +1,17 @@
 import { readFileSync } from 'node:fs';
-import { readAccepted, saveAccepted, type AcceptedGap, type Unresolved } from '@flowatlas/core';
+import {
+  addSpan,
+  emptyAgg,
+  joinIdOf,
+  observedFromParts,
+  readAccepted,
+  saveAccepted,
+  type AcceptedGap,
+  type Agg,
+  type Observed,
+  type ObservedBucket,
+  type Unresolved,
+} from '@flowatlas/core';
 import { packDatabase } from '../../commands/visualise.js';
 import { buildTestProject } from '../../test-graph.js';
 import { createModel, type GraphModel } from '../graph.js';
@@ -37,6 +49,121 @@ export const testPack = (
   if (extra.accepted !== undefined) saveAccepted(dbPath, extra.accepted);
   try {
     return packDatabase(db, readAccepted(dbPath));
+  } finally {
+    db.close();
+  }
+};
+
+/** How the test project's traffic is made (P111): `slower` multiplies the slow hop, `failing` adds failures there. */
+export interface TestTraffic {
+  slower?: number;
+  failing?: number;
+  /** Ids the traffic names that the test graph does not hold (a different graph's file). */
+  stranger?: boolean;
+}
+
+const HOUR = '2026-01-01T08:00:00.000Z';
+const GATEWAY = 'entry:gateway:http:POST:/orders';
+const ORDERS = 'entry:orders:http:POST:/orders';
+const HOP = joinIdOf('http_out:gateway#src/clients/orders.client.ts:20:4', 'http_calls', ORDERS);
+const EMIT = joinIdOf('producer:orders#src/orders/orders.service.ts:44:2', 'emits', 'channel:order.created');
+const CONSUME = joinIdOf('channel:order.created', 'consumes', 'consumer:billing#src/invoices/invoices.consumer.ts:9');
+
+/** An Agg of `n` spans, the i-th lasting `ms(i)` and answering `status(i)`. */
+const aggOf = (n: number, ms: (i: number) => number, status: (i: number) => number | undefined = () => 200): Agg => {
+  const agg = emptyAgg();
+  for (let i = 0; i < n; i += 1) {
+    const answered = status(i);
+    addSpan(agg, { at: HOUR, durationMs: ms(i), ...(answered === undefined ? {} : { status: answered }) });
+  }
+  return agg;
+};
+
+/**
+ * What `flowatlas observe` would write over the test project (P111): thirty
+ * requests into the gateway's `POST /orders`, a slow hop to the orders
+ * service, a few 500s, the event and its consumer, and two samples - the
+ * slowest request and a failing one, with a span the map has no node for.
+ */
+export const testObserved = (traffic: TestTraffic = {}): Observed => {
+  const slower = traffic.slower ?? 1;
+  const failing = traffic.failing ?? 3;
+  const hop = (i: number): number => (i < 28 ? 30 + i : 300) * slower;
+  const bucket: ObservedBucket = {
+    hour: HOUR,
+    spans: 180,
+    joins: {
+      [HOP]: aggOf(30, hop, (i) => (i < failing ? 500 : 201)),
+      [EMIT]: aggOf(30, () => 2),
+      [CONSUME]: aggOf(30, (i) => 5 + (i % 3)),
+      ...(traffic.stranger ? { [joinIdOf('http_out:shop#x', 'http_calls', 'entry:shop:http:GET:/x')]: aggOf(25, () => 9) } : {}),
+    },
+    entries: {
+      [GATEWAY]: aggOf(30, (i) => hop(i) + 10, (i) => (i < failing ? 500 : 201)),
+      [ORDERS]: aggOf(30, (i) => hop(i) - 2, (i) => (i < failing ? 500 : 201)),
+      ...(traffic.stranger ? { 'entry:shop:http:GET:/x': aggOf(25, () => 9) } : {}),
+    },
+    symbols: {
+      'gateway#src/orders/orders.controller.ts:OrdersController.create': aggOf(30, (i) => hop(i) + 6, () => undefined),
+      'orders#src/orders/orders.service.ts:OrdersService.create': aggOf(30, (i) => hop(i) - 6, () => undefined),
+    },
+    channels: {},
+    unmatched: [],
+    ambiguous: [],
+  };
+  const slow = {
+    traceId: 'a'.repeat(32), at: HOUR, ms: 310 * slower, status: 201, spans: 6,
+    tree: {
+      id: GATEWAY, label: 'POST /orders', service: 'gateway', kind: 'server', start: 0, ms: 310 * slower, status: 201,
+      children: [{
+        id: 'gateway#src/orders/orders.controller.ts:OrdersController.create', label: 'OrdersController.create', service: 'gateway',
+        kind: 'internal', start: 1, ms: 306 * slower,
+        children: [
+          { label: 'cache lookup', service: 'gateway', kind: 'client', start: 2, ms: 1 },
+          {
+            id: 'http_out:gateway#src/clients/orders.client.ts:20:4', label: 'POST /orders', service: 'gateway', kind: 'client',
+            start: 4, ms: 300 * slower, status: 201,
+            children: [{ id: ORDERS, label: 'POST /orders', service: 'orders', kind: 'server', start: 5, ms: 298 * slower, status: 201 }],
+          },
+        ],
+      }],
+    },
+  };
+  const bad = {
+    traceId: 'b'.repeat(32), at: HOUR, ms: 40, status: 500, error: true as const, spans: 2, cut: 4,
+    tree: {
+      id: GATEWAY, label: 'POST /orders', service: 'gateway', kind: 'server', start: 0, ms: 40, status: 500, error: true as const,
+      children: [{ id: ORDERS, label: 'POST /orders', service: 'orders', kind: 'server', ms: 31, status: 500, error: true as const }],
+    },
+  };
+  return observedFromParts({
+    buckets: [bucket],
+    samples: { [GATEWAY]: { slow: [slow], failing: [bad] } },
+    sources: [],
+    droppedAttributes: 0,
+    samplesKept: true,
+  });
+};
+
+/**
+ * The test project packed with traffic over it (P111), as `visualise` packs
+ * it when an observed file sits beside the database; `diff` adds a second
+ * file to compare it with (`--observed-diff`).
+ */
+export const testRunTimePack = (
+  name = 'runtime',
+  options: { traffic?: TestTraffic; diff?: TestTraffic; minCount?: number } = {},
+): PackedGraph => {
+  const { db, dbPath } = buildTestProject(name);
+  try {
+    const observed = testObserved(options.traffic);
+    return packDatabase(db, readAccepted(dbPath), {
+      observed,
+      ...(options.diff === undefined
+        ? {}
+        : { observedDiff: { a: observed, b: testObserved(options.diff), names: ['before.json', 'after.json'] as [string, string],
+          ...(options.minCount === undefined ? {} : { minCount: options.minCount }) } }),
+    });
   } finally {
     db.close();
   }

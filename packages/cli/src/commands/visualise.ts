@@ -10,7 +10,8 @@ import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '..
 import { readObservedBeside } from '../observe/store.js';
 import { EDITOR_NAMES } from '../visualise/graph.js';
 import { packGraph, type PackedGraph, type PackInput } from '../visualise/pack.js';
-import type { PackTraffic } from '../visualise/observed.js';
+import type { PackDiffInput, PackTraffic } from '../visualise/observed.js';
+import { diffNamesOf, minCountOf, readDiffPair } from './observe.js';
 import { packChanges, type PackedChanges } from '../visualise/changes.js';
 import { runDiff } from './diff.js';
 import { shipped } from '../own-path.js';
@@ -79,6 +80,7 @@ export const PAGE_PARTS: readonly (readonly [placeholder: string, file: string])
   ['__FRAME_UI_LOGIC__', 'panels/frame-ui.js'],
   ['__MAP_UI_LOGIC__', 'panels/map-ui.js'],
   ['__STEPS_UI_LOGIC__', 'panels/steps-ui.js'],
+  ['__TRACES_LOGIC__', 'panels/traces.js'],
   ['__PALETTE_LOGIC__', 'panels/palette.js'],
   ['__WIRING_LOGIC__', 'panels/wiring.js'],
   ['__BOOT_LOGIC__', 'panels/boot.js'],
@@ -176,6 +178,10 @@ export interface VisualiseOptions extends DbOptions {
   editorLinks?: string;
   /** What `flowatlas diff <ref>` found, already packed; fills the Changes tab. */
   changes?: PackedChanges;
+  /** `--observed-diff <a> <b>`: two observed files to compare on a Run time changes tab (P111), read and never written. */
+  observedDiff?: string[];
+  /** `--min-count <n>`: with `--observed-diff`, the fewest requests on both sides before a time or failure share is compared. */
+  minCount?: string;
   print?: (message: string) => void;
 }
 
@@ -228,7 +234,7 @@ const withDocsOf = (docs: NonNullable<PackInput['docs']>): Pick<PackInput, 'docs
 export const packDatabase = (
   db: GraphDb,
   read: AcceptedRead,
-  extra: Partial<Pick<PackInput, 'observed' | 'editor' | 'changes' | 'routes' | 'docs'>> = {},
+  extra: Partial<Pick<PackInput, 'observed' | 'editor' | 'changes' | 'routes' | 'docs' | 'observedDiff'>> = {},
 ): PackedGraph => {
   const report = db.report();
   if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
@@ -258,6 +264,12 @@ export const packDatabase = (
   });
 };
 
+/** The two files `--observed-diff` names, read, with their names and the floor (P111). */
+const diffInputOf = (paths: readonly string[], minCount: string | undefined): PackDiffInput => {
+  const [a, b] = readDiffPair(paths, '--observed-diff');
+  return { a, b, names: diffNamesOf(paths), minCount: minCountOf(minCount) };
+};
+
 export interface VisualiseResult {
   path: string;
   bytes: number;
@@ -276,6 +288,8 @@ export interface VisualiseResult {
 export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult => {
   const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
   const editor = editorFor(options);
+  if (options.minCount !== undefined && options.observedDiff === undefined) throw cannotRun('--min-count applies to --observed-diff only');
+  const compared = options.observedDiff === undefined ? undefined : diffInputOf(options.observedDiff, options.minCount);
   const db = openDbFromOptions(options);
   const seen = readObservedBeside(dbPathFor(options));
   const observed = seen.observed;
@@ -287,6 +301,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       ...(observed === undefined ? {} : { observed }),
       ...(editor === undefined ? {} : { editor }),
       ...(options.changes === undefined ? {} : { changes: options.changes }),
+      ...(compared === undefined ? {} : { observedDiff: compared }),
       ...withRoutes(routeRulesFor(options)),
       // The pages that describe a node (P120), from `flowatlas docs`, checked against this graph.
       ...withDocsOf(docsNow(db, dbPathFor(options))),
@@ -343,6 +358,8 @@ export const registerVisualise = (program: Command): void => {
       `make each file:line a link that opens it: ${EDITOR_NAMES.join(', ')}. Writes absolute local paths into the page`,
     )
     .option('--diff <ref>', 'add a Changes tab: what the working tree changes against this ref, as flowatlas diff reads it')
+    .option('--observed-diff <files...>', 'add a Run time changes tab comparing two observed files, before then after a deploy')
+    .option('--min-count <n>', 'with --observed-diff, the fewest requests on both sides before a time or failure share is compared (default 20)')
     .action(async (options: VisualiseOptions & { diff?: string }) => {
       const { diff, ...rest } = options;
       const changes = diff === undefined ? undefined : await changesAgainst(diff, rest);

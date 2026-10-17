@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createStepsUi } from './steps-ui.js';
 import { FakeEvent, textOf } from './test-dom.js';
-import { mountPage, nodeAt, testPack } from './test-page.js';
+import { mountPage, nodeAt, testPack, testRunTimePack } from './test-page.js';
 
 /** The Steps tab and Copy as prompt (P103), one view with three modes (P99). */
 describe('the steps', () => {
@@ -158,5 +158,74 @@ describe('the steps', () => {
     box.querySelector('[data-step-mode="waterfall"]')!.click();
     expect(page.stepMode()).toBe('waterfall');
     expect(textOf(box.querySelector('.w-axis-say'))).toBe('steps, not time');
+  });
+});
+
+/** The steps with run time on them (P111): a waterfall in time, and the figures on every row. */
+describe('the steps with run time', () => {
+  const data = testRunTimePack('steps-ui-runtime');
+  const at = nodeAt(data);
+  const gateway = at('entry:gateway:http:POST:/orders');
+
+  const waterfall = (options: Parameters<typeof mountPage>[1] = {}) => {
+    const mounted = mountPage(data, options);
+    mounted.page.store.set('current', gateway);
+    mounted.page.setStepMode('waterfall');
+    mounted.page.showView('steps');
+    return mounted;
+  };
+
+  it('draws a waterfall on a time axis that says it is typical time per step, not one request', () => {
+    const { document } = waterfall();
+    expect(textOf(document.querySelector('#s-list .w-axis-say'))).toBe('typical time per step (p50), not one request');
+    expect(document.querySelectorAll('#s-list .w-tick').map((tick) => textOf(tick))).toContain('10 ms');
+    expect(textOf(document.getElementById('s-note'))).toMatch(/p95 310 ms · 10% errors · a bar per step, as long as its typical time \(p50\)/);
+    // A step no traffic timed is a hatched stand-in, and says so.
+    const untimed = document.querySelector('#s-list .w-row.is-untimed .w-bar')!;
+    expect(untimed.getAttribute('title')).toContain('no time measured: drawn at a stand-in width, not to scale');
+    // A failing step keeps its chip on the waterfall.
+    expect(textOf(document.querySelector('#s-list .w-row .s-mark.is-errors'))).toBe('10% errors');
+    expect(document.getElementById('s-times')!.hidden).toBe(false);
+  });
+
+  it('switches to p95, and keeps the choice for the next visit', () => {
+    const { document, window } = waterfall();
+    (document.querySelector('#s-times [data-step-time="p95"]') as any).click();
+    expect(textOf(document.querySelector('#s-list .w-axis-say'))).toBe('typical time per step (p95), not one request');
+    expect(document.querySelector('#s-list .w-row .w-bar')!.getAttribute('title')).toBe('POST /orders · p95 310 ms');
+    expect(window.localStorage.getItem('flowatlas.steps.time')).toBe('p95');
+    expect(document.querySelector('#s-times [data-step-time="p95"]')!.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('keeps the units axis without run time, and offers no time switch', () => {
+    const plain = testPack('steps-ui-units');
+    const { page, document } = mountPage(plain);
+    page.store.set('current', nodeAt(plain)('entry:gateway:http:POST:/orders'));
+    page.setStepMode('waterfall');
+    page.showView('steps');
+    expect(textOf(document.querySelector('#s-list .w-axis-say'))).toBe('steps, not time');
+    expect(document.getElementById('s-times')!.hidden).toBe(true);
+    expect(document.querySelector('#s-list .is-untimed')).toBeNull();
+  });
+
+  it('marks compact and detailed rows with p95 and an error rate above one in a hundred', () => {
+    const { page, document } = mountPage(data);
+    page.store.set('current', gateway);
+    for (const mode of ['compact', 'detailed']) {
+      page.setStepMode(mode);
+      page.showView('steps');
+      const marks = document.querySelectorAll('#s-list .s-mark').map((mark) => textOf(mark));
+      expect(marks).toContain('p95 300 ms');
+      expect(marks).toContain('10% errors');
+      expect(marks).toContain('p95 306 ms');
+    }
+  });
+
+  it('offers the switch above the drawing too, in waterfall mode', () => {
+    const { page, document } = mountPage(data);
+    page.setStepMode('waterfall');
+    page.stepsInGraph.toggle(gateway);
+    expect(document.querySelector('#g-steps [data-step-time="p50"]')).not.toBeNull();
+    expect(textOf(document.querySelector('#g-steps .w-axis-say'))).toBe('typical time per step (p50), not one request');
   });
 });

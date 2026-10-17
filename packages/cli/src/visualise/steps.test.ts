@@ -27,9 +27,14 @@ import {
   stepIdOf,
   stepKindOf,
   stepsOf,
+  stepTimes,
   stepUnits,
+  timeTicks,
+  traceRowsOf,
+  observedPeriodSay,
   subjectOf,
 } from './steps.js';
+import { nodeAt, testPack, testRunTimePack } from './panels/test-page.js';
 
 /**
  * What the page hands the prompt: the walk's bounds and core's renderer, as the
@@ -571,5 +576,118 @@ describe('a throw through a helper, as the page says it (P90)', () => {
     expect(failSay({ x: 'reject', at: -1, src: 'throw', v: 'helper', fam: 'auth' })).toBe('reject (refuses who is asking)');
     expect(failChips([helper, { s: 404, x: 'NotFoundException', at: -1, src: 'throw' }])).toEqual(['401', '403', '404', '500?']);
     expect(failChips([{ x: 'reject', at: -1, src: 'throw', v: 'helper' }])).toEqual(['reject']);
+  });
+});
+
+/* ── Run time on the steps (P111) ── */
+
+describe('run time', () => {
+  const data = testRunTimePack('steps-runtime');
+  const model = createModel(data) as GraphModel;
+  const seen = createSeen(data);
+  const at = nodeAt(data);
+  const gateway = at('entry:gateway:http:POST:/orders');
+  const hop = data.edges.findIndex((e) => e[0] === at('http_out:gateway#src/clients/orders.client.ts:20:4'));
+
+  it('hands out a join’s, a way in’s and a step’s own figures, and the join first', () => {
+    expect(seen.timed).toBe(true);
+    expect(seen.period).toEqual({ from: '2026-01-01T08:00:00.000Z', to: '2026-01-01T09:00:00.000Z' });
+    expect(seen.stats(hop)).toMatchObject({ p95: 300, errorRate: 0.1 });
+    expect(seen.entryStats(gateway)).toMatchObject({ p95: 310, errorRate: 0.1 });
+    const controller = at('gateway#src/orders/orders.controller.ts:OrdersController.create');
+    expect(seen.nodeStats(controller)).toMatchObject({ p95: 306 });
+    // The edge into the controller was never a join: its own span's figures.
+    const handles = data.edges.findIndex((e) => e[0] === gateway && e[1] === controller);
+    expect(seen.figuresOf(handles, controller)).toMatchObject({ p95: 306 });
+    // A seen join wins over the step's own row.
+    expect(seen.figuresOf(hop, at('entry:orders:http:POST:/orders'))).toMatchObject({ p95: 300 });
+    expect(seen.samples(gateway)).toHaveLength(2);
+    expect(seen.sampled).toEqual([gateway]);
+    expect(createSeen({ edges: [] }).timed).toBe(false);
+  });
+
+  it('gives each row its figure, by p50 or p95, and lays a waterfall in time', () => {
+    const p50 = stepsOf(model, gateway, { seen, config: false });
+    const p95 = stepsOf(model, gateway, { seen, config: false, time: 'p95' });
+    expect(p50.rows[0]).toMatchObject({ p95: 310, errorRate: 0.1, timed: true });
+    expect(p50.rows[0]!.ms).toBeLessThan(100);
+    expect(p95.rows[0]!.ms).toBe(310);
+    expect(p50.timed).toBeGreaterThan(0);
+    expect(p95.timed).toBeGreaterThan(p50.timed);
+    for (const row of p95.rows) {
+      // Nothing starts before its parent or runs past it.
+      if (row.parent < 0) continue;
+      const up = p95.rows[row.parent]!;
+      expect(row.tStart!).toBeGreaterThanOrEqual(up.tStart!);
+      expect(row.tStart! + row.tSpan!).toBeLessThanOrEqual(up.tStart! + up.tSpan! + 1e-9);
+    }
+    // Without traffic the rows have no time and the waterfall stays in units.
+    const plain = stepsOf(createModel(testPack('steps-no-runtime')) as GraphModel, gateway, { config: false });
+    expect(plain.timed).toBe(0);
+    expect(plain.rows[0]!.ms).toBeUndefined();
+  });
+
+  describe('stepTimes', () => {
+    const row = (parent: number, ms?: number, over: Record<string, unknown> = {}) =>
+      ({ parent, kind: 'service', together: false, again: false, loop: false, ...(ms === undefined ? {} : { ms }), ...over });
+
+    it('lays children end to end from their parent, and a parent at least as long as them', () => {
+      const rows: any[] = [row(-1, 10), row(0, 4), row(0, 8)];
+      expect(stepTimes(rows)).toBe(12);
+      expect(rows.map((r) => [r.tStart, r.tSpan, r.tBy])).toEqual([[0, 12, 'inside'], [0, 4, 'own'], [4, 8, 'own']]);
+    });
+
+    it('starts side-by-side siblings at one x, as long as the longest', () => {
+      const rows: any[] = [row(-1, 20), row(0, 3), row(0, 6, { together: true }), row(0, 4, { together: true }), row(0, 2)];
+      stepTimes(rows);
+      expect(rows.map((r) => r.tStart)).toEqual([0, 0, 3, 3, 9]);
+      expect(rows[0].tSpan).toBe(20);
+    });
+
+    it('gives a step with no figure a small hatched stand-in, a mark no width, and nothing at all no time', () => {
+      const rows: any[] = [row(-1, 100), row(0), row(0, undefined, { again: true }), row(0, 50)];
+      expect(stepTimes(rows)).toBe(100);
+      expect(rows[1]).toMatchObject({ tBy: 'stand-in', timed: false, tSpan: 3 });
+      expect(rows[2]).toMatchObject({ tBy: 'mark', tSpan: 0 });
+      expect(rows[3].tStart).toBe(3);
+      const none: any[] = [row(-1), row(0)];
+      expect(stepTimes(none)).toBe(0);
+      expect(none.every((r) => r.tSpan === 0 && r.timed === false)).toBe(true);
+    });
+  });
+
+  it('turns a sample into rows on its own time axis, the map’s nodes linked and the rest said', () => {
+    const [slow, failing] = seen.samples(gateway);
+    const { rows, total, cut } = traceRowsOf(slow!);
+    expect(total).toBe(310);
+    expect(cut).toBe(0);
+    expect(rows.map((r) => [r.label, r.depth, r.start, r.ms])).toEqual([
+      ['POST /orders', 0, 0, 310], ['OrdersController.create', 1, 1, 306], ['cache lookup', 2, 2, 1],
+      ['POST /orders', 2, 4, 300], ['POST /orders', 3, 5, 298],
+    ]);
+    expect(rows[2]!.node).toBe(-1);
+    expect(rows[1]!.service).toBe('gateway');
+    expect(rows[4]!.service).toBe('orders');
+    // A span that did not say when it began goes after the one before it, and says so.
+    const bad = traceRowsOf(failing!);
+    expect(bad.rows[1]).toMatchObject({ start: 0, placed: false, error: true, status: 500 });
+    expect(bad.cut).toBe(4);
+  });
+
+  it('ticks a time axis in round figures, and says the hours a file covers', () => {
+    expect(timeTicks(310)).toEqual([0, 50, 100, 150, 200, 250, 300]);
+    expect(timeTicks(7)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(timeTicks(0)).toEqual([0]);
+    expect(observedPeriodSay({ from: '2026-01-01T08:00:00.000Z', to: '2026-01-01T09:00:00.000Z' })).toBe('seen 2026-01-01 08:00 to 09:00 UTC');
+    expect(observedPeriodSay({ from: '2026-10-10T00:00:00.000Z', to: '2026-10-18T00:00:00.000Z' })).toBe('seen 2026-10-10 to 2026-10-17');
+    expect(observedPeriodSay({ from: '2026-10-16T20:00:00.000Z', to: '2026-10-17T00:00:00.000Z' })).toBe('seen 2026-10-16 20:00 to 24:00 UTC');
+    expect(observedPeriodSay(null)).toBe('');
+  });
+
+  it('writes p95 and the error rate into the copied prompt, as describe_for_prompt does', () => {
+    const text = promptFor(model, { entry: gateway }, { seen, walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS });
+    expect(text).toContain('- seen at run time: 30 hits, p95 310 ms, 10% errors');
+    expect(text).toContain('[seen ×30, p95 300 ms, 10% errors]');
+    expect(text).toContain('[p95 306 ms]');
   });
 });

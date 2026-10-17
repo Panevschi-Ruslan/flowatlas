@@ -187,6 +187,59 @@ describe('the page made of its parts (P103)', () => {
     const row = described.querySelector(`#entries button.row[data-entry="${at('entry:orders:http:POST:/orders')}"]`)!;
     expect(row.querySelectorAll('.fail-chip').map(textOf)).toContain('500 ×1 not declared');
   });
+
+  /* The fixture with all four trace files observed, and a second file a day
+     later with the page loads slower and failing (P111): what Steps, the Map,
+     Traces and Run time changes draw. */
+  const runTimePage = (): string => {
+    const traces = (files: string[]) => files.map((file) => join(ROOT, 'fixtures', 'multi-repo', 'traces', file));
+    const observeInto = (name: string, files: string[]): string => {
+      const copy = join(scratch, name);
+      cpSync(join(ROOT, 'fixtures', 'multi-repo', '.flowatlas'), copy, { recursive: true });
+      runObserve(files, { config: CONFIG, db: join(copy, 'graph.db'), now: new Date('2025-10-16T09:00:00.000Z'), print: () => {} });
+      return copy;
+    };
+    const before = observeInto('runtime-before', traces(['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json', 'web.otlp.json']));
+    const after = observeInto('runtime-after', traces(['billing.observe.json', 'billing.batches.observe.json', 'diff/web.slower.otlp.json']));
+    const file = join(before, 'graph.html');
+    runVisualise({
+      config: CONFIG, db: join(before, 'graph.db'), out: file, print: () => {},
+      observedDiff: [join(before, 'observed.json'), join(after, 'observed.json')],
+    });
+    return readFileSync(file, 'utf8');
+  };
+
+  it('draws run time from the fixture’s traces: the slow hop first everywhere (P111)', async () => {
+    const html = runTimePage();
+    const data = dataOf(html);
+    const gateway = data.entryIds['entry:gateway:http:GET:/orders/:param'];
+    // Traces: the slowest request is the one through the slow hop, drawn on its own axis.
+    const traced = await bootAt(html, '#traces', 'page-runtime-traces');
+    expect(traced.getElementById('tab-traces')!.hidden).toBe(false);
+    expect(textOf(traced.querySelector('#tab-sheet [data-trace-pick]'))).toBe('GET /orders/:paramgateway · 520 ms · 200 · slowest');
+    const spans = traced.querySelectorAll('#tab-sheet .tr-row').map((row) => textOf(row.querySelector('.tr-ms')));
+    expect(spans.slice(0, 3)).toEqual(['520 ms · 200', '500 ms · 200', '496 ms · 200']);
+    // Steps: a waterfall in typical time, the hop the widest step under the way in.
+    const steps = await bootAt(html, `#graph/${gateway}`, 'page-runtime-steps');
+    steps.querySelector('#g-details [data-act="open-steps"]')!.click();
+    steps.querySelector('[data-step-mode="waterfall"]')!.click();
+    expect(textOf(steps.querySelector('#s-list .w-axis-say'))).toBe('typical time per step (p50), not one request');
+    const bars = steps.querySelectorAll('#s-list .w-row').map((row) => textOf(row.querySelector('.s-label')));
+    expect(bars.length).toBeGreaterThan(2);
+    // Map: by p95, the hottest link is the one into orders.
+    const map = await bootAt(html, '#map/x=p95', 'page-runtime-map');
+    const hottest = map.querySelectorAll('#m-world .m-link[data-heat="4"]');
+    expect(hottest.length).toBeGreaterThan(0);
+    expect(textOf(map.getElementById('m-heat-key'))).toContain('500 ms');
+    expect(textOf(map.getElementById('built'))).toContain('seen 2025-10-16 07:00 to 09:00 UTC');
+    // Run time changes: the page loads got slower and fail now and then; the checkout went quiet.
+    const changes = await bootAt(html, '#runtime', 'page-runtime-changes');
+    const heads = changes.querySelectorAll('#tab-sheet h4').map(textOf);
+    expect(heads).toEqual(['Slower · 2', 'Failing more · 2', 'Newly seen · 0', 'No longer seen · 6']);
+    expect(textOf(changes.querySelector('#tab-sheet .rt-table tbody tr'))).toContain('79 ms → 198 ms +150%');
+    // Nothing in the page can be joined back to a request.
+    expect(html).not.toMatch(/"traceId"|a1000000000000000000000000000001/);
+  });
 });
 
 describe('writing the graph as a page', () => {

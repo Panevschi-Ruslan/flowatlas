@@ -61,8 +61,12 @@ __PAGE_CSS__</style>
             tabindex="-1">Not joined</button>
           <button class="tab" role="tab" id="tab-busiest" data-view="busiest" aria-selected="false" aria-controls="tab-sheet"
             tabindex="-1">Busiest</button>
+          <button class="tab" role="tab" id="tab-traces" hidden data-view="traces" aria-selected="false"
+            aria-controls="tab-sheet" tabindex="-1">Traces</button>
           <button class="tab" role="tab" id="tab-changes" hidden data-view="changes" aria-selected="false"
             aria-controls="tab-sheet" tabindex="-1">Changes</button>
+          <button class="tab" role="tab" id="tab-runtime" hidden data-view="runtime" aria-selected="false"
+            aria-controls="tab-sheet" tabindex="-1">Run time changes</button>
           <button class="tab" role="tab" id="tab-graph" data-view="graph" aria-selected="false" aria-controls="graph-view"
             tabindex="-1">Graph</button>
         </div>
@@ -94,6 +98,9 @@ __PAGE_CSS__</style>
             <button class="tool" data-step-mode="waterfall" aria-pressed="false"
               title="A bar per step, coloured by service, laid out in steps, not time">Waterfall</button>
           </span>
+          <span class="g-split s-times" role="group" aria-label="Which time a step is drawn with" id="s-times" hidden><button
+            class="tool" data-step-time="p50" aria-pressed="true" title="Each step as long as its median">p50</button><button
+            class="tool" data-step-time="p95" aria-pressed="false" title="Each step as long as its 95th percentile">p95</button></span>
           <button class="tool" id="s-copy" title="Copy this way in as Markdown for an assistant: steps, places, shapes, gaps, ids">Copy as prompt</button>
           <span class="hint" id="s-note"></span>
           <button class="tool v-link" id="s-link" data-view-link title="Copy a link to the steps of this way in">
@@ -128,6 +135,10 @@ __PAGE_CSS__</style>
               <option value="unread">services not read</option>
             </select>
           </label>
+          <span class="m-heat" id="m-heat" hidden><span class="hint">heat</span><span class="g-split" role="group"
+            aria-label="Colour the links by run time"><button class="tool" data-map-heat="" aria-pressed="true" title="By kind">off</button><button
+            class="tool" data-map-heat="traffic" aria-pressed="false" title="By the requests through each link">traffic</button><button
+            class="tool" data-map-heat="p95" aria-pressed="false" title="By the p95 of the slowest edge behind each link">p95</button></span></span>
           <span class="g-split" role="group" aria-label="Clusters">
             <button class="tool" id="m-open-all" title="Open every cluster">Open all</button>
             <button class="tool" id="m-close-all" title="Close every cluster">Close all</button>
@@ -174,6 +185,7 @@ __PAGE_CSS__</style>
           </div>
           <aside class="g-details" id="m-details" aria-label="Map details"></aside>
         </div>
+        <p class="m-heat-key" id="m-heat-key" hidden></p>
         <p class="g-status" id="m-status" role="status"></p>
       </div>
       <div class="graph" id="graph-view" role="tabpanel" aria-labelledby="tab-graph" hidden>
@@ -371,6 +383,8 @@ __FRAME_UI_LOGIC__
 __MAP_UI_LOGIC__
 
 __STEPS_UI_LOGIC__
+
+__TRACES_LOGIC__
 
 __PALETTE_LOGIC__
 

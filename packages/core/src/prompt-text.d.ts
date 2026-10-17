@@ -96,6 +96,13 @@ export interface PromptMarks {
   nPlusOne?: true;
   /** Times real traffic went through the join, where a trace was imported (P65). */
   seen?: number;
+  /**
+   * How long the step took at run time (P111), in ms: the join's p95, or the
+   * step's own span's when no join into it was seen.
+   */
+  p95?: number;
+  /** The share of those requests that failed, 0 to 1, from the same row as `p95`. */
+  errorRate?: number;
 }
 
 /** A line a step logs (P71). */
@@ -220,6 +227,9 @@ export interface PromptSubject {
   schedule?: { expression: string; zone?: string };
   /** Times a way in was hit at run time, where a trace was imported. */
   hits?: number;
+  /** The way in's own p95 and error rate beside its hits (P111). */
+  p95?: number;
+  errorRate?: number;
   access?: PromptAccess;
   /** Every place a way in fails, ungrouped: the renderer groups them, and marks the steps they are thrown in. */
   fails?: PromptFailure[];
@@ -252,3 +262,7 @@ export declare const promptNextFor: (...nodes: Array<{ id: string; type: string;
 export declare const groupFails: <T extends PromptFailure>(fails: readonly T[]) => Array<PromptFailGroup<T>>;
 export declare const compareFailChoices: (a: PromptFailChoice, b: PromptFailChoice) => number;
 export declare const promptFit: (lines: readonly string[], maxChars: number) => string;
+/** A duration as the page and the text write it: `3.2 ms`, `73 ms`, `1.2 s` (P111). */
+export declare const promptMsSay: (ms: number) => string;
+/** A share, 0 to 1, as a percentage: `4.5%`, `100%` (P111). */
+export declare const promptRateSay: (rate: number) => string;

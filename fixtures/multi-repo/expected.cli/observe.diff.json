@@ -1,0 +1,223 @@
+{
+  "windows": [
+    {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-16T09:00:00.000Z"
+    },
+    {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-17T09:00:00.000Z"
+    }
+  ],
+  "minCount": 20,
+  "timed": [
+    true,
+    true
+  ],
+  "slower": [
+    {
+      "kind": "join",
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:73:12 -hits-> entry:gateway:http:GET:/orders/:param",
+      "count": [
+        20,
+        20
+      ],
+      "p95": [
+        79,
+        197.5
+      ],
+      "errorRate": [
+        0,
+        0.2
+      ],
+      "newStatuses": [
+        "500"
+      ],
+      "gone": false,
+      "new": false
+    },
+    {
+      "kind": "entry",
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "count": [
+        22,
+        20
+      ],
+      "p95": [
+        72.88,
+        167.5
+      ],
+      "errorRate": [
+        0,
+        0.2
+      ],
+      "newStatuses": [
+        "500"
+      ],
+      "gone": false,
+      "new": false
+    }
+  ],
+  "failing": [
+    {
+      "kind": "join",
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:73:12 -hits-> entry:gateway:http:GET:/orders/:param",
+      "count": [
+        20,
+        20
+      ],
+      "p95": [
+        79,
+        197.5
+      ],
+      "errorRate": [
+        0,
+        0.2
+      ],
+      "newStatuses": [
+        "500"
+      ],
+      "gone": false,
+      "new": false
+    },
+    {
+      "kind": "entry",
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "count": [
+        22,
+        20
+      ],
+      "p95": [
+        72.88,
+        167.5
+      ],
+      "errorRate": [
+        0,
+        0.2
+      ],
+      "newStatuses": [
+        "500"
+      ],
+      "gone": false,
+      "new": false
+    }
+  ],
+  "appeared": [],
+  "gone": [
+    {
+      "kind": "entry",
+      "id": "entry:billing:event:order.created",
+      "count": [
+        1,
+        0
+      ],
+      "p95": [
+        12,
+        null
+      ],
+      "errorRate": [
+        0,
+        null
+      ],
+      "newStatuses": [],
+      "gone": true,
+      "new": false
+    },
+    {
+      "kind": "entry",
+      "id": "entry:orders:http:GET:/orders/:param",
+      "count": [
+        1,
+        0
+      ],
+      "p95": [
+        496,
+        null
+      ],
+      "errorRate": [
+        0,
+        null
+      ],
+      "newStatuses": [],
+      "gone": true,
+      "new": false
+    },
+    {
+      "kind": "entry",
+      "id": "entry:orders:http:POST:/orders",
+      "count": [
+        1,
+        0
+      ],
+      "p95": [
+        35,
+        null
+      ],
+      "errorRate": [
+        1,
+        null
+      ],
+      "newStatuses": [],
+      "gone": true,
+      "new": false
+    },
+    {
+      "kind": "join",
+      "id": "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "count": [
+        1,
+        0
+      ],
+      "p95": [
+        12,
+        null
+      ],
+      "errorRate": [
+        0,
+        null
+      ],
+      "newStatuses": [],
+      "gone": true,
+      "new": false
+    },
+    {
+      "kind": "join",
+      "id": "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param",
+      "count": [
+        1,
+        0
+      ],
+      "p95": [
+        500,
+        null
+      ],
+      "errorRate": [
+        0,
+        null
+      ],
+      "newStatuses": [],
+      "gone": true,
+      "new": false
+    },
+    {
+      "kind": "join",
+      "id": "producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created",
+      "count": [
+        1,
+        0
+      ],
+      "p95": [
+        3,
+        null
+      ],
+      "errorRate": [
+        0,
+        null
+      ],
+      "newStatuses": [],
+      "gone": true,
+      "new": false
+    }
+  ],
+  "tooFew": 1
+}

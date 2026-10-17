@@ -17,6 +17,7 @@ import {
   type Failure,
   type GraphEdge,
   type GraphNode,
+  type ObservedFigures,
   type PromptAccess,
   type PromptCheckPlace,
   type FailureComparison,
@@ -41,7 +42,7 @@ import {
 } from '@flowatlas/linker';
 import { projectDetail } from '../query/detail.js';
 import { buildFlowTree, REVERSE_EDGES } from '../query/flow.js';
-import { failuresSeen, type ObservedCounts } from '../query/observed.js';
+import { failuresSeen, nodeRow, type ObservedCounts } from '../query/observed.js';
 import type { CompactNode, FlowNode } from '../query/types.js';
 
 /**
@@ -155,16 +156,33 @@ const nPlusOneAt = (db: GraphDb, edge: GraphEdge, loopLine: number): boolean =>
         [siteOrderOf(edge), loopLine, 0].includes(row.line ?? 0),
     );
 
-/** What the edge into a step says about when and how often it runs, and how often it was seen. */
+/**
+ * How long a step took and how often it failed (P111), from one roll-up row:
+ * the p95, and the error rate when any request failed.
+ */
+const promptFigures =(figures: ObservedFigures | undefined): Pick<PromptMarks, 'p95' | 'errorRate'> => ({
+  ...(figures?.p95 === undefined ? {} : { p95: figures.p95 }),
+  ...(figures?.errorRate === undefined || figures.errorRate <= 0 ? {} : { errorRate: figures.errorRate }),
+});
+
+/**
+ * What the edge into a step says about when and how often it runs, how often
+ * it was seen, and how long it took: the join into it when one was seen, else
+ * the step's own span - the row `get_flow` reads, and the one the page reads
+ * (`figuresOf` in steps.js).
+ */
 const marksFor = (db: GraphDb, edge: GraphEdge, underFailure: boolean, counts: ObservedCounts | undefined): PromptMarks => {
   const loop = loopOfEdge(edge);
-  const seen = counts?.joins[joinIdOf(edge.from, edge.type, edge.to)]?.count ?? 0;
+  const joined = counts?.joins[joinIdOf(edge.from, edge.type, edge.to)];
+  const seen = joined?.count ?? 0;
+  const figures = joined ?? (counts === undefined ? undefined : nodeRow(counts, edge.to));
   return {
     ...(underFailure || runsOnFailure(edge) ? { failure: true as const } : {}),
     ...(runsBeside(edge) ? { together: true as const } : {}),
     ...(loop === undefined ? {} : { perItem: loop.kind }),
     ...(loop !== undefined && nPlusOneAt(db, edge, loop.line) ? { nPlusOne: true as const } : {}),
     ...(seen > 0 ? { seen } : {}),
+    ...promptFigures(figures),
   };
 };
 
@@ -303,7 +321,8 @@ export const gatherPromptSubject = (
   const fails = node.type === 'entry' ? failuresOf(node).map(failureOf) : [];
   const access = accessFor(node);
   const schedule = node.type === 'entry' ? scheduleFor(node) : undefined;
-  const hits = node.type === 'entry' ? (counts?.entries[node.id]?.hits ?? 0) : 0;
+  const own = node.type === 'entry' ? counts?.entries[node.id] : undefined;
+  const hits = own?.hits ?? 0;
   const compared = counts === undefined ? undefined : failuresSeen(counts, node);
   return {
     id: compact.id,
@@ -313,7 +332,7 @@ export const gatherPromptSubject = (
     ...(compact.service === undefined ? {} : { service: compact.service }),
     ...(compact.loc === undefined ? {} : { loc: compact.loc }),
     ...(schedule === undefined ? {} : { schedule }),
-    ...(hits > 0 ? { hits } : {}),
+    ...(hits > 0 ? { hits, ...promptFigures(own) } : {}),
     ...(access === undefined ? {} : { access }),
     ...(fails.length === 0 ? {} : { fails }),
     ...(comparisonSays(compared) ? { failuresSeen: promptFailuresSeen(compared) } : {}),

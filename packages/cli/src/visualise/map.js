@@ -667,6 +667,48 @@ export const mapSeenCount = (map, link, seenJoin) => {
   return n;
 };
 
+/** What the Map can colour its links by (P111): how much traffic went through, or how slow the slowest edge was. */
+export const MAP_HEATS = Object.freeze(['traffic', 'p95']);
+
+/**
+ * How hot a drawn link is (P111), from `seen` (steps.js `createSeen`), by
+ * `traffic` - the requests through the edges behind it - or by `p95` - the
+ * largest p95 of those edges, since a link stands for several and the worst
+ * one is what a reader acts on (D2). `{ value, count }`, with `count` the
+ * requests either way; null when no edge behind it was seen, or, by p95,
+ * none measured a time.
+ */
+export const mapHeat = (map, link, seen, by) => {
+  let count = 0, worst = -1;
+  for (const i of link.links) {
+    for (const e of map.links[i].e || []) {
+      const join = seen.join(e);
+      if (!join) continue;
+      count += join.count;
+      const figures = seen.stats(e);
+      if (figures && figures.p95 !== undefined) worst = Math.max(worst, figures.p95);
+    }
+  }
+  if (count === 0) return null;
+  if (by === 'p95') return worst < 0 ? null : { value: worst, count };
+  return { value: count, count };
+};
+
+/** Steps of the heat ramp, coolest first: as many as the page has `--heat-<n>` tokens. */
+export const MAP_HEAT_STEPS = 5;
+
+/**
+ * Which step of the ramp a heat is, from 0 to `MAP_HEAT_STEPS - 1`, against
+ * the hottest link drawn: on a log scale, since traffic and time both run
+ * over orders of magnitude and a linear ramp would paint all but one link
+ * cold. Everything at the hottest is the last step.
+ */
+export const mapHeatStep = (value, hottest) => {
+  if (!(hottest > 0) || !(value > 0)) return 0;
+  const share = Math.log1p(value) / Math.log1p(hottest);
+  return Math.max(0, Math.min(MAP_HEAT_STEPS - 1, Math.ceil(share * MAP_HEAT_STEPS) - 1));
+};
+
 /**
  * Whether every best guess behind a drawn link was seen at run time (P110),
  * from `seen.confirmed` (steps.js): such a link is drawn solid with its seen
@@ -694,7 +736,7 @@ const oneOf = (text) => {
 };
 
 /**
- * `#map[/s=<unit>&l=<link>&f=<unit>&t=<cluster>,…&h=<kind>,…&m=<mark>&p=1&d=1&o=role]`, or null
+ * `#map[/s=<unit>&l=<link>&f=<unit>&t=<cluster>,…&h=<kind>,…&m=<mark>&p=1&d=1&o=role&x=<heat>]`, or null
  * for any other address. Units and clusters are named, never numbered, so a
  * link lasts across builds; a name this page does not hold is the page's to
  * say, not this function's. An unknown mark or kind is dropped.
@@ -718,6 +760,7 @@ export const parseMapHash = (hash) => {
     packages: params.get('p') === '1',
     dev: params.get('d') === '1',
     layout: params.get('o') === 'role' ? 'role' : 'calls',
+    heat: MAP_HEATS.includes(params.get('x')) ? params.get('x') : null,
   };
 };
 
@@ -735,5 +778,6 @@ export const formatMapHash = (state) => {
   if (state.packages) parts.push('p=1');
   if (state.packages && state.dev) parts.push('d=1');
   if (state.layout === 'role') parts.push('o=role');
+  if (MAP_HEATS.includes(state.heat)) parts.push('x=' + state.heat);
   return parts.length === 0 ? '#map' : '#map/' + parts.join('&');
 };

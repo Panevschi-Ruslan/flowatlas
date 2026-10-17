@@ -1,8 +1,10 @@
 import { middle } from '../graph.js';
 import { pictureName, pictureScale, pinch, pressed, wheelIntent, wordFor } from '../frame.js';
-import { MAP_BOX, MAP_BOX_KINDS, MAP_COLUMNS, MAP_LINK_KINDS, boxId, clusterId, createMap, formatMapHash,
-  isOpen, mapCallOrder, mapCycles, mapGuessesConfirmed, mapLayout, mapMarks, mapSeenCount, mapTopTargets, mapView,
+import { MAP_BOX, MAP_BOX_KINDS, MAP_COLUMNS, MAP_HEATS, MAP_HEAT_STEPS, MAP_LINK_KINDS, boxId, clusterId, createMap, formatMapHash,
+  isOpen, mapCallOrder, mapCycles, mapGuessesConfirmed, mapHeat, mapHeatStep, mapLayout, mapMarks, mapSeenCount, mapTopTargets, mapView,
   openByDefault, serviceInside } from '../map.js';
+import { observedPeriodSay } from '../steps.js';
+import { promptMsSay } from '../../../../core/src/prompt-text.js';
 
 /* The Map tab: the whole project at the size of its services, its details
    panel (which reads what was drawn, so it lives here), and what a person does
@@ -26,7 +28,7 @@ export function createMapUi(page) {
   const mapNotice = document.getElementById('m-notice');
   const mapState = {
     toggled: new Set(), hidden: new Set(), packages: false, dev: false,
-    focus: null, selected: null, link: null, mark: null, layout: 'calls',
+    focus: null, selected: null, link: null, mark: null, layout: 'calls', heat: null,
   };
   let mapDrawn = null;
   let mapFit = true;
@@ -92,7 +94,7 @@ export function createMapUi(page) {
     selected: mapState.link === null ? mapState.selected : null,
     link: mapState.link,
     focus: mapState.focus, toggled: mapState.toggled, hidden: mapState.hidden,
-    mark: mapState.mark, packages: mapState.packages, dev: mapState.dev, layout: mapState.layout,
+    mark: mapState.mark, packages: mapState.packages, dev: mapState.dev, layout: mapState.layout, heat: mapState.heat,
   });
   const writeMapHash = () => {
     if (store.get('view') !== 'map') return;
@@ -177,6 +179,15 @@ export function createMapUi(page) {
       out.push(group);
     }
     const linkLayer = svgEl('g', { class: 'm-links' });
+    // What the links are coloured by (P111): each drawn link's heat, against the hottest one drawn.
+    const heats = new Map();
+    if (mapState.heat !== null) {
+      for (const link of shown.links) {
+        const heat = mapHeat(mapModel, link, seen, mapState.heat);
+        if (heat !== null) heats.set(link.id, heat);
+      }
+    }
+    const hottest = Math.max(0, ...[...heats.values()].map((heat) => heat.value));
     for (const link of shown.links) {
       const a = laid.placed.get(link.from), b = laid.placed.get(link.to);
       if (!a || !b) continue;
@@ -192,17 +203,21 @@ export function createMapUi(page) {
         guessed ? 'is-guess' : '', conf === 'heuristic' && !confirmedAll ? 'is-heuristic' : '', confirmedAll ? 'is-confirmed' : '',
         seenTimes > 0 ? 'is-seen' : '',
         link.kind === 'package' && link.dev ? 'is-dev' : '',
+        mapState.heat === null ? '' : heats.has(link.id) ? 'is-heat' : 'is-cold',
         mapState.mark === 'cycles' && cycles.links.has(link.id) ? 'is-cycle' : '',
         mapState.link === link.id ? 'is-open' : ''].filter(Boolean).join(' ');
       const say = `${unitName(shown.units.get(link.from))} → ${unitName(shown.units.get(link.to))}: ` +
         `${plural(link.count, KIND_SAYS[link.kind] === 'depends on' ? 'package' : 'edge', KIND_SAYS[link.kind] === 'depends on' ? 'packages' : 'edges')}, ${KIND_SAYS[link.kind]}` +
         (conf && conf !== 'static' ? `, ${wordFor('trust', conf)} at worst` : '') +
         (confirmedAll ? ', every best guess confirmed by traffic' : '') +
-        (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '');
+        (seenTimes > 0 ? `, seen ${seenTimes.toLocaleString()} times at run time` : '') +
+        (worstP95(link) === null ? '' : `, p95 ${promptMsSay(worstP95(link))} on the slowest edge`);
       const hit = svgEl('path', { class: 'm-hit', d, 'data-link': link.id });
       hit.append(svgEl('title', {}, say));
+      const heat = heats.get(link.id);
       linkLayer.append(hit,
-        svgEl('path', { class: cls, d, 'stroke-width': width, 'marker-end': 'url(#m-arrow)', 'data-for': link.id }));
+        svgEl('path', { class: cls, d, 'stroke-width': width, 'marker-end': 'url(#m-arrow)', 'data-for': link.id,
+          ...(heat === undefined ? {} : { 'data-heat': mapHeatStep(heat.value, hottest), style: `--heat: var(--heat-${mapHeatStep(heat.value, hottest)})` }) }));
     }
     out.push(linkLayer);
     for (const more of laid.more || []) {
@@ -252,6 +267,7 @@ export function createMapUi(page) {
     }
     mapWorld.replaceChildren(...out);
     if (refit || mapFit) { mapCamera.fit(laid); mapFit = false; }
+    drawHeatKey(heats, hottest);
 
     document.getElementById('m-whole').hidden = shown.focus === null;
     document.getElementById('m-dev-pick').hidden = !mapState.packages;
@@ -681,6 +697,56 @@ export function createMapUi(page) {
   packagesBox.addEventListener('change', () => { mapState.packages = packagesBox.checked; drawMap(true); });
   devBox.addEventListener('change', () => { mapState.dev = devBox.checked; drawMap(true); });
   markSel.addEventListener('change', () => { mapState.mark = markSel.value || null; drawMap(false); });
+
+  /* Colour the links by run time (P111): off, by the traffic through them, or
+     by the p95 of the slowest edge behind each. Offered only when traffic was
+     imported, and p95 only when it measured a time. */
+  const heatEl = document.getElementById('m-heat');
+  const heatKey = document.getElementById('m-heat-key');
+  const heatOffered = (by) => by === null || (by === 'traffic' && seen.any) || (by === 'p95' && seen.timed);
+  const syncHeat = () => {
+    if (heatEl === null) return;
+    heatEl.hidden = !seen.any;
+    for (const button of heatEl.querySelectorAll('[data-map-heat]')) {
+      const by = button.dataset.mapHeat || null;
+      button.setAttribute('aria-pressed', String(by === mapState.heat));
+      button.disabled = !heatOffered(by);
+    }
+  };
+  if (heatEl !== null) {
+    heatEl.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-map-heat]');
+      if (!button) return;
+      const by = button.dataset.mapHeat || null;
+      if (!heatOffered(by) || (by !== null && !MAP_HEATS.includes(by))) return;
+      mapState.heat = by;
+      syncHeat();
+      drawMap(false);
+    });
+  }
+  /* The slowest edge's p95 behind a link, or null: what a link's title says beside its count. */
+  const worstP95 = (link) => {
+    const heat = seen.timed ? mapHeat(mapModel, link, seen, 'p95') : null;
+    return heat === null ? null : heat.value;
+  };
+  /* The ramp's two ends with what they stand for, and the hours the traffic covers. */
+  function drawHeatKey(heats, hottest) {
+    if (heatKey === null) return;
+    if (mapState.heat === null) { heatKey.hidden = true; heatKey.replaceChildren(); return; }
+    const values = [...heats.values()].map((heat) => heat.value);
+    const coolest = values.length === 0 ? 0 : Math.min(...values);
+    const say = (n) => (mapState.heat === 'p95' ? promptMsSay(n) : plural(n, 'request', 'requests'));
+    const ramp = Array.from({ length: MAP_HEAT_STEPS }, (_, n) => `<span class="m-heat-swatch" style="--heat: var(--heat-${n})"></span>`).join('');
+    heatKey.innerHTML = values.length === 0
+      ? `<span>${mapState.heat === 'p95' ? 'No link drawn here measured a time' : 'No link drawn here was seen at run time'}</span>`
+      : `<span class="m-heat-what">${mapState.heat === 'p95' ? 'p95 of the slowest edge' : 'requests through'}</span>` +
+        `<span class="m-heat-end">${esc(say(coolest))}</span><span class="m-heat-ramp" aria-hidden="true">${ramp}</span>` +
+        `<span class="m-heat-end">${esc(say(hottest))}</span>` +
+        '<span class="m-heat-none"><span class="m-heat-swatch is-cold"></span> not seen</span>' +
+        (seen.period ? `<span class="m-heat-when">${esc(observedPeriodSay(seen.period))}</span>` : '');
+    heatKey.hidden = false;
+  }
+  syncHeat();
   const setAll = (open) => {
     mapState.toggled.clear();
     for (const id of mapModel.clusters.keys()) if (openByDefault(mapModel, id) !== open) mapState.toggled.add(id);
@@ -851,7 +917,7 @@ export function createMapUi(page) {
       return mapWorld.querySelector(`[data-unit="${CSS.escape(mapState.selected || id)}"]`);
     },
     show() { titleEl.textContent = 'The whole project'; drawKindChips(); packagesBox.checked = mapState.packages; devBox.checked = mapState.dev;
-      markSel.value = mapState.mark || ''; layoutSel.value = mapState.layout; drawMap(mapFit); },
+      markSel.value = mapState.mark || ''; layoutSel.value = mapState.layout; syncHeat(); drawMap(mapFit); },
     apply(asked) {
       mapSay.clear();
       mapState.toggled = new Set(asked.toggled.filter((id) => mapModel.clusters.has(id)));
@@ -860,6 +926,7 @@ export function createMapUi(page) {
       mapState.dev = asked.dev;
       mapState.mark = asked.mark;
       mapState.layout = asked.layout;
+      mapState.heat = heatOffered(asked.heat) ? asked.heat : null;
       mapState.link = asked.link;
       const known = (id) => id !== null && (mapModel.byId.has(id) || mapModel.clusters.has(id));
       const missing = [asked.selected, asked.focus].filter((id) => id !== null && !known(id));

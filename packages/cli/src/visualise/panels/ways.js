@@ -1,3 +1,4 @@
+import { promptMsSay, promptRateSay } from '../../../../core/src/prompt-text.js';
 import { pressed } from '../frame.js';
 import { failChipLines, failChipsSeen, failsOf, scheduleOf } from '../steps.js';
 
@@ -82,7 +83,17 @@ export function createWays(page) {
     }
     return failLines.get(i);
   };
-  const heightOf = (i) => (fails(i) ? ROW_HEIGHT_FAILS + (linesOf(i) - 1) * FAIL_LINE : ROW_HEIGHT);
+  /* How long the way in took at run time, beside how often it was seen (P111):
+     its p95, and its error rate when more than one request in a hundred failed. */
+  const timeHtml = (i) => {
+    const figures = seen.entryStats(i);
+    if (figures === null) return '';
+    return (figures.p95 === undefined ? ''
+      : ` &middot; <span class="row-time" title="One request in twenty took this long or longer">p95 ${esc(promptMsSay(figures.p95))}</span>`) +
+      ((figures.errorRate ?? 0) > 0.01
+        ? ` &middot; <span class="row-errors" title="Requests that failed">${esc(promptRateSay(figures.errorRate))} errors</span>` : '');
+  };
+  const heightOf = (i) =>(fails(i) ? ROW_HEIGHT_FAILS + (linesOf(i) - 1) * FAIL_LINE : ROW_HEIGHT);
   const pickedAt = () => {
     const current = store.get('current');
     const at = current === null ? -1 : listed.indexOf(current);
@@ -108,6 +119,7 @@ export function createWays(page) {
       `<span class="row-meta">${esc(repoName(i))} &middot; ${esc(kinds[nodes[i][KD]] || typeName(i))}` +
       (files[nodes[i][FL]] ? ' &middot; ' + esc(files[nodes[i][FL]].split('/').pop()) : '') +
       (seen.entry(i) ? ` &middot; <span class="row-seen" title="Hits seen at run time">seen &times;${seen.entry(i).toLocaleString()}</span>` : '') +
+      timeHtml(i) +
       (seen.never(i) ? ` &middot; <span class="row-never${seen.never(i).strong ? ' is-strong' : ''}" title="${seen.never(i).strong ? 'Never seen while its neighbours were busy' : 'Never seen, and nothing beside it was busy either'}">not seen in ${esc(seen.never(i).window)}</span>` : '') +
       (scheduleOf(model, i) ? ` &middot; <span class="sched">${esc(scheduleSay(scheduleOf(model, i)))}</span>` : '') +
       '</span>' + (fails(i) ? `<span class="row-meta row-fails">${failChipsHtml(i)}</span>` : '');

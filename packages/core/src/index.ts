@@ -824,7 +824,9 @@ export {
   PROMPT_WALK,
   promptFit,
   promptHintsFor,
+  promptMsSay,
   promptNextFor,
+  promptRateSay,
   renderPrompt,
 } from './prompt-text.js';
 export type {
