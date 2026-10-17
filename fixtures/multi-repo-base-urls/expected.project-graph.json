@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:24:42.769Z",
+  "builtAt": "2026-10-17T06:05:42.035Z",
   "services": [
     {
       "name": "storefront",
@@ -383,7 +383,11 @@
         "path": "/payments",
         "baseUrlEnv": "PAYMENTS_BASE",
         "responseType": null,
-        "bodyType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
         "baseUrl": "http://payments-api:4000",
         "baseUrlFrom": "docker-compose.yml (shop)",
         "targetService": "payments"
@@ -403,7 +407,11 @@
         "baseUrlEnv": "LEDGER_URL",
         "baseUrlDefault": "http://localhost:4000",
         "responseType": null,
-        "bodyType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
         "baseUrl": "http://localhost:4000",
         "baseUrlFrom": "src/clients/shop.client.ts (the code’s own fallback)",
         "targetService": "payments"
@@ -1066,6 +1074,9 @@
       "confidence": "heuristic",
       "file": "src/clients/shop.client.ts",
       "line": 28,
+      "params": [
+        "{id:string}"
+      ],
       "meta": {
         "via": "baseUrlValue",
         "targetService": "payments",
@@ -1080,6 +1091,9 @@
       "confidence": "heuristic",
       "file": "src/clients/shop.client.ts",
       "line": 33,
+      "params": [
+        "{id:string}"
+      ],
       "meta": {
         "via": "baseUrlValue",
         "targetService": "payments",

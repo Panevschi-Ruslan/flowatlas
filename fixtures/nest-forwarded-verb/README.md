@@ -16,3 +16,7 @@ method })` with `method` a parameter. `Restocker.restock` hands in `'PATCH'`
 and is credited with `PATCH /items/:param/stock`; `Restocker.settle` hands in a
 choice nothing can read, and its request keeps the verb unread, with an
 `api-method-dynamic` row, where it used to read as `GET`.
+
+`StockClient.send` is handed its body too (P128): `fetch(url, { method, body:
+JSON.stringify(body) })`. `Restocker.reserve` hands in `{ id, count }`, and its
+`POST /items/reservations` carries that literal's type and keys.

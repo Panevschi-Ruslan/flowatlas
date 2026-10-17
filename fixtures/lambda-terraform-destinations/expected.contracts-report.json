@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-14T18:10:25.261Z",
+  "generatedAt": "2026-10-17T06:05:23.203Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -98,9 +98,9 @@
       },
       "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:8:22|http_calls|entry:lending:http:ALL:/*@library-lending-request-loan",
       "direction": "request",
-      "reason": "no-type-on-sender",
-      "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+      "reason": "no-type-on-receiver",
+      "message": "lending#src/loans/request-loan.ts:handler reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
     },
     {
       "edge": {

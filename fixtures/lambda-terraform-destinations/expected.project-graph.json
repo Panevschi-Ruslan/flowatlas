@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:01:58.057Z",
+  "builtAt": "2026-10-17T06:05:22.920Z",
   "services": [
     {
       "name": "lending",
@@ -504,7 +504,8 @@
         "path": "/loans",
         "baseUrlEnv": "LOAN_URL",
         "responseType": null,
-        "bodyType": null,
+        "bodyType": "string",
+        "bodyFrom": "value",
         "targetService": "lending"
       }
     },
@@ -1120,6 +1121,9 @@
       "confidence": "static",
       "file": "src/kiosk/kiosk.ts",
       "line": 8,
+      "params": [
+        "string"
+      ],
       "meta": {
         "via": "functionUrl",
         "targetService": "lending",

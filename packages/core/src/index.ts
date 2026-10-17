@@ -468,7 +468,7 @@ export { RXJS_DECLARATION_SHAPE, RXJS_SHAPE } from './rxjs-shape.js';
 
 export { isTestDirectory, isTestFile } from './test-files.js';
 
-export { jsDocCallsMarkers, namesGivenTo, takesNames } from './markers.js';
+export { docsAbove, jsDocCallsIn, jsDocCallsMarkers, namesGivenTo, takesNames, type JsDocCall } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';
 
 export { definePass } from './passes.js';
@@ -593,6 +593,7 @@ export {
 export type { PrimitiveName, TypeRef, TypeRefAst, TypeRefField } from './types/type-ref.js';
 
 export {
+  argumentAlong,
   addressAt,
   callSitesOf,
   choosesASegment,

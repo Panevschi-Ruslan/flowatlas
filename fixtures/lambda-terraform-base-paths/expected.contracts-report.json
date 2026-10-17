@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-08T07:27:12.182Z",
+  "generatedAt": "2026-10-17T06:05:18.787Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -38,9 +38,9 @@
       },
       "edgeKey": "http_out:kiosk#src/kiosk/request-hold.ts:5:26|http_calls|entry:catalogue:http:POST:/holds/requests",
       "direction": "request",
-      "reason": "no-type-on-sender",
-      "message": "kiosk#src/kiosk/request-hold.ts:handler declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+      "reason": "body-already-serialised",
+      "message": "kiosk#src/kiosk/request-hold.ts:handler has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
     },
     {
       "edge": {

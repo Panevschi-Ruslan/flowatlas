@@ -1867,35 +1867,63 @@ const nameOf = (holder: Forwarder): string | undefined =>
     : undefined;
 
 /**
- * The verb a request whose verb is a parameter is sent with by one caller,
- * read along the calls the request's address was already followed through
- * (P91). The twin of {@link verbsAtCallers} for a reader that has those calls
- * in hand: the address and the verb are decided by the same caller, and
- * reading them along the same calls is what keeps them from belonging to two.
+ * The value a parameter is handed by one caller, read along the calls a
+ * request was already followed out through (P128): the general form of
+ * {@link verbAlong}, for whatever else a wrapper is handed beside the address -
+ * its body, `req(method, path, body)`.
  *
- * A call on the way that does not call the function holding the parameter is
- * passed over: the address may go through a wrapper the verb was already
- * settled before. `undefined` when the calls run out with the verb still a
- * parameter, `null` where a call hands on something nothing can read.
+ * Walked outward, innermost first. A call on the way that does not call the
+ * function holding the parameter is passed over (the address may go through a
+ * wrapper that settled this value before). Where the argument a call hands is
+ * itself a parameter of a function further out, the walk goes on; the answer
+ * is the argument at the outermost call it reached, which may still be a
+ * parameter of the function the request is credited to (`issue(invoice)` into
+ * `this.req('POST', '/invoices', invoice)` hands `invoice`). `undefined` when
+ * no call on the way calls the holder, `null` where one hands on nothing
+ * worth following - an argument left out with no default, a parameter of a
+ * function nothing can be followed out of, or a loop.
  */
-export const verbAlong = (
+export const argumentAlong = (
   parameter: ParameterDeclaration,
   hops: readonly CallExpression[],
-): string | null | undefined => {
+): TsNode | null | undefined => {
   let current = parameter;
+  let handed: TsNode | undefined;
   for (const hop of hops) {
     const holder = forwarderOf(current);
     if (holder === undefined) return null;
     if (calledName(hop) !== nameOf(holder)) continue;
     const argument = handedTo(hop, current);
     if (argument === undefined) return null;
-    const verb = verbSpelledBy(argument);
-    if (verb !== null) return verb;
+    handed = argument;
     const further = parameterBehind(argument);
-    if (further === undefined || further === current) return null;
+    if (further === undefined) return argument;
+    if (further === current) return null;
     current = further;
   }
-  return undefined;
+  return handed;
+};
+
+/**
+ * The verb a request whose verb is a parameter is sent with by one caller,
+ * read along the calls the request's address was already followed through
+ * (P91). The twin of {@link verbsAtCallers} for a reader that has those calls
+ * in hand: the address and the verb are decided by the same caller, and
+ * reading them along the same calls is what keeps them from belonging to two.
+ *
+ * {@link argumentAlong} with the verb read out of what was handed.
+ * `undefined` when the calls run out with the verb still a parameter, `null`
+ * where a call hands on something nothing can read.
+ */
+export const verbAlong = (
+  parameter: ParameterDeclaration,
+  hops: readonly CallExpression[],
+): string | null | undefined => {
+  const handed = argumentAlong(parameter, hops);
+  if (handed === undefined || handed === null) return handed;
+  const verb = verbSpelledBy(handed);
+  if (verb !== null) return verb;
+  return parameterBehind(handed) === undefined ? null : undefined;
 };
 
 /**

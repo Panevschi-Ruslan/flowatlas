@@ -337,6 +337,7 @@ describe('a request forwarded to its callers', () => {
         // Handed the verb by the caller (P91): the one it hands in, and none
         // where nothing can read what it hands in.
         'Restocker.restock -> PATCH /items/:param/stock @ api.example.com',
+        'Restocker.reserve -> POST /items/reservations @ api.example.com',
         'Restocker.settle -> ? /items/settlement @ api.example.com',
       ].sort(),
     );
@@ -345,11 +346,46 @@ describe('a request forwarded to its callers', () => {
   it('reads no body from a caller whose request carries its own settings', async () => {
     const graph = await graphOf('nest-forwarded-verb');
     const bodies = graph.nodes
-      .filter((node) => node.type === 'http_out')
+      .filter((node) => node.type === 'http_out' && node.meta?.path !== '/items/reservations')
       .map((node) => node.meta?.bodyType ?? null);
     // The caller's second argument is `reason`, or the settings it hands
     // over, or the path beside the verb it hands in; none is a body.
     expect(bodies).toEqual([null, null, null, null, null, null, null]);
+  });
+
+  it('reads the body a wrapper is handed at the caller that hands it (P128)', async () => {
+    const graph = await graphOf('nest-forwarded-verb');
+    const reserve = graph.nodes.find((node) => node.type === 'http_out' && node.meta?.path === '/items/reservations');
+    expect(reserve?.meta).toMatchObject({ method: 'POST', bodyFrom: 'literal', bodyKeys: ['count', 'id'] });
+  });
+});
+
+/**
+ * A body handed through a verb wrapper (P128): `req(method, path, body)` sets
+ * `init.body = JSON.stringify(body)`, and the caller's `invoice` is what is
+ * sent - not its second argument, which is the path.
+ */
+describe('a body handed through a verb wrapper', () => {
+  const request = async (path: string): Promise<GraphNode | undefined> =>
+    (await graphOf('nest-client-wrapper')).nodes.find((node) => node.type === 'http_out' && node.meta?.path === path && node.meta?.method !== 'GET');
+
+  it('carries the type the caller hands in', async () => {
+    expect((await request('/invoices'))?.meta).toMatchObject({
+      method: 'POST',
+      bodyType: 'type:nest-client-wrapper#Invoice',
+      bodyFrom: 'value',
+    });
+  });
+
+  it('reads the body a request writes in its own settings, where it is made (P131)', async () => {
+    const graph = await graphOf('nest-client-wrapper');
+    const sent = graph.nodes.find((node) => node.type === 'http_out' && String(node.meta?.path).endsWith('/sendMessage'));
+    expect(sent?.meta).toMatchObject({ method: 'POST', bodyType: '{text:string}', bodyFrom: 'literal', bodyKeys: ['text'] });
+  });
+
+  it('leaves a wrapper that settles the verb on the way out as it was', async () => {
+    expect((await request('/orders'))?.meta).toMatchObject({ bodyType: 'type:nest-client-wrapper#Order', bodyFrom: 'value' });
+    expect((await request('/orders/:param/cancel'))?.meta).toMatchObject({ bodyFrom: 'literal', bodyKeys: ['reason'] });
   });
 });
 

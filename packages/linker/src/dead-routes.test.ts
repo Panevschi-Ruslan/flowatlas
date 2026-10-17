@@ -183,3 +183,65 @@ describe('a request that could still reach a route nothing calls', () => {
     expect(result.report.routes.nearMissed).toBeUndefined();
   });
 });
+
+describe('a browser annotation that names its service (P127)', () => {
+  const browser = (meta: Record<string, unknown>): GraphNode => {
+    at += 1;
+    return {
+      id: `ui_api_call:web#src/api.ts:${at}:1`,
+      type: 'ui_api_call',
+      kind: 'http',
+      label: 'request',
+      repo: 'web',
+      file: 'src/api.ts',
+      line: at,
+      meta: { method: 'GET', url: '/items', path: '/items', baseUrlEnv: 'apiUrl', responseType: null, bodyType: null, via: 'marker', ...meta },
+    };
+  };
+  const withWeb = () =>
+    config({
+      services: [
+        { name: 'catalog-api', repo: './catalog', type: 'nestjs', aliases: ['catalog', 'catalog-worker'] },
+        { name: 'orders', repo: './orders', type: 'nestjs' },
+        { name: 'stock', repo: './stock', type: 'nestjs' },
+        // The key the request is rooted at names another service: the
+        // annotation is what says where this one goes.
+        { name: 'web', repo: './web', type: 'angular', apiBaseEnv: ['apiUrl'], apiTarget: { apiUrl: 'orders' } },
+      ],
+    });
+  const linkWeb = (nodes: GraphNode[]) =>
+    linkGraphs(
+      [graph('catalog-api', CATALOG), graph('orders', [route('orders', 'GET', '/orders')]), graph('stock', []), graph('web', nodes)],
+      withWeb(),
+      { builtAt: FIXED },
+    );
+  const hits = (result: ReturnType<typeof linkWeb>) =>
+    result.project.edges.filter((edge) => edge.type === 'hits').map((edge) => `${edge.to} ${edge.confidence} ${String(edge.meta?.['via'])}`);
+
+  it('joins the service the alias names, at marker, before apiTarget', () => {
+    expect(hits(linkWeb([browser({ service: 'catalog' })]))).toEqual(['entry:catalog-api:http:GET:/items marker marker']);
+  });
+
+  it('keeps an address read from the source as sure as it was read', () => {
+    expect(hits(linkWeb([browser({ service: 'catalog-api', via: 'literal' })]))).toEqual([
+      'entry:catalog-api:http:GET:/items static marker',
+    ]);
+  });
+
+  it('says a name no service answers to the way the server annotation says it', () => {
+    const result = linkWeb([browser({ service: 'catalogue' })]);
+    expect(hits(result)).toEqual([]);
+    expect(rows(result)).toContain(
+      'marker-service-unknown: @flowatlas-calls names catalogue, which is not a configured service nor an alias of one (the aliases are catalog, catalog-worker)',
+    );
+  });
+
+  it('says a route the named service lacks is the annotation’s to fix', () => {
+    const result = linkWeb([browser({ service: 'catalog', path: '/stock', url: '/stock' })]);
+    expect(rows(result)).toContain('marker-route-not-found: @flowatlas-calls points at GET /stock, which catalog-api does not serve');
+  });
+
+  it('leaves a request without a service to the ways it always took', () => {
+    expect(hits(linkWeb([browser({ path: '/orders', url: '/orders' })]))).toEqual(['entry:orders:http:GET:/orders marker api-target']);
+  });
+});

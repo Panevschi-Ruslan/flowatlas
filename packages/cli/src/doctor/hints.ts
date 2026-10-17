@@ -517,9 +517,9 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'ambiguous-route-target': () =>
     'Set services[].apiTarget on the frontend to say which service its settings key names.',
   'marker-service-unknown': () =>
-    '@CallsService names a service that is not configured. Add it to services[] in flowatlas.config.json, or correct the annotation.',
+    '@CallsService or @flowatlas-calls names a service that is not configured. Add it to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.',
   'marker-route-not-found': () =>
-    '@CallsService points at a route the named service does not serve. Check its controllers, or correct the annotation.',
+    '@CallsService or @flowatlas-calls points at a route the named service does not serve. Check its controllers, or correct the annotation.',
   'procedure-not-found': () =>
     'No procedure of that path is declared by the caller\'s own service or by any service its apiTarget names. Check the tree for a rename; if another service declares it, name that service in apiTarget.',
   'procedure-ambiguous': () =>

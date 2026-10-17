@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:18.159Z",
+  "builtAt": "2026-10-17T06:05:58.475Z",
   "services": [
     {
       "name": "api",
@@ -147,7 +147,12 @@
         "path": "/send",
         "baseUrlEnv": "MAIL_RELAY_URL",
         "responseType": null,
-        "bodyType": null
+        "bodyType": "{to:string;subject:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "subject",
+          "to"
+        ]
       }
     },
     {

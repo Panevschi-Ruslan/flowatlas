@@ -285,6 +285,42 @@ describe('annotations', () => {
     expect(callsOf(graph)[0]?.meta?.['via']).toBe('literal');
   });
 
+  it('reads the service an annotation names before its verb (P127)', () => {
+    const graph = extract(`
+  /** @flowatlas-calls catalog GET /items */
+  a(path: string): Observable<unknown> { return this.http.get<unknown>(this.base + path); }
+`);
+    const marked = callsOf(graph).find((call) => call.meta?.['via'] === 'marker');
+    expect(marked?.meta).toMatchObject({ method: 'GET', path: '/items', service: 'catalog' });
+  });
+
+  it('keeps the two-word form, with no service on the request', () => {
+    const graph = extract(`
+  /** @flowatlas-calls GET /items */
+  a(path: string): Observable<unknown> { return this.http.get<unknown>(this.base + path); }
+`);
+    const marked = callsOf(graph).find((call) => call.meta?.['via'] === 'marker');
+    expect(marked?.meta).toMatchObject({ method: 'GET', path: '/items' });
+    expect(marked?.meta).not.toHaveProperty('service');
+  });
+
+  it('reads no request from a tag with no verb in it', () => {
+    const graph = extract(`
+  /** @flowatlas-calls catalog items */
+  a(path: string): Observable<unknown> { return this.http.get<unknown>(this.base + path); }
+`);
+    expect(callsOf(graph).filter((call) => call.meta?.['via'] === 'marker')).toEqual([]);
+  });
+
+  it('puts the service on a request it read, rather than a second request', () => {
+    const graph = extract(`
+  /** @flowatlas-calls catalog GET /orders */
+  a(): Observable<OrderDto> { return this.http.get<OrderDto>('/orders'); }
+`);
+    expect(callsOf(graph)).toHaveLength(1);
+    expect(callsOf(graph)[0]?.meta).toMatchObject({ via: 'literal', service: 'catalog' });
+  });
+
   it('turns @flowatlas-consumes into a channel with a handler on it', () => {
     const graph = extract(`
   /** @flowatlas-consumes order.updated */

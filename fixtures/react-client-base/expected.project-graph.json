@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-17T04:50:56.979Z",
+  "builtAt": "2026-10-17T06:03:45.980Z",
   "services": [
     {
       "name": "app",
@@ -393,7 +393,12 @@
         "path": null,
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": "object",
+        "bodyFrom": "literals",
+        "bodyKeys": [
+          "id",
+          "title"
+        ]
       }
     },
     {

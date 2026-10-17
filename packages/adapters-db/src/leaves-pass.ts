@@ -9,6 +9,7 @@ import {
   declaredParameterType,
   forwardNoWorse,
   isUniversalMethod,
+  argumentAlong,
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
@@ -81,6 +82,7 @@ import { handedBackBy } from './leaves/handed-back.js';
 import { handedOverOrigin, unconfirmedHandover } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
+import { bodyParameterOf, bodyWrittenIn } from './leaves/request-body.js';
 import { analyzeUrl, composeAddress, surenessOf, type UrlInfo } from './leaves/url.js';
 import {
   deref,
@@ -199,6 +201,14 @@ interface RecordOptions {
    * request whose own settings were already read.
    */
   readsSite?: boolean;
+  /**
+   * The body the site hands the request, where the request's settings say
+   * which parameter of the wrapper it is (P128): read along the calls the
+   * address came out through, in place of the site's second argument. `null`
+   * where it was handed on and nothing could follow it. Where the request is
+   * recorded where it is made, the body its own settings write (P131).
+   */
+  body?: TsNode | null;
 }
 
 /**
@@ -1610,7 +1620,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     owner: Holder,
     options: RecordOptions = {},
   ): void => {
-    const { init, readsSite = true, binding } = options;
+    const { init, readsSite = true, binding, body: handed } = options;
     // A request through a binding names a host the platform ignores: the
     // binding is where it goes (P91).
     const info: UrlInfo = binding === undefined ? written : { ...written, host: null, baseUrlEnv: null };
@@ -1638,9 +1648,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // The second argument is a body only when it is nothing else. A settings
     // object declares the settings' type, and `RequestInit` read as the body of
     // `fetch(url, { method: 'PUT' })` named a type nothing sends.
-    const bodyAtSite = readsSite && init === undefined && !secondIsSettings;
-    const bodyArgument = bodyAtSite ? site.getArguments()[1] : undefined;
-    const declaredBodyWide = bodyAtSite ? declaredParameterType(site, 1, ctx.checker) : undefined;
+    // A body the wrapper's settings say comes from one of its parameters is
+    // the argument handed for it, wherever it sits (P128); the site's second
+    // argument is the body only for a wrapper that does not say.
+    const bodyAtSite = handed === undefined && readsSite && init === undefined && !secondIsSettings;
+    const bodyArgument = handed !== undefined ? (handed ?? undefined) : bodyAtSite ? site.getArguments()[1] : undefined;
+    // The type the site's own callee declares for it, where it hands it as an
+    // argument of its own: the same declared answer a second argument gets.
+    const bodyAt = bodyAtSite ? 1 : bodyArgument === undefined ? -1 : site.getArguments().indexOf(bodyArgument);
+    const declaredBodyWide = bodyAt < 0 ? undefined : declaredParameterType(site, bodyAt, ctx.checker);
     const declaredBody =
       declaredBodyWide !== undefined && bodyArgument !== undefined
         ? narrowUnionByLiteral(declaredBodyWide, bodyArgument)
@@ -1651,7 +1667,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // stays the declared one — it is the better answer for what each field is —
     // and the keys are recorded beside it.
     const carries = verb === 'POST' || verb === 'PUT' || verb === 'PATCH';
-    const writtenBody = carries && !secondIsSettings ? writtenBodyOutward(bodyArgument) : [];
+    const writtenBody = carries ? writtenBodyOutward(bodyArgument) : [];
     const bodyKeys = writtenKeysOf(writtenBody);
     const bodyFrom: BodyRead =
       bodyKeys !== undefined
@@ -1780,6 +1796,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const through = recognised.binding === undefined ? {} : { binding: recognised.binding };
     const stated = statedVerbOf(call, recognised.method, request?.init);
     const verbParameter = stated === undefined ? verbParameterAt(call, request?.init) : undefined;
+    // The body a wrapper is handed, read at each caller along the same calls
+    // as the address and the verb (P128).
+    const bodyParameter = bodyParameterOf(call, request?.init);
+    const bodyAlong = (hops: readonly CallExpression[]): Pick<RecordOptions, 'body'> =>
+      bodyParameter === undefined ? {} : { body: argumentAlong(bodyParameter, hops) ?? null };
     if (split !== undefined) {
       // A caller is drawn on only where its argument leaves the address at
       // least as sure as the request states it here: `bot${token}` with a
@@ -1805,11 +1826,14 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         // the wrapper's - a verb, a path, a body - and its second is not the
         // body; where a wrapper of its own settled the verb on the way out
         // (`post(path, body)` into `request('POST', path, body)`), the
-        // caller's are that wrapper's, and its second is (P91).
+        // caller's are that wrapper's, and its second is (P91). Either way a
+        // body the request's settings take from a parameter is read along
+        // the hops instead (P128).
         const handedHere = along !== undefined && verbAlong(verbParameter as ParameterDeclaration, hops.slice(0, -1)) === undefined;
         recordHttp(site, reading.info, verb, reading.owner, {
           readsSite: stated?.settings !== true && !handedHere,
           ...(recognised.binding === undefined ? {} : { binding: recognised.binding }),
+          ...bodyAlong(hops),
         });
       }
       // A caller through an interface this method implements, or one whose
@@ -1830,19 +1854,26 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (verbParameter !== undefined) {
       const callers = verbsAtCallers(verbParameter);
       let unnamed = callers.undecided || callers.calls.length === 0;
-      for (const { site, verb } of callers.calls) {
+      for (const { site, verb, hops } of callers.calls) {
         const owner = ownerOf(site);
         if (owner === undefined) {
           unnamed = true;
           continue;
         }
-        recordHttp(site, here, verb, owner, { readsSite: false, ...through });
+        recordHttp(site, here, verb, owner, { readsSite: false, ...through, ...bodyAlong(hops) });
       }
       if (unnamed) recordHttp(call, here, null, holder, { init: request?.init, ...through });
       return true;
     }
 
-    recordHttp(call, here, recognised.method, holder, { init: request?.init, ...through });
+    // A body written in the request's own settings is what it sends:
+    // `fetch(url, { method: 'POST', body: JSON.stringify(order) })` (P131).
+    const bodyHere = bodyWrittenIn(request?.init ?? call.getArguments()[1]);
+    recordHttp(call, here, recognised.method, holder, {
+      init: request?.init,
+      ...through,
+      ...(bodyHere === undefined ? {} : { body: bodyHere }),
+    });
     return true;
   };
 

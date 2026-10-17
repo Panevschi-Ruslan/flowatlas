@@ -8,6 +8,7 @@ import {
   forwardedFrom,
   forwardNoWorse,
   parameterBehind,
+  argumentAlong,
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
@@ -446,6 +447,43 @@ describe('the verb a wrapper is handed', () => {
       "this.api.req('POST', '/items') POST",
       "this.api.req(HttpVerb.Delete, '/items/1') DELETE",
       "this.api.req(verb, '/items/2') unread",
+    ]);
+  });
+});
+
+/**
+ * Whatever else a wrapper is handed beside the address (P128): its body, read
+ * along the same calls, out through a wrapper that hands it on and stopping at
+ * the caller that writes it, or at the parameter of the caller the request is
+ * credited to.
+ */
+describe('the value a wrapper is handed beside the address', () => {
+  const source = `
+    declare function fetch(url: string, init?: { method?: string; body?: string }): Promise<unknown>;
+    class Client {
+      req(method: string, path: string, body?: unknown) { return fetch(path, { method, body: JSON.stringify(body) }); }
+      post(path: string, body: unknown) { return this.req('POST', path, body); }
+    }
+    class Screen {
+      constructor(private readonly api: Client) {}
+      create(item: { title: string }) { return this.api.post('/items', item); }
+      rename() { return this.api.req('PATCH', '/items/1', { title: 'x' }); }
+      empty() { return this.api.req('DELETE', '/items/2'); }
+    }
+  `;
+
+  it('reads it at each caller the address was followed out to', () => {
+    const file = parse(source);
+    const fetchCall = file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch')!;
+    const path = parameterBehind(fetchCall.getArguments()[0]!)!;
+    const body = file.getDescendantsOfKind(SyntaxKind.Parameter).find((each) => each.getName() === 'body' && each.getParent()?.getText().startsWith('req'))!;
+    const said = forwardedFrom(path)
+      .calls.map((each) => `${each.site.getText()} ${argumentAlong(body, each.hops)?.getText() ?? 'nothing'}`)
+      .sort();
+    expect(said).toEqual([
+      "this.api.post('/items', item) item",
+      "this.api.req('DELETE', '/items/2') nothing",
+      "this.api.req('PATCH', '/items/1', { title: 'x' }) { title: 'x' }",
     ]);
   });
 });

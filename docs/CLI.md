@@ -3856,6 +3856,25 @@ async submit(order: Order) {
 }
 ```
 
+Code that takes no decorator — a function, a worker's handler, a browser
+method — says the same thing in its documentation comment:
+
+```ts
+/** @flowatlas-calls catalog GET /items */     // a service, a verb and a path
+export const loadItems = (path: string) => fetch(path);
+
+/** @flowatlas-calls GET /orders */            // browser only: no service
+orders(path: string) { return this.http.get(path); }
+```
+
+The service is a configured name or one of its `services[].aliases`. On a
+browser method or function (Angular and React) it is asked before `apiTarget`
+or anything else, and the request joins there or is a `marker-service-unknown`
+/ `marker-route-not-found` row; without a service the request goes wherever its
+settings key says, as a read address would. The server readers take only the
+form with a service. A tag is read on one line, and one with no verb in first
+or second place names no request.
+
 An annotation wins over what the settings key would have said, and adds no
 second edge. One naming a service or a route that does not exist is reported and
 the automatic answer is kept, so a stale annotation degrades rather than lies.

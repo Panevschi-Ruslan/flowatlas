@@ -388,18 +388,27 @@ export const findingFor = (outcome: CallOutcome): Finding | undefined => {
   return describe === null ? undefined : describe(outcome);
 };
 
-/** The same table for the two ways an annotation can be wrong. */
-const MARKER_FINDINGS = {
-  serviceUnknown: (marker: CallsServiceMarker, aliases: readonly string[] = []): Finding => ({
+/**
+ * The same table for the two ways an annotation can be wrong.
+ *
+ * Said in the annotation's own spelling: `@CallsService` on a server method,
+ * `@flowatlas-calls` where a browser method names its service (P127).
+ */
+export const MARKER_FINDINGS = {
+  serviceUnknown: (
+    marker: Pick<CallsServiceMarker, 'service'>,
+    aliases: readonly string[] = [],
+    annotation = '@CallsService',
+  ): Finding => ({
     reason: 'marker-service-unknown',
     message:
-      `@CallsService names ${marker.service}, which is not a configured service` +
+      `${annotation} names ${marker.service}, which is not a configured service` +
       (aliases.length === 0 ? '' : ` nor an alias of one (the aliases are ${aliases.join(', ')})`),
     hint: `Add ${marker.service} to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.`,
   }),
-  routeNotFound: (marker: CallsServiceMarker): Finding => ({
+  routeNotFound: (marker: CallsServiceMarker, annotation = '@CallsService'): Finding => ({
     reason: 'marker-route-not-found',
-    message: `@CallsService points at ${marker.method} ${marker.path}, which ${marker.service} does not serve`,
+    message: `${annotation} points at ${marker.method} ${marker.path}, which ${marker.service} does not serve`,
     hint: `Check ${marker.service}'s controllers, or correct the annotation.`,
   }),
 };

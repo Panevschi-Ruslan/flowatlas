@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T05:54:54.539Z",
+  "configHash": "70acd3434793",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "admin",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "catalog-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 12,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "storefront",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 8,
+    "resolved": 3,
+    "unresolved": 5,
+    "byReason": {
+      "api-path-dynamic": 1,
+      "api-path-partly-read": 3,
+      "marker-service-unknown": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 3,
+    "uncalled": [
+      "entry:orders:http:GET:/items"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 25,
+      "reason": "marker-service-unknown",
+      "message": "@flowatlas-calls names catalogue, which is not a configured service nor an alias of one (the aliases are catalog)",
+      "hint": "Add catalogue to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
+      "symbol": "ui_api_call:storefront#src/app/shop.client.ts:25:3"
+    }
+  ],
+  "totals": {
+    "nodes": 30,
+    "edges": 16,
+    "types": 1,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

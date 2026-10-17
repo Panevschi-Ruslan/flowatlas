@@ -206,6 +206,10 @@ const buildUiIndex = (
     targetOf: (repo, env) => targets.get(`${repo}\0${env}`),
     claimantsOf: (env) => servicesByEnv.get(env) ?? [],
     services: () => serving,
+    // A browser annotation naming its service names it the way a server one
+    // does, by name or alias (P127).
+    serviceOf: (service) => names.get(service) ?? (routesByService.has(service) ? service : undefined),
+    aliases: () => [...names.keys()].filter((name) => names.get(name) !== name).sort(cmp),
   };
 };
 

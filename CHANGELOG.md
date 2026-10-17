@@ -305,6 +305,33 @@ only one of them moved.
   note and a loop of `… = ANY($1)` statements was set aside as a batch, as
   through a driver; a manager's `update(Entity, criteria, …)` was read as
   conditional by its criteria (`fixtures/loops-worth-fixing`).
+- **A browser annotation that names its service (P127).** `/**
+  @flowatlas-calls catalog GET /items */` above an Angular method or a React
+  function was read as `GET /items` at the service it names, by name or alias
+  (`meta.service` on the request), ahead of `apiTarget` and every other way a
+  browser request's service was decided, and joined `via: "marker"`. A name no
+  service answered to was a `marker-service-unknown` row, and a route the named
+  service lacked a `marker-route-not-found` row, as for the server's
+  annotation. The two-word form (`GET /items`) kept its meaning, and the React
+  reader read either form for the first time. A tag with no verb in first or
+  second place was no longer read as a request (`catalog items` had been the
+  verb `CATALOG`), and a tag was read on one line only
+  (`fixtures/multi-repo-annotated-browser`).
+- **A body handed through a verb wrapper (P128).** A server request whose body
+  is a parameter of the wrapper that sends it - `req(method, path, body)` into
+  `fetch(url, { method, body: JSON.stringify(body) })`, the settings one
+  `const` away, or `init.body = JSON.stringify(body)` set on them afterwards -
+  read its body at each caller, along the same calls its address and verb were
+  followed through (the core's `argumentAlong`), so `this.req('POST',
+  '/invoices', invoice)` carried `invoice`'s type and keys where P91 had left
+  it with none. The caller's second argument stayed the body only for a
+  wrapper that did not say where its body is (`fixtures/nest-client-wrapper`,
+  `fixtures/nest-forwarded-verb`).
+- **A server request's own body (P131).** `fetch(url, { method: 'POST', body:
+  JSON.stringify(order) })` carried `order`'s type and keys where it is made;
+  the server reader had read no body from a request's own settings at all. A
+  body already a string, `body: event.body`, was read as `string`, and
+  `contracts` said so (`body-already-serialised`).
 
 ### Changed
 
