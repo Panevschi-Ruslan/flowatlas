@@ -57,6 +57,30 @@ describe('what a baseline counts', () => {
     expect(snapshot.nothing).toEqual({ rows: 1, sites: 397 });
   });
 
+  // P81, D3: kinds are for people reading the numbers. A CI gate counts what it
+  // counted before - every actionable row, findings included - so a baseline
+  // accepted before kinds existed gives the same verdict after.
+  it('keeps counting every actionable row, findings included, whatever its kind', () => {
+    const rows = [
+      row(),
+      row({ reason: 'route-unguarded', file: 'routes.ts' }),
+      row({ reason: 'query-in-loop', level: 'info', sites: 1, file: 'loop.ts' }),
+      row({ reason: 'base-url-from-files', level: 'info', sites: 3, file: 'client.ts' }),
+    ];
+    const snapshot = snapshotOf(rows);
+    // What the total was before kinds: the sites of every row at `action`.
+    const before = rows.filter((item) => (item.level ?? 'action') === 'action').reduce((sum, item) => sum + (item.sites ?? 1), 0);
+    expect(snapshot.total).toBe(before);
+    expect(snapshot.keys.map((key) => key.key)).toEqual([
+      unresolvedKey(row()),
+      unresolvedKey(row({ reason: 'route-unguarded', file: 'routes.ts' })),
+    ].sort());
+    // A note or a finding at `info` is no limit of static reading.
+    expect(snapshot.info).toEqual({ rows: 0, sites: 0 });
+    expect(snapshot.nothing).toEqual({ rows: 0, sites: 0 });
+    expect(compareBaseline(snapshot, { baseline: baselineOf(rows) }).status).toBe('ok');
+  });
+
   it('takes an ignored reason out of the total and out of the keys', () => {
     const rows = [row(), row({ reason: 'known-noise', file: 'b.ts' })];
     const snapshot = snapshotOf(rows, { ignoreReasons: ['known-noise'] });

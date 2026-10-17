@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:10:23.259Z",
+  "builtAt": "2026-10-16T23:29:38.361Z",
   "services": [
     {
       "name": "api",
@@ -1023,7 +1023,7 @@
       "file": "src/live/peer-sockets.ts",
       "line": 62,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",

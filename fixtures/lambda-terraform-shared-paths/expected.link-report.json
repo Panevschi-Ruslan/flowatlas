@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T21:46:56.152Z",
+  "builtAt": "2026-10-16T23:28:20.478Z",
   "configHash": "21ec3b97440d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 527,
+      "durationMs": 515,
       "packages": {
         "name": "library-branch",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 14,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 551,
+      "durationMs": 532,
       "packages": {
         "name": "library-branch-kiosk",
         "runtime": [],
@@ -141,6 +141,10 @@
     "nodes": 39,
     "edges": 31,
     "types": 6,
-    "unresolved": 7
+    "missed": 4,
+    "sites": 4,
+    "notes": 3,
+    "findings": 0,
+    "unresolved": 4
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-14T21:18:11.947Z",
+  "builtAt": "2026-10-16T23:28:14.599Z",
   "configHash": "33c7cd79accd",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 30,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 564,
+      "durationMs": 523,
       "packages": {
         "name": "lending-library-loans",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 513,
+      "durationMs": 498,
       "packages": {
         "name": "lending-library-members",
         "runtime": [],
@@ -93,6 +93,10 @@
     "nodes": 40,
     "edges": 37,
     "types": 4,
-    "unresolved": 1
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 0
   }
 }

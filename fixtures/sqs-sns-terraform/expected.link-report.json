@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:54.177Z",
+  "builtAt": "2026-10-16T23:29:40.509Z",
   "configHash": "462b9b0bf7ba",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 39,
       "types": 8,
       "unresolved": 4,
-      "durationMs": 509,
+      "durationMs": 518,
       "packages": {
         "name": "lending-library-returns",
         "runtime": [
@@ -101,6 +101,10 @@
     "nodes": 44,
     "edges": 41,
     "types": 8,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 4,
     "unresolved": 3
   }
 }

@@ -299,17 +299,17 @@ describe('counting what the graph is made of', () => {
     const io = capture();
     runStats({ db: dbPath, format: 'json' }, io);
     const stats = parsed(io.stdout) as {
-      totals: { unresolved: number };
+      totals: { missed: number; sites: number; notes: number; findings: number; unresolved: number };
       unresolvedByReason: Record<string, number>;
       unresolvedSites: Record<string, number>;
     };
-    expect(stats.totals.unresolved).toBe(3);
+    expect(stats.totals).toMatchObject({ missed: 3, sites: 14, notes: 0, findings: 0, unresolved: 3 });
     expect(stats.unresolvedByReason['call-dynamic-receiver']).toBe(1);
     expect(stats.unresolvedSites['call-dynamic-receiver']).toBe(12);
 
     const tree = capture();
     runStats({ db: dbPath, format: 'tree' }, tree);
-    expect(tree.stdout).toContain('3 unresolved rows over 14 sites');
+    expect(tree.stdout).toContain('missed: 3 over 14 sites · notes: 0 · findings: 0');
     expect(tree.stdout).toContain('call-dynamic-receiver  12  (listed as 1 row)');
   });
 

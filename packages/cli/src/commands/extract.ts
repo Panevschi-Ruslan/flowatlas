@@ -13,7 +13,7 @@ import {
   readPackageJson,
   readResolvedPackageJson,
   SCHEMA_VERSION,
-  wasMissed,
+  countsOf,
   type FlowatlasConfig,
   type PackageJson,
   type RepoGraph,
@@ -137,8 +137,8 @@ export interface ExtractOptions {
 }
 
 /** Name a repository is known by: the configured service if there is one. */
-/** Rows of a repository's graph that say something was not read. */
-const missed = (graph: RepoGraph): number => graph.unresolved.filter(wasMissed).length;
+/** Rows of a repository's graph that say something was not read: gaps, by the one counter (P81). */
+const missed = (graph: RepoGraph): number => countsOf(graph.unresolved).missed;
 
 const resolveService = (
   rootDir: string,

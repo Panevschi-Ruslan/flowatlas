@@ -6,6 +6,7 @@
  * reads `doctor.json` breaks silently when a field moves. Bump the format
  * version when a field is removed or changes meaning.
  */
+import { ROW_KIND_NAMES, type RowKind } from '@flowatlas/core';
 import { contractFindingSchema } from '@flowatlas/contracts';
 import type { ContractFinding } from '@flowatlas/contracts';
 import { z } from 'zod';
@@ -53,6 +54,8 @@ export interface DoctorRow {
 export interface ReasonGroup {
   reason: string;
   level: 'action' | 'info' | 'nothing';
+  /** What the rows are about (P81): a gap, a note, or a finding about the code. */
+  kind: RowKind;
   /** Rows in the list. */
   count: number;
   /**
@@ -138,12 +141,22 @@ export interface DoctorReport {
      */
     total: number;
     /**
-     * Rows that say something was not read: actionable and informational
-     * alike, and never the ones where there was nothing to read.
+     * Rows that say something was not read - gaps, by `countsOf` (P81):
+     * actionable and informational alike, and never the ones where there was
+     * nothing to read, nor notes or findings.
      */
     rows: number;
     /** Places those rows stand for. */
     sites: number;
+    /** Rows saying how a join or a reading was made, with nothing missed (P81). */
+    notes: number;
+    /**
+     * Rows saying something about the code itself (P81): a likely N+1, a route
+     * with no guard. An actionable one is still in `total`, so a baseline keeps
+     * its verdict.
+     */
+    findings: number;
+    /** Gap rows at `info`: places static reading cannot see. */
     info: { rows: number; sites: number };
     /** Places where nothing joins. Reported, never added to anything. */
     nothing: { rows: number; sites: number };
@@ -260,6 +273,8 @@ export const doctorReportSchema = z.object({
     total: z.number().int().nonnegative(),
     rows: z.number().int().nonnegative(),
     sites: z.number().int().nonnegative(),
+    notes: z.number().int().nonnegative(),
+    findings: z.number().int().nonnegative(),
     info: z.object({
       rows: z.number().int().nonnegative(),
       sites: z.number().int().nonnegative(),
@@ -289,6 +304,7 @@ export const doctorReportSchema = z.object({
       z.object({
         reason: z.string(),
         level,
+        kind: z.enum(ROW_KIND_NAMES),
         count: z.number().int().nonnegative(),
         sites: z.number().int().nonnegative(),
         known: z.boolean(),

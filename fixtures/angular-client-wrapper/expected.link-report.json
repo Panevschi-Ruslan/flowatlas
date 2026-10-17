@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T16:20:16.578Z",
+  "builtAt": "2026-10-16T23:27:43.666Z",
   "configHash": "3a270910539f",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 56,
       "types": 9,
       "unresolved": 1,
-      "durationMs": 600,
+      "durationMs": 572,
       "packages": {
         "name": "angular-client-wrapper",
         "runtime": [
@@ -227,6 +227,10 @@
     "nodes": 58,
     "edges": 56,
     "types": 9,
+    "missed": 19,
+    "sites": 26,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 19
   }
 }

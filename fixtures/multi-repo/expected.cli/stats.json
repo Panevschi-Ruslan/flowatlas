@@ -3,7 +3,11 @@
     "nodes": 126,
     "edges": 109,
     "types": 14,
-    "unresolved": 13
+    "unresolved": 9,
+    "missed": 9,
+    "sites": 9,
+    "notes": 0,
+    "findings": 4
   },
   "nodesByType": {
     "repo": 4,
@@ -50,7 +54,6 @@
     "ambiguous-route-target": 1,
     "api-path-dynamic": 3,
     "dynamic-http-url": 1,
-    "route-unguarded": 4,
     "target-route-not-found": 3,
     "unknown-base-url-env": 1
   },
@@ -58,7 +61,6 @@
     "ambiguous-route-target": 1,
     "api-path-dynamic": 3,
     "dynamic-http-url": 1,
-    "route-unguarded": 4,
     "target-route-not-found": 3,
     "unknown-base-url-env": 1
   },

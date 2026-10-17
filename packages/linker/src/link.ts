@@ -5,7 +5,7 @@ import {
   namesGivenTo,
   SCHEMA_VERSION,
   wasRead,
-  wasMissed,
+  countsOf,
   type Confidence,
   type FlowatlasConfig,
   type GraphEdge,
@@ -812,15 +812,28 @@ export const linkGraphs = (
     unresolved: found.sort(
       (a, b) => cmp(a.service ?? '', b.service ?? '') || cmp(a.file, b.file) || a.line - b.line,
     ),
-    totals: {
-      nodes: project.nodes.length,
-      edges: project.edges.length,
-      types: Object.keys(types).length,
-      unresolved: project.unresolved.filter(wasMissed).length,
-    },
+    totals: totalsOf(project, Object.keys(types).length),
   };
 
   return { project, report };
+};
+
+/**
+ * The project's totals, every row count by `countsOf` (P81): a join made from
+ * the repository's files is a note, and lowers `missed` by the gap it closed.
+ */
+const totalsOf = (project: ProjectGraph, types: number): LinkReport['totals'] => {
+  const { missed, sites, notes, findings } = countsOf(project.unresolved);
+  return {
+    nodes: project.nodes.length,
+    edges: project.edges.length,
+    types,
+    missed,
+    sites,
+    notes,
+    findings,
+    unresolved: missed,
+  };
 };
 
 export { configHashOf };

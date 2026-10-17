@@ -1,7 +1,10 @@
-import type { GraphNode, Unresolved } from '@flowatlas/core';
+import { reasonsWithoutKind, ROW_KINDS, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import {
   answeredByMarker,
+  FINDING_LABELS,
+  findingLabel,
+  findingsSaid,
   genericHint,
   hintFor,
   isKnownReason,
@@ -278,4 +281,30 @@ describe('a reason spelled like a method every object has', () => {
       expect(advice).toContain('unknown reason');
     });
   }
+});
+
+describe('what kind of row each reason is (P81)', () => {
+  // The read gate asks the same question of the built catalogue; this is the
+  // test beside it, so a reason added without a kind fails here first.
+  it('has a kind for every reason the catalogue knows', () => {
+    expect(reasonsWithoutKind(KNOWN_REASONS)).toEqual([]);
+  });
+
+  it('names every finding in a few words, and nothing that is not one', () => {
+    const findings = [...ROW_KINDS].filter(([, kind]) => kind === 'finding').map(([reason]) => reason).sort();
+    expect(Object.keys(FINDING_LABELS).sort()).toEqual(findings);
+  });
+
+  it('says findings by what they are, most first', () => {
+    expect(findingLabel('query-in-loop', 1)).toBe('1 likely N+1');
+    expect(findingLabel('route-unguarded', 2)).toBe('2 routes with no guard');
+    expect(findingLabel('something-new', 3)).toBe('3 something-new');
+    expect(
+      findingsSaid([
+        { reason: 'route-unguarded', count: 1 },
+        { reason: 'query-in-loop', count: 1 },
+        { reason: 'query-in-loop', count: 2 },
+      ]),
+    ).toBe('3 likely N+1s, 1 route with no guard');
+  });
 });

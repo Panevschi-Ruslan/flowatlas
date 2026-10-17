@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:29.027Z",
+  "builtAt": "2026-10-16T23:28:03.270Z",
   "configHash": "a47ef5cd45c0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 674,
+      "durationMs": 653,
       "packages": {
         "name": "api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 8,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 740,
+      "durationMs": 697,
       "packages": {
         "name": "client",
         "runtime": [
@@ -89,6 +89,10 @@
     "nodes": 32,
     "edges": 20,
     "types": 1,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 0
   }
 }

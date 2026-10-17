@@ -1,6 +1,8 @@
 import {
   CONFIDENCE_LEVELS,
+  countsOf,
   EDGE_TYPES,
+  kindOfRow,
   NODE_TYPES,
   tally,
   wasMissed,
@@ -25,7 +27,22 @@ export interface LinkSummary {
 }
 
 export interface Stats {
-  totals: { nodes: number; edges: number; types: number; unresolved: number };
+  /**
+   * What the database holds, rows counted by `countsOf` (P81) as the build
+   * summary counts them: `missed` gap rows over `sites` places, `notes` and
+   * `findings`. `unresolved` equals `missed` and is kept for one version.
+   */
+  totals: {
+    nodes: number;
+    edges: number;
+    types: number;
+    missed: number;
+    sites: number;
+    notes: number;
+    findings: number;
+    /** @deprecated since 0.6.0: read `missed`. */
+    unresolved: number;
+  };
   nodesByType: Record<string, number>;
   nodesByService: Record<string, number>;
   edgesByType: Record<string, number>;
@@ -114,22 +131,23 @@ export const collectStats = (db: GraphDb): Stats => {
 
   // Counted the way the build summary counts: by reason, over the rows that say
   // something was not read. Places where nothing joins are their own figure, so
-  // that the line at the top adds up to the list under it.
+  // that the line at the top adds up to the list under it, and notes and
+  // findings are counted by kind and listed in none of the reasons. Every row
+  // with its meta, since a kind can depend on it (P89's per-item loops).
+  const rows = db.allUnresolved();
   const unresolvedByReason = new Map<string, number>();
   const unresolvedSites = new Map<string, number>();
   const nothingRows: Array<{ sites?: number }> = [];
-  const missedRows: Array<{ sites?: number }> = [];
-  for (const row of db.unresolved({ limit: 1_000_000 })) {
+  for (const row of rows) {
     if (!wasMissed(row)) {
-      nothingRows.push(row);
+      if (kindOfRow(row) === 'gap') nothingRows.push(row);
       continue;
     }
-    missedRows.push(row);
     unresolvedByReason.set(row.reason, (unresolvedByReason.get(row.reason) ?? 0) + 1);
     unresolvedSites.set(row.reason, (unresolvedSites.get(row.reason) ?? 0) + (row.sites ?? 1));
   }
   const nothing = tally(nothingRows);
-  const missed = tally(missedRows);
+  const counted = countsOf(rows);
 
   const report = db.report();
   const link: LinkSummary =
@@ -146,7 +164,14 @@ export const collectStats = (db: GraphDb): Stats => {
     // The database counts every row it holds; `unresolved` here means what it
     // means everywhere else — the rows that say something was not read — so a
     // dashboard reading this figure and the build summary sees one number.
-    totals: { ...db.counts(), unresolved: missed.rows },
+    totals: {
+      ...db.counts(),
+      missed: counted.missed,
+      sites: counted.sites,
+      notes: counted.notes,
+      findings: counted.findings,
+      unresolved: counted.missed,
+    },
     nodesByType: sortedRecord(nodesByType, NODE_TYPES as readonly NodeType[]),
     nodesByService: sortedRecord(nodesByService),
     edgesByType: sortedRecord(edgesByType, EDGE_TYPES as readonly EdgeType[]),
@@ -194,13 +219,16 @@ const unresolvedSection = (stats: Stats): string[] => {
 
 export const summariseStats = (stats: Stats): string[] => {
   const { totals, link } = stats;
-  const sites = Object.values(stats.unresolvedSites).reduce((sum, count) => sum + count, 0);
-  const rows = totals.unresolved;
+  // In the build summary's words (P81), from a report however old: a Stats
+  // written before `missed` existed has `unresolved` alone.
+  const rows = totals.missed ?? totals.unresolved;
+  const sites = totals.sites ?? rows;
   const unresolved =
-    (sites === rows ? `${rows} unresolved` : `${rows} unresolved rows over ${sites} sites`) +
+    `missed: ${rows}${sites === rows ? '' : ` over ${sites} sites`}` +
+    ` · notes: ${totals.notes ?? 0} · findings: ${totals.findings ?? 0}` +
     (stats.nothing.rows === 0
       ? ''
-      : `, and ${stats.nothing.sites} site${stats.nothing.sites === 1 ? '' : 's'} with nothing to join`);
+      : ` · ${stats.nothing.sites} site${stats.nothing.sites === 1 ? '' : 's'} with nothing to join`);
   const lines = [
     `${totals.nodes} nodes, ${totals.edges} edges, ${totals.types} types, ${unresolved}`,
     '',

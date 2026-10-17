@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:10:25.139Z",
+  "builtAt": "2026-10-16T23:29:39.423Z",
   "services": [
     {
       "name": "returns",
@@ -816,7 +816,7 @@
       "file": "src/returns/bulk-return.ts",
       "line": 7,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A call made once per item of a `for-of` loop reaches a publish: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
@@ -835,7 +835,7 @@
       "file": "src/returns/process-return.ts",
       "line": 22,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
@@ -853,7 +853,7 @@
       "file": "src/returns/process-return.ts",
       "line": 28,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",

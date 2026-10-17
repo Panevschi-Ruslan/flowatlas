@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:09.526Z",
+  "builtAt": "2026-10-16T23:28:52.903Z",
   "configHash": "7360f535f4dc",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 53,
       "types": 7,
       "unresolved": 6,
-      "durationMs": 631,
+      "durationMs": 650,
       "packages": {
         "name": "nest-kafka",
         "runtime": [
@@ -74,6 +74,10 @@
     "nodes": 75,
     "edges": 53,
     "types": 7,
+    "missed": 6,
+    "sites": 6,
+    "notes": 0,
+    "findings": 1,
     "unresolved": 6
   }
 }

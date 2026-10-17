@@ -49,7 +49,7 @@ const emptyReport = (): LinkReport => ({
   routes: { total: 0, called: 0, uncalled: [], duplicated: [] },
   types: { total: 0, sharedPackage: 0 },
   unresolved: [],
-  totals: { nodes: 0, edges: 0, types: 0, unresolved: 0 },
+  totals: { nodes: 0, edges: 0, types: 0, missed: 0, sites: 0, notes: 0, findings: 0, unresolved: 0 },
 });
 
 export interface TestGraph {

@@ -205,7 +205,16 @@ export {
   writeBaseline,
 } from './doctor/baseline.js';
 export type { Baseline, BaselineRead, KeyCount, UnresolvedSnapshot } from './doctor/baseline.js';
-export { HINTS, KNOWN_REASONS, SHARPENERS, genericHint, hintFor, isKnownReason } from './doctor/hints.js';
+export {
+  FINDING_LABELS,
+  HINTS,
+  KNOWN_REASONS,
+  SHARPENERS,
+  findingLabel,
+  genericHint,
+  hintFor,
+  isKnownReason,
+} from './doctor/hints.js';
 export type { HintContext, HintTemplate } from './doctor/hints.js';
 export { MARKER_CODES, validateMarkers } from './doctor/markers.js';
 export type { MarkerCode, MarkerIssue, MarkerOptions } from './doctor/markers.js';

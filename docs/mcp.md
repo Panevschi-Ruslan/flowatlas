@@ -98,11 +98,29 @@ The server's instructions describe the same chains. `list_entries`,
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `start_here` | nodes, entries by kind and open gaps per service, the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
+| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, and a few entry ids to start from | `service`, `perService` |
 | `describe_for_prompt` | one entry, channel or symbol as Markdown to hand on: what is in front of it, what it can fail with, the chain in call order with repo-relative `file:line`, shapes in and out, gaps with their reasons, and the ids to ask next. No source code; bounded by `maxSteps` and `maxChars` | `id` (required), `maxSteps`, `maxChars` |
 
 `describe_for_prompt` is rendered by `describeForPrompt`, a pure function
 exported from `@flowatlas/mcp`, so a page can copy the same text.
+
+Every unresolved row is a **gap** (the reading could not follow something), a
+**note** (how a join or a reading was made; nothing was missed) or a
+**finding** (something about the code: a likely N+1, a route with no guard).
+`start_here`'s `counts` holds the figures `flowatlas build` ends on, from the
+same function, so one database says one set of numbers everywhere:
+
+| Name | Counts |
+|---|---|
+| `gaps` | gap rows that say something was not read: the build line's `missed` |
+| `sites` | the places those rows stand for, folding included |
+| `notes` | rows saying how a join or a reading was made |
+| `findings` | rows saying something about the code itself |
+| `nothing` | places with no edge to draw |
+
+`topGaps` and each service's `gaps` are the actionable gaps; notes and findings
+are counted above and listed under `search({kinds: ["gaps"]})`, each hit with its
+`kind`.
 
 ### Finding your way in
 
@@ -125,7 +143,8 @@ when you know roughly what something is called.
 
 `search` is the wider net. `kinds` is any of `routes`, `channels`, `tables`,
 `types`, `gaps`, `fails` and `classes`. A gap's id, `gap:<service>|<file>|<reason>`,
-is what `flowatlas accept` takes, new gaps come first, and an accepted one says
+is what `flowatlas accept` takes, every hit carries its `kind` (`gap`, `note` or
+`finding`), new gaps come first, and an accepted one says
 `accepted: true` with its note, and `acceptedBy` when a rule took it; an
 `accepted.json` that cannot be read marks nothing accepted and says so in
 `note`. Under
@@ -209,8 +228,11 @@ code says about why: `module-not-installed` (with the package), `import-unresolv
 under its own reason. Rows are demoted where an annotation already answers
 them and gaps accepted with `flowatlas accept` are left out and counted apart,
 exactly as `doctor --unresolved` does, a route rule included; an `accepted.json`
-that cannot be read leaves nothing out and says so in `note`. `next` offers `get_source` on the first place and the calls that
-narrow to its cause and its package.
+that cannot be read leaves nothing out and says so in `note`. Only gaps are
+here: notes and findings are not steps the reading missed, so they are counted
+apart under `apart: { notes, findings }` and listed by `search`. `next` offers
+`get_source` on the first place and the calls that narrow to its cause and its
+package.
 
 Under `module-not-installed`, a package the configuration as it stands would
 read in its place once rebuilt (P78) - its source in a repository read here, or a

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:35.211Z",
+  "builtAt": "2026-10-16T23:29:20.720Z",
   "configHash": "9864328032dc",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 477,
+      "durationMs": 467,
       "packages": {
         "name": "next-caller-application-admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 19,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 509,
+      "durationMs": 497,
       "packages": {
         "name": "next-caller-application-shop",
         "runtime": [
@@ -101,6 +101,10 @@
     "nodes": 33,
     "edges": 28,
     "types": 0,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 2
   }
 }

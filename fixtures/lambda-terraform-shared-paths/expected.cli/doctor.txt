@@ -1,6 +1,6 @@
 unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=3 · contracts: errors=0 ignored=0 · exit=0
 
-unresolved: 4 to act on over 7 rows, and 3 places static reading cannot see, folded into 3
+unresolved: 4 to act on · missed: 4 · notes: 3 · findings: 0
   ambiguous-route-api: 2 rows
     Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.
       kiosk/src/kiosk/hours-board.ts:19  2 APIs in branch serve GET /hours: aws_apigatewayv2_api.desk_hours, aws_apigatewayv2_api.lab_hours
@@ -11,7 +11,7 @@ unresolved: 4 to act on over 7 rows, and 3 places static reading cannot see, fol
   dynamic-http-url: 1 row
     The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes.
       kiosk/src/kiosk/hours-board.ts:19  fetch(base)
-  route-api-guessed (info): 3 rows
+  route-api-guessed (note): 3 rows
     Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.
       kiosk/src/kiosk/hours-board.ts:12  GET /hours is served by aws_apigatewayv2_api.desk_hours, aws_apigatewayv2_api.lab_hours; aws_apigatewayv2_api.desk_hours is taken because the call's base URL is read from DESK_HOURS_URL
       kiosk/src/kiosk/status-board.ts:10  GET /status is served by library-events-api, library-loans-api; library-loans-api is taken because the call's base URL is read from LOANS_API_URL

@@ -88,6 +88,7 @@ export type {
 } from './model/types.js';
 
 export {
+  countsOf,
   DEFAULT_DETAIL,
   DEFAULT_MAX_NODES,
   DETAIL_LEVELS,
@@ -95,7 +96,16 @@ export {
   tally,
   wasMissed,
   type PlaceCount,
+  type RowCounts,
 } from './model/graph.js';
+export {
+  kindOfRow,
+  reasonsWithoutKind,
+  ROW_KIND_NAMES,
+  ROW_KINDS,
+  type KindedRow,
+  type RowKind,
+} from './model/row-kind.js';
 export type {
   DetailLevel,
   ProjectGraph,

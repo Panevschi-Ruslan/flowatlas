@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:14.267Z",
+  "builtAt": "2026-10-16T23:28:57.789Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 595,
+      "durationMs": 612,
       "packages": {
         "name": "@member-dev-react/api",
         "runtime": [
@@ -73,6 +73,10 @@
     "nodes": 8,
     "edges": 4,
     "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 1
   }
 }

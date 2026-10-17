@@ -1,5 +1,6 @@
 import {
   causeLabel,
+  countsOf,
   describeAcceptedProblem,
   groupCantFollow,
   packageCoverage,
@@ -45,6 +46,13 @@ export interface CantFollowAnswer extends Omit<CantFollow, 'causes'> {
   }>;
   /** Gaps accepted with `flowatlas accept`, out of every count above. */
   accepted?: { rows: number; sites: number };
+  /**
+   * Rows of the same scope that are not steps the reader missed, and so in none
+   * of the counts above (P81): notes on how a join or a reading was made, and
+   * findings about the code. `search({kinds: ["gaps"]})` lists them, each with
+   * its kind. Absent when there are none.
+   */
+  apart?: { notes: number; findings: number };
   /** Set when `accepted.json` could not be read, so nothing was left out (P80). */
   note?: string;
 }
@@ -155,7 +163,11 @@ export const registerCantFollow = (server: McpServer, ctx: ToolContext): void =>
           ? {}
           : { accepted: { rows: split.accepted.length, sites: split.accepted.reduce((sum, row) => sum + row.sites, 0) } };
         const note = split.problem === undefined ? {} : { note: `${describeAcceptedProblem(split.problem)}.` };
-        return withNext({ ...answer, ...accepted, ...note }, nextOf(answer, input));
+        const { notes, findings } = countsOf(
+          input.service === undefined ? split.fresh : split.fresh.filter((row) => row.service === input.service),
+        );
+        const apart = notes + findings === 0 ? {} : { apart: { notes, findings } };
+        return withNext({ ...answer, ...accepted, ...apart, ...note }, nextOf(answer, input));
       }),
   );
 };

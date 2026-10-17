@@ -10,6 +10,13 @@
       "gaps": 3
     }
   ],
+  "counts": {
+    "gaps": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "nothing": 0
+  },
   "topGaps": [
     {
       "reason": "dynamic-http-url",

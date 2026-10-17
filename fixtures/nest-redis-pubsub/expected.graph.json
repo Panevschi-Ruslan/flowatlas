@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-redis-pubsub",
-  "generatedAt": "2026-10-16T11:08:30.602Z",
+  "generatedAt": "2026-10-16T23:32:13.727Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
@@ -955,7 +955,7 @@
       "file": "src/cache/cache-publisher.service.ts",
       "line": 34,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",

@@ -1,14 +1,9 @@
-can't follow: 2 places over 2 rows, by cause
+can't follow: 1 place over 1 row, by cause
 
   module-not-installed:@acme/feature-flags: 1 place  loans-api
     Install the repository's dependencies so @acme/feature-flags resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.
     rows: call-dynamic-receiver
       loans-api/src/loans/loans.service.ts:27  LoansService.fee -> this.flags.variant
 
-  package-version-differs:@acme/money: 1 place  loans-api
-    The types read may not be the ones this service runs. Install the dependencies to read the version it asks for.
-      loans-api/src/loans/loans.service.ts:3  @acme/money
-
 by package:
   @acme/feature-flags      1  module-not-installed 1
-  @acme/money              1  package-version-differs 1

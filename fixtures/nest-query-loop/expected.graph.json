@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-query-loop",
-  "generatedAt": "2026-10-16T11:08:27.494Z",
+  "generatedAt": "2026-10-16T23:29:06.487Z",
   "nodes": [
     {
       "id": "db_query:nest-query-loop#src/orders/orders.service.ts:17:27",
@@ -949,7 +949,7 @@
       "file": "src/orders/orders.service.ts",
       "line": 17,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A database query runs once per item of a `for-of` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
@@ -966,7 +966,7 @@
       "file": "src/orders/orders.service.ts",
       "line": 25,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A database query runs once per item of a `map` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
@@ -984,7 +984,7 @@
       "file": "src/orders/orders.service.ts",
       "line": 43,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A call made once per item of a `for` loop reaches a database query: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",

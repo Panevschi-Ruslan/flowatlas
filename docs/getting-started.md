@@ -160,7 +160,7 @@ channels: 3 total, 1 joined, 1 with no handler, 1 with no publisher
 routes: 15 total, 7 reached, 8 never called, 1 claimed by two handlers
 ways in: 17 found, 17 with a handler that was read, 0 without — only the second number is coverage of what happens after the request arrives
 types: 14 (4 from shared packages)
-unresolved: 14
+missed: 9 · notes: 0 · findings: 4
 ```
 
 A first build is rarely all joined, and it is not supposed to be. Nothing was
@@ -175,6 +175,10 @@ Three lines are worth knowing about before they surprise you:
 - **`… found at arm's length`** names a framework a service has only through a
   workspace package it declares, so you can judge whether that package's code
   really runs there.
+- **`missed · notes · findings`** counts the rows apart: what the reader could
+  not follow, how a join was made where nothing was missed (a base address taken
+  from an example environment file), and what the code itself does that a
+  reviewer would want to see (a likely N+1, a route with no guard).
 
 `build` writes three files under `.flowatlas`: `project-graph.json`, the graph
 itself; `link-report.json`, what joined and why not; and `graph.db`, the same

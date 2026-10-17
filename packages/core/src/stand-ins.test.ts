@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { GraphBuilder } from './builder.js';
+import { countsOf, wasMissed, type Unresolved } from './model/graph.js';
+import { kindOfRow } from './model/row-kind.js';
 import { packageSourcesFor, parseConfig, shapesFor } from './config.js';
 import { readShapeFile, resolutionOrder, shapeFilesOf } from './declaration-shapes.js';
 import { countSources, createProject } from './project.js';
@@ -136,11 +138,15 @@ describe('the rows that say what stood in', () => {
     reportStandIns({ project, repoDir: join(root, 'loans'), builder });
     const rows = builder.build().unresolved;
     const from = rows.find((row) => row.reason === 'package-from-repo');
-    expect(from).toMatchObject({ level: 'nothing', symbol: '@acme/money', file: 'src/main.ts', line: 1 });
+    // A note at `info` (P81): read, not missed, and not a place with no edge.
+    expect(from).toMatchObject({ level: 'info', symbol: '@acme/money', file: 'src/main.ts', line: 1 });
+    expect(kindOfRow(from as Unresolved)).toBe('note');
+    expect(wasMissed(from as Unresolved)).toBe(false);
     expect(from?.message).toContain('../money');
     expect(rows.find((row) => row.reason === 'package-version-differs')?.message).toContain('@acme/money@^2.0.0');
     // The money block of the shape file is not read: the source is.
-    expect(rows.find((row) => row.reason === 'shape-file-unmatched')).toMatchObject({ symbol: '@acme/money', level: 'nothing' });
+    expect(rows.find((row) => row.reason === 'shape-file-unmatched')).toMatchObject({ symbol: '@acme/money', level: 'info' });
+    expect(countsOf(rows)).toMatchObject({ missed: 0, notes: 3, findings: 0, nothing: 0 });
   });
 
   it('says a name two repositories claim is read from neither', () => {

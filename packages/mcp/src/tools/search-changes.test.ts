@@ -22,7 +22,7 @@ const report = (): LinkReport => ({
   routes: { total: 0, called: 0, uncalled: [], duplicated: [] },
   types: { total: 0, sharedPackage: 0 },
   unresolved: [],
-  totals: { nodes: 0, edges: 0, types: 0, unresolved: 0 },
+  totals: { nodes: 0, edges: 0, types: 0, missed: 0, sites: 0, notes: 0, findings: 0, unresolved: 0 },
 });
 
 const ROUTE = 'orders:entry:POST /orders';
@@ -59,6 +59,9 @@ const graph: ProjectGraph = {
   unresolved: [
     { service: 'orders', file: 'src/orders.service.ts', line: 12, reason: 'channel-dynamic', message: 'order channel built at run time' },
     { service: 'orders', file: 'src/orders.repo.ts', line: 30, reason: 'db-receiver-name-only', message: 'orders table read by name only' },
+    // A finding and a note (P81), worded so only the search below finds them.
+    { service: 'orders', file: 'src/basket.ts', line: 7, reason: 'query-in-loop', level: 'info', sites: 1, message: 'a lookup per basket line: likely N+1' },
+    { service: 'orders', file: 'src/basket-client.ts', line: 3, reason: 'base-url-from-files', level: 'info', message: 'BASKET_URL is taken from .env.example' },
   ] as never,
 };
 
@@ -157,6 +160,19 @@ describe('search', () => {
     ]);
     expect(found.results.gaps[0].accepted).toBeUndefined();
     expect(found.results.gaps[1]).toMatchObject({ accepted: true, note: 'known; read by name' });
+  });
+
+  it('says what each gap hit is about: a gap, a note or a finding (P81)', async () => {
+    const kinds = async (query: string): Promise<Array<[string, string]>> =>
+      (await call('search', { query, kinds: ['gaps'] })).results.gaps.map((gap: { reason: string; kind: string }) => [gap.reason, gap.kind]);
+    expect(await kinds('basket')).toEqual([
+      ['base-url-from-files', 'note'],
+      ['query-in-loop', 'finding'],
+    ]);
+    expect(await kinds('orders')).toEqual([
+      ['channel-dynamic', 'gap'],
+      ['db-receiver-name-only', 'gap'],
+    ]);
   });
 
   it('says an accepted.json it cannot read, and marks nothing accepted (P80)', async () => {

@@ -17,7 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { userInfo } from 'node:os';
-import { tally, wasMissed, type Unresolved } from '@flowatlas/core';
+import { kindOfRow, tally, type Unresolved } from '@flowatlas/core';
 import { z } from 'zod';
 import { BASELINE_FORMAT_VERSION, type BaselineDelta } from './schema.js';
 
@@ -39,7 +39,7 @@ export interface UnresolvedSnapshot {
   /** Every actionable key with its count, in key order. */
   keys: KeyCount[];
   /**
-   * The informational side, recorded and never compared.
+   * The informational side - gap rows at `info` - recorded and never compared.
    *
    * Kept so a reader can see it move — 731 places folded into 17 rows is a
    * number worth watching — without a build ever failing on it.
@@ -162,8 +162,13 @@ export const snapshotOf = (
   const byService = new Map<string, number>();
   const keys = new Map<string, number>();
   let total = 0;
-  const info = tally(rows.filter((row) => wasMissed(row) && !isActionable(row)));
-  const nothing = tally(rows.filter((row) => !wasMissed(row)));
+  // Gaps only (P81): a note or a finding at `info` is neither a place static
+  // reading cannot see nor a place with nothing to join. `total` and `keys`
+  // below still count every actionable row, findings included, exactly as
+  // they did before kinds existed, so no baseline changes verdict on upgrade.
+  const gaps = rows.filter((row) => kindOfRow(row) === 'gap');
+  const info = tally(gaps.filter((row) => row.level === 'info'));
+  const nothing = tally(gaps.filter((row) => row.level === 'nothing'));
 
   for (const row of rows) {
     const sites = sitesOf(row);

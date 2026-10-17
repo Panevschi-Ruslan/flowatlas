@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:26.295Z",
+  "builtAt": "2026-10-16T23:28:26.529Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 851,
+      "durationMs": 743,
       "packages": {
         "name": "billing",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 38,
       "types": 7,
       "unresolved": 1,
-      "durationMs": 904,
+      "durationMs": 801,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -58,7 +58,7 @@
       "edges": 26,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 882,
+      "durationMs": 758,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -81,7 +81,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 718,
+      "durationMs": 602,
       "packages": {
         "name": "web",
         "runtime": [
@@ -232,6 +232,10 @@
     "nodes": 126,
     "edges": 109,
     "types": 14,
-    "unresolved": 13
+    "missed": 9,
+    "sites": 9,
+    "notes": 0,
+    "findings": 4,
+    "unresolved": 9
   }
 }

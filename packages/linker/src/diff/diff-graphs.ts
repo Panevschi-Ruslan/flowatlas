@@ -6,8 +6,7 @@
  * every rebuild would look like a rewrite.
  */
 import {
-  tally,
-  wasMissed,
+  countsOf as rowCountsOf,
   type GraphEdge,
   type GraphNode,
   type ProjectGraph,
@@ -60,12 +59,16 @@ const indexEdges = (edges: readonly GraphEdge[]): Map<string, GraphEdge> => {
 /**
  * Rows and the places they stand for, counting what was not read.
  *
- * A place where nothing joins is left out here for the same reason it is left
- * out of the build summary: a revision that added a button to a template would
- * otherwise report unresolved growth for a template that is perfectly readable.
+ * Counted by the one counter every surface uses (P81): a place where nothing
+ * joins is left out for the same reason it is left out of the build summary - a
+ * revision that added a button to a template would otherwise report unresolved
+ * growth for a template that is perfectly readable - and so are notes and
+ * findings, which are not places the reader missed.
  */
-const sites = (unresolved: readonly Unresolved[]): UnresolvedCount =>
-  tally(unresolved.filter(wasMissed));
+const sites = (unresolved: readonly Unresolved[]): UnresolvedCount => {
+  const counted = rowCountsOf(unresolved);
+  return { rows: counted.missed, sites: counted.sites };
+};
 
 const countsOf = (graph: ProjectGraph): GraphCounts => ({
   nodes: graph.nodes.length,

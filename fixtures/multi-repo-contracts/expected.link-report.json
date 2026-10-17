@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:32.201Z",
+  "builtAt": "2026-10-16T23:28:32.307Z",
   "configHash": "b09bbca5b4ca",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 864,
+      "durationMs": 751,
       "packages": {
         "name": "contracts-billing",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 38,
       "types": 23,
       "unresolved": 3,
-      "durationMs": 1109,
+      "durationMs": 961,
       "packages": {
         "name": "contracts-gateway",
         "runtime": [
@@ -59,7 +59,7 @@
       "edges": 43,
       "types": 17,
       "unresolved": 1,
-      "durationMs": 905,
+      "durationMs": 769,
       "packages": {
         "name": "contracts-orders",
         "runtime": [
@@ -82,7 +82,7 @@
       "edges": 5,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 681,
+      "durationMs": 585,
       "packages": {
         "name": "contracts-web",
         "runtime": [
@@ -159,6 +159,10 @@
     "nodes": 120,
     "edges": 111,
     "types": 44,
-    "unresolved": 7
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 3,
+    "unresolved": 4
   }
 }

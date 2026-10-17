@@ -646,3 +646,48 @@ export const hintFor = (row: Unresolved, context: HintContext = {}): string => {
 
 /** Whether the catalogue knows this reason at all. */
 export const isKnownReason = (reason: string): boolean => entryOf(HINTS, reason) !== undefined;
+
+/**
+ * What one finding is, in a few words, one and many (P81).
+ *
+ * A finding is something about the code a reviewer acts on, and a line saying
+ * "2 findings" says nothing about which; doctor's findings line names each by
+ * these. Keyed by the reasons `ROW_KINDS` classes as findings, and a test holds
+ * the two lists together. A finding with no entry is named by its reason.
+ */
+export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many: string]>> = Object.freeze({
+  'query-in-loop': ['likely N+1', 'likely N+1s'],
+  'route-unguarded': ['route with no guard', 'routes with no guard'],
+  'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
+  'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],
+  'route-file-not-served': ['route file served at no address', 'route files served at no address'],
+  'wizard-step-conflict': ['wizard step numbered twice', 'wizard steps numbered twice'],
+  'workflow-name-duplicate': ['workflow defined twice', 'workflows defined twice'],
+  'workflow-definition-invalid': ['workflow definition the service refuses', 'workflow definitions the service refuses'],
+  'orphan-scene-decorator': ['scene handler outside a scene', 'scene handlers outside a scene'],
+  'orphan-update-decorator': ['bot handler outside an update class', 'bot handlers outside an update class'],
+  'procedure-call-mismatch': ['procedure called as the wrong kind', 'procedures called as the wrong kind'],
+  's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
+  'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
+  'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],
+});
+
+/** One finding reason and its count, in words: `1 likely N+1`, `2 routes with no guard`. */
+export const findingLabel = (reason: string, count: number): string => {
+  const label = entryOf(FINDING_LABELS, reason);
+  if (label === undefined) return `${count} ${reason}`;
+  return `${count} ${count === 1 ? label[0] : label[1]}`;
+};
+
+/**
+ * Groups of findings said as one list, most rows first, then by reason: a
+ * reason split across two levels is said once, with both counts added.
+ */
+export const findingsSaid = (groups: ReadonlyArray<{ reason: string; count: number }>): string => {
+  const byReason = new Map<string, number>();
+  for (const group of groups) byReason.set(group.reason, (byReason.get(group.reason) ?? 0) + group.count);
+  return [...byReason]
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+    .map(([reason, count]) => findingLabel(reason, count))
+    .join(', ');
+};

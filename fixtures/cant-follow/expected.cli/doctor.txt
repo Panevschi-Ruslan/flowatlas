@@ -2,7 +2,8 @@ The dependencies of storefront and payments are not installed, and 7 types could
 
 unresolved: total=8 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
-unresolved: 8 to act on over 10 rows, and 13 places static reading cannot see, folded into 2
+unresolved: 8 to act on · missed: 10 over 21 sites · notes: 0 · findings: 0
+  13 missed places static reading cannot see, folded into 2 rows
   type-unresolved: 7 rows
     The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.
       payments/src/charges/charges.controller.ts:10  LedgerEntry

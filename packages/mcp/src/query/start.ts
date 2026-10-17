@@ -1,4 +1,4 @@
-import type { GraphNode } from '@flowatlas/core';
+import { countsOf, kindOfRow, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow } from '@flowatlas/linker';
 import { projectDetail } from './detail.js';
 import type { CompactNode } from './types.js';
@@ -27,6 +27,7 @@ export interface ServiceCount {
   nodes: number;
   entries: number;
   entriesByKind: Record<string, number>;
+  /** Actionable gap rows of this service. */
   gaps: number;
 }
 
@@ -38,8 +39,27 @@ export interface GapReason {
   example: { service?: string; loc?: string; message: string; id?: string };
 }
 
+/**
+ * The unresolved rows by kind, by the counter the build line, doctor and the
+ * page use (P81), so one database says one set of numbers everywhere.
+ */
+export interface StartCounts {
+  /** Gap rows that say something was not read: the build line's `missed`. */
+  gaps: number;
+  /** Places those rows stand for. */
+  sites: number;
+  /** Rows saying how a join or a reading was made, with nothing missed. */
+  notes: number;
+  /** Rows saying something about the code itself: a likely N+1, a route with no guard. */
+  findings: number;
+  /** Places with no edge to draw. */
+  nothing: number;
+}
+
 export interface StartSummary {
   services: ServiceCount[];
+  counts: StartCounts;
+  /** The most common actionable gaps; notes and findings are counted above and listed in none. */
   topGaps: GapReason[];
   channels: { noConsumers: string[]; noProducers: string[] };
   startFrom: CompactNode[];
@@ -94,9 +114,12 @@ export const summariseProject = (input: StartInput, limits: StartLimits = START_
     entries.push(node);
   }
 
+  const inScope = input.unresolved.filter((row) => wanted(row.service));
+  const { missed, sites, notes, findings, nothing } = countsOf(inScope);
+
   const reasons = new Map<string, GapReason>();
-  for (const row of input.unresolved) {
-    if (row.level !== 'action' || !wanted(row.service)) continue;
+  for (const row of inScope) {
+    if (row.level !== 'action' || kindOfRow(row) !== 'gap') continue;
     if (row.service !== null) counted(row.service).gaps += 1;
     const known = reasons.get(row.reason);
     if (known === undefined) {
@@ -143,6 +166,7 @@ export const summariseProject = (input: StartInput, limits: StartLimits = START_
 
   return {
     services: [...byService.values()].sort((a, b) => cmp(a.service, b.service)),
+    counts: { gaps: missed, sites, notes, findings, nothing },
     topGaps,
     channels: {
       noConsumers: noConsumers.sort().slice(0, limits.channels),

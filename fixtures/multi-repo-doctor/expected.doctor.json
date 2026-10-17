@@ -16,8 +16,10 @@
   "unresolved": {
     "status": "ok",
     "total": 26,
-    "rows": 31,
-    "sites": 31,
+    "rows": 28,
+    "sites": 28,
+    "notes": 0,
+    "findings": 3,
     "info": {
       "rows": 5,
       "sites": 5
@@ -34,6 +36,7 @@
       {
         "reason": "unknown-db-package",
         "level": "action",
+        "kind": "gap",
         "count": 9,
         "sites": 9,
         "known": true,
@@ -106,6 +109,7 @@
       {
         "reason": "channel-from-config",
         "level": "action",
+        "kind": "gap",
         "count": 3,
         "sites": 3,
         "known": true,
@@ -147,6 +151,7 @@
       {
         "reason": "module-import-dynamic",
         "level": "action",
+        "kind": "gap",
         "count": 3,
         "sites": 3,
         "known": true,
@@ -188,6 +193,7 @@
       {
         "reason": "route-unguarded",
         "level": "action",
+        "kind": "finding",
         "count": 3,
         "sites": 3,
         "known": true,
@@ -229,6 +235,7 @@
       {
         "reason": "di-token-unknown",
         "level": "action",
+        "kind": "gap",
         "count": 2,
         "sites": 2,
         "known": true,
@@ -260,6 +267,7 @@
       {
         "reason": "dynamic-http-url",
         "level": "action",
+        "kind": "gap",
         "count": 2,
         "sites": 2,
         "known": true,
@@ -291,6 +299,7 @@
       {
         "reason": "marker-route-not-found",
         "level": "action",
+        "kind": "gap",
         "count": 1,
         "sites": 1,
         "known": true,
@@ -312,6 +321,7 @@
       {
         "reason": "marker-service-unknown",
         "level": "action",
+        "kind": "gap",
         "count": 1,
         "sites": 1,
         "known": true,
@@ -333,6 +343,7 @@
       {
         "reason": "target-route-not-found",
         "level": "action",
+        "kind": "gap",
         "count": 1,
         "sites": 1,
         "known": true,
@@ -354,6 +365,7 @@
       {
         "reason": "unknown-base-url-env",
         "level": "action",
+        "kind": "gap",
         "count": 1,
         "sites": 1,
         "known": true,
@@ -375,6 +387,7 @@
       {
         "reason": "dynamic-http-url",
         "level": "info",
+        "kind": "gap",
         "count": 3,
         "sites": 3,
         "known": true,
@@ -416,6 +429,7 @@
       {
         "reason": "channel-from-config",
         "level": "info",
+        "kind": "gap",
         "count": 2,
         "sites": 2,
         "known": true,

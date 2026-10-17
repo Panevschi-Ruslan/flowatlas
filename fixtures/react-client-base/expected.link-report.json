@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:44.704Z",
+  "builtAt": "2026-10-16T23:29:30.154Z",
   "configHash": "215085ceb5c6",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 26,
       "types": 2,
       "unresolved": 7,
-      "durationMs": 523,
+      "durationMs": 518,
       "packages": {
         "name": "react-client-base",
         "runtime": [
@@ -81,6 +81,10 @@
     "nodes": 31,
     "edges": 29,
     "types": 2,
+    "missed": 9,
+    "sites": 9,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 9
   }
 }

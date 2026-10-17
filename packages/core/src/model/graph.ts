@@ -1,6 +1,7 @@
 import type { GraphEdge } from './edges.js';
 import type { GraphNode } from './nodes.js';
 import type { TypeRegistry } from './types.js';
+import { kindOfRow, type KindedRow } from './row-kind.js';
 
 /**
  * How a row is meant to be read, and what it says about the graph.
@@ -31,12 +32,16 @@ export type UnresolvedLevel = 'action' | 'info' | 'nothing';
  * Whether a row says something was not read.
  *
  * Every figure the tool prints about its own reading asks this one question, so
- * it is asked in one place: a row at `nothing` stands for a place where no edge
- * exists to draw, and counting it beside a receiver whose class could not be
- * resolved would make both numbers say less than either does alone. A fourth
- * level, if there is ever one, changes this file and nothing else.
+ * it is asked in one place. Two things make a row not a miss. Its kind (P81,
+ * `row-kind.ts`): a note says how a join was made and a finding says something
+ * about the code, and neither is a place the reader failed to follow. And its
+ * level: a row at `nothing` stands for a place where no edge exists to draw, and
+ * counting it beside a receiver whose class could not be resolved would make
+ * both numbers say less than either does alone. A fourth level, or a fourth
+ * kind, changes this file and `row-kind.ts` and nothing else.
  */
-export const wasMissed = (row: { level?: UnresolvedLevel }): boolean => row.level !== 'nothing';
+export const wasMissed = (row: KindedRow & { level?: UnresolvedLevel | null }): boolean =>
+  row.level !== 'nothing' && kindOfRow(row) === 'gap';
 
 /** A list of rows, and the places those rows stand for. */
 export interface PlaceCount {
@@ -59,6 +64,45 @@ export const tally = (rows: readonly { sites?: number }[]): PlaceCount => ({
   rows: rows.length,
   sites: sitesIn(rows),
 });
+
+/**
+ * What a list of rows comes to, by kind. The one counter every surface uses.
+ *
+ * `missed`, `notes` and `findings` are row counts; `sites` is the places the
+ * missed rows stand for, folding included; `nothing` is the places of gap rows
+ * with no edge to draw. No two of them are ever added together: the build line,
+ * doctor, the page and the MCP server each print these five, so one database
+ * reads the same everywhere (P81).
+ */
+export interface RowCounts {
+  /** Gap rows that say something was not read. */
+  missed: number;
+  /** Places the missed rows stand for. */
+  sites: number;
+  /** Rows saying how a join or a reading was made. */
+  notes: number;
+  /** Rows saying something about the code itself. */
+  findings: number;
+  /** Places with no edge to draw: gap rows at level `nothing`. */
+  nothing: number;
+}
+
+export const countsOf = (
+  rows: Iterable<KindedRow & { level?: UnresolvedLevel | null; sites?: number | null }>,
+): RowCounts => {
+  const counts: RowCounts = { missed: 0, sites: 0, notes: 0, findings: 0, nothing: 0 };
+  for (const row of rows) {
+    const kind = kindOfRow(row);
+    if (kind === 'note') counts.notes += 1;
+    else if (kind === 'finding') counts.findings += 1;
+    else if (row.level === 'nothing') counts.nothing += row.sites ?? 1;
+    else {
+      counts.missed += 1;
+      counts.sites += row.sites ?? 1;
+    }
+  }
+  return counts;
+};
 
 /**
  * Something the extractor saw but could not resolve.

@@ -93,6 +93,18 @@ describe('a base address from the value its setting is given (P77)', () => {
     expect(result.project.unresolved).toEqual([expect.objectContaining({ reason: 'base-url-from-files', sites: 2 })]);
   });
 
+  // P81: the join is a note, so what was missed goes down by the request it
+  // closed and the notes go up by one, against the same request with no value.
+  it('lowers what was missed by the request it joined, and counts the join as a note', () => {
+    // A setting named after no service, so nothing but the file's value joins it.
+    const unread = link([call('UPSTREAM')], {});
+    const read = link([call('UPSTREAM')], files({ UPSTREAM: [{ value: 'http://orders:3000', file: '.env.example' }] }));
+    expect(unread.report.totals).toMatchObject({ missed: 1, notes: 0, findings: 0 });
+    expect(read.report.totals).toMatchObject({ missed: 0, sites: 0, notes: 1, findings: 0 });
+    expect(read.report.totals.missed).toBe(unread.report.totals.missed - 1);
+    for (const result of [unread, read]) expect(result.report.totals.unresolved).toBe(result.report.totals.missed);
+  });
+
   it('reaches a service by a name its own files give it: a container, a published port', () => {
     const settings = {
       ...files({

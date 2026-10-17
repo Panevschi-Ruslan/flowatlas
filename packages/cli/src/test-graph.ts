@@ -2,6 +2,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  countsOf,
   SCHEMA_VERSION,
   type GraphEdge,
   type GraphNode,
@@ -319,7 +320,11 @@ const report = (): LinkReport => ({
     nodes: NODES.length,
     edges: EDGES.length,
     types: Object.keys(TYPES).length,
-    unresolved: UNRESOLVED.length,
+    missed: countsOf(UNRESOLVED).missed,
+    sites: countsOf(UNRESOLVED).sites,
+    notes: countsOf(UNRESOLVED).notes,
+    findings: countsOf(UNRESOLVED).findings,
+    unresolved: countsOf(UNRESOLVED).missed,
   },
 });
 

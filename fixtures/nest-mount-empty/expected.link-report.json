@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:18.658Z",
+  "builtAt": "2026-10-16T23:29:01.953Z",
   "configHash": "5058ec93d4d4",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 644,
+      "durationMs": 634,
       "packages": {
         "name": "nest-mount-empty-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 504,
+      "durationMs": 468,
       "packages": {
         "name": "nest-mount-empty-web",
         "runtime": [
@@ -110,6 +110,10 @@
     "nodes": 14,
     "edges": 7,
     "types": 0,
-    "unresolved": 4
+    "missed": 2,
+    "sites": 2,
+    "notes": 2,
+    "findings": 0,
+    "unresolved": 2
   }
 }

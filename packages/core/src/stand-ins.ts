@@ -344,9 +344,10 @@ const whose = (source: PackageSource): string =>
  * `shape-file-unread` for a listed file that gave nothing, and
  * `shape-file-unmatched` for a shape nothing here reads.
  *
- * The two that say what was read rather than what was missed sit at
- * `nothing`, so no count of what the reader could not follow includes them;
- * the version that differs is `info`, since the types read may be wrong.
+ * The three that say what was read rather than what was missed - the source,
+ * the version that differs from the one asked for, the shape nothing needed -
+ * are notes (row-kind.ts, P81) at `info`, so no count of what the reader could
+ * not follow includes them; they once sat at `nothing` for that reason alone.
  */
 export const reportStandIns = (context: StandInContext): readonly Unresolved[] => {
   const { project, repoDir, builder } = context;
@@ -373,9 +374,10 @@ export const reportStandIns = (context: StandInContext): readonly Unresolved[] =
       file: at.file,
       line: at.line,
       reason: 'package-from-repo',
-      // Nothing was missed: the package was read, from its source, and a row
-      // at `info` would count it among the places the reader could not follow.
-      level: 'nothing',
+      // Nothing was missed: the package was read, from its source. A note
+      // (row-kind.ts, P81), so `info` no longer counts it among the places the
+      // reader could not follow, and `nothing` keeps meaning no edge to draw.
+      level: 'info',
       symbol: source.name,
       message: `${source.name} is not installed here; its types are read from its source in ${from}, ${whose(source)}`,
       hint: 'Nothing to do. The source may not be the version this service runs: an installed copy is read instead once the dependencies are installed, and packageSources: false reads nothing in its place.',
@@ -447,8 +449,9 @@ export const reportStandIns = (context: StandInContext): readonly Unresolved[] =
         file,
         line: 1,
         reason: 'shape-file-unmatched',
-        // Nothing was missed either: the package is read, from somewhere stronger.
-        level: 'nothing',
+        // Nothing was missed either: the package is read, from somewhere
+        // stronger. A note, like the row above.
+        level: 'info',
         symbol: shape.package,
         message: `the shape of ${shape.package} in ${file} is not read: ${why}`,
         hint: 'Nothing to do while the package is installed or its source is read; remove the block once it is no longer needed.',

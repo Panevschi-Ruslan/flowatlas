@@ -136,7 +136,10 @@ const report = (builder: GraphBuilder, edge: GraphEdge, reached: (from: string) 
     file: edge.file,
     line: edge.line,
     reason: 'query-in-loop',
-    level: 'nothing',
+    // Likely, not certain: a list known to stay small costs nothing. A finding
+    // (row-kind.ts, P81), so it is counted under findings and never as a miss,
+    // and `nothing` keeps meaning a place with no edge to draw.
+    level: 'info',
     sites: 1,
     message:
       direct === undefined

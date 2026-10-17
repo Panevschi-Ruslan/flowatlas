@@ -44,7 +44,7 @@ export { endOfDeclaration } from './tools/source.js';
 export { hintsFor, nextFor, withNext, MAX_NEXT } from './query/next.js';
 export type { Identified } from './query/next.js';
 export { summariseProject, START_LIMITS } from './query/start.js';
-export type { GapReason, ServiceCount, StartInput, StartLimits, StartSummary } from './query/start.js';
+export type { GapReason, ServiceCount, StartCounts, StartInput, StartLimits, StartSummary } from './query/start.js';
 export { describeForPrompt, PROMPT_LIMITS } from './prompt/describe.js';
 export type { PromptGap, PromptLimits, PromptStep, PromptSubject } from './prompt/describe.js';
 export { gatherPromptSubject } from './prompt/gather.js';

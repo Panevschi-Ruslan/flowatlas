@@ -1735,6 +1735,9 @@
     .busiest-table .hide-narrow { display: none; }
   }
   .s-unmatched { list-style: none; margin: 0; padding: 0; }
+  /* Not joined, one body per kind of row (P81) */
+  .kind-head th { padding-top: 14px; text-align: left; font-weight: 600; color: var(--ink); background: none; }
+  .kind-head .hint { font-weight: 400; }
   /* ── what the reader could not follow, by cause (P75) ──────────────── */
   .cf-total { margin: 0 0 10px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
   .cf-total b { color: var(--ink); font-weight: 600; }
@@ -2122,8 +2125,12 @@ __STEPS_LOGIC__
     stat('Channels', r.channels.linked + ' / ' + r.channels.total + ' joined',
       r.channels.noConsumers.length + ' with no handler',
       r.channels.linked === 0 ? 'warn' : 'good');
-    stat('Left unresolved', r.totals.unresolved.toLocaleString(),
-      'each one recorded with a reason');
+    /* The build line's three figures (P81). `missed` is absent from a report
+       packed before 0.6.0, where `unresolved` meant the same thing. */
+    const missedCount = r.totals.missed ?? r.totals.unresolved;
+    stat('Missed', missedCount.toLocaleString(),
+      'joined from files: ' + (r.totals.notes ?? 0).toLocaleString() +
+      ' &middot; findings: ' + (r.totals.findings ?? 0).toLocaleString());
 
     const read = r.services.filter((s) => s.skipped === null).length;
     document.getElementById('standfirst').textContent =
@@ -2360,7 +2367,12 @@ __STEPS_LOGIC__
           `<td><span class="tag is-${confidences[e[3]] === 'static' ? 'good' : 'warn'}">${edgeTypes[e[2]]} &middot; ${confidences[e[3]]}</span></td>`;
         body.append(tr);
       }
-      table.append(body);
+      for (const [kind, heading] of MISSING_KINDS) {
+        const body = bodies.get(kind);
+        if (body.children.length === 0) continue;
+        body.insertAdjacentHTML('afterbegin', `<tr class="kind-head"><th colspan="3">${heading}</th></tr>`);
+        table.append(body);
+      }
       const sheet = document.createElement('div');
       sheet.className = 'sheet';
       sheet.append(table);
@@ -2580,6 +2592,13 @@ __STEPS_LOGIC__
         `over ${plural(cantFollow.total.rows, 'row', 'rows')}, by cause and then by package</p>` +
         causes + byPackage + more + '</div>';
     };
+    /* The kinds a row of Not joined can be (P81, core row-kind.ts), in the
+       order they are listed, each with the heading it is listed under. */
+    const MISSING_KINDS = [
+      ['gap', 'Missed <span class="hint">&middot; the reader could not follow these</span>'],
+      ['note', 'Notes <span class="hint">&middot; how a join or a reading was made; nothing was missed</span>'],
+      ['finding', 'Findings <span class="hint">&middot; about the code itself, whatever the reader managed</span>'],
+    ];
     function drawMissing() {
       titleEl.textContent = 'What did not join';
       const byReason = acceptedByReason();
@@ -2596,10 +2615,14 @@ __STEPS_LOGIC__
       if (accepted.problem) bar.insertAdjacentHTML('beforeend', `<span class="hint accepted-problem">${esc(accepted.problem)}</span>`);
       const table = document.createElement('table');
       table.innerHTML = '<thead><tr><th>Reason</th><th class="num">Count</th><th>One of them</th></tr></thead>';
-      const body = document.createElement('tbody');
+      /* One body per kind (P81), each under its own heading: what the reader
+         missed, how a join or a reading was made, and what the code does. A row
+         packed before kinds existed is a gap. */
+      const bodies = new Map(MISSING_KINDS.map(([kind]) => [kind, document.createElement('tbody')]));
       for (const u of data.unresolved) {
         const taken = byReason.get(u.reason) || 0;
         if (!showAccepted && taken >= u.count) continue;
+        const body = bodies.get(u.kind) || bodies.get('gap');
         const tr = document.createElement('tr');
         const tone = u.reason.includes('not-found') ? 'bad' : u.reason.includes('dynamic') ? 'warn' : '';
         // The example is the first row of its reason, in the order both lists
@@ -2618,7 +2641,12 @@ __STEPS_LOGIC__
           '</td>';
         body.append(tr);
       }
-      table.append(body);
+      for (const [kind, heading] of MISSING_KINDS) {
+        const body = bodies.get(kind);
+        if (body.children.length === 0) continue;
+        body.insertAdjacentHTML('afterbegin', `<tr class="kind-head"><th colspan="3">${heading}</th></tr>`);
+        table.append(body);
+      }
       const sheet = document.createElement('div');
       sheet.className = 'sheet';
       sheet.append(table);

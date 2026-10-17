@@ -24,7 +24,7 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Start here',
       description:
-        'The first question of a session: how many entry points and nodes each service has, the most common things the reading could not follow, channels with one end missing, and a few entry ids to pass to get_flow. Bounded.',
+        'The first question of a session: how many entry points and nodes each service has, the unresolved rows counted by kind (gaps the reading could not follow, notes on how a join was made, findings about the code), the most common gaps, channels with one end missing, and a few entry ids to pass to get_flow. Bounded.',
       inputSchema: {
         service: serviceInput,
         perService: z

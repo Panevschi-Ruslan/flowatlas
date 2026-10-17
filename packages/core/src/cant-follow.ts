@@ -291,9 +291,11 @@ interface Acc {
 /**
  * Every row that says something was not read, by cause and then by package.
  *
- * Rows at `nothing` stand for places with no edge to draw and are left out, as
- * every other count leaves them out. Sorted most places first; ties by name,
- * so two runs over one graph print one list.
+ * Only gaps are here (`wasMissed`): rows at `nothing` stand for places with no
+ * edge to draw, and notes and findings (P81) say how something was joined or
+ * something about the code, none of them a step the reader could not follow.
+ * Sorted most places first; ties by name, so two runs over one graph print one
+ * list.
  */
 export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFollowOptions = {}): CantFollow => {
   const top = options.top ?? 10;

@@ -17,8 +17,7 @@ import {
   serviceDirectoryName,
   serviceOutputDir,
   serviceSourceDirs,
-  sitesIn,
-  wasMissed,
+  countsOf,
   SCHEMA_VERSION,
   type FlowatlasConfig,
   type PackageJson,
@@ -29,6 +28,7 @@ import {
 import { findTsconfig, listRepoSources } from '@flowatlas/extractor-nestjs';
 import {
   linkGraphs,
+  missedOf,
   writeGraphDb,
   type LinkResult,
   type ServicePackages,
@@ -362,16 +362,17 @@ const emptyReport = (service: ServiceConfig, extractor: string | null): ServiceR
 /**
  * What one repository came to, as the summary and the cache both count it.
  *
- * `unresolved` counts the rows that say something was not read. Rows at level
- * `nothing` are left out: they stand for places where no edge exists to draw,
- * so a repository full of them is not a repository read badly, and a number
- * that mixed the two would say it was.
+ * `unresolved` counts the rows that say something was not read: `missed`, by
+ * the one counter (P81). Rows at level `nothing` are left out - they stand for
+ * places where no edge exists to draw, so a repository full of them is not a
+ * repository read badly - and so are notes and findings, which say how a join
+ * was made and what the code does.
  */
-const countsOf = (graph: RepoGraph): RepoCache['counts'] => ({
+const repoCountsOf = (graph: RepoGraph): RepoCache['counts'] => ({
   nodes: graph.nodes.length,
   edges: graph.edges.length,
   types: Object.keys(graph.types).length,
-  unresolved: graph.unresolved.filter(wasMissed).length,
+  unresolved: countsOf(graph.unresolved).missed,
 });
 
 const reportOf = (
@@ -381,7 +382,7 @@ const reportOf = (
   durationMs: number,
 ): ServiceReport => ({
   ...emptyReport(service, extractor),
-  ...countsOf(graph),
+  ...repoCountsOf(graph),
   durationMs,
 });
 
@@ -650,7 +651,7 @@ const extractDeclared = async (options: ExtractOneOptions): Promise<Extracted> =
       graph,
       report: {
         ...base,
-        ...countsOf(graph),
+        ...repoCountsOf(graph),
         repo: documentPath,
         durationMs: Date.now() - started,
       },
@@ -718,7 +719,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
     return {
       service,
       graph,
-      report: { ...base, ...countsOf(graph) },
+      report: { ...base, ...repoCountsOf(graph) },
       ...(previous === undefined
         ? {}
         : { facts: factsOf(previous) }),
@@ -1195,7 +1196,7 @@ const nextCache = (
       packages: carried?.packages ?? survey.packages,
       graphPath: survey.graphPath,
       graphHash: hashGraphFile(survey.graphPath),
-      counts: countsOf(item.graph),
+      counts: repoCountsOf(item.graph),
     };
   }
   return cache;
@@ -1204,23 +1205,23 @@ const nextCache = (
 /**
  * What the unresolved rows came to, in one line.
  *
- * Three numbers, and two of them are never added together. Rows and places
- * differ wherever a reason was folded, and both are worth saying: one is how
- * long the list is, the other is what it covers. A place where nothing joins is
- * neither — a template binding that assigns to a field has no other end, in
- * this project or any other — so it is said last, in its own clause, and only
- * when there is one.
+ * Every figure is `countsOf`'s (P81), and no two of them are added together.
+ * Missed rows and the places they cover differ wherever a reason was folded,
+ * and both are worth saying: one is how long the list is, the other is what it
+ * covers. Notes say how a join or a reading was made and findings say
+ * something about the code; neither is something the reader missed, so each
+ * has its own figure and is said even at zero, so the line reads the same on
+ * every build. A place where nothing joins is neither - a template binding
+ * that assigns to a field has no other end, in this project or any other - so
+ * it is said last, in its own clause, and only when there is one.
  */
-export const unresolvedLine = (rows: readonly Unresolved[], missed: number): string => {
-  const sites = sitesIn(rows.filter(wasMissed));
-  const nothing = rows.filter((row) => !wasMissed(row));
-  const nothingSites = sitesIn(nothing);
+export const unresolvedLine = (rows: ReadonlyArray<Pick<Unresolved, 'reason' | 'level' | 'sites' | 'meta'>>): string => {
+  const { missed, sites, notes, findings, nothing } = countsOf(rows);
   return (
-    `unresolved: ${missed}` +
-    (sites === missed ? '' : ` rows over ${sites} sites`) +
-    (nothing.length === 0
-      ? ''
-      : `, and ${nothingSites} site${nothingSites === 1 ? '' : 's'} with nothing to join`)
+    `missed: ${missed}` +
+    (sites === missed ? '' : ` over ${sites} sites`) +
+    ` · notes: ${notes} · findings: ${findings}` +
+    (nothing === 0 ? '' : ` · ${nothing} site${nothing === 1 ? '' : 's'} with nothing to join`)
   );
 };
 
@@ -1391,7 +1392,7 @@ export const summariseBuild = (result: BuildResult): string[] => {
   if (leftovers !== undefined) lines.push(leftovers);
   // Rows and places differ wherever a reason was folded, and both are worth
   // saying: one is how long the list is, the other is what it covers.
-  lines.push(unresolvedLine(result.project.unresolved, report.totals.unresolved));
+  lines.push(unresolvedLine(result.project.unresolved));
   // Beside that count, last, and never per row: it is the one thing a thousand
   // rows already imply, and it is the line the eye lands on when a build ends.
   if (partial !== undefined) lines.push(partial);
@@ -1401,7 +1402,7 @@ export const summariseBuild = (result: BuildResult): string[] => {
 /**
  * One line saying what was read and what was not.
  *
- * `previous` is the unresolved count of the last rebuild in this session, so a
+ * `previous` is the missed count of the last rebuild in this session, so a
  * watch says which edit started leaving things unresolved rather than only how
  * many there are.
  */
@@ -1415,9 +1416,9 @@ export const summariseRebuild = (result: BuildResult, previous?: number): string
   }
   if (read.length === 0) read.push('nothing changed');
   else if (cached.length > 0) read.push(cached.length === 1 ? `${cached[0]}: cached` : 'others: cached');
-  const total = result.report.totals.unresolved;
+  const total = missedOf(result.report.totals);
   const delta = previous === undefined || previous === total ? '' : ` (${signed(total - previous)})`;
-  return `rebuilt in ${result.timing.total}ms (${read.join(', ')}) unresolved: ${total}${delta}`;
+  return `rebuilt in ${result.timing.total}ms (${read.join(', ')}) missed: ${total}${delta}`;
 };
 
 const signed = (value: number): string => (value > 0 ? `+${value}` : String(value));

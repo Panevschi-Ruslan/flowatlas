@@ -1,51 +1,9 @@
 {
   "total": {
-    "rows": 13,
-    "sites": 13
+    "rows": 9,
+    "sites": 9
   },
   "causes": [
-    {
-      "cause": "route-unguarded",
-      "label": "route-unguarded",
-      "sites": 4,
-      "reasons": [
-        "route-unguarded"
-      ],
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
-      "services": [
-        "orders"
-      ],
-      "packages": [
-        {
-          "package": null,
-          "label": "route-unguarded",
-          "sites": 4,
-          "samples": [
-            {
-              "service": "orders",
-              "file": "src/orders/orders.controller.ts",
-              "line": 19,
-              "symbol": "GET /orders/latest",
-              "loc": "src/orders/orders.controller.ts:19"
-            },
-            {
-              "service": "orders",
-              "file": "src/orders/orders.controller.ts",
-              "line": 25,
-              "symbol": "GET /orders/:param",
-              "loc": "src/orders/orders.controller.ts:25"
-            },
-            {
-              "service": "orders",
-              "file": "src/orders/orders.controller.ts",
-              "line": 31,
-              "symbol": "POST /orders",
-              "loc": "src/orders/orders.controller.ts:31"
-            }
-          ]
-        }
-      ]
-    },
     {
       "cause": "api-path-dynamic",
       "label": "api-path-dynamic",
@@ -222,7 +180,11 @@
     }
   ],
   "packages": [],
+  "apart": {
+    "notes": 0,
+    "findings": 4
+  },
   "next": [
-    "cant_follow({cause: \"route-unguarded\"})"
+    "cant_follow({cause: \"api-path-dynamic\"})"
   ]
 }

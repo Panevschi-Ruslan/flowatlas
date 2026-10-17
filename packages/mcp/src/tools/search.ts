@@ -5,9 +5,11 @@ import {
   failuresOf,
   gapIdOf,
   isRule,
+  kindOfRow,
   readAccepted,
   type AcceptedRead,
   type GraphNode,
+  type RowKind,
 } from '@flowatlas/core';
 import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -36,6 +38,12 @@ export interface GapHit {
   id: string;
   type: 'gap';
   reason: string;
+  /**
+   * What the row is about (P81): `gap` when the reader could not follow
+   * something, `note` for how a join or a reading was made, `finding` for
+   * something about the code itself. Every row is searched, whatever its kind.
+   */
+  kind: RowKind;
   service?: string;
   loc?: string;
   message: string;
@@ -130,6 +138,7 @@ const gaps: Finder = ({ db, text, service, limit, accepted }) => {
       id,
       type: 'gap',
       reason: row.reason,
+      kind: kindOfRow(row),
       ...(row.service === null ? {} : { service: row.service }),
       ...(row.file === null ? {} : { loc: row.line === null ? row.file : `${row.file}:${row.line}` }),
       message: row.message,

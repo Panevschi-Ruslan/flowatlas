@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:16.762Z",
+  "builtAt": "2026-10-16T23:29:00.167Z",
   "configHash": "d95e219d6b04",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 30,
       "types": 4,
       "unresolved": 4,
-      "durationMs": 666,
+      "durationMs": 627,
       "packages": {
         "name": "@fixture/nest-mongo-tables-api",
         "runtime": [],
@@ -57,6 +57,10 @@
     "nodes": 39,
     "edges": 30,
     "types": 4,
+    "missed": 4,
+    "sites": 9,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 4
   }
 }

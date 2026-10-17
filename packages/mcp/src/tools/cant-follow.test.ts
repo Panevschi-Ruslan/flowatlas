@@ -156,7 +156,10 @@ describe('cant_follow and accepted.json (P80)', () => {
     const answer = await ask();
     expect(answer.accepted).toBeUndefined();
     expect(answer.note).toMatch(/^accepted\.json at .* cannot be read \(.*\), so nothing in it is accepted\.$/);
-    expect(answer.total.sites).toBe(before.total.sites + before.accepted.sites);
+    // The rows the rule took are findings (P81): in none of the gap counts, and
+    // back among the findings once nothing is accepted.
+    expect(answer.total.sites).toBe(before.total.sites);
+    expect(answer.apart.findings).toBe((before.apart?.findings ?? 0) + before.accepted.rows);
   });
 });
 

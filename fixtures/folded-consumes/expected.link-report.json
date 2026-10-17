@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:27.703Z",
+  "builtAt": "2026-10-16T23:28:02.013Z",
   "configHash": "c6950e2d9de7",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 11,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 622,
+      "durationMs": 599,
       "packages": {
         "name": "folded-consumes-worker",
         "runtime": [
@@ -65,6 +65,10 @@
     "nodes": 16,
     "edges": 11,
     "types": 2,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 1
   }
 }

@@ -1,13 +1,16 @@
 import {
+  countsOf,
   describeAccepted,
   describeAcceptedProblem,
   gapIdOf,
   isRule,
+  kindOfRow,
   STEP_OF_META,
   type AcceptedGap,
   type AcceptedProblem,
   type GraphEdge,
   type GraphNode,
+  type RowKind,
   type TypeEntry,
 } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
@@ -86,8 +89,11 @@ export interface PackedGraph {
   nodes: unknown[][];
   /** `[from, to, type, confidence]`, all four as indices. */
   edges: number[][];
-  /** One row per reason, with a count and one example. */
-  unresolved: Array<{ reason: string; count: number; service: string; example: string }>;
+  /**
+   * One row per reason and kind, with a count and one example; the Not joined
+   * tab lists them under their kind (P81): missed, notes, findings.
+   */
+  unresolved: Array<{ reason: string; kind: RowKind; count: number; service: string; example: string }>;
   /**
    * Every finding, `[node, repo, file, line, reason, level, sites, message, hint]`.
    *
@@ -311,14 +317,21 @@ const metaPacker = (nodes: readonly GraphNode[], position: ReadonlyMap<string, n
   return { values, pack, keys, enumerated: enumerated.map(([, key]) => key), nodeRefs };
 };
 
-/** One row per reason, since that is the shape the page shows them in. */
+/**
+ * One row per reason, since that is the shape the page shows them in, and per
+ * kind: a reason whose rows are notes or findings by what they recorded is two
+ * rows, one under each heading.
+ */
 const byReason = (rows: readonly AnchoredUnresolvedRow[]): PackedGraph['unresolved'] => {
   const found = new Map<string, PackedGraph['unresolved'][number]>();
   for (const row of rows) {
-    const seen = found.get(row.reason);
+    const kind = kindOfRow(row);
+    const key = `${row.reason}\u0000${kind}`;
+    const seen = found.get(key);
     if (seen === undefined) {
-      found.set(row.reason, {
+      found.set(key, {
         reason: row.reason,
+        kind,
         count: 1,
         service: row.service ?? '',
         example: row.message,
@@ -410,6 +423,20 @@ const packStandIns = (edges: readonly GraphEdge[]): Pick<PackedGraph, 'standIns'
     marked[String(index)] = [via, at];
   });
   return packages.length === 0 ? {} : { standIns: { via: [...STAND_IN_VIA], packages, edges: marked } };
+};
+
+/**
+ * The report's totals with every row count worked out from the rows the page
+ * is handed, by the one counter (P81), so the stat row says what the build line
+ * says - and says it for a database built by 0.5.x, whose stored totals carry
+ * `unresolved` alone.
+ */
+const totalsOf = (
+  totals: Pick<LinkReport['totals'], 'nodes' | 'edges' | 'types'>,
+  rows: readonly AnchoredUnresolvedRow[],
+): LinkReport['totals'] => {
+  const { missed, sites, notes, findings } = countsOf(rows);
+  return { nodes: totals.nodes, edges: totals.edges, types: totals.types, missed, sites, notes, findings, unresolved: missed };
 };
 
 export const packGraph = (input: PackInput): PackedGraph => {
@@ -537,7 +564,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
         duplicated: report.routes.duplicated,
       },
       types: report.types,
-      totals: report.totals,
+      totals: totalsOf(report.totals, rowsIn),
       services: report.services.map((service) => ({
         name: service.name,
         type: service.type,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:12:04.801Z",
+  "builtAt": "2026-10-16T23:29:56.158Z",
   "configHash": "d95e219d6b04",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 697,
+      "durationMs": 615,
       "packages": {
         "name": "@acme/api",
         "runtime": [
@@ -73,6 +73,10 @@
     "nodes": 11,
     "edges": 5,
     "types": 0,
-    "unresolved": 1
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 0
   }
 }

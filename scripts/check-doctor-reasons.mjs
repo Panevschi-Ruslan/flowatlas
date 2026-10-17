@@ -46,6 +46,15 @@
  * `hints.test.ts` asks what is said about `something-new` precisely because
  * nothing knows it — and failing on those would make the gate unwritable.
  *
+ * A second question is asked of every reason `doctor` knows, written in the
+ * sources or not: what kind of row it is (P81, `ROW_KINDS` in
+ * `packages/core/src/model/row-kind.ts`). A reason with no kind is counted as a
+ * gap, which is the safe default and the wrong one for a join made from files
+ * or a finding about the code: either would quietly raise "missed". So a known
+ * reason with no explicit kind fails here too, and the fix is one line in the
+ * registry. `reasonsWithoutKind` is the check, unit tested in the core with a
+ * reason nobody classified.
+ *
  * Run from the repository root:
  *
  *   node scripts/check-doctor-reasons.mjs
@@ -57,7 +66,8 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { isKnownReason } from '../packages/cli/dist/index.js';
+import { reasonsWithoutKind } from '../packages/core/dist/index.js';
+import { isKnownReason, KNOWN_REASONS } from '../packages/cli/dist/index.js';
 
 const root = process.cwd();
 const packages = join(root, 'packages');
@@ -166,4 +176,15 @@ if (unregistered.length > 0) {
   process.exit(1);
 }
 
-console.log(`    ${written.size} reason(s) written in the sources, all registered`);
+// Every reason doctor knows, written in the sources or not: the catalogue also
+// holds the contract reasons and the rows doctor raises itself.
+const unkinded = reasonsWithoutKind(KNOWN_REASONS);
+
+if (unkinded.length > 0) {
+  for (const reason of unkinded) console.error(`    ${reason} — no row kind`);
+  console.error('    FAIL: a reason doctor knows has no kind, so it is counted as a gap by default.');
+  console.error('    Classify each one in packages/core/src/model/row-kind.ts as a gap, a note or a finding.');
+  process.exit(1);
+}
+
+console.log(`    ${written.size} reason(s) written in the sources, all registered; ${KNOWN_REASONS.length} known, all with a kind`);

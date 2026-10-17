@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:23:18.831Z",
+  "builtAt": "2026-10-16T23:28:12.404Z",
   "services": [
     {
       "name": "media",
@@ -1269,7 +1269,7 @@
       "file": "src/uploads/make-thumbnail.ts",
       "line": 19,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
@@ -1287,7 +1287,7 @@
       "file": "src/uploads/make-thumbnail.ts",
       "line": 20,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
@@ -1305,7 +1305,7 @@
       "file": "src/uploads/make-thumbnail.ts",
       "line": 21,
       "reason": "query-in-loop",
-      "level": "nothing",
+      "level": "info",
       "sites": 1,
       "message": "A publish runs once per item of a `for-of` loop: likely N+1.",
       "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",

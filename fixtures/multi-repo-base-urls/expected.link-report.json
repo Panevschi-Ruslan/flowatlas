@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:24:42.769Z",
+  "builtAt": "2026-10-16T23:28:30.764Z",
   "configHash": "df4e82d2e373",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1270,
+      "durationMs": 877,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1330,
+      "durationMs": 884,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1276,
+      "durationMs": 880,
       "packages": {
         "name": "payments",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 27,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1406,
+      "durationMs": 976,
       "packages": {
         "name": "storefront",
         "runtime": [
@@ -250,6 +250,10 @@
     "nodes": 55,
     "edges": 43,
     "types": 0,
-    "unresolved": 9
+    "missed": 1,
+    "sites": 1,
+    "notes": 8,
+    "findings": 0,
+    "unresolved": 1
   }
 }

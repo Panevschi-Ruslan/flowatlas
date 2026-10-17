@@ -177,6 +177,41 @@ describe('packing what the details panel shows', () => {
   });
 });
 
+describe('the stat row and the Not joined tab, by kind (P81)', () => {
+  // A report as 0.5.x stored it: `unresolved` alone, counting every row not
+  // at `nothing`, and `query-in-loop` written at `nothing`.
+  const old = {
+    ...report,
+    totals: { nodes: 2, edges: 1, types: 0, unresolved: 5 },
+  } as unknown as LinkReport;
+  const rows = [
+    row({}),
+    row({ reason: 'call-dynamic-receiver', level: 'info', sites: 12, line: 20 }),
+    row({ reason: 'base-url-from-files', level: 'info', sites: 3, line: 30 }),
+    row({ reason: 'query-in-loop', level: 'nothing', line: 40 }),
+    row({ reason: 'route-unguarded', line: 50 }),
+  ];
+  const kinded = packGraph({ builtAt: '2026-10-07T00:00:00.000Z', nodes, edges: [], unresolved: rows, report: old });
+
+  it('counts missed, notes and findings from the rows, whatever the stored report says', () => {
+    expect(kinded.report).toMatchObject({
+      totals: { nodes: 2, edges: 1, types: 0, missed: 2, sites: 13, notes: 1, findings: 2, unresolved: 2 },
+    });
+  });
+
+  it('lists each reason under its kind', () => {
+    expect(kinded.unresolved.map((group) => [group.reason, group.kind])).toEqual(
+      expect.arrayContaining([
+        ['db-receiver-name-only', 'gap'],
+        ['call-dynamic-receiver', 'gap'],
+        ['base-url-from-files', 'note'],
+        ['query-in-loop', 'finding'],
+        ['route-unguarded', 'finding'],
+      ]),
+    );
+  });
+});
+
 describe('naming nodes in a link', () => {
   const keyAt = (keys: typeof packed.keys, i: number): string =>
     keys.longer[String(i)] ?? keys.all.slice(i * keys.width, (i + 1) * keys.width);

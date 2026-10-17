@@ -7,7 +7,7 @@
  * runs over one graph say the same thing, so a difference in CI is a difference
  * in the project.
  */
-import { tally, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/core';
+import { countsOf, kindOfRow, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
 import { withAnsweredDemoted, type GraphDb, type ServiceReport } from '@flowatlas/linker';
@@ -387,13 +387,15 @@ const groupByReason = (
   // its loudest member's. One reason can hold both: a call whose address is
   // built at run time is something to do, and the same reason on a call an
   // annotation already answers is not (R36). Grouped together, the second
-  // would be listed under a heading asking for work that is already done.
+  // would be listed under a heading asking for work that is already done. And
+  // by kind (P81), for the same reason: one reason whose rows are findings and
+  // notes by what they recorded (P89's per-item loops) is two headings.
   const SPLIT = '\u0000';
   const levelOf = (row: Unresolved): 'action' | 'info' | 'nothing' =>
     (row.level ?? 'action') as 'action' | 'info' | 'nothing';
   const byReason = new Map<string, Unresolved[]>();
   for (const row of rows) {
-    const key = `${row.reason}${SPLIT}${levelOf(row)}`;
+    const key = `${row.reason}${SPLIT}${levelOf(row)}${SPLIT}${kindOfRow(row)}`;
     const list = byReason.get(key);
     if (list === undefined) byReason.set(key, [row]);
     else list.push(row);
@@ -422,6 +424,7 @@ const groupByReason = (
     groups.push({
       reason,
       level,
+      kind: kindOfRow(list[0] as Unresolved),
       count: list.length,
       sites: list.reduce((sum, row) => sum + (row.sites ?? 1), 0),
       known,
@@ -562,13 +565,16 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     .filter((row) => (row.level ?? 'action') === 'action' && ignore.has(row.reason))
     .reduce((sum, row) => sum + (row.sites ?? 1), 0);
 
-  // Places where nothing joins are their own line and nobody else's total.
-  const missed = tally(levelled.filter(wasMissed));
+  // By the one counter (P81): places where nothing joins are their own line and
+  // nobody else's total, and so are notes and findings.
+  const counted = countsOf(levelled);
   const unresolved: DoctorReport['unresolved'] = {
     status: wanted.has('unresolved') ? 'ok' : 'skipped',
     total: snapshot.total,
-    rows: missed.rows,
-    sites: missed.sites,
+    rows: counted.missed,
+    sites: counted.sites,
+    notes: counted.notes,
+    findings: counted.findings,
     info: snapshot.info,
     nothing: snapshot.nothing,
     excluded: { reasons: [...ignore].sort(cmp), sites: excludedSites },

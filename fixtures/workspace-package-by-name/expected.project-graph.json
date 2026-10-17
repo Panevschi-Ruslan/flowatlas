@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T16:51:31.023Z",
+  "builtAt": "2026-10-16T23:29:54.979Z",
   "services": [
     {
       "name": "api",
@@ -240,7 +240,7 @@
       "file": "src/stock/stock.controller.ts",
       "line": 8,
       "reason": "package-from-repo",
-      "level": "nothing",
+      "level": "info",
       "message": "@acme/ledger is not installed here; its types are read from its source in ../packages/ledger, a directory beside the configuration",
       "hint": "Nothing to do. The source may not be the version this service runs: an installed copy is read instead once the dependencies are installed, and packageSources: false reads nothing in its place.",
       "symbol": "@acme/ledger",

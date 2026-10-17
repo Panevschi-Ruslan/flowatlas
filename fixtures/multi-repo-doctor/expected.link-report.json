@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:35.086Z",
+  "builtAt": "2026-10-16T23:28:34.978Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 815,
+      "durationMs": 711,
       "packages": {
         "name": "doctor-billing",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 19,
       "types": 4,
       "unresolved": 7,
-      "durationMs": 856,
+      "durationMs": 766,
       "packages": {
         "name": "doctor-gateway",
         "runtime": [
@@ -58,7 +58,7 @@
       "edges": 38,
       "types": 3,
       "unresolved": 17,
-      "durationMs": 852,
+      "durationMs": 729,
       "packages": {
         "name": "doctor-orders",
         "runtime": [
@@ -179,6 +179,10 @@
     "nodes": 85,
     "edges": 69,
     "types": 8,
-    "unresolved": 31
+    "missed": 28,
+    "sites": 28,
+    "notes": 0,
+    "findings": 3,
+    "unresolved": 28
   }
 }

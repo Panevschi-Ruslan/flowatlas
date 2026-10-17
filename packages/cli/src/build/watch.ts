@@ -1,5 +1,6 @@
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { loadConfig, SERVICES_DIRECTORY } from '@flowatlas/core';
+import { missedOf } from '@flowatlas/linker';
 import { watch, type FSWatcher } from 'chokidar';
 import {
   buildProject,
@@ -125,7 +126,7 @@ export const watchProject = async (options: WatchOptions = {}): Promise<WatchHan
     const leftovers = last === undefined ? leftoversLine(result.leftovers) : undefined;
     if (leftovers !== undefined) print(leftovers);
     if (options.timing === true) print(JSON.stringify(result.timing));
-    previousUnresolved = result.report.totals.unresolved;
+    previousUnresolved = missedOf(result.report.totals);
     last = result;
     options.onRebuild?.(result);
   };

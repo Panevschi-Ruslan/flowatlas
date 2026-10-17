@@ -13,6 +13,7 @@ import { isInstalled, partialReadNotice, type ReadRepo } from '../partial-read.j
 import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
 import type { DoctorReport, DoctorRow } from './schema.js';
+import { findingsSaid } from './hints.js';
 import { noWayInSentence } from './ways-in.js';
 
 /** `… 12 more rows; the whole list is in <file>` — never a silent cut (I9). */
@@ -136,6 +137,18 @@ const LEVEL_TAG = {
   nothing: ' (nothing to join)',
 } as const;
 
+/**
+ * What a group of one kind is marked with (P81). Said instead of the level: a
+ * note or a finding is not a limit of reading, which is what `(info)` means.
+ */
+const KIND_TAG = {
+  gap: '',
+  note: ' (note)',
+  finding: ' (finding)',
+} as const;
+
+const plural = (count: number, one: string, many = `${one}s`): string => `${count} ${count === 1 ? one : many}`;
+
 const unresolvedSection = (
   report: DoctorReport,
   repoDirs: ReadonlyMap<string, string>,
@@ -160,11 +173,20 @@ const unresolvedSection = (
           ];
   if (unresolved.byReason.length === 0) return ['unresolved: none', ...ways, ...acceptedLine];
 
+  // The build summary's three figures (P81), after the one `--strict` compares:
+  // what was missed, how joins were made, and what the code does.
+  const { rows, sites, notes, findings, info } = unresolved;
   const lines: string[] = [
-    `unresolved: ${unresolved.total} to act on over ${unresolved.rows} row${unresolved.rows === 1 ? '' : 's'}` +
-      (unresolved.info.rows === 0
-        ? ''
-        : `, and ${unresolved.info.sites} place${unresolved.info.sites === 1 ? '' : 's'} static reading cannot see, folded into ${unresolved.info.rows}`),
+    `unresolved: ${unresolved.total} to act on · missed: ${rows}${sites === rows ? '' : ` over ${sites} sites`}` +
+      ` · notes: ${notes} · findings: ${findings}`,
+    ...(info.rows === 0
+      ? []
+      : [`  ${plural(info.sites, 'missed place')} static reading cannot see, folded into ${plural(info.rows, 'row')}`]),
+    // Its own line, with what each is: these are what a reviewer acts on, and a
+    // count alone says nothing about which.
+    ...(findings === 0
+      ? []
+      : [`  ${plural(findings, 'finding')}: ${findingsSaid(unresolved.byReason.filter((group) => group.kind === 'finding'))}`]),
     ...ways,
     ...acceptedLine,
   ];
@@ -176,7 +198,7 @@ const unresolvedSection = (
     );
   }
   for (const group of unresolved.byReason) {
-    const tag = LEVEL_TAG[group.level] || (group.excluded ? ' (not counted)' : '');
+    const tag = KIND_TAG[group.kind] || LEVEL_TAG[group.level] || (group.excluded ? ' (not counted)' : '');
     const folded = group.sites === group.count ? '' : ` over ${group.sites} places`;
     lines.push(
       `  ${group.reason}${tag}: ${group.count} row${group.count === 1 ? '' : 's'}${folded}`,

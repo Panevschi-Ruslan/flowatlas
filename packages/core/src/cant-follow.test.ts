@@ -56,7 +56,8 @@ describe('the breakdown', () => {
     { file: 'src/b.ts', line: 3, reason: 'type-unresolved', service: 'shop', meta: { cause: 'module-not-installed', package: '@shop/mailer' } },
     { file: 'src/c.ts', line: 4, reason: 'type-unresolved', service: 'pay', meta: { cause: 'module-not-installed', package: '@shop/ledger' } },
     { file: 'src/d.ts', line: 5, reason: 'dynamic-table-name', service: 'pay' },
-    { file: 'src/e.ts', line: 6, reason: 'query-in-loop', level: 'nothing', service: 'pay' },
+    // A finding (P81), never a step the reader could not follow.
+    { file: 'src/e.ts', line: 6, reason: 'query-in-loop', level: 'info', service: 'pay' },
   ];
 
   it('counts what every other figure counts, and nothing at level nothing', () => {

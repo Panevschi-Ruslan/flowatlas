@@ -280,6 +280,41 @@ only one of them moved.
   `cant_follow` gave such rows the "nothing to do here" hint doctor already
   gave, and the page showed them at `info`. The rules were compiled once per
   surface rather than once per row.
+- **Gaps, notes and findings counted apart (P81).** Every unresolved row became
+  one of three kinds, derived from its reason (`kindOfRow`, `ROW_KINDS` in
+  `@flowatlas/core`, no schema change): a gap (the reader could not follow
+  something), a note (how a join or a reading was made: `base-url-from-files`,
+  `base-url-from-name`, `environment-from-files`, `package-from-repo`,
+  `package-version-differs`, `shape-file-unmatched`, `route-checked-in-body`,
+  `route-mount-assumed-empty`, `route-api-guessed`, `workflow-named-by-file`,
+  `document-age` and the like) or a finding (something about the code:
+  `query-in-loop`, `route-unguarded`, `route-shadowed`, `route-claimed-twice`,
+  `s3-write-matches-nothing` and the like). Only gaps counted as missed
+  (`wasMissed`), and one function counted them all (`countsOf` →
+  `{missed, sites, notes, findings, nothing}`), so the build line, `stats`,
+  doctor, the page and the graph server said the same numbers for one
+  database. The build line became `missed: N over S sites · notes: N ·
+  findings: N` (and the watch line `missed: N`); `LinkReport.totals` gained
+  `missed`, `sites`, `notes` and `findings`, with `totals.unresolved` kept equal
+  to `missed` for one version and deprecated, and readers of a stored report
+  fell back to it. Doctor's heading said the three figures, findings got a line
+  of their own (`2 findings: 1 likely N+1, 1 route with no guard`), a group of
+  notes or findings was marked `(note)` or `(finding)`, and `doctor.json` gained
+  `unresolved.notes`, `unresolved.findings` and a `kind` on each group;
+  `unresolved.info` and `unresolved.nothing` counted gaps only. The page's
+  "Left unresolved" became "Missed", with "joined from files" and "findings"
+  under it, and the Not joined tab listed rows under their kind. The graph
+  server's `start_here` gained `counts: {gaps, sites, notes, findings,
+  nothing}` and listed only gaps among `topGaps`; `search` gap hits gained
+  `kind`; `cant_follow` counted notes and findings apart under `apart`. A
+  doctor baseline kept counting every actionable row, findings included, so
+  no baseline changed verdict on upgrade; only its `info` and `nothing` tallies
+  were recounted by kind. The read gate failed on a reason doctor knows with no
+  kind.
+- **`query-in-loop`, `package-from-repo` and `shape-file-unmatched` at `info`
+  (P81).** They had been written at `nothing` only to stay out of the count of
+  what was missed; their kind did that now, and `nothing` meant again only a
+  place with no edge to draw.
 - **The Map laid out in call order by default (P66).** Services went in columns
   by call depth from the front ends, with queues and topics between the
   columns, stores and outside hosts under the app that uses them (one box per
@@ -299,6 +334,13 @@ only one of them moved.
 
 ### Fixed
 
+- **Joins made from the repositories' files no longer counted as unresolved
+  (P81).** A request P77 joined from the value a file gives its setting swapped
+  an `unknown-base-url-env` row for a `base-url-from-files` row at `info`, and
+  "Left unresolved" and the build line barely moved; it was a note now, and
+  `missed` went down by the request it joined. A likely N+1 (P69) had been
+  printed as "nothing to join" and counted nowhere; it was a finding, counted
+  and named where a reader looks.
 - **An `accepted.json` that could not be read was wiped (P80).** A file that
   did not parse (a merge conflict, a truncated write), did not match the
   format, or came from a newer flowatlas was read as empty, and the next

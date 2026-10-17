@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:11:16.078Z",
+  "builtAt": "2026-10-16T23:29:10.862Z",
   "configHash": "77882f3a6bfe",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 27,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 803,
+      "durationMs": 703,
       "packages": {
         "name": "route-access-catalog",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 21,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 787,
+      "durationMs": 696,
       "packages": {
         "name": "route-access-inventory",
         "runtime": [
@@ -52,7 +52,7 @@
       "edges": 13,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 789,
+      "durationMs": 699,
       "packages": {
         "name": "route-access-ledger",
         "runtime": [
@@ -153,6 +153,10 @@
     "nodes": 68,
     "edges": 61,
     "types": 4,
-    "unresolved": 5
+    "missed": 1,
+    "sites": 1,
+    "notes": 2,
+    "findings": 2,
+    "unresolved": 1
   }
 }

@@ -404,6 +404,37 @@ imports the checker could not resolve: gateway (12) — check their tsconfig pat
   install recovers: what a package declares, never what a package generates.
   It is never printed for a repository that has had an install.
 
+**The last line: missed, notes, findings.** Every unresolved row is one of three
+kinds, decided by its reason (`ROW_KINDS` in `@flowatlas/core`): a **gap** (the
+reader could not follow something), a **note** (how a join or a reading was
+made; nothing was missed - a base address taken from a repository's own files, a
+package read from its source) or a **finding** (something about the code
+itself - a likely N+1, a route with no guard). The build ends on one line that
+counts them apart, never added together:
+
+```
+missed: 9 over 21 sites · notes: 8 · findings: 4 · 3 sites with nothing to join
+```
+
+So a request joined from the value a file gives its setting lowers `missed` by
+one and raises `notes`, and a likely N+1 is counted where a reader looks for it.
+The same five figures, from the same function (`countsOf`), are what `doctor`,
+`stats`, the page and the graph server's `start_here` say about one database:
+
+| Name | Counts | Where |
+|---|---|---|
+| `missed` | gap rows that say something was not read (not at level `nothing`) | build line, `totals.missed`, doctor `unresolved.rows`, page "Missed", MCP `counts.gaps` |
+| `sites` | the places the missed rows stand for, folding included | build line (`over N sites`), `totals.sites`, doctor `unresolved.sites` |
+| `notes` | rows saying how a join or a reading was made | `totals.notes`, doctor `unresolved.notes`, page "joined from files" |
+| `findings` | rows saying something about the code | `totals.findings`, doctor `unresolved.findings` and its findings line |
+| `nothing` | places with no edge to draw (gap rows at level `nothing`) | the last clause of the line, doctor `unresolved.nothing` |
+| `totals.unresolved` | deprecated since 0.6.0: equal to `missed`, written for one more version | `link-report.json`, `graph.db` |
+| `project.unresolved` | every row, all three kinds, nothing dropped | `project-graph.json` |
+| `LinkReport.unresolved` | the rows raised while joining, a subset of the above | `link-report.json` |
+
+A report written by 0.5.x has `totals.unresolved` alone; the page, `stats` and
+the watch line read `missed` and fall back to it.
+
 **What a service is.** A service is an application together with the workspace
 packages it declares, read from `workspaces` or `pnpm-workspace.yaml` and written
 down nowhere. The application's directory stays its identity and the directory
@@ -657,7 +688,11 @@ What cannot be compared this way stays `unchecked`, with one of these reasons:
 ### `flowatlas stats`
 
 What the built graph is made of: counts by node and edge type, per service, and
-the reconciliation from the last build.
+the reconciliation from the last build. The first line counts the unresolved rows
+as `build` does (`missed: 9 · notes: 0 · findings: 4`), and `--format json`
+carries them as `totals.missed`, `sites`, `notes` and `findings`, with
+`totals.unresolved` equal to `missed` for one more version. The breakdown by
+reason lists the missed rows.
 
 | Flag | Default | Does |
 |---|---|---|
@@ -1068,7 +1103,11 @@ the tables, addresses and channels they reach, and the next service's way in.
   channel and on a check row, and the graph server's `describe_for_prompt`
   writes the same text.
 
-The **Not joined** tab lists every row by reason. Rows accepted with
+The **Not joined** tab lists every row by reason, under its kind: *Missed*
+(gaps), *Notes* (how a join or a reading was made) and *Findings* (about the
+code). The stat row above the page says the same figures the build line does:
+*Missed*, with "joined from files" (notes) and "findings" under it, counted from
+the rows, so a database built by 0.5.x still shows them. Rows accepted with
 `flowatlas accept` are left out unless *show accepted* is on, then muted with
 their note and, for a rule, the rule that took them; each reason and each row
 has *Accept all like this*, which copies the command (the page is a file and
@@ -1206,12 +1245,12 @@ source, then shape file, then built-in shape. A call drawn through types one of
 these supplied is `heuristic`, with `because: ["package-from-repo"]` or
 `["shape-file"]` and `typedBy: <package>`, since what is read may not be the
 version that runs. Rows say what happened: `package-from-repo` (which directory
-answered, at `nothing`: nothing was missed), `package-version-differs` (info: the
+answered; a note: nothing was missed), `package-version-differs` (a note: the
 importing manifest asks for another version), `package-source-ambiguous` (two
 directories carry the name, so neither is read), `shape-file-unread` (a listed
 file not there, not parsed, or declaring no module) and `shape-file-unmatched`
-(at `nothing`: a shape something stronger answered, or one a service's own list
-names and it never imports). `flowatlas shapes --suggest` says which packages
+(a note: a shape something stronger answered, or one a service's own list
+names and it never imports). The three notes are at level `info`. `flowatlas shapes --suggest` says which packages
 are still worth a shape file.
 
 **Accepted gaps.** A gap accepted with `flowatlas accept` is left out of every
@@ -1288,8 +1327,32 @@ the graph is missing something:
 | `info` | an edge is there and static reading cannot see it | no; reported beside the total |
 | `nothing` | no edge exists to draw — a template binding that assigns to a field has no method behind it | no; reported on its own line |
 
-`build` says the same thing in its last line: the rows it could not read, then
-the places where nothing joins, never added together.
+Level is how much a row matters; its kind is what it is about, and the two are
+independent. Only a gap is counted as missed:
+
+| Kind | What it is | Counted as |
+|---|---|---|
+| gap | the reader could not follow something (`call-dynamic-receiver`, `type-unresolved`, `unknown-base-url-env`) | `missed`, at `action` or `info`; `nothing` at `nothing` |
+| note | how a join or a reading was made, with nothing missed (`base-url-from-files`, `package-from-repo`, `route-checked-in-body`) | `notes` |
+| finding | something about the code (`query-in-loop`, `route-unguarded`, `route-shadowed`) | `findings`, and on a line of its own |
+
+The heading says the build line's figures after the one `--strict` compares,
+and findings get their own line naming what each is:
+
+```
+unresolved: 26 to act on · missed: 28 · notes: 0 · findings: 3
+  5 missed places static reading cannot see, folded into 5 rows
+  3 findings: 3 routes with no guard
+```
+
+A group of notes or findings is marked `(note)` or `(finding)` instead of
+`(info)`, and `doctor.json` carries `unresolved.notes`, `unresolved.findings`
+and a `kind` on every group. `unresolved.info` and `unresolved.nothing` count
+gap rows only. The baseline is untouched by kinds: its `total` and keys still
+count every actionable row, findings included (`route-unguarded` where a guard is
+expected), so a baseline accepted before kinds existed gives the same verdict
+after. `build` says the same thing in its last line: what was missed, the notes,
+the findings, then the places where nothing joins, never added together.
 
 A row an annotation has already answered is `info`, not `action`. An address
 built at run time that `@CallsService` or `@flowatlas-calls` already names is a
