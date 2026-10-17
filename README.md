@@ -277,6 +277,7 @@ read again and the others come from the cache.
 | `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks |
 | `flowatlas cache <action>` | list, prune or clear the graphs `diff` keeps per commit |
+| `flowatlas docs [paths...]` | whether the Markdown blocks that describe a flow still say what the graph says; `--write` regenerates them |
 
 `doctor` is the one to run after a first build. It groups every finding by
 reason, and each row carries the file, the line and what to do about it:
@@ -327,6 +328,24 @@ asks: given this branch, which entry points in which repositories would notice.
 Its output is markdown because it is meant for a pull request comment, and
 `--fail-on-contract-break` turns a new disagreement into a failure.
 [docs/ci.md](docs/ci.md) is the whole recipe.
+
+A page can name a flow in a block of two HTML comments, which no Markdown
+renderer shows, and `flowatlas docs --write` fills it from the graph - the tree,
+a flowchart, a sequence diagram, a contract table, the prompt text, or a tour
+with a note slot under each step that the next regeneration keeps:
+
+```md
+## Placing an order
+
+<!-- flowatlas:flow id="POST /orders" view="sequence" -->
+<!-- /flowatlas:flow -->
+```
+
+`flowatlas docs --check` exits 1 when the flow a block describes gained or lost
+a step since it was written, naming the step, or when its route is gone; moving
+or reformatting code never fails it. `diff` lists the blocks a branch makes
+stale, and the graph server tells an agent which pages describe the flow it is
+changing.
 
 An entry can be named the way you would say it out loud. All three of these mean
 the same route:

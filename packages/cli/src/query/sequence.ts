@@ -1,35 +1,13 @@
-import { wasMissed, type GraphEdge } from '@flowatlas/core';
-import { DEFAULT_BLAST_DEPTH, sequenceOf, siteOfEdge, type GraphDb, type Sequence, type SequenceDetail, type SequenceSite } from '@flowatlas/linker';
-import { buildFlowTree, defaultFlowDepth, type FlowNode } from '@flowatlas/mcp';
+import type { GraphEdge } from '@flowatlas/core';
+import { DEFAULT_BLAST_DEPTH, sequenceOf, type GraphDb, type Sequence, type SequenceDetail } from '@flowatlas/linker';
+import { buildFlowTree, defaultFlowDepth, SEQUENCE_WALK_DETAIL, sitesFrom, stopsIn, type FlowNode } from '@flowatlas/mcp';
 
-/**
- * Why a walk cannot see past a row, read off the graph (P116): the reason of
- * the first gap row recorded against its node, by line. A note says how a join
- * was made and a finding says something about the code, so neither is a stop;
- * nor is a row at `nothing`, which has no edge to draw (`wasMissed`).
+/*
+ * Why a walk stops at a row, the edge site behind a row and the detail a
+ * sequence is walked at are the server's (P120), so a doc block and `diff`
+ * read one sequence the same way. Re-exported for the commands that walk.
  */
-export const stopsIn =
-  (db: GraphDb) =>
-  (row: Pick<FlowNode, 'node'>): string | undefined =>
-    db
-      .unresolvedFor(row.node.id)
-      .filter((item) => wasMissed(item))
-      .sort((a, b) => (a.line ?? 0) - (b.line ?? 0) || (a.reason < b.reason ? -1 : a.reason > b.reason ? 1 : 0))[0]?.reason;
-
-/** The site of the graph edge behind each row, from the map a walk fills (`FlowOptions.edgesOf`). */
-export const sitesFrom =
-  (edges: ReadonlyMap<FlowNode, GraphEdge>) =>
-  (row: FlowNode): SequenceSite | undefined => {
-    const edge = edges.get(row);
-    return edge === undefined ? undefined : siteOfEdge(edge);
-  };
-
-/**
- * The detail a sequence is walked at, whatever was asked for: a participant
- * label reads a channel's kind (`meta`), and `flow --format sequence` must draw
- * the diagram `diff` draws (I7: read at render, nothing stored).
- */
-export const SEQUENCE_WALK_DETAIL = 2;
+export { SEQUENCE_WALK_DETAIL, sitesFrom, stopsIn };
 
 /**
  * How far a sequence is walked when nobody says: at least as far as `diff`

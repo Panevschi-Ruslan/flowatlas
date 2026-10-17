@@ -2,6 +2,7 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { nextFor, withNext } from '../query/next.js';
+import { staleDocsCount } from '../query/docs.js';
 import { START_LIMITS, summariseProject, type StartSummary } from '../query/start.js';
 import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
 
@@ -42,6 +43,7 @@ export const startOutput = {
   topFindings: z.array(reasonOutput),
   channels: z.object({ noConsumers: z.array(z.string()), noProducers: z.array(z.string()) }),
   startFrom: z.array(nodeOutput),
+  staleDocs: z.number().optional(),
   next: nextOutput,
 };
 
@@ -92,8 +94,10 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
       withDb(ctx.handle, (db) => {
         const summary = startSummaryOf(db, input.service, input.perService);
         const lonely = summary.channels.noConsumers[0] ?? summary.channels.noProducers[0];
+        // Doc blocks that no longer say what the graph says (P120), when `flowatlas docs` has indexed any.
+        const staleDocs = staleDocsCount(db, ctx.handle.path, input.service);
         return withNext(
-          summary,
+          { ...summary, ...(staleDocs === undefined ? {} : { staleDocs }) },
           nextFor(
             summary.startFrom[0],
             lonely === undefined ? undefined : { id: lonely, type: 'channel' },

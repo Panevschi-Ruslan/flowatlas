@@ -47,6 +47,29 @@ export type PackedLogs = Record<number, Array<[level: Word, line: number, text?:
 
 type LogLine = { level?: unknown; text?: unknown; at?: unknown };
 
+/** A doc block about a node, as the details panel lists it (P120). */
+export type PackedDocs = Record<number, Array<[file: string, line: number, kind: string, state: string]>>;
+
+/** One block of the index, as the pack reads it: about which node, where, and what a check said now. */
+export interface PackDoc {
+  node: string;
+  file: string;
+  line: number;
+  kind: string;
+  state: string;
+}
+
+const packDocs = (docs: readonly PackDoc[] | undefined, position: ReadonlyMap<string, number>): PackedDocs | undefined => {
+  if (docs === undefined) return undefined;
+  const packed: PackedDocs = {};
+  for (const doc of docs) {
+    const at = position.get(doc.node);
+    if (at === undefined) continue;
+    (packed[at] ??= []).push([doc.file, doc.line, doc.kind, doc.state]);
+  }
+  return Object.keys(packed).length === 0 ? undefined : packed;
+};
+
 /** What each node logs, kept to a level, a line and a template, with the dictionaries both index. */
 const packLogs = (nodes: readonly GraphNode[]): { logs?: PackedLogs; logLevels?: string[]; logTexts?: string[] } => {
   const found: Array<[number, Array<[string, number, string?]>]> = [];
@@ -234,6 +257,12 @@ export interface PackedGraph {
    * Absent when nothing logs.
    */
   logs?: PackedLogs;
+  /**
+   * The doc blocks about each node (P120), by node position, as
+   * `[file, line, kind, state]`, from the `docs.json` beside the database,
+   * each checked against this graph. Absent when no block is about a node.
+   */
+  docs?: PackedDocs;
   /**
    * What the reader could not follow, by cause and package, less what was
    * accepted (P75). Absent when everything read was followed. See `cant-follow.ts`.
@@ -423,6 +452,8 @@ export interface PackInput {
   changes?: PackedChanges;
   /** What the configuration says about routes nobody calls (P91), for the Map's counts. */
   routes?: MapInput['routes'];
+  /** The doc blocks of `docs.json` that name a node, checked against this graph (P120). */
+  docs?: readonly PackDoc[];
 }
 
 /** The split, as the page needs it: `byEntry` lines up with the rows packed. */
@@ -499,6 +530,8 @@ const totalsOf = (
   const { missed, sites, notes, findings } = countsOf(rows);
   return { nodes: totals.nodes, edges: totals.edges, types: totals.types, missed, sites, notes, findings, unresolved: missed };
 };
+
+const withDocs = (docs: PackedDocs | undefined): Pick<PackedGraph, 'docs'> => (docs === undefined ? {} : { docs });
 
 export const packGraph = (input: PackInput): PackedGraph => {
   const rowsIn = input.unresolved;
@@ -635,6 +668,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     ...(fails === undefined ? {} : { fails: fails.fails }),
     ...withAccess(packAccess(input.nodes)),
     ...(logs === undefined ? {} : { logs }),
+    ...withDocs(packDocs(input.docs, position)),
     ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds, position) }),
     ...(accepted.packed === undefined ? {} : { accepted: accepted.packed }),
     ...packCantFollow(accepted.fresh, position),

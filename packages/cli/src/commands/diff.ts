@@ -37,6 +37,7 @@ import { processIo, type QueryIo } from '../query/answer.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
 import { DIFF_MARKDOWN_DEFAULTS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
 import { flowChanges } from '../report/flow-changes.js';
+import { staleDocsOf, type StaleDocs } from '../report/stale-docs.js';
 import { sequenceDetailOf } from './flow.js';
 import { registerCache } from './cache.js';
 
@@ -87,6 +88,8 @@ export interface DiffRun {
   exitCode: number;
   /** Services neither ref could be read for, when there were any. */
   unread?: string[];
+  /** The head side's doc blocks the branch makes stale, and those stale already (P120). */
+  docs: StaleDocs;
 }
 
 const oneOf = <T extends string>(
@@ -273,10 +276,12 @@ export const runDiff = async (
       depth: settings.depth,
       disableRules: settings.rules.disable,
     });
-    const { impact, flows } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
+    const { impact, flows, docs } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
       const rows = impactOf(dbs, diff, { maxEntries, maxNodes });
       return {
         impact: rows,
+        // Read, never written: `diff` says which pages to update, `docs --write` updates them.
+        docs: staleDocsOf(loaded, head, dbs),
         flows: flowChanges({ impact: rows.rows, nodes: diff.nodes, types: diff.types }, dbs, {
           maxFlows,
           maxNodes: DEFAULT_WALK_NODES,
@@ -346,7 +351,7 @@ export const runDiff = async (
     const text =
       format === 'json'
         ? `${JSON.stringify(report, null, 2)}\n`
-        : renderDiffMarkdown(report, { file, ...markdown });
+        : renderDiffMarkdown(report, { file, ...markdown, docs });
     io.out(text);
     io.err(`${summariseDiff(report)}\n`);
     for (const kept of [...builtHead.worktrees, ...builtBase.worktrees]) {
@@ -383,6 +388,7 @@ export const runDiff = async (
       file,
       exitCode: refused ? EXIT.failed : EXIT.ok,
       ...(unread.size === 0 ? {} : { unread: [...unread] }),
+      docs,
     };
   } finally {
     if (options.keepWorktrees === true) io.err(`work kept: ${workDir}\n`);

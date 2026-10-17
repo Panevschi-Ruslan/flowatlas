@@ -101,6 +101,16 @@ sequenceDiagram
 
 Ways in whose steps did not change: `event order.created` (billing)
 
+## Docs this branch makes stale
+
+- `docs/flows.md:9` — flow `POST /orders` (sequence): **changed**
+  - `+ orders → order.gift-wrapped (topic) order.gift-wrapped`
+  - `+ order.gift-wrapped (topic) → billing order.gift-wrapped`
+- `docs/flows.md:33` — flow `GET /shipments/:id` (steps): **gone**
+  - nearest: `entry:orders:http:GET:/shipments/:param/status`, `entry:orders:http:GET:/orders/:param`
+
+Run `flowatlas docs --write` on this branch to regenerate them.
+
 ## Contract changes
 
 1 new, 0 fixed, 0 already there, 2 excused

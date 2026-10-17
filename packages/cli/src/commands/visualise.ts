@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted, type AcceptedRead } from '@flowatlas/core';
 import { acceptedSplitOf, type GraphDb } from '@flowatlas/linker';
+import { docsNow } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
 import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
@@ -151,6 +152,8 @@ const routeRulesFor = (options: VisualiseOptions): PackInput['routes'] => {
 
 const withRoutes = (routes: PackInput['routes']): Pick<PackInput, 'routes'> => (routes === undefined ? {} : { routes });
 
+const withDocsOf = (docs: NonNullable<PackInput['docs']>): Pick<PackInput, 'docs'> => (docs.length === 0 ? {} : { docs });
+
 /**
  * The graph in a database, packed for the page: every node and edge, and the
  * rows as every other surface counts them - demoted where an annotation
@@ -160,7 +163,7 @@ const withRoutes = (routes: PackInput['routes']): Pick<PackInput, 'routes'> => (
 export const packDatabase = (
   db: GraphDb,
   read: AcceptedRead,
-  extra: Partial<Pick<PackInput, 'observed' | 'editor' | 'changes' | 'routes'>> = {},
+  extra: Partial<Pick<PackInput, 'observed' | 'editor' | 'changes' | 'routes' | 'docs'>> = {},
 ): PackedGraph => {
   const report = db.report();
   if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
@@ -207,6 +210,8 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       ...(editor === undefined ? {} : { editor }),
       ...(options.changes === undefined ? {} : { changes: options.changes }),
       ...withRoutes(routeRulesFor(options)),
+      // The pages that describe a node (P120), from `flowatlas docs`, checked against this graph.
+      ...withDocsOf(docsNow(db, dbPathFor(options))),
     });
     const totals = db.counts();
     counts = { nodes: totals.nodes, edges: totals.edges };

@@ -6,7 +6,8 @@ see the [README](../README.md).
 Commands fall into four groups. **Setting up** writes the configuration and
 registers the graph server. **Building** reads the repositories. **Asking** reads
 the built graph and never touches a repository. **Checking** says what could not
-be read, what is accepted, and what a branch changes.
+be read, what is accepted, what a branch changes, and whether the docs that
+describe a flow still say what the graph says.
 
 Two flags appear almost everywhere and mean the same thing every time:
 
@@ -1768,6 +1769,16 @@ has is drawn on that side alone, titled added or removed (a removed one read off
 the base graph). The flows that changed most, across most services, come first;
 ways in whose steps did not change are named on one line.
 
+**Docs this branch makes stale**, after the changed flows, lists each doc block
+(see `flowatlas docs`) on the head side that no longer says what the head
+graph says but did say what the base graph says, at its `file:line`, with the
+steps added and removed under it, so a reviewer sees which pages to update in
+the same pull request. Blocks that were stale before the branch are counted on
+one line; a project without doc blocks gets no section. The head side's files
+are read from the working tree, or at the head ref from the repository of the
+service each is in. The section is in the Markdown only: `diff.json` is
+unchanged by it.
+
 `diff.json` is format 3 (`diffFormatVersion`). Format 2 added `unresolved`
 (`{ added, removed }`, each row `{ id, kind, service, file, line?, reason,
 node?, sites }`, `kind` `gap` or `finding`) and `joins` (`{ lost }`, each
@@ -1794,6 +1805,93 @@ once. `ls`, `prune` or `clear`.
 | `--keep <n>` | 10 | entries `prune` keeps, newest first |
 | `--max <n>` | all | most rows to print |
 | `--json` | off | print the answer as JSON |
+
+### `flowatlas docs [paths...]`
+
+Markdown kept true to the graph. A page names a flow, a channel or a symbol in
+a block of two HTML comments - invisible wherever Markdown is rendered - and
+`flowatlas docs --write` fills the space between them from the graph:
+
+```md
+<!-- flowatlas:flow id="POST /orders" view="sequence" -->
+<!-- /flowatlas:flow -->
+```
+
+becomes the diagram `flow --format sequence` draws, with the closing marker
+holding a fingerprint of what the diagram shows and, one per line, the steps
+it covered:
+
+```md
+<!-- flowatlas:flow id="POST /orders" view="sequence" -->
+…the diagram…
+<!-- /flowatlas:flow fingerprint="4bb04c97"
+["enters","caller","orders","POST /orders","",["type:@fx/contracts#CreateOrderDto"],"type:@fx/contracts#OrderDto"]
+["emits","orders","channel:order.created","order.created","",["type:@fx/contracts#OrderDto"]]
+-->
+```
+
+`flowatlas docs --check` then fails a pipeline when the flow a block describes
+has changed since it was written, and says which steps were added or removed.
+The fingerprint is of what the block shows, not of its text: node ids without
+their positions, how each was reached and how sure the graph is, the type ids
+carried in and out, in walk order, and the steps between services. Moving code
+down a file or reformatting it changes nothing; a new step, a removed one or a
+changed shape fails the check.
+
+| Flag | Default | Does |
+|---|---|---|
+| `[paths...]` | `docs.files`, else every `*.md` under the configuration | Markdown files, directories or globs to read |
+| `--check` | off | exit 1 when a block is `changed`, `gone` or `ambiguous`; 2 when a marker cannot be read |
+| `--write` | off | regenerate the content between the markers of every block that names one node, in place |
+| `--list` | off | every block with its id, view and state |
+| `--format <name>` | `text` | `text`, `json`, or `github` (a `::warning` at each stale block's opening line) |
+| `--config <path>`, `--db <path>` | found from the working directory | the project and the graph |
+
+**Blocks.** `flow` names a way in, `channel` a channel (publishers and
+handlers), `symbol` any node (what reaches it and what it reaches). `ref`
+holds nothing: `<!-- flowatlas:ref id="orders#src/orders/orders.service.ts:OrdersService.create" -->`
+before a mention in prose is checked to still name a node. An `id` is a node
+id, an entry said aloud (`POST /orders`, `bot:order_confirm`), or a name that is
+exactly one node's label; a channel may be named without `channel:`. A name
+that matches nothing is never re-pointed at the nearest one: the block is
+`gone`, with the nearest names. Attributes: `view`, `depth`, `max-nodes`
+(default 60; 120 for `prompt`), `detail` (0 to 2, default 1) and `service`,
+which says which service's route a name means when two serve it.
+
+**Views.**
+
+| View | What is written |
+|---|---|
+| `steps` (default) | the tree `flow` prints, in a `text` block |
+| `mermaid` | the flowchart `flow --format mermaid` draws |
+| `sequence` | the sequence diagram `flow --format sequence` and `diff` draw |
+| `prompt` | the Markdown `describe_for_prompt` answers with and the page copies, its headings two levels down |
+| `contract` | a table of each crossing with what it sends, gets back and what the handler takes, each shape's fields, and what the way in can fail with |
+| `tour` | a numbered walkthrough, one line per step with its service and `file:line`, and a note slot under each |
+
+**Tours.** Each step line carries its key (`<!-- step key="…" -->`, the node id
+without a position). Whatever is written under a step line is that step's
+note, and a regeneration puts it back under the step with the same key,
+wherever the step now is. A note whose step left the flow is kept at the end of
+the block under **Orphaned notes**, never deleted, and returns to its step if
+the step does.
+
+**States.** `ok`: the fingerprint is the graph's. `changed`: it is not, with
+the steps added (`+`) and removed (`-`) since; a block written by hand, with no
+fingerprint, is `changed` until it is written once. `gone`: the id names
+nothing, with the nearest names. `ambiguous`: it names more than one node, each
+named; nothing is written into it. A marker that cannot be read (unclosed,
+opened inside another block, an unknown kind, attribute or view) is reported
+with its line and its block skipped. Markers inside a fenced code block or a
+code span are text about markers and are ignored.
+
+**What it writes.** Only `--write` writes, only between flowatlas markers, only
+in the files named or configured, and nothing when the content is already what
+it would write. Every run writes `docs.json` beside the graph
+(`docsFormatVersion: 1`: `files` read, and per block `file`, `line`, `kind`,
+`id`, `node`, `view`, `options`, `state`, `fingerprint`, `near`,
+`candidates`), which the MCP server and `flowatlas visualise` read to say which
+documents describe a node.
 
 ---
 
@@ -2031,6 +2129,7 @@ worked example of a document that declares routes.
 | `dead.infrastructure.names` | string[] | `[]` | handler or controller names (`OpsController`, `OpsController.flush`) that mark a route as infrastructure |
 | `dead.infrastructure.builtIn` | boolean | `true` | `false` turns the built-in probe, webhook, callback and well-known rules off; the three lists still apply |
 | `callShape.boundedCalls` | string[] | `[]` | helpers of your own that split a list into chunks, beside the built-in `chunk`, `chunks`, `batches`, `inChunks` and `splitEvery`: a loop over what one returns is set aside |
+| `docs.files` | string[] | every `*.md` under this file | the Markdown files `flowatlas docs` reads for blocks tied to flows: paths or globs, relative to this configuration. Files in the output directory and `node_modules` are never read |
 
 **A path segment written as a closed set.** A segment whose type is a union of
 string literals — `action: 'ship' | 'refund'` — is a segment that was

@@ -3,6 +3,7 @@ import { acceptedSplitOf, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
+import { withDocs } from '../query/docs.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { loadObservedCounts } from '../query/observed.js';
@@ -51,10 +52,17 @@ const checkOf = (db: GraphDb, ctx: ToolContext, gapId: string): PromptSubject | 
   return gatherCheckSubject(db, gapId, rowsOfGap(split.rows, gapId));
 };
 
-const answer = (id: string, subject: PromptSubject, input: { maxSteps: number; maxChars: number }, alsoAnswers?: string[]) => {
+/** `docs` names the blocks about the subject (P120), so the hand-off says which page describes it. */
+const answer = (
+  id: string,
+  subject: PromptSubject,
+  input: { maxSteps: number; maxChars: number },
+  alsoAnswers?: string[],
+  docs: { docs?: unknown[] } = {},
+) => {
   const next = askNextOf(subject);
   const markdown = describeForPrompt(subject, { ...PROMPT_LIMITS, maxSteps: input.maxSteps, maxChars: input.maxChars });
-  return withNext({ id, ...(alsoAnswers === undefined ? {} : { alsoAnswers }), markdown }, next);
+  return withNext({ id, ...(alsoAnswers === undefined ? {} : { alsoAnswers }), markdown, ...docs }, next);
 };
 
 /**
@@ -144,7 +152,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
           if (scoped !== undefined && 'error' in scoped) {
             return { ...scoped, next: (scoped.scopes ?? []).slice(0, MAX_NEXT).map((scope) => `describe_for_prompt({id: ${JSON.stringify(trimmed)}${scope === 'node' ? '' : `, scope: ${JSON.stringify(scope)}`}})`) };
           }
-          if (scoped !== undefined) return answer(scoped.id, scoped.subject, input);
+          if (scoped !== undefined) return answer(scoped.id, scoped.subject, input, undefined, withDocs(db, ctx.handle.path, scoped.id));
         }
         const found = subjectOf(db, input.id);
         if (Array.isArray(found)) {
@@ -158,7 +166,7 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
               );
         }
         const subject = gatherPromptSubject(db, found.node, loadObservedCounts(ctx.handle.path));
-        return answer(found.node.id, subject, input, found.alsoAnswers);
+        return answer(found.node.id, subject, input, found.alsoAnswers, withDocs(db, ctx.handle.path, found.node.id));
       }),
   );
 };

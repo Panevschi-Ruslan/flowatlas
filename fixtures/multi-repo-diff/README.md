@@ -24,6 +24,14 @@ head revision renames. Nobody edited the gateway, which is exactly the
 situation no compiler can see: the break is between two repositories that each
 still compile.
 
+`base/docs/flows.md` is a page written by `flowatlas docs --write` against the
+base revision, outside every repository (so no commit sha moves): `POST /orders`
+as a sequence, `GET /shipments/:id` as a tree, and a `ref` to a method neither
+revision changes. The head revision changes both flows without touching the
+page, so the diff's **Docs this branch makes stale** names the first `changed`
+(the gift-wrap publish and its handler, added) and the second `gone`, with the
+renamed route as the nearest name (P120).
+
 `expected.cli/` holds the document `flowatlas diff HEAD~1` writes (P116):
 `diff.md` with its changed flows drawn, `diff.class.md` with a participant per
 class, one diagram and no context, and `diff.json`. `scripts/cli-snapshots.mjs`

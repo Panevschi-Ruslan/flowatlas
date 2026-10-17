@@ -103,7 +103,8 @@ describe('the tools a session is offered', () => {
    * grew by what the three tools say and the inputs they take; the rest is
    * their output schemas, which the client checks every answer against.
    * P96 gave `what_changed` its `verdict` and said so in its description:
-   * 9,659 and 27,446, inside both ceilings. Its prompts and resources are
+   * 9,659 and 27,446, inside both ceilings. P120 gave `start_here`'s
+   * output schema `staleDocs`: 9,659 and 27,476. Its prompts and resources are
    * listed apart (`prompts/list`, `resources/list`) and cost the tool list
    * nothing.
    */

@@ -103,3 +103,20 @@ export { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen, joinIdOf } f
 export type { ObservedCounts, TreeDirection } from './query/observed.js';
 export { cantFollowFor } from './tools/cant-follow.js';
 export type { CantFollowAnswer, CantFollowPlace } from './tools/cant-follow.js';
+export {
+  checkDocBlock,
+  DOC_WALK,
+  docsAbout,
+  docsNow,
+  docsPathFor,
+  docSubjectOf,
+  loadDocsIndex,
+  recordedOf,
+  resolveDocTarget,
+  SEQUENCE_WALK_DETAIL,
+  sitesFrom,
+  staleDocsCount,
+  stopsIn,
+  withDocs,
+} from './query/docs.js';
+export type { DocAsk, DocCheck, DocRef, DocSubject, DocTarget } from './query/docs.js';

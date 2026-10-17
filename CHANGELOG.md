@@ -422,6 +422,24 @@ only one of them moved.
   as the same Mermaid sequence diagram `diff` draws, without the marks, walked
   16 hops unless `--depth` says; `--sequence-detail class` drew a participant
   per class.
+- **Docs tied to flows (P120).** `flowatlas docs [paths...]` reads Markdown
+  blocks that name a flow, a channel or a symbol by its graph id
+  (`<!-- flowatlas:flow id="POST /orders" view="sequence" -->` …
+  `<!-- /flowatlas:flow fingerprint="…" -->`, and `<!-- flowatlas:ref id="…" -->`
+  before a mention in prose). `--write` regenerates the content between the
+  markers, in place and nowhere else, in one of six views: `steps`, `mermaid`,
+  `sequence`, `prompt`, `contract` and `tour`, whose notes are kept by step and
+  never deleted. `--check` exits 1 when a block is `changed` (the steps it
+  covered were added to or removed since it was written, each named), `gone`
+  (with the nearest names) or `ambiguous`, and 2 on a marker it cannot read;
+  `--format github` writes a `::warning` at each block. The fingerprint is of
+  what the block shows, not its text, so a reformat never fails it. Every run
+  writes `docs.json` beside the graph (`docsFormatVersion: 1`); the
+  configuration gained `docs.files`. `flowatlas diff` gained **Docs this branch
+  makes stale**; `get_flow`, `describe_for_prompt` and `impact` gained `docs`
+  (the blocks about the node, each checked when asked), `start_here` gained
+  `staleDocs`, and the page's details panel lists the docs that describe a
+  node (`fixtures/multi-repo/docs`, `fixtures/multi-repo-diff/base/docs`).
 - **`what_changed` said what each changed flow does now (P116).** A way in
   under `entries` or `retest` whose flow changed gained `flow: { side, added,
   removed, changed, steps }`, `steps` the changed steps as text from detail 1

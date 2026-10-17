@@ -583,6 +583,21 @@ which never decide the verdict). One `offset` pages these with the rest.
 method of the first new gap and asks who calls the first caller that lost its
 target.
 
+### Pages that describe a node
+
+Where `flowatlas docs` has indexed doc blocks (its `docs.json`, beside the
+database), `get_flow`, `describe_for_prompt` and `impact` carry `docs` on an
+answer about a node a block names: `[{ file, line, kind, state }]`, `file`
+relative to the configuration, `kind` `flow`, `channel`, `symbol` or `ref`. The
+state is worked out when the question is asked, against the graph as it is
+then, not when the index was written: `ok`, `changed` (the flow the block
+describes gained or lost a step since it was written), `gone` or `ambiguous`.
+An agent changing that flow learns there is a page to update with it, and
+which line; `flowatlas docs --write` regenerates it. `start_here` says
+`staleDocs`, how many blocks no longer say what the graph says (under
+`service`, the blocks about its nodes). Without an index, neither appears. No
+tool is added for it.
+
 ### Prompts and resources
 
 Three prompts write out the calls a common review takes, with the ids already

@@ -157,6 +157,20 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "docs": [
+    {
+      "file": "docs/architecture.md",
+      "line": 32,
+      "kind": "flow",
+      "state": "ok"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 59,
+      "kind": "flow",
+      "state": "changed"
+    }
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:orders:http:POST:/orders\"})",
     "impact({symbol: \"entry:orders:http:POST:/orders\"})",

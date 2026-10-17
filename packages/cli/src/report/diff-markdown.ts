@@ -21,6 +21,7 @@ import {
 } from '@flowatlas/linker';
 import { groupEntries, reachableSummary } from '../query/callers.js';
 import { foldSteps, notWalked, renderSequenceDiagram } from '../render/sequence.js';
+import { staleDocLines, type StaleDocs } from './stale-docs.js';
 
 export interface DiffMarkdownOptions {
   /** Most rows to print in any one table. The file on disk is complete (I9). */
@@ -39,6 +40,8 @@ export interface DiffMarkdownOptions {
   maxChars?: number;
   /** False for step lists without the Mermaid. */
   diagrams?: boolean;
+  /** The doc blocks the head side holds, checked on both sides (P120); absent, the section is left out. */
+  docs?: StaleDocs;
 }
 
 /**
@@ -46,7 +49,7 @@ export interface DiffMarkdownOptions {
  * 65,536 characters a pull-request comment on GitHub may hold, with room for
  * whatever a workflow adds around it.
  */
-export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions, 'file'>>> = Object.freeze({
+export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions, 'file' | 'docs'>>> = Object.freeze({
   maxRows: 50,
   maxDiagrams: 5,
   context: 3,
@@ -56,7 +59,7 @@ export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions,
 
 const DEFAULTS = DIFF_MARKDOWN_DEFAULTS;
 
-type Settings = Required<Omit<DiffMarkdownOptions, 'file'>> & DiffMarkdownOptions;
+type Settings = Required<Omit<DiffMarkdownOptions, 'file' | 'docs'>> & DiffMarkdownOptions;
 
 const escape = (text: string): string => text.replace(/\|/g, '\\|');
 
@@ -564,6 +567,7 @@ export const renderDiffMarkdown = (report: DiffReport, options: DiffMarkdownOpti
       ...warningLines(report),
       ...impactLines(report, settings),
       ...flowLines(report, settings, room),
+      ...staleDocLines(settings.docs, settings.maxRows),
       ...contractLines(report, settings),
       ...joinLines(report, settings),
       ...gapLines(report, settings),

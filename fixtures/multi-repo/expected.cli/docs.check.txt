@@ -1,0 +1,9 @@
+docs/architecture.md:59  flow POST /orders (contract)  changed
+    never written: run flowatlas docs --write
+docs/architecture.md:126  flow GET /orders/:param/export (steps)  gone
+    nearest: entry:gateway:http:GET:/orders/:param, entry:orders:http:GET:/orders/:param
+docs/architecture.md:133  flow GET /orders/:param (steps)  ambiguous
+    could mean: entry:gateway:http:GET:/orders/:param, entry:orders:http:GET:/orders/:param; add service="…" or use a full id
+docs: 8 blocks in 1 of 1 file: 5 ok, 1 changed, 1 gone, 1 ambiguous
+--- stderr ---
+exit 1

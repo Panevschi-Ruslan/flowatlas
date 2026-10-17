@@ -43,7 +43,8 @@ const failures = [];
 for (const dir of fixtureDirs()) {
   const { kind, steps } = layoutOf(dir);
   done[kind] += 1;
-  for (const { args, writes, mayDecline = false } of steps) {
+  for (const { args, writes, mayDecline = false, when } of steps) {
+    if (when !== undefined && !when(dir)) continue;
     // Last run's answer is not this run's: see `steps` in fixture-layout.mjs.
     for (const file of writes) rmSync(join(outputDir(dir), file), { force: true });
     try {
