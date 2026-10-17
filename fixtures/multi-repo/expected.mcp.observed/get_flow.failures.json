@@ -1,0 +1,99 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "loc": "src/invoices/invoices.controller.ts:15",
+      "service": "billing",
+      "kind": "http"
+    },
+    "fails": [
+      {
+        "status": 409,
+        "exception": "ConflictException",
+        "sources": [
+          "throw"
+        ],
+        "sites": 1,
+        "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+        "loc": "src/invoices/invoices.service.ts:15"
+      }
+    ],
+    "observed": 22,
+    "p95": 11.81,
+    "errorRate": 0.0455,
+    "failures": {
+      "hits": 22,
+      "window": {
+        "from": "2025-10-16T07:00:00.000Z",
+        "to": "2025-10-16T09:00:00.000Z"
+      },
+      "undeclared": [
+        {
+          "status": 500,
+          "count": 1,
+          "share": 0.0455
+        }
+      ],
+      "declaredNeverSeen": [
+        {
+          "status": 409,
+          "exception": "ConflictException",
+          "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+          "loc": "src/invoices/invoices.service.ts:15"
+        }
+      ]
+    },
+    "children": [
+      {
+        "node": {
+          "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+          "type": "method",
+          "label": "InvoicesController.create",
+          "loc": "src/invoices/invoices.controller.ts:15"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "type:billing#CreateInvoiceDto"
+          ],
+          "returns": "type:billing#InvoiceDto"
+        },
+        "observed": 22,
+        "p95": 11.81,
+        "errorRate": 0,
+        "children": [
+          {
+            "node": {
+              "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+              "type": "method",
+              "label": "InvoicesService.create",
+              "loc": "src/invoices/invoices.service.ts:14"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "type:billing#CreateInvoiceDto"
+              ],
+              "returns": "type:billing#InvoiceDto"
+            },
+            "observed": 2,
+            "p95": 40.2,
+            "errorRate": 0.5,
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "next": [
+    "describe_for_prompt({id: \"entry:billing:http:POST:/invoices\"})",
+    "trace_for({entry: \"entry:billing:http:POST:/invoices\"})",
+    "impact({symbol: \"entry:billing:http:POST:/invoices\"})",
+    "get_source({symbol: \"billing#src/invoices/invoices.controller.ts:InvoicesController.create\"})"
+  ]
+}

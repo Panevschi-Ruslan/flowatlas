@@ -1182,14 +1182,23 @@ the tables, addresses and channels they reach, and the next service's way in.
   by status and exception, and so do the ways-in list and the details panel;
   the step that throws is marked. The details panel lists each status and
   exception once with how many places raise it, the places behind a
-  disclosure, and a status nothing on the path writes as `500?`. A scheduled way in shows its expression and the zone it fires in.
+  disclosure, and a status nothing on the path writes as `500?`. With an
+  observed file beside the graph (P106), each declared status says what
+  traffic answered: `404 seen ×3`, or `409 never seen` for a way in hit at
+  least 20 times in the window; and each status from 400 up that it answered
+  and no failure declares is a chip of its own, `500 ×4 not declared`, drawn
+  quieter where the framework answers it anyway (the router's 404, a 401 or
+  403 from a check in front of it, a 400 for a body it cannot read) with the
+  reason on hover. The details panel lists the same under the declared ones,
+  with the window they are over. A scheduled way in shows its expression and the zone it fires in.
   A step's log lines are folded under it, as templates.
 - **Moving around.** Hovering a row lights its node in the Graph tab's
   drawing, where a way in's steps also open above the drawing; a row opens its
   `file:line` and *show in graph*. The depth goes to
   4, 8, 12 or 24 steps.
 - **Copy as prompt** copies the way in as Markdown for an assistant: what is in
-  front of it, what it can fail with, its schedule, the steps `get_flow` walks
+  front of it, what it can fail with and, with an observed file, what it was
+  seen failing with (P106), its schedule, the steps `get_flow` walks
   with their ids, repo-relative `file:line` and marks, shapes in and out, log
   lines, open gaps with their reasons, and the graph server's calls to make
   next. No source code. The same button is on a channel and on a check row,
@@ -1239,7 +1248,7 @@ files named and sends nothing anywhere.
 
 ```
 $ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json traces/billing.batches.observe.json
-30 spans read from 3 file(s)
+70 spans read from 3 file(s)
 not read: 1 snapshot of protocol ws, 1 node without o, c and m, 1 job without a span tree
 3 joins seen, 6 entries hit, 6 seen at run time but not found in code, 1 that could be more than one place
   db        billing  invoices  (2)
@@ -1254,12 +1263,12 @@ could be more than one place, so counted on none:
 slowest entries (p95):
   gateway GET /orders/:param  count 2  p50 47.26ms  p95 520ms  max 520ms  errors 0%
   orders GET /orders/:param  count 1  p50 496ms  p95 496ms  max 496ms  errors 0%
-  billing POST /invoices  count 2  p50 6.44ms  p95 41.5ms  max 41.5ms  errors 50%
   orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
   billing event order.created  count 1  p50 12ms  p95 12ms  max 12ms  errors 0%
+  billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
 failing most:
   orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
-  billing POST /invoices  count 2  p50 6.44ms  p95 41.5ms  max 41.5ms  errors 50%
+  billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
 window 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
 .flowatlas/observed.json
 ```
@@ -1355,8 +1364,11 @@ the unmatched list, and carries `p50`, `p95`, `max`, errors, statuses and the
 window for the page to draw (not drawn yet). The graph server's `get_flow` and
 `who_calls` show `observed: n` with `p95` and `errorRate` beside it on the rows
 it counted, and `seenAmbiguous: n` on a row that a request could have been;
-`hot_paths`, `slow_steps` and `trace_for` answer from it (see the
-[MCP guide](mcp.md)). Nothing is drawn from a trace: an edge it did not
+`hot_paths`, `slow_steps`, `trace_for` and `undeclared_failures` answer from
+it (see the [MCP guide](mcp.md)). The statuses each way in answered are set
+beside the failures its code declares (P106): on the page's failure chips, in
+`get_flow`, `describe_for_prompt` and *Copy as prompt*, and as `doctor` rows
+(see [`flowatlas doctor`](#flowatlas-doctor)). Nothing is drawn from a trace: an edge it did not
 confirm keeps the confidence it was read with, and the graph and its hash
 never depend on traffic.
 
@@ -1411,6 +1423,7 @@ installed, and what a service with no way in looks like.
 | `--section <name>` | all five | `unresolved`, `markers`, `desync`, `contracts`, `baseline`; repeatable |
 | `--service <name>` | every one | narrow every section to one repository |
 | `--strict` | off | exit 1 on a broken annotation, a contract error, or growth past the baseline |
+| `--strict-runtime` | off | exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered (with an observed file) |
 | `--accept` | off | write today's numbers as the baseline |
 | `--baseline <path>` | `<config dir>/flowatlas.baseline.json` | where the accepted numbers live |
 | `--no-baseline` | off | skip the growth check, so `--strict` asks only about annotations and contracts |
@@ -1531,9 +1544,25 @@ line of `flowatlas.config.json` that names the service. A service declared by a
 document is never named: none of its code was read, and a document that declares
 no way in describes a service nothing here enters.
 
+**Failures seen at run time (P106).** With an observed file beside the
+database (`flowatlas observe`), doctor sets the statuses each way in answered
+beside the failures its code declares, and adds two kinds of row, both at
+`info`: `failure-seen-undeclared` (a finding), one per way in and status from
+400 up that no failure declares, at the handler, saying how many of its
+requests answered it over which window, with `expected: <why>` where the
+framework answers it anyway; and `failure-declared-unseen` (a note), one per
+declared failure no request answered in the window, at the throw, said only of
+a way in hit at least 20 times. They are asked at doctor time and never stored
+in the graph; being `info`, they move neither the exit code nor the baseline.
+Traffic differs per environment and per week, and a build should not fail
+because nobody hit a 409 on Sunday; `--strict-runtime` is there for a team that
+wants it, and exits 1 on any of these rows but an expected status. `flowatlas
+accept` takes one like any other row.
+
 The exit code is decided by the first of these that applies: a graph that cannot
 be reported on, a baseline that cannot be read, or `--strict` with no baseline
-(2); `--strict` and a check that found something (1); otherwise 0.
+(2); `--strict` and a check that found something, or `--strict-runtime` and a
+failure row from traffic (1); otherwise 0.
 
 Every unresolved row is read at one of three levels, and only the first two say
 the graph is missing something:

@@ -293,6 +293,46 @@ const promptFailSay = (group) => {
   return group.status === undefined ? group.exception : `${group.status}${group.assumed === true ? '? ' : ' '}${group.exception}`;
 };
 
+/* ── What a way in answered at run time, beside what it declares (P106) ── */
+
+/** The hours a comparison covers, as a reader is told them: "never seen" means "in these". */
+const promptWindowSay = (window) =>
+  window === undefined || window.from === null
+    ? 'no hours held'
+    : `${window.from} to ${window.to}${window.since === undefined ? '' : ` (kept: the last ${window.since})`}`;
+
+const promptShare = (share) => `${Math.round(share * 1000) / 10}%`;
+
+/**
+ * The lines of a comparison: each status no failure declares, the declared
+ * ones traffic answered, and the declared ones it never did, or why that is
+ * not said.
+ */
+const promptSeenFailLines = (seen, limits) => {
+  const lines = [
+    ...seen.undeclared.map(
+      (row) =>
+        `- **${row.status}** ×${row.count}, ${promptShare(row.share)} of requests — not declared` +
+        (row.expected === undefined ? '' : `; expected: ${row.expected}`) +
+        (row.maybe === undefined ? '' : `; maybe ${row.maybe.map(promptCode).join(', ')}, which name no status`),
+    ),
+    ...seen.declaredSeen.map((row) =>
+      row.assumed === true
+        ? `- **${row.status}?** ${promptCode(row.exception)} — assumed, seen ×${row.count}: traffic, not the code, settled it`
+        : `- **${row.status}** ${promptCode(row.exception)} — declared, seen ×${row.count}`,
+    ),
+    ...seen.declaredNeverSeen.map(
+      (row) =>
+        `- **${row.status ?? 'no status'}** ${promptCode(row.exception)} — declared, never seen in the window` +
+        (row.loc === undefined ? '' : ` — at ${promptCode(row.loc)}`),
+    ),
+  ];
+  const kept = lines.slice(0, limits.maxFails);
+  if (lines.length > limits.maxFails) kept.push(`- … ${lines.length - limits.maxFails} more; ask undeclared_failures for the rest`);
+  if (seen.tooFewHits === true) kept.push(`- ${seen.hits} hits are too few to say a declared failure was never seen`);
+  return kept;
+};
+
 /* ── Steps ── */
 
 const promptWhere = (item) => [item.service, item.loc === undefined ? undefined : promptCode(item.loc)].filter(Boolean).join(' ');
@@ -634,6 +674,12 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
     ...head,
     ...promptSection('In front of it', promptAccessLines(subject.access)),
     ...(fails.length === 0 ? [] : promptSection(`Can fail with ${promptFailChips(fails).join(' · ')}`, promptFailLines(fails, bounds))),
+    ...(subject.failuresSeen === undefined
+      ? []
+      : promptSection(
+          `Failures seen at run time · ${subject.failuresSeen.hits} hits, ${promptWindowSay(subject.failuresSeen.window)}`,
+          promptSeenFailLines(subject.failuresSeen, bounds),
+        )),
     ...(isChannel
       ? promptSection(
           `Published by · ${producers.length}`,

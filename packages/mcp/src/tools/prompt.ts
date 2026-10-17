@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
-import { loadObservedCounts } from '../query/observed.js';
+import { failuresSeenRef, type FailuresSeenRef } from '../query/fails.js';
+import { failuresSeen, loadObservedCounts } from '../query/observed.js';
 import { describeForPrompt, PROMPT_LIMITS } from '../prompt/describe.js';
 import {
   fileIdOf,
@@ -51,10 +52,19 @@ const checkOf = (db: GraphDb, ctx: ToolContext, gapId: string): PromptSubject | 
   return gatherCheckSubject(db, gapId, rowsOfGap(split.rows, gapId));
 };
 
-const answer = (id: string, subject: PromptSubject, input: { maxSteps: number; maxChars: number }, alsoAnswers?: string[]) => {
+const answer = (
+  id: string,
+  subject: PromptSubject,
+  input: { maxSteps: number; maxChars: number },
+  alsoAnswers?: string[],
+  failures?: FailuresSeenRef,
+) => {
   const next = askNextOf(subject);
   const markdown = describeForPrompt(subject, { ...PROMPT_LIMITS, maxSteps: input.maxSteps, maxChars: input.maxChars });
-  return withNext({ id, ...(alsoAnswers === undefined ? {} : { alsoAnswers }), markdown }, next);
+  return withNext(
+    { id, ...(alsoAnswers === undefined ? {} : { alsoAnswers }), markdown, ...(failures === undefined ? {} : { failures }) },
+    next,
+  );
 };
 
 /**
@@ -157,8 +167,11 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
                   .map((node) => `describe_for_prompt({id: ${JSON.stringify(node.id)}${input.scope === undefined || input.scope === 'node' ? '' : `, scope: ${JSON.stringify(input.scope)}`}})`),
               );
         }
-        const subject = gatherPromptSubject(db, found.node, loadObservedCounts(ctx.handle.path));
-        return answer(found.node.id, subject, input, found.alsoAnswers);
+        const counts = loadObservedCounts(ctx.handle.path);
+        const subject = gatherPromptSubject(db, found.node, counts);
+        // An entry seen at run time carries the comparison as data too (P106), beside the text that says it.
+        const compared = counts === undefined ? undefined : failuresSeen(counts, found.node);
+        return answer(found.node.id, subject, input, found.alsoAnswers, compared === undefined ? undefined : failuresSeenRef(compared));
       }),
   );
 };

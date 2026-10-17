@@ -1,0 +1,32 @@
+{
+  "id": "entry:billing:http:POST:/invoices",
+  "markdown": "# Way in: POST /invoices\n\n`entry:billing:http:POST:/invoices` — entry / http in billing at `src/invoices/invoices.controller.ts:15`\n\nRead from the source by flowatlas, without running it. Steps are in call order; a best guess is a join it inferred, not one the code proves.\n\n- seen at run time: 22 hits\n\n## Can fail with 409\n\n- **409** `ConflictException` — throw at `src/invoices/invoices.service.ts:15`\n\n## Failures seen at run time · 22 hits, 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z\n\n- **500** ×1, 4.6% of requests — not declared\n- **409** `ConflictException` — declared, never seen in the window — at `src/invoices/invoices.service.ts:15`\n\n## Steps\n\n- **InvoicesController.create** `billing#src/invoices/invoices.controller.ts:InvoicesController.create` — billing `src/invoices/invoices.controller.ts:15` — handles (static) — takes `type:billing#CreateInvoiceDto`; returns `type:billing#InvoiceDto`\n  - **InvoicesService.create** `billing#src/invoices/invoices.service.ts:InvoicesService.create` — billing `src/invoices/invoices.service.ts:14` — calls (static) — takes `type:billing#CreateInvoiceDto`; returns `type:billing#InvoiceDto` [throws 409 ConflictException]\n\n## Shapes\n\n- in: `type:billing#CreateInvoiceDto`\n- out: `type:billing#InvoiceDto`\n\n## Gaps\n\n- none recorded on this chain\n\n## Ask next\n\n- `get_flow({entry: \"entry:billing:http:POST:/invoices\"})`\n- `describe_for_prompt({id: \"entry:billing:http:POST:/invoices\"})`\n- `impact({symbol: \"entry:billing:http:POST:/invoices\"})`\n- `who_calls({symbol: \"billing#src/invoices/invoices.controller.ts:InvoicesController.create\"})`\n",
+  "failures": {
+    "hits": 22,
+    "window": {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-16T09:00:00.000Z"
+    },
+    "undeclared": [
+      {
+        "status": 500,
+        "count": 1,
+        "share": 0.0455
+      }
+    ],
+    "declaredNeverSeen": [
+      {
+        "status": 409,
+        "exception": "ConflictException",
+        "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+        "loc": "src/invoices/invoices.service.ts:15"
+      }
+    ]
+  },
+  "next": [
+    "get_flow({entry: \"entry:billing:http:POST:/invoices\"})",
+    "describe_for_prompt({id: \"entry:billing:http:POST:/invoices\"})",
+    "impact({symbol: \"entry:billing:http:POST:/invoices\"})",
+    "who_calls({symbol: \"billing#src/invoices/invoices.controller.ts:InvoicesController.create\"})"
+  ]
+}

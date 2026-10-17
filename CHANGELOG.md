@@ -8,6 +8,25 @@ only one of them moved.
 
 ### Added
 
+- **Failures seen but not declared (P106).** With an observed file beside the
+  graph, the statuses each way in answered are set beside the failures its
+  code declares, over the file's window: a status from 400 up that no failure
+  declares is *undeclared* (an unhandled throw, a constraint nobody mapped),
+  with `expected: <why>` where the framework answers it anyway (the router's
+  404 and 405, a 401 or 403 from a check in front of it, a 400 for a body it
+  cannot read); a declared failure no request answered is *declared, never
+  seen*, said only of a way in hit at least 20 times. An assumed status that
+  traffic answered is confirmed, one it never answered is not reported, and a
+  failure that names no status is `maybe` beside an unexplained status, never
+  folded into it. The page's failure chips say `404 seen ×3`, `409 never seen`
+  and `500 ×4 not declared`; `get_flow` and `describe_for_prompt` carry
+  `failures` and each `fails` row `seen`; the copied prompt has a *Failures
+  seen at run time* section; the MCP server gained `undeclared_failures`, worst
+  first; `flowatlas doctor` gained `failure-seen-undeclared` and
+  `failure-declared-unseen` rows at `info`, and `--strict-runtime` to make them
+  count. One pure comparison in core, `compareSeenFailures`
+  (`fixtures/multi-repo/traces`).
+
 - **How long it took, how it answered, and runs that add up (P105).**
   `flowatlas observe` kept each span's duration, HTTP status and error flag:
   every entry, join, method, table and channel it credits gained a count, a

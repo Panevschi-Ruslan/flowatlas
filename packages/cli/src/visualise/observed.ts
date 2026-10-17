@@ -1,4 +1,15 @@
-import { joinIdOf, type GraphEdge, type MeasuredAt, type Observed, type ObservedFigures, type ObservedWindow } from '@flowatlas/core';
+import {
+  compareEntryFailures,
+  comparisonSays,
+  joinIdOf,
+  type FailureComparison,
+  type GraphEdge,
+  type GraphNode,
+  type MeasuredAt,
+  type Observed,
+  type ObservedFigures,
+  type ObservedWindow,
+} from '@flowatlas/core';
 import { wordsOf, type Word } from './dictionary.js';
 
 /**
@@ -8,6 +19,7 @@ import { wordsOf, type Word } from './dictionary.js';
  *     joins:   { [edgeId]: { count, lastSeen, ...stats, measuredAt? } },   // edgeId: position in `edges`, as a string
  *     entries: { [entryId]: { hits, ...stats } },   // entryId: entry node id, a key of `entryIds`
  *     window?: { since?, from, to },                // the hours the counts cover (P105)
+ *     failures?: { [entryId]: FailureSeen },        // statuses answered against the failures declared (P106)
  *     unmatched: [[service, kind, name]],           // seen at run time, not found in code
  *     ambiguous?: [[service, kind, name, count, places, unnamed?]],  // fit several places (P85)
  *     services?: [name], kinds?: [kind]             // what `service` and `kind` index (P84)
@@ -26,6 +38,12 @@ import { wordsOf, type Word } from './dictionary.js';
  * `p95`, `max` in milliseconds, `errors`, and `statuses` (status → count).
  * Nothing on the page renders them yet (P111); `createSeen` reads `count`
  * and `hits` as it always has.
+ *
+ * `failures` (P106) is core's `compareSeenFailures` for each way in seen with
+ * a status that has something to say, without the entry id its key already
+ * is: the statuses it answered that no failure declares, the declared ones
+ * seen and never seen, over `window`. The Steps failure chips and the copied
+ * prompt read it; `failSeenOf` (steps.js) hands it out.
  */
 export type PackedAmbiguous = [service: Word, kind: Word, name: string, count: number, places: number[], unnamed?: number];
 
@@ -37,10 +55,14 @@ export interface PackedStats {
   statuses?: Record<string, number>;
 }
 
+/** A comparison as the page holds it: the entry id is its key. */
+export type PackedFailuresSeen = Omit<FailureComparison, 'entry'>;
+
 export interface PackedObserved {
   joins: Record<string, { count: number; lastSeen: string | null; measuredAt?: MeasuredAt } & PackedStats>;
   entries: Record<string, { hits: number } & PackedStats>;
   window?: ObservedWindow;
+  failures?: Record<string, PackedFailuresSeen>;
   unmatched: Array<[service: Word, kind: Word, name: string]>;
   ambiguous?: PackedAmbiguous[];
   services?: string[];
@@ -64,6 +86,8 @@ export const packObserved = (
   entryIds: Readonly<Record<string, number>>,
   /** Every node's position in `nodes`, by id. */
   position: ReadonlyMap<string, number>,
+  /** The nodes themselves, for what each way in declares it fails with (P106). */
+  nodes: readonly GraphNode[] = [],
 ): PackedObserved => {
   const at = new Map(packedEdges.map((edge, index) => [joinIdOf(edge.from, edge.type, edge.to), index]));
   const joins: PackedObserved['joins'] = {};
@@ -79,8 +103,24 @@ export const packObserved = (
     }
   }
   const entries: PackedObserved['entries'] = {};
+  const failures: Record<string, PackedFailuresSeen> = {};
   for (const [id, seen] of Object.entries(observed.entries)) {
-    if (entryIds[id] !== undefined) entries[id] = { hits: seen.hits, ...statsOf(seen) };
+    const at = entryIds[id];
+    if (at === undefined) continue;
+    entries[id] = { hits: seen.hits, ...statsOf(seen) };
+    const node = nodes[at];
+    const compared =
+      node?.id !== id
+        ? undefined
+        : compareEntryFailures(
+            node,
+            { count: seen.hits, ...(seen.statuses === undefined ? {} : { statuses: seen.statuses }) },
+            { window: observed.window },
+          );
+    if (comparisonSays(compared)) {
+      const { entry: _entry, ...rest } = compared;
+      failures[id] = rest;
+    }
   }
   const ambiguousIn = observed.ambiguous ?? [];
   const rows = [...observed.unmatched, ...ambiguousIn];
@@ -109,6 +149,7 @@ export const packObserved = (
     joins,
     entries,
     ...(observed.window === undefined || observed.window.from === null ? {} : { window: observed.window }),
+    ...(Object.keys(failures).length === 0 ? {} : { failures }),
     unmatched,
     ...(ambiguous.length === 0 ? {} : { ambiguous }),
     ...(services.list.length === 0 ? {} : { services: services.list }),

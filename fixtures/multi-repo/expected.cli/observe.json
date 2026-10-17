@@ -1,6 +1,6 @@
 {
   "observedFormatVersion": 3,
-  "spans": 30,
+  "spans": 70,
   "privacy": {
     "kept": [
       "traceId",
@@ -60,9 +60,9 @@
       "readAt": "2025-10-16T09:00:00.000Z"
     },
     {
-      "sha256": "f04bab0820ecd0d0f3f62c403e76d4f2819e581409796f70b63245e54bfae667",
+      "sha256": "12749c3cca637c47e3d602c554aab511047450df05e4e1e5e69003e26d6d0bf3",
       "format": "nestjs-observe",
-      "spans": 8,
+      "spans": 48,
       "readAt": "2025-10-16T09:00:00.000Z"
     }
   ],
@@ -130,18 +130,18 @@
       "errorRate": 0
     },
     "entry:billing:http:POST:/invoices": {
-      "hits": 2,
-      "lastSeen": "2025-10-16T08:06:00.000Z",
+      "hits": 22,
+      "lastSeen": "2025-10-16T08:39:00.000Z",
       "firstSeen": "2025-10-16T07:33:30.000Z",
-      "p50": 6.44,
-      "p95": 41.5,
+      "p50": 8.35,
+      "p95": 11.81,
       "max": 41.5,
       "statuses": {
-        "201": 1,
+        "201": 21,
         "500": 1
       },
       "errors": 1,
-      "errorRate": 0.5
+      "errorRate": 0.0455
     },
     "entry:gateway:http:GET:/orders/:param": {
       "hits": 2,
@@ -185,11 +185,11 @@
   },
   "symbols": {
     "billing#src/invoices/invoices.controller.ts:InvoicesController.create": {
-      "hits": 2,
-      "lastSeen": "2025-10-16T08:06:00.000Z",
+      "hits": 22,
+      "lastSeen": "2025-10-16T08:39:00.000Z",
       "firstSeen": "2025-10-16T07:33:30.000Z",
-      "p50": 6.44,
-      "p95": 41,
+      "p50": 7.66,
+      "p95": 11.81,
       "max": 41,
       "errors": 0,
       "errorRate": 0
@@ -521,17 +521,17 @@
           }
         },
         {
-          "traceId": "e1000000000000000000000000000001",
-          "at": "2025-10-16T07:33:30.000Z",
-          "ms": 6.4,
+          "traceId": "f1000000000000000000000000000023",
+          "at": "2025-10-16T08:39:00.000Z",
+          "ms": 11.65,
           "status": 201,
-          "spans": 6,
+          "spans": 2,
           "tree": {
             "id": "entry:billing:http:POST:/invoices",
             "label": "POST /invoices",
             "service": "billing",
             "kind": "server",
-            "ms": 6.4,
+            "ms": 11.65,
             "status": 201,
             "children": [
               {
@@ -539,37 +539,31 @@
                 "label": "InvoicesController.create",
                 "service": "billing",
                 "kind": "internal",
-                "ms": 6,
-                "children": [
-                  {
-                    "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
-                    "label": "InvoicesService.create",
-                    "service": "billing",
-                    "kind": "internal",
-                    "ms": 3,
-                    "children": [
-                      {
-                        "label": "GET /orders/:value",
-                        "service": "billing",
-                        "kind": "client",
-                        "ms": 1.2
-                      },
-                      {
-                        "label": "invoices",
-                        "service": "billing",
-                        "kind": "client",
-                        "ms": 0.8
-                      }
-                    ]
-                  },
-                  {
-                    "label": "LedgerClient.post",
-                    "service": "billing",
-                    "kind": "internal",
-                    "ms": 2,
-                    "error": true
-                  }
-                ]
+                "ms": 11.15
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "f1000000000000000000000000000022",
+          "at": "2025-10-16T08:38:00.000Z",
+          "ms": 11.3,
+          "status": 201,
+          "spans": 2,
+          "tree": {
+            "id": "entry:billing:http:POST:/invoices",
+            "label": "POST /invoices",
+            "service": "billing",
+            "kind": "server",
+            "ms": 11.3,
+            "status": 201,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+                "label": "InvoicesController.create",
+                "service": "billing",
+                "kind": "internal",
+                "ms": 10.8
               }
             ]
           }
@@ -1145,7 +1139,7 @@
     },
     {
       "hour": "2025-10-16T08:00:00.000Z",
-      "spans": 8,
+      "spans": 48,
       "joins": {},
       "entries": {
         "entry:billing:http:GET:/invoices/:param": {
@@ -1164,14 +1158,25 @@
           "max": 3.2
         },
         "entry:billing:http:POST:/invoices": {
-          "count": 1,
+          "count": 21,
           "errors": 1,
           "firstSeen": "2025-10-16T08:06:00.000Z",
-          "lastSeen": "2025-10-16T08:06:00.000Z",
+          "lastSeen": "2025-10-16T08:39:00.000Z",
           "statuses": {
+            "201": 20,
             "500": 1
           },
           "hist": {
+            "19": 2,
+            "20": 1,
+            "21": 2,
+            "22": 1,
+            "23": 2,
+            "24": 2,
+            "25": 2,
+            "26": 3,
+            "27": 2,
+            "28": 3,
             "43": 1
           },
           "max": 41.5
@@ -1179,11 +1184,23 @@
       },
       "symbols": {
         "billing#src/invoices/invoices.controller.ts:InvoicesController.create": {
-          "count": 1,
+          "count": 21,
           "errors": 0,
           "firstSeen": "2025-10-16T08:06:00.000Z",
-          "lastSeen": "2025-10-16T08:06:00.000Z",
+          "lastSeen": "2025-10-16T08:39:00.000Z",
           "hist": {
+            "17": 1,
+            "18": 1,
+            "19": 1,
+            "20": 2,
+            "21": 1,
+            "22": 2,
+            "23": 2,
+            "24": 2,
+            "25": 2,
+            "26": 2,
+            "27": 3,
+            "28": 1,
             "43": 1
           },
           "max": 41

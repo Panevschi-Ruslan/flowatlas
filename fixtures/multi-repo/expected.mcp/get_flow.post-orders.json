@@ -130,7 +130,7 @@
                                   "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
                                   "type": "method",
                                   "label": "InvoicesService.create",
-                                  "loc": "src/invoices/invoices.service.ts:10"
+                                  "loc": "src/invoices/invoices.service.ts:14"
                                 },
                                 "edge": {
                                   "type": "calls",

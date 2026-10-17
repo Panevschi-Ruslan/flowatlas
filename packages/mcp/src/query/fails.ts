@@ -1,4 +1,14 @@
-import { failuresOf, groupFailures, type Failure, type FailureChoice, type FailureGroup, type GraphNode } from '@flowatlas/core';
+import {
+  failuresOf,
+  groupFailures,
+  seenOfGroup,
+  type Failure,
+  type FailureChoice,
+  type FailureComparison,
+  type FailureGroup,
+  type GraphNode,
+  type StatusMix,
+} from '@flowatlas/core';
 
 /** One place a failure comes from, at `detail >= 2` (P87). */
 export interface FailPlace {
@@ -36,6 +46,39 @@ export interface FailRef {
   loc?: string;
   /** Every place, at `detail >= 2`. */
   places?: FailPlace[];
+  /** Requests that answered a status it declares, in the observed window (P106); absent when none did or nothing was observed. */
+  seen?: number;
+}
+
+/**
+ * What an entry answered at run time against what it declares (P106), as
+ * `get_flow` and `describe_for_prompt` carry it: the statuses no failure
+ * declares and the declared failures never seen, over the window. Which
+ * declared ones were seen is each `FailRef.seen`.
+ */
+export interface FailuresSeenRef {
+  hits: number;
+  window: FailureComparison['window'];
+  undeclared: FailureComparison['undeclared'];
+  declaredNeverSeen: FailureComparison['declaredNeverSeen'];
+  tooFewHits?: true;
+}
+
+/** The wire form of a comparison. */
+export const failuresSeenRef = (comparison: FailureComparison): FailuresSeenRef => ({
+  hits: comparison.hits,
+  window: comparison.window,
+  undeclared: comparison.undeclared,
+  declaredNeverSeen: comparison.declaredNeverSeen,
+  ...(comparison.tooFewHits === true ? { tooFewHits: true as const } : {}),
+});
+
+/** Sets `seen` on each failure row whose status traffic answered (P106). */
+export const markFailsSeen = (fails: readonly FailRef[] | undefined, statuses: StatusMix): void => {
+  for (const fail of fails ?? []) {
+    const count = seenOfGroup(fail, statuses);
+    if (count > 0) fail.seen = count;
+  }
 }
 
 const locOf = (item: Failure): string | undefined =>

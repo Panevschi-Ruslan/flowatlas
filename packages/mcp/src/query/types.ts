@@ -1,4 +1,4 @@
-import type { FailRef } from './fails.js';
+import type { FailRef, FailuresSeenRef } from './fails.js';
 import type { DetailLevel } from '@flowatlas/core';
 
 /**
@@ -101,6 +101,8 @@ export interface FlowNode {
   seenAmbiguous?: number;
   /** What a way in can fail with, on an entry that says (P68). */
   fails?: FailRef[];
+  /** On a way in seen at run time: the statuses it answered that nothing declares, and the declared ones never seen (P106). */
+  failures?: FailuresSeenRef;
   /** Decorators on the handler or its class that let a request past a check (P76). */
   optOuts?: OptOutRef[];
   /**

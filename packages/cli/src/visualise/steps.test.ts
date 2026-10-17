@@ -11,7 +11,9 @@ import {
   accessOf,
   createSeen,
   failChips,
+  failChipsSeen,
   failGroups,
+  failSeenSay,
   failSay,
   failsOf,
   likeRoute,
@@ -269,6 +271,38 @@ describe('failures, loops, logs and schedules on the steps (P74)', () => {
     ]);
     expect(failChips([fail({ a: 1 }), fail({ s: 404 })])).toEqual(['404', '500?']);
     expect(failChips([fail({ a: 1 }), fail({})])).toEqual(['500']);
+  });
+
+  it('sets what traffic answered beside each failure chip, and says it in the copied prompt (P106)', () => {
+    const window = { from: '2026-01-01T00:00:00.000Z', to: '2026-01-02T00:00:00.000Z' };
+    const seenData = packGraph({
+      builtAt: '2026-01-01T00:00:00Z', nodes: list, edges: linked, report, unresolved: [],
+      observed: {
+        joins: {}, symbols: {}, channels: {}, unmatched: [], ambiguous: [], window,
+        entries: { [list[0]!.id]: { hits: 30, lastSeen: null, statuses: { '201': 20, '401': 4, '500': 6 } } },
+      } as never,
+    });
+    const seenModel = modelOf(seenData);
+    const seen = createSeen(seenData);
+    const compared = seen.failures(0);
+    expect(compared).toMatchObject({ hits: 30, window, declaredSeen: [{ status: 401, exception: 'AuthGuard', count: 4 }] });
+    expect(seen.failures(3)).toBeNull();
+    expect(failChipsSeen(failsOf(seenModel, 0), compared).map((chip) => [chip.text, chip.mark])).toEqual([
+      ['401 seen ×4', 'seen'],
+      ['409 never seen', 'never'],
+      ['Error', ''],
+      ['500 ×6 not declared', 'undeclared'],
+    ]);
+    // Without traffic, the chips are what the code says, unmarked.
+    expect(failChipsSeen(failsOf(seenModel, 0), null).map((chip) => chip.text)).toEqual(['401', '409', 'Error']);
+    const groups = failGroups(failsOf(seenModel, 0));
+    expect(groups.map((group) => failSeenSay(group, compared))).toEqual(['seen ×4', 'never seen', '']);
+    const text = promptFor(seenModel, { node: 0 }, { ...kit, seen });
+    expect(text).toContain('## Failures seen at run time · 30 hits, 2026-01-01T00:00:00.000Z to 2026-01-02T00:00:00.000Z');
+    expect(text).toContain('- **500** ×6, 20% of requests — not declared; maybe `Error`, which name no status');
+    expect(text).toContain('- **401** `AuthGuard` — declared, seen ×4');
+    expect(text).toContain('- **409** `ConflictException` — declared, never seen in the window — at `src/carts.ts:21`');
+    expect(promptFor(seenModel, { node: 0 }, kit)).not.toContain('Failures seen at run time');
   });
 
   it('marks the step that throws, the call per item and the likely N+1, and carries the logs', () => {

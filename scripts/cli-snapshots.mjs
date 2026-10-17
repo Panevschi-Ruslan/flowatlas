@@ -96,8 +96,30 @@ const observeOnCopy = (io, runs) => {
   }
 };
 
+/**
+ * `doctor` beside the observed file (P106): the rows about failures traffic
+ * answered and the code does not declare, and declared ones nobody answered,
+ * for billing, under `--strict-runtime` so the verdict says them too.
+ */
+const doctorObservedOnCopy = (io) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-doctor-observed-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    runObserve(TRACES, { db, now: OBSERVE_NOW, print: () => {} });
+    runDoctorCommand(
+      { config, db, out: copy, section: ['unresolved'], service: 'billing', strictRuntime: true },
+      { ...io, out: (text) => io.out(said(text)) },
+    );
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
+  ['doctor.observed.txt', doctorObservedOnCopy],
   ['observe.txt', (io) => observeOnCopy(io, [[TRACES, {}]])],
   ['observe.json', (io) => observeOnCopy(io, [[TRACES, { format: 'json' }]])],
   ['observe.again.txt', (io) => observeOnCopy(io, [[TRACES.slice(0, 1), { print: () => {} }], [TRACES, {}]])],

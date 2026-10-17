@@ -1,0 +1,13 @@
+unresolved: total=0 (skipped) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=1
+
+unresolved: 0 to act on · missed: 0 · notes: 1 · findings: 1
+  1 finding: 1 status seen that the code does not declare
+  failure-declared-unseen (note): 1 row
+    The code says the way in can fail with this and no request in the observed window answered it: an error path nothing exercised, or one that cannot happen any more. Traffic differs per environment and per week, so it is a question for a test, not proof the path is dead.
+      billing/src/invoices/invoices.service.ts:15  POST /invoices declares 409 ConflictException, and none of its 22 requests from 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z answered it
+  failure-seen-undeclared (finding): 1 row
+    Real traffic got this status from the way in and no failure read off its code says it can: an unhandled throw, a constraint nobody mapped, a framework answer. Read a failing request (the MCP tool trace_for) and map the exception to the status it should answer, or declare it, and the route says what it really fails with.
+      billing/src/invoices/invoices.controller.ts:15  POST /invoices answered 500 to 1 of 22 requests (4.6%) from 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z, and no failure in its code declares it
+
+verdict:
+  2 failures traffic answered and the code does not declare, or the code declares and nothing answered (--strict-runtime)

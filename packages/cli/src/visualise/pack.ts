@@ -635,7 +635,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     ...(fails === undefined ? {} : { fails: fails.fails }),
     ...withAccess(packAccess(input.nodes)),
     ...(logs === undefined ? {} : { logs }),
-    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds, position) }),
+    ...(input.observed === undefined ? {} : { observed: packObserved(input.observed, packedEdges, entryIds, position, input.nodes) }),
     ...(accepted.packed === undefined ? {} : { accepted: accepted.packed }),
     ...packCantFollow(accepted.fresh, position),
     ...packStandIns(packedEdges),

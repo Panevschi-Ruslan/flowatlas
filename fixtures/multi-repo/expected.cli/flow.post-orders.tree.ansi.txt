@@ -7,5 +7,5 @@
         ⚡ order.created                                [2msrc/orders/orders.service.ts:49[0m
           [32m⇢ billing[0m ⚡ [32mInvoicesConsumer.onOrderCreated[0m  [2mbilling/src/invoices/invoices.consumer.ts:17[0m
             →  [32mInvoicesConsumer.onOrderCreated[0m         [2mbilling/src/invoices/invoices.consumer.ts:17[0m
-              →  [32mInvoicesService.create[0m                [2mbilling/src/invoices/invoices.service.ts:10[0m
+              →  [32mInvoicesService.create[0m                [2mbilling/src/invoices/invoices.service.ts:14[0m
 unresolved on this path: 0

@@ -28,6 +28,7 @@ import {
   type HintContext,
 } from './hints.js';
 import { validateMarkers, type MarkerIssue } from './markers.js';
+import { countsUnderStrictRuntime } from './runtime.js';
 import { mostlyUnread, noWayInSentence, waysInByService, waysInTotal, type WaysIn } from './ways-in.js';
 import {
   DOCTOR_FORMAT_VERSION,
@@ -57,6 +58,12 @@ export interface DoctorInput {
 
 export interface DoctorSettings {
   strict?: boolean;
+  /**
+   * `--strict-runtime` (P106): the rows about failures traffic answered and the
+   * code does not declare, or that the code declares and nothing answered,
+   * decide the exit code. Off, they are information only (D3).
+   */
+  strictRuntime?: boolean;
   /** Which sections to run. Defaults to all five. */
   sections?: readonly Section[];
   /** Narrow everything to one service. */
@@ -266,6 +273,9 @@ const withoutWaysInOf = (
 /** What the verdict is decided from, read once from the sections above. */
 interface VerdictFacts {
   strict: boolean;
+  strictRuntime: boolean;
+  /** Runtime failure rows that count under `--strict-runtime`, after accepted ones left (P106). */
+  runtimeFailures: number;
   markerErrors: number;
   contractErrors: number;
   baseline: DoctorReport['baseline'];
@@ -307,6 +317,12 @@ const VERDICT_REASONS: ReadonlyArray<{ says(facts: VerdictFacts): string[] }> = 
   },
   { says: (facts) => [...facts.faults] },
   {
+    says: ({ strictRuntime, runtimeFailures }) =>
+      strictRuntime && runtimeFailures > 0
+        ? [`${plural(runtimeFailures, 'failure')} traffic answered and the code does not declare, or the code declares and nothing answered (--strict-runtime)`]
+        : [],
+  },
+  {
     says: ({ strict, baseline }) =>
       strict && baseline.status === 'missing'
         ? [`${baseline.note ?? 'there is no baseline'} — or pass --no-baseline to check annotations and contracts only`]
@@ -340,6 +356,7 @@ const EXIT_RULES: ReadonlyArray<{ applies(facts: VerdictFacts): boolean; exitCod
     { applies: (facts) => facts.baseline.status === 'invalid', exitCode: 2 },
     { applies: (facts) => facts.strict && facts.baseline.status === 'missing', exitCode: 2 },
     { applies: (facts) => facts.strict && foundSomething(facts), exitCode: 1 },
+    { applies: (facts) => facts.strictRuntime && facts.runtimeFailures > 0, exitCode: 1 },
   ]);
 
 const NOTHING_FAILS = { exitCode: 0 } as const;
@@ -700,6 +717,8 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
   // ---- verdict ----------------------------------------------------------
   const facts: VerdictFacts = {
     strict,
+    strictRuntime: settings.strictRuntime === true,
+    runtimeFailures: rows.filter(countsUnderStrictRuntime).length,
     markerErrors: markers.errors + (settings.warnAsError === true ? markers.warnings : 0),
     contractErrors: contracts.errorCount,
     baseline,

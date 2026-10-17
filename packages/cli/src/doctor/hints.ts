@@ -536,6 +536,13 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'document-age': () =>
     'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
 
+  // What traffic answered beside what the code declares (doctor/runtime.ts, P106).
+  // Asked of the observed file at doctor time, never stored in the graph.
+  'failure-seen-undeclared': () =>
+    'Real traffic got this status from the way in and no failure read off its code says it can: an unhandled throw, a constraint nobody mapped, a framework answer. Read a failing request (the MCP tool trace_for) and map the exception to the status it should answer, or declare it, and the route says what it really fails with.',
+  'failure-declared-unseen': () =>
+    'The code says the way in can fail with this and no request in the observed window answered it: an error path nothing exercised, or one that cannot happen any more. Traffic differs per environment and per week, so it is a question for a test, not proof the path is dead.',
+
   // Workflows written down as state machine definitions (stepfunctions)
   'workflow-definition-unreadable': () =>
     'The definition could not be read as a state machine, so no step of it is in the graph. Fix the syntax, or give the file another name if it is not a definition.',
@@ -681,6 +688,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
   'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
   'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],
+  'failure-seen-undeclared': ['status seen that the code does not declare', 'statuses seen that the code does not declare'],
 });
 
 /** One finding reason and its count, in words: `1 likely N+1`, `2 routes with no guard`. */

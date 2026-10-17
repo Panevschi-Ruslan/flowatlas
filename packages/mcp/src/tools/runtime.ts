@@ -1,4 +1,14 @@
-import { JOIN_EDGE_TYPES, joinOfId, type GraphNode, type Observed, type ObservedFigures, type TraceTree } from '@flowatlas/core';
+import {
+  compareEntryFailures,
+  FAILURE_MIN_HITS,
+  JOIN_EDGE_TYPES,
+  joinOfId,
+  type FailureComparison,
+  type GraphNode,
+  type Observed,
+  type ObservedFigures,
+  type TraceTree,
+} from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -12,8 +22,9 @@ import { callOf, READ_ONLY, serviceInput, withDb, type ToolContext } from './com
 
 /**
  * What real traffic did, from the observed file (P105): the steps it was
- * slowest on, the ways in it used most, and one slow and one failing request
- * of an entry, step by step. Every answer is bounded (I9) and ends with the
+ * slowest on, the ways in it used most, one slow and one failing request
+ * of an entry, step by step, and the statuses ways in answered that their
+ * code never declares (P106). Every answer is bounded (I9) and ends with the
  * calls that take its ids; a row names only places the graph still has.
  */
 
@@ -188,6 +199,36 @@ const firstMethod = (db: GraphDb, tree: TraceTree | undefined): string | undefin
   return undefined;
 };
 
+/** One way in whose traffic answered a status nothing in its code declares (P106). */
+interface UndeclaredRow {
+  entry: string;
+  label: string;
+  service: string;
+  hits: number;
+  undeclared: FailureComparison['undeclared'];
+  declaredNeverSeen?: FailureComparison['declaredNeverSeen'];
+  tooFewHits?: true;
+  next: string[];
+}
+
+/** What ranks a way in: requests answering a 5xx nothing explains, then any status nothing explains, then the largest share. */
+const undeclaredRank = (row: UndeclaredRow): [number, number, number] => {
+  const open = row.undeclared.filter((item) => item.expected === undefined);
+  return [
+    open.filter((item) => item.status >= 500).reduce((sum, item) => sum + item.count, 0),
+    open.reduce((sum, item) => sum + item.count, 0),
+    Math.max(0, ...row.undeclared.map((item) => item.share)),
+  ];
+};
+
+const byUndeclaredRank = (a: UndeclaredRow, b: UndeclaredRow): number => {
+  const [x, y] = [undeclaredRank(a), undeclaredRank(b)];
+  return y[0] - x[0] || y[1] - x[1] || y[2] - x[2] || (a.entry < b.entry ? -1 : 1);
+};
+
+/** The handler a way in runs, for a `get_source` hint. */
+const handlerOf = (db: GraphDb, entry: string): string | undefined => db.edgesFrom(entry, ['handles'])[0]?.to;
+
 export const registerRuntime = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'slow_steps',
@@ -329,6 +370,61 @@ export const registerRuntime = (server: McpServer, ctx: ToolContext): void => {
             ...(method === undefined ? [] : [callOf('get_source', { symbol: method })]),
             callOf('slow_steps', { entry: found.id, minCount: 1 }),
           ],
+        );
+      }),
+  );
+  server.registerTool(
+    'undeclared_failures',
+    {
+      title: 'Failures not declared',
+      description: 'Ways in whose traffic got statuses their code never declares, 5xx first.',
+      inputSchema: {
+        service: serviceInput,
+        minCount: z.number().int().min(1).max(1000000).default(1),
+        minHits: z.number().int().min(1).max(1000000).default(FAILURE_MIN_HITS),
+        limit: z.number().int().min(1).max(100).default(20),
+      },
+      annotations: READ_ONLY,
+    },
+    (input) =>
+      withDb(ctx.handle, (db) => {
+        const observed = loadObserved(ctx.handle.path);
+        if (observed === undefined) return { error: NO_FILE };
+        const all = Object.entries(observed.entries)
+          .flatMap(([id, seen]): UndeclaredRow[] => {
+            const node = db.node(id);
+            if (node?.type !== 'entry' || (input.service !== undefined && node.repo !== input.service)) return [];
+            const compared = compareEntryFailures(
+              node,
+              { count: seen.hits, ...(seen.statuses === undefined ? {} : { statuses: seen.statuses }) },
+              { window: observed.window, minHits: input.minHits },
+            );
+            const undeclared = (compared?.undeclared ?? []).filter((item) => item.count >= input.minCount);
+            if (compared === undefined || undeclared.length === 0) return [];
+            const handler = handlerOf(db, id);
+            const sampled = (observed.samples[id]?.failing.length ?? 0) > 0;
+            return [
+              {
+                entry: id,
+                label: node.label,
+                service: node.repo,
+                hits: compared.hits,
+                undeclared,
+                ...(compared.declaredNeverSeen.length === 0 ? {} : { declaredNeverSeen: compared.declaredNeverSeen }),
+                ...(compared.tooFewHits === true ? { tooFewHits: true as const } : {}),
+                next: [
+                  ...(sampled ? [callOf('trace_for', { entry: id })] : []),
+                  ...(handler === undefined ? [] : [callOf('get_source', { symbol: handler })]),
+                ],
+              },
+            ];
+          })
+          .sort(byUndeclaredRank);
+        const { rows: routes, page } = cut(all, input.limit, 'ways in');
+        const top = routes[0]?.entry;
+        return withNext(
+          { routes, window: observed.window, ...page },
+          top === undefined ? [] : [callOf('get_flow', { entry: top }), callOf('describe_for_prompt', { id: top })],
         );
       }),
   );

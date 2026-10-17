@@ -315,9 +315,18 @@ planted that no reader may keep (`packages/cli/src/observe/__fixtures__/planted.
 |---|---|---|
 | `checkout.otlp.json` | OTLP/JSON | a slow `GET /orders/:id` hop from `gateway` to `orders` (500 ms on the caller's span), a `POST /orders` that answers 500 with `status.code: 2`, a publish and its consumer, a call that fits two call sites, and a span with no times |
 | `billing.observe.json` | @nestjs/observe batch | one batch with jobs, a WebSocket snapshot and a node the contract refuses |
-| `billing.batches.observe.json` | @nestjs/observe `{ batches }` | two posts an hour later: two reads (200 and 404) and a write that fails with `e` on its nodes |
+| `billing.batches.observe.json` | @nestjs/observe `{ batches }` | three posts an hour later: two reads (200 and 404), a write that fails with `e` on its nodes, and twenty writes that answer 201 |
 
 The protobuf copy of `checkout.otlp.json` is written by the test's encoder at
 test time, not checked in. `expected.cli/observe.json` is the observed file
 over all three, and the MCP snapshots in `expected.mcp.observed/` answer from
 it; regenerate the CLI snapshots before the MCP ones.
+
+What the traffic answered against what the code declares (P106):
+`InvoicesService` throws a `NotFoundException` in `findOne` and a
+`ConflictException` in `create`, so `GET /invoices/:id` declares a 404 and
+`POST /invoices` a 409. The traces answer the 404 (declared, seen), never the
+409 on a route hit 22 times (declared, never seen), and a 500 from both
+`POST /invoices` and `POST /orders`, whose code declares none (undeclared).
+`expected.cli/doctor.observed.txt` and `expected.mcp.observed/undeclared_failures.*`,
+`get_flow.failures` and `describe_for_prompt.failures` hold the answers.

@@ -60,7 +60,7 @@ describe('slow_steps', () => {
     // The call site's own row would say what its join says.
     expect(all.steps.some((step: { id: string }) => step.id === hop.from)).toBe(false);
     expect((await call('slow_steps', { minCount: 2, limit: 100 })).steps.every((step: { count: number }) => step.count >= 2)).toBe(true);
-    const tooFew = await call('slow_steps', {});
+    const tooFew = await call('slow_steps', { minCount: 50 });
     expect(tooFew).toMatchObject({ steps: [], total: 0, note: expect.stringContaining('lower minCount') });
   });
 
@@ -140,5 +140,62 @@ describe('run time beside the map', () => {
     const flow = await none('get_flow', { entry: 'entry:gateway:http:GET:/orders/:param' });
     expect(flow.root).not.toHaveProperty('p95');
     expect(flow.next.some((hint: string) => hint.startsWith('trace_for'))).toBe(false);
+  });
+});
+
+describe('undeclared_failures', () => {
+  it('ranks the ways in whose 5xx nothing declares first, bounded, each naming the failing request and the handler next', async () => {
+    const all = await call('undeclared_failures', {});
+    expect(all.window).toMatchObject({ from: expect.any(String), to: expect.any(String) });
+    const entries = all.routes.map((row: { entry: string }) => row.entry);
+    expect(entries).toContain('entry:orders:http:POST:/orders');
+    expect(entries).toContain('entry:billing:http:POST:/invoices');
+    // A 404 the handler declares, and traffic answered, is not undeclared.
+    expect(entries).not.toContain('entry:billing:http:GET:/invoices/:param');
+    const ranks = all.routes.map((row: { undeclared: Array<{ status: number; count: number; expected?: string }> }) =>
+      row.undeclared.filter((item) => item.status >= 500 && item.expected === undefined).reduce((sum, item) => sum + item.count, 0),
+    );
+    expect(ranks).toEqual([...ranks].sort((a: number, b: number) => b - a));
+    const invoices = all.routes.find((row: { entry: string }) => row.entry === 'entry:billing:http:POST:/invoices');
+    expect(invoices.undeclared).toEqual([{ status: 500, count: 1, share: expect.any(Number) }]);
+    // Hit often enough that the 409 it declares and nobody answered is said.
+    expect(invoices.declaredNeverSeen).toEqual([expect.objectContaining({ status: 409, exception: 'ConflictException' })]);
+    expect(invoices.next).toEqual([
+      'trace_for({entry: "entry:billing:http:POST:/invoices"})',
+      expect.stringMatching(/^get_source\(\{symbol: "billing#src\/invoices\/invoices\.controller\.ts:InvoicesController\.create"\}\)$/),
+    ]);
+    const cut = await call('undeclared_failures', { limit: 1 });
+    expect(cut.routes).toHaveLength(1);
+    expect(cut.total).toBe(all.routes.length);
+    expect(cut.truncated).toContain('larger limit');
+    expect((await call('undeclared_failures', { service: 'orders' })).routes.every((row: { service: string }) => row.service === 'orders')).toBe(true);
+    expect((await call('undeclared_failures', { minCount: 2 })).routes).toEqual([]);
+  });
+
+  it('says there is nothing to read without an observed file', async () => {
+    expect(await none('undeclared_failures', {})).toEqual({ error: expect.stringContaining('flowatlas observe') });
+  });
+});
+
+describe('failures on get_flow and describe_for_prompt', () => {
+  it('set the statuses seen beside the declared failures of the root, over the window', async () => {
+    const flow = await call('get_flow', { entry: 'GET /invoices/inv-1' });
+    expect(flow.root.fails).toEqual([expect.objectContaining({ status: 404, exception: 'NotFoundException', seen: 1 })]);
+    expect(flow.root.failures).toEqual({ hits: 3, window: expect.any(Object), undeclared: [], declaredNeverSeen: [] });
+    const invoices = await call('get_flow', { entry: 'POST /invoices' });
+    expect(invoices.root.fails[0]).not.toHaveProperty('seen');
+    expect(invoices.root.failures).toMatchObject({ undeclared: [{ status: 500 }], declaredNeverSeen: [{ status: 409 }] });
+    expect((await none('get_flow', { entry: 'POST /invoices' })).root).not.toHaveProperty('failures');
+  });
+
+  it('write the same in the text and carry it as data on an entry', async () => {
+    const answer = await call('describe_for_prompt', { id: 'entry:billing:http:POST:/invoices' });
+    expect(answer.failures).toMatchObject({ undeclared: [{ status: 500 }], declaredNeverSeen: [{ status: 409 }] });
+    expect(answer.markdown).toContain('## Failures seen at run time');
+    expect(answer.markdown).toContain('- **500** ×1');
+    expect(answer.markdown).toContain('`ConflictException` — declared, never seen in the window');
+    const bare = await none('describe_for_prompt', { id: 'entry:billing:http:POST:/invoices' });
+    expect(bare).not.toHaveProperty('failures');
+    expect(bare.markdown).not.toContain('Failures seen at run time');
   });
 });

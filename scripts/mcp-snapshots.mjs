@@ -171,7 +171,10 @@ const PROMPTS = {
  * CLI's `observe.json` snapshot, put beside a copy of the fixture's database
  * so no other suite sees it. The busiest ways in, the slowest steps, a slow
  * and a failing request step by step, an entry with no sample, and the rows
- * of get_flow, who_calls and list_entries with timings beside `observed`.
+ * of get_flow, who_calls and list_entries with timings beside `observed`;
+ * then the statuses ways in answered that their code does not declare, and
+ * the declared ones nobody answered, on their own and on get_flow and
+ * describe_for_prompt (P106).
  */
 const OBSERVED_CASES = [
   ['hot_paths.all', 'hot_paths', {}],
@@ -179,7 +182,7 @@ const OBSERVED_CASES = [
   ['slow_steps.all', 'slow_steps', { minCount: 1 }],
   ['slow_steps.by-max', 'slow_steps', { by: 'max', minCount: 1, limit: 3 }],
   ['slow_steps.entry', 'slow_steps', { entry: 'entry:gateway:http:GET:/orders/:param', minCount: 1 }],
-  ['slow_steps.too-few', 'slow_steps', {}],
+  ['slow_steps.too-few', 'slow_steps', { minCount: 50 }],
   ['trace_for.route', 'trace_for', { entry: 'POST /orders' }],
   ['trace_for.cross-service', 'trace_for', { entry: 'entry:gateway:http:GET:/orders/:param' }],
   ['trace_for.cut', 'trace_for', { entry: 'POST /invoices', maxNodes: 2 }],
@@ -187,6 +190,10 @@ const OBSERVED_CASES = [
   ['get_flow.observed', 'get_flow', { entry: 'entry:gateway:http:GET:/orders/:param' }],
   ['who_calls.observed', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 6 }],
   ['list_entries.observed', 'list_entries', { service: 'billing' }],
+  ['undeclared_failures.all', 'undeclared_failures', {}],
+  ['undeclared_failures.bounded', 'undeclared_failures', { service: 'billing', limit: 1, minHits: 2 }],
+  ['get_flow.failures', 'get_flow', { entry: 'POST /invoices' }],
+  ['describe_for_prompt.failures', 'describe_for_prompt', { id: 'entry:billing:http:POST:/invoices' }],
 ];
 
 /** A copy of the fixture's output with the observed file beside it, removed when the run ends. */

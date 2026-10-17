@@ -186,11 +186,14 @@ describe('a saved series of @nestjs/observe batch posts', () => {
     expect(readerFor(series)).toBe(nestjsObserveReader);
     const { spans, droppedAttributes } = nestjsObserveReader.read(series);
     const servers = spans.filter((span) => span.kind === 'server');
-    expect(servers.map((span) => [span.method, span.route, span.status, span.durationMs, span.error ?? false])).toEqual([
+    expect(servers.slice(0, 3).map((span) => [span.method, span.route, span.status, span.durationMs, span.error ?? false])).toEqual([
       ['GET', '/invoices/:id', 200, 3.2, false],
       ['GET', '/invoices/:id', 404, 2.8, false],
       ['POST', '/invoices', 500, 41.5, true],
     ]);
+    // The third batch: twenty writes that all answer 201, so POST /invoices is
+    // hit often enough for the 409 it declares and never answers to be said (P106).
+    expect(servers.slice(3).map((span) => `${span.method} ${span.route} ${span.status}`)).toEqual(Array(20).fill('POST /invoices 201'));
     expect(spans.find((span) => span.symbol === 'InvoicesService.create')).toMatchObject({ durationMs: 40.2, error: true });
     // Span ids stay unique across the batches.
     expect(new Set(spans.map((span) => span.spanId)).size).toBe(spans.length);

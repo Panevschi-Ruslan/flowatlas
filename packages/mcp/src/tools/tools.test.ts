@@ -54,7 +54,7 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the twenty-one the project promises', async () => {
+  it('are exactly the twenty-two the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
@@ -74,6 +74,7 @@ describe('the tools a session is offered', () => {
       'start_here',
       'trace_for',
       'type_usage',
+      'undeclared_failures',
       'what_changed',
       'who_calls',
       'who_consumes',
@@ -114,12 +115,20 @@ describe('the tools a session is offered', () => {
    * schema header the SDK writes for each cannot fit in the hundred
    * characters left, so both ceilings move by what the three cost and the
    * same margin as before.
+   *
+   * Raised by P106, which added one tool (`undeclared_failures`): 10,802 and
+   * 29,040 before, 11,259 and 29,649 after. It says one short sentence and
+   * takes the four bounds the ticket names (`service`, `minCount`, `minHits`,
+   * `limit`), with no output schema; the fields it adds to `get_flow` and
+   * `describe_for_prompt` are in answers, not in the list. The 457
+   * characters of one tool cannot fit in the hundred left, so both ceilings
+   * move by what it costs and the same margin as before.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(10900);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(29150);
+    expect(read.length).toBeLessThan(11350);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(29750);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

@@ -11,6 +11,15 @@
     "observed": 2,
     "p95": 520,
     "errorRate": 0,
+    "failures": {
+      "hits": 2,
+      "window": {
+        "from": "2025-10-16T07:00:00.000Z",
+        "to": "2025-10-16T09:00:00.000Z"
+      },
+      "undeclared": [],
+      "declaredNeverSeen": []
+    },
     "children": [
       {
         "node": {

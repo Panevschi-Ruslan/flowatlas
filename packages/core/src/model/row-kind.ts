@@ -75,12 +75,17 @@ const NOTES: readonly string[] = [
   // spelling as well, since a stored row may still carry it.
   'document-age',
   'openapi-document-age',
+  // A declared failure no request answered in the observed window (cli/doctor/runtime.ts, P106):
+  // evidence beside the code, nothing missed.
+  'failure-declared-unseen',
 ];
 
 // Something about the code, true whatever the reader managed.
 const FINDINGS: readonly string[] = [
   // Cost (the call-shape pass, P69)
   'query-in-loop',
+  // A status traffic answered that the code does not declare (cli/doctor/runtime.ts, P106)
+  'failure-seen-undeclared',
   // Who may ask (the route audit, linker)
   'route-unguarded',
   'route-shadowed',

@@ -12,6 +12,7 @@
  *   subjectOf     a way in, a channel, any node or a check row as the subject of a prompt
  *   promptFor     the same as Markdown, written by core's renderPrompt, as the MCP server writes it
  *   failsOf       what a way in can fail with, failGroups each answer once, failChips the statuses
+ *   failChipsSeen the same chips with what traffic answered beside them (P106), failSeenSay one group's
  *   logsOf        the lines a step logs
  *   scheduleOf    when a scheduled way in fires, and in which zone
  *   accessOf      what stands in front of a way in, and from where
@@ -177,6 +178,63 @@ export const failSay = (fail) => {
   return fail.s === undefined ? fail.x : fail.s + (fail.a ? '? ' : ' ') + fail.x;
 };
 
+/* ── What a way in answered at run time, beside what it declares (P106) ── */
+
+/** The hours a comparison covers, in a few words: "never seen" means "in these". */
+export const failWindowSay = (window) =>
+  !window || window.from === null ? 'no hours held' : window.from + ' to ' + window.to;
+
+/** The highest count traffic answered a declared status with, by status. */
+const seenByStatus = (compared) => {
+  const out = new Map();
+  for (const row of compared.declaredSeen) out.set(row.status, Math.max(out.get(row.status) || 0, row.count));
+  return out;
+};
+
+/** What traffic said of one declared group: `seen ×n`, `never seen`, or nothing it can say. */
+export const failSeenSay = (group, compared) => {
+  if (!compared) return '';
+  const statuses = group.s !== undefined ? [group.s] : (group.sites[0].ch || []).filter((c) => c.s !== undefined).map((c) => c.s);
+  const seen = seenByStatus(compared);
+  const count = statuses.reduce((sum, s) => sum + (seen.get(s) || 0), 0);
+  if (count > 0) return 'seen ×' + count;
+  const never = compared.declaredNeverSeen.some((row) => row.exception === group.x && (row.status === undefined ? group.s === undefined : statuses.includes(row.status)));
+  return never ? 'never seen' : '';
+};
+
+/**
+ * The failure chips of a way in with what traffic said of each (P106):
+ * `{ text, mark, title? }`, a declared status `404 seen ×n` or `409 never
+ * seen`, then one chip per status it answered that nothing declares, `500 ×n
+ * not declared`, marked `expected` where the framework answers it anyway.
+ * Without a comparison, `failChips` unmarked.
+ */
+export const failChipsSeen = (fails, compared) => {
+  const chips = failChips(fails).map((text) => ({ text, mark: '' }));
+  if (!compared) return chips;
+  const seen = seenByStatus(compared);
+  const never = new Set(compared.declaredNeverSeen.map((row) => (row.status === undefined ? row.exception : String(row.status))));
+  const over = failWindowSay(compared.window);
+  const marked = chips.map((chip) => {
+    const status = parseInt(chip.text, 10);
+    const key = Number.isInteger(status) ? String(status) : chip.text;
+    if (Number.isInteger(status) && seen.has(status)) {
+      return { text: chip.text + ' seen ×' + seen.get(status), mark: 'seen', title: 'Declared, and answered ' + seen.get(status) + ' times in ' + over };
+    }
+    if (never.has(key)) return { text: chip.text + ' never seen', mark: 'never', title: 'Declared, and no request of ' + compared.hits + ' answered it in ' + over };
+    return chip;
+  });
+  return [
+    ...marked,
+    ...compared.undeclared.map((row) => ({
+      text: row.status + ' ×' + row.count + ' not declared',
+      mark: row.expected ? 'expected' : 'undeclared',
+      title: (row.expected ? 'Expected: ' + row.expected : 'Answered at run time; no failure in the code declares it') +
+        (row.maybe ? '; maybe ' + row.maybe.join(', ') + ', which name no status' : '') + ' (' + over + ')',
+    })),
+  ];
+};
+
 const NO_LOGS = Object.freeze([]);
 
 /** A packed word, as graph.js's `wordIn`: a position in `list`, or the word itself. */
@@ -261,7 +319,7 @@ const placeAmongSiblings = (model, order, k) => {
 
 const NO_SEEN = Object.freeze({
   any: false, most: 0, unmatched: Object.freeze([]), ambiguous: Object.freeze([]),
-  join: () => null, entry: () => 0,
+  join: () => null, entry: () => 0, failures: () => null,
 });
 
 /** What ran but is not in code, `{ service?, kind, name }`; a service of -1 is none. */
@@ -276,7 +334,8 @@ export const ambiguousOf = ({ ambiguous = [], services, kinds }) =>
 
 /**
  * What was seen at run time, from the pack's `observed` (P65), or nothing.
- * A join is named by its edge's position, an entry by its id.
+ * A join is named by its edge's position, an entry by its id; `failures(i)`
+ * is a way in's statuses against what it declares (P106), or null.
  */
 export const createSeen = (data) => {
   const observed = data.observed;
@@ -293,6 +352,12 @@ export const createSeen = (data) => {
     const at = data.entryIds ? data.entryIds[id] : undefined;
     if (at !== undefined) hits.set(at, value.hits || 0);
   }
+  // What each way in answered against what it declares (P106), by position.
+  const failures = new Map();
+  for (const [id, value] of Object.entries(observed.failures || {})) {
+    const at = data.entryIds ? data.entryIds[id] : undefined;
+    if (at !== undefined) failures.set(at, value);
+  }
   const most = Math.max(0, ...[...joins.values()].map((join) => join.count));
   return {
     any: true,
@@ -301,6 +366,7 @@ export const createSeen = (data) => {
     ambiguous: Object.freeze(ambiguousOf(observed)),
     join: (k) => joins.get(k) || null,
     entry: (i) => hits.get(i) || 0,
+    failures: (i) => failures.get(i) || null,
   };
 };
 
@@ -869,12 +935,14 @@ const promptNodeSubject = (model, i, walk, seen) => {
   const access = type === 'entry' ? promptAccessOf(model, i) : undefined;
   const schedule = type === 'entry' ? scheduleOf(model, i) : null;
   const hits = type === 'entry' ? seen.entry(i) : 0;
+  const failuresSeen = type === 'entry' ? seen.failures(i) : null;
   return {
     ...head,
     ...(schedule === null ? {} : { schedule: { expression: schedule.expression, ...(schedule.zone ? { zone: schedule.zone } : {}) } }),
     ...(hits > 0 ? { hits } : {}),
     ...(access === undefined ? {} : { access }),
     ...(fails.length === 0 ? {} : { fails }),
+    ...(failuresSeen === null ? {} : { failuresSeen }),
     steps,
     stepsCut: flow.left,
     ...(flow.stoppedBy.length === 0 ? {} : { stepsCutBy: flow.stoppedBy[0] }),

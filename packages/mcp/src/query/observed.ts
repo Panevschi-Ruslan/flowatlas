@@ -1,12 +1,16 @@
 import { statSync } from 'node:fs';
 import {
+  compareEntryFailures,
   joinIdOf,
   observedPathFor,
   readObserved,
   type AmbiguousSpan,
+  type FailureComparison,
+  type GraphNode,
   type HitSeen,
   type Observed,
   type ObservedFigures,
+  type ObservedWindow,
   type Seen,
 } from '@flowatlas/core';
 import type { FlowNode } from './types.js';
@@ -29,6 +33,8 @@ export interface ObservedCounts {
   ambiguous: readonly AmbiguousSpan[];
   /** How many requests named an id (node or join) as one of the places they could be. */
   candidates: ReadonlyMap<string, number>;
+  /** The hours the counts cover (P105): what "never seen" is said over (P106). */
+  window: ObservedWindow;
 }
 
 const cache = new Map<string, { mtime: number; observed: Observed | undefined; counts: ObservedCounts | undefined }>();
@@ -63,6 +69,7 @@ const held = (dbPath: string): { observed: Observed | undefined; counts: Observe
           channels: observed.channels,
           ambiguous: observed.ambiguous,
           candidates: candidatesOf(observed.ambiguous),
+          window: observed.window,
         };
   const read = { mtime, observed, counts };
   cache.set(path, read);
@@ -168,3 +175,22 @@ export const sampledIn =
     const samples = loadObserved(dbPath)?.samples[id];
     return samples !== undefined && samples.slow.length + samples.failing.length > 0;
   };
+
+/**
+ * What an entry answered at run time against what it declares (P106), over
+ * the file's window; undefined for anything that is not an entry, an entry
+ * nothing saw, or one whose spans carried no status.
+ */
+export const failuresSeen = (
+  counts: ObservedCounts,
+  node: Pick<GraphNode, 'id' | 'type' | 'meta'>,
+  minHits?: number,
+): FailureComparison | undefined => {
+  const row = node.type === 'entry' ? counts.entries[node.id] : undefined;
+  if (row === undefined) return undefined;
+  return compareEntryFailures(
+    node,
+    { count: row.hits, ...(row.statuses === undefined ? {} : { statuses: row.statuses }) },
+    { window: counts.window, ...(minHits === undefined ? {} : { minHits }) },
+  );
+};

@@ -768,6 +768,25 @@ export {
   summarise,
 } from './observed-stats.js';
 export type { Agg, Histogram, SpanFigures, Summary } from './observed-stats.js';
+export {
+  compareEntryFailures,
+  compareSeenFailures,
+  comparisonSays,
+  FAILURE_FROM,
+  FAILURE_MIN_HITS,
+  failureContextOf,
+  seenOfGroup,
+} from './observed-failures.js';
+export type {
+  CompareOptions,
+  DeclaredNeverSeen,
+  DeclaredSeen,
+  FailureComparison,
+  FailureContext,
+  GroupStatuses,
+  StatusMix,
+  UndeclaredFailure,
+} from './observed-failures.js';
 export { compileGlob, expandGlob, isGlob, NEVER_WALKED } from './glob.js';
 export type { Glob } from './glob.js';
 export {
@@ -803,6 +822,7 @@ export type {
   PromptFailChoice,
   PromptFailGroup,
   PromptFailure,
+  PromptFailuresSeen,
   PromptGap,
   PromptLimits,
   PromptLog,
