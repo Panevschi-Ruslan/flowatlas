@@ -149,6 +149,12 @@ const serviceEntrySchema = z.strictObject({
    */
   shapes: z.array(z.string().min(1)).optional(),
   /**
+   * Pattern files this service reads beside the project's (P121), as paths
+   * or globs relative to the configuration. Added to the project-wide list,
+   * never in place of it.
+   */
+  patterns: z.array(z.string().min(1)).optional(),
+  /**
    * Whether an import of a package that is not installed is read from that
    * package's source when a repository of the project is that package (P78).
    * Overrides the project-wide setting of the same name.
@@ -301,6 +307,35 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
+/**
+ * A value a call must write somewhere for a description to apply to it (P121).
+ *
+ * A description says where the parts of a call are; a pattern written as code
+ * also says what some of them are: `$API.call('POST', $URL)` is a request only
+ * where the first argument is `'POST'`. The place is a locator, so the two
+ * vocabularies stay one, and the value is read as any name is - a literal, a
+ * constant, an enum member. A call that writes anything else there, or nothing,
+ * is not the call described, which is different from a call whose name could
+ * not be read.
+ */
+const conditionSchema = z.strictObject({
+  at: nameLocatorSchema,
+  equals: z.union([z.string(), z.number(), z.boolean(), z.null()]),
+});
+
+/** Every condition a description applies under; absent applies everywhere it matched. */
+const whereSchema = z.array(conditionSchema).min(1).optional();
+
+/**
+ * The pattern rule a description was compiled from, `pattern:<id>` (P121).
+ *
+ * Written by the pattern compiler and copied onto every node the description
+ * draws as `meta.describedBy`, so a graph says why a node exists. A description
+ * written by hand leaves it out; where both kinds match one call, the one
+ * without it wins.
+ */
+const describedBySchema = z.string().min(1).optional();
+
 /** A regular expression, refused here rather than when the first call is read. */
 const patternSchema = z.string().min(1).refine((source) => {
   try {
@@ -353,6 +388,12 @@ export const customProducerSchema = z.strictObject({
    * import renames it to.
    */
   function: z.string().min(1).optional(),
+  /**
+   * The package `function` is imported from (P121): the call is then the
+   * function called by its name or as a member of what the package exports,
+   * matched on the import, so a package nobody installed is matched as readily.
+   */
+  module: z.string().min(1).optional(),
   /** Shorthand for a channel written as one plain argument. */
   channelArg: z.number().int().min(0).default(0),
   /** Where the channel is written, tried in order. Overrides `channelArg`. */
@@ -387,6 +428,8 @@ export const customProducerSchema = z.strictObject({
    */
   batch: z.boolean().optional(),
   perItem: z.boolean().optional(),
+  where: whereSchema,
+  describedBy: describedBySchema,
 }).superRefine((producer, ctx) => {
   const onReceiver = producer.receiverType !== undefined || producer.method !== undefined;
   if (producer.function !== undefined && onReceiver) {
@@ -394,6 +437,12 @@ export const customProducerSchema = z.strictObject({
       code: 'custom',
       path: ['function'],
       message: 'a producer is either a function, or a method with its receiverType, not both.',
+    });
+  } else if (producer.module !== undefined && producer.function === undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['module'],
+      message: 'module names the package a function is imported from: write function as well.',
     });
   } else if (producer.function === undefined && (producer.receiverType === undefined || producer.method === undefined)) {
     ctx.addIssue({
@@ -429,6 +478,8 @@ export const customSubscriberSchema = z.strictObject({
   /** Argument holding what runs when a message arrives, when the call takes one. */
   handlerArg: z.number().int().min(0).optional(),
   kind: z.string().min(1).default('event'),
+  where: whereSchema,
+  describedBy: describedBySchema,
 });
 
 /**
@@ -450,6 +501,9 @@ export const customConsumerSchema = z.strictObject({
   /** Where the message sits inside that parameter. The whole of it by default. */
   payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
+  /** Values the decorator must write, read at the decorator as `channel` is. */
+  where: whereSchema,
+  describedBy: describedBySchema,
 });
 
 export const customBrokerSchema = z.strictObject({
@@ -501,6 +555,8 @@ export const starterSchema = z
     names: z.record(z.string().min(1), z.string().min(1)).optional(),
     /** Recorded on the node the call is drawn as. `start` or `invoke` by default. */
     kind: z.string().min(1).optional(),
+    where: whereSchema,
+    describedBy: describedBySchema,
   })
   .superRefine((starter, ctx) => {
     const onReceiver = starter.receiverType !== undefined || starter.method !== undefined;
@@ -851,9 +907,76 @@ export const dbTableAccessSchema = z.strictObject({
   /** The argument that is the table's name, or the table itself for a function that always touches one. */
   table: z.union([z.number().int().min(0), z.string().min(1)]),
   op: z.enum(['read', 'write', 'delete']).optional(),
+  where: whereSchema,
+  describedBy: describedBySchema,
 });
 
 export type DbTableAccess = z.infer<typeof dbTableAccessSchema>;
+
+/** One name or several, as a description writes either. */
+const oneOrMany = z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]);
+
+/**
+ * An HTTP client of the project's own, described in configuration (P121).
+ *
+ * The request half of what `broker.custom` is for messages: a wrapper a
+ * project wrote around the network - `api.call('POST', url, body)`,
+ * `send({ method, path })` - with no library behind it for a reader to know.
+ * It says which call it is (the type it is made on, the function that makes
+ * the client, or a function called by its name), where the address and the
+ * body are written, and where the verb is: fixed, at a place in the call, or,
+ * when neither is said, the method's own name (`post`, `delete`). The answer
+ * is the call's type argument, as for every client. Read by the server
+ * reader's request pass and by both browser readers beside
+ * `frontend.localClientClasses`, through one matcher in the core.
+ */
+export const httpClientSchema = z
+  .strictObject({
+    /** Type the call is made on, as for a producer. */
+    receiverType: oneOrMany.optional(),
+    /** Or the function whose call made the receiver: `const api = useApi(); api.send(...)`. */
+    factory: z.string().min(1).optional(),
+    /** The method called on it, or every spelling of it. */
+    method: oneOrMany.optional(),
+    /** Or a function of the project's own that sends the request, called by its name. */
+    function: z.string().min(1).optional(),
+    /** The package `function` or `factory` is imported from, matched on the import. */
+    module: z.string().min(1).optional(),
+    /** The verb every call sends, when the call does not say. */
+    verb: z.string().min(1).optional(),
+    /** Where the call writes its verb, tried in order. */
+    verbAt: z.array(nameLocatorSchema).min(1).optional(),
+    /** Where the address is written, tried in order. */
+    url: z.array(nameLocatorSchema).min(1),
+    /** Where the body is written, tried in order. */
+    body: z.array(nameLocatorSchema).min(1).optional(),
+    where: whereSchema,
+    describedBy: describedBySchema,
+  })
+  .superRefine((client, ctx) => {
+    const onReceiver = client.receiverType !== undefined || client.factory !== undefined;
+    if (client.function !== undefined && (onReceiver || client.method !== undefined)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['function'],
+        message: 'a client is either a function, or a method with the receiverType or factory it is called on, not both.',
+      });
+    } else if (client.function === undefined && (!onReceiver || client.method === undefined)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [onReceiver ? 'method' : 'receiverType'],
+        message: 'a client names the function it is, or the method and the receiverType (or factory) it is called on.',
+      });
+    }
+    if (client.receiverType !== undefined && client.factory !== undefined) {
+      ctx.addIssue({ code: 'custom', path: ['factory'], message: 'a client is matched by its receiverType or by its factory, not both.' });
+    }
+    if (client.verb !== undefined && client.verbAt !== undefined) {
+      ctx.addIssue({ code: 'custom', path: ['verbAt'], message: 'a verb is either fixed (verb) or read from the call (verbAt), not both.' });
+    }
+  });
+
+export type HttpClientConfig = z.infer<typeof httpClientSchema>;
 
 const expressionValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
@@ -933,6 +1056,16 @@ export const flowatlasConfigSchema = z
      */
     shapes: z.array(z.string().min(1)).optional(),
     /**
+     * Pattern files of the project's own (P121): paths or globs of `.yml` /
+     * `.yaml` files, relative to this configuration, each a list of rules that
+     * say in code what a call of an in-house wrapper is - a publish, a
+     * subscription, a request, a start, a table access - and where its name,
+     * address and payload are written. Compiled into the descriptions under
+     * `adapters` and read exactly as those are; `flowatlas patterns test`
+     * runs each rule's own tests.
+     */
+    patterns: z.array(z.string().min(1)).optional(),
+    /**
      * Whether an import of a package that is not installed is read from that
      * package's source when one is on disk (P78): a configured repository, or
      * a workspace member of one, whose `package.json` `name` is the package -
@@ -969,6 +1102,12 @@ export const flowatlasConfigSchema = z
           .default({ custom: [] }),
         /** Calls that start a workflow or invoke a function by its deployed name. */
         starters: z.array(starterSchema).default([]),
+        /** Requests the project sends through a client of its own (P121). */
+        http: z
+          .strictObject({
+            clients: z.array(httpClientSchema).default([]),
+          })
+          .default({ clients: [] }),
         /**
          * What a repository's infrastructure is read with, where its ways in are
          * declared there.
@@ -1040,6 +1179,7 @@ export const flowatlasConfigSchema = z
         entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
         starters: [],
+        http: { clients: [] },
         infra: { modules: [] },
         db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
@@ -1466,6 +1606,25 @@ export const shapesFor = (
   const out: string[] = [];
   for (const pattern of patterns) {
     for (const path of expandGlob(configDir, pattern)) if (!out.includes(path)) out.push(path);
+  }
+  return out;
+};
+
+/**
+ * The pattern files a service reads, as absolute paths in a settled order
+ * (P121): the project's list and then the service's own, expanded as
+ * `shapes` are, so a file named and missing is a row (`pattern-file-unread`)
+ * rather than nothing.
+ */
+export const patternFilesFor = (
+  config: Pick<FlowatlasConfig, 'patterns'> | undefined,
+  service: Pick<ServiceConfig, 'patterns'> | undefined,
+  configDir: string,
+): string[] => {
+  const globs = [...(config?.patterns ?? []), ...(service?.patterns ?? [])];
+  const out: string[] = [];
+  for (const glob of globs) {
+    for (const path of expandGlob(configDir, glob)) if (!out.includes(path)) out.push(path);
   }
   return out;
 };

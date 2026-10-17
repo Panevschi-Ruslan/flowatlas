@@ -1,4 +1,4 @@
-import { callsHelper, evaluateExpression, namesHelper, type DbOp, type DbTableAccess } from '@flowatlas/core';
+import { callsHelper, conditionsHold, evaluateExpression, namesHelper, type DbOp, type DbTableAccess } from '@flowatlas/core';
 import { Node, SyntaxKind, type CallExpression, type EntityName, type Project, type Type, type TypeNode } from 'ts-morph';
 
 /** A call to a function the configuration names, and the table it touches. */
@@ -197,11 +197,10 @@ export const configuredAccessOf = (
   call: CallExpression,
   described: readonly DbTableAccess[],
   exports: RepositoryExports = repositoryExports(),
-): ConfiguredAccess | undefined => {
-  const access = described.find((candidate) =>
-    MATCHES[candidate.factory === undefined ? 'function' : 'client'](call, candidate, exports),
-  );
-  if (access === undefined) return undefined;
+): ConfiguredAccess | undefined => configuredAccessesOf(call, described, exports)[0];
+
+/** What one description reads at a call it matched. */
+const accessAt = (call: CallExpression, access: DbTableAccess): ConfiguredAccess => {
   const op = access.op ?? null;
   if (typeof access.table === 'string') return { access, table: access.table, op };
   const argument = call.getArguments()[access.table];
@@ -209,3 +208,23 @@ export const configuredAccessOf = (
   const table = value?.resolved === true && typeof value.value === 'string' && value.value !== '' ? value.value : null;
   return { access, table, op };
 };
+
+/**
+ * Every description a call matches, in the order configuration lists them,
+ * each with the table it reads: all of them, so a reader can choose between a
+ * description written by hand and a compiled pattern, and say when two
+ * patterns claim one call (P121). A description whose required values the
+ * call does not write is not matched.
+ */
+export const configuredAccessesOf = (
+  call: CallExpression,
+  described: readonly DbTableAccess[],
+  exports: RepositoryExports = repositoryExports(),
+): ConfiguredAccess[] =>
+  described
+    .filter(
+      (candidate) =>
+        MATCHES[candidate.factory === undefined ? 'function' : 'client'](call, candidate, exports) &&
+        conditionsHold(call, candidate.where),
+    )
+    .map((access) => accessAt(call, access));

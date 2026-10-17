@@ -372,6 +372,8 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
         confidence,
         ...(names.length === 0 ? {} : { [REACHES_META]: names.map((name) => makeDeployedReference(starts.entry, name)) }),
         ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting }),
+        // Which rule of the project's patterns drew it, when one did (P121).
+        ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
       },
     });
     ctx.builder.addEdge({
@@ -430,7 +432,13 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
         file: holder.file,
         line,
         kind,
-        meta: { kind, adapter: spec.name, method: pattern.method, resumes: pattern.starts.entry },
+        meta: {
+          kind,
+          adapter: spec.name,
+          method: pattern.method,
+          resumes: pattern.starts.entry,
+          ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
+        },
       });
       ctx.builder.addEdge({ from: holder.id, to: id, type: 'calls', confidence: evidence === 'checked' ? 'static' : 'heuristic', file: holder.file, line });
       return;

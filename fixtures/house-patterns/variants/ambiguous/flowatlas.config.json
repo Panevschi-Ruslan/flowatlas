@@ -1,0 +1,24 @@
+{
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "../../catalog",
+      "type": "nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "../../stock",
+      "type": "nestjs",
+      "baseUrlEnv": ["STOCK_URL"]
+    },
+    {
+      "name": "storefront",
+      "repo": "../../storefront",
+      "type": "react",
+      "apiBaseEnv": ["VITE_CATALOG_URL"],
+      "apiTarget": { "VITE_CATALOG_URL": "catalog" }
+    }
+  ],
+  "patterns": ["../../flowatlas-patterns/*.yml", "./second-bus.yml"],
+  "output": ".flowatlas"
+}

@@ -491,6 +491,7 @@ bounds the list. With none it says so, and how many go the other way.
 | Tool | Answers | Takes |
 |---|---|---|
 | `cant_follow` | every step the reading could not follow, grouped by cause and then by the package it points into, with a few places each and the id of the method each is written in | `service`, `cause`, `package`, `top`, `samples`, `offset` |
+| `test_pattern` | a draft extraction pattern checked before it is suggested: each rule refused with the part named, or its own tests run, and what it draws from the code with the holes it filled | `yaml`, `code`, `service` |
 
 The same breakdown `flowatlas doctor --unresolved` prints. A cause is what the
 code says about why: `module-not-installed` (with the package), `import-unresolved`
@@ -521,6 +522,20 @@ in its place gets `run: flowatlas shapes --suggest --package <name>` in `next`,
 the command that lists the names the project uses of it. A step drawn through
 types such a stand-in supplied says so on its edge in `get_flow`: `because:
 ["package-from-repo"]` or `["shape-file"]`, and `typedBy` naming the package.
+
+A cause whose rows are calls on a receiver nothing types, or a channel a
+wrapper hides (`call-dynamic-receiver`, `channel-dynamic`, and the other reasons
+`flowatlas patterns suggest` reads), also gets a `test_pattern` call in `next`,
+with a starter rule for its first place: the method that place calls, the kind
+its name suggests, and `TODO` for the receiver's type. `test_pattern` runs rules
+written as YAML - one rule or a list, as a pattern file holds them - by the
+reader the build runs, in memory, and is the same tester `flowatlas patterns
+test` is (P121): with `code`, what each rule draws from it (`producer on
+channel:book.added`), the rows it leaves and what each hole caught, or how far
+the pattern got (`stoppedAt`); with `service`, the code is typed in that
+service's own program. At most ten rules and ten tests a rule are answered. It
+runs only under `flowatlas mcp`, which hands the server the readers; a server
+started without them says so.
 
 ### What a branch changed
 

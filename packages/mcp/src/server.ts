@@ -4,12 +4,13 @@ import { DbHandle, type DbHandleOptions } from './query/db.js';
 import { registerCantFollow } from './tools/cant-follow.js';
 import { registerChanges } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
-import type { ContractChecker, ToolContext } from './tools/common.js';
+import type { ContractChecker, PatternTester, ToolContext } from './tools/common.js';
 import { registerContract } from './tools/contract.js';
 import { registerDead } from './tools/dead.js';
 import { registerEntries } from './tools/entries.js';
 import { registerFindings } from './tools/findings.js';
 import { registerFlow } from './tools/flow.js';
+import { registerPatterns } from './tools/patterns.js';
 import { registerPrompt } from './tools/prompt.js';
 import { registerReach } from './tools/reach.js';
 import { registerSearch } from './tools/search.js';
@@ -36,7 +37,7 @@ export const INSTRUCTIONS = [
   '- symbol: find_symbol -> who_calls / impact({symbol: id}) -> get_flow on an entry it names.',
   '- shape: get_type({type: id}) -> type_usage({type: id}): every way in, crossing, channel and call that takes or returns it, and the types holding it; check_contract for whether two services still agree.',
   '- search({query}) finds a route, channel, table, type, class or gap by name; what_changed reads the last flowatlas diff.',
-  "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names.",
+  "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names; a wrapper of the project's own -> test_pattern on a draft rule for it.",
   '- findings - a likely N+1, a route with no guard, a contract break, a channel with one end - are not gaps: findings() counts each kind with its top rows, ranked by reach; findings({kind}) lists one, each row with the call that shows it.',
   "- dead({id}) says whether a node is dead: `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` (`outside` the project, or a call `oneOff` a segment) or `alive`; dead({service}) lists them, verdict first.",
   'Rows real traffic went through carry `observed: n` (`seenAmbiguous: n` where requests fit it and other places too, so were counted on none); gaps someone accepted with flowatlas accept carry `accepted: true`.',
@@ -51,6 +52,8 @@ export const INSTRUCTIONS = [
 export interface ServerOptions extends DbHandleOptions {
   /** Field-level contract rules, when the contracts package is installed. */
   contractChecker?: ContractChecker;
+  /** The pattern tester, when the readers are there to run it (P121). */
+  patternTester?: PatternTester;
   version?: string;
 }
 
@@ -66,6 +69,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   const context: ToolContext = {
     handle,
     ...(options.contractChecker === undefined ? {} : { contractChecker: options.contractChecker }),
+    ...(options.patternTester === undefined ? {} : { patternTester: options.patternTester }),
   };
 
   const server = new McpServer(
@@ -90,6 +94,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   registerDead(server, context);
   registerFindings(server, context);
   registerTypeUsage(server, context);
+  registerPatterns(server, context);
 
   return server;
 };

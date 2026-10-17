@@ -14,6 +14,7 @@ import {
   readResolvedPackageJson,
   readStandInsOfBuild,
   standInsFingerprintOf,
+  patternFilesFor,
   SCHEMA_VERSION,
   countsOf,
   type FlowatlasConfig,
@@ -374,7 +375,10 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
   for (const [file, stamp] of Object.entries(files)) stamp.deps = imports[file] ?? [];
 
   const tsconfig = findTsconfig(rootDir, options.tsconfig ?? options.service?.tsconfig);
-  const standIns = options.configDir === undefined ? undefined : standInsFingerprintOf(warm.project, options.configDir);
+  const standIns =
+    options.configDir === undefined
+      ? undefined
+      : standInsFingerprintOf(warm.project, options.configDir, patternFilesFor(config, options.service, options.configDir));
   cache.repos[repo] = {
     repo: options.service?.repo ?? rootDir,
     extractor,

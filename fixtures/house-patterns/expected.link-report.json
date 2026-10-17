@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T10:22:09.864Z",
+  "configHash": "5ed2bafa4709",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 18,
+      "edges": 12,
+      "types": 2,
+      "unresolved": 2,
+      "durationMs": 860,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "@bookshop/bus",
+          "@bookshop/http",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 7,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 856,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "@bookshop/bus",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 592,
+      "packages": {
+        "name": "storefront",
+        "runtime": [
+          "@bookshop/api",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 2,
+    "resolved": 2,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 3,
+    "uncalled": [
+      "entry:catalog:http:DELETE:/books/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 34,
+    "edges": 24,
+    "types": 6,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

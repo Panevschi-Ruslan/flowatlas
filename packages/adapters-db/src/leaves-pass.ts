@@ -33,6 +33,10 @@ import {
   lineAndColumnAt,
   declarationOf,
   locatedExpressions,
+  describedCallKey,
+  precedenceOf,
+  precedenceRows,
+  withdrawDescribedCalls,
   type GraphEdge,
   type GraphNode,
 } from '@flowatlas/core';
@@ -75,7 +79,8 @@ import {
 import { entityTableName, locateTable, locateTableAt, statedEntityTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
 import { loadedSettings, type LoadedSetting } from './leaves/config-load.js';
-import { configuredAccessOf, repositoryExports } from './leaves/configured.js';
+import { configuredAccessesOf, repositoryExports } from './leaves/configured.js';
+import { describedRequestOf } from './leaves/http-clients.js';
 import { hostCallOf } from './leaves/fragment.js';
 import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
 import { handedBackBy } from './leaves/handed-back.js';
@@ -209,6 +214,14 @@ interface RecordOptions {
    * recorded where it is made, the body its own settings write (P131).
    */
   body?: TsNode | null;
+  /** The pattern rule the request was described by, recorded as `meta.describedBy` (P121). */
+  describedBy?: string;
+  /**
+   * The client was known only from what the source states it is - an
+   * annotation or a construction naming a class nothing installed - so the
+   * edge is a guess, as a described publish on such a receiver is (P121).
+   */
+  stated?: boolean;
 }
 
 /**
@@ -1361,6 +1374,22 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return true;
   };
 
+  /** Calls a description matched, whose untyped-receiver rows go once the pass is done (P121). */
+  const describedCalls = new Set<string>();
+
+  /**
+   * The library descriptor that reads a call as a query on its own, by name,
+   * where one does: what a compiled pattern matching the same call is
+   * shadowed by (P121).
+   */
+  const builtInDbReading = (call: CallExpression): string | undefined => {
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    const descriptor = descriptorFor(originOf(callee.getExpression()).origin);
+    if (descriptor === undefined || operationOf(descriptor, callee.getName()) === null) return undefined;
+    return `the ${descriptor.package} descriptor`;
+  };
+
   /**
    * A call to a function the configuration names under `adapters.db.tables`:
    * one query of the table its argument names, drawn as any other query is
@@ -1369,10 +1398,29 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    * as a string keeps the query and gets the ordinary row.
    */
   const emitConfigured = (call: CallExpression, scope: Scope): boolean => {
-    const found = configuredAccessOf(call, ctx.config.adapters.db.tables, exported);
-    if (found === undefined) return false;
+    const described = ctx.config.adapters.db.tables;
+    if (described.length === 0) return false;
+    const matches = configuredAccessesOf(call, described, exported);
+    if (matches.length === 0) return false;
     const { id: holderId, file } = scope;
     const site = siteOf(ctx, call, file);
+    // A description written by hand wins over a compiled pattern, and two
+    // patterns on one call are ambiguous (P121). A pattern on a call a
+    // library's own descriptor already reads is shadowed by it: the library
+    // is read, as it would be with no pattern at all.
+    const at = { file, line: site.line, symbol: call.getExpression().getText().slice(0, 60) };
+    const choice = precedenceOf(matches, (match) => match.access.describedBy);
+    const found = choice.chosen[0];
+    const builtIn = found?.access.describedBy === undefined ? undefined : builtInDbReading(call);
+    for (const row of precedenceRows(
+      builtIn === undefined ? choice : { chosen: [], shadowed: [found?.access.describedBy as string], ambiguous: [] },
+      at,
+      builtIn ?? 'a function described under adapters.db.tables',
+    )) {
+      ctx.report(row);
+    }
+    if (found === undefined || builtIn !== undefined) return false;
+    describedCalls.add(describedCallKey(file, site.line, call));
     const id = makeLeafId('db_query', ctx.repo, file, site.line, site.column);
     if (emitted.has(id)) return true;
     emitted.add(id);
@@ -1392,6 +1440,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         method: found.access.name,
         receiver: call.getExpression().getText().slice(0, 80),
         source: 'configured',
+        ...(found.access.describedBy === undefined ? {} : { describedBy: found.access.describedBy }),
       },
     });
     scope.ensure();
@@ -1620,7 +1669,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     owner: Holder,
     options: RecordOptions = {},
   ): void => {
-    const { init, readsSite = true, binding, body: handed } = options;
+    const { init, readsSite = true, binding, body: handed, describedBy, stated } = options;
     // A request through a binding names a host the platform ignores: the
     // binding is where it goes (P91).
     const info: UrlInfo = binding === undefined ? written : { ...written, host: null, baseUrlEnv: null };
@@ -1725,6 +1774,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(info.host === null ? {} : { host: info.host }),
         ...(application === undefined ? {} : { application }),
         ...(binding === undefined ? {} : { binding: binding.binding, ...(binding.typed ? {} : { bindingTyped: false }) }),
+        ...(describedBy === undefined ? {} : { describedBy }),
       },
     });
     owner.ensure();
@@ -1732,7 +1782,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       from: owner.id,
       to: id,
       type: 'calls',
-      confidence: info.path === null || verb === null ? 'heuristic' : 'static',
+      confidence: info.path === null || verb === null || stated === true ? 'heuristic' : 'static',
       file: owner.file,
       line: place.line,
     });
@@ -1878,6 +1928,31 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
   /**
+   * A request through a client the configuration describes under
+   * `adapters.http.clients`, or a pattern compiles into one (P121): recorded
+   * where it is made, with the verb, address and body the description says
+   * where to find. A call the reader's own clients recognise is theirs.
+   */
+  const emitDescribedClient = (call: CallExpression, scope: Scope): boolean => {
+    const { clients } = ctx.config.adapters.http;
+    if (clients.length === 0) return false;
+    const site = siteOf(ctx, call, scope.file);
+    const at = { file: scope.file, line: site.line, symbol: call.getExpression().getText().slice(0, 60) };
+    const decided = describedRequestOf(call, clients, at, recogniseHttp(call) === null ? undefined : 'the built-in reading of the request');
+    for (const row of decided.rows) ctx.report(row);
+    const { request } = decided;
+    if (request === undefined) return false;
+    describedCalls.add(describedCallKey(scope.file, site.line, call));
+    recordHttp(call, analyzeUrl(request.url ?? call, { whole: true }), request.verb, scope, {
+      readsSite: false,
+      body: request.body ?? null,
+      ...(request.client.describedBy === undefined ? {} : { describedBy: request.client.describedBy }),
+      ...(request.evidence === 'stated' ? { stated: true } : {}),
+    });
+    return true;
+  };
+
+  /**
    * Every body whose calls are read, and the node each one's leaves hang off.
    *
    * Classes first, and then the functions, so that a graph reads in the order
@@ -1973,6 +2048,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     forEachCall(scope.body, (call) => {
       const expression = call as unknown as CallExpression;
       if (emitConfigured(expression, scope)) return;
+      if (emitDescribedClient(expression, scope)) return;
       if (emitDb(expression, scope)) return;
       if (emitCache(expression, scope)) return;
       emitHttp(expression, scope);
@@ -1992,6 +2068,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       }
     });
   }
+
+  // A place the calls reader could not follow is followed now: a description
+  // said what the call is (P121).
+  withdrawDescribedCalls(ctx.builder, describedCalls);
 
   // Silence is an answer, and on a data layer it is usually the wrong one. A
   // repository whose store nothing recognises answers every question with half

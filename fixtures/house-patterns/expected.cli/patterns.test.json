@@ -1,0 +1,326 @@
+{
+  "patternsTestFormatVersion": 1,
+  "files": [
+    {
+      "file": "flowatlas-patterns/house.yml"
+    }
+  ],
+  "rules": [
+    {
+      "id": "shop-bus-emit",
+      "kind": "publish",
+      "file": "flowatlas-patterns/house.yml",
+      "line": 7,
+      "tests": [
+        {
+          "code": "bus.emit({ topic: 'book.added', data: book })",
+          "expect": {
+            "channel": "book.added"
+          },
+          "pass": true,
+          "failures": [],
+          "drawn": [
+            {
+              "node": "producer",
+              "label": "event book.added",
+              "channels": [
+                "book.added"
+              ]
+            }
+          ],
+          "rows": [],
+          "captures": {
+            "$BUS": "bus",
+            "$CHANNEL": "'book.added'",
+            "$PAYLOAD": "book"
+          }
+        },
+        {
+          "code": "bus.emit({ topic: topicFor(kind), data })",
+          "expect": {
+            "channel": "*",
+            "row": "channel-dynamic"
+          },
+          "pass": true,
+          "failures": [],
+          "drawn": [
+            {
+              "node": "producer",
+              "label": "event ?",
+              "channels": []
+            }
+          ],
+          "rows": [
+            {
+              "reason": "channel-dynamic",
+              "message": "PatternSample.run -> topicFor(kind)"
+            }
+          ],
+          "captures": {
+            "$BUS": "bus",
+            "$CHANNEL": "topicFor(kind)",
+            "$PAYLOAD": "data"
+          }
+        },
+        {
+          "code": "bus.flush()",
+          "expect": "none",
+          "pass": true,
+          "failures": [],
+          "drawn": [],
+          "rows": [
+            {
+              "reason": "call-dynamic-receiver"
+            }
+          ],
+          "captures": {}
+        }
+      ],
+      "descriptor": {
+        "under": "adapters.broker.custom",
+        "description": {
+          "name": "pattern:shop-bus-emit",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": "ShopBus",
+              "method": "emit",
+              "channelArg": 0,
+              "channel": [
+                {
+                  "kind": "argument-property",
+                  "index": 0,
+                  "key": "topic"
+                }
+              ],
+              "payload": [
+                {
+                  "kind": "argument-property",
+                  "index": 0,
+                  "key": "data"
+                }
+              ],
+              "kind": "event",
+              "describedBy": "pattern:shop-bus-emit"
+            }
+          ],
+          "consumers": [],
+          "subscribers": []
+        }
+      }
+    },
+    {
+      "id": "shop-bus-on",
+      "kind": "subscribe",
+      "file": "flowatlas-patterns/house.yml",
+      "line": 23,
+      "tests": [
+        {
+          "code": "bus.on('book.added', (book) => shelve(book))",
+          "expect": {
+            "channel": "book.added"
+          },
+          "pass": true,
+          "failures": [],
+          "drawn": [
+            {
+              "node": "consumer",
+              "label": "PatternSample.run",
+              "channels": [
+                "book.added"
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "reason": "consumer-handler-unresolved"
+            }
+          ],
+          "captures": {
+            "$BUS": "bus",
+            "$CHANNEL": "'book.added'",
+            "$HANDLER": "(book) => shelve(book)"
+          }
+        }
+      ],
+      "descriptor": {
+        "under": "adapters.broker.custom",
+        "description": {
+          "name": "pattern:shop-bus-on",
+          "channelKind": "channel",
+          "producers": [],
+          "consumers": [],
+          "subscribers": [
+            {
+              "receiverType": "ShopBus",
+              "method": "on",
+              "channelArg": 0,
+              "channel": [
+                {
+                  "kind": "argument",
+                  "index": 0
+                }
+              ],
+              "handlerArg": 1,
+              "kind": "event",
+              "describedBy": "pattern:shop-bus-on"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "api-client-call",
+      "kind": "http-request",
+      "file": "flowatlas-patterns/house.yml",
+      "line": 34,
+      "tests": [
+        {
+          "code": "api.call('POST', '/stock/reserve', { isbn, copies: 1 })",
+          "expect": {
+            "verb": "POST",
+            "url": "/stock/reserve"
+          },
+          "pass": true,
+          "failures": [],
+          "drawn": [
+            {
+              "node": "http_out",
+              "label": "POST /stock/reserve",
+              "verb": "POST",
+              "url": "/stock/reserve"
+            }
+          ],
+          "rows": [],
+          "captures": {
+            "$API": "api",
+            "$VERB": "'POST'",
+            "$URL": "'/stock/reserve'",
+            "$BODY": "{ isbn, copies: 1 }"
+          }
+        },
+        {
+          "code": "api.call(verb, '/stock/reserve', body)",
+          "expect": {
+            "url": "/stock/reserve",
+            "row": "api-method-dynamic"
+          },
+          "pass": true,
+          "failures": [],
+          "drawn": [
+            {
+              "node": "http_out",
+              "label": "? /stock/reserve",
+              "verb": null,
+              "url": "/stock/reserve"
+            }
+          ],
+          "rows": [
+            {
+              "reason": "api-method-dynamic"
+            }
+          ],
+          "captures": {
+            "$API": "api",
+            "$VERB": "verb",
+            "$URL": "'/stock/reserve'",
+            "$BODY": "body"
+          }
+        }
+      ],
+      "descriptor": {
+        "under": "adapters.http.clients",
+        "description": {
+          "receiverType": "ApiClient",
+          "method": "call",
+          "verbAt": [
+            {
+              "kind": "argument",
+              "index": 0
+            }
+          ],
+          "url": [
+            {
+              "kind": "argument",
+              "index": 1
+            }
+          ],
+          "body": [
+            {
+              "kind": "argument",
+              "index": 2
+            }
+          ],
+          "describedBy": "pattern:api-client-call"
+        }
+      }
+    },
+    {
+      "id": "storefront-send",
+      "kind": "http-request",
+      "file": "flowatlas-patterns/house.yml",
+      "line": 48,
+      "tests": [
+        {
+          "code": "useApi().send({ method: 'GET', path: '/books' })",
+          "expect": {
+            "verb": "GET",
+            "url": "/books"
+          },
+          "pass": true,
+          "failures": [],
+          "drawn": [
+            {
+              "node": "http_out",
+              "label": "GET /books",
+              "verb": "GET",
+              "url": "/books"
+            }
+          ],
+          "rows": [],
+          "captures": {
+            "$API": "useApi()",
+            "$VERB": "'GET'",
+            "$URL": "'/books'"
+          }
+        }
+      ],
+      "descriptor": {
+        "under": "adapters.http.clients",
+        "description": {
+          "factory": "useApi",
+          "method": "send",
+          "module": "@bookshop/api",
+          "verbAt": [
+            {
+              "kind": "argument-property",
+              "index": 0,
+              "key": "method"
+            }
+          ],
+          "url": [
+            {
+              "kind": "argument-property",
+              "index": 0,
+              "key": "path"
+            }
+          ],
+          "body": [
+            {
+              "kind": "argument-property",
+              "index": 0,
+              "key": "body"
+            }
+          ],
+          "describedBy": "pattern:storefront-send"
+        }
+      }
+    }
+  ],
+  "total": {
+    "rules": 4,
+    "refused": 0,
+    "tests": 7,
+    "failed": 0
+  }
+}

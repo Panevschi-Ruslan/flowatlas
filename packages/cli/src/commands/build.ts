@@ -24,6 +24,7 @@ import {
   hashShapeFile,
   STAND_INS_FILENAME,
   standInsFingerprintOfBuild,
+  unmatchedPatternRows,
   standInsOfBuild,
   type FlowatlasConfig,
   type PackageJson,
@@ -1147,16 +1148,29 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
 
   const silent = readNothing(loaded.config, (service) => loaded.repoDir(service), extracted);
   const armsLength = armsLengthOf(loaded.config, (service) => loaded.repoDir(service), extracted);
-  const rowFor = new Map(silent.map((found) => [found.service, readNothingRow(found)]));
+  const rowFor = new Map(silent.map((found) => [found.service, [readNothingRow(found)]]));
+  // Rules of the project's patterns nothing matched (P121), said once every
+  // service a rule applies to has been read: a project-wide judgement, so it
+  // is derived here rather than by any one reader.
+  const unmatched = unmatchedPatternRows(
+    loaded.config,
+    loaded.rootDir,
+    extracted.flatMap((item) =>
+      item.graph === undefined
+        ? []
+        : [{ service: item.service.name, repoDir: loaded.repoDir(item.service), nodes: item.graph.nodes, unresolved: item.graph.unresolved }],
+    ),
+  );
+  for (const [service, rows] of unmatched) rowFor.set(service, [...(rowFor.get(service) ?? []), ...rows]);
   const graphs = extracted.flatMap((item) => {
     if (item.graph === undefined) return [];
-    const row = rowFor.get(item.service.name);
+    const rows = rowFor.get(item.service.name);
     // A copy rather than the graph itself, because the same object is what the
     // cache counts and what was already written to the service's own
     // graph.json, and neither of those should gain a row that this build
     // derived from the project rather than read from the repository.
-    if (row === undefined) return [item.graph];
-    return [{ ...item.graph, unresolved: [...item.graph.unresolved, row] }];
+    if (rows === undefined) return [item.graph];
+    return [{ ...item.graph, unresolved: [...item.graph.unresolved, ...rows] }];
   });
   const result = linkGraphs(graphs, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),

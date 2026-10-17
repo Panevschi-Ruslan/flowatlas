@@ -1,0 +1,9 @@
+{
+  "name": "storefront",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@bookshop/api": "^1.0.0",
+    "react": "^19.0.0"
+  }
+}

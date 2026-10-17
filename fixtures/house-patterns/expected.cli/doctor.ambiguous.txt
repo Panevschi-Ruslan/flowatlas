@@ -1,0 +1,40 @@
+unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 5 to act on · missed: 6 over 7 sites · notes: 1 · findings: 0
+  2 missed places static reading cannot see, folded into 1 row
+  bootstrap-not-found: 2 rows
+    Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.
+      ../../catalog/src/main.ts:1  bootstrap
+      ../../stock/src/main.ts:1  bootstrap
+  pattern-ambiguous: 2 rows
+    Two patterns describe one call. Narrow one of them - a receiver type, a literal the call writes - or remove one; flowatlas patterns explain shows how far each matched.
+      ../../catalog/src/books/books.service.ts:23  BooksService.add -> this.bus.emit
+      ../../catalog/src/books/books.service.ts:29  BooksService.remove -> this.bus.emit
+  pattern-not-expressible: 1 row
+    Nothing of the rule is read until it compiles. Change the part named, or describe the call under adapters in flowatlas.config.json; flowatlas patterns test shows the same refusal.
+      ../../catalog/../variants/ambiguous/second-bus.yml:21  shop-bus-later
+  call-dynamic-receiver (info): 1 row over 2 places
+    The receiver has no single class type; inject a class to make the edge visible.
+      ../../catalog/src/books/books.service.ts:23  BooksService.add -> this.bus.emit
+  pattern-unmatched (note): 1 row
+    Check the rule's on.receiverType or function and its pattern against a call it should match (flowatlas patterns explain <file:line>), or remove it.
+      ../../catalog/../variants/ambiguous/second-bus.yml:12  shop-bus-flush
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 3 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 5 now, +5)
+  no baseline at <root>/fixtures/house-patterns/variants/ambiguous/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  bootstrap-not-found: 0 → 2 (+2)
+  pattern-ambiguous: 0 → 2 (+2)
+  pattern-not-expressible: 0 → 1 (+1)
+  new (5):
+    catalog|../variants/ambiguous/second-bus.yml|shop-bus-later|pattern-not-expressible
+    catalog|src/books/books.service.ts|BooksService.add -> this.bus.emit|pattern-ambiguous
+    catalog|src/books/books.service.ts|BooksService.remove -> this.bus.emit|pattern-ambiguous
+    catalog|src/main.ts|bootstrap|bootstrap-not-found
+    stock|src/main.ts|bootstrap|bootstrap-not-found

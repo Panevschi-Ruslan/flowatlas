@@ -422,6 +422,19 @@ describe('planning around what stood in for a missing package (P83)', () => {
     expect(plan(undefined, undefined)).toEqual({ mode: 'skip', reason: '0 files changed' });
   });
 
+  it('reads again when the last shape file under a glob went and nothing stands in now (P180)', () => {
+    expect(plan(recorded, undefined)).toEqual({ mode: 'full', reason: 'stand-ins changed: shape file flowatlas-shapes/queue.d.ts removed' });
+  });
+
+  it.each([
+    ['a pattern file added', { ...recorded, patterns: { 'flowatlas-patterns/bus.yml': 'sha1:bus' } }, recorded, 'added'],
+    ['a pattern file edited', { ...recorded, patterns: { 'flowatlas-patterns/bus.yml': 'sha1:bus' } }, { ...recorded, patterns: { 'flowatlas-patterns/bus.yml': 'sha1:new' } }, 'changed'],
+    ['a pattern file removed', { ...recorded, shapes: {}, patterns: { 'flowatlas-patterns/bus.yml': 'sha1:bus' } }, { ...recorded, shapes: {} }, 'removed'],
+  ])('reads everything again for %s (P121)', (_, now, before, how) => {
+    const [was, is] = how === 'added' ? [before, now] : [now, before];
+    expect(plan(was, is)).toEqual({ mode: 'full', reason: `stand-ins changed: pattern file flowatlas-patterns/bus.yml ${how}` });
+  });
+
   it('says what stood in before an installed file that changed', () => {
     const moved = { ...recorded, shapes: {} };
     const result = planRebuild([survey({ standIns: moved, packages: { 'node_modules/x/index.d.ts': stamp('sha1:new') } })], {

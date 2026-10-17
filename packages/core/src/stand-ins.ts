@@ -40,6 +40,7 @@ import {
 } from './package-index.js';
 import {
   packageSourcesFor,
+  patternFilesFor,
   shapesFor,
   type FlowatlasConfig,
   type PackageSourcesSetting,
@@ -172,7 +173,9 @@ export interface StandInsOfBuild {
   /** Every shape file some service lists, each read once, sorted by path. */
   readonly shapeFiles: readonly ShapeFileReading[];
   /** Per service, the shape files it reads (`files`) and those its own entry lists (`own`), as absolute paths. */
-  readonly perService: Readonly<Record<string, { readonly files: readonly string[]; readonly own: readonly string[] }>>;
+  readonly perService: Readonly<
+    Record<string, { readonly files: readonly string[]; readonly own: readonly string[]; readonly patterns?: readonly string[] }>
+  >;
 }
 
 const recordOf = (index: PackageIndex): PackageIndexRecord => ({
@@ -193,11 +196,13 @@ export const standInsOfBuild = (config: FlowatlasConfig, configDir: string): Sta
   for (const search of (['services', 'folders'] as const).filter((each) => searches.has(each))) {
     indexes[search] = recordOf(indexFor(config, configDir, search));
   }
-  const perService: Record<string, { files: string[]; own: string[] }> = {};
+  const perService: Record<string, { files: string[]; own: string[]; patterns?: string[] }> = {};
   const paths = new Set<string>();
   for (const service of read) {
     const files = shapesFor(config, service, configDir);
-    perService[service.name] = { files, own: shapesFor(undefined, service, configDir) };
+    // The pattern files it lists, which its fingerprint hashes (P121).
+    const patterns = patternFilesFor(config, service, configDir);
+    perService[service.name] = { files, own: shapesFor(undefined, service, configDir), ...(patterns.length === 0 ? {} : { patterns }) };
     for (const path of files) paths.add(path);
   }
   return {
@@ -239,7 +244,10 @@ const standInsSchema = z
     shapeFiles: z.array(
       z.object({ path: z.string(), shapes: z.array(shapeSchema), problem: z.string().optional() }).strict(),
     ),
-    perService: z.record(z.string(), z.object({ files: z.array(z.string()), own: z.array(z.string()) }).strict()),
+    perService: z.record(
+      z.string(),
+      z.object({ files: z.array(z.string()), own: z.array(z.string()), patterns: z.array(z.string()).optional() }).strict(),
+    ),
   })
   .strict();
 
@@ -656,6 +664,12 @@ export type PackageAnswer =
 export interface StandInsFingerprint {
   shapes: Record<string, string>;
   packages: Record<string, PackageAnswer | null>;
+  /**
+   * Every pattern file listed for the service (P121), relative to the
+   * configuration, to its content hash. Absent where none is listed, so a
+   * reading with no patterns records what it always did.
+   */
+  patterns?: Record<string, string>;
 }
 
 export interface StandInsFingerprintInput {
@@ -667,6 +681,8 @@ export interface StandInsFingerprintInput {
   readonly shapeFiles: readonly string[];
   /** The configuration's directory, which every path recorded is relative to. */
   readonly configDir: string;
+  /** Every pattern file listed for the service, as absolute paths (P121). */
+  readonly patternFiles?: readonly string[];
   /** How a shape file is hashed; {@link hashShapeFile} unless a caller shares one per build. */
   readonly hashOf?: (path: string) => string;
 }
@@ -703,7 +719,12 @@ export const standInsFingerprint = (input: StandInsFingerprintInput): StandInsFi
             : null;
     }
   }
-  return { shapes, packages };
+  // A pattern file is configuration the readers compile (P121): a new file
+  // under a glob, an edited one and a removed one each change what the same
+  // sources produce, the way a shape file does.
+  const patterns: Record<string, string> = {};
+  for (const path of [...(input.patternFiles ?? [])].sort()) patterns[rel(path)] = hashOf(path);
+  return { shapes, packages, ...(Object.keys(patterns).length === 0 ? {} : { patterns }) };
 };
 
 /**
@@ -712,7 +733,11 @@ export const standInsFingerprint = (input: StandInsFingerprintInput): StandInsFi
  * reading on its own leaves in its cache entry; a build asks the names of it
  * and answers them from its own index.
  */
-export const standInsFingerprintOf = (project: Project, configDir: string): StandInsFingerprint | undefined => {
+export const standInsFingerprintOf = (
+  project: Project,
+  configDir: string,
+  patternFiles: readonly string[] = [],
+): StandInsFingerprint | undefined => {
   const state = STATE.get(project);
   if (state === undefined) return undefined;
   return standInsFingerprint({
@@ -720,6 +745,7 @@ export const standInsFingerprintOf = (project: Project, configDir: string): Stan
     index: state.index,
     shapeFiles: state.shapeFiles.map((reading) => reading.path),
     configDir,
+    patternFiles,
   });
 };
 
@@ -741,12 +767,14 @@ export const standInsFingerprintOfBuild = (options: {
   const listed = given.perService[service.name];
   const search = searchOf(packageSourcesFor(options.config, service));
   const record = search === undefined ? undefined : given.indexes[search];
-  if (listed === undefined || (record === undefined && listed.files.length === 0)) return undefined;
+  const patternFiles = listed?.patterns ?? [];
+  if (listed === undefined || (record === undefined && listed.files.length === 0 && patternFiles.length === 0)) return undefined;
   return standInsFingerprint({
     wants: options.wants,
     index: record === undefined ? undefined : indexOfRecord(record),
     shapeFiles: listed.files,
     configDir: given.configDir,
+    patternFiles,
     ...(options.hashOf === undefined ? {} : { hashOf: options.hashOf }),
   });
 };

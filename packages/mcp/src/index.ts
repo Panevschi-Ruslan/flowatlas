@@ -39,7 +39,15 @@ export type {
   Cut,
   WalkLimit,
 } from './query/types.js';
-export type { ContractChecker, ContractFinding, ToolContext } from './tools/common.js';
+export type {
+  ContractChecker,
+  ContractFinding,
+  PatternTester,
+  PatternTesterAnswer,
+  PatternTesterInput,
+  PatternTesterRule,
+  ToolContext,
+} from './tools/common.js';
 export type { ContractStatus } from './tools/contract.js';
 // Read-side helpers the terminal needs for the same two levels the tools serve:
 // what a type refers to (L2) and where a declaration ends (L3).

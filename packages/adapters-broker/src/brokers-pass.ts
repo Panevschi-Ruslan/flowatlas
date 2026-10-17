@@ -28,6 +28,11 @@ import {
   type NameLocator,
   type TypeRef,
   lineAndColumnAt,
+  conditionsHold,
+  describedCallKey,
+  precedenceOf,
+  precedenceRows,
+  withdrawDescribedCalls,
 } from '@flowatlas/core';
 // The context and the body walk, from the package neither extractor owns. This
 // import is the whole of R46's answer at this end: a channel reader is not part
@@ -36,7 +41,7 @@ import {
 import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/extract-scopes';
 import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
+import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern, type SubscriberPattern } from './adapters/index.js';
 import { createStarterAdapter } from './adapters/starters.js';
 import {
   hasAcknowledgement,
@@ -59,17 +64,6 @@ import { isStartPattern, startReader } from './starts.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   lineAndColumnAt(node.getSourceFile(), node.getStart());
-
-/**
- * A call as the calls reader names one whose receiver it could not follow:
- * where it is, and what it calls, spelled `receiver.method`.
- */
-const calledAt = (file: string, line: number, callee: string): string => `${file}\0${line}\0${callee}`;
-
-const calleeOf = (call: CallExpression): string => {
-  const callee = call.getExpression();
-  return Node.isPropertyAccessExpression(callee) ? `${callee.getExpression().getText()}.${callee.getName()}` : callee.getText();
-};
 
 /** What a call is made on: the receiver of a method, or the function itself. */
 const receiverOf = (call: CallExpression): TsNode => {
@@ -450,6 +444,8 @@ export const extractBrokers = (ctx: PassContext): void => {
         // How a loop around it is read (P89): a batch, or a send with none.
         ...(pattern.batch === true ? { batch: true } : {}),
         ...(pattern.perItem === true ? { perItem: true } : {}),
+        // Which rule of the project's patterns drew it, when one did (P121).
+        ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
       },
     });
     ctx.builder.addEdge({
@@ -635,6 +631,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         decorator: pattern.decorator,
         entryId,
         ...(jobName === undefined ? {} : { jobName }),
+        ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
       },
     });
     ctx.ensureMethodNode(method);
@@ -785,14 +782,53 @@ export const extractBrokers = (ctx: PassContext): void => {
     const calls: CallExpression[] = [];
     forEachCall(body, (call) => calls.push(call as unknown as CallExpression));
 
+    // Which descriptions each call is read by, settled before any is drawn
+    // (P121): every written one that matches, as before; a pattern only where
+    // nothing written does, and only where it is the one pattern that does.
+    // Asked first and drawn in the order below, so the channels keep the
+    // places they were first seen at.
+    const readBy = new Map<CallExpression, ReadonlySet<SubscriberPattern>>();
+    /** Subscriptions whose receiver is known only from what the source states it is. */
+    const stated = new Set<CallExpression>();
+    const subscribing = specs.flatMap((spec) => (spec.subscriberPatterns ?? []).map((pattern) => ({ spec, pattern })));
+    /**
+     * How a subscription's receiver is the one a pattern names. A library's
+     * pattern asks the checker alone, as it always has; a description the
+     * project wrote - which names a type and no package - is also matched on
+     * what the source states the receiver is, the way a described publish is,
+     * so a bus from a package nobody installed is read at both ends (P121).
+     */
+    const subscribedOn = (receiver: TsNode, pattern: SubscriberPattern): ReceiverEvidence | undefined =>
+      pattern.receiverPackages === undefined
+        ? receiverEvidence(receiver, pattern)
+        : receiverIsFrom(receiver, pattern)
+          ? 'checked'
+          : undefined;
+    for (const call of calls) {
+      const callee = call.getExpression();
+      if (!Node.isPropertyAccessExpression(callee)) continue;
+      const evidence = new Map<SubscriberPattern, ReceiverEvidence>();
+      const matches = subscribing.filter(({ pattern }) => {
+        if (!methodMatches(callee.getName(), pattern.method) || !conditionsHold(call, pattern.where)) return false;
+        const found = subscribedOn(callee.getExpression(), pattern);
+        if (found !== undefined) evidence.set(pattern, found);
+        return found !== undefined;
+      });
+      if (matches.some(({ pattern }) => evidence.get(pattern) === 'stated')) stated.add(call);
+      if (matches.length === 0) continue;
+      const choice = precedenceOf(matches, (match) => match.pattern.describedBy);
+      const at = { file, line: lineColOf(call).line, symbol: `${className}.${method.getName()} -> ${callee.getText().slice(0, 60)}` };
+      for (const row of precedenceRows(choice, at, choice.chosen[0]?.spec.name)) ctx.report(row);
+      readBy.set(call, new Set(choice.chosen.map((match) => match.pattern)));
+    }
+
     for (const spec of specs) {
       for (const pattern of spec.subscriberPatterns ?? []) {
         for (const call of calls) {
+          if (readBy.get(call)?.has(pattern) !== true) continue;
           const callee = call.getExpression();
           if (!Node.isPropertyAccessExpression(callee)) continue;
           const spelling = callee.getName();
-          if (!methodMatches(spelling, pattern.method)) continue;
-          if (!receiverIsFrom(callee.getExpression(), pattern)) continue;
 
           const args = call.getArguments();
           const resolution = channelAt(
@@ -803,6 +839,9 @@ export const extractBrokers = (ctx: PassContext): void => {
             call.getText().slice(0, 60),
           );
           const { line } = lineColOf(call);
+          // Read as a subscription, so the row saying its receiver could not
+          // be followed goes (P121), as a described publish's does.
+          described.add(describedCallKey(file, line, call));
           const shaping = endpointShapingAt(spec, owner, callee.getExpression());
           const names = isResolved(resolution) && !isUnreadable(shaping)
             ? shapeChannelNames(resolution.names, shaping)
@@ -870,7 +909,13 @@ export const extractBrokers = (ctx: PassContext): void => {
             kind: pattern.kind,
             // The spelling written at the call site, not the first the
             // description happens to list: what a reader opening the file sees.
-            meta: { kind: pattern.kind, adapter: spec.name, decorator: spelling, entryId },
+            meta: {
+              kind: pattern.kind,
+              adapter: spec.name,
+              decorator: spelling,
+              entryId,
+              ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
+            },
           });
           ctx.builder.addEdge({
             from: consumerId,
@@ -897,7 +942,9 @@ export const extractBrokers = (ctx: PassContext): void => {
               from: channel.id,
               to: consumerId,
               type: 'consumes',
-              confidence: 'static',
+              // A receiver known only from what the source states is what the
+              // author meant rather than what a compiler checked.
+              confidence: stated.has(call) ? 'heuristic' : 'static',
               file,
               line,
             });
@@ -925,7 +972,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         : Node.isPropertyAccessExpression(callee) && methodMatches(callee.getName(), pattern.method)
           ? receiverEvidence(callee.getExpression(), pattern)
           : undefined;
-    return evidence !== undefined && appliesAt(call, pattern) ? evidence : undefined;
+    return evidence !== undefined && appliesAt(call, pattern) && conditionsHold(call, pattern.where) ? evidence : undefined;
   };
 
   /**
@@ -962,18 +1009,26 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     emitSubscribers(method, owner, file, className);
 
-    for (const spec of specs) {
-      for (const pattern of spec.consumerPatterns) {
-        if (pattern.classDecorator !== undefined && pattern.nameArgIndex === undefined) {
-          // A worker class handles its queue through one named method.
-          if (method.getName() !== 'process') continue;
-          if (getDecorator(owner, pattern.classDecorator) === undefined) continue;
-        } else if (findDecorators(method, { names: [pattern.decorator] }).length === 0) {
-          continue;
-        }
-        emitConsumer(method, owner, pattern, spec, file, className);
+    /** Whether a description marks this handler, its required values written on the decorator. */
+    const marks = (pattern: ConsumerPattern): boolean => {
+      if (pattern.classDecorator !== undefined && pattern.nameArgIndex === undefined) {
+        // A worker class handles its queue through one named method.
+        if (method.getName() !== 'process') return false;
+        const decorator = getDecorator(owner, pattern.classDecorator);
+        return decorator !== undefined && conditionsHold(decorator, pattern.where);
       }
-    }
+      if (findDecorators(method, { names: [pattern.decorator] }).length === 0) return false;
+      const decorator = pattern.where === undefined ? undefined : getDecorator(method, pattern.decorator);
+      return pattern.where === undefined || (decorator !== undefined && conditionsHold(decorator, pattern.where));
+    };
+    const matches = specs.flatMap((spec) => spec.consumerPatterns.filter(marks).map((pattern) => ({ spec, pattern })));
+    if (matches.length === 0) return;
+    // A written description wins over a pattern, and two patterns on one
+    // handler are ambiguous (P121); written ones are all read, as before.
+    const choice = precedenceOf(matches, (match) => match.pattern.describedBy);
+    const at = { file, line: lineColOf(method).line, symbol: `${className}.${method.getName()}` };
+    for (const row of precedenceRows(choice, at, choice.chosen[0]?.spec.name)) ctx.report(row);
+    for (const { spec, pattern } of choice.chosen) emitConsumer(method, owner, pattern, spec, file, className);
   };
 
   // A publish is read wherever it is written: a method, a module-level
@@ -995,23 +1050,35 @@ export const extractBrokers = (ctx: PassContext): void => {
   const starts = startReader(ctx, holderAt);
   /** The calls a description matched, as the calls reader names a call it could not follow. */
   const described = new Set<string>();
+  /** Every description of a publish or a start, in the order they are tried. */
+  const producing = specs.flatMap((spec) => spec.producerPatterns.map((pattern) => ({ spec, pattern })));
 
   for (const scope of scopes) {
     forEachCall(scope.body, (call) => {
       const expression = call as unknown as CallExpression;
-      for (const spec of specs) {
-        for (const pattern of spec.producerPatterns) {
-          const evidence = evidenceFor(pattern, expression);
-          if (evidence === undefined) continue;
-          described.add(calledAt(scope.file, lineColOf(expression).line, calleeOf(expression)));
-          // A start is read through the same pattern and address, and names an
-          // entry rather than a channel.
-          if (isStartPattern(pattern)) starts.read(expression, pattern, spec, scope, contextOf(receiverOf(expression), scope.owner), evidence);
-          else emitProducer(expression, pattern, spec, scope, scope.owner, evidence);
-          return;
-        }
+      // The first description that matches is read, as it always was; a
+      // compiled pattern only where nothing written matches, and only where
+      // it is the one pattern that does (P121). Every match is asked for only
+      // once one is found, so a call nothing describes costs what it did.
+      const first = producing.findIndex(({ pattern }) => evidenceFor(pattern, expression) !== undefined);
+      if (first < 0) {
+        starts.notice(expression, scope);
+        return;
       }
-      starts.notice(expression, scope);
+      const matches = producing.slice(first).filter(({ pattern }, index) => index === 0 || evidenceFor(pattern, expression) !== undefined);
+      const choice = precedenceOf(matches, (match) => match.pattern.describedBy);
+      const line = lineColOf(expression).line;
+      const symbol = `${ctx.builder.getNode(scope.id)?.label ?? scope.id} -> ${expression.getExpression().getText().slice(0, 60)}`;
+      for (const row of precedenceRows(choice, { file: scope.file, line, symbol }, choice.chosen[0]?.spec.name)) ctx.report(row);
+      const chosen = choice.chosen[0];
+      if (chosen === undefined) return;
+      const { spec, pattern } = chosen;
+      const evidence = evidenceFor(pattern, expression) as NonNullable<ReturnType<typeof evidenceFor>>;
+      described.add(describedCallKey(scope.file, line, expression));
+      // A start is read through the same pattern and address, and names an
+      // entry rather than a channel.
+      if (isStartPattern(pattern)) starts.read(expression, pattern, spec, scope, contextOf(receiverOf(expression), scope.owner), evidence);
+      else emitProducer(expression, pattern, spec, scope, scope.owner, evidence);
     });
 
     readReceiving(scope);
@@ -1020,14 +1087,7 @@ export const extractBrokers = (ctx: PassContext): void => {
   // A call whose receiver has no type is a place static reading cannot see,
   // until a description says what it is: then it is read, as a publish or a
   // start, and the row saying it could not be goes (R173).
-  if (described.size > 0) {
-    ctx.builder.withdrawUnresolved(
-      (row) =>
-        row.reason === 'call-dynamic-receiver' &&
-        row.symbol !== undefined &&
-        described.has(calledAt(row.file, row.line, row.symbol.slice(row.symbol.indexOf(' -> ') + ' -> '.length))),
-    );
-  }
+  withdrawDescribedCalls(ctx.builder, described);
 
   readBrokerMarkers(ctx, specs[0] ?? brokerAdapters[0], alreadyStatic);
 };

@@ -18,6 +18,7 @@ import { registerLink } from './commands/link.js';
 import { registerMcp } from './commands/mcp.js';
 import { registerObserve } from './commands/observe.js';
 import { registerShapes } from './commands/shapes.js';
+import { registerPatterns } from './commands/patterns.js';
 import { registerStats } from './commands/stats.js';
 import { registerTypes } from './commands/types.js';
 import { registerVisualise } from './commands/visualise.js';
@@ -46,6 +47,7 @@ export const createProgram = (): Command => {
   registerDead(program);
   registerDoctor(program);
   registerShapes(program);
+  registerPatterns(program);
   registerConfig(program);
   registerHotspots(program);
   registerVisualise(program);
@@ -178,6 +180,24 @@ export {
   SHAPES_SUGGEST_FORMAT_VERSION,
 } from './commands/shapes.js';
 export type { ShapeFileSummary, ShapesOptions, ShapesRun, ShapesSuggestReport, ShapeSuggestion, SuggestedExport } from './commands/shapes.js';
+export { registerPatterns, runPatternsExplain, runPatternsSuggest, runPatternsTest } from './commands/patterns.js';
+export type { PatternsExplainOptions, PatternsRun, PatternsSuggestOptions, PatternsTestOptions } from './commands/patterns.js';
+export {
+  failuresOf,
+  readRulesText,
+  renderPatternsTest,
+  testPatternFiles,
+  testPatternText,
+  testRule,
+  PATTERNS_TEST_FORMAT_VERSION,
+} from './patterns/test.js';
+export type { PatternsTestReport, PatternTesterRuleLike, RuleOutcome, TestOutcome } from './patterns/test.js';
+export { runSample } from './patterns/sample.js';
+export type { Drawn, SampleOptions, SampleRow, SampleRun } from './patterns/sample.js';
+export { explainPlaces, placesNamed, renderPatternsExplain, PATTERNS_EXPLAIN_FORMAT_VERSION } from './patterns/explain.js';
+export type { PatternsExplainReport } from './patterns/explain.js';
+export { renderPatternsSuggest, suggestPatterns, writeStarters, PATTERNS_SUGGEST_FORMAT_VERSION } from './patterns/suggest.js';
+export type { PatternsSuggestReport, SuggestedRule } from './patterns/suggest.js';
 export { runDoctor } from './doctor/run.js';
 export type { DoctorInput, DoctorSettings } from './doctor/run.js';
 export {

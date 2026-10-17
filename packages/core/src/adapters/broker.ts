@@ -1,3 +1,4 @@
+import type { DescriptionCondition } from './conditions.js';
 import type { NameLocator } from './locator.js';
 import type { FlowatlasConfig } from '../config.js';
 import type { PackageJson } from './manifest.js';
@@ -189,6 +190,10 @@ export interface CallPattern {
    * per item on purpose: a note, not a likely N+1.
    */
   perItem?: boolean;
+  /** Values the call must write for the pattern to apply (P121). */
+  where?: readonly DescriptionCondition[];
+  /** The rule a compiled pattern came from, `pattern:<id>`, recorded on what it draws (P121). */
+  describedBy?: string;
 }
 
 /**

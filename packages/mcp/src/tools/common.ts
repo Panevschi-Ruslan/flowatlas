@@ -45,7 +45,36 @@ export interface ToolContext {
   handle: DbHandle;
   /** Filled by the contracts package when one is installed. */
   contractChecker?: ContractChecker;
+  /** Filled by the command line, which runs the readers a pattern is tested with (P121). */
+  patternTester?: PatternTester;
 }
+
+/** What `test_pattern` is asked: rules as YAML, code to run them over, a service to type it in. */
+export interface PatternTesterInput {
+  yaml: string;
+  code?: string;
+  service?: string;
+}
+
+/** One rule as `test_pattern` answers it: refused, or its own tests and what it makes of the code. */
+export interface PatternTesterRule {
+  id: string;
+  kind?: string;
+  refused?: { part: string; reason: string };
+  tests: Array<{ code: string; pass: boolean; failures: string[]; drew: string[]; rows: string[] }>;
+  code?: { drew: string[]; rows: string[]; holes: Record<string, string>; stoppedAt?: string };
+}
+
+export interface PatternTesterAnswer {
+  rules: PatternTesterRule[];
+  error?: string;
+}
+
+/**
+ * Runs rules written as YAML by the reader the build runs, in memory: the
+ * same tester `flowatlas patterns test` is (P121).
+ */
+export type PatternTester = (input: PatternTesterInput) => Promise<PatternTesterAnswer>;
 
 /**
  * A field-level finding as `check_contract` sends it (P93).

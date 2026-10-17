@@ -367,7 +367,10 @@ package index answered. A build that finds any of that moved reads the service
 again and says which: `stand-ins changed: shape file flowatlas-shapes/flags.d.ts
 added`, `stand-ins changed: package @acme/flags now at flags-lib`, or `now claimed
 by 2 directories (...)`. A package directory nothing in a service imports does
-not re-read it. The package index is worked out again on every build, a
+not re-read it. The pattern files a service lists (`patterns`, below) are
+recorded the same way, each with a hash: a file added under a listed glob, an
+edited one and a removed one read the services that list it again
+(`stand-ins changed: pattern file flowatlas-patterns/house.yml changed`). The package index is worked out again on every build, a
 `--watch` rebuild included; a new directory beside the configuration does not
 start a rebuild by itself, and the next save in a repository does.
 
@@ -1549,6 +1552,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 |---|---|
 | A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id`, `test-directory-skipped` (info) |
 | A package that is not installed, read in its place | `package-from-repo` (nothing), `package-version-differs` (info), `package-source-ambiguous`, `shape-file-unread`, `shape-file-unmatched` (nothing) |
+| The project's own extraction patterns | `pattern-file-unread`, `pattern-not-expressible` (a rule refused, the part named), `pattern-ambiguous` (two rules on one call, neither read), `pattern-shadowed` (info: a written description reads the call), `pattern-unmatched` (info: a rule nothing matches) |
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic`, `fails-filter-unread` |
@@ -1632,6 +1636,66 @@ typed `any` is then counted as `any-typed:<package>` rather than
 `module-not-installed`. A file that is already there is kept (`--force` writes
 over it), and a directory inside a repository the configuration reads is
 refused: shape files are the project's, kept beside the configuration.
+
+### `flowatlas patterns test | explain | suggest`
+
+The author's side of the project's own extraction patterns (P121; the file
+format is under [Your own extraction patterns](#your-own-extraction-patterns)).
+All three read only, except `suggest --out`.
+
+**`flowatlas patterns test [files...]`** runs every rule's `tests` - of the
+files named, or of every file the configuration lists - by the reader the build
+runs, in memory: each test's code is put in a file of its own, the names it
+uses and does not declare are declared `any`, the receiver the rule is about is
+given a stub of the rule's `receiverType` (so the reader's own type check is
+what passes or fails), and a function the rule imports from `on.module` is
+imported from it. Then the reader reads that file with the rule compiled into
+its configuration, exactly as a build would. Per test it prints pass or fail,
+what was drawn (`producer on channel:book.added`, `http_out POST /stock/reserve`),
+the rows the code left and what each hole caught. Exit 0 when every test
+passes, 1 when one fails, 2 when a rule or a file cannot be read.
+
+| Flag | Default | Means |
+|---|---|---|
+| `--sample <file>` | none | run the rules over a file of code instead, and list every match |
+| `--service <name>` | none | type the code against that service's own program: the test is read beside a file of the service that names the rule's type |
+| `--rule <id>` | every rule | only this rule |
+| `--show-descriptor` | off | print what each rule compiles to, as it would be written under `adapters` in `flowatlas.config.json`, for a team that prefers one file |
+| `--json` | off | the same as data (`patternsTestFormatVersion: 1`); each rule's `descriptor` is always there |
+| `--config` | found | the configuration whose pattern files are tested, and whose written descriptions a rule is read beside |
+
+**`flowatlas patterns explain <place>`** holds every rule a service reads
+against each call written at a place - `<service>/<file>:<line>`, `<file>:<line>`
+with `--service`, or a gap id from `search` (`gap:<service>|<file>|<reason>`,
+every place of that row) - part by part: the method's name, the receiver's type
+(the checker's, or what the source states), each argument, each key, each
+literal. A rule that fits says so; one that does not names the first part that
+did not fit (`stops at receiver type: OtherBus`). A rule that does not compile
+is listed as not tried, with why. `--json` gives `patternsExplainFormatVersion: 1`.
+
+**`flowatlas patterns suggest`** reads the built graph's Can't follow places
+under `call-dynamic-receiver`, `channel-dynamic`, `db-receiver-name-only`,
+`api-client-unread` and `global-wrapper-dynamic`, opens each call, groups them
+by the receiver's type and the method (or the function), counts every call of
+the same method on the same type in the service, and writes a starter rule for
+each group of at least `--min-sites`: the kind guessed from the names, a pattern
+written from the first call's own shape, the fields it can place (`channel:
+$TOPIC`), `TODO` where it cannot tell, and two tests from the first calls with
+what the starter makes of them. Nothing a suggestion writes is read until it is
+listed under `patterns`.
+
+| Flag | Default | Means |
+|---|---|---|
+| `--min-sites <n>` | 3 | fewest calls a starter is written for |
+| `--cause <cause>` | every one | only places of this reason or cause |
+| `--service <name>` | every one | only the places of one service |
+| `--out <dir>` | none | write each starter to `<dir>/<id>.yml`; a directory inside a repository the configuration reads is refused |
+| `--force` | off | with `--out`: write over a file that is there already |
+| `--json` | off | the same as data (`patternsSuggestFormatVersion: 1`) |
+| `--config`, `--db` | found | as for every reading command |
+
+`doctor --unresolved` names `flowatlas patterns suggest --cause <cause>` under
+every cause whose rows are of those reasons.
 
 ### `flowatlas accept [reason-or-id]`
 
@@ -1750,6 +1814,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `readTestDirectories` | string[] | `[]` | directories named like tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`, `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) that hold code the application runs, relative to the service's directory: `["src/fixtures"]` |
 | `builtInShapes` | boolean | project setting | whether the reader's built-in declaration shapes stand in for packages this service has not installed; `false` turns them off for this service alone |
 | `shapes` | string[] | none | shape files this service reads beside the project's, as paths or globs relative to the configuration (the grammar under `accept`, *Globs*); added to the project's list |
+| `patterns` | string[] | none | pattern files this service reads beside the project's, as paths or globs relative to the configuration; added to the project's list |
 | `packageSources` | boolean or `"services"` | project setting | where this service reads the source of a package it has not installed; overrides the project setting |
 
 **A directory named like tests is not read, and says so.** Test code is left out
@@ -1938,6 +2003,7 @@ worked example of a document that declares routes.
 | `sharedPackages` | string[] | `[]` | packages whose types are one declaration rather than two copies |
 | `builtInShapes` | boolean | `true` | where a repository has not installed `rxjs`, `@nestjs/common`, `@nestjs/core`, `@nestjs/microservices` or `@nestjs/passport` (read by the server reader), or `rxjs`, `@angular/core` or `@angular/common/http` (read by the Angular reader), read a few hand-written declarations of their public surface in their place, so `ClientsModule.register` tokens, `ClientProxy` calls, passport's `AuthGuard`, Angular's decorators and `HttpClient`, and `Observable<T>` returns resolve; an installed package always wins. `false` turns them off |
 | `shapes` | string[] | none | shape files of the project's own: paths or globs of `.d.ts` files, relative to this configuration, each holding `declare module '<package>' { ... }` blocks. Read in memory, never run and never written, for a package that is neither installed nor the source of a repository read here; a block wins over a reader's built-in shape of the same package. `flowatlas shapes --suggest --out <dir>` writes starters |
+| `patterns` | string[] | none | pattern files of the project's own: paths or globs of `.yml` / `.yaml` files, relative to this configuration, each a list of rules that say in code what a call of an in-house wrapper is (see [Your own extraction patterns](#your-own-extraction-patterns)). Compiled into the descriptions under `adapters` and read as those are; `flowatlas patterns test` runs each rule's tests |
 | `packageSources` | boolean or `"services"` | `true` | where an import of a package that is not installed is read from: `true` for the source of a configured repository, a workspace member of one, or a directory directly under the configuration whose `package.json` `name` is the package; `"services"` for configured repositories and their members alone; `false` for nowhere. Types only; an installed package always wins |
 | `settingFiles.read` | boolean | `true` | whether a base address and an address waiting on the environment are completed from what the repositories' own files and the code's own fallbacks say a setting is; only addresses are kept, never a secret |
 | `settingFiles.environment` | string | none | the environment read where files name several (`.env.development` and `.env.staging`, `docker-compose.prod.yml`, a worker's `env.<name>.vars`): that environment's files, and the files for none in particular |
@@ -2154,6 +2220,7 @@ it.
 | `db.localBaseClasses` | (string \| object)[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares. An entry may be `{ "name": "BaseRepository", "tableProperty": "collectionName" }` to say which property each class extending it sets to its table |
 | `db.tables` | object[] | `[]` | functions your data access goes through that name their table at the call — `insert('orders', row)` from a data kit of your own, installed or not: `{ "name", "package"?, "factory"?, "clientType"?, "table": argIndex \| "name", "op"?: "read" \| "write" \| "delete" }`; with `factory`, `name` is a method of the client that factory returns, and `clientType` the type a client handed in is declared as (see [Tables named in configuration](#tables-named-in-configuration)) |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
+| `http.clients` | object[] | `[]` | an HTTP client of your own, described by the call it is - `{ "receiverType" \| "factory" \| "function", "method"?, "module"?, "verb"? \| "verbAt"?, "url", "body"?, "where"? }`, `url`, `body` and `verbAt` as locators; the verb is the method's own name (`post`) when neither `verb` nor `verbAt` is said. Read by the server reader's request pass and by both browser readers; patterns of kind `http-request` compile into it (see [Your own extraction patterns](#your-own-extraction-patterns)) |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `starters` | object[] | `[]` | a helper of your own that starts a workflow or invokes a function by its deployed name, described so the start is joined to what it starts (see [Code that starts a workflow or a function](#code-that-starts-a-workflow-or-a-function)) |
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
@@ -2572,6 +2639,95 @@ described with the same locator the SDK's own description uses:
 
 The helper's own call to the SDK is still read, and has no channel: the command
 it sends was built by its caller, which is what the description is for.
+
+### Your own extraction patterns
+
+A wrapper of the project's own - a bus, an HTTP client, a data kit, a helper
+that starts a workflow - is read through a description under `adapters`, and a
+pattern file is the friendlier way to write one (P121): the call written as
+code, the holes in it named, and tests beside it. List the files under
+`patterns` (top level, or per service); each is a YAML list of rules:
+
+```yaml
+- id: shop-bus-emit
+  kind: publish                  # publish | subscribe | consume-decorator | http-request | start | table
+  on:
+    receiverType: ShopBus        # or: function: emitEvent   (with module?: '@acme/bus'), or factory: useApi
+  pattern: "$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })"
+  channel: $CHANNEL
+  payload: $PAYLOAD
+  note: our bus wraps the broker; one call per event
+  tests:
+    - code: "bus.emit({ topic: 'book.added', data: book })"
+      expect: { channel: book.added }
+    - code: "bus.emit({ topic: topicFor(kind), data })"
+      expect: { channel: '*', row: channel-dynamic }
+    - code: bus.flush()
+      expect: none
+```
+
+Quote a pattern or a test's code that holds `: `, because YAML reads an unquoted
+`: ` as a key; a block scalar (`pattern: |`) works too.
+
+**The pattern language.** A pattern is one TypeScript expression, read by the
+TypeScript parser: the call, or `@Decorator(...)` for a `consume-decorator`
+rule. `$NAME` is a hole that names one node, `$$$NAME` a run of arguments, `_`
+anything. Matching is structural on the call: the method or the function by its
+name, arguments by position, the keys of an object argument in any order with
+extra keys allowed, a list's one element for every element (`[{ Name: $N }]`),
+a chain (`$CLIENT.queue($Q).add($JOB, $PAYLOAD)`), a construction handed to the
+call (`$C.send(new SendCommand({ Name: $N }))`) or the one the receiver is
+(`new Upload({ params: { Bucket: $B } }).done()`), a receiver made by a call of
+a function (`useApi().send(...)`). A literal must match literally: it becomes a
+condition the call must meet (`where`), so `$API.call('POST', $URL)` reads only
+the calls whose first argument is `'POST'`. A test's `expect` states `channel`
+(`*` for one that cannot be read), `verb`, `url`, `table`, `name` (what a start
+reaches) and `row` (a reason the code leaves), any of them, or `none`.
+
+**Which hole is which.** The rule's fields name holes: `channel` and `payload`
+(publish), `channel` and `handler` (subscribe), `channel` (consume-decorator),
+`url`, `body` and `verb` (http-request; `verb: POST` fixes it, and with no `verb`
+the method's own name is the verb), `name` with `target: workflow | invoke` and
+`names` (start), `table` and `op` (table; the operation is the method name's
+first word when `op` is not said). A field may also be a value: `channel:
+heartbeat`, `table: audit_log`. The receiver's hole has three forms for where
+its name is stated once rather than at the call: `$Q:type` (the receiver's
+declared type), `$Q:constructor(0)` (an argument of its base-constructor call),
+`$Q:decorator(InjectQueue, 0)` (the decorator on whatever provided it).
+`channelKind` and `messageKind` are what the transport calls the channel and
+what the node records.
+
+**Compiled, not interpreted.** Each rule compiles into the description the
+readers already read - a publish, a subscription or a decorator into
+`broker.custom` (a bus named `pattern:<id>`), a start into `starters`, a table
+access into `db.tables`, a request into `http.clients` - with each hole as the
+locator that reaches the same place: a whole argument is `argument`, a key of an
+object argument `argument-property` or `argument-path`, a hole further up the
+chain `chain-call` or `chain-root-argument`, the receiver `receiver`. Every node
+a rule draws carries `meta.describedBy: "pattern:<id>"`. What cannot be said as
+locators - a hole inside a callback, a spread, a hole after a run of arguments,
+a receiver written as a name rather than a hole with its type - refuses the rule
+at load with `pattern-not-expressible`, naming the part; nothing of it is read.
+
+Every description takes the two keys a compiled rule uses, and may be written
+with them by hand: `where: [{ "at": <locator>, "equals": <value> }]`, values the
+call (or the decorator) must write for the description to apply, and
+`describedBy`, the rule it came from. A `broker.custom` producer also takes
+`module` beside `function`, for a publishing function a package exports.
+
+**Precedence.** A description written by hand - the tool's own or one in the
+configuration - wins over a pattern on the same call, and the pattern is
+`pattern-shadowed` (info) there. Two patterns on one call are
+`pattern-ambiguous` and neither is read. A rule nothing in the services it
+applies to matches is `pattern-unmatched` (info), said once the build has read
+them all. A name read from a literal is `static`, a receiver known only from
+what the source states (a class nobody installed) makes the edge `heuristic`,
+and a hole that cannot be read is `*` with its row, as for every description.
+
+**Calls a pattern covers stop being Can't follow places.** A call whose
+receiver could not be typed (`call-dynamic-receiver`) and that a description now
+reads - a publish, a subscription, a request, a table access - loses its row, so
+the next build counts the place as followed.
 
 ### The AWS SDK
 

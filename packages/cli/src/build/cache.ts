@@ -77,6 +77,8 @@ const standInsSchema = z.strictObject({
       ])
       .nullable(),
   ),
+  /** Every pattern file listed for the service, relative to the configuration, to its content hash (P121). */
+  patterns: z.record(z.string(), z.string()).optional(),
 });
 
 export type StandInsState = z.infer<typeof standInsSchema>;

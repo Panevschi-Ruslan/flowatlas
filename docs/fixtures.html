@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>161 fixtures</span>
-    <span>382 snapshot files</span>
+    <span>162 fixtures</span>
+    <span>387 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -1316,7 +1316,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="13">13</span></h2>
+    <h2>Everything else <span class="count" data-total="14">14</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1349,6 +1349,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>An Express service for a lending library whose every data access goes through <code>@acme/data-kit</code>, a shared package the repository declares and nobody installed.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="house-patterns everything else a bookshop of three services whose wrappers are its own and come from packages nobody here installed (p121): `catalog` publishes through `shopbus.emit({ topic, data })` and calls `stock` through `apiclient.call('post', url, body)`, `stock` handles through `shopbus.on('book.added', handler)`, and the react `storefront` requests through `useapi().send({ method, path })`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/house-patterns">house-patterns</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>A bookshop of three services whose wrappers are its own and come from packages nobody here installed (P121): <code>catalog</code> publishes through <code>ShopBus.emit({ topic, data })</code> and calls <code>stock</code> through <code>ApiClient.call('POST', url, body)</code>, <code>stock</code> handles through <code>ShopBus.on('book.added', handler)</code>, and the React <code>storefront</code> requests through <code>useApi().send({ method, path })</code>.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="loops-worth-fixing everything else exercises p89: one `query-in-loop` row per loop, loops bounded on purpose set aside and counted, per-item loops as notes, and the rest ranked by how many ways in reach them.">
         <div class="head">

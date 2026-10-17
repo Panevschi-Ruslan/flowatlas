@@ -143,7 +143,9 @@ export {
   customBrokerSchema,
   customProducerSchema,
   customSubscriberSchema,
+  customConsumerSchema,
   dbTableAccessSchema,
+  httpClientSchema,
   entryHttpAppTypesSchema,
   entryHttpMiddlewareSchema,
   entryHttpMountSchema,
@@ -160,6 +162,7 @@ export {
   packageSourcesFor,
   parseConfig,
   shapesFor,
+  patternFilesFor,
   serviceConfigSchema,
   serviceNamesOf,
   starterSchema,
@@ -171,6 +174,7 @@ export type {
   CustomProducerConfig,
   CustomSubscriberConfig,
   DbTableAccess,
+  HttpClientConfig,
   EntryHttpConfig,
   EntryHttpDescription,
   EntryProcedureConfig,
@@ -804,3 +808,39 @@ export {
   whyUntyped,
 } from './follow-cause.js';
 export type { FollowCause } from './follow-cause.js';
+export { importOf, statedOrigin } from './stated-origin.js';
+export type { StatedOrigin } from './stated-origin.js';
+export { conditionsHold } from './adapters/conditions.js';
+export type { DescriptionCondition } from './adapters/conditions.js';
+export { describedRequestsAt, httpVerbOf } from './adapters/http-clients.js';
+export type { DescribedEvidence, DescribedRequest } from './adapters/http-clients.js';
+export { describedCallKey, withdrawDescribedCalls } from './described-calls.js';
+export {
+  PATTERN_CAUSES,
+  PATTERN_KINDS,
+  patternRuleSchema,
+  patternsFor,
+  readPatternFile,
+  readPatternText,
+} from './patterns/schema.js';
+export type {
+  PatternExpectation,
+  PatternFileReading,
+  PatternKind,
+  PatternRule,
+  PatternTest,
+  RuleReading,
+} from './patterns/schema.js';
+export { isParsed, parsePattern } from './patterns/parse.js';
+export type { ParsedPattern, PatternCall, PatternEntry, PatternNode, PatternSyntaxError } from './patterns/parse.js';
+export { compilePattern, describedByOf, isCompiled, opOfName, ruleIdOf } from './patterns/compile.js';
+export type { CompiledDescriptor, CompiledRule, CompileResult, HolePlaces, PatternRefusal } from './patterns/compile.js';
+export { readPatterns, reportPatterns, withCompiledRules } from './patterns/apply.js';
+export type { PatternReading, PlacedRule, RefusedRule } from './patterns/apply.js';
+export { precedenceOf, precedenceRows } from './patterns/precedence.js';
+export type { Precedence } from './patterns/precedence.js';
+export { unmatchedPatternRows } from './patterns/unmatched.js';
+export type { ServiceNodes } from './patterns/unmatched.js';
+export { matchPatternAt } from './patterns/match.js';
+export type { MatchOptions, MatchStep, PatternFit } from './patterns/match.js';
+export { guessPatternKind } from './patterns/starter.js';
