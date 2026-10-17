@@ -99,6 +99,8 @@ export interface MapHash {
   packages: boolean;
   dev: boolean;
   layout: 'calls' | 'role';
+  /** What the links are coloured by (P111), or null for their kinds. */
+  heat: MapHeatBy | null;
 }
 
 export interface MapCallOrder extends MapLayout {
@@ -121,6 +123,17 @@ export declare const mapSeenCount: (
   link: MapViewLink,
   seenJoin: (edge: number) => { count: number } | null,
 ) => number;
+
+export type MapHeatBy = 'traffic' | 'p95';
+export declare const MAP_HEATS: readonly MapHeatBy[];
+export declare const MAP_HEAT_STEPS: number;
+export declare const mapHeat: (
+  map: MapModel,
+  link: MapViewLink,
+  seen: { join(edge: number): { count: number } | null; stats(edge: number): { p95?: number } | null },
+  by: MapHeatBy,
+) => { value: number; count: number } | null;
+export declare const mapHeatStep: (value: number, hottest: number) => number;
 
 export declare const mapGuessesConfirmed: (
   map: MapModel,
@@ -159,6 +172,7 @@ export interface MapHashState {
   packages?: boolean;
   dev?: boolean;
   layout?: 'calls' | 'role';
+  heat?: MapHeatBy | null;
 }
 
 export declare const formatMapHash: (state: MapHashState) => string;

@@ -250,13 +250,16 @@ export interface ObservedBucket {
 
 /**
  * One span of a sample, and the spans under it. `id` is the graph node it was
- * credited to, when one; `label` what the span said, from kept fields only.
+ * credited to, when one; `label` what the span said, from kept fields only;
+ * `start` when it began, in milliseconds after the sample's own span began,
+ * when both spans said when (P111: the page draws a request on a time axis).
  */
 export interface TraceTree {
   id?: string;
   label: string;
   service?: string;
   kind: string;
+  start?: number;
   ms?: number;
   status?: number;
   error?: true;
@@ -735,6 +738,7 @@ const tree: z.ZodType<TraceTree> = z.lazy(() =>
     label: z.string(),
     service: z.string().optional(),
     kind: z.string(),
+    start: z.number().optional(),
     ms: z.number().optional(),
     status: z.number().optional(),
     error: z.literal(true).optional(),

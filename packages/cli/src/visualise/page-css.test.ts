@@ -132,7 +132,7 @@ describe('the page’s control edges (P142)', () => {
     return rule;
   };
   /** What a control is drawn as: the last part of one of its selectors names it. */
-  const CONTROL = /^(?:input(?!\[type=.(?:checkbox|radio).\])|select|kbd|\.(?:tool|chip|tab|ship|pill|find-key|g-more-btn|g-type-all|g-fold|row-menu-btn))(?![\w-])/;
+  const CONTROL = /^(?:input(?!\[type=.(?:checkbox|radio).\])|select|kbd|\.(?:tool|chip|tab|ship|pill|find-key|g-more-btn|g-type-all|g-fold|row-menu-btn|tr-pick))(?![\w-])/;
   const isControl = (selector: string): boolean =>
     selector.split(',').some((one) => CONTROL.test(one.trim().split(/[\s>+~]+/).pop()!));
   /** The colours an edge, a ring or a mark may be drawn in, each held at 3:1 below. */
@@ -171,7 +171,7 @@ describe('the page’s control edges (P142)', () => {
     // A service's hue (--hue), a kind of link's (--kind, a hue, --muted, --faint or the accent)
     // and --good are held at 3:1 by the tones test.
     expect(drawn.filter(({ token }) => !EDGES.includes(token) && !['hue', 'kind', 'good'].includes(token))).toEqual([]);
-    for (const control of ["input[type='search'], select", '.tool', '.chip', '.tab', '.ship', 'kbd', '.pill', '.finder input']) {
+    for (const control of ["input[type='search'], select", '.tool', '.chip', '.tab', '.ship', 'kbd', '.pill', '.finder input', '.tr-pick']) {
       expect(tokensIn(ruleOf(control).body, BORDER), control).toContain('edge');
     }
     // The frames and rules that only decorate keep --rule.
@@ -195,4 +195,22 @@ describe('the page’s control edges (P142)', () => {
     expect(bars).toEqual(expect.arrayContaining(['.find-out a:focus', ".row-menu-list [role='menuitem']:focus", ".palette-list [role='option'][aria-selected='true']"]));
     expect(tokensIn(ruleOf(".tab[aria-selected='true']").body, /border-color/)).toEqual(['accent']);
   });
+});
+
+describe('the Map’s heat ramp (P111)', () => {
+  for (const [theme, tokens] of Object.entries(THEMES)) {
+    const ramp = [0, 1, 2, 3, 4].map((n) => tokens.get(`heat-${n}`));
+
+    it(`has five steps drawn at 3:1 or more on every ground, in the ${theme} theme`, () => {
+      expect(ramp.every((value) => value !== undefined)).toBe(true);
+      const low = ramp.flatMap((value, n) => ['ground', 'paper', 'raise']
+        .filter((bg) => contrastOf(value!, tokens.get(bg)!) < 3).map((bg) => `--heat-${n} on --${bg}`));
+      expect(low).toEqual([]);
+    });
+
+    it(`gets louder at every step, so hotter always reads as more, in the ${theme} theme`, () => {
+      const against = ramp.map((value) => contrastOf(value!, tokens.get('paper')!));
+      for (let n = 1; n < against.length; n += 1) expect(against[n]!).toBeGreaterThan(against[n - 1]!);
+    });
+  }
 });

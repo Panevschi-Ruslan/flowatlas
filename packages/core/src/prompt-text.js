@@ -21,6 +21,8 @@
  *   promptNextFor     hints for several nodes, without repeats, bounded
  *   groupFails        each status and exception a way in fails with once (P87)
  *   compareFailChoices  the order a helper's choices are written in (P90)
+ *   promptMsSay       a duration as it is written: `3.2 ms`, `73 ms`, `1.2 s` (P111)
+ *   promptRateSay     a share as a percentage: `4.5%`, `100%` (P111)
  */
 
 /**
@@ -295,6 +297,32 @@ const promptFailSay = (group) => {
   return group.status === undefined ? group.exception : `${group.status}${group.assumed === true ? '? ' : ' '}${group.exception}`;
 };
 
+/* ── How long and how often it failed, as the page and the text say it (P111) ── */
+
+/**
+ * A duration in milliseconds as it is written: a tenth below 10 ms, whole
+ * milliseconds below a second, seconds above. The page's chips and the text
+ * say a figure in the same characters, never by the reader's locale.
+ */
+export const promptMsSay = (ms) => {
+  if (ms < 10) return `${Math.round(ms * 10) / 10} ms`;
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${Math.round(ms / (ms < 10000 ? 100 : 1000)) / (ms < 10000 ? 10 : 1)} s`;
+};
+
+/** A share (0 to 1) as a percentage: a tenth below 10%, whole above. */
+export const promptRateSay = (rate) => {
+  const percent = rate * 100;
+  return `${percent < 10 ? Math.round(percent * 10) / 10 : Math.round(percent)}%`;
+};
+
+/** The figures beside a count: `p95 73 ms, 4.5% errors`, each when measured; '' with none. */
+const promptFiguresSay = (figures) =>
+  [
+    ...(figures.p95 === undefined ? [] : [`p95 ${promptMsSay(figures.p95)}`]),
+    ...((figures.errorRate ?? 0) > 0 ? [`${promptRateSay(figures.errorRate)} errors`] : []),
+  ].join(', ');
+
 /* ── What a way in answered at run time, beside what it declares (P106) ── */
 
 /** The hours a comparison covers, as a reader is told them: "never seen" means "in these". */
@@ -354,7 +382,8 @@ const promptVia = (step) => {
 
 /**
  * What a step's line is marked with, in this order: how sure the join is, when
- * it runs, how often, what it throws, and how often it was seen.
+ * it runs, how often, what it throws, how often it was seen, and how long it
+ * took and how often it failed there (P111).
  */
 /** A best guess traffic went through (P110): the join was seen, so the line says both. */
 const promptConfirmed = (step) => step.via !== undefined && step.via.confidence === 'heuristic' && (step.marks?.seen ?? 0) > 0;
@@ -368,6 +397,7 @@ const PROMPT_MARKS = Object.freeze([
   [(step) => step.marks?.nPlusOne === true, () => 'likely N+1'],
   [(step, throws) => throws.length > 0, (step, throws) => `throws ${throws.map(promptFailSay).join(', ')}`],
   [(step) => (step.marks?.seen ?? 0) > 0 && !promptConfirmed(step), (step) => `seen ×${step.marks.seen}`],
+  [(step) => step.marks !== undefined && promptFiguresSay(step.marks) !== '', (step) => promptFiguresSay(step.marks)],
 ]);
 
 /** The lines of one step: what it is, where it lives, how it was reached, its marks, and what it logs. */
@@ -620,7 +650,9 @@ const promptFacts = (subject) => [
   ...(subject.schedule === undefined
     ? []
     : [`- schedule: ${promptCode(subject.schedule.expression)}${subject.schedule.zone ? ` in ${subject.schedule.zone}` : ''}`]),
-  ...((subject.hits ?? 0) > 0 ? [`- seen at run time: ${subject.hits} hits`] : []),
+  ...((subject.hits ?? 0) > 0
+    ? [`- seen at run time: ${subject.hits} hits${promptFiguresSay(subject) === '' ? '' : `, ${promptFiguresSay(subject)}`}`]
+    : []),
 ];
 
 /* ── Scoped subjects: a class, a file, a service (P95) ── */

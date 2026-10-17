@@ -28,7 +28,7 @@ import {
 import { stableKeys, type PackedKeys } from './keys.js';
 import { packMap, type MapInput, type PackedMap } from './map-pack.js';
 import type { Observed } from '../observe/match.js';
-import { packObserved, type PackedObserved, type PackTraffic } from './observed.js';
+import { packObserved, packObservedDiff, type PackDiffInput, type PackedObserved, type PackedObservedDiff, type PackTraffic } from './observed.js';
 
 export type { PackedObserved };
 import { packShapes, type PackedShapes } from './shapes.js';
@@ -297,6 +297,8 @@ export interface PackedGraph {
   busiest: PackedBusiest;
   /** What a branch changed, when the page was made with `--diff <ref>` (P73). See `changes.ts`. */
   changes?: PackedChanges;
+  /** Two observed files compared, when the page was made with `--observed-diff <a> <b>` (P111). See `observed.ts`. */
+  observedDiff?: PackedObservedDiff;
   /**
    * What each way in can fail with (P68), by entry position, as positions in
    * `dicts.fails`. Absent when none says. See `fails.ts`.
@@ -509,6 +511,8 @@ export interface PackInput {
   accepted?: PackAccepted;
   /** What `visualise --diff` compared, already packed. */
   changes?: PackedChanges;
+  /** The two observed files `visualise --observed-diff` read (P111). */
+  observedDiff?: PackDiffInput;
   /** What the configuration says about routes nobody calls (P91), for the Map's counts. */
   routes?: MapInput['routes'];
   /** The doc blocks of `docs.json` that name a node, checked against this graph (P120). */
@@ -737,6 +741,7 @@ export const packGraph = (input: PackInput): PackedGraph => {
     sites: packSites(packedEdges, position),
     busiest: packBusiest(input.nodes, packedEdges, position, rowsIn),
     ...(input.changes === undefined ? {} : { changes: input.changes }),
+    ...(input.observedDiff === undefined ? {} : { observedDiff: packObservedDiff(input.observedDiff, packedEdges, entryIds) }),
     ...(fails === undefined ? {} : { fails: fails.fails }),
     ...withAccess(packAccess(input.nodes)),
     ...(logs === undefined ? {} : { logs }),

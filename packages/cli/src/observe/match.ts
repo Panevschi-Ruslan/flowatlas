@@ -682,21 +682,32 @@ const labelOf = (span: ObservedSpan, placed: boolean): string => {
   return channelLabelOf(span) ?? span.symbol ?? span.rpc ?? span.collection ?? span.method ?? span.kind;
 };
 
-const nodeOf = (span: ObservedSpan, id: string | undefined): TraceTree => ({
-  ...(id === undefined ? {} : { id }),
-  label: labelOf(span, id !== undefined),
-  ...serviceOf(span),
-  kind: span.kind,
-  ...(span.durationMs === undefined ? {} : { ms: span.durationMs }),
-  ...(span.status === undefined ? {} : { status: span.status }),
-  ...(span.error === undefined ? {} : { error: span.error }),
-});
+/** When a span began after the sample's own span did, in ms (two decimals), when both said when. */
+const startAfter = (span: ObservedSpan, rootAt: number | undefined): number | undefined => {
+  if (rootAt === undefined || span.at === undefined) return undefined;
+  const at = Date.parse(span.at);
+  return Number.isNaN(at) ? undefined : Math.round((at - rootAt) * 100) / 100;
+};
+
+const nodeOf = (span: ObservedSpan, id: string | undefined, rootAt: number | undefined): TraceTree => {
+  const start = startAfter(span, rootAt);
+  return {
+    ...(id === undefined ? {} : { id }),
+    label: labelOf(span, id !== undefined),
+    ...serviceOf(span),
+    kind: span.kind,
+    ...(start === undefined ? {} : { start }),
+    ...(span.durationMs === undefined ? {} : { ms: span.durationMs }),
+    ...(span.status === undefined ? {} : { status: span.status }),
+    ...(span.error === undefined ? {} : { error: span.error }),
+  };
+};
 
 /**
  * One request as a tree from the entry's span down, breadth first, at most
  * `SPANS_PER_SAMPLE` spans: each says the node it was credited to, what it
- * said, how long it took and how it answered. No span or parent id is kept;
- * the tree's shape is the parentage.
+ * said, when it began after the request did, how long it took and how it
+ * answered. No span or parent id is kept; the tree's shape is the parentage.
  */
 const sampleOf = (
   root: ObservedSpan,
@@ -705,7 +716,10 @@ const sampleOf = (
   at: string,
 ): ObservedSample => {
   const key = (span: ObservedSpan): string => `${span.traceId}/${span.spanId}`;
-  const tree = nodeOf(root, placeOf.get(root));
+  const parsed = root.at === undefined ? Number.NaN : Date.parse(root.at);
+  const rootAt = Number.isNaN(parsed) ? undefined : parsed;
+  // The root begins the request: only the spans under it say when they began.
+  const tree = nodeOf(root, placeOf.get(root), undefined);
   const queue: Array<[ObservedSpan, TraceTree]> = [[root, tree]];
   const seen = new Set([key(root)]);
   let spans = 1;
@@ -720,7 +734,7 @@ const sampleOf = (
         continue;
       }
       spans += 1;
-      const branch = nodeOf(child, placeOf.get(child));
+      const branch = nodeOf(child, placeOf.get(child), rootAt);
       (node.children ??= []).push(branch);
       queue.push([child, branch]);
     }

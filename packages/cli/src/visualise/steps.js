@@ -364,11 +364,23 @@ const placeAmongSiblings = (model, order, k) => {
   return at > 0 || stepKindOf(model, model.edges[k][0]) === 'workflow' ? at : Infinity;
 };
 
+const NO_SAMPLES = Object.freeze([]);
+
 const NO_SEEN = Object.freeze({
   any: false, most: 0, unmatched: Object.freeze([]), ambiguous: Object.freeze([]),
   join: () => null, entry: () => 0, failures: () => null,
   window: '', neverSeen: Object.freeze([]), never: () => null, confirmed: () => 0,
+  timed: false, period: null, stats: () => null, entryStats: () => null, nodeStats: () => null, figuresOf: () => null,
+  samples: () => NO_SAMPLES, sampled: Object.freeze([]),
 });
+
+/** What a packed row measured (P111): its time figures and its error rate, or null when it measured neither. */
+const figuresIn = (value) => {
+  if (!value) return null;
+  const figures = {};
+  for (const key of ['p50', 'p95', 'max', 'errorRate']) if (typeof value[key] === 'number') figures[key] = value[key];
+  return Object.keys(figures).length === 0 ? null : Object.freeze(figures);
+};
 
 /** What ran but is not in code, `{ service?, kind, name }`; a service of -1 is none. */
 export const unmatchedOf = ({ unmatched = [], services, kinds }) =>
@@ -388,22 +400,53 @@ export const ambiguousOf = ({ ambiguous = [], services, kinds }) =>
  * strong }`, or null; `confirmed(k)` how often traffic went through a best
  * guess, 0 when it is not one or was not seen (P110); `window` the hours
  * the file holds, in words.
+ *
+ * Run time (P111): `stats(k)` is a join's figures (`p50`, `p95`, `max` in
+ * ms, `errorRate`), `entryStats(i)` a way in's, `nodeStats(i)` a step's own
+ * span's (a way in's, else a method's, a call site's, a table's or a
+ * channel's), each null when nothing was measured. `figuresOf(k, i)` is
+ * what a step reached by edge `k` is drawn and written with: the join's
+ * when it was seen, else the step's own - the rule the server's prompt and
+ * `get_flow` follow. `samples(i)` are the requests a way in's Traces rows
+ * draw, `sampled` the ways in that have any, `timed` whether anything has a
+ * time, `period` the hours the file covers (`{ from, to }`) or null.
  */
 export const createSeen = (data) => {
   const observed = data.observed;
   if (!observed) return NO_SEEN;
   const joins = new Map();
+  const stats = new Map();
   for (const [id, value] of Object.entries(observed.joins || {})) {
     const k = Number(id);
     if (Number.isInteger(k) && String(k) === id && k < data.edges.length) {
       joins.set(k, { count: value.count || 0, lastSeen: value.lastSeen || '' });
+      const figures = figuresIn(value);
+      if (figures) stats.set(k, figures);
     }
   }
   const hits = new Map();
+  const entryStats = new Map();
   for (const [id, value] of Object.entries(observed.entries || {})) {
     const at = data.entryIds ? data.entryIds[id] : undefined;
-    if (at !== undefined) hits.set(at, value.hits || 0);
+    if (at === undefined) continue;
+    hits.set(at, value.hits || 0);
+    const figures = figuresIn(value);
+    if (figures) entryStats.set(at, figures);
   }
+  const own = new Map();
+  for (const [id, value] of Object.entries(observed.nodes || {})) {
+    const figures = figuresIn(value);
+    if (figures) own.set(Number(id), figures);
+  }
+  const samples = new Map();
+  for (const [id, list] of Object.entries(observed.samples || {})) {
+    const at = data.entryIds ? data.entryIds[id] : undefined;
+    if (at !== undefined && list.length > 0) samples.set(at, Object.freeze(list));
+  }
+  const nodeStats = (i) => entryStats.get(i) || own.get(i) || null;
+  const hasTime = (figures) => figures.p50 !== undefined || figures.p95 !== undefined;
+  const timed = [...stats.values(), ...entryStats.values(), ...own.values()].some(hasTime);
+  const period = observed.window && observed.window.from ? Object.freeze({ from: observed.window.from, to: observed.window.to }) : null;
   // What each way in answered against what it declares (P106), by position.
   const failures = new Map();
   for (const [id, value] of Object.entries(observed.failures || {})) {
@@ -426,7 +469,138 @@ export const createSeen = (data) => {
     neverSeen: Object.freeze([...never].map(([node, said]) => ({ node, strong: said.strong }))),
     never: (i) => never.get(i) || null,
     confirmed: (k) => (confirmed.has(k) && joins.has(k) ? joins.get(k).count : 0),
+    timed,
+    period,
+    stats: (k) => stats.get(k) || null,
+    entryStats: (i) => entryStats.get(i) || null,
+    nodeStats,
+    figuresOf: (k, i) => (k >= 0 && joins.has(k) ? stats.get(k) || null : nodeStats(i)),
+    samples: (i) => samples.get(i) || NO_SAMPLES,
+    sampled: Object.freeze([...samples.keys()]),
   };
+};
+
+/* ── Run time on the steps (P111) ── */
+
+/**
+ * The hours an observed file covers, as the header and the Map's key say
+ * them: `seen 2025-10-10 to 2025-10-17`, or within one day `seen 2025-10-16
+ * 07:00 to 09:00 UTC`. `period` is `{ from, to }` (ISO hours), as `seen.period`.
+ */
+export const observedPeriodSay = (period) => {
+  if (!period || !period.from) return '';
+  const day = (iso) => iso.slice(0, 10);
+  const hour = (iso) => iso.slice(11, 16);
+  const to = period.to || period.from;
+  // The window ends where its last hour does: an end at midnight is the day before's.
+  const last = Number.isNaN(Date.parse(to)) || to <= period.from ? period.from : new Date(Date.parse(to) - 1).toISOString();
+  return day(period.from) === day(last)
+    ? `seen ${day(period.from)} ${hour(period.from)} to ${day(to) === day(period.from) ? hour(to) : '24:00'} UTC`
+    : `seen ${day(period.from)} to ${day(last)}`;
+};
+
+/** Ticks for a time axis `total` ms wide: round figures a reader can add up (1, 2 or 5 times a power of ten), at most nine. */
+export const timeTicks = (total) => {
+  if (!(total > 0)) return [0];
+  const raw = total / 8;
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 5, 10].map((m) => m * power).find((m) => m >= raw - 1e-12);
+  const ticks = [];
+  for (let n = 0; n <= total + 1e-9; n += step) ticks.push(Math.round(n * 100) / 100);
+  return ticks;
+};
+
+/** Which figure a waterfall in time draws a step with: the median, or the slow tail. */
+export const STEP_TIMES = Object.freeze(['p50', 'p95']);
+
+/** How wide a step with no figure is drawn on a time axis, as a share of the timed width: a hatched stand-in, not a time. */
+const UNTIMED_SHARE = 0.03;
+
+/**
+ * Lays rows out on a time axis, from each step's `ms` (P111): a step is as
+ * long as its own figure, children run end to end from their parent's start
+ * in call order, a run of side-by-side siblings (`together`) starts at one
+ * x, and a parent is at least as long as its children laid out - which a
+ * parent's own p50 can be shorter than, since p50s do not add up. A step
+ * with no figure and nothing timed under it gets a small stand-in width
+ * (`UNTIMED_SHARE` of the timed whole); an answer, a break, a step listed
+ * above or looping back is a mark of no width. Sets `tStart`, `tSpan` (ms),
+ * `timed` (it had a figure of its own) and `tBy` (what its length is: its
+ * `own` figure, the steps `inside` it, a `stand-in`, or a `mark`) on each
+ * row and returns the whole
+ * width, 0 when no step had a figure. These are typical times per step, not
+ * one request: the axis says so.
+ */
+export const stepTimes = (rows) => {
+  if (rows.length === 0) return 0;
+  const kids = rows.map(() => []);
+  for (let r = 1; r < rows.length; r += 1) kids[rows[r].parent].push(r);
+  const marks = (row) => row.kind === 'answer' || row.kind === 'break' || row.again || row.loop;
+  const laid = rows.map(() => 0);
+  const lay = (unit) => {
+    for (let r = rows.length - 1; r >= 0; r -= 1) {
+      let end = 0, groupStart = 0, groupEnd = 0, inGroup = false;
+      for (const c of kids[r]) {
+        const width = marks(rows[c]) ? 0 : rows[c].tSpan;
+        if (rows[c].together && inGroup) {
+          laid[c] = groupStart;
+          groupEnd = Math.max(groupEnd, groupStart + width);
+        } else {
+          end = Math.max(end, groupEnd);
+          laid[c] = end;
+          groupStart = end;
+          groupEnd = end + width;
+          inGroup = rows[c].together;
+          if (!inGroup) end = groupEnd;
+        }
+      }
+      const inside = Math.max(end, groupEnd);
+      const own = typeof rows[r].ms === 'number' ? rows[r].ms : undefined;
+      rows[r].timed = own !== undefined;
+      rows[r].tSpan = marks(rows[r]) ? 0 : Math.max(own ?? (inside > 0 ? 0 : unit), inside);
+      rows[r].tBy = marks(rows[r]) ? 'mark' : own !== undefined && own >= inside ? 'own' : inside > 0 ? 'inside' : 'stand-in';
+    }
+    return rows[0].tSpan;
+  };
+  const timedWidth = lay(0);
+  if (timedWidth <= 0 || !rows.some((row) => row.timed)) {
+    for (const row of rows) { row.tStart = 0; row.tSpan = 0; row.timed = false; row.tBy = 'mark'; }
+    return 0;
+  }
+  const total = lay(timedWidth * UNTIMED_SHARE);
+  rows[0].tStart = 0;
+  for (let r = 1; r < rows.length; r += 1) rows[r].tStart = rows[rows[r].parent].tStart + laid[r];
+  return total;
+};
+
+/**
+ * A sampled request as rows on a real time axis (P111), depth first in the
+ * order its spans were kept: `{ node (-1 when the map has no such step),
+ * label, service, kind, depth, parent, start, ms, status, error, placed }`.
+ * `start` is when the span began after the request did; a span that did not
+ * say is put after its previous sibling (`placed: false`). `service` is
+ * inherited from the span above where the pack left it out. Returns the
+ * rows, the whole width in ms and how many spans the sample left out.
+ */
+export const traceRowsOf = (sample) => {
+  const rows = [];
+  const visit = (tree, depth, parent, service, after) => {
+    const at = rows.length;
+    const placed = typeof tree.start === 'number';
+    const start = placed ? tree.start : after;
+    const row = {
+      node: typeof tree.node === 'number' ? tree.node : -1, label: tree.label, service: tree.service || service,
+      kind: tree.kind, depth, parent, start, ms: typeof tree.ms === 'number' ? tree.ms : null,
+      status: typeof tree.status === 'number' ? tree.status : null, error: tree.error === true, placed: placed || depth === 0,
+    };
+    rows.push(row);
+    let next = start;
+    for (const child of tree.children || []) next = visit(child, depth + 1, at, row.service, next);
+    return Math.max(after, start + (row.ms ?? 0));
+  };
+  visit(sample.tree, 0, -1, '', 0);
+  const total = Math.max(sample.ms ?? 0, ...rows.map((row) => row.start + (row.ms ?? 0)));
+  return { rows, total, cut: sample.cut ?? 0 };
 };
 
 /**
@@ -445,8 +619,15 @@ export const createSeen = (data) => {
  * (`start`, `span`; `stepUnits`). `more` counts what was left out, split in
  * `cut` by what left it out: the depth, or the rows a waterfall holds.
  *
- * `options`: `{ depth, rows, config, answersOf(model, i), seen }`; `config`
- * false leaves the settings out (a compact list, a waterfall, a count).
+ * With run time (P111) a row also has `ms` (the figure `time` names, p50 by
+ * default), `p95` and `errorRate` where its join, or else its own span,
+ * measured them (`seen.figuresOf`), and its place on a time axis (`tStart`,
+ * `tSpan`, `timed`; `stepTimes`); `timed` is the whole width in ms, 0 when
+ * no step had a figure.
+ *
+ * `options`: `{ depth, rows, config, answersOf(model, i), seen, time }`;
+ * `config` false leaves the settings out (a compact list, a waterfall, a
+ * count); `time` is `p50` or `p95`.
  */
 export const stepsOf = (model, entry, options = {}) => {
   const depth = options.depth ?? STEP_BOUNDS.depth;
@@ -454,6 +635,7 @@ export const stepsOf = (model, entry, options = {}) => {
   const follows = options.config === false ? STEP_RUNS : STEP_FOLLOWS;
   const answersOf = options.answersOf || (() => []);
   const seen = options.seen || NO_SEEN;
+  const time = STEP_TIMES.includes(options.time) ? options.time : STEP_TIMES[0];
   const { confidences, edgeTypes } = model.data.dicts;
   const { failure, concurrent, loop: loops } = sitesOf(model);
   const throwsAt = failsByNode(failsOf(model, entry));
@@ -462,6 +644,7 @@ export const stepsOf = (model, entry, options = {}) => {
     confidence: '', certain: true, failure: false, together: false, again: false, loop: false, crosses: false,
     seen: seen.entry(entry), confirmed: 0, never: seen.never(entry), answer: null, perItem: '', nPlusOne: false,
     throws: throwsAt.get(entry) || NO_FAILS, logs: logsOf(model, entry), start: 0, span: 1,
+    ...timesOf(seen.entryStats(entry), time),
   }];
   for (const answer of answersOf(model, entry)) {
     if (answer.kind !== 'failure') continue;
@@ -499,6 +682,7 @@ export const stepsOf = (model, entry, options = {}) => {
       perItem: loops.has(k) ? loops.get(k).kind : '', nPlusOne: isNPlusOne(model, k, loops.get(k)),
       throws: again || loop || leaf ? NO_FAILS : throwsAt.get(to) || NO_FAILS,
       logs: again || loop || leaf ? NO_LOGS : logsOf(model, to), start: 0, span: 1,
+      ...timesOf(again || loop || leaf ? null : seen.figuresOf(k, to), time),
     };
     rows.push(row);
     if (loop || again || leaf) continue;
@@ -514,8 +698,16 @@ export const stepsOf = (model, entry, options = {}) => {
     for (const child of stepChildren(model, to, follows).reverse()) stack.push({ k: child, parent: at, path: next });
   }
   stepUnits(rows);
-  return { rows, more: cut.depth + cut.rows, cut };
+  const timed = stepTimes(rows);
+  return { rows, more: cut.depth + cut.rows, cut, timed };
 };
+
+/** A step's figures as its row holds them (P111): `ms` by the figure asked for, `p95` and `errorRate`, each when measured. */
+const timesOf = (figures, time) => (figures === null ? {} : {
+  ...(figures[time] === undefined ? {} : { ms: figures[time] }),
+  ...(figures.p95 === undefined ? {} : { p95: figures.p95 }),
+  ...(figures.errorRate === undefined ? {} : { errorRate: figures.errorRate }),
+});
 
 /**
  * Lays rows out on a waterfall drawn in steps, not time (P99): every step
@@ -972,8 +1164,15 @@ const promptMarksOf = (model, edge, underFailure, seen) => {
     ...(loop ? { perItem: loop.kind } : {}),
     ...(isNPlusOne(model, edge.k, loop) ? { nPlusOne: true } : {}),
     ...(count && count.count > 0 ? { seen: count.count } : {}),
+    ...promptFiguresOf(seen.figuresOf(edge.k, edge.to)),
   };
 };
+
+/** How long a step took and how often it failed (P111): the p95, and the error rate when any request failed. */
+const promptFiguresOf = (figures) => (figures === null ? {} : {
+  ...(figures.p95 === undefined ? {} : { p95: figures.p95 }),
+  ...((figures.errorRate ?? 0) > 0 ? { errorRate: figures.errorRate } : {}),
+});
 
 /** The lines a step logs, as the server reads them: a level, the line, the template. */
 const promptLogsOf = (model, i) => logsOf(model, i).map((log) =>
@@ -1104,7 +1303,7 @@ const promptNodeSubject = (model, i, walk, seen) => {
   return {
     ...head,
     ...(schedule === null ? {} : { schedule: { expression: schedule.expression, ...(schedule.zone ? { zone: schedule.zone } : {}) } }),
-    ...(hits > 0 ? { hits } : {}),
+    ...(hits > 0 ? { hits, ...promptFiguresOf(seen.entryStats(i)) } : {}),
     ...(access === undefined ? {} : { access }),
     ...(fails.length === 0 ? {} : { fails }),
     ...(failuresSeen === null ? {} : { failuresSeen }),

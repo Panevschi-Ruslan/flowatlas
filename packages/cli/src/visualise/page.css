@@ -34,6 +34,14 @@
   --s-3: #7a3f6d;
   --s-4: #5b52a3;
 
+  /* Run-time heat on the Map (P111): one sequential ramp, coolest first,
+     each step 3:1 or more on every ground and darker than the one before. */
+  --heat-0: #a8750a;
+  --heat-1: #b65a17;
+  --heat-2: #b23c2a;
+  --heat-3: #93263f;
+  --heat-4: #6b1d52;
+
   --f-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --f-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --f-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -66,6 +74,12 @@
     --s-2: #a4bd6a;
     --s-3: #c68fb8;
     --s-4: #a59ee6;
+
+    --heat-0: #9a7a3c;
+    --heat-1: #c18a3e;
+    --heat-2: #de8a5a;
+    --heat-3: #f08a7e;
+    --heat-4: #ffa9c4;
   }
 }
 
@@ -94,6 +108,12 @@
   --s-2: #a4bd6a;
   --s-3: #c68fb8;
   --s-4: #a59ee6;
+
+  --heat-0: #9a7a3c;
+  --heat-1: #c18a3e;
+  --heat-2: #de8a5a;
+  --heat-3: #f08a7e;
+  --heat-4: #ffa9c4;
 }
 
 * { box-sizing: border-box; }
@@ -2351,4 +2371,65 @@ kbd {
   .overlay { padding: 0; align-items: flex-end; }
   .dialog { width: 100%; max-height: 82vh; border-radius: 8px 8px 0 0; border-bottom: 0; }
   .keys-row { grid-template-columns: 7.5em minmax(0, 1fr); }
+}
+
+/* ── run time on the page (P111) ──────────────────────────────────── */
+
+/* The figures beside a step and a way in: how long, and how often it failed. */
+.s-mark.is-time { color: var(--ink); border-color: var(--rule); }
+.s-mark.is-errors { color: var(--bad); border-color: var(--bad); font-weight: 600; }
+.w-label .s-mark { flex: none; }
+.row-time { font-family: var(--f-mono); color: var(--ink); }
+.row-errors { font-family: var(--f-mono); color: var(--bad); }
+.built-seen { white-space: nowrap; }
+
+/* A step the traffic measured no time for, on a waterfall in time: a
+   hatched stand-in, so it is never read as a short step. */
+.w-row.is-untimed .w-bar {
+  background: repeating-linear-gradient(135deg, var(--hue) 0 2px, transparent 2px 5px);
+  border: 1px dashed var(--hue); opacity: .7;
+}
+
+/* No time of its own, as long as the steps under it: an outline, not a bar. */
+.w-row.is-spanning .w-bar { background: transparent; border: 1.5px solid var(--hue); opacity: .8; }
+
+/* The Map's heat: a link by the ramp's step, one nothing was seen on quiet. */
+.m-link.is-heat { stroke: var(--heat); stroke-opacity: .95; }
+.m-link.is-cold { stroke: var(--faint); stroke-opacity: .28; }
+.m-heat { display: inline-flex; align-items: center; gap: 6px; }
+.m-heat .tool:disabled { opacity: .45; cursor: not-allowed; }
+.m-heat-key {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 6px 0 0;
+  font-family: var(--f-mono); font-size: 12px; color: var(--muted);
+}
+.m-heat-ramp { display: inline-flex; }
+.m-heat-swatch { display: inline-block; width: 18px; height: 6px; background: var(--heat); }
+.m-heat-swatch.is-cold { background: var(--faint); opacity: .35; }
+.m-heat-none { display: inline-flex; align-items: center; gap: 4px; }
+.m-heat-what { color: var(--ink); }
+
+/* Traces: the sampled requests beside the one drawn. */
+.tr-split { display: grid; grid-template-columns: minmax(220px, 30%) minmax(0, 1fr); gap: 14px; align-items: start; }
+.tr-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.tr-pick {
+  display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; cursor: pointer;
+  font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--edge);
+  border-left: 3px solid var(--hue); border-radius: var(--radius); padding: 6px 10px;
+}
+.tr-pick:hover { background: var(--raise); }
+.tr-pick[aria-pressed='true'] { background: var(--accent-soft); border-color: var(--accent); border-left-color: var(--hue); }
+.tr-route { font-family: var(--f-mono); font-size: 13px; overflow-wrap: anywhere; }
+.tr-meta { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.tr-meta b { color: var(--ink); font-weight: 600; }
+.tr-bad, .tr-pick.is-failure .tr-status { color: var(--bad); font-weight: 600; }
+.tr-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 6px; font-family: var(--f-mono); font-size: 13px; }
+.tr-tree { min-width: 0; }
+.tr-rows { overflow-x: hidden; }
+.tr-ms { flex: none; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.tr-none { flex: none; font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-style: italic; }
+.w-row.is-unplaced .w-bar { opacity: .5; }
+.rt-table td { vertical-align: top; }
+.rt-table td a { font-family: var(--f-mono); }
+@media (max-width: 900px) {
+  .tr-split { grid-template-columns: minmax(0, 1fr); }
 }

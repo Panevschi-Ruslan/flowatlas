@@ -155,7 +155,10 @@ all take the same optional `service` filter.
 
 `describe_for_prompt` and the page's *Copy as prompt* write the same text
 (P97): each gathers one subject - the server from the database, the page from
-its packed model - and core's `renderPrompt` writes it. The headings are the
+its packed model - and core's `renderPrompt` writes it. With an observed file,
+a way in's hits line and a step's marks carry its p95 and, when any request
+failed, its error rate (`[seen ×20, p95 79 ms, 5% errors]`): the join into the
+step's figures, else the step's own span's (P111). The headings are the
 same for every subject:
 
 - `# Way in: …`, `# Channel: …`, `# Check: …` (a gap id) or `# Symbol: …`, then

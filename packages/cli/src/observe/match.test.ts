@@ -239,4 +239,14 @@ describe('what a span measured, on the place it is credited to (P105)', () => {
       tree: { id: PRODUCT, label: 'GET /products/:value', service: 'catalog', kind: 'server', ms: 25, status: 503 },
     });
   });
+
+  it('says when each span under the request began after it did, so the page can draw it on a time axis (P111)', () => {
+    const root = { ...timed(server('/products/:value'), 30, 200), traceId: 'w', spanId: 'r', at: '2026-01-01T00:00:00.000Z' };
+    const query = { traceId: 'w', spanId: 'q', parentId: 'r', kind: 'client' as const, service: 'catalog', collection: 'x',
+      at: '2026-01-01T00:00:00.012Z', durationMs: 9 };
+    const untimed = { traceId: 'w', spanId: 'u', parentId: 'r', kind: 'internal' as const, service: 'catalog' };
+    const tree = matchSpans(graph, [root, query, untimed]).samples[PRODUCT]!.slow[0]!.tree;
+    expect(tree.start).toBeUndefined();
+    expect(tree.children!.map((child) => child.start)).toEqual([12, undefined]);
+  });
 });

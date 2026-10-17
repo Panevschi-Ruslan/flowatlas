@@ -7,6 +7,7 @@ import { createModel, serviceOfRow, type GraphModel } from './graph.js';
 import { packObserved } from './observed.js';
 import { packGraph, type PackedGraph } from './pack.js';
 import { ambiguousOf, logsOf, unmatchedOf } from './steps.js';
+import { nodeAt, testObserved, testPack, testRunTimePack } from './panels/test-page.js';
 
 const report = {
   httpOut: {},
@@ -366,5 +367,33 @@ describe('wordsOf (P84)', () => {
     expect(many.list).toEqual(['NotFoundException']);
     expect(many.word('NotFoundException')).toBe(0);
     expect(many.word('Once')).toBe('Once');
+  });
+});
+
+describe('run time in the pack (P111)', () => {
+  it('adds nothing to a page with no observed file', () => {
+    const plain = testPack('pack-plain');
+    expect(plain.observed).toBeUndefined();
+    expect(plain.observedDiff).toBeUndefined();
+  });
+
+  it('packs each step’s own figures by node position, and the slow and the failing request once each', () => {
+    const data = testRunTimePack('pack-runtime');
+    const at = nodeAt(data);
+    expect(data.observed!.nodes![String(at('orders#src/orders/orders.service.ts:OrdersService.create'))]).toMatchObject({ p95: 294 });
+    const samples = data.observed!.samples!['entry:gateway:http:POST:/orders']!;
+    expect(samples.map((sample) => [sample.slow ?? 0, sample.failing ?? 0, sample.ms])).toEqual([[1, 0, 310], [0, 1, 40]]);
+    // The tree names nodes by position and a service only where it changes.
+    expect(samples[0]!.tree).toMatchObject({ node: at('entry:gateway:http:POST:/orders'), service: 'gateway' });
+    expect(samples[0]!.tree.children![0]!.service).toBeUndefined();
+    expect(data.observed!.entries['entry:gateway:http:POST:/orders']).toMatchObject({ errorRate: 0.1 });
+  });
+
+  it('packs a request that is both the slowest and failing once, as both', () => {
+    const observed = testObserved();
+    const bad = observed.samples['entry:gateway:http:POST:/orders']!.failing[0]!;
+    observed.samples['entry:gateway:http:POST:/orders'] = { slow: [bad], failing: [bad] };
+    const packed = packObserved(observed, [], { 'entry:gateway:http:POST:/orders': 0 }, new Map());
+    expect(packed.samples!['entry:gateway:http:POST:/orders']!.map((sample) => [sample.slow, sample.failing])).toEqual([[1, 1]]);
   });
 });

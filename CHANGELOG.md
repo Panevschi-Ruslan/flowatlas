@@ -56,6 +56,20 @@ only one of them moved.
   the directories `flowatlas mcp` found for each). The full tool list's
   ceiling moves from 31,000 to 31,200 characters for `missingRepos` in
   `start_here`'s output schema; the part a model reads stays under 12,250.
+- **Run time on the page (P111).** With an observed file beside the database,
+  `flowatlas visualise` draws what traffic measured: the Steps waterfall in
+  milliseconds by each step's p50 or p95 (a switch, kept per browser), its axis
+  saying *typical time per step, not one request*; p95 and error-rate chips on
+  steps and ways in; a *heat* switch on the Map (traffic, or the p95 of the
+  slowest edge behind each link) with a key; the window in the header; and a
+  **Traces** tab drawing each way in's slowest and latest failing request on its
+  own time axis, with no trace or span id in the page. `visualise
+  --observed-diff <a> <b>` adds a **Run time changes** tab (slower, failing
+  more, newly seen, no longer seen, compared only above `--min-count`, default
+  20), and `flowatlas observe --diff <a> <b>` prints the same. The copied prompt
+  and `describe_for_prompt` write a step's and a way in's p95 and error rate.
+  Sample trees in `observed.json` now say when each span began after the
+  request did (`start`, ms); the format version is unchanged.
 
 - **`flowatlas doctor --reason <code>` (P141).** Lists the places of one
   reason, or several (repeatable, or a comma list), under every level the

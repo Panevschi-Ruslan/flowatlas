@@ -6,7 +6,7 @@ import { STEP_KINDS } from '../steps.js';
    following a link's address, Copy link on the tabs without one of their
    own, the controls every tab shares, the colophon, and the first view. */
 export function wirePage(page) {
-  const { LB, MT, copyText, drawBusiest, drawChanges, drawCrossings, drawEntries, drawMissing,
+  const { LB, MT, copyText, drawBusiest, drawChanges, drawCrossings, drawEntries, drawMissing, drawRunChanges, drawTraces,
     drawSteps, entryIx, esc, flash, fullScreen, graph, graphView, keys, kindSelect,
     mapController, nodes, notice, reachesCrossing, reopen, repoName, root, seen, setMapFull, sheetEl, startCard, stepsView,
     store } = page;
@@ -85,10 +85,19 @@ export function wirePage(page) {
      to it (ways.js), so Back steps through what a person looked at. */
   const DEFAULT_VIEW = 'map';
   const SHOWS_A_WAY_IN = new Set(['steps']);
-  const TABLES = new Set(['crossings', 'missing', 'busiest', 'changes']);
+  const TABLES = new Set(['crossings', 'missing', 'busiest', 'traces', 'changes', 'runtime']);
   /* The tabs that never read the way in picked: the Ways in list steps aside
      and the tab takes the width (P101). */
-  const WIDE = new Set(['crossings', 'busiest', 'changes']);
+  const WIDE = new Set(['crossings', 'busiest', 'traces', 'changes', 'runtime']);
+  const NO_LEGEND = new Set(['busiest', 'traces', 'changes', 'runtime']);
+  /* What a link to a tab only some pages have is told when this one has not got it. */
+  const ABSENT_TABS = {
+    changes: 'This link opens the Changes tab, which a page has only when it was written with <code>--diff</code>. The map is shown.',
+    traces: 'This link opens the Traces tab, which a page has only when its observed file holds sampled requests: ' +
+      '<code>flowatlas observe</code> keeps them unless it was run with <code>--no-samples</code>. The map is shown.',
+    runtime: 'This link opens the Run time changes tab, which a page has only when it was written with ' +
+      '<code>--observed-diff &lt;a&gt; &lt;b&gt;</code>. The map is shown.',
+  };
   const viewHashNow = (where) => {
     const name = store.get('view');
     const current = store.get('current');
@@ -138,8 +147,8 @@ export function wirePage(page) {
     stepsView.hidden = name !== 'steps';
     graphView.hidden = name !== 'graph';
     mapViewEl.hidden = name !== 'map';
-    // Busiest and Changes draw none of the marks a legend explains.
-    legendEl.hidden = name === 'busiest' || name === 'changes';
+    // Busiest, Traces and the two changes tabs draw none of the marks a legend explains.
+    legendEl.hidden = NO_LEGEND.has(name);
     legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : name === 'map' ? MAP_LEGEND : name === 'steps' ? STEPS_LEGEND : TABLE_LEGEND;
     writeViewHash(where);
     if (name === 'steps') drawSteps();
@@ -147,6 +156,8 @@ export function wirePage(page) {
     else if (name === 'missing') drawMissing();
     else if (name === 'busiest') drawBusiest();
     else if (name === 'changes') drawChanges();
+    else if (name === 'traces') drawTraces();
+    else if (name === 'runtime') drawRunChanges();
     else if (name === 'map') mapController.show();
     else graph.show(asked);
   }
@@ -232,9 +243,8 @@ export function wirePage(page) {
     const tab = tabs.find((t) => t.dataset.view === asked.view);
     if (asked.view === null || tab === undefined || tab.hidden) {
       showView(DEFAULT_VIEW);
-      viewNotice.say(asked.view === 'changes'
-        ? 'This link opens the Changes tab, which a page has only when it was written with <code>--diff</code>. The map is shown.'
-        : `This link opens a tab this page does not have, <code>${esc(asked.name)}</code>. The map is shown.`);
+      viewNotice.say(ABSENT_TABS[asked.view] ||
+        `This link opens a tab this page does not have, <code>${esc(asked.name)}</code>. The map is shown.`);
       return true;
     }
     const held = asked.entry !== null && entryIx.includes(asked.entry);

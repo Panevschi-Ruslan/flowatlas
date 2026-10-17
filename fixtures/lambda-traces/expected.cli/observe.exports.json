@@ -568,6 +568,7 @@
                 "label": "checkout",
                 "service": "checkout",
                 "kind": "server",
+                "start": 3,
                 "ms": 180,
                 "children": [
                   {
@@ -575,6 +576,7 @@
                     "label": "DynamoDB/PutItem",
                     "service": "checkout",
                     "kind": "client",
+                    "start": 8,
                     "ms": 20,
                     "status": 200,
                     "children": [
@@ -582,6 +584,7 @@
                         "label": "server",
                         "service": "DynamoDB",
                         "kind": "server",
+                        "start": 9,
                         "ms": 18,
                         "status": 200
                       },
@@ -590,6 +593,7 @@
                         "label": "index-orders",
                         "service": "index-orders",
                         "kind": "server",
+                        "start": 1503,
                         "ms": 20
                       }
                     ]
@@ -599,6 +603,7 @@
                     "label": "SQS/SendMessage",
                     "service": "checkout",
                     "kind": "client",
+                    "start": 33,
                     "ms": 12,
                     "status": 200,
                     "children": [
@@ -607,6 +612,7 @@
                         "label": "ship-order",
                         "service": "ship-order",
                         "kind": "server",
+                        "start": 1003,
                         "ms": 400,
                         "children": [
                           {
@@ -614,6 +620,7 @@
                             "label": "DynamoDB/GetItem",
                             "service": "ship-order",
                             "kind": "client",
+                            "start": 1013,
                             "ms": 20,
                             "status": 200
                           },
@@ -622,6 +629,7 @@
                             "label": "Lambda/Invoke",
                             "service": "ship-order",
                             "kind": "client",
+                            "start": 1043,
                             "ms": 340,
                             "status": 200,
                             "children": [
@@ -630,6 +638,7 @@
                                 "label": "print-label",
                                 "service": "print-label",
                                 "kind": "server",
+                                "start": 1053,
                                 "ms": 320
                               }
                             ]
@@ -643,6 +652,7 @@
                     "label": "SFN/StartExecution",
                     "service": "checkout",
                     "kind": "client",
+                    "start": 48,
                     "ms": 25,
                     "status": 200,
                     "children": [
@@ -651,6 +661,7 @@
                         "label": "fulfil-order",
                         "service": "fulfil-order",
                         "kind": "server",
+                        "start": 78,
                         "ms": 825,
                         "children": [
                           {
@@ -658,12 +669,14 @@
                             "label": "fulfil-order/ReserveStock",
                             "service": "fulfil-order",
                             "kind": "internal",
+                            "start": 83,
                             "ms": 220,
                             "children": [
                               {
                                 "label": "Lambda/Invoke",
                                 "service": "fulfil-order",
                                 "kind": "client",
+                                "start": 84,
                                 "ms": 218,
                                 "status": 200,
                                 "children": [
@@ -672,6 +685,7 @@
                                     "label": "reserve-stock",
                                     "service": "reserve-stock",
                                     "kind": "server",
+                                    "start": 93,
                                     "ms": 200
                                   }
                                 ]
@@ -683,12 +697,14 @@
                             "label": "fulfil-order/ChargeCard",
                             "service": "fulfil-order",
                             "kind": "internal",
+                            "start": 313,
                             "ms": 290,
                             "children": [
                               {
                                 "label": "Lambda/Invoke",
                                 "service": "fulfil-order",
                                 "kind": "client",
+                                "start": 314,
                                 "ms": 288,
                                 "status": 200,
                                 "children": [
@@ -697,6 +713,7 @@
                                     "label": "charge-card",
                                     "service": "charge-card",
                                     "kind": "server",
+                                    "start": 323,
                                     "ms": 270,
                                     "error": true
                                   }
@@ -709,6 +726,7 @@
                             "label": "fulfil-order/MarkPaid",
                             "service": "fulfil-order",
                             "kind": "internal",
+                            "start": 613,
                             "ms": 90,
                             "children": [
                               {
@@ -716,6 +734,7 @@
                                 "label": "DynamoDB/UpdateItem",
                                 "service": "fulfil-order",
                                 "kind": "client",
+                                "start": 618,
                                 "ms": 75,
                                 "status": 200
                               }
@@ -726,6 +745,7 @@
                             "label": "fulfil-order/SendReceipt",
                             "service": "fulfil-order",
                             "kind": "internal",
+                            "start": 713,
                             "ms": 180,
                             "children": [
                               {
@@ -733,6 +753,7 @@
                                 "label": "SNS/Publish",
                                 "service": "fulfil-order",
                                 "kind": "client",
+                                "start": 718,
                                 "ms": 165,
                                 "status": 200
                               }
@@ -746,6 +767,7 @@
                     "label": "DynamoDB/GetItem",
                     "service": "checkout",
                     "kind": "client",
+                    "start": 75,
                     "ms": 8,
                     "status": 200
                   },
@@ -753,6 +775,7 @@
                     "label": "SecretsManager/GetSecretValue",
                     "service": "checkout",
                     "kind": "client",
+                    "start": 85,
                     "ms": 13,
                     "status": 200
                   }
@@ -819,6 +842,7 @@
                 "label": "DynamoDB/PutItem",
                 "service": "checkout",
                 "kind": "client",
+                "start": 5,
                 "ms": 20,
                 "status": 200,
                 "children": [
@@ -826,6 +850,7 @@
                     "label": "server",
                     "service": "DynamoDB",
                     "kind": "server",
+                    "start": 6,
                     "ms": 18,
                     "status": 200
                   },
@@ -834,6 +859,7 @@
                     "label": "index-orders",
                     "service": "index-orders",
                     "kind": "server",
+                    "start": 1500,
                     "ms": 20
                   }
                 ]
@@ -843,6 +869,7 @@
                 "label": "SQS/SendMessage",
                 "service": "checkout",
                 "kind": "client",
+                "start": 30,
                 "ms": 12,
                 "status": 200,
                 "children": [
@@ -851,6 +878,7 @@
                     "label": "ship-order",
                     "service": "ship-order",
                     "kind": "server",
+                    "start": 1000,
                     "ms": 400,
                     "children": [
                       {
@@ -858,6 +886,7 @@
                         "label": "DynamoDB/GetItem",
                         "service": "ship-order",
                         "kind": "client",
+                        "start": 1010,
                         "ms": 20,
                         "status": 200
                       },
@@ -866,6 +895,7 @@
                         "label": "Lambda/Invoke",
                         "service": "ship-order",
                         "kind": "client",
+                        "start": 1040,
                         "ms": 340,
                         "status": 200,
                         "children": [
@@ -874,6 +904,7 @@
                             "label": "print-label",
                             "service": "print-label",
                             "kind": "server",
+                            "start": 1050,
                             "ms": 320
                           }
                         ]
@@ -887,6 +918,7 @@
                 "label": "SFN/StartExecution",
                 "service": "checkout",
                 "kind": "client",
+                "start": 45,
                 "ms": 25,
                 "status": 200,
                 "children": [
@@ -895,6 +927,7 @@
                     "label": "fulfil-order",
                     "service": "fulfil-order",
                     "kind": "server",
+                    "start": 75,
                     "ms": 825,
                     "children": [
                       {
@@ -902,12 +935,14 @@
                         "label": "fulfil-order/ReserveStock",
                         "service": "fulfil-order",
                         "kind": "internal",
+                        "start": 80,
                         "ms": 220,
                         "children": [
                           {
                             "label": "Lambda/Invoke",
                             "service": "fulfil-order",
                             "kind": "client",
+                            "start": 81,
                             "ms": 218,
                             "status": 200,
                             "children": [
@@ -916,6 +951,7 @@
                                 "label": "reserve-stock",
                                 "service": "reserve-stock",
                                 "kind": "server",
+                                "start": 90,
                                 "ms": 200
                               }
                             ]
@@ -927,12 +963,14 @@
                         "label": "fulfil-order/ChargeCard",
                         "service": "fulfil-order",
                         "kind": "internal",
+                        "start": 310,
                         "ms": 290,
                         "children": [
                           {
                             "label": "Lambda/Invoke",
                             "service": "fulfil-order",
                             "kind": "client",
+                            "start": 311,
                             "ms": 288,
                             "status": 200,
                             "children": [
@@ -941,6 +979,7 @@
                                 "label": "charge-card",
                                 "service": "charge-card",
                                 "kind": "server",
+                                "start": 320,
                                 "ms": 270,
                                 "error": true
                               }
@@ -953,6 +992,7 @@
                         "label": "fulfil-order/MarkPaid",
                         "service": "fulfil-order",
                         "kind": "internal",
+                        "start": 610,
                         "ms": 90,
                         "children": [
                           {
@@ -960,6 +1000,7 @@
                             "label": "DynamoDB/UpdateItem",
                             "service": "fulfil-order",
                             "kind": "client",
+                            "start": 615,
                             "ms": 75,
                             "status": 200
                           }
@@ -970,6 +1011,7 @@
                         "label": "fulfil-order/SendReceipt",
                         "service": "fulfil-order",
                         "kind": "internal",
+                        "start": 710,
                         "ms": 180,
                         "children": [
                           {
@@ -977,6 +1019,7 @@
                             "label": "SNS/Publish",
                             "service": "fulfil-order",
                             "kind": "client",
+                            "start": 715,
                             "ms": 165,
                             "status": 200
                           }
@@ -990,6 +1033,7 @@
                 "label": "DynamoDB/GetItem",
                 "service": "checkout",
                 "kind": "client",
+                "start": 72,
                 "ms": 8,
                 "status": 200
               },
@@ -997,6 +1041,7 @@
                 "label": "SecretsManager/GetSecretValue",
                 "service": "checkout",
                 "kind": "client",
+                "start": 82,
                 "ms": 13,
                 "status": 200
               }
@@ -1079,6 +1124,7 @@
                 "label": "DynamoDB/GetItem",
                 "service": "ship-order",
                 "kind": "client",
+                "start": 10,
                 "ms": 20,
                 "status": 200
               },
@@ -1087,6 +1133,7 @@
                 "label": "Lambda/Invoke",
                 "service": "ship-order",
                 "kind": "client",
+                "start": 40,
                 "ms": 340,
                 "status": 200,
                 "children": [
@@ -1095,6 +1142,7 @@
                     "label": "print-label",
                     "service": "print-label",
                     "kind": "server",
+                    "start": 50,
                     "ms": 320
                   }
                 ]
@@ -1124,12 +1172,14 @@
                 "label": "fulfil-order/ReserveStock",
                 "service": "fulfil-order",
                 "kind": "internal",
+                "start": 5,
                 "ms": 220,
                 "children": [
                   {
                     "label": "Lambda/Invoke",
                     "service": "fulfil-order",
                     "kind": "client",
+                    "start": 6,
                     "ms": 218,
                     "status": 200,
                     "children": [
@@ -1138,6 +1188,7 @@
                         "label": "reserve-stock",
                         "service": "reserve-stock",
                         "kind": "server",
+                        "start": 15,
                         "ms": 200
                       }
                     ]
@@ -1149,12 +1200,14 @@
                 "label": "fulfil-order/ChargeCard",
                 "service": "fulfil-order",
                 "kind": "internal",
+                "start": 235,
                 "ms": 290,
                 "children": [
                   {
                     "label": "Lambda/Invoke",
                     "service": "fulfil-order",
                     "kind": "client",
+                    "start": 236,
                     "ms": 288,
                     "status": 200,
                     "children": [
@@ -1163,6 +1216,7 @@
                         "label": "charge-card",
                         "service": "charge-card",
                         "kind": "server",
+                        "start": 245,
                         "ms": 270,
                         "error": true
                       }
@@ -1175,6 +1229,7 @@
                 "label": "fulfil-order/MarkPaid",
                 "service": "fulfil-order",
                 "kind": "internal",
+                "start": 535,
                 "ms": 90,
                 "children": [
                   {
@@ -1182,6 +1237,7 @@
                     "label": "DynamoDB/UpdateItem",
                     "service": "fulfil-order",
                     "kind": "client",
+                    "start": 540,
                     "ms": 75,
                     "status": 200
                   }
@@ -1192,6 +1248,7 @@
                 "label": "fulfil-order/SendReceipt",
                 "service": "fulfil-order",
                 "kind": "internal",
+                "start": 635,
                 "ms": 180,
                 "children": [
                   {
@@ -1199,6 +1256,7 @@
                     "label": "SNS/Publish",
                     "service": "fulfil-order",
                     "kind": "client",
+                    "start": 640,
                     "ms": 165,
                     "status": 200
                   }
@@ -1224,12 +1282,14 @@
                 "label": "fulfil-order/ReserveStock",
                 "service": "fulfil-order",
                 "kind": "internal",
+                "start": 5,
                 "ms": 220,
                 "children": [
                   {
                     "label": "Lambda/Invoke",
                     "service": "fulfil-order",
                     "kind": "client",
+                    "start": 6,
                     "ms": 217
                   }
                 ]
@@ -1239,12 +1299,14 @@
                 "label": "fulfil-order/ChargeCard",
                 "service": "fulfil-order",
                 "kind": "internal",
+                "start": 235,
                 "ms": 290,
                 "children": [
                   {
                     "label": "Lambda/Invoke",
                     "service": "fulfil-order",
                     "kind": "client",
+                    "start": 237,
                     "ms": 283
                   }
                 ]
@@ -1254,6 +1316,7 @@
                 "label": "fulfil-order/MarkPaid",
                 "service": "fulfil-order",
                 "kind": "internal",
+                "start": 535,
                 "ms": 90,
                 "children": [
                   {
@@ -1261,6 +1324,7 @@
                     "label": "DynamoDB/UpdateItem",
                     "service": "fulfil-order",
                     "kind": "client",
+                    "start": 536,
                     "ms": 87
                   }
                 ]
@@ -1270,6 +1334,7 @@
                 "label": "fulfil-order/SendReceipt",
                 "service": "fulfil-order",
                 "kind": "internal",
+                "start": 635,
                 "ms": 180,
                 "children": [
                   {
@@ -1277,6 +1342,7 @@
                     "label": "SNS/Publish",
                     "service": "fulfil-order",
                     "kind": "client",
+                    "start": 636,
                     "ms": 177
                   }
                 ]

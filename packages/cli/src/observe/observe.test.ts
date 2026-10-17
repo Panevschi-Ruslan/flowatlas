@@ -161,7 +161,7 @@ describe('matchSpans over the multi-repo fixture', () => {
     );
     expect(packed.joins[String(edge)]?.count).toBe(1);
     expect(unmatchedOf(packed)).toEqual(observed.unmatched.map(({ service, kind, name }) => ({ service, kind, name })));
-    expect(packed.entries['entry:orders:http:POST:/orders']).toEqual({ hits: 1, p50: 35, p95: 35, max: 35, errors: 1, statuses: { '500': 1 } });
+    expect(packed.entries['entry:orders:http:POST:/orders']).toEqual({ hits: 1, p50: 35, p95: 35, max: 35, errors: 1, errorRate: 1, statuses: { '500': 1 } });
     expect(packed.window).toEqual({ from: '2025-10-16T07:00:00.000Z', to: '2025-10-16T08:00:00.000Z' });
     expect(ambiguousOf(packed)).toEqual([
       {

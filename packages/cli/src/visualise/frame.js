@@ -170,7 +170,7 @@ export const formatHash = (keys, focus, hops, expanded = [], more = {}) => {
  * The page's tabs, by the name the address and the markup give them, in the
  * order they are drawn (P98). Every one opens from a link.
  */
-export const VIEWS = Object.freeze(['map', 'steps', 'crossings', 'missing', 'busiest', 'changes', 'graph']);
+export const VIEWS = Object.freeze(['map', 'steps', 'crossings', 'missing', 'busiest', 'traces', 'changes', 'runtime', 'graph']);
 
 /**
  * Tabs that went, by the tab that shows what they showed: a link made while

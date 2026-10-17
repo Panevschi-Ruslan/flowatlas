@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { packChanges } from '../changes.js';
 import { createKeys, SHORTCUTS, VIEWS } from '../frame.js';
 import { FakeEvent, textOf } from './test-dom.js';
-import { mountPage, nodeAt, testPack, withServices } from './test-page.js';
+import { mountPage, nodeAt, testPack, testRunTimePack, withServices } from './test-page.js';
 
 /** The tabs, links and first view (P103, P98). */
 describe('the wiring', () => {
@@ -265,11 +265,12 @@ describe('the wiring', () => {
   const PANEL_OF: Record<string, string> = {
     map: 'map-view', steps: 'steps-view', graph: 'graph-view',
     crossings: 'tab-sheet', missing: 'tab-sheet', busiest: 'tab-sheet', changes: 'tab-sheet',
+    traces: 'tab-sheet', runtime: 'tab-sheet',
   };
   const PANELS = [...new Set(Object.values(PANEL_OF))];
-  /** A page written with --diff, so it has the Changes tab too. */
+  /** A page written with --diff and --observed-diff over traffic with samples, so it has every tab (P111). */
   const withChanges = {
-    ...data,
+    ...testRunTimePack('wiring-runtime', { diff: { slower: 2 } }),
     changes: packChanges({
       base: { ref: 'main', services: {} }, head: { ref: null, services: {} },
       nodes: { added: ['entry:orders:http:GET:/orders/today'], removed: [], changed: [], moved: [] },
@@ -287,7 +288,7 @@ describe('the wiring', () => {
       ['', 'map'], ['#map', 'map'], ['#map/m=dead', 'map'], ['#map/o=role', 'map'],
       ['#steps', 'steps'], [`#steps/${testKey(v)}`, 'steps'], [`#walk/${testKey(v)}`, 'steps'],
       ['#crossings', 'crossings'], ['#missing', 'missing'], ['#missing/reason=di-token-unknown', 'missing'],
-      ['#busiest', 'busiest'], ['#changes', 'changes'],
+      ['#busiest', 'busiest'], ['#changes', 'changes'], ['#traces', 'traces'], ['#runtime', 'runtime'],
       ['#graph', 'graph'], [`#graph/${testKey(v)}`, 'graph'], [`#graph/${testKey(v)}/3`, 'graph'],
       ['#timeline', 'map'],
     ];

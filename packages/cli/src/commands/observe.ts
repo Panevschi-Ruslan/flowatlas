@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { dirname, extname } from 'node:path';
+import { basename, dirname, extname } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import {
   describeObservedProblem,
@@ -9,10 +9,12 @@ import {
   OBSERVED_FORMAT_VERSION,
   observedPathFor,
   parseDuration,
+  readObserved,
   type GraphNode,
   type HitSeen,
   type ObservedSource,
 } from '@flowatlas/core';
+import { diffLines, diffObserved, DIFF_MIN_COUNT, type ObservedDiff } from '../observe/diff.js';
 import type { Command } from 'commander';
 import { settingsOfProject } from '../build/settings/index.js';
 import { dbPathFor, openDbFromOptions, type DbOptions } from '../db.js';
@@ -566,6 +568,59 @@ export const runListen = async (options: ListenCliOptions): Promise<ListenStats>
   return stats;
 };
 
+/**
+ * Two observed files, read and never written (P111): the path of each, and
+ * the floor below which a time or a failure share is not compared. Refuses a
+ * file it cannot read rather than comparing against nothing.
+ */
+export const readDiffPair = (paths: readonly string[] | undefined, flag: string): [Observed, Observed] => {
+  if (paths === undefined || paths.length !== 2) throw cannotRun(`${flag} takes two observed files: before, then after`);
+  return paths.map((path) => {
+    const { observed, problem } = readObserved(path);
+    if (observed === undefined) {
+      throw cannotRun(`${flag}: ${path} cannot be read as an observed file (${problem?.detail ?? 'no file'})`);
+    }
+    return observed;
+  }) as [Observed, Observed];
+};
+
+/**
+ * What to call the two files: their names, or - when both are `observed.json`
+ * beside two databases - each with the folder it sits in.
+ */
+export const diffNamesOf = (paths: readonly string[]): [string, string] => {
+  const [a, b] = [paths[0]!, paths[1]!];
+  if (basename(a) !== basename(b)) return [basename(a), basename(b)];
+  const tail = (path: string): string => `${basename(dirname(path))}/${basename(path)}`;
+  return [tail(a), tail(b)];
+};
+
+/** `--min-count <n>`: a whole number of requests, 1 or more; the default when not given. */
+export const minCountOf = (said: string | undefined): number => {
+  if (said === undefined) return DIFF_MIN_COUNT;
+  const n = Number(said);
+  if (!Number.isInteger(n) || n < 1) throw cannotRun(`--min-count takes a whole number of requests, 1 or more; got ${JSON.stringify(said)}`);
+  return n;
+};
+
+export interface ObserveDiffOptions {
+  minCount?: string;
+  format?: string;
+  print?: (line: string) => void;
+}
+
+/** `flowatlas observe --diff <a> <b>`: what got slower, fails more, appeared and went quiet, as text or JSON. */
+export const runObserveDiff = (paths: readonly string[], options: ObserveDiffOptions = {}): ObservedDiff => {
+  const print = options.print ?? ((line: string) => process.stdout.write(`${line}\n`));
+  const format = options.format ?? 'table';
+  if (format !== 'table' && format !== 'json') throw cannotRun(`--format takes json or table; got ${JSON.stringify(format)}`);
+  const [a, b] = readDiffPair(paths, '--diff');
+  const diff = diffObserved(a, b, { minCount: minCountOf(options.minCount) });
+  if (format === 'json') print(JSON.stringify(diff, null, 2));
+  else for (const line of diffLines(diff, diffNamesOf(paths))) print(line);
+  return diff;
+};
+
 export const registerObserve = (program: Command): void => {
   program
     .command('observe')
@@ -596,7 +651,16 @@ export const registerObserve = (program: Command): void => {
     .option('--max-body <size>', 'largest body --listen takes, before and after gzip (default 8mb)')
     .option('--trace-wait <dur>', 'how long --listen holds a trace for more of its spans after its last one (default 30s)')
     .option('--quiet', 'no line per flush from --listen')
-    .action(async (files: string[], options: ListenCliOptions) => {
+    .option('--diff <files...>', 'instead of reading traces, compare two observed files, before then after: slower, failing more, new, gone')
+    .option('--min-count <n>', `with --diff, the fewest requests on both sides before a time or failure share is compared (default ${DIFF_MIN_COUNT})`)
+    .action(async (files: string[], options: ListenCliOptions & { diff?: string[]; minCount?: string }) => {
+      if (options.diff !== undefined) {
+        if (files.length > 0 || options.listen !== undefined) throw cannotRun('--diff compares two observed files; name no trace files and no --listen');
+        const { diff, minCount, format } = options;
+        runObserveDiff(diff, { ...(minCount === undefined ? {} : { minCount }), ...(format === undefined ? {} : { format }) });
+        return;
+      }
+      if (options.minCount !== undefined) throw cannotRun('--min-count applies to --diff only');
       if (options.listen !== undefined) {
         if (files.length > 0) throw cannotRun('name trace files or --listen, not both');
         await runListen(options);
