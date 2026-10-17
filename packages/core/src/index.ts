@@ -750,6 +750,7 @@ export type {
   MeasuredAt,
   MergeOptions,
   Observed,
+  ObservedBodies,
   ObservedBucket,
   ObservedFigures,
   ObservedParts,
@@ -768,6 +769,23 @@ export type {
   UnmatchedKind,
   UnmatchedSpan,
 } from './observed.js';
+export {
+  isValueKey,
+  mergeEntryShapes,
+  mergeShapeRecords,
+  mergeShapes,
+  SHAPE_BODY_BYTES,
+  SHAPE_DEPTH,
+  SHAPE_KEYS,
+  SHAPE_OBJECTS,
+  SHAPE_TYPES,
+  shapeAt,
+  shapeOf,
+  toTypeEntry,
+  TRAFFIC_TYPE_PREFIX,
+  trafficTypeOf,
+} from './observed-shape.js';
+export type { EntryShapes, FieldShape, JsonType, Shape, ShapeType, TrafficType } from './observed-shape.js';
 export {
   addSpan,
   BUCKET_RATIO,

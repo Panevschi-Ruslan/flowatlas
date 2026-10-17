@@ -24,9 +24,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { createFlowatlasServer } from '@flowatlas/mcp';
+import { createFlowatlasServer, DbHandle } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
-import { reasonCatalog, testPatternText } from '../packages/cli/dist/index.js';
+import { reasonCatalog, testPatternText, trafficHook } from '../packages/cli/dist/index.js';
 import { diffFixtureProject } from './diff-fixture.mjs';
 import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
 
@@ -285,6 +285,49 @@ const observedCopy = () => {
   return copy;
 };
 
+/**
+ * What traffic carried against what the code declares (P113), asked of the
+ * multi-repo graph with the observed file `observe --shapes` wrote over the
+ * traces and the front end's HAR (the CLI's `observe.shapes.json`): a route
+ * whose request carries a field its DTO lacks and lacks one it requires, the
+ * same route asked through the call into it, a route whose answers carry
+ * fields the front end's type lacks, one that agrees, one with nothing
+ * declared, and `get_flow` hinting `check_contract` where traffic differs.
+ */
+const SHAPES_CASES = [
+  ['check_contract.traffic-request', 'check_contract', { edge: 'entry:gateway:http:POST:/orders/:param/invoice' }],
+  [
+    'check_contract.traffic-edge',
+    'check_contract',
+    { from: 'ui_api_call:web#src/app/orders-api.service.ts:21:12', to: 'entry:gateway:http:GET:/orders/:param' },
+  ],
+  ['check_contract.traffic-response', 'check_contract', { edge: 'entry:gateway:http:GET:/orders/:param' }],
+  ['check_contract.traffic-agrees', 'check_contract', { edge: 'entry:orders:http:GET:/orders/:param' }],
+  ['check_contract.traffic-billing', 'check_contract', { edge: 'entry:billing:http:POST:/invoices' }],
+  ['check_contract.traffic-undeclared', 'check_contract', { edge: 'entry:gateway:http:POST:/orders/:param/refund' }],
+  ['check_contract.traffic-none', 'check_contract', { edge: 'entry:orders:http:POST:/orders' }],
+  ['get_flow.traffic-differs', 'get_flow', { entry: 'POST /orders/:id/invoice', maxNodes: 5 }],
+];
+
+/** A copy of the fixture's output with the shapes file beside it. */
+const shapesCopy = () => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-mcp-shapes-'));
+  cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+  copyFileSync(join(fixture, 'expected.cli', 'observe.shapes.json'), join(copy, 'observed.json'));
+  return copy;
+};
+
+/** The traffic checker the command hands its server, over the copy's database. */
+const shapesOptions = (copy) => {
+  const handle = new DbHandle({ dbPath: join(copy, 'graph.db'), configPath: join(fixture, 'flowatlas.config.json') });
+  return {
+    trafficChecker: trafficHook(() => {
+      const opened = handle.open();
+      return 'error' in opened ? undefined : opened.db;
+    }),
+  };
+};
+
 const SUITES = [
   { fixture, outDir, cases: CASES, prompts: PROMPTS },
   { fixture: housePatterns, outDir: join(housePatterns, 'expected.mcp'), cases: PATTERN_CASES, options: { patternTester } },
@@ -293,6 +336,13 @@ const SUITES = [
     outDir: join(fixture, 'expected.mcp.observed'),
     cases: OBSERVED_CASES,
     copy: observedCopy,
+  },
+  {
+    fixture,
+    outDir: join(fixture, 'expected.mcp.shapes'),
+    cases: SHAPES_CASES,
+    copy: shapesCopy,
+    options: shapesOptions,
   },
   {
     fixture: join(root, 'fixtures', 'nest-check-through-helper'),
@@ -335,7 +385,7 @@ for (const suite of SUITES) {
   const server = createFlowatlasServer({
     configPath,
     ...(copy === undefined ? {} : { dbPath: join(copy, 'graph.db') }),
-    ...(suite.options ?? {}),
+    ...(typeof suite.options === 'function' ? suite.options(copy) : (suite.options ?? {})),
   });
   await server.connect(serverSide);
   const client = new Client({ name: 'snapshots', version: '0' });

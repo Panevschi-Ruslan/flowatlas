@@ -7,7 +7,7 @@
  * `allow-list.ts`). A path keeps its shape and loses its query; a template
  * keeps its parameters by name only.
  */
-import { OBSERVED_KEPT } from '@flowatlas/core';
+import { isValueKey, OBSERVED_KEPT } from '@flowatlas/core';
 
 export type SpanKind = 'server' | 'client' | 'producer' | 'consumer' | 'internal';
 
@@ -105,8 +105,12 @@ export const keepAllowed = (span: ObservedSpan): ObservedSpan => {
 /** What a path segment that holds a value is replaced with; it matches only a route parameter. */
 export const VALUE = ':value';
 
-/** A segment that carries a value rather than a name: any digit, or a long token. */
-const isValue = (segment: string): boolean => /\d/.test(segment) || segment.length > 32;
+/**
+ * A segment, or a body's key (P113), that carries a value rather than a name:
+ * any digit, a long token, an email, a UUID or a hex token. One rule for both
+ * (P113 D2), kept in core beside the shape it also folds.
+ */
+export { isValueKey };
 
 /**
  * Path only: no scheme, host, query or fragment, and every segment that looks
@@ -121,6 +125,6 @@ export const pathOf = (url: string): string | undefined => {
   }
   return pathname
     .split('/')
-    .map((segment) => (segment !== '' && isValue(segment) ? VALUE : segment))
+    .map((segment) => (segment !== '' && isValueKey(segment) ? VALUE : segment))
     .join('/');
 };

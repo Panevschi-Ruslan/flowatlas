@@ -38,6 +38,15 @@ describe('the report as a document', () => {
     expect(parseContractReport(JSON.parse(JSON.stringify(report)))).toEqual(report);
   });
 
+  it('takes the traffic section a report beside an observed file carries (P113)', () => {
+    const traffic = {
+      window: { from: '2026-01-01T00:00:00.000Z', to: '2026-01-01T01:00:00.000Z' },
+      entries: [{ entry: 'entry:api:http:POST:/x', samples: 2, lastSeen: null, unchecked: [], differs: 0 }],
+    };
+    expect(parseContractReport(JSON.parse(JSON.stringify({ ...report, traffic })))).toEqual({ ...report, traffic });
+    expect(contractReportSchema.safeParse({ ...report, traffic: { entries: [] } }).success).toBe(false);
+  });
+
   it('refuses a key nobody declared, so a typo is an error and not a default', () => {
     const strayed = { ...report, surprise: true };
     expect(contractReportSchema.safeParse(strayed).success).toBe(false);

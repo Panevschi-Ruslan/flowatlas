@@ -1,4 +1,4 @@
-import { isInnerHost } from '@flowatlas/core';
+import { isInnerHost, type Shape } from '@flowatlas/core';
 import { HAR_READS, only } from '../allow-list.js';
 import { pathOf, type ObservedSpan } from '../span.js';
 import {
@@ -6,12 +6,16 @@ import {
   isObject,
   isoOfText,
   msOf,
+  shapeOfFormNames,
+  shapeOfText,
   Skips,
   text,
   TraceFileError,
   withFields,
   type FrontEndContext,
+  type Json,
   type ReadContext,
+  type SpanBodies,
   type TraceReader,
 } from './shared.js';
 
@@ -24,6 +28,11 @@ import {
  * here (D2). The URL's query and fragment are cut before a span exists, its
  * origin is compared with the front end's base URLs and dropped, and no error
  * quotes the file.
+ *
+ * With `--shapes` (P113), and only then, an API call's JSON request body and
+ * JSON response content are each parsed, walked for their shape (key names
+ * and JSON types, value-like keys folded) and dropped in `requestShape` /
+ * `responseShape`; a form's fields give their names only.
  *
  * Each API call kept is one client span of the front end. A HAR has no trace
  * context (D3), so its calls are never joined to a back end's spans from
@@ -44,6 +53,10 @@ export interface HarEntry {
   error?: true;
   durationMs?: number;
   at?: string;
+  /** With `--shapes` (P113): the shape of the JSON body the call sent, or of its form fields' names. */
+  request?: Shape;
+  /** With `--shapes`: the shape of the JSON content it was answered with. */
+  response?: Shape;
 }
 
 /** The resource types a browser writes for a call a script made; every other one is a file. */
@@ -73,6 +86,45 @@ const JSON_TYPE = /^(?:application|text)\/(?:[\w.+-]+\+)?json$/;
 
 const HTTP_SCHEMES: ReadonlySet<string> = new Set(['http:', 'https:']);
 
+/** A MIME type without its parameters, lower case. */
+const mimeOf = (value: unknown): string | undefined => text(value)?.split(';')[0]?.trim().toLowerCase() || undefined;
+
+/**
+ * The shape of what a call sent (P113): its JSON `postData.text`, parsed and
+ * dropped here, or the names of its form fields; never a field's value. A
+ * body of another type is counted, not read.
+ */
+const requestShape = (request: Json, skips: Skips, dropped: Dropped): Shape | undefined => {
+  const { postData } = only(request, HAR_READS.shapesRequest);
+  if (!isObject(postData)) return undefined;
+  dropped.outside(postData, HAR_READS.postData);
+  const { mimeType, text: body, params } = only(postData, HAR_READS.postData);
+  const mime = mimeOf(mimeType);
+  if ((mime !== undefined && JSON_TYPE.test(mime)) || (mime === undefined && typeof body === 'string' && /^\s*[{[]/.test(body))) {
+    return shapeOfText(body, undefined, skips);
+  }
+  if (Array.isArray(params) && params.length > 0) {
+    const names = params.flatMap((param) => {
+      dropped.outside(param, HAR_READS.param);
+      const { name } = only(param, HAR_READS.param);
+      return typeof name === 'string' && name !== '' ? [name] : [];
+    });
+    return names.length === 0 ? undefined : shapeOfFormNames(names);
+  }
+  if (typeof body === 'string' && body !== '') skips.add('body', 'not JSON');
+  return undefined;
+};
+
+/** The shape of the JSON content a call was answered with (P113), decoded from base64 when it says so. */
+const responseShape = (content: unknown, mime: string | undefined, skips: Skips): Shape | undefined => {
+  const { text: body, encoding } = only(content, HAR_READS.shapesContent);
+  if (mime === undefined || !JSON_TYPE.test(mime)) {
+    if (typeof body === 'string' && body !== '' && mime !== undefined) skips.add('body', 'not JSON');
+    return undefined;
+  }
+  return shapeOfText(body, encoding, skips);
+};
+
 /** The document's entries, or nothing when it is not a HAR. */
 const entriesOf = (document: unknown): unknown[] | undefined => {
   if (!isObject(document) || !isObject(document['log'])) return undefined;
@@ -101,9 +153,11 @@ const isApiCall = (resourceType: string | undefined, mime: string | undefined, m
  */
 const walkEntries = (
   document: unknown,
-  { skips, dropped }: { skips: Skips; dropped: Dropped },
+  { skips, dropped, shapes = false }: { skips: Skips; dropped: Dropped; shapes?: boolean },
   visit: (entry: HarEntry, origin: { origin: string; hostname: string }) => void,
 ): void => {
+  const requestFields = shapes ? [...HAR_READS.request, ...HAR_READS.shapesRequest] : HAR_READS.request;
+  const contentFields = shapes ? HAR_READS.shapesContent : HAR_READS.content;
   dropped.outside(document, HAR_READS.document);
   dropped.outside((document as Record<string, unknown>)['log'], HAR_READS.log);
   (entriesOf(document) ?? []).forEach((raw, index) => {
@@ -111,7 +165,7 @@ const walkEntries = (
     dropped.outside(raw, HAR_READS.entry);
     const { startedDateTime, time, request, response, _resourceType } = only(raw, HAR_READS.entry);
     if (!isObject(request)) throw new TraceFileError(`HAR entry ${index} has no request`);
-    dropped.outside(request, HAR_READS.request);
+    dropped.outside(request, requestFields);
     const { method, url } = only(request, HAR_READS.request);
     if (typeof method !== 'string' || !/^[A-Za-z]+$/.test(method)) throw new TraceFileError(`HAR entry ${index} has no request.method`);
     let parsed: URL;
@@ -128,8 +182,8 @@ const walkEntries = (
     if (path === undefined) throw new TraceFileError(`HAR entry ${index} has no absolute request.url`);
     dropped.outside(response, HAR_READS.response);
     const { status, content } = only(response, HAR_READS.response);
-    dropped.outside(content, HAR_READS.content);
-    const mime = text(only(content, HAR_READS.content)['mimeType'])?.split(';')[0]?.trim().toLowerCase() || undefined;
+    dropped.outside(content, contentFields);
+    const mime = mimeOf(only(content, HAR_READS.content)['mimeType']);
     const verb = method.toUpperCase();
     const kept = isApiCall(text(_resourceType)?.toLowerCase(), mime, verb, path);
     if (kept !== true) {
@@ -145,14 +199,23 @@ const walkEntries = (
     if (durationMs !== undefined) entry.durationMs = durationMs;
     const at = isoOfText(startedDateTime);
     if (at !== undefined) entry.at = at;
+    if (shapes) {
+      const sent = requestShape(request, skips, dropped);
+      if (sent !== undefined) entry.request = sent;
+      const answer = responseShape(content, mime, skips);
+      if (answer !== undefined) entry.response = answer;
+    }
     visit(entry, { origin: parsed.origin, hostname: parsed.hostname.toLowerCase() });
   });
 };
 
-/** The API calls a HAR records, method, path, status and time only (for P113). */
-export const harEntries = (document: unknown): HarEntry[] => {
+/**
+ * The API calls a HAR records, method, path, status and time only; with
+ * `shapes`, the shapes of their JSON bodies too (P113).
+ */
+export const harEntries = (document: unknown, options: { shapes?: boolean } = {}): HarEntry[] => {
   const entries: HarEntry[] = [];
-  walkEntries(document, { skips: new Skips(), dropped: new Dropped() }, (entry) => entries.push(entry));
+  walkEntries(document, { skips: new Skips(), dropped: new Dropped(), shapes: options.shapes === true }, (entry) => entries.push(entry));
   return entries;
 };
 
@@ -190,10 +253,20 @@ const read = (document: unknown, fallbackService?: string, readContext?: ReadCon
   const frontEnd = frontEndOf(fallbackService, context);
   const source = readContext?.source?.slice(0, 12) ?? 'file';
   const spans: ObservedSpan[] = [];
+  const bodies: SpanBodies[] = [];
   let ours = 0;
-  walkEntries(document, { skips, dropped }, (entry, origin) => {
+  walkEntries(document, { skips, dropped, shapes: readContext?.shapes === true }, (entry, origin) => {
     const id = `har:${source}:${entry.index}`;
     const place = placeOf(origin, frontEnd, context);
+    // A third party's bodies are its own business: only a call into the map is read for shapes.
+    if (place.thirdParty === undefined && (entry.request !== undefined || entry.response !== undefined)) {
+      bodies.push({
+        traceId: id,
+        spanId: id,
+        ...(entry.request === undefined ? {} : { request: entry.request }),
+        ...(entry.response === undefined ? {} : { response: entry.response }),
+      });
+    }
     if (place.thirdParty === undefined) ours += 1;
     spans.push(
       withFields(
@@ -221,11 +294,18 @@ const read = (document: unknown, fallbackService?: string, readContext?: ReadCon
             'name the API’s host under services[].hosts',
         ]
       : [];
-  return { spans, skipped: skips.list(), droppedAttributes: dropped.count, ...(notes.length === 0 ? {} : { notes }) };
+  return {
+    spans,
+    skipped: skips.list(),
+    droppedAttributes: dropped.count,
+    ...(notes.length === 0 ? {} : { notes }),
+    ...(readContext?.shapes === true ? { bodies } : {}),
+  };
 };
 
 export const harReader: TraceReader = {
   name: 'har',
   sniff: (document) => entriesOf(document) !== undefined,
   read,
+  carriesBodies: true,
 };

@@ -59,7 +59,8 @@
       "kept": true,
       "perEntry": 3,
       "spansPerSample": 200
-    }
+    },
+    "bodies": "not read"
   },
   "window": {
     "from": "2025-10-16T08:00:00.000Z",

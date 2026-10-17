@@ -1,10 +1,11 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig, type GraphEdge, type GraphNode, type ProjectGraph } from '@flowatlas/core';
 import { writeGraphDb, type LinkReport } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
+import { BODY_VALUES } from '../__fixtures__/planted.js';
 import { settingsOfProject } from '../../build/settings/index.js';
 import { readTraceFiles, runObserve } from '../../commands/observe.js';
 import { frontEndContextOf } from '../origins.js';
@@ -66,7 +67,18 @@ const HAR_PLANTED = [
   'ord-5521',
   'v1/collect',
   'user-a-88',
+  // Bodies (P113): read for their shape only with --shapes, and not at all without.
+  'cus-har-2',
+  'har-gift-g6',
+  'har-state-s8',
+  'giftNote',
 ];
+
+/** With `--shapes` key names are kept; every value, and every key that is a value, is still never kept (P113). */
+const KEY_NAMES = new Set(['password', 'giftNote']);
+const expectNoValue = (text: string): void => {
+  for (const secret of [...HAR_PLANTED.filter((one) => !KEY_NAMES.has(one)), ...BODY_VALUES]) expect(text, secret).not.toContain(secret);
+};
 
 const expectNoSecret = (text: string): void => {
   for (const secret of HAR_PLANTED) expect(text, secret).not.toContain(secret);
@@ -253,6 +265,12 @@ describe('flowatlas observe over a HAR (P112)', () => {
     expect(printed).toContain('not read: 1 entry of type document, 1 entry of type script, 1 entry of type image, 1 entry of a static file');
   });
 
+  it('reads no body and says so: the file holds no shape, its privacy block says bodies were not read', () => {
+    expect(run.observed.privacy.bodies).toBe('not read');
+    expect(run.observed).not.toHaveProperty('shapes');
+    expect(run.traffic).toBeUndefined();
+  });
+
   it('refuses a malformed HAR by file, entry and field, and never quotes it', () => {
     const bad = join(scratch, 'bad.har');
     writeFileSync(bad, JSON.stringify(harOf({ request: { method: 'GET', url: 'Bearer har-bearer-k7 tok-q-31' } })));
@@ -264,5 +282,102 @@ describe('flowatlas observe over a HAR (P112)', () => {
     }
     expect(message).toBe(`${bad}: HAR entry 0 has no absolute request.url`);
     expectNoSecret(message);
+  });
+});
+
+/** A HAR call whose body and content throw when read: nothing may touch them without --shapes (P113). */
+const trapped = (): unknown => {
+  const request: Record<string, unknown> = { method: 'POST', url: 'https://gateway.example.test/orders/7/invoice' };
+  Object.defineProperty(request, 'postData', { enumerable: true, get: () => { throw new Error('postData was read'); } });
+  const content: Record<string, unknown> = { mimeType: 'application/json' };
+  Object.defineProperty(content, 'text', { enumerable: true, get: () => { throw new Error('content.text was read'); } });
+  return harOf({ startedDateTime: '2025-10-16T08:00:00.000Z', time: 3, _resourceType: 'fetch', request, response: { status: 201, content } });
+};
+
+describe('the HAR reader with --shapes (P113)', () => {
+  it('never touches a body without --shapes, and reads it only with', () => {
+    expect(() => harReader.read(trapped(), 'web')).not.toThrow();
+    expect(() => harEntries(trapped())).not.toThrow();
+    expect(() => harReader.read(trapped(), 'web', { shapes: true })).toThrow('postData was read');
+  });
+
+  it('keeps each API call’s body as key names and JSON types, base64 decoded, value-like keys folded', () => {
+    const entries = harEntries(har, { shapes: true });
+    const byIndex = new Map(entries.map((entry) => [entry.index, entry]));
+    expect(Object.keys(byIndex.get(12)!.request!.f!)).toEqual(['customerId', 'giftNote', 'id', 'total']);
+    expect(byIndex.get(3)!.response!.f!['history']!.s).toEqual({
+      t: 'object',
+      n: 1,
+      idx: {
+        t: 'object',
+        n: 1,
+        f: { by: { s: { t: 'string', n: 1 }, n: 1, opt: true }, state: { s: { t: 'string', n: 1 }, n: 1 } },
+      },
+    });
+    // Saved as base64 by the browser, read as the JSON it encodes.
+    expect(Object.keys(byIndex.get(9)!.response!.f!)).toEqual(['customerId', 'id', 'status', 'total']);
+    expectNoValue(JSON.stringify(entries));
+  });
+
+  it('reads a form’s field names only and counts a body that is not JSON', () => {
+    const form = harOf({
+      _resourceType: 'fetch',
+      request: {
+        method: 'POST',
+        url: 'http://localhost:3000/orders',
+        postData: { mimeType: 'application/x-www-form-urlencoded', params: [{ name: 'customerId', value: 'cus-har-2' }, { name: 'ord-5521', value: 'x' }] },
+      },
+      response: { status: 200, content: { mimeType: 'application/json', text: 'not json at all' } },
+    });
+    const read = harReader.read(form, 'web', { shapes: true });
+    expect(read.bodies).toEqual([
+      {
+        traceId: 'har:file:0',
+        spanId: 'har:file:0',
+        request: { t: 'object', n: 1, f: { customerId: { s: { t: 'string', n: 1 }, n: 1 } }, idx: { t: 'string', n: 1 } },
+      },
+    ]);
+    expect(read.skipped).toEqual([{ noun: 'body', why: 'not JSON', count: 1 }]);
+    expectNoValue(JSON.stringify(read));
+  });
+});
+
+describe('flowatlas observe --shapes over a HAR (P113)', () => {
+  const dir = join(scratch, 'shapes');
+  mkdirSync(dir);
+  const dbPath = join(dir, 'graph.db');
+  writeGraphDb(graph, JSON.parse(readFileSync(join(fixture, 'expected.link-report.json'), 'utf8')) as LinkReport, dbPath);
+  const printed: string[] = [];
+  const now = new Date('2025-10-16T09:00:00.000Z');
+  const run = runObserve([harFile], { db: dbPath, config: configPath, now, shapes: true, print: (line) => printed.push(line) });
+
+  it('keeps the shapes per route and says bodies were read for shape only', () => {
+    expect(run.observed.privacy.bodies).toBe('read for shape only');
+    expect(Object.keys(run.observed.shapes ?? {})).toEqual([
+      'entry:gateway:http:GET:/orders/:param',
+      'entry:gateway:http:POST:/orders/:param/invoice',
+      'entry:gateway:http:POST:/orders/:param/refund',
+      'entry:gateway:http:POST:/orders/:param/resume',
+      'entry:gateway:http:POST:/orders/:param/ship',
+      'entry:orders:http:GET:/orders/:param',
+    ]);
+    // Cut and merged by the hour like the counts.
+    expect(run.observed.buckets.some((bucket) => bucket.shapes !== undefined)).toBe(true);
+    expect(run.bodies).toEqual({ placed: 7, unplaced: 1 });
+  });
+
+  it('shows the field the front end sends that the DTO lacks, and the required one it never sends', () => {
+    const invoice = run.traffic?.find((comparison) => comparison.entry === 'entry:gateway:http:POST:/orders/:param/invoice');
+    expect(invoice?.request?.diffs.map((diff) => [diff.kind, diff.path, diff.seenIn, diff.of])).toEqual([
+      ['extra_field', 'giftNote', 1, 1],
+      ['missing_required', 'status', 0, 1],
+    ]);
+    expect(printed).toContain('  gateway POST /orders/:param/invoice  2 fields: request giftNote, request status');
+  });
+
+  it('lets no value, and no key that is a value, reach the observed file or the summary', () => {
+    expectNoValue(readFileSync(run.path, 'utf8'));
+    expectNoValue(printed.join('\n'));
+    expectNoValue(JSON.stringify(run.traffic));
   });
 });

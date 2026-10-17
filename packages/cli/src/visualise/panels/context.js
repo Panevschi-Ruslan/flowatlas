@@ -143,9 +143,18 @@ export function createPageContext(data) {
         .join('<span aria-hidden="true">·</span>') + '</span>';
   };
   const scheduleSay = (schedule) => schedule.expression + (schedule.zone ? ' · ' + schedule.zone : '');
+  /* Bodies traffic carried that differ from what the code declares (P113),
+     the paths in the title: where a contract chip would sit. */
+  const driftChipHtml = (i) => {
+    const drift = seen.drift(i);
+    if (!drift) return '';
+    const title = 'Traffic carried these differently from what the code declares: ' + drift.paths.join(', ') +
+      '. Seen in one window of traffic, so never a break on its own: flowatlas contracts says how often.';
+    return `<span class="fail-chips"><span class="fail-chip is-drift" title="${esc(title)}">traffic differs: ${drift.fields} ${drift.fields === 1 ? 'field' : 'fields'}</span></span>`;
+  };
   const entryHeadHtml = (i) => {
     const schedule = scheduleOf(model, i);
-    return (schedule ? `<span class="hint">fires <span class="sched">${esc(scheduleSay(schedule))}</span></span>` : '') + failChipsHtml(i);
+    return (schedule ? `<span class="hint">fires <span class="sched">${esc(scheduleSay(schedule))}</span></span>` : '') + failChipsHtml(i) + driftChipHtml(i);
   };
   const accepted = data.accepted || { rows: [], ids: {}, notes: {} };
   const acceptedRows = new Set(accepted.rows);

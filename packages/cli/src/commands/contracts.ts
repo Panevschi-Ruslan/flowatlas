@@ -12,16 +12,19 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
 import {
   checkContracts,
   SEVERITY_RANK,
+  trafficReport,
   type CheckOptions,
   type ContractFinding,
   type ContractReport,
   type Direction,
   type Severity,
+  type TrafficReport,
 } from '@flowatlas/contracts';
 import { loadConfig } from '@flowatlas/core';
 import type { Command } from 'commander';
 import { openProjectDb, type ReadOptions } from '../analysis/open.js';
 import { cannotRun, CliError, EXIT } from '../exit.js';
+import { readObservedBeside } from '../observe/store.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import {
   renderContractsJson,
@@ -119,9 +122,45 @@ const matches = (finding: { sender: { service: string }; receiver: { service: st
  * The file on disk is always the whole thing: narrowing is a question a person
  * asked once, and a later reader of the file has no way to know it was asked.
  */
+/**
+ * The traffic section as the same flags narrow it (P113): a route of the
+ * service, or compared against a type of it; the direction asked; the route
+ * an edge reaches.
+ */
+const narrowTraffic = (
+  traffic: TrafficReport,
+  filters: { edge?: string; service?: string; direction?: Direction },
+  serviceOf: (id: string) => string | undefined,
+): TrafficReport => {
+  const to = filters.edge?.split('|')[2];
+  const entries = traffic.entries.flatMap((comparison) => {
+    if (to !== undefined && comparison.entry !== to) return [];
+    if (filters.direction === 'payload') return [];
+    const sides = [comparison.request, ...Object.values(comparison.responses ?? {})];
+    if (
+      filters.service !== undefined &&
+      serviceOf(comparison.entry) !== filters.service &&
+      !sides.some((side) => side?.against.service === filters.service)
+    ) {
+      return [];
+    }
+    if (filters.direction === 'request') {
+      const { responses: _responses, ...rest } = comparison;
+      return [{ ...rest, unchecked: rest.unchecked.filter((row) => row.direction === 'request') }];
+    }
+    if (filters.direction === 'response') {
+      const { request: _request, ...rest } = comparison;
+      return [{ ...rest, unchecked: rest.unchecked.filter((row) => row.direction === 'response') }];
+    }
+    return [comparison];
+  });
+  return { ...traffic, entries };
+};
+
 const narrow = (
   report: ContractReport,
   filters: { edge?: string; service?: string; direction?: Direction },
+  serviceOf: (id: string) => string | undefined = () => undefined,
 ): ContractReport => {
   if (filters.edge === undefined && filters.service === undefined && filters.direction === undefined) {
     return report;
@@ -148,6 +187,7 @@ const narrow = (
     findings,
     ignored,
     unchecked,
+    ...(report.traffic === undefined ? {} : { traffic: narrowTraffic(report.traffic, filters, serviceOf) }),
     summary: {
       edges: edges.length,
       shared: count('shared'),
@@ -183,7 +223,7 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
   const maxNodes = whole(options.maxNodes, 150, '--max-nodes');
 
   const settings = fromConfig(options);
-  const { db, close } = openProjectDb(options);
+  const { db, close, path } = openProjectDb(options);
   try {
     const check: CheckOptions = {
       depth: whole(options.depth, settings.depth ?? 3, '--depth'),
@@ -199,7 +239,20 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
         'Rebuild without --no-types.',
       ]);
     }
-    const report = checkContracts(db, check);
+    const checked = checkContracts(db, check);
+    // What traffic carried, when `observe --shapes` left shapes beside the graph (P113): a section of its own,
+    // never counted in the summary and never an error, since one environment's week is not a contract.
+    const observed = readObservedBeside(path).observed;
+    const report: ContractReport =
+      observed?.shapes === undefined
+        ? checked
+        : {
+            ...checked,
+            traffic: trafficReport(observed.shapes, observed.window, db, {
+              ...(check.depth === undefined ? {} : { depth: check.depth }),
+              ...(check.disableRules === undefined ? {} : { disableRules: check.disableRules }),
+            }),
+          };
 
     const out = options.out ?? settings.outputDir;
     let file: string | undefined;
@@ -210,11 +263,15 @@ export const runContracts = (options: ContractsOptions, io: QueryIo = processIo)
       writeFileSync(file, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
     }
 
-    const view = narrow(report, {
-      ...(options.edge === undefined ? {} : { edge: options.edge }),
-      ...(options.service === undefined ? {} : { service: options.service }),
-      ...(direction === undefined ? {} : { direction }),
-    });
+    const view = narrow(
+      report,
+      {
+        ...(options.edge === undefined ? {} : { edge: options.edge }),
+        ...(options.service === undefined ? {} : { service: options.service }),
+        ...(direction === undefined ? {} : { direction }),
+      },
+      (id) => db.node(id)?.repo,
+    );
     const drawn = { severity, maxNodes, ...(file === undefined ? {} : { file }) };
     const text =
       format === 'json'

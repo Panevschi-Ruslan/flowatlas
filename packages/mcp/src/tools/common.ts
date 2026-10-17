@@ -1,4 +1,4 @@
-import type { DetailLevel } from '@flowatlas/core';
+import type { DetailLevel, EntryShapes, GraphEdge } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import { z } from 'zod';
 import { CLAMP_NOTE, clampDetail } from '../query/detail.js';
@@ -47,7 +47,47 @@ export interface ToolContext {
   contractChecker?: ContractChecker;
   /** Filled by the command line, which runs the readers a pattern is tested with (P121). */
   patternTester?: PatternTester;
+  /** Filled by the contracts package: a route's traffic shapes against its code (P113). */
+  trafficChecker?: TrafficChecker;
 }
+
+/** One difference between what traffic carried and what the code declares (P113), as the contracts package says it. */
+export interface TrafficDiffSaid {
+  kind: string;
+  path: string;
+  expected: string | null;
+  actual: string | null;
+  seenIn: number;
+  of: number;
+  severity: string;
+  message: string;
+}
+
+/** One direction of a route's traffic, compared. */
+export interface TrafficSideSaid {
+  against: { typeId: string; by: string; symbol: string; service: string };
+  samples: number;
+  diffs: TrafficDiffSaid[];
+}
+
+/** A route's traffic against its code, as `compareTraffic` answers it; this package reads only these fields. */
+export interface TrafficCompared {
+  entry: string;
+  samples: number;
+  lastSeen: string | null;
+  request?: TrafficSideSaid;
+  responses?: Record<string, TrafficSideSaid>;
+  unchecked: Array<{ direction: string; status?: string; reason: string; samples: number }>;
+  differs: number;
+}
+
+/**
+ * Compares a route's traffic shapes with its code (P113). The server does not
+ * depend on the contracts package, so the command hands this in, as it does
+ * the contract checker; `caller` is the call being checked, whose expected
+ * answer stands in when the route declares none.
+ */
+export type TrafficChecker = (input: { entry: string; shapes: EntryShapes; caller?: GraphEdge }) => TrafficCompared | undefined;
 
 /** What `test_pattern` is asked: rules as YAML, code to run them over, a service to type it in. */
 export interface PatternTesterInput {

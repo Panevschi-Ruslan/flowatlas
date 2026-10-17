@@ -8,6 +8,20 @@ only one of them moved.
 
 ### Added
 
+- **Payload shapes from traffic (P113).** `flowatlas observe --shapes` reads
+  the JSON bodies a HAR or a @nestjs/observe batch carries for their shape
+  only - key names and JSON types, never a value - folding keys that are
+  values (ids, emails, tokens, UUIDs) into an index signature, and keeps them
+  per route and status under `shapes` in `observed.json` (format 3, optional;
+  `privacy.bodies` says `not read` or `read for shape only`). Each route's
+  shapes are compared with the types its code declares through the contracts
+  package and its wire rules: the summary names the routes whose traffic
+  differs, `flowatlas contracts` gains a `traffic` section (`seenIn` / `of`
+  per field, never an error), `check_contract` carries `traffic` and takes an
+  entry id, `get_flow` hints it where traffic differs, the page's Steps header
+  shows `traffic differs: n fields`, and `flowatlas dead` lists declared
+  optional fields no traffic carried. Without `--shapes` no body is read.
+
 - **`flowatlas doctor --reason <code>` (P141).** Lists the places of one
   reason, or several (repeatable, or a comma list), under every level the
   reason is at, so a reason with hundreds of places can be read on its own:

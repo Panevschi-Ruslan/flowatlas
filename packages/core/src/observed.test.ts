@@ -17,6 +17,7 @@ import {
   type ObservedBucket,
   type ObservedSample,
 } from './observed.js';
+import { shapeOf } from './observed-shape.js';
 import { addSpan, emptyAgg } from './observed-stats.js';
 
 const scratch = mkdtempSync(join(tmpdir(), 'flowatlas-observed-'));
@@ -164,5 +165,41 @@ describe('the window', () => {
     const merged = mergeObserved(undefined, runOf('2026-01-01T00:00:00.000Z', 10, 't1'), { now, samples: false });
     expect(merged.samples).toEqual({});
     expect(merged.privacy.samples.kept).toBe(false);
+  });
+});
+
+describe('route shapes in the observed file (P113)', () => {
+  const hour = (at: string, n: number): ObservedBucket => ({
+    hour: at,
+    spans: 1,
+    joins: {},
+    entries: {},
+    symbols: {},
+    channels: {},
+    unmatched: [],
+    ambiguous: [],
+    shapes: { 'entry:shop:http:POST:/cart': { request: shapeOf(n === 1 ? { a: 1 } : { a: 1, b: 'x' }), samples: 1, lastSeen: at } },
+  });
+  const now = new Date('2026-01-02T00:00:00.000Z');
+  const parts = { samples: {}, sources: [], droppedAttributes: 0, samplesKept: true };
+
+  it('rolls the hours up, says bodies were read for shape only, and reads back', () => {
+    const observed = observedFromParts({ ...parts, buckets: [hour('2026-01-01T10:00:00.000Z', 1), hour('2026-01-01T22:00:00.000Z', 2)] });
+    expect(observed.privacy.bodies).toBe('read for shape only');
+    expect(observed.shapes?.['entry:shop:http:POST:/cart']).toMatchObject({ samples: 2, lastSeen: '2026-01-01T22:00:00.000Z' });
+    expect(observed.shapes?.['entry:shop:http:POST:/cart']?.request?.f?.['b']).toEqual({ s: { t: 'string', n: 1 }, n: 1, opt: true });
+    expect(readObserved(file(JSON.stringify(observed)))).toEqual({ observed });
+  });
+
+  it('cuts shapes with the window like the counts, and a file with none says bodies were not read', () => {
+    const run = observedFromParts({ ...parts, buckets: [hour('2026-01-01T10:00:00.000Z', 1), hour('2026-01-01T22:00:00.000Z', 2)] });
+    const cut = mergeObserved(undefined, run, { since: '6h', now });
+    expect(cut.shapes?.['entry:shop:http:POST:/cart']?.samples).toBe(1);
+    const none = observedFromParts({ ...parts, buckets: [] });
+    expect(none.privacy.bodies).toBe('not read');
+    expect(none).not.toHaveProperty('shapes');
+    // A later run without --shapes over a file that read bodies still says it did; starting again does not.
+    expect(mergeObserved(run, none, { now }).privacy.bodies).toBe('read for shape only');
+    expect(mergeObserved(run, none, { now, reset: true }).privacy.bodies).toBe('not read');
   });
 });

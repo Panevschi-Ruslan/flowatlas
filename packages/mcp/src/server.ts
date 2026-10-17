@@ -6,7 +6,7 @@ import { registerResources, type ReasonHint } from './resources.js';
 import { registerCantFollow } from './tools/cant-follow.js';
 import { registerChanges } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
-import type { ContractChecker, PatternTester, ToolContext } from './tools/common.js';
+import type { ContractChecker, PatternTester, ToolContext, TrafficChecker } from './tools/common.js';
 import { registerContract } from './tools/contract.js';
 import { registerDead } from './tools/dead.js';
 import { registerEntries } from './tools/entries.js';
@@ -68,6 +68,8 @@ export interface ServerOptions extends DbHandleOptions {
   reasonCatalog?: readonly ReasonHint[];
   /** The pattern tester, when the readers are there to run it (P121). */
   patternTester?: PatternTester;
+  /** A route's traffic shapes against its code, when the contracts package is installed (P113). */
+  trafficChecker?: TrafficChecker;
   version?: string;
 }
 
@@ -84,6 +86,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
     handle,
     ...(options.contractChecker === undefined ? {} : { contractChecker: options.contractChecker }),
     ...(options.patternTester === undefined ? {} : { patternTester: options.patternTester }),
+    ...(options.trafficChecker === undefined ? {} : { trafficChecker: options.trafficChecker }),
   };
 
   const server = new McpServer(

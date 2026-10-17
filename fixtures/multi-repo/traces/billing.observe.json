@@ -13,7 +13,7 @@
       "u": "user-7781",
       "rq": {
         "headers": { "authorization": "Bearer not-a-real-token" },
-        "body": { "orderId": "ord-1043", "amount": 42 }
+        "body": { "orderId": "ord-1043", "amount": 42, "memo": "memo-val-61" }
       },
       "tg": { "tenant": "tenant-tag-9" },
       "t": [

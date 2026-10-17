@@ -129,7 +129,7 @@ interface Verdict {
  * `ValidationPipe` configured with `whitelist: true`, wherever it was attached.
  * A pipe whose options could not be read says nothing, and nothing is assumed.
  */
-const stripsUndecorated = (lookup: GraphLookup, entryId: string): boolean =>
+export const stripsUndecorated = (lookup: GraphLookup, entryId: string): boolean =>
   lookup.edgesFrom(entryId, ['guarded_by']).some((edge) => {
     if (edge.meta?.['layer'] !== 'pipe') return false;
     const pipe = lookup.node(edge.to);

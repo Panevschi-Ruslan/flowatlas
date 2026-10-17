@@ -59,7 +59,8 @@
       "kept": true,
       "perEntry": 3,
       "spansPerSample": 200
-    }
+    },
+    "bodies": "not read"
   },
   "window": {
     "from": "2025-10-16T07:00:00.000Z",
@@ -73,7 +74,7 @@
       "readAt": "2025-10-16T09:00:00.000Z"
     },
     {
-      "sha256": "7aa93a0f890bd8268a24a65a3aabb1b392794c0dfb2e4b96a7b76afc855c4f0e",
+      "sha256": "0d0b1e56866c203783f104d7e5d70a9796873df7e45c6401c4a6ea6c51887f3b",
       "format": "nestjs-observe",
       "spans": 10,
       "readAt": "2025-10-16T09:00:00.000Z"

@@ -47,6 +47,8 @@ export type {
   PatternTesterInput,
   PatternTesterRule,
   ToolContext,
+  TrafficChecker,
+  TrafficCompared,
 } from './tools/common.js';
 export type { ContractStatus } from './tools/contract.js';
 // Read-side helpers the terminal needs for the same two levels the tools serve:

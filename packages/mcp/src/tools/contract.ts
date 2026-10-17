@@ -1,9 +1,18 @@
-import type { GraphEdge } from '@flowatlas/core';
+import { isEntryId, type GraphEdge } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { MAX_NEXT, withNext } from '../query/next.js';
-import { callOf, commonInput, READ_ONLY, withDb, type ContractFinding, type ToolContext } from './common.js';
+import { loadObserved } from '../query/observed.js';
+import {
+  callOf,
+  commonInput,
+  READ_ONLY,
+  withDb,
+  type ContractFinding,
+  type ToolContext,
+  type TrafficSideSaid,
+} from './common.js';
 
 /**
  * A finding as it goes out (P93): what disagrees and how. The checker's own
@@ -20,6 +29,78 @@ export const wireFinding = (finding: ContractFinding): ContractFinding => ({
   message: finding.message,
   ...(finding.ignored === true ? { ignored: true } : {}),
 });
+
+/** One difference traffic showed (P113), as it goes out: the field, how often it was carried, and the sentence. */
+const wireTrafficDiff = (diff: TrafficSideSaid['diffs'][number]) => ({
+  severity: diff.severity,
+  kind: diff.kind,
+  field: diff.path,
+  expected: diff.expected,
+  actual: diff.actual,
+  seenIn: diff.seenIn,
+  of: diff.of,
+  message: diff.message,
+});
+
+/** What traffic carried into an entry, against what its code declares (P113). */
+export interface TrafficAnswer {
+  /** Exchanges read for shapes. */
+  samples: number;
+  /** The hours the shapes were seen over. */
+  window: { from: string | null; to: string | null };
+  /** The declared types compared against, by direction. */
+  against?: { request?: string; response?: string };
+  request?: ReturnType<typeof wireTrafficDiff>[];
+  responses?: Record<string, ReturnType<typeof wireTrafficDiff>[]>;
+  /** What was not compared, and why: `request: no-declared-type`, `response 500: status-not-declared`. */
+  unchecked?: string[];
+}
+
+/**
+ * What traffic carried into `entry` against its code (P113): nothing when the
+ * observed file holds no shapes of it or no checker was handed in. `caller`
+ * is the call being checked, whose expected answer stands in for a route
+ * that declares none.
+ */
+export const trafficFor = (ctx: ToolContext, entry: string, caller?: GraphEdge): TrafficAnswer | undefined => {
+  const observed = loadObserved(ctx.handle.path);
+  const shapes = observed?.shapes?.[entry];
+  if (observed === undefined || shapes === undefined || ctx.trafficChecker === undefined) return undefined;
+  const compared = ctx.trafficChecker({ entry, shapes, ...(caller === undefined ? {} : { caller }) });
+  if (compared === undefined) return undefined;
+  const responses = Object.entries(compared.responses ?? {});
+  const response = responses[0]?.[1].against.typeId;
+  return {
+    samples: compared.samples,
+    window: { from: observed.window.from, to: observed.window.to },
+    ...(compared.request === undefined && response === undefined
+      ? {}
+      : {
+          against: {
+            ...(compared.request === undefined ? {} : { request: compared.request.against.typeId }),
+            ...(response === undefined ? {} : { response }),
+          },
+        }),
+    ...(compared.request === undefined ? {} : { request: compared.request.diffs.map(wireTrafficDiff) }),
+    ...(responses.length === 0
+      ? {}
+      : { responses: Object.fromEntries(responses.map(([status, side]) => [status, side.diffs.map(wireTrafficDiff)])) }),
+    ...(compared.unchecked.length === 0
+      ? {}
+      : {
+          unchecked: compared.unchecked.map(
+            (row) => `${row.direction}${row.status === undefined ? '' : ` ${row.status}`}: ${row.reason}`,
+          ),
+        }),
+  };
+};
+
+/** Whether traffic into an entry differs from its code (P113): what `get_flow` hints `check_contract` on. */
+export const trafficDiffers = (ctx: ToolContext, entry: string): boolean => {
+  const observed = loadObserved(ctx.handle.path);
+  const shapes = observed?.shapes?.[entry];
+  return shapes !== undefined && (ctx.trafficChecker?.({ entry, shapes })?.differs ?? 0) > 0;
+};
 
 /**
  * How well the two ends of an edge agree about what crosses it.
@@ -188,7 +269,7 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
       title: 'Check a contract',
       description: 'Whether what one side of a crossing sends is what the other side expects.',
       inputSchema: {
-        edge: z.string().optional().describe('"<from> -http_calls-> <to>"'),
+        edge: z.string().optional().describe('"<from> -http_calls-> <to>", or an entry id'),
         from: z.string().optional(),
         to: z.string().optional(),
         // `maxNodes` only. This answers about one crossing, so there is no tree
@@ -201,6 +282,25 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
+        // An entry on its own (P113): what traffic carried into it against its code, and the calls into it.
+        if (input.edge !== undefined && parseEdgeRef(input.edge) === undefined && isEntryId(input.edge.trim())) {
+          const entry = input.edge.trim();
+          if (db.node(entry) === undefined) return { error: `no entry ${entry}` };
+          const into = db
+            .edgesTo(entry, [...REQUEST_EDGES])
+            .sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
+          const traffic = trafficFor(ctx, entry);
+          return withNext(
+            {
+              entry,
+              ...(traffic === undefined
+                ? { note: 'no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches' }
+                : { traffic }),
+              callers: into.length,
+            },
+            into.slice(0, MAX_NEXT).map((edge) => callOf('check_contract', { from: edge.from, to: edge.to })),
+          );
+        }
         const parsed =
           input.edge !== undefined
             ? parseEdgeRef(input.edge)
@@ -259,6 +359,7 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           }) ?? [];
 
         const shown = findings.slice(0, input.maxNodes).map(wireFinding);
+        const traffic = isEntryId(edge.to) ? trafficFor(ctx, edge.to, edge) : undefined;
         const shapes = [request.left, request.right, response.left, response.right].filter(
           (id): id is string => typeof id === 'string' && id.startsWith('type:'),
         );
@@ -271,6 +372,7 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           ...(findings.length === shown.length
             ? {}
             : { cut: `${findings.length - shown.length} more finding(s); raise maxNodes` }),
+          ...(traffic === undefined ? {} : { traffic }),
         }, [...new Set(shapes)].slice(0, 2).map((id) => `get_type({type: ${JSON.stringify(id)}})`));
       }),
   );

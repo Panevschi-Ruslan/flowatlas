@@ -11,6 +11,14 @@ import { nearNames } from './entries.js';
 import { MAX_NEXT, withNext, withTraceFor } from '../query/next.js';
 import { slimTree } from '../query/wire.js';
 import { bound, callOf, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
+import { trafficDiffers } from './contract.js';
+
+/**
+ * `next` with `check_contract({edge: entry})` second (P113), when traffic
+ * into the entry carried bodies that differ from what its code declares.
+ */
+const withDrift = (next: readonly string[], entry: string, differs: boolean): string[] =>
+  !differs ? [...next] : [...next.slice(0, 1), callOf('check_contract', { edge: entry }), ...next.slice(1)].slice(0, MAX_NEXT);
 
 /**
  * What `get_flow` shows when nobody says (P92 D4): a tree, not a list, so fewer
@@ -114,7 +122,11 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
             ...withDocs(db, ctx.handle.path, ref.id),
             ...(note === undefined ? {} : { note }),
           },
-          withTraceFor(flowNext(ref.id, flow), ref.node, sampledIn(ctx.handle.path)),
+          withDrift(
+            withTraceFor(flowNext(ref.id, flow), ref.node, sampledIn(ctx.handle.path)),
+            ref.id,
+            ref.node?.type === 'entry' && trafficDiffers(ctx, ref.id),
+          ),
         );
       }),
   );

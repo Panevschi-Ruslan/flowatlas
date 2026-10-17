@@ -710,6 +710,20 @@ A boundary that could not be compared is not left out: it is listed under
 `unchecked` with the reason and the thing to do about it, so "no errors" can be
 read as "nothing broken" rather than "nothing looked at".
 
+**Traffic as a third side (P113).** Beside an observed file `observe --shapes`
+wrote, the report gains a `traffic` section: for each route traffic carried
+bodies of, its request and each 2xx answer compared with what the code
+declares, traffic being what was sent both ways. A field sent that the type
+lacks is `extra_field`, a declared field no body carried `missing_required`,
+one carried only sometimes where it is declared always present
+`optionality_mismatch`, and a declared optional field none of at least 50
+bodies carried `declared_never_sent` (information; `flowatlas dead` lists it
+among its fields with `neverSentIn`). Each row says `seenIn` of `of` bodies, so
+a field sent in 3 of 400 requests reads as rare. Traffic is one environment
+over one window: it is never an `error`, never counted in the summary, and
+never fails `--fail-on`. `--service`, `--direction` and `--edge` narrow it as
+they narrow the rest.
+
 **A message delivered by AWS is compared through the envelope it arrives in.**
 A function a queue, a topic or a bus delivers to is not handed the message: it
 is handed an event with the message inside it. A queue's message is the text at
@@ -1708,6 +1722,7 @@ over it unless told `--reset`.
 | `--since <dur>` | keep only the hours inside this window of now (`2h`, `24h`, `7d`, `2w`; whole hours, `30m` is refused) and its samples; kept in the file, so later runs keep cutting the same way. `--since all` stops cutting |
 | `--reset` | start the file again instead of adding to it |
 | `--no-samples` | keep no sample requests and remove the ones the file holds: then it holds no trace id at all |
+| `--shapes` | read the JSON bodies a HAR or a @nestjs/observe batch carries, for their shape only, and compare them with the declared types (below) |
 | `--format json` | print `observed.json` (format 3) instead of the summary |
 | `--workflow <name>` | the state machine a Step Functions execution history is of, when the file does not name it |
 | `--function <name>` | the function Lambda `REPORT` lines are of, when no log group names it |
@@ -1716,6 +1731,50 @@ over it unless told `--reset`.
 Each of the last three applies only to the format that needs it: given for any
 other file, it is an error (`--workflow applies to sfn-history files only;
 traces/a.json is otlp`), never a flag quietly unused.
+
+#### `observe --shapes`: what traffic carried against what the code declares
+
+The contract check compares one side's code with the other's, and both can be
+wrong the same way; a body built by hand can carry fields neither declares.
+With `--shapes`, and only then, `observe` reads the bodies a file carries - a
+HAR's JSON `postData.text` (or the names of its form fields) and JSON
+`response.content.text` (base64-decoded when `encoding` says so), a
+@nestjs/observe snapshot's `rq.body` - and keeps their **shape**: key names,
+JSON types (`string`, `number`, `boolean`, `null`, `object`, `array`, `mixed`)
+and how many bodies carried each key. Each body is parsed, walked and dropped
+in one function. No value is kept: not a string, a number, an enum member, a
+length or a format. Without `--shapes` no reader looks at a body at all, and
+the file's `privacy.bodies` says `not read`; with it, `read for shape only`.
+
+A key that is itself a value is not kept as a name: a key with a digit, longer
+than 32 characters, with an `@` inside it, a UUID or a long hex token folds,
+with every other such key of its object, into an index signature of their
+merged values - the rule a path segment is masked by. An object of more than
+64 keys folds wholly; deeper than 6 levels, or past 200 objects in one body,
+an object is kept as `object` with nothing said of it; a body over 1 MB is
+skipped and counted, as is one that is not JSON. Formats with no bodies (OTLP,
+Zipkin, Jaeger, the AWS exports) are said once and read as without the flag.
+
+The shapes go on the route each exchange reached, by status for answers,
+under `shapes` in `observed.json` and in each hour's bucket, so `--since` cuts
+them like the counts. `observe` then compares each route's shapes with its
+code through the contracts package and the wire rules (a `Date` declared and
+a string carried is not drift): the request against the route's body type,
+each 2xx answer against its declared return type, or against the type the
+code calling it expects back when the route declares none readable. The
+summary names the routes whose traffic differs, five at most, each with its
+first paths:
+
+```
+bodies read for shape only (key names and JSON types, no value): 9 exchanges placed on a route, 1 on none (no single route fits the call)
+traffic differs from the code on 3 route(s):
+  billing POST /invoices  2 fields: request amount, request memo
+  gateway GET /orders/:param  2 fields: 200 history, 200 owner
+  gateway POST /orders/:param/invoice  2 fields: request giftNote, request status
+```
+
+`flowatlas contracts` lists them field by field, with how often each was
+carried; `--listen` does not take `--shapes`.
 
 #### `observe --listen`: a receiver on this machine
 

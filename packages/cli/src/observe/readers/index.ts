@@ -30,6 +30,7 @@ export {
   type ReaderFlag,
   type ReaderOptions,
   type SkippedPart,
+  type SpanBodies,
   type TraceRead,
   type TraceReader,
 } from './shared.js';
