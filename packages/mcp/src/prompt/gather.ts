@@ -241,8 +241,9 @@ const stepsOf = (
   return steps;
 };
 
+/** A row's place; none for a row with no file, as a blind spot of traffic is (P110). */
 const locOf = (row: Pick<UnresolvedRow, 'file' | 'line'>): string | undefined =>
-  row.file === null ? undefined : row.line === null ? row.file : `${row.file}:${row.line}`;
+  row.file === null || row.file === '' ? undefined : row.line === null ? row.file : `${row.file}:${row.line}`;
 
 const gapOf = (row: UnresolvedRow & { meta?: Record<string, unknown> }, id: string | undefined): PromptGap => {
   const loc = locOf(row);
@@ -364,9 +365,16 @@ export const rowsOfGap = <T extends Pick<AnchoredUnresolvedRow, 'service' | 'fil
 /**
  * A check as the subject of a prompt: the gap id's places, each with the node
  * it is on, and the ways in that reach the first of those. `rows` are the
- * gap's rows as every surface counts them (`acceptedSplitOf`), by line.
+ * gap's rows as every surface counts them (`acceptedSplitOf`), by line;
+ * `unresolved` every row the repository probably missing is ranked from, the
+ * database's and, with an observed file, its blind spots (P144).
  */
-export const gatherCheckSubject = (db: GraphDb, gapId: string, rows: readonly AnchoredUnresolvedRow[]): PromptSubject | undefined => {
+export const gatherCheckSubject = (
+  db: GraphDb,
+  gapId: string,
+  rows: readonly AnchoredUnresolvedRow[],
+  unresolved: readonly AnchoredUnresolvedRow[] = db.allUnresolved(),
+): PromptSubject | undefined => {
   const gap = parseGapId(gapId);
   const [first] = rows;
   if (gap === undefined || first === undefined) return undefined;
@@ -383,7 +391,7 @@ export const gatherCheckSubject = (db: GraphDb, gapId: string, rows: readonly An
   const firstOn = rows.map((row) => (row.node === null ? undefined : db.node(row.node))).find((node) => node !== undefined);
   const reachedFrom = firstOn === undefined ? undefined : reachedFromOf(db, firstOn);
   // The repository this gap is evidence for, as the page names it from its pack (P122).
-  const missing = missingTokenOfGap(missingByGap(missingGroupsOf(db, db.allUnresolved())), gapId);
+  const missing = missingTokenOfGap(missingByGap(missingGroupsOf(db, unresolved)), gapId);
   return {
     id: gapId,
     label: gap.reason,

@@ -11,7 +11,7 @@
 import { readdirSync, realpathSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { loadConfig, readPackageJson, type HostAlias } from '@flowatlas/core';
-import { missingKeyOf, sayEvidence, saySignal, worthSaying, type MissingGroup } from '@flowatlas/linker';
+import { missingKeyOf, sayEvidence, saySeen, saySignal, worthSaying, type MissingGroup, type MissingSeen } from '@flowatlas/linker';
 import { readProjectSettings } from '../build/settings/index.js';
 import { isComposeFile } from '../build/settings/files.js';
 import { repoPathFor, suggestName } from '../commands/init.js';
@@ -148,7 +148,8 @@ export interface MissingRepoEntry {
     kind: string;
     name: string;
     says: string;
-    places: Array<{ service?: string; file?: string; line?: number; gapId?: string }>;
+    /** `seen` on a place of traffic (P144): what one blind-spot group reached, and over which window. */
+    places: Array<{ service?: string; file?: string; line?: number; gapId?: string; seen?: MissingSeen }>;
   }>;
   /** `path` relative to the configuration, as `services[].repo` is written. */
   candidates: Array<{ path: string; name?: string; matchedBy: string[] }>;
@@ -217,7 +218,11 @@ export const sayMissing = (entry: MissingRepoEntry, options: MissingSayOptions =
   for (const signal of entry.signals) {
     lines.push(`${pad}  ${signal.says}`);
     if (options.everyPlace === true) {
-      for (const place of signal.places) lines.push(`${pad}    ${options.placeSaid?.(place) ?? `${place.service ?? ''} ${place.file ?? ''}:${place.line ?? '?'}`}`);
+      for (const place of signal.places) {
+        const said = options.placeSaid?.(place) ?? `${place.service ?? ''} ${place.file ?? ''}:${place.line ?? '?'}`;
+        // A place of traffic has no file: what it reached, and over which window, is where it is (P144).
+        lines.push(`${pad}    ${place.seen === undefined ? said : `${said}: ${saySeen(place.seen)}`}`);
+      }
     }
   }
   const [first, ...others] = entry.candidates;

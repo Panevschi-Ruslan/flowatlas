@@ -2105,6 +2105,17 @@ graph as evidence, with the name it points at:
 | a package | `module-not-installed:<package>`, under the scope of a configured service's own `package.json` name, that no read repository is | without its scope and its `-client`, `-sdk`, `-types` |
 | a channel | `channels.noConsumers` / `noProducers` | its first segment (`payment.captured` → `payment`), its transport's word left off (`sqs/…`) |
 | a deployment | `invoke-target-not-found`, `route-root-not-found`, `function-handler-not-found` | the deployed name's service part, its stage word and its own last word left off |
+| traffic | with an observed file beside the database: a `seen-not-in-code` blind spot (what `observe` matched to nothing) whose `service.name` no configured service has | the service's name |
+
+Traffic is one kind among the others. Alone it is weak: a proxy, a collector or
+a browser writes spans under a name of its own, so it is said in the report's
+head only when another kind agrees or a directory fits. The places it adds are
+its blind-spot groups, one per kind, each with what it reached and the window
+it was seen in. A configured service's blind spots are never evidence (a reader
+missed something there; no repository is missing), and without an observed file
+the groups are what the code alone says. Hosts stay unread in traffic (`observe`
+keeps no host), so a call to a host nobody answers is evidence from the code
+only.
 
 `target-route-not-found` is not evidence: its service is configured, and what is
 missing is a route. Names are put together once the separators, the generic
@@ -2134,9 +2145,18 @@ Probably missing: a repository for "payments" — 3 kinds of evidence, 4 places
 or "nothing next to the configured repositories looks like it; if it exists
 elsewhere, `flowatlas link <path>`". The command is written for the directory
 `doctor` runs in. `--missing` prints every group, with every place under each
-line, or "nothing points at a repository that is not here". `doctor.json` holds
+line, or "nothing points at a repository that is not here". With traffic beside
+it, the same group gains a line and its places:
+
+```
+  traffic came from payments, which no configured service is: 2 methods and 2 routes, 8 spans in 1h
+    payments: 2 methods, 4 spans in 1h: ChargesController.charge, ChargesController.refund
+    payments: 2 routes, 4 spans in 1h: POST /charges, POST /refunds
+```
+
+`doctor.json` holds
 them all under `unresolved.missingRepos: [{ token, score, places, kinds, weak,
-signals: [{ kind, name, says, places: [{ service, file, line, gapId }] }],
+signals: [{ kind, name, says, places: [{ service, file, line, gapId, seen? }] }],
 candidates: [{ path, name, matchedBy }] }]` (`path` relative to the
 configuration; `weak` for a lone package or channel with nothing on disk);
 `--format github` adds one `::notice` per group at the configuration file. A
@@ -2154,7 +2174,12 @@ the host under `hosts`, an alias, `apiBaseEnv` and `apiTarget`, a pattern
 (`flowatlas patterns suggest --cause <reason>`), a shape file (`shapes
 --suggest`), the annotation meant for it (`@CallsService`, `@flowatlas-calls`,
 `@Emits` / `@Consumes`, `@FlowEntry`), or the advice on its places; and last,
-the `flowatlas accept` line that takes it.
+the `flowatlas accept` line that takes it. A service's blind spots of traffic
+(`gap:<service>||seen-not-in-code`) are one check too: linking the repository
+(by name when the service is one nobody configured), else finding what it
+reached and describing it so a build draws it. On the page, the *Seen at run
+time, not found in code* sheet has *Copy as prompt* and *Copy for agent* for
+each service's.
 
 **What stands in for a package nobody installed.** A clone with nothing
 installed still has, one directory over, the source of the internal packages it

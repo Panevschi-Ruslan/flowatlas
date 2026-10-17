@@ -419,12 +419,15 @@ export function createStepsUi(page) {
   /* Copy as prompt: one handler for every button that asks, on any tab, in
      the words describe_for_prompt answers with (P97). `promptOf('row:<at>')`
      is the same text for a row menu (P100); `class:<at>`, `file:<service>#<path>`
-     and `service:<name>` write the scopes the server writes (P134). */
+     and `service:<name>` write the scopes the server writes (P134), and
+     `blind:<service>` the check of what traffic reached there (P144). */
   const promptKit = { seen, walk: PROMPT_WALK, render: renderPrompt, limits: PROMPT_LIMITS };
   const promptOf = (asked) => {
-    // `agent:<row>` is the row's check as a task for an agent (P122).
+    // `agent:<row>` is the row's check as a task for an agent (P122);
+    // `agent:blind:<service>` a service's blind spots as one (P144).
     if (asked.startsWith('agent:')) {
-      const row = promptTargetOf('row:' + asked.slice('agent:'.length));
+      const rest = asked.slice('agent:'.length);
+      const row = promptTargetOf(rest.startsWith('blind:') ? rest : 'row:' + rest);
       return row === null ? '' : promptFor(model, row, { ...promptKit, task: 'close' });
     }
     const target = promptTargetOf(asked);

@@ -884,8 +884,34 @@ const missingRepoLinkedOnce = async () => {
   return missingRepoLinked;
 };
 
+/**
+ * The same project with traffic beside it (P144): four checkouts through the
+ * gateway, each answered by `payments`, a service the configuration does not
+ * list. `observe` matches its routes and methods to nothing, and those blind
+ * spots are a fourth kind of evidence for the same group. The observed file
+ * is also what the MCP snapshots of the traffic answer from.
+ */
+const missingRepoDir = join(root, 'fixtures', 'missing-repo');
+const MISSING_REPO_TRAFFIC = [join(missingRepoDir, 'traces', 'payments.otlp.json')];
+const missingRepoTraffic = (run) => async (io) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-missing-traffic-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(missingRepoDir, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    runObserve(MISSING_REPO_TRAFFIC, { db, now: OBSERVE_NOW, print: () => {} });
+    await run({ config: missingRepoPlain.config, db, out: copy }, { ...io, out: (text) => io.out(said(text)) });
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
 const MISSING_REPO_CASES = [
   ['doctor.txt', (io) => runDoctorCommand({ config: missingRepoPlain.config }, io)],
+  ['observe.traffic.json', (io) => observeOnCopy(io, [[MISSING_REPO_TRAFFIC, { format: 'json' }]], missingRepoDir)],
+  ['doctor.traffic.txt', missingRepoTraffic((options, io) => runDoctorCommand({ ...options, section: ['unresolved'] }, io))],
+  ['doctor.missing.traffic.txt', missingRepoTraffic((options, io) => runMissingCommand(options, io))],
+  ['doctor.missing.traffic.json', missingRepoTraffic((options, io) => runMissingCommand({ ...options, json: true }, io))],
   ['doctor.github.txt', (io) => runDoctorCommand({ config: missingRepoPlain.config, format: 'github' }, io)],
   ['doctor.missing.txt', (io) => runMissingCommand({ config: missingRepoPlain.config }, io)],
   ['doctor.missing.json', (io) => runMissingCommand({ config: missingRepoPlain.config, json: true }, io)],

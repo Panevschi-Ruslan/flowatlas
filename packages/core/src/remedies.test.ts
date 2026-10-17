@@ -32,6 +32,16 @@ describe('REMEDIES', () => {
     expect(remedyLinesOf('gap:gateway|src/pay.ts|unknown-base-url-env')[0]).toContain('flowatlas doctor --missing');
   });
 
+  it('closes a blind spot of traffic by linking the repository, or by finding and describing it (P144)', () => {
+    expect(remediesOf('seen-not-in-code')).toEqual(['link', 'traffic']);
+    const [link, found, accept] = remedyLinesOf('gap:payments||seen-not-in-code', 'payments');
+    expect(link).toContain('one for "payments" looks missing here');
+    expect(link).toContain('`flowatlas link <path>`');
+    expect(found).toContain('`cant_follow`');
+    expect(accept).toContain('`flowatlas accept seen-not-in-code --service payments --note');
+    expect(remedyLinesOf('gap:gateway||seen-not-in-code')[0]).toContain('`flowatlas doctor --missing` names the likely one');
+  });
+
   it('writes the accept command a shell takes, quoting what needs it', () => {
     expect(remedyLinesOf('gap:web|src/my app.ts|api-path-dynamic').at(-1)).toBe(
       "- Or, if it is right as it is, accept it: `flowatlas accept api-path-dynamic --service web --file 'src/my app.ts' --note '<why this one is fine>'`.",

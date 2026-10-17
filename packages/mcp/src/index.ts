@@ -80,7 +80,7 @@ export {
   serviceInputOf,
 } from './prompt/gather.js';
 export type { PromptScopeName, ScopeContext, ServiceCrossing, ServiceInput } from './prompt/gather.js';
-export { promptScopeContext } from './tools/prompt.js';
+export { checkSubjectAt, promptScopeContext } from './tools/prompt.js';
 export { loadContractBreaks } from './query/contracts.js';
 export { deadOptionsOf, deadRows, DEAD_KINDS } from './tools/dead.js';
 export type { DeadKind } from './tools/dead.js';
@@ -117,6 +117,8 @@ export {
 export type { ReasonEntry, ReasonHint } from './resources.js';
 export { startSummaryOf } from './tools/start.js';
 export {
+  blindSpotsAsRows,
+  blindSpotsBeside,
   failuresSeen,
   figuresOf,
   loadObserved,

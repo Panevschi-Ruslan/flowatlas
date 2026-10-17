@@ -1,9 +1,11 @@
 import {
+  blindSpotPlaces,
   causePartsOf,
   gapIdOf,
   hostOf,
   innerServiceName,
   isInnerHost,
+  SEEN_NOT_IN_CODE,
   type GraphEdge,
   type GraphNode,
 } from '@flowatlas/core';
@@ -20,21 +22,29 @@ import type { LinkReport } from './report.js';
  * those is read here as a signal - the word it points at and the places it
  * comes from - and the signals that point at one word are put together and
  * ranked, first by how many kinds of evidence agree, then by how many places.
+ * Traffic is one more kind (P144): spans from a service the configuration
+ * does not list, read from the blind-spot rows P110 makes of what `observe`
+ * matched to nothing, so the file is read by whoever counts the rows.
  *
  * Pure: the graph and the link report in, nothing read from anywhere. A guess
  * is all this is (I3): no edge is drawn and nothing is configured from it; what
  * is said about it says why, place by place.
  */
 
-/** The kinds of evidence, strongest first: the order a group's lines are said in. */
-export const MISSING_KINDS = ['setting', 'host', 'deployment', 'package', 'channel'] as const;
+/**
+ * The kinds of evidence, strongest first: the order a group's lines are said
+ * in. Traffic is last: it agrees with what the code says, and alone it is as
+ * often a proxy, a collector or a browser that names itself in its spans.
+ */
+export const MISSING_KINDS = ['setting', 'host', 'deployment', 'package', 'channel', 'traffic'] as const;
 export type MissingKind = (typeof MISSING_KINDS)[number];
 
 /**
  * Kinds that name an address or a deployment nothing configured answers: a
  * group with one of them is worth saying on its own. A package nobody
  * installed and a channel with one end are, alone, as often a checkout without
- * its dependencies or a message nothing reads yet.
+ * its dependencies or a message nothing reads yet; traffic from a service
+ * nobody configured, as often infrastructure that writes spans of its own.
  */
 export const STRONG_KINDS: ReadonlySet<MissingKind> = new Set(['setting', 'host', 'deployment']);
 
@@ -45,6 +55,22 @@ export interface MissingPlace {
   line?: number;
   /** The gap id of the row it was read from (`gap:<service>|<file>|<reason>`), when a row said it. */
   gapId?: string;
+  /** Of traffic: what one blind-spot group of the service reached, and over which window (P144). */
+  seen?: MissingSeen;
+}
+
+/** One blind-spot group as evidence: its kind, how many names and spans, the names listed, and the window. */
+export interface MissingSeen {
+  /** P110's unmatched kind: `http`, `code`, `messaging`, ... */
+  kind: string;
+  /** Distinct names the group holds, listed or not. */
+  places: number;
+  /** Spans, over every name. */
+  count: number;
+  /** The names listed, busiest first (P110 lists five at most). */
+  names: string[];
+  /** The window, said in words: `2h`. */
+  window: string;
 }
 
 /** One piece of evidence: what it names, the word it points at, and where. */
@@ -225,6 +251,20 @@ const DEPLOYED: ReadonlyMap<string, (row: MissingRow, node: GraphNode | undefine
   ['function-handler-not-found', (row) => /^(\S+) runs /.exec(row.message ?? '')?.[1]],
 ]);
 
+/** What a blind-spot row's `meta` says it reached (P110's `blindSpotRows`), or nothing for a row that is not one. */
+const seenOfRow = (row: MissingRow): MissingSeen | undefined => {
+  const spot = row.meta?.['seen'];
+  const window = text(row.meta?.['window']);
+  if (spot === null || typeof spot !== 'object' || window === undefined) return undefined;
+  const { kind, places, count, names } = spot as Record<string, unknown>;
+  if (typeof kind !== 'string' || typeof places !== 'number' || typeof count !== 'number') return undefined;
+  const listed = (Array.isArray(names) ? names : []).flatMap((name: unknown): string[] => {
+    const said = name !== null && typeof name === 'object' ? (name as { name?: unknown }).name : undefined;
+    return typeof said === 'string' ? [said] : [];
+  });
+  return { kind, places, count, names: listed, window };
+};
+
 /** Collects signals by kind and name, so one setting used in seven places is one signal of seven places. */
 class Signals {
   readonly #by = new Map<string, MissingSignal>();
@@ -235,7 +275,12 @@ class Signals {
     const signal = this.#by.get(key) ?? { kind, name, token, ...(lacks === undefined ? {} : { lacks }), places: [] };
     this.#by.set(key, signal);
     const same = signal.places.some(
-      (seen) => seen.service === place.service && seen.file === place.file && seen.line === place.line && seen.gapId === place.gapId,
+      (seen) =>
+        seen.service === place.service &&
+        seen.file === place.file &&
+        seen.line === place.line &&
+        seen.gapId === place.gapId &&
+        seen.seen?.kind === place.seen?.kind,
     );
     if (!same) signal.places.push(place);
   }
@@ -347,6 +392,20 @@ export const missingRepoSignals = (project: MissingRepoProject, report?: Pick<Li
     if (named !== undefined && named !== '') signals.add('deployment', named, deployedServiceOf(named), placeOfRow(row));
   }
 
+  // Traffic from a service no configured service is (P144): a blind spot's
+  // own service, by name. One place per blind-spot group (service and kind),
+  // each with what it reached and when; a configured service's blind spots
+  // are a question for a reader, never for a repository.
+  const configured = new Set([
+    ...(report?.services ?? []).map((service) => service.name),
+    ...(project.services ?? []).map((service) => service.name),
+  ]);
+  for (const row of project.unresolved) {
+    const service = row.reason === SEEN_NOT_IN_CODE ? text(row.service) : undefined;
+    const seen = service === undefined || configured.has(service) ? undefined : seenOfRow(row);
+    if (service !== undefined && seen !== undefined) signals.add('traffic', service, tokenOf(service), { ...placeOfRow(row), seen });
+  }
+
   return signals.all();
 };
 
@@ -434,6 +493,26 @@ const SAYS: { readonly [K in MissingKind]: (signal: MissingSignal, by: string) =
     signal.lacks === 'producer'
       ? `channel ${signal.name} is consumed by ${by} and nothing here publishes it`
       : `channel ${signal.name} is published by ${by} and nobody here consumes it`,
+  traffic: (signal) => `traffic came from ${signal.name}, which no configured service is: ${saySeenAll(signal.places)}`,
+};
+
+const seenOf = (places: readonly MissingPlace[]): MissingSeen[] =>
+  places.flatMap((place) => (place.seen === undefined ? [] : [place.seen]));
+
+/** What every blind-spot group of a signal reached, together: `2 routes and 2 methods, 8 spans in 2h`. */
+const saySeenAll = (places: readonly MissingPlace[]): string => {
+  const seen = seenOf(places);
+  const spans = seen.reduce((sum, one) => sum + one.count, 0);
+  const windows = [...new Set(seen.map((one) => one.window))];
+  const over = windows.length === 1 ? ` in ${windows[0]}` : '';
+  return `${andList(seen.map((one) => blindSpotPlaces(one.kind, one.places)))}, ${plural(spans, 'span')}${over}`;
+};
+
+/** One blind-spot group, as `doctor --missing` says the place: `2 routes, 4 spans in 2h: POST /charges, POST /refunds`. */
+export const saySeen = (seen: MissingSeen): string => {
+  const more = seen.places - seen.names.length;
+  const listed = seen.names.length === 0 ? '' : `: ${seen.names.join(', ')}${more > 0 ? `, and ${more} more` : ''}`;
+  return `${blindSpotPlaces(seen.kind, seen.places)}, ${plural(seen.count, 'span')} in ${seen.window}${listed}`;
 };
 
 export const saySignal = (signal: MissingSignal): string => SAYS[signal.kind](signal, andList(servicesOfSignal(signal)));

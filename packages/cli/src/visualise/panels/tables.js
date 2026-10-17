@@ -94,7 +94,19 @@ export function createTables(page) {
         (item.service ? ` <span class="hint">${esc(item.service)}</span>` : '') +
         (item.next ? ` <span class="hint">&middot; next <code>${esc(item.next)}</code></span>` : '') + '</li>').join('') +
       (list.length > UNMATCHED_LIMIT ? `<li class="hint">${(list.length - UNMATCHED_LIMIT).toLocaleString()} more</li>` : '') +
-      '</ul>';
+      '</ul>' + blindCopyHtml();
+  };
+
+  /* Each service's blind spots as the one check describe_for_prompt writes
+     for its gap id (P144): copied as a prompt, or as a task for an agent,
+     which says the repository probably missing when the service is one. */
+  const blindCopyHtml = () => {
+    const services = [...new Set(((data.observed && data.observed.blind) || []).map(([service]) => service))];
+    if (services.length === 0) return '';
+    return '<ul class="s-unmatched">' + services.map((service) =>
+      `<li><span class="tag">seen-not-in-code</span> ${service ? esc(service) : '<span class="hint">no service</span>'} ` +
+      `<button class="tool" data-prompt="blind:${esc(service)}">Copy as prompt</button> ` +
+      `<button class="tool" data-prompt="agent:blind:${esc(service)}">Copy for agent</button></li>`).join('') + '</ul>';
   };
 
   /* What a trace saw that fits several places here, counted on none of them (P85). */

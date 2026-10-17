@@ -1,5 +1,4 @@
 import {
-  blindSpotRows,
   causeLabel,
   causePartsOf,
   countsOf,
@@ -23,27 +22,8 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { nearWords } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
-import { loadObserved } from '../query/observed.js';
+import { blindSpotsBeside } from '../query/observed.js';
 import { callOf, nextOutput, pageInput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
-
-/**
- * What traffic reached and no reader drew (P110), as the rows the database
- * holds are read: one per service and kind, file-less, under its own cause.
- * Doctor counts the same rows; none without an observed file.
- */
-const blindSpotsBeside = (dbPath: string): AnchoredUnresolvedRow[] =>
-  blindSpotRows(loadObserved(dbPath)).map((row) => ({
-    service: row.service ?? null,
-    file: row.file,
-    line: row.line,
-    reason: row.reason,
-    level: row.level ?? 'info',
-    sites: row.sites ?? 1,
-    message: row.message ?? row.reason,
-    hint: null,
-    node: null,
-    ...(row.meta === undefined ? {} : { meta: row.meta }),
-  }));
 
 /** A place, with the id of the method or function it is written in when the graph draws one. */
 export interface CantFollowPlace extends CantFollowSample {

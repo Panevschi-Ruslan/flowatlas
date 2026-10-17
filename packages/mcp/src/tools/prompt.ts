@@ -7,7 +7,7 @@ import { withDocs } from '../query/docs.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { failuresSeenRef, type FailuresSeenRef } from '../query/fails.js';
-import { failuresSeen, loadObservedCounts } from '../query/observed.js';
+import { blindSpotsBeside, failuresSeen, loadObservedCounts } from '../query/observed.js';
 import { describeForPrompt, PROMPT_LIMITS } from '../prompt/describe.js';
 import {
   fileIdOf,
@@ -48,14 +48,22 @@ const subjectOf = (db: GraphDb, ref: string): { node: GraphNode; alsoAnswers?: s
 
 /**
  * A check by its gap id (`gap:<service>|<file>|<reason>`), its rows as every
- * surface counts them: demoted where an annotation answered them (P80).
+ * surface counts them: demoted where an annotation answered them (P80). The
+ * blind spots of the observed file beside the database are rows too (P110),
+ * so their gap ids are checks, and the repository probably missing is named
+ * from the traffic as well as the code (P144). `dbPath` is where the
+ * database is, the accepted and observed files beside it; the page's parity
+ * test asks the same.
  */
-const checkOf = (db: GraphDb, ctx: ToolContext, gapId: string): PromptSubject | undefined => {
-  const rows = rowsOfGap(db.allUnresolved(), gapId);
+export const checkSubjectAt = (db: GraphDb, dbPath: string, gapId: string): PromptSubject | undefined => {
+  const all = [...db.allUnresolved(), ...blindSpotsBeside(dbPath)];
+  const rows = rowsOfGap(all, gapId);
   if (rows.length === 0) return undefined;
-  const split = acceptedSplitOf(db, rows, readAccepted(ctx.handle.path));
-  return gatherCheckSubject(db, gapId, rowsOfGap(split.rows, gapId));
+  const split = acceptedSplitOf(db, rows, readAccepted(dbPath));
+  return gatherCheckSubject(db, gapId, rowsOfGap(split.rows, gapId), all);
 };
+
+const checkOf = (db: GraphDb, ctx: ToolContext, gapId: string): PromptSubject | undefined => checkSubjectAt(db, ctx.handle.path, gapId);
 
 /** `file:line`, with `service#` in front or not. */
 const PLACE = /^(?:([^#\s]+)#)?([^\s#]+):(\d+)$/;

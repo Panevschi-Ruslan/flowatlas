@@ -109,7 +109,9 @@ describe('a node’s wider prompts (P134)', () => {
   });
 
   it('names each target as one word a control carries, and reads it back', () => {
-    const targets: PromptTarget[] = [{ entry: 0 }, { row: 3 }, { class: 9 }, { file: ['shop-gateway', 'src/a#b.ts'] }, { service: 'shop-gateway' }];
+    const targets: PromptTarget[] = [
+      { entry: 0 }, { row: 3 }, { class: 9 }, { file: ['shop-gateway', 'src/a#b.ts'] }, { service: 'shop-gateway' }, { blind: 'payments' }, { blind: '' },
+    ];
     for (const target of targets) {
       expect(promptTargetOf(promptAskOf(target))).toEqual(target);
     }
@@ -117,6 +119,8 @@ describe('a node’s wider prompts (P134)', () => {
     expect(promptTargetOf('entry:')).toBeNull();
     expect(promptTargetOf('file:no-service')).toBeNull();
     expect(promptTargetOf('nothing')).toBeNull();
+    // A service whose traffic left no blind spot in the pack is no check (P144).
+    expect(subjectOf(withClass(), { blind: 'payments' }, kit)).toBeNull();
   });
 
   it('writes a service’s front: its ways in by kind and its most common gaps', () => {

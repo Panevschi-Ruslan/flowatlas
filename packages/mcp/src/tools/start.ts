@@ -2,6 +2,7 @@ import { missingGroupsOf, worthSaying, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { nextFor, withNext } from '../query/next.js';
+import { blindSpotsBeside } from '../query/observed.js';
 import { staleDocsCount } from '../query/docs.js';
 import { START_LIMITS, summariseProject, type StartSummary } from '../query/start.js';
 import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
@@ -64,10 +65,11 @@ const MISSING_NAMED = 3;
 /**
  * The repositories probably missing (P122): the likeliest few worth saying,
  * by name, with the directories that look like each where the command line
- * can look. For one service, those whose evidence is in it.
+ * can look. For one service, those whose evidence is in it. Traffic from a
+ * service nobody configured counts too, with an observed file beside (P144).
  */
 const missingReposOf = (db: GraphDb, ctx: ToolContext, service?: string): Array<{ token: string; candidates?: string[] }> => {
-  const groups = missingGroupsOf(db, db.allUnresolved()).filter(
+  const groups = missingGroupsOf(db, [...db.allUnresolved(), ...blindSpotsBeside(ctx.handle.path)]).filter(
     (group) => service === undefined || group.signals.some((signal) => signal.places.some((place) => place.service === service)),
   );
   const candidates = ctx.missingCandidates?.(groups) ?? [];

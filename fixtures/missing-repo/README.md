@@ -47,9 +47,23 @@ configuration: built, both requests join `POST /charges` and `POST /refunds`
 joins its consumer, and no group is left. The package stays uninstalled, and
 is no longer evidence: its name is now a configured service's.
 
+`traces/payments.otlp.json` is the same project at run time (P144): four
+checkouts through the gateway (three `pay`, one `refund`), each answered by a
+service whose spans say `service.name` `payments`, which the configuration does
+not list. `observe` matches its two routes and its two `ChargesController`
+methods to nothing, so they are blind spots (`seen-not-in-code`) of a service
+no configured service is: a fourth kind of evidence, `traffic`, for the same
+group ("4 kinds of evidence, 6 places"), each place with what it reached and
+the hour it was seen in. Their check, `gap:payments||seen-not-in-code`, names
+the repository to link, on the page and from `describe_for_prompt` alike. The
+gateway's own calls match its call sites, so they are no blind spot.
+
 Recorded: `expected.cli/doctor.txt` (the group at the head),
 `doctor.missing.txt` and `.json` (every place), `doctor.github.txt` (a
 `::notice` at the configuration), `link.suggested.txt` (`--dry-run`) and
 `doctor.linked.txt` (the variant); `expected.mcp/` holds `start_here` and
 `describe_for_prompt` on the gap id of the two requests, whose "How to close
-it" names the repository.
+it" names the repository. With the traces: `expected.cli/observe.traffic.json`
+(the observed file), `doctor.traffic.txt`, `doctor.missing.traffic.txt` and
+`.json`, and `expected.mcp.traffic/` (`describe_for_prompt` on the blind spots'
+gap id, `start_here`).

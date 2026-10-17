@@ -152,7 +152,9 @@ export type PromptTarget =
   | { row: number }
   | { class: number }
   | { file: [service: string, path: string] }
-  | { service: string };
+  | { service: string }
+  /** What traffic reached in a service and no reader drew, as its check (P144); `''` for spans that name no service. */
+  | { blind: string };
 
 /** What a node can be copied as (P134): itself, its class, its file, its service. */
 export interface PromptScope {

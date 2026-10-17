@@ -568,13 +568,16 @@ const promptPlaceLines = (check) =>
  * page, the MCP server and `doctor` read (D3), so the advice for a reason is
  * the same wherever it is copied from. A reason in no list is closed by the
  * advice on its places; every one can be accepted. `pattern` is core's
- * `PATTERN_CAUSES` (P121), which a test holds equal.
+ * `PATTERN_CAUSES` (P121), which a test holds equal. What traffic reached and
+ * no reader drew (`seen-not-in-code`, P110) is linked when its service is not
+ * configured (P144), and found and described when it is.
  */
 export const PROMPT_REMEDY_REASONS = Object.freeze({
   link: Object.freeze([
     'unknown-base-url-env', 'service-binding-unknown', 'route-root-not-found', 'invoke-target-not-found',
     'function-handler-not-found', 'function-source-unread', 'reference-not-found', 'marker-service-unknown',
     'procedure-not-found', 'delivery-target-unread', 'channel-without-producer', 'channel-without-consumer',
+    'seen-not-in-code',
   ]),
   setting: Object.freeze(['unknown-base-url-env']),
   alias: Object.freeze(['service-binding-unknown', 'marker-service-unknown']),
@@ -588,6 +591,7 @@ export const PROMPT_REMEDY_REASONS = Object.freeze({
     'channel-without-producer', 'channel-without-consumer',
   ]),
   flowEntry: Object.freeze(['dynamic-bot-trigger']),
+  traffic: Object.freeze(['seen-not-in-code']),
 });
 
 /** A gap id read back: `gap:<service>|<file>|<reason>`, empty parts naming nothing. */
@@ -622,6 +626,10 @@ const PROMPT_REMEDY_SAY = Object.freeze({
   flowatlasCalls: () => 'Annotate the method with `/** @flowatlas-calls METHOD /path */` to say where it goes.',
   channelMarker: () => "Annotate the publishing method with `@Emits('<channel>')`, or the handler with `@Consumes('<channel>')`.",
   flowEntry: () => "Annotate the handler with `@FlowEntry('<name>')`.",
+  traffic: () =>
+    'Or, if it is in a repository read here, it is registered at run time or a reader missed it: ' +
+    '`flowatlas doctor --unresolved` and the MCP tool `cant_follow` name the search that finds each name, ' +
+    "and an annotation or a pattern of the project's own lets the next build draw it.",
   advice: () => 'Change the code or the configuration as the advice on each place above says, so it can be read without running it.',
 });
 
