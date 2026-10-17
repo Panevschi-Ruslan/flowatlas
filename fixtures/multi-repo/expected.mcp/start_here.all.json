@@ -205,6 +205,7 @@
       "kind": "http"
     }
   ],
+  "staleDocs": 3,
   "next": [
     "get_flow({entry: \"entry:billing:http:GET:/invoices/:param\"})",
     "describe_for_prompt({id: \"entry:billing:http:GET:/invoices/:param\"})",

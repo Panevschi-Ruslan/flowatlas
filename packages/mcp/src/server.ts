@@ -42,6 +42,7 @@ export const INSTRUCTIONS = [
   "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names; a wrapper of the project's own -> test_pattern on a draft rule for it.",
   '- findings - a likely N+1, a route with no guard, a contract break, a channel with one end - are not gaps: findings() counts each kind with its top rows, ranked by reach; findings({kind}) lists one, each row with the call that shows it.',
   "- dead({id}) says whether a node is dead: `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` (`outside` the project, or a call `oneOff` a segment) or `alive`; dead({service}) lists them, verdict first.",
+  'get_flow, describe_for_prompt and impact carry `docs` when a Markdown page describes the node (flowatlas docs): `file`, `line` and `state`; `changed` or `gone` is a page to update with the change. start_here says `staleDocs`.',
   'Rows real traffic went through carry `observed: n` (`seenAmbiguous: n` where requests fit it and other places too, so were counted on none); gaps someone accepted with flowatlas accept carry `accepted: true`.',
   'describe_for_prompt({id}) writes any of these as Markdown to hand on; `scope` class, file or service writes the whole of one. Every list tool takes the same optional `service` filter, a service name, to keep only its rows.',
   'Every answer is bounded; get_source is the only one that returns code, and says `truncated` with the `fromLine` to read on from when a declaration is longer than one answer.',

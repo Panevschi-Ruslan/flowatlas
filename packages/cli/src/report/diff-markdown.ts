@@ -7,17 +7,59 @@
  */
 import type { Confidence, GraphNode } from '@flowatlas/core';
 import type { ContractFinding } from '@flowatlas/contracts';
-import type { BlastEntry, BlastRow, DiffReport, LostJoin, TypeChange } from '@flowatlas/linker';
+import {
+  flowChanged,
+  sayCounts,
+  sayStep,
+  servicesCrossed,
+  type BlastEntry,
+  type BlastRow,
+  type DiffReport,
+  type FlowChange,
+  type LostJoin,
+  type TypeChange,
+} from '@flowatlas/linker';
 import { groupEntries, reachableSummary } from '../query/callers.js';
+import { foldSteps, notWalked, renderSequenceDiagram } from '../render/sequence.js';
+import { staleDocLines, type StaleDocs } from './stale-docs.js';
 
 export interface DiffMarkdownOptions {
   /** Most rows to print in any one table. The file on disk is complete (I9). */
   maxRows?: number;
   /** Where the whole document was written, named in every truncation note. */
   file?: string;
+  /** Most changed flows drawn under "Changed flows"; the rest are named and counted (P116). */
+  maxDiagrams?: number;
+  /** Unchanged steps kept on each side of a change; a longer run folds to a count (D4). */
+  context?: number;
+  /**
+   * About the most characters the document may take. Diagrams go first, from
+   * the last, then whole flows, each counted, so the comment fits where it is
+   * posted.
+   */
+  maxChars?: number;
+  /** False for step lists without the Mermaid. */
+  diagrams?: boolean;
+  /** The doc blocks the head side holds, checked on both sides (P120); absent, the section is left out. */
+  docs?: StaleDocs;
 }
 
-const DEFAULTS = { maxRows: 50 };
+/**
+ * What a document leaves out when nobody says. `maxChars` stays under the
+ * 65,536 characters a pull-request comment on GitHub may hold, with room for
+ * whatever a workflow adds around it.
+ */
+export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions, 'file' | 'docs'>>> = Object.freeze({
+  maxRows: 50,
+  maxDiagrams: 5,
+  context: 3,
+  maxChars: 60_000,
+  diagrams: true,
+});
+
+const DEFAULTS = DIFF_MARKDOWN_DEFAULTS;
+
+type Settings = Required<Omit<DiffMarkdownOptions, 'file' | 'docs'>> & DiffMarkdownOptions;
 
 const escape = (text: string): string => text.replace(/\|/g, '\\|');
 
@@ -138,6 +180,111 @@ const impactLines = (report: DiffReport, options: Required<Pick<DiffMarkdownOpti
     lines.push('');
     lines.push(...more(ways.dropped + item.truncated, 'ways in', options.file));
     lines.push('</details>', '');
+  }
+  return lines;
+};
+
+/** Text inside an HTML element, which a `<summary>` is: Markdown is not read there. */
+const html = (text: string): string => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** What happened to a flow, for the line its `<details>` opens on. */
+const flowSummary = (flow: FlowChange): string => {
+  const crosses = servicesCrossed(flow);
+  const steps = flow.steps.filter((step) => step.kind !== 'stop').length;
+  const said =
+    flow.side === 'head'
+      ? `added, a way in the base did not have: ${steps} ${steps === 1 ? 'step' : 'steps'}`
+      : flow.side === 'base'
+        ? `removed, as of base: ${steps} ${steps === 1 ? 'step' : 'steps'} gone`
+        : sayCounts(flow.counts);
+  return `<code>${html(flow.label)}</code> (${html(flow.service)}) — ${html(said)}${crosses.length > 1 ? `; crosses ${html(crosses.join(' → '))}` : ''}`;
+};
+
+/** Where a step is written, said after it: `orders/src/orders.service.ts:22`. */
+const stepPlace = (flow: FlowChange, step: Pick<FlowChange['steps'][number], 'from' | 'to' | 'file' | 'line'>): string => {
+  if (step.file === undefined) return '';
+  // Written in the service it leaves from; the request into a way in and a
+  // handler taking a channel's message, in the service they reach.
+  const serviceOf = (id: string): string | undefined => flow.participants.find((participant) => participant.id === id)?.service;
+  const service = serviceOf(step.from) ?? serviceOf(step.to);
+  return `  · ${service === undefined ? '' : `${service}/`}${step.file}${step.line === undefined ? '' : `:${step.line}`}`;
+};
+
+/**
+ * The steps as text, under the diagram (D3): Mermaid does not render in every
+ * place a comment is read, and a `diff` block colours the marks where it is.
+ */
+const stepList = (flow: FlowChange, context: number): string[] => [
+  '```diff',
+  ...foldSteps(flow.steps, context).map((item) =>
+    'folded' in item ? `  … ${item.folded} unchanged steps` : `${sayStep(item.step, flow.participants)}${stepPlace(flow, item.step)}`,
+  ),
+  ...(flow.truncated === undefined ? [] : [`  … not walked: ${notWalked(flow.truncated)}`]),
+  '```',
+];
+
+/** One changed flow: the summary line, the diagram unless left out, and the step list. */
+const flowBlock = (flow: FlowChange, options: { open: boolean; diagram: boolean; context: number }): string[] => [
+  `<details${options.open ? ' open' : ''}><summary>${flowSummary(flow)}</summary>`,
+  '',
+  ...(options.diagram
+    ? [
+        '```mermaid',
+        renderSequenceDiagram(flow, { context: options.context, ...(flow.truncated === undefined ? {} : { truncated: flow.truncated }) }).trimEnd(),
+        '```',
+        '',
+      ]
+    : []),
+  ...stepList(flow, options.context),
+  '',
+  '</details>',
+  '',
+];
+
+/** How much of "Changed flows" a document has room for: flows drawn, and how many of them with a diagram. */
+interface FlowRoom {
+  drawn: number;
+  diagrams: number;
+}
+
+/**
+ * Each way in whose flow the branch changed, as a sequence diagram with its
+ * steps listed under it (P116), the most changed first and the first open.
+ * Past `maxDiagrams` a flow is named and counted; so is every flow `room`
+ * left out to keep the document under `maxChars`; a way in whose steps did
+ * not change is named on one line.
+ */
+const flowLines = (report: DiffReport, settings: Settings, room: FlowRoom): string[] => {
+  if (report.flows.length === 0) return [];
+  const changed = report.flows.filter(flowChanged);
+  const same = report.flows.filter((flow) => !flowChanged(flow));
+  const lines = ['## Changed flows', ''];
+  if (changed.length === 0) lines.push('No way in the impact reaches does anything different.', '');
+  const drawn = changed.slice(0, room.drawn);
+  drawn.forEach((flow, at) => lines.push(...flowBlock(flow, { open: at === 0, diagram: settings.diagrams && at < room.diagrams, context: settings.context })));
+  const where = settings.file === undefined ? 'diff.json' : settings.file;
+  const notDrawn = changed.slice(drawn.length);
+  // Flows past `maxDiagrams`, and those `maxChars` had no room for.
+  const squeezed = Math.min(changed.length, settings.maxDiagrams) - drawn.length;
+  const squeeze = `to keep this under ${settings.maxChars} characters`;
+  if (notDrawn.length > 0) {
+    const named = cut(notDrawn, settings.maxRows);
+    lines.push(
+      `… ${notDrawn.length} more changed ${notDrawn.length === 1 ? 'flow' : 'flows'}${squeezed > 0 ? ` (${squeezed} left out ${squeeze})` : ''}: ` +
+        `${named.rows.map((flow) => code(flow.label)).join(', ')}${named.dropped > 0 ? ', …' : ''}; every flow is in ${where}`,
+      '',
+    );
+  }
+  const undrawn = settings.diagrams ? drawn.length - Math.min(room.diagrams, drawn.length) : 0;
+  if (undrawn > 0) {
+    lines.push(`… ${undrawn} ${undrawn === 1 ? 'diagram' : 'diagrams'} left out ${squeeze}; the steps are listed, and every flow is in ${where}`, '');
+  }
+  if (same.length > 0) {
+    const named = cut(same, settings.maxRows);
+    lines.push(
+      `Ways in whose steps did not change: ${named.rows.map((flow) => `${code(flow.label)} (${flow.service})`).join(', ')}${named.dropped > 0 ? `, and ${named.dropped} more` : ''}`,
+      '',
+    );
   }
   return lines;
 };
@@ -401,24 +548,43 @@ const footer = (report: DiffReport): string[] => {
   ];
 };
 
+/**
+ * The whole document, under `maxChars`: the changed flows' diagrams are
+ * dropped from the last one back, then the flows themselves, each said in a
+ * line, before anything else is; every table is already bounded by `maxRows`.
+ */
 export const renderDiffMarkdown = (report: DiffReport, options: DiffMarkdownOptions = {}): string => {
   const settings = { ...DEFAULTS, ...options };
-  const lines = [
-    '## flowatlas diff',
-    '',
-    `\`${report.base.ref ?? 'working tree'}\` → \`${report.head.ref ?? 'working tree'}\``,
-    '',
-    ...sideLines(report),
-    ...warningLines(report),
-    ...impactLines(report, settings),
-    ...contractLines(report, settings),
-    ...joinLines(report, settings),
-    ...gapLines(report, settings),
-    ...typeLines(report, settings),
-    ...graphLines(report),
-    ...footer(report),
-  ];
-  return `${lines.join('\n')}\n`;
+  const changed = report.flows.filter(flowChanged).length;
+  const drawn = Math.min(changed, settings.maxDiagrams);
+  const render = (room: FlowRoom): string => {
+    const lines = [
+      '## flowatlas diff',
+      '',
+      `\`${report.base.ref ?? 'working tree'}\` → \`${report.head.ref ?? 'working tree'}\``,
+      '',
+      ...sideLines(report),
+      ...warningLines(report),
+      ...impactLines(report, settings),
+      ...flowLines(report, settings, room),
+      ...staleDocLines(settings.docs, settings.maxRows),
+      ...contractLines(report, settings),
+      ...joinLines(report, settings),
+      ...gapLines(report, settings),
+      ...typeLines(report, settings),
+      ...graphLines(report),
+      ...footer(report),
+    ];
+    return `${lines.join('\n')}\n`;
+  };
+  const room: FlowRoom = { drawn, diagrams: settings.diagrams ? drawn : 0 };
+  let text = render(room);
+  while (text.length > settings.maxChars && (room.diagrams > 0 || room.drawn > 0)) {
+    if (room.diagrams > 0) room.diagrams -= 1;
+    else room.drawn -= 1;
+    text = render(room);
+  }
+  return text;
 };
 
 /** The same thing in one line, for a terminal and for the top of a CI log. */
@@ -430,6 +596,7 @@ export const summariseDiff = (report: DiffReport): string => {
     ` · types +${types.added.length}/-${types.removed.length}/~${types.changed.length}` +
     ` · contracts ${contracts.new.length} new, ${contracts.fixed.length} fixed, ${contracts.preexisting.length} already there` +
     ` · lost joins ${report.joins.lost.length} · gaps +${report.unresolved.added.length}/-${report.unresolved.removed.length}` +
-    ` · impact ${report.impact.length} node(s)`
+    ` · impact ${report.impact.length} node(s)` +
+    ` · flows ${report.flows.filter(flowChanged).length} changed`
   );
 };

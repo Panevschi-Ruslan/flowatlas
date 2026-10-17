@@ -44,7 +44,7 @@ export { missedOf } from './report.js';
 export type { LinkReport, LinkTotals, ServicePackages, ServiceReport } from './report.js';
 export { replaceService, writeGraphDb } from './db/writer.js';
 export type { WriteOptions } from './db/writer.js';
-export { blastRadius, BLAST_EDGES, PROVIDER_EDGES } from './diff/blast-radius.js';
+export { blastRadius, BLAST_EDGES, DEFAULT_BLAST_DEPTH, PROVIDER_EDGES } from './diff/blast-radius.js';
 export { compareDeclarations } from './diff/compare-declarations.js';
 export type { DeclarationCompareOptions } from './diff/compare-declarations.js';
 export { diffGraphs, impactedNodes } from './diff/diff-graphs.js';
@@ -59,7 +59,45 @@ export type {
   DiffWarning,
   DiffWarningReason,
 } from './diff/report.js';
-export { graphDiffSchema, graphDiffSchemaV1, parseGraphDiff } from './diff/schema.js';
+export { graphDiffSchema, graphDiffSchemaV1, graphDiffSchemaV2, parseGraphDiff } from './diff/schema.js';
+export {
+  countSteps,
+  diffSequences,
+  FLOW_SIDES,
+  flowChanged,
+  flowChangeOf,
+  onlyOn,
+  PARTICIPANT_KINDS,
+  sayCounts,
+  sayStep,
+  SEQUENCE_DETAILS,
+  sequenceOf,
+  servicesCrossed,
+  siteOfEdge,
+  STATUS_MARK,
+  STEP_KINDS,
+  STEP_STATUSES,
+  stepKeyOf,
+  typeNotesOf,
+} from './diff/sequence.js';
+export type {
+  DiffSequenceOptions,
+  FlowChange,
+  FlowSide,
+  Participant,
+  ParticipantKind,
+  Sequence,
+  SequenceChange,
+  SequenceDetail,
+  SequenceOptions,
+  SequenceSite,
+  SequenceStep,
+  SequenceTree,
+  StepGroup,
+  StepKind,
+  StepStatus,
+  WalkedSide,
+} from './diff/sequence.js';
 export {
   DIFF_FORMAT_VERSION,
   DIFF_SECTIONS,
@@ -162,3 +200,47 @@ export type {
   FindingRow,
   FindingSources,
 } from './analysis/findings.js';
+export {
+  blockRegion,
+  closingMarker,
+  DEFAULT_DOC_VIEW,
+  DOC_KINDS,
+  DOC_STATES,
+  DOC_VIEWS,
+  DOCS_FILE,
+  DOCS_FORMAT_VERSION,
+  docsEntrySchema,
+  docsIndexSchema,
+  encodeAttribute,
+  FINGERPRINT_LENGTH,
+  fingerprintRows,
+  flowFingerprint,
+  NOTE_SLOT,
+  ORPHANED_HEADING,
+  parseDocBlocks,
+  parseDocs,
+  positionFreeId,
+  readDocsIndex,
+  readRecordedStep,
+  recordStep,
+  renderTour,
+  rewriteDocBlocks,
+  STEPS_END,
+  tourNotesOf,
+} from './docs/index.js';
+export type {
+  DocBlock,
+  DocKind,
+  DocOptions,
+  DocProblem,
+  DocRewrite,
+  DocsEntry,
+  DocsIndex,
+  DocState,
+  DocView,
+  FingerprintTree,
+  ParsedDocs,
+  RecordedStep,
+  TourNote,
+  TourStep,
+} from './docs/index.js';

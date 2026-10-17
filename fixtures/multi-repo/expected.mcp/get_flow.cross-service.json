@@ -154,6 +154,20 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "docs": [
+    {
+      "file": "docs/architecture.md",
+      "line": 10,
+      "kind": "flow",
+      "state": "ok"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 95,
+      "kind": "flow",
+      "state": "ok"
+    }
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
     "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:33:12\", to: \"entry:orders:http:GET:/orders/:param\"})",

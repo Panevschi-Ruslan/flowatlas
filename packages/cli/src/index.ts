@@ -8,6 +8,7 @@ import { registerContracts } from './commands/contracts.js';
 import { registerCycles } from './commands/cycles.js';
 import { registerDead } from './commands/dead.js';
 import { registerDiff } from './commands/diff.js';
+import { registerDocs } from './commands/docs.js';
 import { registerDoctor } from './commands/doctor.js';
 import { registerExtract } from './commands/extract.js';
 import { registerFlow } from './commands/flow.js';
@@ -46,6 +47,7 @@ export const createProgram = (): Command => {
   registerCycles(program);
   registerDead(program);
   registerDoctor(program);
+  registerDocs(program);
   registerShapes(program);
   registerPatterns(program);
   registerConfig(program);
@@ -114,7 +116,8 @@ export type { Observed } from './observe/match.js';
 export { TRACE_READERS, readerFor } from './observe/readers.js';
 export type { SkippedPart, TraceRead, TraceReader } from './observe/readers.js';
 export { ALLOW_LISTS, NESTJS_OBSERVE_READS, OTLP_READS } from './observe/allow-list.js';
-export { runFlow } from './commands/flow.js';
+export { runFlow, sequenceDetailOf } from './commands/flow.js';
+export type { FlowOptions } from './commands/flow.js';
 export { runImpact } from './commands/impact.js';
 export { runStats, collectStats, summariseStats } from './commands/stats.js';
 export type { Stats } from './commands/stats.js';
@@ -135,7 +138,7 @@ export { CliError, EXIT, cannotRun, notFound } from './exit.js';
 export type { ExitCode } from './exit.js';
 export { openDbFromOptions, sourceRootsFor } from './db.js';
 export type { DbOptions } from './db.js';
-export { DEFAULT_DEPTH, FORMATS, querySettings, withQueryOptions } from './options.js';
+export { DEFAULT_DEPTH, FLOW_FORMATS, FORMATS, querySettings, withQueryOptions } from './options.js';
 export type { Format, QueryOptions, QuerySettings } from './options.js';
 export { present, processIo } from './query/answer.js';
 export type { Answer, QueryIo } from './query/answer.js';
@@ -150,12 +153,17 @@ export {
   graphOf,
   renderJson,
   renderMermaid,
+  renderSequenceDiagram,
   renderTree,
   repoPalette,
   sanitiseIds,
   truncationLine,
 } from './render/index.js';
-export type { RenderOptions, Renderer, RepoPalette, SourceBlock } from './render/index.js';
+export type { DrawnSequence, DrawnStep, RenderOptions, Renderer, RepoPalette, SequenceDiagramOptions, SourceBlock } from './render/index.js';
+export { sequenceDepth, stopsIn, walkSequence } from './query/sequence.js';
+export type { SequenceWalk } from './query/sequence.js';
+export { flowCandidates, flowChanges } from './report/flow-changes.js';
+export type { FlowCandidate, FlowLimits } from './report/flow-changes.js';
 export { runCycles, CYCLE_EDGES } from './commands/cycles.js';
 export { runDead } from './commands/dead.js';
 export { registerAccept, runAccept, targetOf } from './commands/accept.js';
@@ -251,7 +259,11 @@ export {
 export { runConfig, SelectorError } from './commands/config.js';
 export { runHotspots } from './commands/hotspots.js';
 export { HOTSPOT_EDGES } from './analysis/hotspots.js';
-export { runDiff, registerDiff, DIFF_FILE } from './commands/diff.js';
+export { runDiff, registerDiff, DIFF_FILE, DEFAULT_MAX_FLOWS } from './commands/diff.js';
+export { DEFAULT_DOC_GLOB, DOCS_FORMATS, docFiles, docsIn, registerDocs, runDocs } from './commands/docs.js';
+export type { DocResult, DocsFormat, DocsOptions, DocsProblem, DocsRun } from './commands/docs.js';
+export { DOC_VIEW_RENDERERS, renderDocView } from './docs/views.js';
+export type { DrawnView } from './docs/views.js';
 export type { DiffFormat, DiffOptions, DiffRun } from './commands/diff.js';
 export { runCache, registerCache, CACHE_ACTIONS } from './commands/cache.js';
 export type { CacheAction, CacheOptions, CacheRun } from './commands/cache.js';
@@ -262,8 +274,10 @@ export type { CacheEntry, CacheMeta, CacheRow } from './git/graph-cache.js';
 export { isDirty, isGitRepo, pruneWorktrees, resolveSha, withWorktree } from './git/worktree.js';
 export type { Checkout, NodeModules } from './git/worktree.js';
 export { classifyContracts, contractBreaks } from './report/contract-delta.js';
-export { renderDiffMarkdown, summariseDiff } from './report/diff-markdown.js';
+export { DIFF_MARKDOWN_DEFAULTS, renderDiffMarkdown, summariseDiff } from './report/diff-markdown.js';
 export type { DiffMarkdownOptions } from './report/diff-markdown.js';
+export { staleDocLines, staleDocsOf } from './report/stale-docs.js';
+export type { StaleDoc, StaleDocs } from './report/stale-docs.js';
 export { runVisualise } from './commands/visualise.js';
 export type { VisualiseOptions, VisualiseResult } from './commands/visualise.js';
 export { packGraph } from './visualise/pack.js';

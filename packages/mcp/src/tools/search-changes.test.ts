@@ -84,6 +84,7 @@ const diff: DiffReport = {
   types: { added: [], removed: [], changed: [] },
   unresolved: { added: [], removed: [] },
   joins: { lost: [] },
+  flows: [],
   counts: {
     base: { nodes: 5, edges: 2, types: 1, unresolved: { rows: 2, sites: 2 } },
     head: { nodes: 6, edges: 3, types: 1, unresolved: { rows: 2, sites: 2 } },
@@ -437,12 +438,25 @@ describe('what_changed', () => {
     });
 
     it('reads a diff.json of format 1, and says it is too old to know the gaps', async () => {
-      const { unresolved: _unresolved, joins: _joins, ...old } = diff;
+      const { unresolved: _unresolved, joins: _joins, flows: _flows, ...old } = diff;
       writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...old, diffFormatVersion: 1 }));
       try {
         const answer = await call('what_changed', { verdict: true });
         expect(answer.verdict).toBe('unknown');
         expect(answer.because[0]).toMatch(/format 1.*rerun flowatlas diff for new gaps/);
+      } finally {
+        writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
+      }
+    });
+
+    it('reads a diff.json of format 2, whose missing flows do not make the verdict unknown (P116)', async () => {
+      const { flows: _flows, ...old } = diff;
+      writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...old, diffFormatVersion: 2 }));
+      try {
+        const answer = await call('what_changed', { verdict: true });
+        expect(answer.verdict).toBe('safe');
+        expect(answer.counts.flows).toBe(0);
+        expect(answer.retest[0].flow).toBeUndefined();
       } finally {
         writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
       }
@@ -465,5 +479,48 @@ describe('what_changed', () => {
       ]);
       expect(answer.next[0]).toBe(`get_flow({entry: ${JSON.stringify(ROUTE)}})`);
     });
+  });
+});
+
+describe('what_changed says what each changed flow does now (P116)', () => {
+  const flow = {
+    entry: ROUTE,
+    label: 'POST /orders',
+    service: 'orders',
+    side: 'both' as const,
+    reaches: 1,
+    participants: [
+      { id: 'caller', label: 'client', kind: 'caller' as const },
+      { id: 'orders', label: 'orders', kind: 'service' as const, service: 'orders' },
+      { id: CHANNEL, label: 'order.placed', kind: 'channel' as const },
+      { id: 'billing', label: 'billing', kind: 'service' as const, service: 'billing' },
+    ],
+    steps: [
+      { status: 'same' as const, kind: 'enters' as const, from: 'caller', to: 'orders', label: 'POST /orders', confidence: 'static' as const },
+      { status: 'added' as const, kind: 'emits' as const, from: 'orders', to: CHANNEL, label: 'order.placed', confidence: 'static' as const },
+      { status: 'removed' as const, kind: 'http_calls' as const, from: 'orders', to: 'billing', label: 'POST /invoices', confidence: 'static' as const },
+    ],
+    counts: { same: 1, added: 1, removed: 1, changed: 0 },
+  };
+
+  it('gives each way in its changed steps as text, and only their counts at detail 0', async () => {
+    writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify({ ...diff, flows: [flow] }));
+    try {
+      const answer = await call('what_changed');
+      expect(answer.counts.flows).toBe(1);
+      expect(answer.entries[0].flow).toEqual({
+        side: 'both',
+        added: 1,
+        removed: 1,
+        changed: 0,
+        steps: ['+ orders → order.placed order.placed', '- orders → billing POST /invoices'],
+      });
+      const bare = await call('what_changed', { detail: 0 });
+      expect(bare.entries[0].flow).toEqual({ side: 'both', added: 1, removed: 1, changed: 0 });
+      const verdict = await call('what_changed', { verdict: true });
+      expect(verdict.retest[0].flow.steps).toHaveLength(2);
+    } finally {
+      writeFileSync(join(dbPath, '..', 'diff.json'), JSON.stringify(diff));
+    }
   });
 });

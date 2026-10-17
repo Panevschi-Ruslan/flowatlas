@@ -58,6 +58,8 @@ export const OUTPUT = '.flowatlas';
  * of the answer - a fixture that does gets a snapshot validated and compared
  * never, which the checker refuses.
  *
+ * A step with `when` runs only for a fixture it says yes to.
+ *
  * `neutral` is a configuration with nothing in it: `extract` searches upward for
  * one and would otherwise find this repository's own.
  */
@@ -78,6 +80,15 @@ const KINDS = [
         writes: ['contracts.json'],
         mayDecline: true,
       },
+      {
+        // The index of the doc blocks a fixture's configuration points at
+        // (P120), which the MCP server reads beside the graph: only where the
+        // configuration names its docs, so a fixture without them is not read
+        // for Markdown it never meant as docs.
+        args: (dir) => ['docs', '--config', join(dir, 'flowatlas.config.json')],
+        writes: ['docs.json'],
+        when: (dir) => configOf(dir)?.docs !== undefined,
+      },
     ],
   },
   {
@@ -91,6 +102,15 @@ const KINDS = [
     ],
   },
 ];
+
+/** A fixture's configuration, read as data, or nothing when it has none or it cannot be read. */
+const configOf = (dir) => {
+  try {
+    return JSON.parse(readFileSync(join(dir, 'flowatlas.config.json'), 'utf8'));
+  } catch {
+    return undefined;
+  }
+};
 
 /** The exit code of a command that could not answer, as opposed to one that failed. */
 export const CANNOT_RUN = 2;

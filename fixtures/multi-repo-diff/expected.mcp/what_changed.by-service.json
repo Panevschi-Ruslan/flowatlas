@@ -10,18 +10,18 @@
   "generatedAt": "2026-01-01T00:00:00.000Z",
   "counts": {
     "nodes": {
-      "added": 1,
+      "added": 3,
       "removed": 2,
       "changed": 1,
-      "moved": 8
+      "moved": 9
     },
     "edges": {
-      "added": 1,
+      "added": 4,
       "removed": 2,
       "changed": 1
     },
     "types": {
-      "added": 0,
+      "added": 1,
       "removed": 0,
       "changed": 1
     },
@@ -35,11 +35,14 @@
       "added": 1,
       "removed": 0
     },
-    "lostJoins": 1
+    "lostJoins": 1,
+    "flows": 5
   },
   "nodes": {
     "added": [
-      "entry:orders:http:GET:/shipments/:param/status"
+      "channel:order.gift-wrapped",
+      "entry:orders:http:GET:/shipments/:param/status",
+      "producer:orders#src/orders/orders.service.ts:23:5"
     ],
     "removed": [
       "entry:orders:http:GET:/shipments/:param",
@@ -54,7 +57,9 @@
     ]
   },
   "types": {
-    "added": [],
+    "added": [
+      "type:orders#OrderGiftWrappedEvent"
+    ],
     "removed": [],
     "changed": [
       "type:orders#CreateOrderDto"
@@ -110,6 +115,17 @@
       "service": "orders",
       "confidence": "static",
       "reaches": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "flow": {
+        "side": "both",
+        "added": 2,
+        "removed": 0,
+        "changed": 1,
+        "steps": [
+          "~ client → orders POST /orders (body: +channel (required))",
+          "+ orders → order.gift-wrapped (topic) order.gift-wrapped",
+          "+ order.gift-wrapped (topic) → billing order.gift-wrapped"
+        ]
+      },
       "changed": 1
     },
     {
@@ -120,6 +136,15 @@
       "service": "orders",
       "confidence": "static",
       "reaches": "orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+      "flow": {
+        "side": "head",
+        "added": 1,
+        "removed": 0,
+        "changed": 0,
+        "steps": [
+          "+ client → orders GET /shipments/:param/status"
+        ]
+      },
       "changed": 1
     }
   ],

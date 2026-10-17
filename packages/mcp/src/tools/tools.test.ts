@@ -104,19 +104,21 @@ describe('the tools a session is offered', () => {
    * grew by what the three tools say and the inputs they take; the rest is
    * their output schemas, which the client checks every answer against.
    * P96 gave `what_changed` its `verdict` and said so in its description:
-   * 9,659 and 27,446, inside both ceilings. Its prompts and resources are
+   * 9,659 and 27,446, inside both ceilings. P120 gave `start_here`'s
+   * output schema `staleDocs`: 9,659 and 27,476. Its prompts and resources are
    * listed apart (`prompts/list`, `resources/list`) and cost the tool list
    * nothing.
    *
    * Raised again by P121, which added `test_pattern` (three inputs, no output
    * schema) and one clause of the instructions: about 450 characters read,
-   * about 500 in all. With P96 beside it, 10,100 and 28,037.
+   * about 500 in all. With P96 beside it, 10,100 and 28,037. With P120's
+   * `staleDocs` beside it, 10,100 and 28,067.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
     expect(read.length).toBeLessThan(10150);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(28050);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(28100);
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

@@ -1689,6 +1689,8 @@
   .access-list { list-style: none; margin: 4px 0 0; padding: 0; }
   .access-list li { padding: 3px 0; border-top: 1px solid var(--rule-soft); font-size: 12px; overflow-wrap: anywhere; }
   .access-list .is-off { color: var(--muted); text-decoration: line-through; }
+  .doc-list { list-style: none; margin: 4px 0 0; padding: 0; }
+  .doc-list li { padding: 3px 0; border-top: 1px solid var(--rule-soft); font-size: 12px; overflow-wrap: anywhere; }
   .accepted-problem { color: var(--warn); font-weight: 600; }
   .accepted-rules { margin: 6px 0 0; padding: 0 0 0 18px; font-size: 12px; color: var(--muted); }
   .accepted-rules code, .accept-cmd { font-family: var(--f-mono); font-size: 11.5px; overflow-wrap: anywhere; }
@@ -2763,6 +2765,19 @@ __STEPS_LOGIC__
             : `<details class="fail-sites"><summary class="hint">${esc(g.srcs.join('/'))} &times;${g.n}</summary><ul>` +
               g.sites.map((f) => `<li>${failSiteHtml(v, f)}</li>`).join('') + '</ul></details>') +
           '</li>').join('') + '</ul></section>';
+    };
+    /* The pages that describe a node (P120): blocks of Markdown files tied to
+       it by flowatlas docs, and whether each still says what the graph says. */
+    const DOC_STATE_SAYS = { ok: ['good', 'up to date'], changed: ['warn', 'stale: the flow changed'], gone: ['bad', 'names nothing now'], ambiguous: ['bad', 'names more than one node'] };
+    const docsHtml = (v) => {
+      const list = (data.docs || {})[v];
+      if (!list || list.length === 0) return '';
+      return `<section><h4>Described in &middot; ${list.length}</h4><ul class="doc-list">` +
+        list.map(([file, line, kind, state]) => {
+          const [tone, say] = DOC_STATE_SAYS[state] || ['warn', state];
+          return `<li><span class="g-place">${esc(file)}:${line}</span> <span class="hint">${esc(kind)}</span> ` +
+            `<span class="tag is-${tone}">${esc(say)}</span></li>`;
+        }).join('') + '</ul></section>';
     };
     /* What stands in front of a way in, and from where (P76). */
     const accessHtml = (v) => {
@@ -3967,6 +3982,7 @@ __STEPS_LOGIC__
           : '') +
         accessHtml(v) +
         failsHtml(v) +
+        docsHtml(v) +
         shapeHtml(v) +
         `<section><h4>In &middot; ${total(d.into)}</h4>` +
           (d.into.length ? d.into.map((group) => edgeGroup('in', group, 0)).join('') : '<p class="g-none">Nothing reaches it.</p>') +

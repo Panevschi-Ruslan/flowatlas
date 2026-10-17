@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
+import { withDocs } from '../query/docs.js';
 import { buildFlowTree, type FlowResult } from '../query/flow.js';
 import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
 import type { FlowNode } from '../query/types.js';
@@ -102,6 +103,8 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
             unresolvedOnPath: flow.unresolvedOnPath,
             ...(flow.truncated === undefined ? {} : { truncated: flow.truncated, stoppedBy: flow.stoppedBy }),
             ...(flow.crossingsLeft === undefined ? {} : { crossingsLeft: flow.crossingsLeft }),
+            // The pages that describe this flow (P120): a change here is one they must follow.
+            ...withDocs(db, ctx.handle.path, ref.id),
             ...(note === undefined ? {} : { note }),
           },
           flowNext(ref.id, flow),

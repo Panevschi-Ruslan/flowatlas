@@ -86,6 +86,20 @@
       "service": "orders"
     }
   ],
+  "docs": [
+    {
+      "file": "docs/architecture.md",
+      "line": 10,
+      "kind": "flow",
+      "state": "ok"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 95,
+      "kind": "flow",
+      "state": "ok"
+    }
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
     "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",

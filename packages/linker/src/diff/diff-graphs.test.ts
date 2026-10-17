@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { diffGraphs, impactedNodes } from './diff-graphs.js';
 import { lostJoins } from './lost-joins.js';
-import { graphDiffSchema, parseGraphDiff } from './schema.js';
+import { graphDiffSchema, graphDiffSchemaV2, parseGraphDiff } from './schema.js';
 import { edge, field, graphOf, node, object } from './test-graph.js';
 import { DIFF_FORMAT_VERSION, sectionsMissing } from './types.js';
 
@@ -367,7 +367,7 @@ describe('lostJoins (P96)', () => {
   });
 });
 
-describe('diff.json formats (P96)', () => {
+describe('diff.json formats (P96, P116)', () => {
   const formatOne = {
     diffFormatVersion: 1,
     schemaVersion: 1,
@@ -387,11 +387,15 @@ describe('diff.json formats (P96)', () => {
     timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 },
   };
 
-  it('writes format 2, with the gaps and the lost joins', () => {
-    expect(DIFF_FORMAT_VERSION).toBe(2);
-    const current = { ...formatOne, diffFormatVersion: 2, unresolved: { added: [], removed: [] }, joins: { lost: [] } };
-    expect(graphDiffSchema.parse(current).diffFormatVersion).toBe(2);
+  const formatTwo = { ...formatOne, diffFormatVersion: 2, unresolved: { added: [], removed: [] }, joins: { lost: [] } };
+
+  it('writes format 3, with the flows beside the gaps and the lost joins (P116)', () => {
+    expect(DIFF_FORMAT_VERSION).toBe(3);
+    const current = { ...formatTwo, diffFormatVersion: 3, flows: [] };
+    expect(graphDiffSchema.parse(current).diffFormatVersion).toBe(3);
     expect(() => graphDiffSchema.parse(formatOne)).toThrow();
+    expect(() => graphDiffSchema.parse(formatTwo)).toThrow();
+    expect(graphDiffSchemaV2.parse(formatTwo).diffFormatVersion).toBe(2);
   });
 
   it('still reads format 1, its new sections empty and said to be missing', () => {
@@ -399,12 +403,39 @@ describe('diff.json formats (P96)', () => {
     expect(read.diffFormatVersion).toBe(1);
     expect(read.unresolved).toEqual({ added: [], removed: [] });
     expect(read.joins).toEqual({ lost: [] });
-    expect(sectionsMissing(read)).toEqual(['unresolved', 'joins']);
-    expect(sectionsMissing({ diffFormatVersion: 2 })).toEqual([]);
+    expect(read.flows).toEqual([]);
+    expect(sectionsMissing(read)).toEqual(['unresolved', 'joins', 'flows']);
+    expect(sectionsMissing({ diffFormatVersion: 3 })).toEqual([]);
+  });
+
+  it('still reads format 2, with no flows and flows said to be missing (P116)', () => {
+    const lost = { kind: 'target-gone', caller: 'a', target: 'b', edge: 'http_calls', service: 'x', targetService: 'y', now: 'no-edge', targetRemoved: false };
+    const read = parseGraphDiff({ ...formatTwo, joins: { lost: [lost] } });
+    expect(read.diffFormatVersion).toBe(2);
+    expect(read.joins.lost).toEqual([lost]);
+    expect(read.flows).toEqual([]);
+    expect(sectionsMissing(read)).toEqual(['flows']);
+    // A format-2 document is checked as one: it cannot carry flows it predates.
+    expect(() => parseGraphDiff({ ...formatTwo, flows: [] })).toThrow();
+  });
+
+  it('checks a flow step by step', () => {
+    const flow = {
+      entry: 'entry:orders:http:POST:/orders',
+      label: 'POST /orders',
+      service: 'orders',
+      side: 'both',
+      reaches: 1,
+      participants: [{ id: 'orders', label: 'orders', kind: 'service', service: 'orders' }],
+      steps: [{ status: 'added', kind: 'emits', from: 'orders', to: 'channel:x', label: 'x', confidence: 'static', line: 3 }],
+      counts: { same: 0, added: 1, removed: 0, changed: 0 },
+    };
+    expect(parseGraphDiff({ ...formatTwo, diffFormatVersion: 3, flows: [flow] }).flows).toEqual([flow]);
+    expect(() => parseGraphDiff({ ...formatTwo, diffFormatVersion: 3, flows: [{ ...flow, steps: [{ ...flow.steps[0], status: 'moved' }] }] })).toThrow();
   });
 
   it('refuses a format from a newer flowatlas by name, and a document with no format', () => {
-    expect(() => parseGraphDiff({ ...formatOne, diffFormatVersion: 9 })).toThrow(/format 9, written by a newer flowatlas/);
+    expect(() => parseGraphDiff({ ...formatOne, diffFormatVersion: 9 })).toThrow(/format 9, written by a newer flowatlas; this one reads formats 1 to 3/);
     expect(() => parseGraphDiff({})).toThrow(/no diffFormatVersion/);
     // A format-1 document is still checked as one: a typo is an error, not a default.
     expect(() => parseGraphDiff({ ...formatOne, extra: true })).toThrow();

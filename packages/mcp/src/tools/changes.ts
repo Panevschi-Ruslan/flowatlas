@@ -3,9 +3,12 @@ import { dirname, join } from 'node:path';
 import type { DetailLevel } from '@flowatlas/core';
 import {
   findingKindOf,
+  flowChanged,
   parseGraphDiff,
+  sayStep,
   sectionsMissing,
   type BlastEntry,
+  type FlowChange,
   type DiffReport,
   type DiffSide,
   type GapRef,
@@ -44,7 +47,34 @@ export interface ChangedEntry {
   confidence?: string;
   /** The changed node it reaches, nearest first. */
   reaches: string;
+  /** What its flow does now that it did not before, when it changed (P116). */
+  flow?: FlowSaid;
 }
+
+/**
+ * A way in's flow, compared step by step (P116): how many steps were added,
+ * removed and changed, and from detail 1 the changed steps as text
+ * (`+ orders → billing POST /invoices`), never a diagram, at most
+ * `MAX_STEP_LINES` of them.
+ */
+export interface FlowSaid {
+  /** `both`, or `head`/`base` for a way in only that side has. */
+  side: FlowChange['side'];
+  added: number;
+  removed: number;
+  changed: number;
+  steps?: string[];
+}
+
+/** How many changed steps a flow says as text; the rest are counted in a last line. */
+export const MAX_STEP_LINES = 12;
+
+/** A changed flow's steps said for an agent: the ones that changed, in order. */
+export const flowSaid = (flow: FlowChange): FlowSaid => {
+  const lines = flow.steps.filter((step) => step.status !== 'same').map((step) => sayStep(step, flow.participants));
+  const steps = lines.length > MAX_STEP_LINES ? [...lines.slice(0, MAX_STEP_LINES), `… ${lines.length - MAX_STEP_LINES} more changed steps; get_flow on the entry`] : lines;
+  return { side: flow.side, added: flow.counts.added, removed: flow.counts.removed, changed: flow.counts.changed, steps };
+};
 
 /** A changed node: its id at 0, whose and its label from 1, the fields that changed at 2. */
 export interface ChangedNode {
@@ -80,6 +110,8 @@ export interface WhatChanged {
     gaps: { added: number; removed: number };
     /** Calls and channel ends that stopped joining (format 2). */
     lostJoins: number;
+    /** Ways in whose flow changed (format 3). */
+    flows: number;
   };
   nodes: {
     added: string[];
@@ -171,6 +203,9 @@ export interface VerdictOptions {
 /** Warnings that mean a service was read from its working tree on both sides, or not read at all. */
 const UNREAD_WARNINGS: ReadonlySet<string> = new Set(['ref-not-found', 'not-a-git-repo', 'base-extract-failed']);
 
+/** The `diff.json` sections the verdict is decided by; a document without one of them is `unknown` (I11). */
+const VERDICT_SECTIONS: ReadonlySet<string> = new Set(['unresolved', 'joins']);
+
 /** How far back from a change the path to a way in is walked: as far as the blast radius goes, bounded (I9). */
 const PATH_WALK = { maxDepth: 25, maxNodes: 5000 } as const;
 
@@ -233,6 +268,8 @@ interface Scoped {
   gapsAdded: GapRef[];
   gapsRemoved: GapRef[];
   lost: LostJoin[];
+  /** The changed flows of the ways in kept (P116). */
+  flows: FlowChange[];
   known: boolean;
 }
 
@@ -246,6 +283,7 @@ const scopeOf = (report: DiffReport, service: string | undefined, serviceOf?: (i
   const byEdge = <T extends { from: string }>(edges: readonly T[]): T[] => (service === undefined ? [...edges] : edges.filter((edge) => ownerOf(edge.from) === service));
   const byType = (ids: readonly string[]): string[] => (service === undefined ? [...ids] : ids.filter((id) => serviceInId(id) === service));
 
+  const flows = new Map(report.flows.filter(flowChanged).map((flow) => [flow.entry, flow]));
   const entries = new Map<string, RetestEntry>();
   for (const row of report.impact) {
     if (service !== undefined && !row.services.includes(service)) continue;
@@ -256,6 +294,7 @@ const scopeOf = (report: DiffReport, service: string | undefined, serviceOf?: (i
         held.changed += 1;
         continue;
       }
+      const flow = flows.get(entry.id);
       entries.set(entry.id, {
         id: entry.id,
         type: entry.type,
@@ -264,6 +303,7 @@ const scopeOf = (report: DiffReport, service: string | undefined, serviceOf?: (i
         service: entry.service,
         confidence: entry.confidence,
         reaches: row.node,
+        ...(flow === undefined ? {} : { flow: flowSaid(flow) }),
         changed: 1,
       });
     }
@@ -289,6 +329,7 @@ const scopeOf = (report: DiffReport, service: string | undefined, serviceOf?: (i
     gapsAdded: report.unresolved.added.filter((ref) => keep(ref.service)),
     gapsRemoved: report.unresolved.removed.filter((ref) => keep(ref.service)),
     lost: report.joins.lost.filter((join) => keep(join.service) || (service !== undefined && join.targetService === service)),
+    flows: [...flows.values()].filter((flow) => keep(flow.service) || flow.participants.some((participant) => participant.service === service)),
     known: service === undefined || servicesIn(report).has(service),
   };
 };
@@ -368,7 +409,9 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
     unsafe.push(`${plural(removedEntries.length, 'removed way in is', 'removed ways in are')} still called from another service: ${removedEntries.join(', ')}`);
   }
 
-  const missing = sectionsMissing(report);
+  // Only the sections the verdict reads: a document with no flows says nothing
+  // less about whether a branch is safe.
+  const missing = sectionsMissing(report).filter((section) => VERDICT_SECTIONS.has(section));
   if (missing.length > 0) {
     unknown.push(`diff.json is format ${report.diffFormatVersion}, which holds no ${missing.join(' or ')}; rerun flowatlas diff for new gaps and lost joins`);
   }
@@ -498,13 +541,26 @@ export const summariseChanges = (
   };
   const changedNode = ({ id, service: owner, label, fields }: { id: string; service: string; label: string; fields: string[] }): ChangedNode =>
     detail <= 0 ? { id } : detail === 1 ? { id, service: owner, label } : { id, service: owner, label, fields };
+  // At detail 0 a flow is its counts; its steps as text from 1.
+  const flowAt = (flow: FlowSaid | undefined): { flow?: FlowSaid } => {
+    if (flow === undefined) return {};
+    const { steps: _steps, ...counts } = flow;
+    return { flow: detail <= 0 ? counts : flow };
+  };
   const changedEntry = (entry: RetestEntry): ChangedEntry => {
     const { changed: _changed, observed: _observed, ...row } = entry;
-    return detail <= 0 ? { id: row.id, type: row.type, reaches: row.reaches } : row;
+    return detail <= 0 ? { id: row.id, type: row.type, reaches: row.reaches, ...flowAt(row.flow) } : row;
   };
   const retestEntry = (entry: RetestEntry): RetestEntry =>
     detail <= 0
-      ? { id: entry.id, type: entry.type, reaches: entry.reaches, changed: entry.changed, ...(entry.observed === undefined ? {} : { observed: entry.observed }) }
+      ? {
+          id: entry.id,
+          type: entry.type,
+          reaches: entry.reaches,
+          ...flowAt(entry.flow),
+          changed: entry.changed,
+          ...(entry.observed === undefined ? {} : { observed: entry.observed }),
+        }
       : entry;
 
   const scoped = scopeOf(report, service, options.serviceOf);
@@ -520,6 +576,7 @@ export const summariseChanges = (
       contracts: { new: scoped.fresh.length, breaks: scoped.breaks.length, fixed: scoped.fixed },
       gaps: { added: scoped.gapsAdded.length, removed: scoped.gapsRemoved.length },
       lostJoins: scoped.lost.length,
+      flows: scoped.flows.length,
     },
     nodes: {
       added: bounded(scoped.added),

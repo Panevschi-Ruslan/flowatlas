@@ -7,6 +7,7 @@
  * only one section of it.
  */
 import type { ContractFinding } from '@flowatlas/contracts';
+import type { FlowChange } from './sequence.js';
 import type { BlastRow, GraphDiff } from './types.js';
 
 /** One repository, as it was read on one side of the comparison. */
@@ -35,7 +36,8 @@ export interface DiffSide {
  * printing rather than assuming. `node-modules-*` say what the type checker had
  * to resolve against; `dirty-working-tree` says a head ref was named and the
  * uncommitted work was left out on purpose; `impact-truncated` says the diff
- * below is complete and the table of who would notice is not.
+ * below is complete and the table of who would notice is not;
+ * `flows-truncated` says some ways in were not walked for `flows` (P116).
  */
 export const DIFF_WARNINGS = [
   'ref-not-found',
@@ -45,6 +47,7 @@ export const DIFF_WARNINGS = [
   'base-extract-failed',
   'dirty-working-tree',
   'impact-truncated',
+  'flows-truncated',
 ] as const;
 
 export type DiffWarningReason = (typeof DIFF_WARNINGS)[number];
@@ -100,6 +103,12 @@ export interface DiffReport {
   joins: GraphDiff['joins'];
   /** One row per changed or removed node, in the order they should be read. */
   impact: BlastRow[];
+  /**
+   * The ways in the impact reaches (and those added or removed), each walked
+   * on both sides and compared step by step, the most changed first (format
+   * 3, P116).
+   */
+  flows: FlowChange[];
   contracts: DiffContracts;
   warnings: DiffWarning[];
   timing: DiffTiming;

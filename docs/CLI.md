@@ -6,7 +6,8 @@ see the [README](../README.md).
 Commands fall into four groups. **Setting up** writes the configuration and
 registers the graph server. **Building** reads the repositories. **Asking** reads
 the built graph and never touches a repository. **Checking** says what could not
-be read, what is accepted, and what a branch changes.
+be read, what is accepted, what a branch changes, and whether the docs that
+describe a flow still say what the graph says.
 
 Two flags appear almost everywhere and mean the same thing every time:
 
@@ -537,7 +538,7 @@ the whole graph has no walk to bound, so it is not offered `--depth`.
 | Flag | Default | Does |
 |---|---|---|
 | `--detail <0-3>` | `1` | 0 identity only, 1 adds location, 2 adds metadata, 3 is answered at 2 |
-| `--format <name>` | `tree` on a terminal, `json` in a pipe | one of `tree`, `json`, `mermaid` |
+| `--format <name>` | `tree` on a terminal, `json` in a pipe | one of `tree`, `json`, `mermaid`; `flow` also `sequence` |
 | `--depth <n>` | `8`, and one more per step: of the workflow `flow` starts at, of every workflow `impact` climbs through | how many hops to follow |
 | `--max-nodes <n>` | `150` | most nodes to print, after which it says how many it cut |
 | `--service <name>` | every service | narrow to one |
@@ -550,7 +551,10 @@ because JSON repeats every key and every full node id; it is the cheapest thing
 to hand to a person or a model. JSON is the one to parse, and the only one
 carrying node ids, so it is what you want if a follow-up has to name a node.
 Mermaid names every edge and its confidence, but drops locations and ids: it is
-for pasting into a pull request, where it renders as a diagram.
+for pasting into a pull request, where it renders as a diagram. `sequence`
+(`flow` only) is the walk as a Mermaid sequence diagram: what crosses from one
+service to another, in call order, the diagram `flowatlas diff` draws for a
+changed flow.
 
 ### `flowatlas flow <entry>`
 
@@ -596,6 +600,24 @@ entry:shop@examples/blog:http:GET:/api/orders
 ```
 
 `flow "GET /health"` there comes back as that choice, naming both.
+
+**As a sequence.** `--format sequence` draws the walk as a Mermaid
+`sequenceDiagram`: the caller of the way in, a participant per service, each
+channel and outside API one of its own, each table inside its service's box.
+The messages are the steps that cross from one participant to another - the
+request into the way in, a request to another service, a publish onto a channel
+and the handler that takes it, a query - numbered, in call order, a loop as
+`loop` and a `Promise.all` as `par`; a step the graph guessed says
+`(best guess)`, and a place the walk cannot see past is a note where it stopped
+(`stops here: target-route-not-found`). `--sequence-detail class` draws a
+participant per class inside each service, with the calls between them. Without
+`--depth` a sequence is walked 16 hops (more for a workflow), as far as `diff`
+walks one, so the diagram is the one a pull request shows for that way in,
+without the marks:
+
+```sh
+flowatlas flow "POST /orders" --format sequence
+```
 
 The last line, `unresolved on this path: N` (`unresolvedOnPath` in JSON and in
 the MCP `get_flow`), counts the nodes of the walk that something could not be
@@ -1763,8 +1785,14 @@ are new. Markdown by default, because its destination is a pull request comment.
 | `--format <name>` | `markdown` | `markdown` or `json` |
 | `--output <file>` | none | write what was printed here as well |
 | `--fail-on-contract-break` | off | exit 1 on a new contract error, or on a service neither ref could be read for |
-| `--max-entries <n>` | 20 | ways in listed per changed node |
-| `--max-nodes <n>` | 50 | changed nodes walked backwards from |
+| `--max-entries <n>` | 150 | ways in listed per changed node |
+| `--max-nodes <n>` | 100 | changed nodes walked backwards from |
+| `--max-flows <n>` | 50 | ways in walked for **Changed flows**; the rest are counted in a `flows-truncated` warning |
+| `--max-diagrams <n>` | 5 | changed flows drawn; the rest are named and counted |
+| `--context <n>` | 3 | unchanged steps kept on each side of a change; a longer run folds to `N unchanged steps` |
+| `--sequence-detail <level>` | `service` | `service` or `class`: what a participant of a flow's diagram is |
+| `--max-chars <n>` | 60000 | about the most characters of Markdown (a pull-request comment on GitHub holds 65,536): diagrams are dropped from the last one back, then whole flows, each counted, with `diff.json` named |
+| `--no-diagrams` | off | list each changed flow's steps without its Mermaid diagram |
 | `--concurrency <n>` | cores | repositories read at once |
 | `--no-cache` | off | read every commit again rather than believing the cache |
 | `--keep-worktrees` | off | leave the detached checkouts on disk, for debugging |
@@ -1786,13 +1814,49 @@ other way round. **Gaps and findings** lists, by gap id
 findings that the head has and the base does not, each with the method it is
 in. The MCP server's `what_changed({verdict: true})` reads both.
 
-`diff.json` is format 2 (`diffFormatVersion`): format 1 plus `unresolved`
+**Changed flows**, after the impact, is the question a reviewer has about each
+way in: what does this request do now that it did not do before. Every way in
+the impact lists, and every way in the branch added or removed, is walked on
+both graphs (16 hops, `maxNodes` 150, the same on each side) and read as a
+sequence of steps, as `flow --format sequence` draws it. The two sequences are
+matched step by step on what each step is - its two ends, its kind and its
+label, never its line - so a step written five lines lower is the same step, and
+one inserted in the middle is one addition. Each changed flow is a `<details>`
+(the first open) whose summary says what happened (`POST /orders` (gateway) — 2
+steps added, 1 changed; crosses gateway → orders → billing), a Mermaid sequence
+diagram with added steps in green prefixed `+`, removed ones in red drawn with
+the cross arrow and prefixed `−`, and changed ones in amber with a note naming
+what changed (`body: +channel (required)`: the request carries, or its handler
+takes, a type that changed shape), and under it the same steps as a `diff`
+block, for a reader whose client does not render Mermaid. A way in only one side
+has is drawn on that side alone, titled added or removed (a removed one read off
+the base graph). The flows that changed most, across most services, come first;
+ways in whose steps did not change are named on one line.
+
+**Docs this branch makes stale**, after the changed flows, lists each doc block
+(see `flowatlas docs`) on the head side that no longer says what the head
+graph says but did say what the base graph says, at its `file:line`, with the
+steps added and removed under it, so a reviewer sees which pages to update in
+the same pull request. Blocks that were stale before the branch are counted on
+one line; a project without doc blocks gets no section. The head side's files
+are read from the working tree, or at the head ref from the repository of the
+service each is in. The section is in the Markdown only: `diff.json` is
+unchanged by it.
+
+`diff.json` is format 3 (`diffFormatVersion`). Format 2 added `unresolved`
 (`{ added, removed }`, each row `{ id, kind, service, file, line?, reason,
 node?, sites }`, `kind` `gap` or `finding`) and `joins` (`{ lost }`, each
 `{ kind, caller, target, edge, service, targetService, now, targetRemoved }`,
-`kind` `target-gone`, `no-producer` or `no-consumer`). A file of format 1 is
-still read, without those sections; one from a newer flowatlas is refused by
-name.
+`kind` `target-gone`, `no-producer` or `no-consumer`). Format 3 adds `flows`:
+one per way in walked, `{ entry, label, service, side, reaches, participants,
+steps, counts, truncated? }`, `side` `both`, `head` or `base`, each participant
+`{ id, label, kind, service? }` (`kind` `caller`, `service`, `class`, `channel`,
+`table`, `store` or `external`) and each step `{ status, kind, from, to, label,
+confidence, file?, line?, params?, returns?, takes?, group?, note? }` (`status`
+`same`, `added`, `removed` or `changed`; `kind` `enters`, `calls`, `http_calls`,
+`hits`, `emits`, `consumes`, `queries`, `caches`, `triggers` or `stop`). Files of
+formats 1 and 2 are still read, without the sections they predate; one from a
+newer flowatlas is refused by name.
 
 ### `flowatlas cache <action>`
 
@@ -1805,6 +1869,93 @@ once. `ls`, `prune` or `clear`.
 | `--keep <n>` | 10 | entries `prune` keeps, newest first |
 | `--max <n>` | all | most rows to print |
 | `--json` | off | print the answer as JSON |
+
+### `flowatlas docs [paths...]`
+
+Markdown kept true to the graph. A page names a flow, a channel or a symbol in
+a block of two HTML comments - invisible wherever Markdown is rendered - and
+`flowatlas docs --write` fills the space between them from the graph:
+
+```md
+<!-- flowatlas:flow id="POST /orders" view="sequence" -->
+<!-- /flowatlas:flow -->
+```
+
+becomes the diagram `flow --format sequence` draws, with the closing marker
+holding a fingerprint of what the diagram shows and, one per line, the steps
+it covered:
+
+```md
+<!-- flowatlas:flow id="POST /orders" view="sequence" -->
+…the diagram…
+<!-- /flowatlas:flow fingerprint="4bb04c97"
+["enters","caller","orders","POST /orders","",["type:@fx/contracts#CreateOrderDto"],"type:@fx/contracts#OrderDto"]
+["emits","orders","channel:order.created","order.created","",["type:@fx/contracts#OrderDto"]]
+-->
+```
+
+`flowatlas docs --check` then fails a pipeline when the flow a block describes
+has changed since it was written, and says which steps were added or removed.
+The fingerprint is of what the block shows, not of its text: node ids without
+their positions, how each was reached and how sure the graph is, the type ids
+carried in and out, in walk order, and the steps between services. Moving code
+down a file or reformatting it changes nothing; a new step, a removed one or a
+changed shape fails the check.
+
+| Flag | Default | Does |
+|---|---|---|
+| `[paths...]` | `docs.files`, else every `*.md` under the configuration | Markdown files, directories or globs to read |
+| `--check` | off | exit 1 when a block is `changed`, `gone` or `ambiguous`; 2 when a marker cannot be read |
+| `--write` | off | regenerate the content between the markers of every block that names one node, in place |
+| `--list` | off | every block with its id, view and state |
+| `--format <name>` | `text` | `text`, `json`, or `github` (a `::warning` at each stale block's opening line) |
+| `--config <path>`, `--db <path>` | found from the working directory | the project and the graph |
+
+**Blocks.** `flow` names a way in, `channel` a channel (publishers and
+handlers), `symbol` any node (what reaches it and what it reaches). `ref`
+holds nothing: `<!-- flowatlas:ref id="orders#src/orders/orders.service.ts:OrdersService.create" -->`
+before a mention in prose is checked to still name a node. An `id` is a node
+id, an entry said aloud (`POST /orders`, `bot:order_confirm`), or a name that is
+exactly one node's label; a channel may be named without `channel:`. A name
+that matches nothing is never re-pointed at the nearest one: the block is
+`gone`, with the nearest names. Attributes: `view`, `depth`, `max-nodes`
+(default 60; 120 for `prompt`), `detail` (0 to 2, default 1) and `service`,
+which says which service's route a name means when two serve it.
+
+**Views.**
+
+| View | What is written |
+|---|---|
+| `steps` (default) | the tree `flow` prints, in a `text` block |
+| `mermaid` | the flowchart `flow --format mermaid` draws |
+| `sequence` | the sequence diagram `flow --format sequence` and `diff` draw |
+| `prompt` | the Markdown `describe_for_prompt` answers with and the page copies, its headings two levels down |
+| `contract` | a table of each crossing with what it sends, gets back and what the handler takes, each shape's fields, and what the way in can fail with |
+| `tour` | a numbered walkthrough, one line per step with its service and `file:line`, and a note slot under each |
+
+**Tours.** Each step line carries its key (`<!-- step key="…" -->`, the node id
+without a position). Whatever is written under a step line is that step's
+note, and a regeneration puts it back under the step with the same key,
+wherever the step now is. A note whose step left the flow is kept at the end of
+the block under **Orphaned notes**, never deleted, and returns to its step if
+the step does.
+
+**States.** `ok`: the fingerprint is the graph's. `changed`: it is not, with
+the steps added (`+`) and removed (`-`) since; a block written by hand, with no
+fingerprint, is `changed` until it is written once. `gone`: the id names
+nothing, with the nearest names. `ambiguous`: it names more than one node, each
+named; nothing is written into it. A marker that cannot be read (unclosed,
+opened inside another block, an unknown kind, attribute or view) is reported
+with its line and its block skipped. Markers inside a fenced code block or a
+code span are text about markers and are ignored.
+
+**What it writes.** Only `--write` writes, only between flowatlas markers, only
+in the files named or configured, and nothing when the content is already what
+it would write. Every run writes `docs.json` beside the graph
+(`docsFormatVersion: 1`: `files` read, and per block `file`, `line`, `kind`,
+`id`, `node`, `view`, `options`, `state`, `fingerprint`, `near`,
+`candidates`), which the MCP server and `flowatlas visualise` read to say which
+documents describe a node.
 
 ---
 
@@ -2044,6 +2195,7 @@ worked example of a document that declares routes.
 | `dead.infrastructure.names` | string[] | `[]` | handler or controller names (`OpsController`, `OpsController.flush`) that mark a route as infrastructure |
 | `dead.infrastructure.builtIn` | boolean | `true` | `false` turns the built-in probe, webhook, callback and well-known rules off; the three lists still apply |
 | `callShape.boundedCalls` | string[] | `[]` | helpers of your own that split a list into chunks, beside the built-in `chunk`, `chunks`, `batches`, `inChunks` and `splitEvery`: a loop over what one returns is set aside |
+| `docs.files` | string[] | every `*.md` under this file | the Markdown files `flowatlas docs` reads for blocks tied to flows: paths or globs, relative to this configuration. Files in the output directory and `node_modules` are never read |
 
 **A path segment written as a closed set.** A segment whose type is a union of
 string literals — `action: 'ship' | 'refund'` — is a segment that was

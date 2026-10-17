@@ -305,3 +305,23 @@ whether the annotation can be about anything else.
 
 An annotation that reached no route counts for nothing here: the reader still
 has something to fix, and the marker checks say what.
+
+## A page tied to its flows (P120)
+
+`docs/architecture.md` is the project's own page, with doc blocks that
+`flowatlas docs` checks against the graph: the gateway's `GET /orders/:param`
+as a tree and as a tour (with notes under two steps), `POST /orders` as a
+sequence diagram and as a contract table, `order.created` as a flowchart, a
+`ref` to `OrdersService.create` in a sentence, a block naming a route that
+does not exist (`gone`) and one naming a route two services serve without
+saying which (`ambiguous`). The contract block is left as a person writes it,
+unfilled, so a check calls it `changed` until it is written. The configuration
+points `docs.files` at the page, and `fixtures-run` writes the `docs.json` the
+MCP snapshots read.
+
+`expected.cli/docs.check.{txt,json}`, `docs.check.github.txt` and
+`docs.list.txt` are what the check says; `docs.architecture.md` is the page as
+`flowatlas docs --write` leaves it (written on a copy). Once a flow the page
+describes changes, `docs.check.txt` says so: regenerate the page with
+`node packages/cli/bin/flowatlas.js docs --write --config fixtures/multi-repo/flowatlas.config.json`
+and review it like any other snapshot.

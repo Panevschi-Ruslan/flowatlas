@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { DIFF_WARNINGS } from './report.js';
 import { CONFIDENCE_LEVELS } from '@flowatlas/core';
 import type { DiffReport } from './report.js';
+import { FLOW_SIDES, PARTICIPANT_KINDS, STEP_KINDS, STEP_STATUSES } from './sequence.js';
 import { DIFF_FORMAT_VERSION, GAP_REF_KINDS, LOST_JOIN_KINDS, TYPE_FIELD_CHANGES } from './types.js';
 
 const edgeRefSchema = z.strictObject({
@@ -131,6 +132,50 @@ const lostJoinSchema = z.strictObject({
   targetRemoved: z.boolean(),
 });
 
+const participantSchema = z.strictObject({
+  id: z.string().min(1),
+  label: z.string(),
+  kind: z.enum(PARTICIPANT_KINDS),
+  service: z.string().optional(),
+});
+
+const stepSchema = z.strictObject({
+  status: z.enum(STEP_STATUSES),
+  kind: z.enum(STEP_KINDS),
+  from: z.string().min(1),
+  to: z.string().min(1),
+  label: z.string(),
+  confidence: z.enum(CONFIDENCE_LEVELS),
+  file: z.string().optional(),
+  line: z.number().int().min(0).optional(),
+  params: z.array(z.string()).optional(),
+  returns: z.string().optional(),
+  takes: z.array(z.string()).optional(),
+  group: z
+    .strictObject({
+      kind: z.enum(['loop', 'par']),
+      id: z.string().min(1),
+      label: z.string(),
+      branch: z.number().int().min(0).optional(),
+    })
+    .optional(),
+  note: z.string().min(1).optional(),
+});
+
+const stepCount = z.number().int().min(0);
+
+const flowChangeSchema = z.strictObject({
+  entry: z.string().min(1),
+  label: z.string(),
+  service: z.string(),
+  side: z.enum(FLOW_SIDES),
+  reaches: z.number().int().min(0),
+  participants: z.array(participantSchema),
+  steps: z.array(stepSchema),
+  counts: z.strictObject({ same: stepCount, added: stepCount, removed: stepCount, changed: stepCount }),
+  truncated: z.string().min(1).optional(),
+});
+
 /** Every section of format 1, which every later format keeps. */
 const formatOneShape = {
   schemaVersion: z.number().int().positive(),
@@ -170,15 +215,24 @@ const formatOneShape = {
   }),
 };
 
+/** The sections format 2 added (P96), which every later format keeps. */
+const formatTwoShape = {
+  unresolved: z.strictObject({ added: z.array(gapRefSchema), removed: z.array(gapRefSchema) }),
+  joins: z.strictObject({ lost: z.array(lostJoinSchema) }),
+};
+
 /** Format 1, as flowatlas wrote it before P96: read, never written. */
 export const graphDiffSchemaV1 = z.strictObject({ diffFormatVersion: z.literal(1), ...formatOneShape });
+
+/** Format 2, as flowatlas wrote it before P116: read, never written. */
+export const graphDiffSchemaV2 = z.strictObject({ diffFormatVersion: z.literal(2), ...formatOneShape, ...formatTwoShape });
 
 /** The whole document, as `flowatlas diff` writes it: the current format. */
 export const graphDiffSchema = z.strictObject({
   diffFormatVersion: z.literal(DIFF_FORMAT_VERSION),
   ...formatOneShape,
-  unresolved: z.strictObject({ added: z.array(gapRefSchema), removed: z.array(gapRefSchema) }),
-  joins: z.strictObject({ lost: z.array(lostJoinSchema) }),
+  ...formatTwoShape,
+  flows: z.array(flowChangeSchema),
 });
 
 /**
@@ -191,6 +245,10 @@ const OLDER: Readonly<Record<number, { schema: z.ZodType; lift: (doc: Record<str
   1: {
     schema: graphDiffSchemaV1,
     lift: (doc) => ({ ...doc, unresolved: { added: [], removed: [] }, joins: { lost: [] } }),
+  },
+  2: {
+    schema: graphDiffSchemaV2,
+    lift: (doc) => ({ ...doc, flows: [] }),
   },
 };
 

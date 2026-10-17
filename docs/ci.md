@@ -116,10 +116,22 @@ jobs:
 
       - run: npx @flowatlas/cli build
       - run: npx @flowatlas/cli doctor --strict --no-contracts --format github
+      # Pages whose doc blocks no longer say what the graph says.
+      - run: npx @flowatlas/cli docs --check --format github
 ```
 
 `--format github` prints one `::error file=…,line=…::` per finding, so they
 appear against the lines that caused them rather than only in the log.
+
+**Docs.** A page that names a flow in a doc block (see
+[`flowatlas docs`](CLI.md#flowatlas-docs-paths)) is checked like code:
+`docs --check` exits 1 when a flow a block describes gained or lost a step
+since the block was written, when its id names nothing any more, or when it
+names more than one thing, and `--format github` puts a `::warning` at the
+block's opening line. The fix is `flowatlas docs --write`, committed with the
+change; a reformat or a line moved never fails it, because the fingerprint is
+of the steps, not of the text. Set `docs.files` in the configuration to read
+only the pages that hold blocks.
 
 ## On a pull request
 
@@ -134,11 +146,33 @@ It reads each repository at its own commit through a detached worktree, so
 uncommitted work is never touched, and it remembers each graph under the commit
 that produced it, so the second run is much faster than the first.
 
-The report has three parts. What changed, and what reaches it from anywhere in
+The report has four parts. What changed, and what reaches it from anywhere in
 the project — including a node that is gone, walked on the base graph, because a
-removal nobody can see the effect of is the dangerous kind. What the revision did
-to the contracts, sorted into new, fixed, already there and excused. And which
-types changed shape.
+removal nobody can see the effect of is the dangerous kind. What each of those
+ways in does now that it did not before: under **Changed flows**, one Mermaid
+sequence diagram per changed flow across the services, added steps in green,
+removed ones in red with a cross, a changed request body named in a note, and
+the same steps listed as text under it for a reader whose mail or client does
+not render Mermaid. What the revision did to the contracts, sorted into new,
+fixed, already there and excused. And which types changed shape. Where the
+project has doc blocks, **Docs this branch makes stale** lists the ones that
+were true on the base and are not on this branch, at their `file:line`, so the
+page is updated in the same pull request.
+
+The comment stays under `--max-chars` (60,000 by default; a GitHub comment
+holds 65,536): the diagrams are dropped from the last one back, then whole
+flows, each counted, and the line that says so names `diff.json`, which always
+has every flow. `--max-diagrams` (5) and `--context` (3 unchanged steps on each
+side of a change) keep a large branch readable, and `--no-diagrams` lists the
+steps alone. Posting it is the workflow's job:
+
+```sh
+flowatlas diff origin/main --output diff.md
+gh pr comment "$PR" --body-file diff.md
+```
+
+To see one flow's diagram locally, as the comment draws it without the marks:
+`flowatlas flow "POST /orders" --format sequence`.
 
 To fail only on a break this branch introduced:
 

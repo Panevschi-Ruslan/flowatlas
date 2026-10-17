@@ -108,6 +108,9 @@ const CASES = [
   ['describe_for_prompt.wrong-scope', 'describe_for_prompt', { id: 'POST /orders', scope: 'class' }],
   ['who_calls.class', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService', depth: 1 }],
   ['impact.class', 'impact', { symbol: 'OrdersService' }],
+  // The pages that describe what was asked about (P120), from the docs.json `flowatlas docs` wrote.
+  ['describe_for_prompt.documented', 'describe_for_prompt', { id: 'entry:gateway:http:GET:/orders/:param', maxSteps: 3 }],
+  ['impact.documented', 'impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.create' }],
 ];
 
 /**

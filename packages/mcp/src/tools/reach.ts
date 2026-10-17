@@ -9,6 +9,7 @@ import { truncationMessage, type FlowNode, type WalkLimit } from '../query/types
 import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
 import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
 import { slimForest } from '../query/wire.js';
+import { withDocs } from '../query/docs.js';
 import {
   bound,
   callOf,
@@ -416,6 +417,8 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
           reachedByService,
           servicesWithoutEntry,
           channels: [...channels].sort(),
+          // The pages about it (P120): what to update beside what to retest.
+          ...withDocs(db, ctx.handle.path, target.id),
           ...(note === undefined ? {} : { note }),
         }, pagedNext({ tool: 'impact', args, nextOffset }, leads));
       }),

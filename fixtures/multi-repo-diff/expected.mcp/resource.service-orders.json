@@ -4,7 +4,7 @@
     "services": [
       {
         "service": "orders",
-        "nodes": 17,
+        "nodes": 19,
         "entries": 3,
         "entriesByKind": {
           "http": 3
@@ -86,6 +86,14 @@
         "via": "channel:order.created",
         "status": "unchecked",
         "check": "check_contract({from: \"producer:orders#src/orders/orders.service.ts:20:5\", to: \"channel:order.created\"})"
+      },
+      {
+        "from": "producer:orders#src/orders/orders.service.ts:23:5",
+        "to": "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+        "type": "emits",
+        "via": "channel:order.gift-wrapped",
+        "status": "unchecked",
+        "check": "check_contract({from: \"producer:orders#src/orders/orders.service.ts:23:5\", to: \"channel:order.gift-wrapped\"})"
       }
     ],
     "into": [

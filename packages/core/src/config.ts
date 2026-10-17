@@ -1319,6 +1319,17 @@ export const flowatlasConfigSchema = z
           .default({ paths: [], decorators: [], names: [], builtIn: true }),
       })
       .default({ infrastructure: { paths: [], decorators: [], names: [], builtIn: true } }),
+    /**
+     * The Markdown files `flowatlas docs` reads for blocks tied to flows
+     * (P120): paths or globs relative to this configuration. Absent, every
+     * `*.md` under the configuration's directory is read, outside
+     * `node_modules`, `.git` and the output directory.
+     */
+    docs: z
+      .strictObject({
+        files: z.array(z.string().min(1)).optional(),
+      })
+      .optional(),
   })
   .superRefine((config, ctx) => {
     const seen = new Set<string>();

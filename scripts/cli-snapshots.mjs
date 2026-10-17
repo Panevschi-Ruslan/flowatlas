@@ -27,6 +27,8 @@ import {
   runChannel,
   runContracts,
   runDead,
+  runDiff,
+  runDocs,
   runDoctorCommand,
   runFlow,
   runImpact,
@@ -34,6 +36,7 @@ import {
   runStats,
   runTypes,
 } from '../packages/cli/dist/index.js';
+import { diffFixtureProject } from './diff-fixture.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = join(root, 'fixtures', 'multi-repo');
@@ -74,8 +77,43 @@ const acceptUnreadable = (io) => {
   }
 };
 
+/**
+ * `flowatlas docs` over the fixture's own page (P120): what a check says, as
+ * text, JSON and workflow commands, with the exit code; every block listed;
+ * and the page as `--write` leaves it. The write is made on a copy of the
+ * page and of the database, so neither the fixture nor the `docs.json` the
+ * MCP snapshots read is touched; the checks write that index, the same one
+ * `fixtures-run` writes.
+ */
+const docsAsked = (options) => (io) => {
+  const run = runDocs([], { config, ...options }, io);
+  io.err(`exit ${run.exitCode}\n`);
+};
+
+const docsWritten = (io) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-docs-'));
+  try {
+    cpSync(join(fixture, 'docs'), join(copy, 'docs'), { recursive: true });
+    // The database beside its own copy of the output, which a run never reads Markdown from.
+    mkdirSync(join(copy, 'out'));
+    for (const name of readdirSync(join(fixture, '.flowatlas')).filter((file) => file.startsWith('graph.db'))) {
+      cpSync(join(fixture, '.flowatlas', name), join(copy, 'out', name));
+    }
+    const page = join(copy, 'docs', 'architecture.md');
+    runDocs([page], { config, db: join(copy, 'out', 'graph.db'), write: true }, { out() {}, err() {} });
+    io.out(readFileSync(page, 'utf8'));
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
+  ['docs.architecture.md', docsWritten],
+  ['docs.check.txt', docsAsked({ check: true })],
+  ['docs.check.json', docsAsked({ check: true, format: 'json' })],
+  ['docs.check.github.txt', docsAsked({ check: true, format: 'github' })],
+  ['docs.list.txt', docsAsked({ list: true })],
   ['accept.unreadable.txt', acceptUnreadable],
   ['flow.get-orders.tree.l0.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '0' }, io)],
   ['flow.get-orders.tree.l1.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree' }, io)],
@@ -89,6 +127,8 @@ const CASES = [
   ['flow.get-orders.mermaid.l2.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'mermaid', detail: '2' }, io)],
   ['flow.post-orders.tree.ansi.txt', (io) => runFlow('entry:orders:http:POST:/orders', { config, format: 'tree' }, { ...io, tty: true })],
   ['flow.post-orders.truncated.tree.txt', (io) => runFlow('entry:orders:http:POST:/orders', { ...plain, format: 'tree', maxNodes: '5' }, io)],
+  ['flow.post-orders.sequence.txt', (io) => runFlow('entry:orders:http:POST:/orders', { ...plain, format: 'sequence' }, io)],
+  ['flow.get-orders.sequence.class.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'sequence', sequenceDetail: 'class' }, io)],
   ['impact.orders-create.tree.txt', (io) => runImpact(ORDERS_CREATE, { ...plain, format: 'tree' }, io)],
   ['impact.orders-create.json', (io) => runImpact(ORDERS_CREATE, { ...plain, format: 'json' }, io)],
   ['impact.orders-create.entries-only.tree.txt', (io) => runImpact(ORDERS_CREATE, { ...plain, format: 'tree', entriesOnly: true }, io)],
@@ -538,6 +578,41 @@ const HOUSE_CASES = [
   ['doctor.ambiguous.txt', async (io) => runDoctorCommand({ config: await variantBuilt('ambiguous') }, io)],
 ];
 
+/**
+ * The pull-request document `flowatlas diff` writes for `fixtures/multi-repo-diff`
+ * (P116), with its changed flows drawn, and the `diff.json` beside it. The
+ * project's history is made once, the same commits on every machine
+ * (`diff-fixture.mjs`); what still differs between runs - how long each side
+ * took, and where the copy was made - is written as a placeholder.
+ */
+const FIXED = '2026-01-01T00:00:00.000Z';
+let diffProject;
+const diffProjectOnce = async () => (diffProject ??= await diffFixtureProject(root));
+const quiet = { out() {}, err() {}, tty: false };
+const diffRun = async (options) => {
+  const { scratch, config: diffConfig } = await diffProjectOnce();
+  const run = await runDiff('HEAD~1', undefined, { config: diffConfig, generatedAt: FIXED, ...options }, quiet);
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  return { run, placed };
+};
+const diffMarkdown = (options) => async (io) => {
+  const { run, placed } = await diffRun(options);
+  io.out(placed(run.text).replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total'));
+};
+
+const DIFF_CASES = [
+  ['diff.md', diffMarkdown({})],
+  ['diff.class.md', diffMarkdown({ sequenceDetail: 'class', maxDiagrams: '1', context: '0' })],
+  [
+    'diff.json',
+    async (io) => {
+      const { run, placed } = await diffRun({});
+      const report = { ...run.report, timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 } };
+      io.out(placed(`${JSON.stringify(report, null, 2)}\n`));
+    },
+  ],
+];
+
 const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
   terraformShape('lambda-terraform-openapi', [
@@ -607,6 +682,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.cli'), owned: true, cases: LOOPS_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
   { dir: join(root, 'fixtures', 'house-patterns', 'expected.cli'), owned: true, cases: HOUSE_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 
@@ -664,6 +740,8 @@ for (const [file, ask] of CASES) {
   if (expected !== actual) problems.push(`${file}: output differs from the snapshot`);
 }
 }
+
+if (diffProject !== undefined) rmSync(diffProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 
 for (const { dir, owned, cases } of SUITES) {
   if (update || !owned) continue;

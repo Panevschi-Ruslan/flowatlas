@@ -77,6 +77,7 @@ const diff: DiffReport = {
   types: { added: [], removed: [], changed: [] },
   unresolved: { added: [], removed: [] },
   joins: { lost: [] },
+  flows: [],
   counts: {
     base: { nodes: 0, edges: 0, types: 0, unresolved: { rows: 0, sites: 0 } },
     head: { nodes: 0, edges: 0, types: 0, unresolved: { rows: 0, sites: 0 } },

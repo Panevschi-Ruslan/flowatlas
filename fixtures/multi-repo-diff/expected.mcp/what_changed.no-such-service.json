@@ -35,7 +35,8 @@
       "added": 0,
       "removed": 0
     },
-    "lostJoins": 0
+    "lostJoins": 0,
+    "flows": 0
   },
   "nodes": {
     "added": [],
