@@ -2,6 +2,7 @@ import { normalizePath, type GraphNode } from '@flowatlas/core';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
+import { rankMatches } from '../query/names.js';
 import { nextFor, withNext } from '../query/next.js';
 import {
   bound,
@@ -39,33 +40,10 @@ const inReadingOrder = (a: GraphNode, b: GraphNode): number =>
   cmp(a.repo, b.repo) || cmp(a.kind ?? '', b.kind ?? '') || cmp(a.label, b.label);
 
 /**
- * Fuzzy match: a substring, or the initials of a camel-cased name.
- *
- * `ocs` finds `OrderCreationService`, which is how someone types when they half
- * remember a name.
+ * Fuzzy match and near names live with the resolver (`query/names.ts`), so a
+ * name an error suggests is ranked the way every lookup ranks it (P94).
  */
-const initialsOf = (text: string): string =>
-  (text.match(/[A-Z]|(?<=[^A-Za-z0-9])[a-z]/g) ?? []).join('').toLowerCase();
-
-export interface Ranked {
-  node: GraphNode;
-  score: number;
-}
-
-export const rankMatches = (nodes: readonly GraphNode[], query: string): Ranked[] => {
-  const wanted = query.toLowerCase();
-  const ranked: Ranked[] = [];
-  for (const node of nodes) {
-    const label = node.label.toLowerCase();
-    const id = node.id.toLowerCase();
-    if (label === wanted) ranked.push({ node, score: 0 });
-    else if (label.startsWith(wanted)) ranked.push({ node, score: 1 });
-    else if (label.includes(wanted)) ranked.push({ node, score: 2 });
-    else if (initialsOf(node.label).includes(wanted)) ranked.push({ node, score: 3 });
-    else if (id.includes(wanted)) ranked.push({ node, score: 4 });
-  }
-  return ranked.sort((a, b) => a.score - b.score || a.node.label.length - b.node.label.length || cmp(a.node.id, b.node.id));
-};
+export { nearNames, rankMatches, type Ranked } from '../query/names.js';
 
 /** What list_entries answers: one page of entries, and how many there are. */
 export const listEntriesOutput = {

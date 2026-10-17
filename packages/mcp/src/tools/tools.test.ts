@@ -389,6 +389,43 @@ describe('working backwards', () => {
     const answer = await call('who_calls', { symbol: 'findOne' });
     expect(answer.candidates.length).toBeGreaterThan(1);
   });
+
+  it('asks the same tool again once per candidate (P94)', async () => {
+    const answer = await call('who_calls', { symbol: 'findOne' });
+    expect(answer.next).toEqual(
+      answer.candidates.slice(0, 4).map((candidate: { id: string }) => `who_calls({symbol: ${JSON.stringify(candidate.id)}})`),
+    );
+    const impact = await call('impact', { symbol: 'findOne' });
+    expect(impact.next.every((hint: string) => hint.startsWith('impact('))).toBe(true);
+  });
+
+  it('counts the callers it left past its depth, and names the rows to ask on from (P94)', async () => {
+    const answer = await call('who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 2 });
+    expect(answer.truncated).toBe('1 more nodes past depth 2; raise depth');
+    expect(answer.stoppedBy).toEqual(['depth']);
+    expect(answer.frontier).toEqual(['entry:orders:http:GET:/orders/:param']);
+    expect(answer.next[0]).toBe('who_calls({symbol: "orders#src/orders/orders.service.ts:OrdersService.findOne", depth: 4})');
+  });
+
+  it('says nothing was cut when the walk ran out of callers', async () => {
+    const answer = await call('who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 16 });
+    expect(answer.truncated).toBeUndefined();
+    expect(answer.stoppedBy).toBeUndefined();
+  });
+
+  it('takes a route said with a real value, and gives the two services that serve it as candidates (P94)', async () => {
+    const answer = await call('who_calls', { symbol: 'GET /orders/123' });
+    expect(answer.candidates.map((candidate: { id: string }) => candidate.id)).toEqual([
+      'entry:gateway:http:GET:/orders/:param',
+      'entry:orders:http:GET:/orders/:param',
+    ]);
+  });
+
+  it('takes a literal route, and names the routes that answer it less specifically (P94)', async () => {
+    const answer = await call('impact', { symbol: 'GET /orders/latest' });
+    expect(answer.target.id).toBe('entry:orders:http:GET:/orders/latest');
+    expect(answer.alsoAnswers).toEqual(['entry:gateway:http:GET:/orders/:param', 'entry:orders:http:GET:/orders/:param']);
+  });
 });
 
 describe('channels', () => {
@@ -412,6 +449,12 @@ describe('channels', () => {
 
   it('says so when the channel does not exist', async () => {
     expect((await call('who_emits', { channel: 'nope' })).error).toContain('no channel named');
+  });
+
+  it('names the nearest channels when the one asked for does not exist (P94)', async () => {
+    const answer = await call('who_consumes', { channel: 'order.creatd' });
+    expect(answer.suggestions.map((node: { id: string }) => node.id)).toContain('channel:order.created');
+    expect(answer.next[0]).toBe('who_consumes({channel: "channel:order.created"})');
   });
 });
 
@@ -471,6 +514,24 @@ describe('whether two services still agree', () => {
     const answer = await call('check_contract', { from: 'a', to: 'b' });
     expect(answer.error).toContain('no edge');
   });
+
+  it('lists every crossing between two services, each with the call that checks it (P94)', async () => {
+    const answer = await call('check_contract', { from: 'gateway', to: 'billing' });
+    expect(answer.crossings.map((crossing: { to: string }) => crossing.to)).toEqual(['entry:billing:http:POST:/invoices']);
+    expect(answer.crossings[0]).toMatchObject({ type: 'http_calls', status: 'hash_differs' });
+    expect(answer.next[0]).toBe(answer.crossings[0].check);
+    const publishes = await call('check_contract', { from: 'orders', to: 'billing' });
+    expect(publishes.crossings).toEqual([
+      expect.objectContaining({ type: 'emits', via: 'channel:order.created', to: expect.stringContaining('InvoicesConsumer.onOrderCreated') }),
+    ]);
+  });
+
+  it('says when nothing crosses between two services, and which way something does', async () => {
+    const answer = await call('check_contract', { from: 'billing', to: 'gateway' });
+    expect(answer.crossings).toEqual([]);
+    expect(answer.note).toBe('nothing crosses from billing to gateway; 1 crossing(s) go the other way');
+    expect(answer.next).toEqual(['check_contract({from: "gateway", to: "billing"})']);
+  });
 });
 
 describe('reading the code itself', () => {
@@ -494,8 +555,66 @@ describe('reading the code itself', () => {
     expect(wide.code.length).toBeGreaterThan(tight.code.length);
   });
 
-  it('says so when the symbol is unknown', async () => {
-    expect((await call('get_source', { symbol: 'nope' })).error).toContain('no symbol with id');
+  it('says so when the symbol is unknown, and names the nearest (P94)', async () => {
+    const answer = await call('get_source', { symbol: 'OrdersServce.findOne' });
+    expect(answer.error).toContain('no symbol matches');
+    expect(answer.suggestions[0].id).toBe('orders#src/orders/orders.service.ts:OrdersService.findOne');
+    expect(answer.next[0]).toBe('get_source({symbol: "orders#src/orders/orders.service.ts:OrdersService.findOne"})');
+  });
+
+  it('takes a name, not only an id (P94)', async () => {
+    const answer = await call('get_source', { symbol: 'OrdersService.create' });
+    expect(answer.id).toBe('orders#src/orders/orders.service.ts:OrdersService.create');
+    expect(answer.code).toContain('create');
+  });
+
+  it('gives the candidates, each a get_source call, for a name that means more than one', async () => {
+    const answer = await call('get_source', { symbol: 'findOne' });
+    expect(answer.candidates.length).toBeGreaterThan(1);
+    expect(answer.next.every((hint: string) => hint.startsWith('get_source('))).toBe(true);
+  });
+});
+
+describe('an answer that could not be given (P94)', () => {
+  it('is a failed call every time, never an empty result', async () => {
+    const failing: Array<[string, Record<string, unknown>]> = [
+      ['who_calls', { symbol: 'zzzz-nothing-zzzz' }],
+      ['impact', { symbol: 'zzzz-nothing-zzzz' }],
+      ['who_emits', { channel: 'nope' }],
+      ['get_source', { symbol: 'zzzz-nothing-zzzz' }],
+      ['get_flow', { entry: 'PUT /nowhere' }],
+      ['check_contract', { from: 'a', to: 'b' }],
+      ['cant_follow', { cause: 'no-such-cause' }],
+      ['search', { query: 'zzzz-nothing-zzzz' }],
+    ];
+    for (const [name, args] of failing) {
+      const reply = (await client.callTool({ name, arguments: args })) as { isError?: boolean; structuredContent?: unknown; content: Array<{ text: string }> };
+      expect(reply.isError, name).toBe(true);
+      expect(reply.structuredContent, name).toBeUndefined();
+      expect(JSON.parse(reply.content[0]!.text).error, name).toEqual(expect.any(String));
+    }
+  });
+
+  it('names the causes there are when the one asked for does not exist', async () => {
+    const answer = await call('cant_follow', { cause: 'nope' });
+    expect(answer.error).toBe('no cause named "nope"');
+    expect(answer.known).toEqual(expect.arrayContaining(['module-not-installed', 'target-route-not-found']));
+    const near = await call('cant_follow', { cause: 'api-path-dynamik' });
+    expect(near.nearest).toEqual(['api-path-dynamic']);
+  });
+
+  it('says why a finding asked for as a cause has nothing to follow', async () => {
+    const answer = await call('cant_follow', { cause: 'route-unguarded' });
+    expect(answer.error).toBeUndefined();
+    expect(answer.causes).toEqual([]);
+    expect(answer.note).toBe('route-unguarded is a finding, not a step the reader missed: 4 rows');
+    expect(answer.next).toEqual(['search({query: "route-unguarded", kinds: ["gaps"]})']);
+  });
+
+  it('says a known cause has no rows in the service asked about', async () => {
+    const answer = await call('cant_follow', { cause: 'api-path-dynamic', service: 'gateway' });
+    expect(answer.note).toBe('no api-path-dynamic rows in gateway');
+    expect(answer.next).toEqual(['cant_follow({cause: "api-path-dynamic"})']);
   });
 });
 

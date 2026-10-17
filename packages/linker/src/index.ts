@@ -38,7 +38,7 @@ export { readAsyncapiDocument } from './asyncapi/index.js';
 export { surveyChannels, surveyRoutes } from './survey.js';
 export type { ChannelSurvey, RouteSurvey } from './survey.js';
 export { matchesRoutePattern } from './route-audit.js';
-export { isMatch, matchRoute, pathAnswers } from './route-match.js';
+export { answeringAt, isMatch, matchRoute, pathAnswers } from './route-match.js';
 export type { RouteMatch, RouteMiss, RouteResult } from './route-match.js';
 export { missedOf } from './report.js';
 export type { LinkReport, LinkTotals, ServicePackages, ServiceReport } from './report.js';

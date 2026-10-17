@@ -566,7 +566,11 @@ flowatlas flow "workflow:loan-approval"   # a state machine, by its name
 ```
 
 A name matching two services comes back as a choice rather than a guess. A name
-matching nothing comes back with the nearest few.
+matching nothing comes back with the nearest few. Where a route that spells a
+segment out and one with a hole there both answer, the spelled-out one is meant,
+as the router and the linker read it: `flow "GET /orders/latest"` is the route
+registered as `/orders/latest`, not `/orders/:param`. The graph server's tools
+resolve a name the same way.
 
 Each node is written out once. Met again - a helper every method calls, a
 logger - it is a `↺` line (`(again)` with `--ascii`) under the new caller, and

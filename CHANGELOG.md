@@ -582,12 +582,38 @@ only one of them moved.
   `channel` write a repeat as `↺` (`(again)` with `--ascii`, which said
   `(cycle)`) with the node's label, and the cut line names the one flag that
   shows more (`fixtures/multi-repo-plumbing`).
+- **MCP walks that say where they stopped (P94).** An answer that stopped,
+  found nothing or could not place a name used to read like a complete one.
+  `who_calls` counts the callers it left past its depth (`n more nodes past
+  depth 3; raise depth`, `stoppedBy`, and `frontier`, the rows to ask on from
+  at depth 16), writes a caller the graph has no node for as a `missing` row
+  instead of dropping it, and marks a row that is no way in and that nothing
+  calls `topOfChain` with `gapsInFile`, the gaps of its file that may hide the
+  call, with `cant_follow` and a gap search in `next`. `impact` with no way in
+  says `entriesNone` and where to look, and its walk limit moved from `note`
+  to `truncated`. `who_calls`, `impact` and `get_source` take a route said
+  aloud, a bot key or an `invoke:` name as `get_flow` does, and `get_source`
+  a name; a route with a literal segment resolves to the most specific route,
+  as the linker joins it, naming the others under `alsoAnswers`
+  (`GET /orders/latest` used to come back as three candidates), in the
+  terminal's `flow` and `config` too. After an ambiguous name `next`
+  asks the same tool once per candidate. An unknown channel, symbol or entry
+  names up to five `suggestions`; every error is `isError`. `check_contract`
+  between two service names lists every crossing from one into the other with
+  its status and the call that checks it. `cant_follow` for a cause with no
+  gaps says why (`route-unguarded is a finding, not a step the reader missed`),
+  and for a cause nothing knows is an error with the `known` causes and the
+  `nearest`. A `search` gap hit's `id` is the method it is in, its gap id moved
+  to `gapId`, and it carries `sites` and every `places` (at most ten), so
+  `next` leads to `get_source` and `who_calls`. `start_here` lists
+  `topFindings` beside `topGaps` (`fixtures/cant-follow/expected.mcp`).
 
 ### Fixed
 
 - **`impact` said only one of its notes (P132).** An answer whose walk stopped
   at its limit, asked at `detail: 3`, said only that the level was clamped: the
-  second note overwrote the first. It now says both, the walk's first.
+  second note overwrote the first. It now says both: the walk limit under
+  `truncated` since P94, the clamp as `note`.
 - **A file's likely N+1 hidden behind its note (P130).** The MCP `search`
   keeps one `query-in-loop` hit per file, and of loops reached alike it kept
   the first; a finding now ranks before a note reached alike, so a file holding

@@ -29,3 +29,8 @@ the built-in shapes, so every other package import resolves to nothing.
 
 `flowatlas doctor --unresolved` prints these by cause and by package, the page
 shows them under Not joined, and the MCP `cant_follow` tool answers the same.
+
+`expected.mcp` holds what the graph server answers where it used to answer
+nothing (P94): `who_calls` on `ReminderJob.start`, which nothing calls, marks it
+`topOfChain` with the gaps of its file and points at them; `impact` on it says
+`entriesNone`; and a cause misspelled is an error naming the causes there are.

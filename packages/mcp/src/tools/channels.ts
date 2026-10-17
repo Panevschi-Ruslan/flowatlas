@@ -1,7 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
-import { nextFor, withNext } from '../query/next.js';
+import { nearNames } from '../query/names.js';
+import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
 import {
   bound,
   commonInput,
@@ -61,7 +62,15 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
           const { detail, maxNodes, note } = bound(input);
           const id = channelId(input.channel);
           const channel = db.node(id);
-          if (channel === undefined) return { error: `no channel named ${JSON.stringify(id)}` };
+          if (channel === undefined) {
+            // The nearest names, each a call that takes it (P94): a typo is
+            // one step from its channel, not a dead end.
+            const near = nearNames(db.nodesByType('channel'), input.channel.trim().replace(/^channel:/, ''), 5);
+            return withNext(
+              { error: `no channel named ${JSON.stringify(id)}`, suggestions: near.map((node) => projectDetail(node, 0)) },
+              near.slice(0, MAX_NEXT).map((node) => `${name}({channel: ${JSON.stringify(node.id)}})`),
+            );
+          }
 
           // A publisher points at the channel; the channel points at a handler.
           const edges =

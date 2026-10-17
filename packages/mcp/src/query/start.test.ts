@@ -46,6 +46,15 @@ describe('the first answer of a session, counted by kind (P81)', () => {
     ]);
   });
 
+  it('lists findings apart from the gaps, whatever level they are written at (P94)', () => {
+    const summary = summariseProject({ nodes, channelEnds: new Map(), unresolved: rows });
+    expect(summary.topFindings.map((finding) => [finding.reason, finding.count, finding.services])).toEqual([
+      ['route-unguarded', 2, ['billing', 'orders']],
+      ['query-in-loop', 1, ['orders']],
+    ]);
+    expect(summary.topGaps.map((gap) => gap.reason)).not.toContain('route-unguarded');
+  });
+
   it('counts one service when asked about one', () => {
     const summary = summariseProject({ nodes, channelEnds: new Map(), unresolved: rows, service: 'billing' });
     expect(summary.counts).toEqual({ gaps: 0, sites: 0, notes: 0, findings: 1, nothing: 0 });

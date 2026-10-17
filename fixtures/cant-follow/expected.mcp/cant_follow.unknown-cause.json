@@ -1,0 +1,37 @@
+{
+  "error": "no cause named \"dynamic-membr\"",
+  "known": [
+    "any-typed",
+    "call-dynamic-receiver",
+    "callback-param",
+    "container-lookup",
+    "data-layer-unnamed",
+    "di-type-unresolved",
+    "dynamic-member",
+    "function-field",
+    "function-value",
+    "generic-receiver",
+    "import-unresolved",
+    "interface-type",
+    "language-any",
+    "module-namespace",
+    "module-not-installed",
+    "name-undeclared",
+    "no-base-class",
+    "object-literal",
+    "other-type",
+    "re-export-missing",
+    "this-outside-class",
+    "token-ambiguous",
+    "token-not-provided",
+    "type-unresolved",
+    "union-receiver",
+    "unknown-typed",
+    "untyped-di-token",
+    "untyped-parameter",
+    "untyped-value"
+  ],
+  "nearest": [
+    "dynamic-member"
+  ]
+}

@@ -2,7 +2,7 @@ import { rmSync } from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildTestDb, edge, entry, node, testDbDirectory, type TestGraph } from '../test-graph.js';
 import { projectDetail, truncate } from './detail.js';
-import { isResolved, resolveEntryRef } from './entry-ref.js';
+import { isResolved, resolveEntryRef, resolveSymbol } from './entry-ref.js';
 import { buildFlowTree, defaultFlowDepth, flatten, walkBack } from './flow.js';
 import type { FlowNode } from './types.js';
 
@@ -516,8 +516,29 @@ describe('naming an entry the way a person would', () => {
         label: 'GET /tickets/:param',
         meta: { method: 'GET', path: '/tickets/:param' },
       }),
+      entry('entry:orders:http:GET:/orders/latest', {
+        label: 'GET /orders/latest',
+        meta: { method: 'GET', path: '/orders/latest' },
+      }),
+      node('orders#src/orders.service.ts:OrdersService.create', { label: 'OrdersService.create' }),
+      node('orders#src/orders.service.ts:OrdersService.cancel', { label: 'OrdersService.cancel' }),
+      node('orders#src/carts.service.ts:CartsService.cancel', { label: 'CartsService.cancel' }),
     ],
     edges: [],
+  });
+
+  it('takes the route that spells a segment out over one with a hole there, and names the others (P94)', () => {
+    const found = resolveEntryRef(db, 'GET /orders/latest');
+    expect(isResolved(found) && found.id).toBe('entry:orders:http:GET:/orders/latest');
+    expect(isResolved(found) && found.alsoAnswers).toEqual([
+      'entry:gateway:http:GET:/orders/:param',
+      'entry:orders:http:GET:/orders/:param',
+    ]);
+  });
+
+  it('says no other route when only one answers', () => {
+    const found = resolveEntryRef(db, 'POST /orders');
+    expect(isResolved(found) && found.alsoAnswers).toBeUndefined();
   });
 
   it('accepts a route with a real value where the hole is', () => {
@@ -552,6 +573,32 @@ describe('naming an entry the way a person would', () => {
   it('comes back empty rather than guessing', () => {
     const found = resolveEntryRef(db, 'PUT /nowhere');
     expect(!isResolved(found) && found.candidates).toEqual([]);
+  });
+
+  describe('any symbol, by any name a tool accepts (P94 D1)', () => {
+    it('takes an id as it is', () => {
+      const found = resolveSymbol(db, 'orders#src/orders.service.ts:OrdersService.create');
+      expect(isResolved(found) && found.node.label).toBe('OrdersService.create');
+    });
+
+    it('takes a route said aloud, the way get_flow does', () => {
+      const found = resolveSymbol(db, 'get /tickets/7');
+      expect(isResolved(found) && found.id).toBe('entry:orders:http:GET:/tickets/:param');
+      expect(!isResolved(resolveSymbol(db, 'GET /orders/9'))).toBe(true);
+    });
+
+    it('takes a name that is the only best match', () => {
+      const found = resolveSymbol(db, 'OrdersService.create');
+      expect(isResolved(found) && found.id).toBe('orders#src/orders.service.ts:OrdersService.create');
+    });
+
+    it('gives the candidates for a name that means more than one', () => {
+      const found = resolveSymbol(db, 'cancel');
+      expect(!isResolved(found) && found.candidates.map((node) => node.label).sort()).toEqual([
+        'CartsService.cancel',
+        'OrdersService.cancel',
+      ]);
+    });
   });
 });
 

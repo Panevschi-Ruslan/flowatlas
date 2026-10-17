@@ -109,6 +109,20 @@
       }
     }
   ],
+  "topFindings": [
+    {
+      "reason": "route-unguarded",
+      "count": 4,
+      "services": [
+        "orders"
+      ],
+      "example": {
+        "message": "GET /orders/latest has no guard in front of it and reaches orders.",
+        "service": "orders",
+        "loc": "src/orders/orders.controller.ts:19"
+      }
+    }
+  ],
   "channels": {
     "noConsumers": [
       "channel:order.archived"

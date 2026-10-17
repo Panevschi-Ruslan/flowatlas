@@ -2,8 +2,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { projectDetail } from '../query/detail.js';
+import { isResolved, resolveSymbol } from '../query/entry-ref.js';
+import { nearNames } from '../query/names.js';
 import { MAX_NEXT, nextFor, withNext } from '../query/next.js';
-import { nextOutput, READ_ONLY, withDb, type ToolContext } from './common.js';
+import { nextOutput, nodeOutput, READ_ONLY, withDb, type ToolContext } from './common.js';
 
 /**
  * Where a declaration ends, read by counting braces from where it starts.
@@ -69,13 +72,17 @@ export const sourceWindow = (
   return { from, to, end, continues };
 };
 
-/** What get_source answers: the code of one symbol, or the part of it asked for. */
+/**
+ * What get_source answers: the code of one symbol, or the part of it asked
+ * for; or, for a name that means more than one, the candidates (P94).
+ */
 export const getSourceOutput = {
-  id: z.string(),
-  file: z.string(),
-  line: z.number(),
-  endLine: z.number(),
-  code: z.string(),
+  id: z.string().optional(),
+  file: z.string().optional(),
+  line: z.number().optional(),
+  endLine: z.number().optional(),
+  code: z.string().optional(),
+  candidates: z.array(nodeOutput).optional(),
   truncated: z.string().optional(),
   note: z.string().optional(),
   next: nextOutput,
@@ -88,7 +95,7 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
       title: 'Read the source of a symbol',
       description: 'The code of one symbol; the only tool that returns source.',
       inputSchema: {
-        symbol: z.string().describe('node id'),
+        symbol: z.string().describe('node id or name'),
         context: z.number().int().min(0).max(50).default(0).describe('lines either side'),
         fromLine: z.number().int().min(1).max(1000000).optional().describe('read on from this line'),
         maxLines: z.number().int().min(1).max(MAX_LINES).default(MAX_LINES),
@@ -98,8 +105,22 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
-        const node = db.node(input.symbol.trim());
-        if (node === undefined) return { error: `no symbol with id ${JSON.stringify(input.symbol)}` };
+        // By id, a route said aloud, or a name that is the only best match (P94 D1).
+        const found = resolveSymbol(db, input.symbol);
+        if (!isResolved(found)) {
+          if (found.candidates.length > 0) {
+            return withNext(
+              { candidates: found.candidates.map((node) => projectDetail(node, 1)) },
+              found.candidates.slice(0, MAX_NEXT).map((node) => `get_source({symbol: ${JSON.stringify(node.id)}})`),
+            );
+          }
+          const near = nearNames(db.allNodes(), input.symbol, 5);
+          return withNext(
+            { error: `no symbol matches ${JSON.stringify(input.symbol)}`, suggestions: near.map((node) => projectDetail(node, 1)) },
+            near.slice(0, MAX_NEXT).map((node) => `get_source({symbol: ${JSON.stringify(node.id)}})`),
+          );
+        }
+        const node = found.node;
         if (node.file === undefined) return { error: 'source unavailable', reason: 'the node records no file' };
 
         const root = ctx.handle.repoDir(node.repo);

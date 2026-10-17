@@ -89,7 +89,13 @@ Every answer is one compact JSON document, in the text content and again as
 `get_source`, `search` and `cant_follow` declare an `outputSchema`, and a
 client can check every answer against it; the tree tools follow once their
 shape is settled. An answer that is an error (`{ "error": … }`) carries
-`isError: true` and no `structuredContent`. Every tool is annotated
+`isError: true` and no `structuredContent`, every time, so a client shows a
+failed call and an assistant never reads it as an empty result. Where a near
+name exists the error names it: an unknown channel (`who_emits`,
+`who_consumes`), symbol (`get_source`) or entry (`get_flow`) answers with up to
+five `suggestions`, nearest first, and a `next` that asks again with each. A
+name that means more than one thing is not an error: it answers `candidates`,
+and `next` is the same tool once per candidate. Every tool is annotated
 `readOnlyHint: true`, `openWorldHint: false` and `idempotentHint: true`: none
 writes anything or reaches outside the project, so a client that asks before
 running a tool that might can skip asking.
@@ -158,9 +164,19 @@ same function, so one database says one set of numbers everywhere:
 | `findings` | rows saying something about the code itself |
 | `nothing` | places with no edge to draw |
 
-`topGaps` and each service's `gaps` are the actionable gaps; notes and findings
-are counted above and listed under `search({kinds: ["gaps"]})`, each hit with its
-`kind`.
+`topGaps` and each service's `gaps` are the actionable gaps: places the reading
+could not follow, and nothing else. `topFindings` lists the findings beside them
+the same way (reason, count, services, a first place): what the reading found
+about the code, a likely N+1 or a route with no guard, whatever level the row is
+written at. Notes are counted above and listed in neither. Every row is also
+listed under `search({kinds: ["gaps"]})`, each hit with its `kind`.
+
+A gap hit's `id` is the method or function its first place is written in, when
+the graph draws one, so `next` is `get_source` and `who_calls` on it; its
+`gapId` (`gap:<service>|<file>|<reason>`) is the one `flowatlas accept` takes.
+One hit stands for every row of its reason in its file: `sites` counts the
+places and `places` lists them as `file:line`, at most ten. A hit the graph
+draws nothing around has no `id`, and `next` searches the gaps of its file.
 
 A `query-in-loop` hit is one loop that runs a query, request or publish once per
 item (P89). It carries `severity` (`likely`, a finding, or `note`, a loop that is
@@ -234,9 +250,32 @@ A procedure's callers are requests like any other, joined to it by that dotted
 path with a `hits` edge, so `who_calls` on a procedure reaches the code in
 another repository that asks for it.
 
+`who_calls`, `impact` and `get_source` take a `symbol` by the same names: an
+id, an entry said aloud (`GET /orders/123`, `bot:x`, `invoke:x`, read exactly as
+`get_flow` reads it), or a name that is the one best match. A route said with a
+literal segment resolves as the router would: `GET /orders/latest` is the route
+registered as `/orders/latest`, not `/orders/:param`, and the answer names the
+routes that would also answer it under `alsoAnswers`. Two routes that spell the
+address out alike, in two services, stay candidates.
+
 `impact` is the one to ask before changing something: it answers "what would
 have to be retested", including the services whose chains run into this one
-without an entry point of their own.
+without an entry point of their own. With no way in it says `entriesNone`
+("nothing in the graph reaches this from a way in; the callers may be behind a
+gap", or "nothing reaches this"), and `next` names a deeper `who_calls`, the
+service's `cant_follow` and a gap search on the file. A walk that stopped at
+its own limit (4,000 nodes) says so in `truncated`.
+
+`who_calls` walks breadth first to `depth` (3; 16 at most) and counts what it
+left: a cut tree says `truncated: "n more nodes past depth 3; raise depth"`,
+`stoppedBy` (`depth`, `maxNodes`, the one that left out more first), and
+`frontier`, the rows on the depth line with callers past it, to ask on from
+when 16 is not enough. A caller the graph holds no node for is a `missing` row.
+A row that is no way in and that nothing calls carries `topOfChain: true` and
+`gapsInFile`, the gaps in its file that may be hiding its caller (the target
+itself says so at the top of the answer); `next` then names `cant_follow` for
+its service and a gap search on its file. That is a lead, not a verdict: the
+code is dead, or it is called from behind one of those gaps.
 
 `get_flow` writes each node once. Met again on another path - a repository
 helper every method calls, a logger, a mapper - it is `{ "id": …, "ref": true,
@@ -319,6 +358,14 @@ installed (`flowatlas mcp` installs it), are `{ severity, kind, direction,
 field, expected, actual, message, ignored? }`; the crossing is the answer's
 `edge`.
 
+Given two service names as `from` and `to` (and no node by either name, which
+would win), it lists every crossing from one into the other: each request
+(`http_calls`, `hits`) that reaches an entry of the other, and each publish
+(`emits`) onto a channel the other handles (`via` names the channel). Each
+crossing is `{ from, to, type, via?, status, check }`, worst `status` first,
+`check` the call that checks it in full; `byStatus` counts them and `maxNodes`
+bounds the list. With none it says so, and how many go the other way.
+
 ### Why a flow stops
 
 | Tool | Answers | Takes |
@@ -335,7 +382,12 @@ them and gaps accepted with `flowatlas accept` are left out and counted apart,
 exactly as `doctor --unresolved` does, a route rule included; an `accepted.json`
 that cannot be read leaves nothing out and says so in `note`. Only gaps are
 here: notes and findings are not steps the reading missed, so they are counted
-apart under `apart: { notes, findings }` and listed by `search`. A place is
+apart under `apart: { notes, findings }` and listed by `search`. A `cause` that
+answers no causes says why in `note`: its rows are findings or notes
+(`"route-unguarded is a finding, not a step the reader missed: 4 rows"`, with
+`next` the search that lists them), or were all accepted, or there are none in
+that service or package. A cause nothing knows is an error with `known`, the
+causes of this graph and of the catalogue, and the `nearest` few by spelling. A place is
 `{ loc, id?, symbol?, service? }`: `symbol` where it is not the id (the text of
 a call, say), `service` where the cause spans more than one. `total.causes`
 counts every cause, and `offset` pages them. `next` offers `get_source` on the
@@ -366,7 +418,7 @@ confidence); at 2 a changed node adds the `fields` that changed.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_source` | the code of one symbol | `symbol` (required), `context`, `fromLine`, `maxLines` |
+| `get_source` | the code of one symbol, by id or by name | `symbol` (required), `context`, `fromLine`, `maxLines` |
 
 At most `maxLines` lines (400, the most there is) per answer. A declaration
 longer than that says `truncated: "declaration continues past line N; ask with
@@ -438,8 +490,13 @@ that graph, and the graph is not the project.
 **An answer looks cut off.** It was, and it says so. A list says `nextOffset`:
 ask again with `offset` for the next page (`next` writes the call). A tree
 (`get_flow`, `who_calls`) does not page: it says which limit stopped it
-(`stoppedBy` on `get_flow`), so raise that one, or ask `get_flow` on a row it
-showed or on one of its `crossingsLeft`.
+(`stoppedBy`), so raise that one, or ask `get_flow` on a row it showed or on one
+of its `crossingsLeft`, or `who_calls` on an id in its `frontier`.
+
+**An answer is empty.** It says why. `impact` with no way in says
+`entriesNone`, a `who_calls` chain that ends in nobody says `topOfChain` and
+`gapsInFile`, `cant_follow` for a cause with no gaps says what its rows are,
+and an unknown name is an error with `suggestions`.
 
 ---
 

@@ -237,8 +237,8 @@ describe('an answer that is an error', () => {
   });
 });
 
-describe('impact with two things to say (P132)', () => {
-  it('says both the walk limit and the clamp, where the clamp used to overwrite the walk', async () => {
+describe('impact with two things to say (P132, P94)', () => {
+  it('says the walk limit as a cut and the clamp as a note, where the clamp used to overwrite the walk', async () => {
     const root = mkdtempSync(join(tmpdir(), 'flowatlas-p132-'));
     const target = 'orders:Hub.run';
     const callers = Array.from({ length: 4100 }, (_, index) => `orders:Caller${index}.run`);
@@ -257,7 +257,9 @@ describe('impact with two things to say (P132)', () => {
     await other.connect(clientSide);
     try {
       const reply = (await other.callTool({ name: 'impact', arguments: { symbol: target, detail: 3 } })) as { content: Array<{ text: string }> };
-      expect(JSON.parse(reply.content[0]!.text).note).toBe('reachability stopped at the walk limit; detail clamped to 2; use get_source');
+      const answer = JSON.parse(reply.content[0]!.text);
+      expect(answer.truncated).toBe('reachability stopped at the walk limit of 4000 nodes; entries past it are not listed');
+      expect(answer.note).toBe('detail clamped to 2; use get_source');
     } finally {
       await other.close();
     }

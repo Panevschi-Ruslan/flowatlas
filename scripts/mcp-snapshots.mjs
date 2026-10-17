@@ -64,6 +64,14 @@ const CASES = [
   ['cant_follow.all', 'cant_follow', {}],
   ['cant_follow.by-service', 'cant_follow', { service: 'gateway' }],
   ['describe_for_prompt.symbol', 'describe_for_prompt', { id: 'orders#src/orders/orders.service.ts:OrdersService.findOne' }],
+  // Answers that say where they stopped (P94): a caller walk cut by depth, a
+  // route said with a real value, a literal segment beside a hole, every
+  // crossing between two services, and a channel that does not exist.
+  ['who_calls.depth-cut', 'who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 2 }],
+  ['who_calls.concrete-path', 'who_calls', { symbol: 'GET /orders/123' }],
+  ['get_flow.literal-route', 'get_flow', { entry: 'GET /orders/latest', maxNodes: 8 }],
+  ['check_contract.between-services', 'check_contract', { from: 'gateway', to: 'billing' }],
+  ['who_emits.unknown-channel', 'who_emits', { channel: 'order.create' }],
 ];
 
 /**
@@ -85,6 +93,19 @@ const HELPER_CASES = [
 const LOOPS_CASES = [
   ['search.query-in-loop', 'search', { query: 'query-in-loop', kinds: ['gaps'] }],
   ['describe_for_prompt.labels', 'describe_for_prompt', { id: 'GET /parcels/labels' }],
+  // A finding asked for as a cause (P94): empty, and saying why.
+  ['cant_follow.finding', 'cant_follow', { cause: 'query-in-loop' }],
+];
+
+/**
+ * What the reader could not follow (P75), asked the ways that used to answer
+ * nothing (P94): a method nothing calls, in a file with gaps that may hide its
+ * caller, and a cause that does not exist.
+ */
+const CANT_FOLLOW_CASES = [
+  ['who_calls.top-of-chain', 'who_calls', { symbol: 'storefront#src/jobs/reminder.job.ts:ReminderJob.start' }],
+  ['impact.no-entries', 'impact', { symbol: 'storefront#src/jobs/reminder.job.ts:ReminderJob.start' }],
+  ['cant_follow.unknown-cause', 'cant_follow', { cause: 'dynamic-membr' }],
 ];
 
 /**
@@ -112,6 +133,11 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),
     outDir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.mcp'),
     cases: LOOPS_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'cant-follow'),
+    outDir: join(root, 'fixtures', 'cant-follow', 'expected.mcp'),
+    cases: CANT_FOLLOW_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'multi-repo-plumbing'),

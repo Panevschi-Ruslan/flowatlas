@@ -1,11 +1,15 @@
 import {
   causeLabel,
+  causePartsOf,
   countsOf,
   describeAcceptedProblem,
   groupCantFollow,
+  kindOfRow,
+  knownCauses,
   packageCoverage,
   placeIdOf,
   readAccepted,
+  wasMissed,
   type CantFollow,
   type CantFollowSample,
   type PackageCover,
@@ -13,6 +17,7 @@ import {
 import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { nearWords } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { callOf, nextOutput, pageInput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
 
@@ -228,6 +233,68 @@ const nextOf = (answer: CantFollowWire, asked: { cause?: string; package?: strin
   return hints.slice(0, MAX_NEXT);
 };
 
+/** Whether a row stands for this cause, by the cause it records or by its reason. */
+const carries = (row: AnchoredUnresolvedRow, cause: string): boolean =>
+  row.reason === cause || causePartsOf(row).some((part) => part.cause === cause);
+
+/** How rows that are not steps the reader missed are said, by what they are (P81's kinds). */
+const notMissedSaid = (cause: string, rows: readonly AnchoredUnresolvedRow[]): string => {
+  const findings = rows.filter((row) => kindOfRow(row) === 'finding').length;
+  const notes = rows.filter((row) => kindOfRow(row) === 'note').length;
+  const nothing = rows.length - findings - notes;
+  if (findings === rows.length) return `${cause} is a finding, not a step the reader missed: ${rows.length} rows`;
+  if (notes === rows.length) return `${cause} is a note on how something was read, not a step the reader missed: ${rows.length} rows`;
+  if (nothing === rows.length) return `${cause} rows are places with nothing to join, not steps the reader missed: ${rows.length} rows`;
+  const parts = [
+    ...(findings > 0 ? [`${findings} findings`] : []),
+    ...(notes > 0 ? [`${notes} notes`] : []),
+    ...(nothing > 0 ? [`${nothing} with nothing to join`] : []),
+  ];
+  return `${cause} rows are not steps the reader missed: ${parts.join(', ')}`;
+};
+
+/**
+ * Why a cause asked for answers no causes (P94): its rows are findings or
+ * notes, or were accepted, or it has none in this scope, or there is no such
+ * cause, which is an error naming the ones there are. An empty breakdown is
+ * never left to read as "nothing wrong".
+ */
+const whyNone = (
+  cause: string,
+  rows: { fresh: readonly AnchoredUnresolvedRow[]; accepted: readonly AnchoredUnresolvedRow[]; all: readonly AnchoredUnresolvedRow[] },
+  scope: { service?: string; package?: string },
+): { error: string; known: string[]; nearest: string[] } | { note: string; next: string[] } => {
+  const { service } = scope;
+  const inScope = (row: AnchoredUnresolvedRow): boolean => service === undefined || row.service === service;
+  const carrying = rows.fresh.filter((row) => inScope(row) && carries(row, cause));
+  const apart = carrying.filter((row) => !wasMissed(row));
+  if (apart.length < carrying.length && scope.package !== undefined) {
+    return {
+      note: `no ${cause} rows point into ${scope.package}`,
+      next: [callOf('cant_follow', { service, cause })],
+    };
+  }
+  if (apart.length > 0) {
+    return { note: notMissedSaid(cause, apart), next: [callOf('search', { query: cause, kinds: ['gaps'] })] };
+  }
+  const accepted = rows.accepted.filter((row) => inScope(row) && carries(row, cause));
+  if (accepted.length > 0) {
+    return {
+      note: `every ${cause} row here was accepted with flowatlas accept: ${accepted.length} rows`,
+      next: [callOf('search', { query: cause, kinds: ['gaps'] })],
+    };
+  }
+  const present = rows.all.flatMap((row) => [row.reason, ...causePartsOf(row).map((part) => part.cause)]);
+  const known = [...new Set([...present, ...knownCauses()])].sort();
+  if (known.includes(cause)) {
+    return {
+      note: `no ${cause} rows${service === undefined ? '' : ` in ${service}`}`,
+      next: service === undefined ? [] : [callOf('cant_follow', { cause })],
+    };
+  }
+  return { error: `no cause named ${JSON.stringify(cause)}`, known, nearest: nearWords(known, cause, 3) };
+};
+
 /** The defaults a hint for the next page leaves out. */
 const PAGE_DEFAULTS: Readonly<Record<string, unknown>> = { top: 10, samples: 3, offset: 0 };
 
@@ -280,6 +347,15 @@ export const registerCantFollow = (server: McpServer, ctx: ToolContext): void =>
         );
         const apart = notes + findings === 0 ? {} : { apart: { notes, findings } };
         const wire = wireCantFollow(answer, input.offset);
+        if (input.cause !== undefined && wire.total.causes === 0) {
+          const why = whyNone(
+            input.cause,
+            { fresh: split.fresh, accepted: split.accepted, all: db.allUnresolved() },
+            { ...(input.service === undefined ? {} : { service: input.service }), ...(input.package === undefined ? {} : { package: input.package }) },
+          );
+          if ('error' in why) return why;
+          return withNext({ ...wire, ...accepted, ...apart, note: [why.note, ...('note' in note ? [note.note] : [])].join(' ') }, why.next);
+        }
         const args = { service: input.service, cause: input.cause, package: input.package, top: input.top, samples: input.samples };
         const page = wire.nextOffset === undefined ? [] : [callOf('cant_follow', { ...args, offset: wire.nextOffset }, PAGE_DEFAULTS)];
         return withNext({ ...wire, ...accepted, ...apart, ...note }, [...page, ...nextOf(wire, input)].slice(0, MAX_NEXT));

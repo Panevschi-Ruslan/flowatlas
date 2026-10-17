@@ -750,6 +750,7 @@ export {
   groupCantFollow,
   hintForCause,
   isKnownCause,
+  knownCauses,
   placeIdOf,
 } from './cant-follow.js';
 export type {

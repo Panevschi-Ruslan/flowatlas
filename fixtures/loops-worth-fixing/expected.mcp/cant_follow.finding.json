@@ -1,0 +1,17 @@
+{
+  "total": {
+    "rows": 0,
+    "sites": 0,
+    "causes": 0
+  },
+  "causes": [],
+  "packages": [],
+  "apart": {
+    "notes": 4,
+    "findings": 3
+  },
+  "note": "query-in-loop rows are not steps the reader missed: 3 findings, 4 notes",
+  "next": [
+    "search({query: \"query-in-loop\", kinds: [\"gaps\"]})"
+  ]
+}

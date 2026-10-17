@@ -274,6 +274,9 @@ const CAUSE_HINTS: ReadonlyMap<string, (pkg: string | undefined) => string> = ne
 /** Whether the catalogue has a sentence for this cause. */
 export const isKnownCause = (cause: string): boolean => CAUSE_HINTS.has(cause);
 
+/** Every cause the catalogue names, sorted: what an unknown cause is told it could have meant (P94). */
+export const knownCauses = (): string[] => [...CAUSE_HINTS.keys()].sort(cmp);
+
 /** What to do about a cause, or undefined when it is a reason with a hint of its own. */
 export const hintForCause = (cause: string, pkg?: string): string | undefined => CAUSE_HINTS.get(cause)?.(pkg);
 

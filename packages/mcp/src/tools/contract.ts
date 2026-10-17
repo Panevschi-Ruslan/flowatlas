@@ -2,8 +2,8 @@ import type { GraphEdge } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { withNext } from '../query/next.js';
-import { commonInput, READ_ONLY, withDb, type ContractFinding, type ToolContext } from './common.js';
+import { MAX_NEXT, withNext } from '../query/next.js';
+import { callOf, commonInput, READ_ONLY, withDb, type ContractFinding, type ToolContext } from './common.js';
 
 /**
  * A finding as it goes out (P93): what disagrees and how. The checker's own
@@ -101,6 +101,75 @@ const sidesOf = (
   };
 };
 
+/**
+ * One crossing from one service into another (P94): a request that reaches an
+ * entry of the other, or a publish onto a channel the other handles, with its
+ * verdict and the call that checks it in full.
+ */
+export interface Crossing {
+  from: string;
+  to: string;
+  type: string;
+  /** The channel a publish crosses through. */
+  via?: string;
+  status: ContractStatus;
+  check: string;
+}
+
+/** The edges that cross by a request, from a call site to an entry. */
+const REQUEST_EDGES = ['http_calls', 'hits'] as const;
+
+const byWorstThenId = (a: Crossing, b: Crossing): number =>
+  RANK[b.status] - RANK[a.status] || (a.from < b.from ? -1 : a.from > b.from ? 1 : a.to < b.to ? -1 : a.to > b.to ? 1 : 0);
+
+/**
+ * Every crossing from service `a` into service `b`, worst verdict first.
+ *
+ * Requests are judged as `check_contract` judges one edge, both halves; a
+ * publish by what the publisher sends against what the handler's subscription
+ * reads, which is unchecked where either side names no type.
+ */
+export const crossingsBetween = (db: GraphDb, a: string, b: string): Crossing[] => {
+  const serviceOf = (id: string): string | undefined => db.node(id)?.repo;
+  const crossings: Crossing[] = [];
+  for (const edge of db.allEdges()) {
+    const isRequest = (REQUEST_EDGES as readonly string[]).includes(edge.type);
+    if ((!isRequest && edge.type !== 'emits') || serviceOf(edge.from) !== a) continue;
+    if (isRequest) {
+      const target = db.node(edge.to);
+      if (target?.type !== 'entry' || target.repo !== b) continue;
+      const { request, response } = sidesOf(db, edge);
+      crossings.push({
+        from: edge.from,
+        to: edge.to,
+        type: edge.type,
+        status: worse(request.status, response.status),
+        check: callOf('check_contract', { from: edge.from, to: edge.to }),
+      });
+    } else if (edge.type === 'emits') {
+      for (const consumed of db.edgesFrom(edge.to, ['consumes'])) {
+        if (serviceOf(consumed.to) !== b) continue;
+        crossings.push({
+          from: edge.from,
+          to: consumed.to,
+          type: 'emits',
+          via: edge.to,
+          status: classify(db, edge.params?.[0], consumed.params?.[0]).status,
+          check: callOf('check_contract', { from: edge.from, to: edge.to }),
+        });
+      }
+    }
+  }
+  return crossings.sort(byWorstThenId);
+};
+
+/** Two names that are services and not nodes: a question about every crossing between them. */
+const asServices = (db: GraphDb, from: string, to: string): boolean => {
+  if (db.node(from) !== undefined || db.node(to) !== undefined) return false;
+  const names = new Set(db.services().map((service) => service.name));
+  return names.has(from) && names.has(to);
+};
+
 /** `from -type-> to`, the way an edge is named when one is asked for by hand. */
 const parseEdgeRef = (ref: string): { from: string; type?: string; to: string } | undefined => {
   const arrow = /^(.*?)\s*-([a-z_]+)->\s*(.*)$/.exec(ref.trim());
@@ -140,6 +209,33 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
               : undefined;
         if (parsed === undefined) {
           return { error: 'give either edge, or both from and to' };
+        }
+
+        // Two service names (a node of either name wins, as before): every
+        // crossing between them, each with the call that checks it (P94).
+        if (parsed.type === undefined && asServices(db, parsed.from, parsed.to)) {
+          const all = crossingsBetween(db, parsed.from, parsed.to);
+          const shown = all.slice(0, input.maxNodes);
+          const byStatus: Partial<Record<ContractStatus, number>> = {};
+          for (const crossing of all) byStatus[crossing.status] = (byStatus[crossing.status] ?? 0) + 1;
+          const back = all.length === 0 ? crossingsBetween(db, parsed.to, parsed.from).length : 0;
+          return withNext(
+            {
+              services: { from: parsed.from, to: parsed.to },
+              crossings: shown,
+              total: all.length,
+              byStatus,
+              ...(shown.length === all.length ? {} : { truncated: `${all.length - shown.length} more crossing(s); raise maxNodes` }),
+              ...(all.length > 0
+                ? {}
+                : { note: `nothing crosses from ${parsed.from} to ${parsed.to}${back > 0 ? `; ${back} crossing(s) go the other way` : ''}` }),
+            },
+            all.length > 0
+              ? shown.slice(0, MAX_NEXT).map((crossing) => crossing.check)
+              : back > 0
+                ? [callOf('check_contract', { from: parsed.to, to: parsed.from })]
+                : [],
+          );
         }
 
         const candidates = db

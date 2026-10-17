@@ -99,6 +99,13 @@ export interface FlowNode {
   fails?: FailRef[];
   /** Decorators on the handler or its class that let a request past a check (P76). */
   optOuts?: OptOutRef[];
+  /**
+   * On a who_calls row (P94 D3): the top of a caller chain, a node that is no
+   * way in and that nothing in the graph calls. Dead, or called from behind a
+   * gap; `gapsInFile` counts the gaps in its file that might hide the call.
+   */
+  topOfChain?: true;
+  gapsInFile?: number;
   children: FlowNode[];
 }
 

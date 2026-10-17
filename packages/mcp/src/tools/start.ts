@@ -5,6 +5,21 @@ import { nextFor, withNext } from '../query/next.js';
 import { START_LIMITS, summariseProject } from '../query/start.js';
 import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
 
+/** A reason, how often, where, and the first place it was seen: one row of `topGaps` or `topFindings`. */
+const reasonOutput = z
+  .object({
+    reason: z.string(),
+    count: z.number(),
+    services: z.array(z.string()),
+    example: z.object({
+      service: z.string().optional(),
+      loc: z.string().optional(),
+      message: z.string(),
+      id: z.string().optional(),
+    }),
+  })
+  .meta({ id: 'Reason' });
+
 /** What start_here answers (`StartSummary`, with `next`). */
 export const startOutput = {
   services: z.array(
@@ -23,19 +38,8 @@ export const startOutput = {
     findings: z.number(),
     nothing: z.number(),
   }),
-  topGaps: z.array(
-    z.object({
-      reason: z.string(),
-      count: z.number(),
-      services: z.array(z.string()),
-      example: z.object({
-        service: z.string().optional(),
-        loc: z.string().optional(),
-        message: z.string(),
-        id: z.string().optional(),
-      }),
-    }),
-  ),
+  topGaps: z.array(reasonOutput),
+  topFindings: z.array(reasonOutput),
   channels: z.object({ noConsumers: z.array(z.string()), noProducers: z.array(z.string()) }),
   startFrom: z.array(nodeOutput),
   next: nextOutput,
@@ -59,7 +63,7 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
     'start_here',
     {
       title: 'Start here',
-      description: 'Begin here: counts and gaps per service, rows by kind, one-ended channels, entry ids.',
+      description: 'Begin here: counts and gaps per service, findings, one-ended channels, entry ids.',
       inputSchema: {
         service: serviceInput,
         perService: z.number().int().min(1).max(20).default(START_LIMITS.perService).describe('entry ids per service'),

@@ -6,7 +6,8 @@
   "results": {
     "gaps": [
       {
-        "id": "gap:parcels|src/parcels/parcels.service.ts|query-in-loop",
+        "id": "parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor",
+        "gapId": "gap:parcels|src/parcels/parcels.service.ts|query-in-loop",
         "type": "gap",
         "reason": "query-in-loop",
         "kind": "finding",
@@ -14,10 +15,16 @@
         "loc": "src/parcels/parcels.service.ts:18",
         "message": "A `for-of` loop runs 2 database queries once per item: likely N+1.",
         "severity": "likely",
-        "waysIn": 3
+        "waysIn": 3,
+        "sites": 2,
+        "places": [
+          "src/parcels/parcels.service.ts:18",
+          "src/parcels/parcels.service.ts:28"
+        ]
       },
       {
-        "id": "gap:parcels|src/parcels/handover.ts|query-in-loop",
+        "id": "parcels#src/parcels/handover.ts:ParcelHandover.withCarriers",
+        "gapId": "gap:parcels|src/parcels/handover.ts|query-in-loop",
         "type": "gap",
         "reason": "query-in-loop",
         "kind": "finding",
@@ -25,10 +32,17 @@
         "loc": "src/parcels/handover.ts:43",
         "message": "A `for-of` loop runs 1 database query once per item: likely N+1.",
         "severity": "likely",
-        "waysIn": 1
+        "waysIn": 1,
+        "sites": 3,
+        "places": [
+          "src/parcels/handover.ts:43",
+          "src/parcels/handover.ts:18",
+          "src/parcels/handover.ts:25"
+        ]
       },
       {
-        "id": "gap:parcels|src/parcels/dispatch.ts|query-in-loop",
+        "id": "parcels#src/parcels/dispatch.ts:ParcelDispatch.claimAll",
+        "gapId": "gap:parcels|src/parcels/dispatch.ts|query-in-loop",
         "type": "gap",
         "reason": "query-in-loop",
         "kind": "note",
@@ -36,8 +50,17 @@
         "loc": "src/parcels/dispatch.ts:13",
         "message": "A `for-of` loop runs 1 database query once per item, each a conditional write or a send to one recipient: per item on purpose.",
         "severity": "note",
-        "waysIn": 1
+        "waysIn": 1,
+        "sites": 2,
+        "places": [
+          "src/parcels/dispatch.ts:13",
+          "src/parcels/dispatch.ts:20"
+        ]
       }
     ]
-  }
+  },
+  "next": [
+    "get_source({symbol: \"parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor\"})",
+    "who_calls({symbol: \"parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor\"})"
+  ]
 }

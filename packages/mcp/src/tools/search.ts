@@ -1,5 +1,6 @@
 import {
   acceptedKeyOf,
+  causePartsOf,
   describeAccepted,
   describeAcceptedProblem,
   failuresOf,
@@ -8,6 +9,7 @@ import {
   gapIdOf,
   isRule,
   kindOfRow,
+  placeIdOf,
   rankByReach,
   readAccepted,
   waysInOf,
@@ -19,7 +21,7 @@ import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flow
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
-import { MAX_NEXT, nextFor, withNext, type Identified } from '../query/next.js';
+import { hintsFor, MAX_NEXT, withNext, type Identified } from '../query/next.js';
 import type { CompactNode } from '../query/types.js';
 import { rankMatches } from './entries.js';
 import {
@@ -41,8 +43,9 @@ import {
  *
  * A Strategy per kind: each says how to find its rows for a query, and every
  * row carries the `id` the next tool takes, so a search hands straight on to
- * get_flow, who_emits, get_type or impact. A gap's id is
- * `gap:<service>|<file>|<reason>`, the one `flowatlas accept` takes.
+ * get_flow, who_emits, get_type or impact. A gap's `id` is the method or
+ * function it is written in (P94), for get_source and who_calls; its `gapId`,
+ * `gap:<service>|<file>|<reason>`, is the one `flowatlas accept` takes.
  */
 export const SEARCH_KINDS = ['routes', 'channels', 'tables', 'types', 'gaps', 'fails', 'classes'] as const;
 export type SearchKind = (typeof SEARCH_KINDS)[number];
@@ -51,7 +54,10 @@ export type SearchKind = (typeof SEARCH_KINDS)[number];
 const CLASS_TYPES = ['provider', 'module', 'guard', 'interceptor', 'pipe', 'middleware', 'ui_component'] as const;
 
 export interface GapHit {
-  id: string;
+  /** The method or function the first place is in, when the graph draws one (P94). */
+  id?: string;
+  /** `gap:<service>|<file>|<reason>`: what `flowatlas accept` takes. */
+  gapId: string;
   type: 'gap';
   reason: string;
   /**
@@ -71,7 +77,14 @@ export interface GapHit {
   severity?: string;
   /** How many ways in of its service reach the place, where the row says; hits are ranked by it (P89). */
   waysIn?: number;
+  /** Places the gap id stands for in all: one file can hold the same reason many times (P94). */
+  sites: number;
+  /** Those places as `file:line`, at most `MAX_PLACES`; `sites` says how many there are. */
+  places: string[];
 }
+
+/** The most places one gap hit lists. */
+const MAX_PLACES = 10;
 
 export interface TypeHit {
   id: string;
@@ -163,16 +176,34 @@ const gaps: Finder = ({ db, text, service, limit, offset, accepted }) => {
   );
   // Which entry took each row, as every other surface decides it (P80).
   const split = acceptedSplitOf(db, candidates, accepted);
+  const byKey = new Map<string, GapHit>();
+  const has = (id: string): boolean => db.node(id) !== undefined;
   candidates.forEach((row, index) => {
-    const id = gapIdOf(row);
+    const gapId = gapIdOf(row);
     const entry = split.byEntry[index];
     // One row per gap id: the same reason in one file is one thing to accept —
     // unless a route rule took some of that file's rows and not the others.
-    const key = `${id}\u0000${entry === undefined ? '' : acceptedKeyOf(entry)}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    rows.push({
-      id,
+    const key = `${gapId}\u0000${entry === undefined ? '' : acceptedKeyOf(entry)}`;
+    // Every place the hit stands for, not only its first (P94).
+    const places = causePartsOf(row).flatMap((part) => part.samples).map((sample) => `${sample.file}:${sample.line}`);
+    const known = byKey.get(key);
+    if (known !== undefined) {
+      known.sites += row.sites;
+      for (const place of places) if (known.places.length < MAX_PLACES && !known.places.includes(place)) known.places.push(place);
+      return;
+    }
+    const id = placeIdOf(
+      {
+        ...(row.service === null ? {} : { service: row.service }),
+        file: row.file ?? '',
+        line: row.line ?? 0,
+        ...(row.node === null ? {} : { symbol: row.node }),
+      },
+      has,
+    );
+    const hit: GapHit = {
+      ...(id === undefined ? {} : { id }),
+      gapId,
       type: 'gap',
       reason: row.reason,
       kind: kindOfRow(row),
@@ -188,7 +219,11 @@ const gaps: Finder = ({ db, text, service, limit, offset, accepted }) => {
             ...(entry.note === '' ? {} : { note: entry.note }),
             ...(isRule(entry) ? { acceptedBy: describeAccepted(entry) } : {}),
           }),
-    });
+      sites: row.sites,
+      places: [...new Set(places)].slice(0, MAX_PLACES),
+    };
+    byKey.set(key, hit);
+    rows.push(hit);
   });
   // New gaps first: an accepted one is the least likely to be the question.
   rows.sort((a, b) => Number(a.accepted === true) - Number(b.accepted === true));
@@ -239,8 +274,17 @@ const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
   ['classes', nodesOf(CLASS_TYPES)],
 ]);
 
-/** The hint for a gap row: what reaches the place, read off the node it names. */
-const anchorOf = (hit: Hit): Identified | undefined => (hit.type === 'gap' ? undefined : hit);
+/**
+ * The calls a hit leads to. A gap's are the code it is in and what reaches
+ * that (P94), or, where the graph draws nothing around it, the gaps of its file.
+ */
+const hintsOfHit = (hit: Hit): string[] => {
+  // A node's `type` is any string, so the narrowing is said rather than inferred.
+  if (hit.type !== 'gap') return hintsFor(hit as Identified);
+  if (hit.id !== undefined) return [`get_source({symbol: ${JSON.stringify(hit.id)}})`, `who_calls({symbol: ${JSON.stringify(hit.id)}})`];
+  const file = hit.loc?.replace(/:\d+$/, '');
+  return file === undefined ? [] : [callOf('search', { query: file, kinds: ['gaps'] })];
+};
 
 /** What search answers: per kind, how many match in all and one page of them. */
 export const searchOutput = {
@@ -250,7 +294,8 @@ export const searchOutput = {
     z.string(),
     z.array(
       z.object({
-        id: z.string(),
+        id: z.string().optional(),
+        gapId: z.string().optional(),
         type: z.string(),
         label: z.string().optional(),
         loc: z.string().optional(),
@@ -268,6 +313,7 @@ export const searchOutput = {
         status: z.number().optional(),
         assumed: z.literal(true).optional(),
         sites: z.number().optional(),
+        places: z.array(z.string()).optional(),
         more: z.number().optional(),
       }),
     ),
@@ -296,7 +342,7 @@ export const runSearch = (
   const results: Partial<Record<SearchKind, Hit[]>> = {};
   const counts: Partial<Record<SearchKind, number>> = {};
   const more: Partial<Record<SearchKind, number>> = {};
-  const firsts: Array<Identified | undefined> = [];
+  const hints: string[] = [];
   for (const kind of kinds) {
     const found = FINDERS.get(kind)!({ db, text, service: input.service, limit: input.limit, offset, bounded, accepted });
     if (found.total === 0) continue;
@@ -304,9 +350,9 @@ export const runSearch = (
     counts[kind] = found.total;
     const left = found.total - Math.min(offset, found.total) - found.rows.length;
     if (left > 0) more[kind] = left;
-    if (found.rows[0] !== undefined) firsts.push(anchorOf(found.rows[0]));
+    if (found.rows[0] !== undefined) hints.push(...hintsOfHit(found.rows[0]));
   }
-  return { results, counts, more, next: nextFor(...firsts) };
+  return { results, counts, more, next: [...new Set(hints)].slice(0, MAX_NEXT) };
 };
 
 /** The defaults a hint for the next page leaves out. */

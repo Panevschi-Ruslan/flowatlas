@@ -9,8 +9,8 @@ export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS } fr
 export type { ServerOptions } from './server.js';
 export { DbHandle } from './query/db.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';
-export { resolveEntryRef, isResolved } from './query/entry-ref.js';
-export type { EntryRef } from './query/entry-ref.js';
+export { resolveEntryRef, resolveSymbol, isResolved } from './query/entry-ref.js';
+export type { EntryRef, Resolved } from './query/entry-ref.js';
 export {
   buildFlowTree,
   DEFAULT_FLOW_DEPTH,

@@ -16,11 +16,13 @@ export interface StartLimits {
   perService: number;
   /** Gap reasons listed. */
   gaps: number;
+  /** Finding reasons listed (P94). */
+  findings: number;
   /** Channels listed under each of the two lonely ends. */
   channels: number;
 }
 
-export const START_LIMITS: StartLimits = { perService: 3, gaps: 5, channels: 5 };
+export const START_LIMITS: StartLimits = { perService: 3, gaps: 5, findings: 5, channels: 5 };
 
 export interface ServiceCount {
   service: string;
@@ -59,8 +61,14 @@ export interface StartCounts {
 export interface StartSummary {
   services: ServiceCount[];
   counts: StartCounts;
-  /** The most common actionable gaps; notes and findings are counted above and listed in none. */
+  /** The most common actionable gaps: places the reading could not follow, and only those. */
   topGaps: GapReason[];
+  /**
+   * The most common findings (P94): what the reading found about the code - a
+   * likely N+1, a route with no guard - listed apart from the gaps, since
+   * neither is a place the reading missed. Notes are counted and listed in none.
+   */
+  topFindings: GapReason[];
   channels: { noConsumers: string[]; noProducers: string[] };
   startFrom: CompactNode[];
 }
@@ -91,6 +99,34 @@ const bump = (counts: Record<string, number>, key: string): void => {
   counts[key] = (counts[key] ?? 0) + 1;
 };
 
+/** Rows by reason, most rows first, each with the services it is in and the first place it was seen. */
+const topReasons = (rows: readonly AnchoredUnresolvedRow[], limit: number): GapReason[] => {
+  const reasons = new Map<string, GapReason>();
+  for (const row of rows) {
+    const known = reasons.get(row.reason);
+    if (known === undefined) {
+      reasons.set(row.reason, {
+        reason: row.reason,
+        count: 1,
+        services: row.service === null ? [] : [row.service],
+        example: {
+          message: row.message,
+          ...(row.service === null ? {} : { service: row.service }),
+          ...(row.file === null ? {} : { loc: row.line === null ? row.file : `${row.file}:${row.line}` }),
+          ...(row.node === null ? {} : { id: row.node }),
+        },
+      });
+      continue;
+    }
+    known.count += 1;
+    if (row.service !== null && !known.services.includes(row.service)) known.services.push(row.service);
+  }
+  return [...reasons.values()]
+    .sort((a, b) => b.count - a.count || cmp(a.reason, b.reason))
+    .slice(0, limit)
+    .map((reason) => ({ ...reason, services: [...reason.services].sort() }));
+};
+
 export const summariseProject = (input: StartInput, limits: StartLimits = START_LIMITS): StartSummary => {
   const wanted = (repo: string | null | undefined): boolean => input.service === undefined || repo === input.service;
   const byService = new Map<string, ServiceCount>();
@@ -117,32 +153,15 @@ export const summariseProject = (input: StartInput, limits: StartLimits = START_
   const inScope = input.unresolved.filter((row) => wanted(row.service));
   const { missed, sites, notes, findings, nothing } = countsOf(inScope);
 
-  const reasons = new Map<string, GapReason>();
-  for (const row of inScope) {
-    if (row.level !== 'action' || kindOfRow(row) !== 'gap') continue;
-    if (row.service !== null) counted(row.service).gaps += 1;
-    const known = reasons.get(row.reason);
-    if (known === undefined) {
-      reasons.set(row.reason, {
-        reason: row.reason,
-        count: 1,
-        services: row.service === null ? [] : [row.service],
-        example: {
-          message: row.message,
-          ...(row.service === null ? {} : { service: row.service }),
-          ...(row.file === null ? {} : { loc: row.line === null ? row.file : `${row.file}:${row.line}` }),
-          ...(row.node === null ? {} : { id: row.node }),
-        },
-      });
-      continue;
-    }
-    known.count += 1;
-    if (row.service !== null && !known.services.includes(row.service)) known.services.push(row.service);
-  }
-  const topGaps = [...reasons.values()]
-    .sort((a, b) => b.count - a.count || cmp(a.reason, b.reason))
-    .slice(0, limits.gaps)
-    .map((gap) => ({ ...gap, services: [...gap.services].sort() }));
+  const actionable = inScope.filter((row) => row.level === 'action' && kindOfRow(row) === 'gap');
+  for (const row of actionable) if (row.service !== null) counted(row.service).gaps += 1;
+  const topGaps = topReasons(actionable, limits.gaps);
+  // Every finding but one with nothing to point at, whatever its level: a
+  // likely N+1 is written at `info` and is as much a finding as an unguarded route.
+  const topFindings = topReasons(
+    inScope.filter((row) => row.level !== 'nothing' && kindOfRow(row) === 'finding'),
+    limits.findings,
+  );
 
   const noConsumers: string[] = [];
   const noProducers: string[] = [];
@@ -168,6 +187,7 @@ export const summariseProject = (input: StartInput, limits: StartLimits = START_
     services: [...byService.values()].sort((a, b) => cmp(a.service, b.service)),
     counts: { gaps: missed, sites, notes, findings, nothing },
     topGaps,
+    topFindings,
     channels: {
       noConsumers: noConsumers.sort().slice(0, limits.channels),
       noProducers: noProducers.sort().slice(0, limits.channels),

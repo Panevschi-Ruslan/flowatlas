@@ -62,6 +62,9 @@ const graph: ProjectGraph = {
     // A finding and a note (P81), worded so only the search below finds them.
     { service: 'orders', file: 'src/basket.ts', line: 7, reason: 'query-in-loop', level: 'info', sites: 1, message: 'a lookup per basket line: likely N+1' },
     { service: 'orders', file: 'src/basket-client.ts', line: 3, reason: 'base-url-from-files', level: 'info', message: 'BASKET_URL is taken from .env.example' },
+    // One reason twice in one file, inside a method the graph draws (P94).
+    { service: 'orders', file: 'src/refunds.ts', line: 40, reason: 'call-dynamic-receiver', symbol: SERVICE, message: 'refund step picked by key' },
+    { service: 'orders', file: 'src/refunds.ts', line: 52, reason: 'call-dynamic-receiver', symbol: SERVICE, message: 'refund step picked by key, again' },
   ] as never,
 };
 
@@ -154,12 +157,32 @@ describe('search', () => {
 
   it('marks accepted gaps and lists the new ones first', async () => {
     const found = await call('search', { query: 'orders', kinds: ['gaps'] });
-    expect(found.results.gaps.map((gap: { id: string }) => gap.id)).toEqual([
+    expect(found.results.gaps.map((gap: { gapId: string }) => gap.gapId)).toEqual([
       'gap:orders|src/orders.service.ts|channel-dynamic',
       'gap:orders|src/orders.repo.ts|db-receiver-name-only',
     ]);
     expect(found.results.gaps[0].accepted).toBeUndefined();
     expect(found.results.gaps[1]).toMatchObject({ accepted: true, note: 'known; read by name' });
+  });
+
+  it('names the method a gap is in, keeps its gap id for accept, and lists every place (P94)', async () => {
+    const found = await call('search', { query: 'refund', kinds: ['gaps'] });
+    expect(found.results.gaps).toEqual([
+      expect.objectContaining({
+        id: SERVICE,
+        gapId: 'gap:orders|src/refunds.ts|call-dynamic-receiver',
+        loc: 'src/refunds.ts:40',
+        sites: 2,
+        places: ['src/refunds.ts:40', 'src/refunds.ts:52'],
+      }),
+    ]);
+    expect(found.next).toEqual([`get_source({symbol: ${JSON.stringify(SERVICE)}})`, `who_calls({symbol: ${JSON.stringify(SERVICE)}})`]);
+  });
+
+  it('leads a gap the graph draws nothing around to the gaps of its file', async () => {
+    const found = await call('search', { query: 'basket', kinds: ['gaps'] });
+    expect(found.results.gaps.every((gap: { id?: string }) => gap.id === undefined)).toBe(true);
+    expect(found.next[0]).toBe('search({query: "src/basket-client.ts", kinds: ["gaps"]})');
   });
 
   it('says what each gap hit is about: a gap, a note or a finding (P81)', async () => {

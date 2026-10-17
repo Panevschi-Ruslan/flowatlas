@@ -5,7 +5,7 @@ import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { buildFlowTree, type FlowResult } from '../query/flow.js';
 import { loadObservedCounts, markObserved, nodeAmbiguous, nodeSeen } from '../query/observed.js';
 import type { FlowNode } from '../query/types.js';
-import { rankMatches } from './entries.js';
+import { nearNames } from './entries.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { slimTree } from '../query/wire.js';
 import { bound, callOf, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
@@ -70,13 +70,14 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           if (ref.candidates.length > 0) {
             return withNext(
               { candidates: ref.candidates.map((node) => projectDetail(node, detail)) },
-              ref.candidates.slice(0, 2).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`),
+              ref.candidates.slice(0, MAX_NEXT).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`),
             );
           }
-          const suggestions = rankMatches(db.nodesByType('entry'), input.entry)
-            .slice(0, 5)
-            .map((match) => projectDetail(match.node, detail));
-          return { error: `no entry matches ${JSON.stringify(input.entry)}`, suggestions };
+          const near = nearNames(db.nodesByType('entry'), input.entry, 5);
+          return withNext(
+            { error: `no entry matches ${JSON.stringify(input.entry)}`, suggestions: near.map((node) => projectDetail(node, detail)) },
+            near.slice(0, MAX_NEXT).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`),
+          );
         }
 
         const flow = buildFlowTree(db, ref.id, {
@@ -96,6 +97,8 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
         return withNext(
           {
             root: slimTree(flow.root),
+            // The less specific routes that answer the same request (P94 D2).
+            ...(ref.alsoAnswers === undefined ? {} : { alsoAnswers: ref.alsoAnswers }),
             unresolvedOnPath: flow.unresolvedOnPath,
             ...(flow.truncated === undefined ? {} : { truncated: flow.truncated, stoppedBy: flow.stoppedBy }),
             ...(flow.crossingsLeft === undefined ? {} : { crossingsLeft: flow.crossingsLeft }),

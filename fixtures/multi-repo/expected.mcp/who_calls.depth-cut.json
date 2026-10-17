@@ -1,0 +1,60 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+    "type": "method",
+    "label": "OrdersService.findOne",
+    "loc": "src/orders/orders.service.ts:25",
+    "service": "orders"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+        "type": "method",
+        "label": "OrdersController.findOne",
+        "loc": "src/orders/orders.controller.ts:25"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "type:@fx/contracts#OrderDto"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:orders:http:GET:/orders/:param",
+            "type": "entry",
+            "label": "GET /orders/:param",
+            "loc": "src/orders/orders.controller.ts:25",
+            "kind": "http"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static",
+            "params": [
+              "string"
+            ],
+            "returns": "type:@fx/contracts#OrderDto"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "truncated": "1 more nodes past depth 2; raise depth",
+  "stoppedBy": [
+    "depth"
+  ],
+  "frontier": [
+    "entry:orders:http:GET:/orders/:param"
+  ],
+  "next": [
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", depth: 4})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:orders:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:orders:http:GET:/orders/:param\"})"
+  ]
+}
