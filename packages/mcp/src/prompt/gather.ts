@@ -3,7 +3,7 @@ import {
   comparisonSays,
   failuresOf,
   joinIdOf,
-  kindOfRow,
+  rowKindOf,
   loopOfEdge,
   parseGapId,
   PROMPT_LIMITS,
@@ -156,7 +156,7 @@ const nPlusOneAt = (db: GraphDb, edge: GraphEdge, loopLine: number): boolean =>
     .some(
       (row) =>
         row.reason === 'query-in-loop' &&
-        kindOfRow(row) === 'finding' &&
+        rowKindOf(row) === 'finding' &&
         [siteOrderOf(edge), loopLine, 0].includes(row.line ?? 0),
     );
 

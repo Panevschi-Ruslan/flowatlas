@@ -56,11 +56,12 @@ beforeAll(async () => {
 afterAll(() => rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe('flowatlas rules (P114)', () => {
-  it('lists the three violations, each at the crossing hop with the rule\'s note', () => {
+  it('lists the four violations, each at the crossing hop with the rule\'s note', () => {
     const run = runRules({ config }, io);
     expect(run.report.violations.map((item) => [item.rule, item.at?.service, item.at?.file, item.at?.line])).toEqual([
       ['frontends-reach-only-edge', 'web', 'src/app/orders-api.service.ts', 34],
       ['only-billing-consumes-order-events', 'gateway', 'src/audit/order-audit.consumer.ts', 14],
+      ['only-gateway-reaches-billing', 'orders', 'src/orders/orders.service.ts', 49],
       ['only-orders-writes-orders', 'billing', 'src/invoices/invoices.service.ts', 33],
     ]);
     expect(run.report.rules.find((rule) => rule.name === 'order-created-keeps-a-consumer')?.status).toBe('held');
@@ -86,16 +87,16 @@ describe('flowatlas rules (P114)', () => {
 
   it('writes the whole report to rules.json, whatever --max-nodes printed', () => {
     const run = runRules({ config, maxNodes: '1' }, io);
-    expect(run.text).toContain('… 2 more; the whole report is in');
+    expect(run.text).toContain('… 3 more; the whole report is in');
     const written = parseRulesReport(JSON.parse(readFileSync(run.file as string, 'utf8')));
-    expect(written.violations).toHaveLength(3);
+    expect(written.violations).toHaveLength(4);
     expect(written.rulesFormatVersion).toBe(1);
   });
 
   it('narrows by rule and by service, the file still whole', () => {
     const run = runRules({ config, service: 'billing', format: 'json' }, io);
-    expect(run.shown.violations.map((item) => item.rule)).toEqual(['only-orders-writes-orders']);
-    expect(run.report.violations).toHaveLength(3);
+    expect(run.shown.violations.map((item) => item.rule)).toEqual(['only-gateway-reaches-billing', 'only-orders-writes-orders']);
+    expect(run.report.violations).toHaveLength(4);
     expect(() => runRules({ config, rule: ['no-such-rule'] }, io)).toThrow(CliError);
   });
 
@@ -127,7 +128,7 @@ describe('rules in doctor and accept (P114)', () => {
     runDoctorCommand({ config, accept: true, baseline }, io);
     const held = JSON.parse(readFileSync(baseline, 'utf8'));
     expect(held.baselineFormatVersion).toBe(2);
-    expect(Object.keys(held.rules)).toHaveLength(4);
+    expect(Object.keys(held.rules)).toHaveLength(5);
     expect(runDoctorCommand({ config, strict: true, baseline }, io).exitCode).toBe(EXIT.ok);
 
     const written = JSON.parse(readFileSync(config, 'utf8'));
@@ -150,7 +151,7 @@ describe('rules in doctor and accept (P114)', () => {
     writeFileSync(old, JSON.stringify({ ...rest, baselineFormatVersion: 1 }));
     const strict = runDoctorCommand({ config, strict: true, baseline: old }, io);
     expect(strict.exitCode).toBe(EXIT.failed);
-    expect(strict.report.rules.new).toBe(4);
+    expect(strict.report.rules.new).toBe(5);
   });
 
   it('accept rule:<name> excuses the violations it names, and they are listed as excused', () => {
@@ -174,7 +175,7 @@ describe('rules in doctor and accept (P114)', () => {
   it('refuses a rule that fails its schema with exit 2, naming it', () => {
     const written = JSON.parse(readFileSync(config, 'utf8'));
     const bad = join(dir, 'flowatlas.bad.config.json');
-    writeFileSync(bad, JSON.stringify({ ...written, rules: [{ name: 'two-shapes', forbid: written.rules[4].forbid, tags: written.rules[0].tags }] }));
+    writeFileSync(bad, JSON.stringify({ ...written, rules: [{ name: 'two-shapes', forbid: written.rules[5].forbid, tags: written.rules[0].tags }] }));
     let caught: unknown;
     try {
       runRules({ config: bad }, io);

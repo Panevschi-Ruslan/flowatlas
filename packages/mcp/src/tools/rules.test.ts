@@ -31,10 +31,12 @@ describe('check_rules (P114)', () => {
     expect(answer.violations.map((row: { rule: string; loc: string }) => [row.rule, row.loc])).toEqual([
       ['frontends-reach-only-edge', 'src/app/orders-api.service.ts:34'],
       ['only-billing-consumes-order-events', 'src/audit/order-audit.consumer.ts:14'],
+      // A transitive only (P203): orders publishing what billing consumes, other than through the gateway.
+      ['only-gateway-reaches-billing', 'src/orders/orders.service.ts:49'],
       ['only-orders-writes-orders', 'src/invoices/invoices.service.ts:33'],
     ]);
     expect(answer.unchecked).toEqual([expect.objectContaining({ rule: 'typo-rule', reason: 'rule-matches-nothing' })]);
-    const write = answer.violations[2];
+    const write = answer.violations[3];
     expect(write.next[0]).toBe('get_flow({entry: "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"})');
     expect(write.next[1]).toMatch(/^get_source\(\{symbol: "db_query:billing#/);
   });
@@ -42,13 +44,13 @@ describe('check_rules (P114)', () => {
   it('is bounded, and says where the next page starts', async () => {
     const answer = await call('check_rules', { maxNodes: 1 });
     expect(answer.violations).toHaveLength(1);
-    expect(answer.total).toBe(3);
+    expect(answer.total).toBe(4);
     expect(answer.nextOffset).toBe(1);
     expect(answer.next[0]).toBe('check_rules({maxNodes: 1, offset: 1})');
   });
 
   it('narrows to one rule or one service, and names the near rule for a typo', async () => {
-    expect((await call('check_rules', { service: 'billing' })).violations.map((row: { rule: string }) => row.rule)).toEqual(['only-orders-writes-orders']);
+    expect((await call('check_rules', { service: 'billing' })).violations.map((row: { rule: string }) => row.rule)).toEqual(['only-gateway-reaches-billing', 'only-orders-writes-orders']);
     const typo = await call('check_rules', { rule: 'only-orders-write-orders' });
     expect(typo.error).toBe('no rule named "only-orders-write-orders"');
     expect(typo.suggestions).toContain('only-orders-writes-orders');
@@ -67,13 +69,13 @@ describe('check_rules (P114)', () => {
 
   it('writes the rules a node is on into describe_for_prompt, and counts the errors in start_here and findings', async () => {
     const prompt = await call('describe_for_prompt', { id: 'billing', scope: 'service' });
-    expect(prompt.markdown).toContain('## Rules it breaks · 1');
+    expect(prompt.markdown).toContain('## Rules it breaks · 2');
     expect(prompt.markdown).toContain('`only-orders-writes-orders` · error: billing writes table orders (billing), which only service orders may at billing `src/invoices/invoices.service.ts:33`. Why: orders owns its table; everyone else asks orders');
     const start = await call('start_here');
-    expect(start.rules).toEqual({ errors: 3, warnings: 0, unchecked: 1 });
+    expect(start.rules).toEqual({ errors: 4, warnings: 0, unchecked: 1 });
     expect(start.next[0]).toBe('check_rules()');
     const findings = await call('findings', { kind: 'rule' });
-    expect(findings.rows.map((row: { message: string }) => row.message.split(':')[0])).toHaveLength(3);
+    expect(findings.rows.map((row: { message: string }) => row.message.split(':')[0])).toHaveLength(4);
     expect(findings.rows[0].next).toMatch(/^check_rules\(\{rule: /);
   });
 });

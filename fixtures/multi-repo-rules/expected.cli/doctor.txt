@@ -1,4 +1,4 @@
-unresolved: total=10 (skipped) · markers: errors=0 warnings=0 · desync=4 · contracts: errors=0 ignored=0 · rules: errors=3 new=4 · exit=0
+unresolved: total=10 (skipped) · markers: errors=0 warnings=0 · desync=4 · contracts: errors=0 ignored=0 · rules: errors=4 new=5 · exit=0
 
 unresolved: 10 to act on · missed: 8 · notes: 0 · findings: 4
   2 missed places static reading cannot see, folded into 2 rows
@@ -45,14 +45,16 @@ desync: 4:
 
 contracts: no errors, 0 excused, 18 boundary directions nothing could be compared on
 
-rules: 5 configured · 3 errors, 0 warnings, 0 info · 4 new · 0 excused
+rules: 6 configured · 4 errors, 0 warnings, 0 info · 5 new · 0 excused
   new  typo-rule (error): not checked (to): service "biling" names nothing in this graph; did you mean billing? (rule-matches-nothing)
   new  frontends-reach-only-edge (error): web (frontend) requests orders GET /orders/:param, and orders carries none of edge
     at web/src/app/orders-api.service.ts:34  · why: the browser talks to the gateway, never to a domain service
   new  only-billing-consumes-order-events (error): gateway OrderAuditConsumer.onOrderCreated consumes channel order.created, which only service billing may
     at gateway/src/audit/order-audit.consumer.ts:14  · why: order events are billing's to act on
+  new  only-gateway-reaches-billing (error): orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may
+    at orders/src/orders/orders.service.ts:49  · why: billing is asked through the gateway, never by another service
   new  only-orders-writes-orders (error): billing writes table orders (billing), which only service orders may
     at billing/src/invoices/invoices.service.ts:33  · why: orders owns its table; everyone else asks orders
 
 verdict:
-  4 architecture rule violations at error the baseline does not hold
+  5 architecture rule violations at error the baseline does not hold

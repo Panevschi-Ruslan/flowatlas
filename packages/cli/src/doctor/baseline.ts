@@ -17,7 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { userInfo } from 'node:os';
-import { kindOfRow, tally, type Unresolved } from '@flowatlas/core';
+import { rowKindOf, tally, type Unresolved } from '@flowatlas/core';
 import { z } from 'zod';
 import { BASELINE_FORMAT_VERSION, type BaselineDelta } from './schema.js';
 
@@ -177,7 +177,7 @@ export const snapshotOf = (
   // reading cannot see nor a place with nothing to join. `total` and `keys`
   // below still count every actionable row, findings included, exactly as
   // they did before kinds existed, so no baseline changes verdict on upgrade.
-  const gaps = rows.filter((row) => kindOfRow(row) === 'gap');
+  const gaps = rows.filter((row) => rowKindOf(row) === 'gap');
   const info = tally(gaps.filter((row) => row.level === 'info'));
   const nothing = tally(gaps.filter((row) => row.level === 'nothing'));
 

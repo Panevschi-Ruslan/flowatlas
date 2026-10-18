@@ -2,12 +2,13 @@
   "missingRepos": [
     {
       "token": "payments",
-      "score": 3,
-      "places": 4,
+      "score": 4,
+      "places": 6,
       "kinds": [
         "setting",
         "package",
-        "channel"
+        "channel",
+        "subscription"
       ],
       "weak": false,
       "signals": [
@@ -52,6 +53,32 @@
               "service": "orders",
               "file": "src/orders.service.ts",
               "line": 18
+            }
+          ]
+        },
+        {
+          "kind": "subscription",
+          "name": "acme.payments*",
+          "says": "events from acme.payments* are taken by jobs (1 rule) and nothing here publishes one",
+          "places": [
+            {
+              "service": "jobs",
+              "file": "infra/main.tf",
+              "line": 68,
+              "gapId": "gap:jobs|infra/main.tf|subscription-matches-nothing"
+            }
+          ]
+        },
+        {
+          "kind": "subscription",
+          "name": "kinesis/payments",
+          "says": "stream kinesis/payments is read by jobs and nothing here writes to it",
+          "places": [
+            {
+              "service": "jobs",
+              "file": "infra/main.tf",
+              "line": 46,
+              "gapId": "gap:jobs|infra/main.tf|stream-no-writer"
             }
           ]
         }

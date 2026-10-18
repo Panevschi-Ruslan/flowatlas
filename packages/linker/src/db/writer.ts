@@ -1,6 +1,7 @@
 import { renameSync, rmSync } from 'node:fs';
 import Database from 'better-sqlite3';
 import {
+  rowClassOf,
   SCHEMA_VERSION,
   type GraphEdge,
   type GraphNode,
@@ -10,7 +11,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import type { LinkReport } from '../report.js';
-import { SCHEMA_SQL } from './schema.js';
+import { GRAPH_DB_FORMAT_VERSION, SCHEMA_SQL } from './schema.js';
 
 /** A channel or a third party belongs to the project, not to any one service. */
 const serviceOf = (node: GraphNode): string | null =>
@@ -33,7 +34,7 @@ const statementsOf = (db: Database.Database) => ({
     'INSERT INTO types (id, name, kind, repo, declared_in, structural_hash, fields, members, meta) VALUES (?,?,?,?,?,?,?,?,?)',
   ),
   row: db.prepare(
-    'INSERT INTO unresolved (service, file, line, reason, level, sites, message, hint, node_id, meta) VALUES (?,?,?,?,?,?,?,?,?,?)',
+    'INSERT INTO unresolved (service, file, line, reason, level, sites, message, hint, node_id, meta, kind, risk) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
   ),
 });
 
@@ -83,6 +84,8 @@ const insertType = (statements: Statements, id: string, entry: TypeEntry): void 
 };
 
 const insertRow = (statements: Statements, item: Unresolved, service?: string): void => {
+  // Decided once, by the one place that decides it, and read back by every reader (P208).
+  const { kind, risk } = rowClassOf(item);
   statements.row.run(
     item.service ?? service ?? null,
     item.file,
@@ -97,6 +100,8 @@ const insertRow = (statements: Statements, item: Unresolved, service?: string): 
     // reading the whole list.
     item.symbol ?? null,
     JSON.stringify(item.meta ?? {}),
+    kind,
+    risk ?? null,
   );
 };
 
@@ -162,6 +167,7 @@ export const writeGraphDb = (
 
     db.transaction(() => {
       meta.run('schema_version', String(SCHEMA_VERSION));
+      meta.run('db_format_version', String(GRAPH_DB_FORMAT_VERSION));
       meta.run('built_at', project.builtAt);
       meta.run('config_hash', report.configHash);
       meta.run('flowatlas_version', options.flowatlasVersion ?? '0.0.0');

@@ -1,5 +1,6 @@
 frontends-reach-only-edge  tags  error  source=32 mayReach edge=47
 only-orders-writes-orders  only  error  from=31 to=2
 only-billing-consumes-order-events  only  error  from=21 to=2
+only-gateway-reaches-billing  only  error  from=47 to=21
 order-created-keeps-a-consumer  reachable  error  from=1 to=21
 typo-rule  forbid  error  from=32 to=0  (unchecked: a side selects nothing)

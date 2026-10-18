@@ -1,4 +1,4 @@
-rules: 5 checked · 3 broken · 1 unchecked · errors=3 warnings=0 infos=0 · excused=0
+rules: 6 checked · 4 broken · 1 unchecked · errors=4 warnings=0 infos=0 · excused=0
 
 frontends-reach-only-edge  tags  error  1 violation
   why: the browser talks to the gateway, never to a domain service
@@ -14,6 +14,11 @@ only-billing-consumes-order-events  only  error  1 violation
   why: order events are billing's to act on
   gateway OrderAuditConsumer.onOrderCreated consumes channel order.created, which only service billing may
     at gateway/src/audit/order-audit.consumer.ts:14  (consumes, static)
+
+only-gateway-reaches-billing  only  error  1 violation
+  why: billing is asked through the gateway, never by another service
+  orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may
+    at orders/src/orders/orders.service.ts:49  (emits, static)
 
 order-created-keeps-a-consumer  reachable  error  held
   why: an order nobody invoices is lost money

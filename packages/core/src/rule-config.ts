@@ -75,20 +75,29 @@ export type RuleSelector = z.infer<typeof selectorSchema>;
 
 const viaSchema = z.array(z.enum(RULE_EDGE_KINDS)).min(1);
 
+/** How far a `forbid` or an `only` looks: one hop between services (default), or any path. */
+export const RULE_REACHES = ['direct', 'transitive'] as const;
+export type RuleReach = (typeof RULE_REACHES)[number];
+
 /** `from` must not reach `to`: in one hop between services (default), or by any path. */
 export const forbidRuleSchema = z.strictObject({
   from: selectorSchema,
   to: selectorSchema,
   via: viaSchema.optional(),
-  reach: z.enum(['direct', 'transitive']).optional(),
+  reach: z.enum(RULE_REACHES).optional(),
 });
 
-/** Nothing outside `from` may reach `to` by `via` (and, for a table, by `op`). */
+/**
+ * Nothing outside `from` may reach `to` by `via` (and, for a table, by `op`):
+ * in one hop (default), or by any path that does not go through `from`
+ * (`transitive`, P203), where whatever `from` itself reaches acts for it.
+ */
 export const onlyRuleSchema = z.strictObject({
   from: selectorSchema,
   to: selectorSchema,
   via: viaSchema.optional(),
   op: z.enum(RULE_OPS).optional(),
+  reach: z.enum(RULE_REACHES).optional(),
 });
 
 /** A service tagged `source` may join only services carrying one of `mayReach` (`*` any). */

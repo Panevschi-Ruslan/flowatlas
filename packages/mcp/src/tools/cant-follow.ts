@@ -6,7 +6,7 @@ import {
   gapIdOf,
   groupCantFollow,
   guessPatternKind,
-  kindOfRow,
+  rowKindOf,
   PATTERN_CAUSES,
   knownCauses,
   packageCoverage,
@@ -283,8 +283,8 @@ const carries = (row: AnchoredUnresolvedRow, cause: string): boolean =>
 
 /** How rows that are not steps the reader missed are said, by what they are (P81's kinds). */
 const notMissedSaid = (cause: string, rows: readonly AnchoredUnresolvedRow[]): string => {
-  const findings = rows.filter((row) => kindOfRow(row) === 'finding').length;
-  const notes = rows.filter((row) => kindOfRow(row) === 'note').length;
+  const findings = rows.filter((row) => rowKindOf(row) === 'finding').length;
+  const notes = rows.filter((row) => rowKindOf(row) === 'note').length;
   const nothing = rows.length - findings - notes;
   if (findings === rows.length) return `${cause} is a finding, not a step the reader missed: ${rows.length} rows`;
   if (notes === rows.length) return `${cause} is a note on how something was read, not a step the reader missed: ${rows.length} rows`;
@@ -320,7 +320,7 @@ const whyNone = (
   }
   if (apart.length > 0) {
     // Findings have a tool of their own (P95), ranked by reach; notes are only searched.
-    const finding = apart.some((row) => kindOfRow(row) === 'finding');
+    const finding = apart.some((row) => rowKindOf(row) === 'finding');
     return {
       note: notMissedSaid(cause, apart),
       next: [finding ? callOf('findings', { kind: findingKindOf(cause), service }) : callOf('search', { query: cause, kinds: ['gaps'] })],

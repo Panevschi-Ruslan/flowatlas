@@ -61,6 +61,51 @@ const shop = (): RuleGraph => ({
   tags: { web: ['frontend'], gateway: ['edge'], orders: ['domain'], billing: ['domain'] },
 });
 
+/**
+ * Payments, kept by billing through a workflow (`settle`) it starts. orders
+ * starts the same workflow too, behind the gateway; `reports` writes and
+ * reads the table itself.
+ */
+const payments = (): RuleGraph => ({
+  nodes: [
+    node('entry:billing:http:POST:/charges', 'entry', 'billing', 'POST /charges', { kind: 'http' }),
+    node('billing#Charges.charge', 'method', 'billing', 'Charges.charge'),
+    node('start:billing#settle', 'start', 'billing', 'start settle'),
+    node('entry:gateway:http:POST:/orders', 'entry', 'gateway', 'POST /orders', { kind: 'http' }),
+    node('gateway#Orders.place', 'method', 'gateway', 'Orders.place'),
+    node('http_out:gateway#orders', 'http_out', 'gateway', 'POST /orders'),
+    node('entry:orders:http:POST:/orders', 'entry', 'orders', 'POST /orders', { kind: 'http' }),
+    node('orders#Orders.place', 'method', 'orders', 'Orders.place'),
+    node('start:orders#settle', 'start', 'orders', 'start settle'),
+    node('entry:settle:workflow', 'entry', 'settle', 'settle', { kind: 'workflow' }),
+    node('settle#Settle.run', 'method', 'settle', 'Settle.run'),
+    node('db_query:settle#save', 'db_query', 'settle', 'write payments', { meta: { op: 'write' } }),
+    node('table:settle#payments', 'table', 'settle', 'payments'),
+    node('reports#Fix.run', 'method', 'reports', 'Fix.run'),
+    node('db_query:reports#fix', 'db_query', 'reports', 'write payments', { meta: { op: 'write' } }),
+    node('db_query:reports#list', 'db_query', 'reports', 'read payments', { meta: { op: 'read' } }),
+  ],
+  edges: [
+    edge('entry:billing:http:POST:/charges', 'handles', 'billing#Charges.charge'),
+    edge('billing#Charges.charge', 'calls', 'start:billing#settle'),
+    edge('start:billing#settle', 'triggers', 'entry:settle:workflow'),
+    edge('entry:gateway:http:POST:/orders', 'handles', 'gateway#Orders.place'),
+    edge('gateway#Orders.place', 'calls', 'http_out:gateway#orders'),
+    edge('http_out:gateway#orders', 'http_calls', 'entry:orders:http:POST:/orders'),
+    edge('entry:orders:http:POST:/orders', 'handles', 'orders#Orders.place'),
+    edge('orders#Orders.place', 'calls', 'start:orders#settle'),
+    edge('start:orders#settle', 'triggers', 'entry:settle:workflow', 'heuristic'),
+    edge('entry:settle:workflow', 'handles', 'settle#Settle.run'),
+    edge('settle#Settle.run', 'calls', 'db_query:settle#save'),
+    edge('db_query:settle#save', 'queries', 'table:settle#payments'),
+    edge('reports#Fix.run', 'calls', 'db_query:reports#fix'),
+    edge('reports#Fix.run', 'calls', 'db_query:reports#list'),
+    edge('db_query:reports#fix', 'queries', 'table:settle#payments'),
+    edge('db_query:reports#list', 'queries', 'table:settle#payments'),
+  ],
+  tags: {},
+});
+
 const rule = (written: Record<string, unknown>): RuleConfig => ruleSchema.parse(written);
 
 describe('evaluateRules (P114)', () => {
@@ -222,6 +267,59 @@ describe('evaluateRules (P114)', () => {
     expect(report.notes).toEqual([expect.objectContaining({ rule: 'billing-out-of-orders', reason: 'rule-over-partial-read', service: 'billing' })]);
   });
 
+  it('only, transitive: a write through a workflow the owner starts holds; a start of it by anyone else is where it breaks (P203)', () => {
+    const owner = [rule({ name: 'only-billing-writes-payments', only: { from: { service: 'billing' }, to: { table: 'payments' }, op: 'write', reach: 'transitive' } })];
+    const report = evaluateRules(payments(), owner);
+    // The workflow's own write acts for billing, which starts it; orders starting it too is the violation, at the start.
+    expect(report.violations.map((item) => [item.from, item.to, item.via, item.path.map((hop) => hop.type).join(' ')])).toEqual([
+      ['start:orders#settle', 'table:settle#payments', 'triggers', 'triggers handles calls queries'],
+      ['db_query:reports#fix', 'table:settle#payments', 'queries', 'queries'],
+    ]);
+    const [started, direct] = report.violations;
+    expect(started?.at).toEqual({ service: 'orders', file: 'src/start-settle.ts', line: 10 });
+    expect(started?.message).toBe('orders start settle reaches table payments (settle) in 4 hops, which only service billing may');
+    expect(started?.confidence).toBe('heuristic');
+    // A one-hop path is said as a direct `only` says it.
+    expect(direct?.message).toBe('reports writes table payments (settle), which only service billing may');
+    // The gateway in front of orders reaches the table too, but orders is the nearest and answers for the path.
+    expect(report.violations.some((item) => item.fromService === 'gateway')).toBe(false);
+    // Direct, the workflow's own write is the one blamed, and orders' start is not seen.
+    const direct1 = evaluateRules(payments(), [rule({ name: 'only-billing-writes-payments', only: { from: { service: 'billing' }, to: { table: 'payments' }, op: 'write' } })]);
+    expect(direct1.violations.map((item) => item.from)).toEqual(['db_query:reports#fix', 'db_query:settle#save']);
+  });
+
+  it('only, transitive: a read is not a write when op says write (P203)', () => {
+    const report = evaluateRules(payments(), [rule({ name: 'only-billing-reads', only: { from: { service: 'billing' }, to: { table: 'payments' }, op: 'read', reach: 'transitive' } })]);
+    expect(report.violations.map((item) => item.from)).toEqual(['db_query:reports#list']);
+  });
+
+  it('only, transitive: a handler of a channel the owner publishes onto acts for it, unless via leaves channels out (P203)', () => {
+    const through = [rule({ name: 'only-orders-writes-orders', only: { from: { service: 'orders' }, to: { table: 'orders' }, op: 'write', reach: 'transitive' } })];
+    expect(evaluateRules(shop(), through).violations).toEqual([]);
+    const strict = evaluateRules(shop(), [
+      rule({ name: 'only-orders-writes-orders', only: { from: { service: 'orders' }, to: { table: 'orders' }, op: 'write', via: ['http_calls', 'hits', 'queries', 'triggers'], reach: 'transitive' } }),
+    ]);
+    expect(strict.violations.map((item) => item.from)).toEqual(['db_query:billing#mark']);
+  });
+
+  it('only, transitive: a path through the owner is its own, and a request that goes round it is not (P203)', () => {
+    const report = evaluateRules(shop(), [rule({ name: 'only-gateway-reaches-billing', only: { from: { service: 'gateway' }, to: { service: 'billing' }, reach: 'transitive' } })]);
+    // The gateway asks orders, which publishes what billing consumes: that is the gateway's. The browser asking orders
+    // straight goes round it, and its request is where the path starts.
+    expect(report.violations.map((item) => [item.from, item.to, item.via, item.path.map((hop) => hop.type).join(' ')])).toEqual([
+      ['ui:web#direct', 'consumer:billing#created', 'hits', 'hits handles calls emits consumes'],
+    ]);
+    expect(report.violations[0]?.at).toEqual({ service: 'web', file: 'src/GET-orders-param-direct.ts', line: 10 });
+    // Direct, nothing hops into billing: a consume is billing's own hop onto the channel.
+    expect(evaluateRules(shop(), [rule({ name: 'only-gateway-reaches-billing', only: { from: { service: 'gateway' }, to: { service: 'billing' } } })]).violations).toEqual([]);
+  });
+
+  it('only, transitive: when what the owner reaches is cut by the bound, nothing is said and the rule says it stopped (P203)', () => {
+    const report = evaluateRules(payments(), [rule({ name: 'only-billing-writes-payments', only: { from: { service: 'billing' }, to: { table: 'payments' }, reach: 'transitive' } })], { maxWalk: 3 });
+    expect(report.violations).toEqual([]);
+    expect(report.rules[0]).toMatchObject({ walkCut: true, status: 'held' });
+  });
+
   it('a transitive walk is bounded and says it stopped', () => {
     const report = evaluateRules(shop(), [rule({ name: 'web-never-billing', forbid: { from: { service: 'web' }, to: { service: 'billing' }, reach: 'transitive' } })], { maxWalk: 4 });
     expect(report.rules[0]).toMatchObject({ walkCut: true });
@@ -235,5 +333,10 @@ describe('ruleSchema (P114)', () => {
     expect(ruleSchema.safeParse({ name: 'Not Kebab', forbid: { from: { service: 'a' }, to: { service: 'b' } } }).success).toBe(false);
     expect(ruleSchema.safeParse({ name: 'ok', forbid: { from: {}, to: { service: 'b' } } }).success).toBe(false);
     expect(ruleSchema.parse({ name: 'ok', forbid: { from: { service: 'a' }, to: { service: 'b' } } }).severity).toBe('error');
+  });
+
+  it('takes reach on only as on forbid (P203)', () => {
+    expect(ruleSchema.parse({ name: 'ok', only: { from: { service: 'a' }, to: { table: 'b' }, reach: 'transitive' } }).only?.reach).toBe('transitive');
+    expect(ruleSchema.safeParse({ name: 'ok', only: { from: { service: 'a' }, to: { table: 'b' }, reach: 'sideways' } }).success).toBe(false);
   });
 });

@@ -25,9 +25,12 @@
  *   (`route-shadowed`). A reviewer acts on these; a better reader would not
  *   make them go away.
  *
- * The kind is derived from the reason, never stored: a reason already says what
- * a row is, so old graphs, old databases and the read gate keep working with no
- * schema change. Kind and level are orthogonal. Level is how much a row matters
+ * The kind is derived from the reason and what the row recorded, here and
+ * nowhere else. The graph database stores it on each row when the graph is
+ * written (P208), with a finding's risk, so a reader reads one stored answer
+ * (`rowKindOf`, `rowRiskOf`); a row with none stored - an older database, the
+ * JSON graph, a row made at read time - is decided here as it always was, so
+ * the answer is the same either way. Kind and level are orthogonal. Level is how much a row matters
  * (`action`, `info`, `nothing`); kind is what it is about. A note can be `info`,
  * a finding can be `action` (`route-unguarded` where a guard is expected) or
  * `info` (`query-in-loop`). Level `nothing` keeps the one meaning it has: a
@@ -332,7 +335,7 @@ const REFINED: ReadonlyMap<string, (row: KindedRow) => RowKind | undefined> = ne
   ['query-in-loop', (row: KindedRow) => (row.meta?.['severity'] === 'note' ? 'note' : undefined)],
 ]);
 
-/** What a row is about. */
+/** What a row is about. The one place a kind is decided; a stored kind is this, written down (P208). */
 export const kindOfRow = (row: KindedRow): RowKind =>
   REFINED.get(row.reason)?.(row) ?? ROW_KINDS.get(row.reason) ?? 'gap';
 
@@ -422,3 +425,48 @@ export const riskOf = (reason: string): Risk | undefined => RISKS.get(reason);
 export const findingsWithoutRisk = (
   reasons: Iterable<string> = [...ROW_KINDS].filter(([, kind]) => kind === 'finding').map(([reason]) => reason),
 ): string[] => [...reasons].filter((reason) => ROW_KINDS.get(reason) === 'finding' && !RISKS.has(reason));
+
+/**
+ * A row as a reader holds it: what it recorded, and the kind and risk the
+ * graph database stored when the graph was written (P208), when it was read
+ * from one that stores them.
+ */
+export interface StoredKindRow extends KindedRow {
+  kind?: RowKind | null | undefined;
+  /** A finding's risk as stored; null for a row stored without one (a gap, a note). */
+  risk?: Risk | null | undefined;
+}
+
+const KIND_SET: ReadonlySet<string> = new Set(ROW_KIND_NAMES);
+const RISK_SET: ReadonlySet<string> = new Set(RISK_NAMES);
+
+/** Whether a value is a row kind: what a stored column is checked against before it is trusted. */
+export const isRowKind = (value: unknown): value is RowKind => typeof value === 'string' && KIND_SET.has(value);
+
+/**
+ * The kind a row was stored with, or the one `kindOfRow` decides for a row
+ * that has none stored. Every reader asks this, so a stored answer is read
+ * and a row from anywhere else is classified exactly as before.
+ */
+export const rowKindOf = (row: StoredKindRow): RowKind => (isRowKind(row.kind) ? row.kind : kindOfRow(row));
+
+/**
+ * A finding's risk as it was stored, or as `riskOf` says for a row with no
+ * kind stored. A gap or a note has none, whatever its reason: a loop per item
+ * on purpose is a note, and no risk.
+ */
+export const rowRiskOf = (row: StoredKindRow): Risk | undefined => {
+  if (isRowKind(row.kind)) return row.kind === 'finding' && typeof row.risk === 'string' && RISK_SET.has(row.risk) ? row.risk : undefined;
+  return kindOfRow(row) === 'finding' ? riskOf(row.reason) : undefined;
+};
+
+/**
+ * A row's kind and, for a finding, its risk, decided as `kindOfRow` and
+ * `riskOf` decide them: what the graph database stores on each row (P208),
+ * and what a row made at read time carries so it reads like a stored one.
+ */
+export const rowClassOf = (row: KindedRow): { kind: RowKind; risk?: Risk } => {
+  const kind = kindOfRow(row);
+  const risk = kind === 'finding' ? riskOf(row.reason) : undefined;
+  return risk === undefined ? { kind } : { kind, risk };
+};

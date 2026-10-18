@@ -8,7 +8,7 @@ import {
   type FailureGroup,
   gapIdOf,
   isRule,
-  kindOfRow,
+  rowKindOf,
   placeIdOf,
   rankByReach,
   readAccepted,
@@ -172,7 +172,7 @@ const gaps: Finder = ({ db, text, service, limit, offset, accepted }) => {
   const candidates = rankByReach(
     db.allUnresolved().filter((row) => (service === undefined || row.service === service) && gapText(row).includes(wanted)),
     waysInOf,
-    (a, b) => Number(kindOfRow(a) === 'note') - Number(kindOfRow(b) === 'note'),
+    (a, b) => Number(rowKindOf(a) === 'note') - Number(rowKindOf(b) === 'note'),
   );
   // Which entry took each row, as every other surface decides it (P80).
   const split = acceptedSplitOf(db, candidates, accepted);
@@ -206,7 +206,7 @@ const gaps: Finder = ({ db, text, service, limit, offset, accepted }) => {
       gapId,
       type: 'gap',
       reason: row.reason,
-      kind: kindOfRow(row),
+      kind: rowKindOf(row),
       ...(row.service === null ? {} : { service: row.service }),
       ...(row.file === null ? {} : { loc: row.line === null ? row.file : `${row.file}:${row.line}` }),
       message: row.message,

@@ -252,6 +252,12 @@ describe('traffic that names the missing repository, the same from both sides (P
         const page = promptFor(model, pageTarget({ db, model, dbPath }, setting), kit);
         expect(page).toBe(renderPrompt(checkSubjectAt(db, dbPath, setting)!, PROMPT_LIMITS));
         expect(page).toContain('one for "payments" looks missing here');
+        // A stream nothing here writes to, and a rule nothing here publishes for, are its evidence too (P204).
+        for (const unwritten of ['gap:jobs|infra/main.tf|stream-no-writer', 'gap:jobs|infra/main.tf|subscription-matches-nothing']) {
+          const said = promptFor(model, pageTarget({ db, model, dbPath }, unwritten), kit);
+          expect(said, unwritten).toBe(renderPrompt(checkSubjectAt(db, dbPath, unwritten)!, PROMPT_LIMITS));
+          expect(said, unwritten).toContain('one for "payments" looks missing here');
+        }
       } finally {
         db.close();
       }

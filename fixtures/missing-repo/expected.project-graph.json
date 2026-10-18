@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-17T18:06:55.744Z",
+  "builtAt": "2026-10-18T10:28:16.517Z",
   "services": [
     {
       "name": "gateway",
@@ -13,9 +13,32 @@
       "repo": "./orders",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
     }
   ],
   "nodes": [
+    {
+      "id": "channel:kinesis/payments",
+      "type": "channel",
+      "label": "kinesis/payments",
+      "repo": "jobs",
+      "file": "infra/main.tf",
+      "line": 46,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "aws_kinesis_stream.payments",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
     {
       "id": "channel:payment.requested",
       "type": "channel",
@@ -42,6 +65,82 @@
       "meta": {
         "key": "PAYMENTS_URL",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:jobs#infra/main.tf:aws_cloudwatch_event_target.receipts",
+      "type": "consumer",
+      "label": "rule acme-payment-captured",
+      "repo": "jobs",
+      "file": "infra/main.tf",
+      "line": 68,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.receipts",
+        "deployedBy": "terraform",
+        "name": "acme-payment-captured",
+        "rule": "aws_cloudwatch_event_rule.payment_captured",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
+        "channelPattern": {
+          "parts": [
+            {
+              "name": "service",
+              "filters": [
+                {
+                  "equals": "eventbridge"
+                }
+              ]
+            },
+            {
+              "name": "bus",
+              "filters": [
+                {
+                  "equals": "default"
+                }
+              ]
+            },
+            {
+              "name": "source",
+              "filters": [
+                {
+                  "prefix": "acme.payments"
+                }
+              ]
+            },
+            {
+              "name": "detail-type",
+              "filters": [
+                {
+                  "equals": "PaymentCaptured"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:jobs#infra/main.tf:aws_lambda_event_source_mapping.ledger",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.ledger",
+      "repo": "jobs",
+      "file": "infra/main.tf",
+      "line": 51,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.ledger",
+        "deployedBy": "terraform"
       }
     },
     {
@@ -74,6 +173,74 @@
         "rawPath": "/checkout/:id/refund",
         "controller": "CheckoutController",
         "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:jobs:event:kinesis/payments",
+      "type": "entry",
+      "label": "event kinesis/payments",
+      "repo": "jobs",
+      "file": "infra/main.tf",
+      "line": 51,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/payments",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.ledger",
+        "deployedBy": "terraform",
+        "changesOf": "stream",
+        "name": "payments",
+        "function": "acme-jobs-ledger",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:jobs:invoke:acme-jobs-ledger",
+      "type": "entry",
+      "label": "acme-jobs-ledger",
+      "repo": "jobs",
+      "file": "infra/main.tf",
+      "line": 33,
+      "kind": "invoke",
+      "meta": {
+        "key": "acme-jobs-ledger",
+        "deployedBy": "terraform",
+        "name": "acme-jobs-ledger",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"ledger\"]",
+        "handler": "ledger.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#KinesisStreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:jobs:invoke:acme-jobs-receipts",
+      "type": "entry",
+      "label": "acme-jobs-receipts",
+      "repo": "jobs",
+      "file": "infra/main.tf",
+      "line": 33,
+      "kind": "invoke",
+      "meta": {
+        "key": "acme-jobs-receipts",
+        "deployedBy": "terraform",
+        "name": "acme-jobs-receipts",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"receipts\"]",
+        "handler": "receipts.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#EventBridgeEvent<'PaymentCaptured',type:jobs#PaymentCaptured>",
+          "detail": "type:jobs#PaymentCaptured"
+        },
+        "adapter": "aws-lambda"
       }
     },
     {
@@ -200,6 +367,56 @@
         "bodyFrom": "literal",
         "bodyKeys": [
           "orderId"
+        ]
+      }
+    },
+    {
+      "id": "jobs#src/ledger.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "jobs",
+      "file": "src/ledger.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#KinesisStreamEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "jobs#src/receipts.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "jobs",
+      "file": "src/receipts.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'PaymentCaptured',type:jobs#PaymentCaptured>"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 10
+          }
         ]
       }
     },
@@ -352,6 +569,26 @@
       }
     },
     {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
       "id": "repo:orders",
       "type": "repo",
       "label": "orders",
@@ -377,6 +614,39 @@
     }
   ],
   "edges": [
+    {
+      "from": "channel:kinesis/payments",
+      "to": "consumer:jobs#infra/main.tf:aws_lambda_event_source_mapping.ledger",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 51,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:jobs#infra/main.tf:aws_cloudwatch_event_target.receipts",
+      "to": "entry:jobs:invoke:acme-jobs-receipts",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 68,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:jobs#infra/main.tf:aws_lambda_event_source_mapping.ledger",
+      "to": "entry:jobs:event:kinesis/payments",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 51,
+      "meta": {
+        "via": "deployment"
+      }
+    },
     {
       "from": "entry:gateway:http:POST:/checkout/:param/pay",
       "to": "gateway#src/checkout.controller.ts:CheckoutController.pay",
@@ -408,6 +678,30 @@
       "meta": {
         "params": "{id:string}"
       }
+    },
+    {
+      "from": "entry:jobs:event:kinesis/payments",
+      "to": "jobs#src/ledger.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/ledger.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:jobs:invoke:acme-jobs-ledger",
+      "to": "jobs#src/ledger.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/ledger.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:jobs:invoke:acme-jobs-receipts",
+      "to": "jobs#src/receipts.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/receipts.ts",
+      "line": 9
     },
     {
       "from": "entry:orders:http:POST:/orders/:param/confirm",
@@ -518,7 +812,50 @@
       "line": 18
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#EventBridgeEvent<'PaymentCaptured',type:jobs#PaymentCaptured>": {
+      "name": "EventBridgeEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "927920068f37d58d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#KinesisStreamEvent": {
+      "name": "KinesisStreamEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "e6e5fb34bea91d37",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:jobs#PaymentCaptured": {
+      "name": "PaymentCaptured",
+      "kind": "object",
+      "declaredIn": "jobs#src/receipts.ts",
+      "structuralHash": "7b74f42d53219fdf",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
   "unresolved": [
     {
       "service": "gateway",
@@ -537,6 +874,26 @@
       "message": "no service declares PAYMENTS_URL",
       "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
       "symbol": "http_out:gateway#src/checkout.controller.ts:21:26"
+    },
+    {
+      "service": "jobs",
+      "file": "infra/main.tf",
+      "line": 46,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/payments is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/payments"
+    },
+    {
+      "service": "jobs",
+      "file": "infra/main.tf",
+      "line": 68,
+      "reason": "subscription-matches-nothing",
+      "level": "info",
+      "message": "rule acme-payment-captured takes events by a pattern that no publisher in the configured services matches",
+      "hint": "A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.",
+      "symbol": "consumer:jobs#infra/main.tf:aws_cloudwatch_event_target.receipts"
     },
     {
       "file": "src/orders.service.ts",

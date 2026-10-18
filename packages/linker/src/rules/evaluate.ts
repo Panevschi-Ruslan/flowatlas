@@ -19,7 +19,10 @@
  *   `from` selects and stopped at the first node `to` selects on each path,
  *   so a rule over a whole service reports where a path enters it, not every
  *   method behind that.
- * - `only` - a hop into `to` from anything `from` does not select.
+ * - `only` - `direct` (the default): a hop into `to` from anything `from`
+ *   does not select. `transitive` (P203): any path into `to` that does not go
+ *   through `from`, walked back from `to` through whatever `from` itself
+ *   reaches and reported at the nearest node outside that (`walkBack`).
  * - `tags` - a hop from a service tagged `source` into a service carrying none
  *   of `mayReach`. A publish joins nobody in particular; a consume joins the
  *   services that publish onto the channel.
@@ -46,6 +49,7 @@ import {
   type GraphEdge,
   type GraphNode,
   type RuleConfig,
+  type RuleEdgeKind,
   type RuleSelector,
   type RuleSeverity,
 } from '@flowatlas/core';
@@ -107,6 +111,8 @@ interface Index {
   order: string[];
   hops: Hop[];
   forward: Map<string, GraphEdge[]>;
+  /** The same edges by the node they arrive at, for walking a path back from its end. */
+  backward: Map<string, GraphEdge[]>;
   /** Each channel's publishers, by channel id. */
   producers: Map<string, string[]>;
   tags: Readonly<Record<string, readonly string[]>>;
@@ -124,11 +130,15 @@ const indexOf = (graph: RuleGraph): Index => {
   const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
   const hops: Hop[] = [];
   const forward = new Map<string, GraphEdge[]>();
+  const backward = new Map<string, GraphEdge[]>();
   const producers = new Map<string, string[]>();
   const edges = [...graph.edges].sort((a, b) => byText(a.from, b.from) || byText(a.to, b.to) || byText(a.type, b.type));
   for (const edge of edges) {
     if (!nodes.has(edge.from) || !nodes.has(edge.to)) continue;
-    if (FORWARD.includes(edge.type)) add(forward, edge.from, edge);
+    if (FORWARD.includes(edge.type)) {
+      add(forward, edge.from, edge);
+      add(backward, edge.to, edge);
+    }
     if (edge.type === 'emits') add(producers, edge.to, edge.from);
     if (!HOP_KINDS.has(edge.type)) continue;
     hops.push(
@@ -143,6 +153,7 @@ const indexOf = (graph: RuleGraph): Index => {
     order: [...nodes.keys()].sort(byText),
     hops,
     forward,
+    backward,
     producers,
     tags: graph.tags,
     partial: new Set(graph.partial ?? []),
@@ -396,6 +407,110 @@ const walkForward = (
   return { found, cut };
 };
 
+/** What a transitive `only` is walked with, beyond its two sides. */
+interface BackRule {
+  via: readonly string[];
+  op?: string | undefined;
+  /** Whether a path inside one service counts: the rule's `to` names a table, or its `via` names a kind on the path. */
+  inService: (path: readonly GraphEdge[]) => boolean;
+  /** How the rule says who may: `service orders`. */
+  owner: string;
+}
+
+/**
+ * Every path into what `to` selects that does not go through what `from`
+ * selects: a transitive `only` (P203).
+ *
+ * Whatever `from` reaches acts for it - a workflow it starts, a route it
+ * calls, a handler of a channel it publishes onto - so "only billing writes
+ * payments" holds when billing writes them through a workflow of its own.
+ * Each path is walked back from a `to` node through what acts for `from`, and
+ * stops at the nearest node that `from` neither selects nor reaches: that
+ * node is where the path starts (`from`), the one that reached `to` other than
+ * through `from`, and what is in front of it (a gateway route in front of a
+ * service that breaks the rule) is not walked: the nearest one answers for
+ * the path. A path back that arrives at `from` is `from`'s own and ends there.
+ * A channel is no one's (I6): the walk goes on to its publishers.
+ *
+ * One path per node reached, the shortest, as forward. When working out what
+ * `from` reaches stops at `maxWalk`, nothing is said: every node past the cut
+ * would be a violation it is not.
+ */
+const walkBack = (index: Index, from: NodeTest, to: NodeTest, rule: BackRule, maxWalk: number): Walked => {
+  const follows = (edge: GraphEdge): boolean => PLUMBING.has(edge.type) || rule.via.includes(edge.type);
+  const side = new Set<string>();
+  const ahead: string[] = [];
+  for (const id of index.order) {
+    if (!from(index.nodes.get(id)!)) continue;
+    side.add(id);
+    ahead.push(id);
+  }
+  for (let at = 0; at < ahead.length; at += 1) {
+    for (const edge of index.forward.get(ahead[at]!) ?? []) {
+      if (side.has(edge.to) || !follows(edge)) continue;
+      if (side.size >= maxWalk) return { found: [], cut: true };
+      side.add(edge.to);
+      ahead.push(edge.to);
+    }
+  }
+
+  // Toward the nearest `to` node: the edge out of each node walked back to, null on a `to` node.
+  const next = new Map<string, GraphEdge | null>();
+  const back: string[] = [];
+  for (const id of index.order) {
+    const node = index.nodes.get(id)!;
+    if (!to(node) || from(node)) continue;
+    next.set(id, null);
+    back.push(id);
+  }
+  const found: Found[] = [];
+  let cut = false;
+  for (let at = 0; at < back.length && !cut; at += 1) {
+    const id = back[at]!;
+    const intoTo = next.get(id) === null;
+    for (const edge of index.backward.get(id) ?? []) {
+      if (next.has(edge.from) || !follows(edge)) continue;
+      // `op` is about the hop that arrives: a table's query that does what it says.
+      if (intoTo && rule.op !== undefined && !(edge.type === 'queries' && index.nodes.get(edge.from)?.meta?.['op'] === rule.op)) continue;
+      const node = index.nodes.get(edge.from)!;
+      if (from(node)) continue;
+      if (next.size >= maxWalk) {
+        cut = true;
+        break;
+      }
+      next.set(edge.from, edge);
+      if (side.has(edge.from) || node.type === 'channel') {
+        back.push(edge.from);
+        continue;
+      }
+      const path: GraphEdge[] = [];
+      for (let step: GraphEdge | null | undefined = edge; step != null; step = next.get(step.to)) path.push(step);
+      const end = index.nodes.get(path[path.length - 1]!.to)!;
+      // A path that stays in one service is a rule's only when it asks for one, as a direct hop is.
+      const inOne = serviceOfNode(end) !== null && end.repo === node.repo && path.every((hop) => PLUMBING.has(hop.type) || hop.type === 'queries');
+      if (inOne && !rule.inService(path)) continue;
+      const crossing = path.find((hop) => !PLUMBING.has(hop.type)) ?? path[0]!;
+      const place = placeOf(node);
+      const said =
+        path.length === 1
+          ? `${nodeSay(node)} ${doesSay({ kind: edge.type, actor: edge.from, target: edge.to, edge }, index)} ${nodeSay(end)}`
+          : `${nodeSay(node)} reaches ${nodeSay(end)} in ${path.length} hops`;
+      found.push({
+        from: edge.from,
+        to: end.id,
+        fromService: node.repo,
+        toService: serviceOfNode(end),
+        via: crossing.type,
+        path: path.map(hopOf),
+        ...(place === undefined ? {} : { at: place }),
+        confidence: weakest(path.map((hop) => hop.confidence)),
+        message: `${said}, which only ${rule.owner} may`,
+      });
+    }
+  }
+  return { found, cut };
+};
+
 /** What each shape needs to say about itself: the sides it selects by and how it finds violations. */
 interface ShapeRule {
   /** The sides that must each select something, with the test for each. */
@@ -439,10 +554,24 @@ const SHAPES: Readonly<Record<string, ShapeRule>> = {
   only: {
     sides: (rule, index) => sidesOf(rule.only!.from, rule.only!.to, index),
     names: (rule, index) => [...servicesSelected(index, rule.only!.from), ...servicesSelected(index, rule.only!.to)],
-    find: (rule, index) => {
+    find: (rule, index, options) => {
       const shape = rule.only!;
       const from = testOf(shape.from, index);
       const to = testOf(shape.to, index);
+      if (shape.reach === 'transitive') {
+        return walkBack(
+          index,
+          from,
+          to,
+          {
+            via: shape.via ?? DEFAULT_RULE_VIA,
+            op: shape.op,
+            inService: (path) => shape.to.table !== undefined || path.some((hop) => shape.via?.includes(hop.type as RuleEdgeKind) ?? false),
+            owner: saySelector(shape.from),
+          },
+          options.maxWalk,
+        );
+      }
       const found = index.hops
         .filter((hop) => looksAt(hop, shape, index) && to(index.nodes.get(hop.target)!) && !from(index.nodes.get(hop.actor)!))
         .filter((hop) => shape.op === undefined || (hop.kind === 'queries' && index.nodes.get(hop.actor)?.meta?.['op'] === shape.op))

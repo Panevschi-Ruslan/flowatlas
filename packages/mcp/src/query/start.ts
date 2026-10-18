@@ -1,4 +1,4 @@
-import { countsOf, kindOfRow, type GraphNode } from '@flowatlas/core';
+import { countsOf, rowKindOf, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow } from '@flowatlas/linker';
 import { projectDetail } from './detail.js';
 import type { CompactNode } from './types.js';
@@ -153,13 +153,13 @@ export const summariseProject = (input: StartInput, limits: StartLimits = START_
   const inScope = input.unresolved.filter((row) => wanted(row.service));
   const { missed, sites, notes, findings, nothing } = countsOf(inScope);
 
-  const actionable = inScope.filter((row) => row.level === 'action' && kindOfRow(row) === 'gap');
+  const actionable = inScope.filter((row) => row.level === 'action' && rowKindOf(row) === 'gap');
   for (const row of actionable) if (row.service !== null) counted(row.service).gaps += 1;
   const topGaps = topReasons(actionable, limits.gaps);
   // Every finding but one with nothing to point at, whatever its level: a
   // likely N+1 is written at `info` and is as much a finding as an unguarded route.
   const topFindings = topReasons(
-    inScope.filter((row) => row.level !== 'nothing' && kindOfRow(row) === 'finding'),
+    inScope.filter((row) => row.level !== 'nothing' && rowKindOf(row) === 'finding'),
     limits.findings,
   );
 

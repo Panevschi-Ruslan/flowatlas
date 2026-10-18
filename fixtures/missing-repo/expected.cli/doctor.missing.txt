@@ -1,4 +1,4 @@
-Probably missing: a repository for "payments" — 3 kinds of evidence, 4 places
+Probably missing: a repository for "payments" — 4 kinds of evidence, 6 places
   PAYMENTS_URL is used by gateway (2 requests) and no service claims it
     gateway/src/checkout.controller.ts:12
     gateway/src/checkout.controller.ts:21
@@ -6,4 +6,8 @@ Probably missing: a repository for "payments" — 3 kinds of evidence, 4 places
     orders/src/orders.service.ts:17
   channel payment.requested is published by orders and nobody here consumes it
     orders/src/orders.service.ts:18
+  events from acme.payments* are taken by jobs (1 rule) and nothing here publishes one
+    jobs/infra/main.tf:68
+  stream kinesis/payments is read by jobs and nothing here writes to it
+    jobs/infra/main.tf:46
   ./payments-api looks like it (package @acme/payments-api, its directory name, a compose service built from it): flowatlas link ./fixtures/missing-repo/payments-api --config fixtures/missing-repo/flowatlas.config.json

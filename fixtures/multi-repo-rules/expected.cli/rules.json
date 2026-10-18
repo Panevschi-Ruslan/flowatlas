@@ -41,6 +41,19 @@
       "excused": 0
     },
     {
+      "name": "only-gateway-reaches-billing",
+      "shape": "only",
+      "severity": "error",
+      "note": "billing is asked through the gateway, never by another service",
+      "status": "broken",
+      "matched": {
+        "from": 47,
+        "to": 21
+      },
+      "violations": 1,
+      "excused": 0
+    },
+    {
       "name": "order-created-keeps-a-consumer",
       "shape": "reachable",
       "severity": "error",
@@ -125,6 +138,40 @@
       "heuristic": false
     },
     {
+      "rule": "only-gateway-reaches-billing",
+      "shape": "only",
+      "severity": "error",
+      "note": "billing is asked through the gateway, never by another service",
+      "key": "rule|only-gateway-reaches-billing|producer:orders#src/orders/orders.service.ts~event order.created|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "from": "producer:orders#src/orders/orders.service.ts:49:5",
+      "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "fromService": "orders",
+      "toService": "billing",
+      "via": "emits",
+      "path": [
+        {
+          "from": "producer:orders#src/orders/orders.service.ts:49:5",
+          "to": "channel:order.created",
+          "type": "emits",
+          "confidence": "static"
+        },
+        {
+          "from": "channel:order.created",
+          "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+          "type": "consumes",
+          "confidence": "static"
+        }
+      ],
+      "at": {
+        "service": "orders",
+        "file": "src/orders/orders.service.ts",
+        "line": 49
+      },
+      "confidence": "static",
+      "message": "orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may",
+      "heuristic": false
+    },
+    {
       "rule": "only-orders-writes-orders",
       "shape": "only",
       "severity": "error",
@@ -168,11 +215,11 @@
   ],
   "notes": [],
   "summary": {
-    "rules": 5,
+    "rules": 6,
     "held": 1,
-    "broken": 3,
+    "broken": 4,
     "unchecked": 1,
-    "errors": 3,
+    "errors": 4,
     "warnings": 0,
     "infos": 0,
     "heuristic": 0,

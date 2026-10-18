@@ -9,6 +9,7 @@ import {
   rankMissing,
   saySeen,
   saySignal,
+  subscriptionSources,
   worthSaying,
   type MissingRow,
 } from './missing-repo.js';
@@ -270,5 +271,118 @@ describe('traffic from a service nobody configured (P144)', () => {
       ]);
       expect(aliased).toEqual([]);
     });
+  });
+});
+
+describe('a subscription nothing here writes to (P204)', () => {
+  /** A declared stream a function reads, as the linker leaves it: the consume edge, no write, its row. */
+  const stream: GraphNode = {
+    id: 'channel:kinesis/payments',
+    type: 'channel',
+    label: 'kinesis/payments',
+    repo: 'jobs',
+    file: 'infra/main.tf',
+    line: 40,
+    meta: { adapters: ['aws-kinesis'], declaredBy: ['jobs'] },
+  };
+  const ledger: GraphNode = { id: 'consumer:jobs#ledger', type: 'consumer', label: 'ledger', repo: 'jobs', file: 'infra/main.tf', line: 46 };
+  const reads: GraphEdge = { from: stream.id, to: ledger.id, type: 'consumes', confidence: 'static' };
+  const unwritten: MissingRow = {
+    reason: 'stream-no-writer',
+    service: 'jobs',
+    file: 'infra/main.tf',
+    line: 40,
+    symbol: stream.id,
+    message: 'kinesis/payments is read by a function and nothing in the configured services writes to it',
+  };
+  /** A rule taking events by a pattern, as the deployment reader writes its consumer. */
+  const rule = (id: string, sources: unknown[], line = 60): GraphNode => ({
+    id,
+    type: 'consumer',
+    label: `rule ${id}`,
+    repo: 'jobs',
+    file: 'infra/main.tf',
+    line,
+    meta: {
+      channelPattern: {
+        parts: [
+          { name: 'service', filters: [{ equals: 'eventbridge' }] },
+          { name: 'bus', filters: [{ equals: 'default' }] },
+          { name: 'source', filters: sources },
+          { name: 'detail-type', filters: [{ equals: 'PaymentCaptured' }] },
+        ],
+      },
+    },
+  });
+  const matchesNothing = (node: GraphNode): MissingRow => ({
+    reason: 'subscription-matches-nothing',
+    service: 'jobs',
+    file: 'infra/main.tf',
+    line: node.line ?? 0,
+    symbol: node.id,
+    message: `${node.label} takes events by a pattern that no publisher in the configured services matches`,
+  });
+  const receipts = rule('receipts', [{ equals: 'acme.payments' }]);
+  const report = { ...(REPORT as object), channels: { noConsumers: [], noProducers: [stream.id] } } as never;
+
+  it('reads a stream nothing writes to by its name, as a subscription, and not again as a channel with one end', () => {
+    const signals = missingRepoSignals({ nodes: [stream, ledger], edges: [reads], unresolved: [unwritten] }, report);
+    expect(signals.map((signal) => [signal.kind, signal.name, signal.token, signal.reads])).toEqual([['subscription', 'kinesis/payments', 'payments', 'stream']]);
+    expect(signals[0]?.places).toEqual([{ service: 'jobs', file: 'infra/main.tf', line: 40, gapId: 'gap:jobs|infra/main.tf|stream-no-writer' }]);
+    expect(saySignal(signals[0]!)).toBe('stream kinesis/payments is read by jobs and nothing here writes to it');
+    // Accepted (its row gone), the stream is no evidence at all: the row was the one reading of it.
+    expect(missingRepoSignals({ nodes: [stream, ledger], edges: [reads], unresolved: [] }, report)).toEqual([]);
+    // A channel nobody declared, read and never written, stays a channel with one end.
+    const plain = { ...stream, meta: { adapters: ['aws-kinesis'] } };
+    expect(missingRepoSignals({ nodes: [plain, ledger], edges: [reads], unresolved: [] }, report).map((signal) => signal.kind)).toEqual(['channel']);
+  });
+
+  it('reads a rule nothing published matches by the sources it names, the last dotted word the token', () => {
+    const prefix = rule('partner-titles', [{ prefix: 'partner.' }], 70);
+    const signals = missingRepoSignals({ nodes: [receipts, prefix], unresolved: [matchesNothing(receipts), matchesNothing(prefix)] }, REPORT);
+    expect(signals.map((signal) => [signal.kind, signal.name, signal.token, signal.reads])).toEqual([
+      ['subscription', 'acme.payments', 'payments', 'rule'],
+      ['subscription', 'partner.*', 'partner', 'rule'],
+    ]);
+    expect(saySignal(signals[0]!)).toBe('events from acme.payments are taken by jobs (1 rule) and nothing here publishes one');
+    expect(signals[0]?.places[0]?.gapId).toBe('gap:jobs|infra/main.tf|subscription-matches-nothing');
+  });
+
+  it("names no writer for the platform's own sources, nor for a pattern without a source", () => {
+    const platform = rule('backups', [{ equals: 'aws.backup' }, { prefix: 'aws.partner/' }]);
+    const sourceless: GraphNode = { ...receipts, id: 'any', meta: { channelPattern: { parts: [{ name: 'source', filters: [] }] } } };
+    const negated = rule('not-mine', [{ anythingBut: [{ equals: 'acme.orders' }] }]);
+    expect(missingRepoSignals({ nodes: [platform, sourceless, negated], unresolved: [platform, sourceless, negated].map(matchesNothing) }, REPORT)).toEqual([]);
+  });
+
+  it('is one kind for both, weak alone, after a channel, and agrees with the others on one name', () => {
+    const both = rankMissing(missingRepoSignals({ nodes: [stream, ledger, receipts], edges: [reads], unresolved: [unwritten, matchesNothing(receipts)] }, report), SERVICES);
+    expect(both.map((group) => [group.token, group.score, group.places, group.kinds])).toEqual([['payments', 1, 2, ['subscription']]]);
+    expect(worthSaying(both[0]!)).toBe(false);
+    const node = call('http_out:gateway#a', 'gateway', { baseUrlEnv: 'PAYMENTS_URL' });
+    const channel: GraphNode = { id: 'channel:payment.requested', type: 'channel', label: 'payment.requested', repo: 'orders', file: 'src/o.ts', line: 7 };
+    const agreed = rankMissing(
+      missingRepoSignals(
+        { nodes: [node, channel, stream, ledger, receipts], edges: [reads], unresolved: [unclaimed(node.id, 'PAYMENTS_URL'), unwritten, matchesNothing(receipts)] },
+        { ...(REPORT as object), channels: { noConsumers: [channel.id], noProducers: [stream.id] } } as never,
+      ),
+      SERVICES,
+    );
+    expect(agreed.map((group) => [group.token, group.score, group.kinds])).toEqual([['payments', 3, ['setting', 'channel', 'subscription']]]);
+    expect(worthSaying(agreed[0]!)).toBe(true);
+    expect(missingTokenOfGap(missingByGap(agreed), 'gap:jobs|infra/main.tf|stream-no-writer')).toBe('payments');
+  });
+
+  it('is dropped when the name is a configured service', () => {
+    const signals = missingRepoSignals({ nodes: [receipts], unresolved: [matchesNothing(receipts)] }, REPORT);
+    expect(rankMissing(signals, [...SERVICES, { name: 'payments-api' }])).toEqual([]);
+  });
+
+  it('subscriptionSources reads equals, any case, prefix and wildcard values', () => {
+    expect(subscriptionSources(rule('r', [{ equals: 'com.acme.payments' }, { equalsIgnoreCase: 'Acme.Shipping' }, { wildcard: 'acme.*.billing' }, { exists: true }]))).toEqual([
+      { name: 'com.acme.payments', token: 'payments' },
+      { name: 'Acme.Shipping', token: 'Shipping' },
+      { name: 'acme.*.billing', token: 'billing' },
+    ]);
   });
 });

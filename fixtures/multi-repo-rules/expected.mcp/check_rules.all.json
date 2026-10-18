@@ -25,6 +25,14 @@
       "note": "order events are billing's to act on"
     },
     {
+      "name": "only-gateway-reaches-billing",
+      "shape": "only",
+      "severity": "error",
+      "status": "broken",
+      "violations": 1,
+      "note": "billing is asked through the gateway, never by another service"
+    },
+    {
       "name": "order-created-keeps-a-consumer",
       "shape": "reachable",
       "severity": "error",
@@ -74,6 +82,22 @@
       ]
     },
     {
+      "rule": "only-gateway-reaches-billing",
+      "severity": "error",
+      "from": "producer:orders#src/orders/orders.service.ts:49:5",
+      "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:49",
+      "via": "emits",
+      "confidence": "static",
+      "message": "orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may",
+      "note": "billing is asked through the gateway, never by another service",
+      "next": [
+        "get_flow({entry: \"entry:orders:http:POST:/orders\"})",
+        "get_source({symbol: \"producer:orders#src/orders/orders.service.ts:49:5\"})"
+      ]
+    },
+    {
       "rule": "only-orders-writes-orders",
       "severity": "error",
       "from": "db_query:billing#src/invoices/invoices.service.ts:33:11",
@@ -90,7 +114,7 @@
       ]
     }
   ],
-  "total": 3,
+  "total": 4,
   "unchecked": [
     {
       "rule": "typo-rule",

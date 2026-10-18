@@ -449,8 +449,12 @@ kinds, decided by its reason (`ROW_KINDS` in `@flowatlas/core`): a **gap** (the
 reader could not follow something), a **note** (how a join or a reading was
 made; nothing was missed - a base address taken from a repository's own files, a
 package read from its source) or a **finding** (something about the code
-itself - a likely N+1, a route with no guard). The build ends on one line that
-counts them apart, never added together:
+itself - a likely N+1, a route with no guard). `graph.db` stores each row's
+kind, and a finding's risk (auth, performance, wiring), in the `unresolved`
+table's `kind` and `risk` columns when the graph is written, and every reader
+reads them back; a database written before those columns is read by deciding
+them again, the same way. The build ends on one line that counts them apart,
+never added together:
 
 ```
 missed: 9 over 21 sites · notes: 8 · findings: 4 · 3 sites with nothing to join
@@ -2143,8 +2147,18 @@ graph as evidence, with the name it points at:
 | a host | a third party written in the call, or a value of such a setting, whose host is the project's own: no dot, `localhost:<port>`, a private address, `*.internal`, `*.local`, `*.svc`, `*.cluster.local`, or a name under a domain a service's `hosts` uses | its first label, a cluster's service name, or the host itself for `localhost:<port>` |
 | a package | `module-not-installed:<package>`, under the scope of a configured service's own `package.json` name, that no read repository is | without its scope and its `-client`, `-sdk`, `-types` |
 | a channel | `channels.noConsumers` / `noProducers` | its first segment (`payment.captured` → `payment`), its transport's word left off (`sqs/…`) |
+| a subscription | a `stream-no-writer` row (a stream a function reads that nothing configured writes to), or a `subscription-matches-nothing` row (a rule taking events by a pattern nothing published matches) | the stream as a channel is named; each `source` the pattern names, by its last dotted word (`acme.payments` → `payments`; `aws.*` sources are the platform's and name none) |
 | a deployment | `invoke-target-not-found`, `route-root-not-found`, `function-handler-not-found` | the deployed name's service part, its stage word and its own last word left off |
 | traffic | with an observed file beside the database: a `seen-not-in-code` blind spot (what `observe` matched to nothing) whose `service.name` no configured service has; or a `peer` blind spot, a call whose `peer.service` names a service the map lacks (P146), from any service | the service's name; for a `peer` row, each name the calls went to (a masked `:value` is none) |
+
+A subscription is one kind for both rows, and weak alone like a channel with
+one end: a stream or a rule that nothing here writes to is as often fed by
+another account, a partner or the platform as by a repository nobody added. It
+counts once another kind agrees or a directory fits. A declared stream that is
+read and never written is said only as a subscription, not again as a channel
+with one end (one fact, one kind), and an accepted row is no evidence. Both
+rows stay findings; their check's *How to close it* now opens with the
+`flowatlas link` line.
 
 Traffic is one kind among the others. Alone it is weak: a proxy, a collector or
 a browser writes spans under a name of its own, so it is said in the report's
@@ -2177,10 +2191,12 @@ evidence is worth saying on its own (an address or a deployment nobody answers,
 two kinds that agree, or a directory that fits):
 
 ```
-Probably missing: a repository for "payments" — 3 kinds of evidence, 4 places
+Probably missing: a repository for "payments" — 4 kinds of evidence, 6 places
   PAYMENTS_URL is used by gateway (2 requests) and no service claims it
   @acme/payments-client is imported by orders and is not installed
   channel payment.requested is published by orders and nobody here consumes it
+  events from acme.payments* are taken by jobs (1 rule) and nothing here publishes one
+  stream kinesis/payments is read by jobs and nothing here writes to it
   ./payments-api looks like it (package @acme/payments-api, its directory name, a compose service built from it): flowatlas link ./payments-api
 ```
 
@@ -2200,7 +2216,7 @@ it, the same group gains a line and its places:
 them all under `unresolved.missingRepos: [{ token, score, places, kinds, weak,
 signals: [{ kind, name, says, places: [{ service, file, line, gapId, seen? }] }],
 candidates: [{ path, name, matchedBy }] }]` (`path` relative to the
-configuration; `weak` for a lone package or channel with nothing on disk);
+configuration; `weak` for a lone package, channel, subscription or traffic with nothing on disk);
 `--format github` adds one `::notice` per group at the configuration file. A
 guess, said as one: it decides no exit code, draws no edge and changes no
 configuration. `flowatlas link --suggested` is the one command that acts on it.
@@ -3837,9 +3853,27 @@ one of four shapes:
 | Shape | Says | Broken by |
 |---|---|---|
 | `forbid: { from, to, via?, reach? }` | `from` must not reach `to` | `reach: "direct"` (default): one hop from a node `from` selects to one `to` selects. `"transitive"`: any path forward, through calls and channels, reported where it first enters `to` |
-| `only: { from, to, via?, op? }` | nothing outside `from` may reach `to` | a hop into `to` from a node `from` does not select; `op` (`read`, `write`, `delete`) narrows a table's queries |
+| `only: { from, to, via?, op?, reach? }` | nothing outside `from` may reach `to` | `reach: "direct"` (default): a hop into `to` from a node `from` does not select. `"transitive"`: any path into `to` that does not go through `from` (below); `op` (`read`, `write`, `delete`) narrows a table's queries, the last hop's in a path |
 | `tags: { source, mayReach, via? }` | a service tagged `source` may join only services carrying one of `mayReach` (`*` any) | a hop from such a service into one carrying none of them; a consume joins the services that publish onto the channel, a publish joins nobody in particular |
 | `reachable: { from, to, must }` | with `must: true`, a path from `from` to `to` must exist | `true`: no path any more (one violation, with no hop to point at). `false`: every path that does |
+
+A **transitive `only`** reads "only `billing` may reach the `payments` table,
+even through other services". Whatever `from` reaches acts for it: a workflow
+`billing` starts, a route it calls, a handler of a channel it publishes onto
+writing `payments` is `billing`'s write, and a path that goes through `from` is
+`from`'s own. A violation is a path into `to` that does not: it is walked back
+from `to` through what acts for `from`, and starts at the nearest node that
+`from` neither selects nor reaches. That node is the violation's `from` and its
+`at` (the call, request, publish, start or query that took the path), its `via`
+is the kind of the path's first hop between services, its `path` every hop from
+there to `to`, and its confidence the weakest of them, as for a transitive
+`forbid`. What is in front of that node is not reported again: a gateway route in
+front of a service that breaks the rule is the service's violation, not the
+gateway's. A one-hop path reads as a direct `only` does. To leave channels out
+of what acts for `from`, name a `via` without `emits` and `consumes`. A walk
+stops at 5,000 nodes and the rule says so (`walkCut`); when that happens while
+working out what `from` reaches, the rule reports nothing, since every node past
+the cut would look like a violation.
 
 A **selector** is `{ service?, tag?, entry?, table?, channel?, route?, type? }`,
 every key optional and all of them ANDed; `*` (and `**`) is any run of

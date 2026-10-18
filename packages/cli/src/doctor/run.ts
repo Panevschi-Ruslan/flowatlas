@@ -7,7 +7,7 @@
  * runs over one graph say the same thing, so a difference in CI is a difference
  * in the project.
  */
-import { countsOf, kindOfRow, waysInOf, type GraphNode, type Unresolved } from '@flowatlas/core';
+import { countsOf, rowKindOf, waysInOf, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
 import {
@@ -495,7 +495,7 @@ const groupByReason = (
     (row.level ?? 'action') as 'action' | 'info' | 'nothing';
   const byReason = new Map<string, Unresolved[]>();
   for (const row of rows) {
-    const key = `${row.reason}${SPLIT}${levelOf(row)}${SPLIT}${kindOfRow(row)}`;
+    const key = `${row.reason}${SPLIT}${levelOf(row)}${SPLIT}${rowKindOf(row)}`;
     const list = byReason.get(key);
     if (list === undefined) byReason.set(key, [row]);
     else list.push(row);
@@ -526,7 +526,7 @@ const groupByReason = (
     groups.push({
       reason,
       level,
-      kind: kindOfRow(list[0] as Unresolved),
+      kind: rowKindOf(list[0] as Unresolved),
       count: list.length,
       sites: list.reduce((sum, row) => sum + (row.sites ?? 1), 0),
       known,

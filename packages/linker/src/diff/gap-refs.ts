@@ -13,7 +13,7 @@
  * line, and the sites left over on either side are listed under the same id
  * with `kept`, the sites the two sides share.
  */
-import { gapIdOf, kindOfRow, placeIdOf, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/core';
+import { gapIdOf, rowKindOf, placeIdOf, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/core';
 import type { GapRef, GapRefKind, UnresolvedDiff } from './types.js';
 
 /** As much of a graph as this reads. */
@@ -27,7 +27,7 @@ const byText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
  * to draw is no place to look; neither is listed.
  */
 const kindOf = (row: Unresolved): GapRefKind | undefined =>
-  wasMissed(row) ? 'gap' : kindOfRow(row) === 'finding' && row.level !== 'nothing' ? 'finding' : undefined;
+  wasMissed(row) ? 'gap' : rowKindOf(row) === 'finding' && row.level !== 'nothing' ? 'finding' : undefined;
 
 const sitesOf = (row: Unresolved): number => row.sites ?? 1;
 

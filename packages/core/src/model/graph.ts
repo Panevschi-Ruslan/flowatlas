@@ -1,7 +1,7 @@
 import type { GraphEdge } from './edges.js';
 import type { GraphNode } from './nodes.js';
 import type { TypeRegistry } from './types.js';
-import { kindOfRow, type KindedRow } from './row-kind.js';
+import { rowKindOf, type StoredKindRow } from './row-kind.js';
 
 /**
  * How a row is meant to be read, and what it says about the graph.
@@ -40,8 +40,8 @@ export type UnresolvedLevel = 'action' | 'info' | 'nothing';
  * both numbers say less than either does alone. A fourth level, or a fourth
  * kind, changes this file and `row-kind.ts` and nothing else.
  */
-export const wasMissed = (row: KindedRow & { level?: UnresolvedLevel | null }): boolean =>
-  row.level !== 'nothing' && kindOfRow(row) === 'gap';
+export const wasMissed = (row: StoredKindRow & { level?: UnresolvedLevel | null }): boolean =>
+  row.level !== 'nothing' && rowKindOf(row) === 'gap';
 
 /** A list of rows, and the places those rows stand for. */
 export interface PlaceCount {
@@ -88,11 +88,11 @@ export interface RowCounts {
 }
 
 export const countsOf = (
-  rows: Iterable<KindedRow & { level?: UnresolvedLevel | null; sites?: number | null }>,
+  rows: Iterable<StoredKindRow & { level?: UnresolvedLevel | null; sites?: number | null }>,
 ): RowCounts => {
   const counts: RowCounts = { missed: 0, sites: 0, notes: 0, findings: 0, nothing: 0 };
   for (const row of rows) {
-    const kind = kindOfRow(row);
+    const kind = rowKindOf(row);
     if (kind === 'note') counts.notes += 1;
     else if (kind === 'finding') counts.findings += 1;
     else if (row.level === 'nothing') counts.nothing += row.sites ?? 1;

@@ -1,0 +1,45 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-18T10:28:16.873Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:kinesis/payments",
+        "to": "consumer:jobs#infra/main.tf:aws_lambda_event_source_mapping.ledger",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:kinesis/payments|consumes|consumer:jobs#infra/main.tf:aws_lambda_event_source_mapping.ledger",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:kinesis/payments is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders.service.ts:18:5",
+        "to": "channel:payment.requested",
+        "type": "emits"
+      },
+      "edgeKey": "channel:payment.requested|emits|producer:orders#src/orders.service.ts:18:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:payment.requested is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

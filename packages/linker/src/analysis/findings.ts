@@ -1,4 +1,4 @@
-import { kindOfRow, waysInOf, type GraphNode } from '@flowatlas/core';
+import { rowKindOf, waysInOf, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
 import type { RuleViolation } from '../rules/types.js';
@@ -149,7 +149,7 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
   const findings: FindingRow[] = [];
   const notes: Record<string, number> = {};
   for (const row of sources.rows) {
-    const rowKind = kindOfRow(row);
+    const rowKind = rowKindOf(row);
     if (rowKind === 'note' && KIND_OF_REASON[row.reason] !== undefined) {
       const kind = findingKindOf(row.reason);
       notes[kind] = (notes[kind] ?? 0) + 1;

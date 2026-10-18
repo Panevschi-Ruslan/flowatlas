@@ -1,14 +1,17 @@
-::notice file=flowatlas.config.json,title=Probably missing%3A a repository for payments::PAYMENTS_URL is used by gateway (2 requests) and no service claims it; @acme/payments-client is imported by orders and is not installed; channel payment.requested is published by orders and nobody here consumes it. ./payments-api looks like it: flowatlas link ./payments-api
+::notice file=flowatlas.config.json,title=Probably missing%3A a repository for payments::PAYMENTS_URL is used by gateway (2 requests) and no service claims it; @acme/payments-client is imported by orders and is not installed; channel payment.requested is published by orders and nobody here consumes it; events from acme.payments* are taken by jobs (1 rule) and nothing here publishes one; stream kinesis/payments is read by jobs and nothing here writes to it. ./payments-api looks like it: flowatlas link ./payments-api
 ::error file=gateway/src/checkout.controller.ts,line=12,title=gateway%3A unknown-base-url-env::no service declares PAYMENTS_URL. Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
 ::error file=gateway/src/checkout.controller.ts,line=21,title=gateway%3A unknown-base-url-env::no service declares PAYMENTS_URL. Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
 unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=2 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 3 to act on · missed: 4 · notes: 0 · findings: 0
+unresolved: 3 to act on · missed: 4 · notes: 0 · findings: 2
   1 missed place static reading cannot see, folded into 1 row
-  Probably missing: a repository for "payments" — 3 kinds of evidence, 4 places
+  2 findings: 1 stream nothing writes to, 1 rule nothing published matches
+  Probably missing: a repository for "payments" — 4 kinds of evidence, 6 places
     PAYMENTS_URL is used by gateway (2 requests) and no service claims it
     @acme/payments-client is imported by orders and is not installed
     channel payment.requested is published by orders and nobody here consumes it
+    events from acme.payments* are taken by jobs (1 rule) and nothing here publishes one
+    stream kinesis/payments is read by jobs and nothing here writes to it
     ./payments-api looks like it (package @acme/payments-api, its directory name, a compose service built from it): flowatlas link ./payments-api
   unknown-base-url-env: 2 rows
     Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
@@ -20,6 +23,12 @@ unresolved: 3 to act on · missed: 4 · notes: 0 · findings: 0
   call-dynamic-receiver (info): 1 row
     The receiver has no single class type; inject a class to make the edge visible.
       orders src/orders.service.ts:17  OrdersService.confirm -> this.payments.authorize
+  stream-no-writer (finding): 1 row
+    Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.
+      jobs infra/main.tf:46  kinesis/payments is read by a function and nothing in the configured services writes to it
+  subscription-matches-nothing (finding): 1 row
+    A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.
+      jobs infra/main.tf:68  rule acme-payment-captured takes events by a pattern that no publisher in the configured services matches
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
@@ -29,7 +38,7 @@ desync: 2:
   unknown-base-url-env  gateway src/checkout.controller.ts:12  POST /charges  PAYMENTS_URL  Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
   unknown-base-url-env  gateway src/checkout.controller.ts:21  POST /refunds  PAYMENTS_URL  Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
 
-contracts: no errors, 0 excused, 1 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 3 now, +3)
   no baseline at <root>/fixtures/missing-repo/flowatlas.baseline.json; run flowatlas doctor --accept to write one

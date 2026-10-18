@@ -42,6 +42,15 @@ describe('REMEDIES', () => {
     expect(remedyLinesOf('gap:gateway||seen-not-in-code')[0]).toContain('`flowatlas doctor --missing` names the likely one');
   });
 
+  it('closes a subscription nothing writes to by linking the repository its writer is in, or accepting it (P204)', () => {
+    for (const reason of ['stream-no-writer', 'subscription-matches-nothing']) {
+      expect(remediesOf(reason), reason).toEqual(['link']);
+      const [link, accept] = remedyLinesOf(`gap:jobs|infra/main.tf|${reason}`, 'payments');
+      expect(link, reason).toContain('one for "payments" looks missing here');
+      expect(accept, reason).toContain(`flowatlas accept ${reason} --service jobs --file infra/main.tf`);
+    }
+  });
+
   it('writes the accept command a shell takes, quoting what needs it', () => {
     expect(remedyLinesOf('gap:web|src/my app.ts|api-path-dynamic').at(-1)).toBe(
       "- Or, if it is right as it is, accept it: `flowatlas accept api-path-dynamic --service web --file 'src/my app.ts' --note '<why this one is fine>'`.",

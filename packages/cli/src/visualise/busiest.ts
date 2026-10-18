@@ -1,4 +1,4 @@
-import { kindOfRow, waysInOf, type GraphEdge, type GraphNode, type KindedRow } from '@flowatlas/core';
+import { rowKindOf, waysInOf, type GraphEdge, type GraphNode, type KindedRow } from '@flowatlas/core';
 import { inDegree } from '../analysis/degree.js';
 import { buildGraph } from '../analysis/graph.js';
 import { HOTSPOT_EDGES } from '../analysis/hotspots.js';
@@ -37,7 +37,7 @@ const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 /** The likely N+1 rows, by position, the way doctor lists them (P89). */
 export const likelyLoops = (rows: readonly LoopRow[]): PackedBusiest['loops'] =>
   rows
-    .flatMap((row, index) => (row.reason === 'query-in-loop' && kindOfRow(row) === 'finding' ? [index] : []))
+    .flatMap((row, index) => (row.reason === 'query-in-loop' && rowKindOf(row) === 'finding' ? [index] : []))
     .sort((a, b) => {
       const ra = rows[a] as LoopRow;
       const rb = rows[b] as LoopRow;

@@ -9,6 +9,9 @@ import {
   riskOf,
   ROW_KIND_NAMES,
   ROW_KINDS,
+  rowClassOf,
+  rowKindOf,
+  rowRiskOf,
   type RowKind,
 } from './row-kind.js';
 
@@ -116,5 +119,37 @@ describe('which risk a finding is (P100)', () => {
   it('names the findings with no risk for the read gate, and only findings', () => {
     expect(findingsWithoutRisk()).toEqual([]);
     expect(findingsWithoutRisk(['route-unguarded', 'type-unresolved', 'something-new'])).toEqual([]);
+  });
+});
+
+describe('a kind stored on the row (P208)', () => {
+  const loop = { reason: 'query-in-loop' };
+  const onPurpose = { reason: 'query-in-loop', meta: { severity: 'note' } };
+
+  it('reads the kind a row was stored with, and decides one for a row that has none', () => {
+    expect(rowKindOf({ reason: 'channel-dynamic', kind: 'note' })).toBe('note');
+    expect(rowKindOf({ reason: 'channel-dynamic' })).toBe('gap');
+    expect(rowKindOf({ ...onPurpose, kind: null })).toBe('note');
+    // A column holding something no kind is, is not trusted.
+    expect(rowKindOf({ reason: 'route-unguarded', kind: 'bogus' as RowKind })).toBe('finding');
+  });
+
+  it("reads a finding's stored risk, and none for a gap or a note whatever its reason", () => {
+    expect(rowRiskOf({ ...loop, kind: 'finding', risk: 'performance' })).toBe('performance');
+    expect(rowRiskOf({ ...loop, kind: 'note', risk: null })).toBeUndefined();
+    expect(rowRiskOf(loop)).toBe('performance');
+    expect(rowRiskOf(onPurpose)).toBeUndefined();
+    expect(rowRiskOf({ reason: 'channel-dynamic' })).toBeUndefined();
+  });
+
+  it('classifies a row as kindOfRow and riskOf do, for every reason the registry knows', () => {
+    for (const reason of ROW_KINDS.keys()) {
+      const kind = kindOfRow({ reason });
+      const risk = kind === 'finding' ? riskOf(reason) : undefined;
+      expect(rowClassOf({ reason }), reason).toEqual(risk === undefined ? { kind } : { kind, risk });
+      expect(rowKindOf({ reason, ...rowClassOf({ reason }) }), reason).toBe(kind);
+      expect(rowRiskOf({ reason, ...rowClassOf({ reason }) }), reason).toBe(risk);
+    }
+    expect(rowClassOf(onPurpose)).toEqual({ kind: 'note' });
   });
 });

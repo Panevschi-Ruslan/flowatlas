@@ -14,10 +14,10 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { ConfigInvalidError, loadConfig, readAccepted, type AcceptedProblem, type Unresolved } from '@flowatlas/core';
+import { ConfigInvalidError, loadConfig, readAccepted, type AcceptedProblem, type StoredKindRow, type Unresolved } from '@flowatlas/core';
 import type { RulesReport } from '@flowatlas/linker';
 import type { CheckOptions } from '@flowatlas/contracts';
-import { acceptedSplitOf, withAnsweredDemoted, type GraphDb, type MissingService } from '@flowatlas/linker';
+import { acceptedSplitOf, withAnsweredDemoted, type GraphDb, type KindOfStoredRow, type MissingService } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { openProjectDb } from '../analysis/open.js';
 import { dbPathFor } from '../db.js';
@@ -388,8 +388,33 @@ const textOptionsOf = (settings: FromConfig) => ({
  * stale output once already, and here it would quietly change the number a
  * build is failed on.
  */
-const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Unresolved[]; note?: string } => {
-  const fallback = (): { rows: Unresolved[] } => ({
+/** Where a row is and what it says, as the graph file and the database both hold it. */
+const placeKeyOf = (row: { service?: string | null; file?: string | null; line?: number | null; reason: string; message?: string | null }): string =>
+  [row.service ?? '', row.file ?? '', row.line ?? 0, row.reason, row.message ?? ''].join('\u0000');
+
+/**
+ * The graph file's rows with the kind and risk the database stored for each
+ * (P208), matched by place, reason and message. A row the database holds
+ * twice under one key with two kinds, or not at all, keeps none, and is
+ * decided by `kindOfRow` as it always was.
+ */
+const withStoredKinds = (rows: readonly Unresolved[], db: GraphDb): Array<Unresolved & StoredKindRow> => {
+  const stored = new Map<string, KindOfStoredRow | null>();
+  for (const row of db.allUnresolved()) {
+    const key = placeKeyOf(row);
+    const before = stored.get(key);
+    if (before === undefined) stored.set(key, { kind: row.kind, ...(row.risk === undefined ? {} : { risk: row.risk }) });
+    else if (before !== null && (before.kind !== row.kind || before.risk !== row.risk)) stored.set(key, null);
+  }
+  return rows.map((row) => {
+    const found = stored.get(placeKeyOf({ ...row, message: row.message ?? row.symbol ?? row.reason }));
+    return found == null ? row : { ...row, ...found };
+  });
+};
+
+const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Array<Unresolved & StoredKindRow>; note?: string } => {
+  // Read from the database, a row keeps the kind and risk stored with it (P208).
+  const fallback = (): { rows: Array<Unresolved & StoredKindRow> } => ({
     rows: db.allUnresolved().map((row) => ({
       file: row.file ?? '',
       line: row.line ?? 0,
@@ -400,6 +425,8 @@ const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Unresolved
       ...(row.hint === null ? {} : { hint: row.hint }),
       ...(row.service === null ? {} : { service: row.service }),
       ...(row.meta === undefined ? {} : { meta: row.meta }),
+      kind: row.kind,
+      ...(row.risk === undefined ? {} : { risk: row.risk }),
     })),
   });
 
@@ -424,7 +451,7 @@ const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Unresolved
       };
     }
     if (!Array.isArray(parsed.unresolved)) return fallback();
-    return { rows: parsed.unresolved };
+    return { rows: withStoredKinds(parsed.unresolved, db) };
   } catch (cause) {
     return {
       ...fallback(),

@@ -2,8 +2,9 @@ The dependencies of gateway, orders and payments-api are not installed, and 1 ty
 
 unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 1 to act on · missed: 2 · notes: 1 · findings: 0
+unresolved: 1 to act on · missed: 2 · notes: 1 · findings: 2
   1 missed place static reading cannot see, folded into 1 row
+  2 findings: 1 stream nothing writes to, 1 rule nothing published matches
   type-unresolved: 1 row
     The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.
       ../../orders/src/orders.service.ts:18  any
@@ -13,13 +14,19 @@ unresolved: 1 to act on · missed: 2 · notes: 1 · findings: 0
   call-dynamic-receiver (info): 1 row
     The receiver has no single class type; inject a class to make the edge visible.
       ../../orders/src/orders.service.ts:17  OrdersService.confirm -> this.payments.authorize
+  stream-no-writer (finding): 1 row
+    Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.
+      ../../jobs/infra/main.tf:46  kinesis/payments is read by a function and nothing in the configured services writes to it
+  subscription-matches-nothing (finding): 1 row
+    A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.
+      ../../jobs/infra/main.tf:68  rule acme-payment-captured takes events by a pattern that no publisher in the configured services matches
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
 
 desync: none
 
-contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 3 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 1 now, +1)
   no baseline at <root>/fixtures/missing-repo/variants/linked/flowatlas.baseline.json; run flowatlas doctor --accept to write one

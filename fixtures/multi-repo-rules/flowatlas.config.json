@@ -91,6 +91,19 @@
       }
     },
     {
+      "name": "only-gateway-reaches-billing",
+      "note": "billing is asked through the gateway, never by another service",
+      "only": {
+        "from": {
+          "service": "gateway"
+        },
+        "to": {
+          "service": "billing"
+        },
+        "reach": "transitive"
+      }
+    },
+    {
       "name": "order-created-keeps-a-consumer",
       "note": "an order nobody invoices is lost money",
       "reachable": {
