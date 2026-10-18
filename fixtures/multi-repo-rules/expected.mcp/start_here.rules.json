@@ -203,6 +203,7 @@
     "warnings": 0,
     "unchecked": 1
   },
+  "hidden": "what_changed: after flowatlas diff or check --env · test_pattern: under flowatlas mcp · hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe",
   "next": [
     "check_rules()",
     "get_flow({entry: \"entry:billing:http:GET:/invoices/:param\"})",

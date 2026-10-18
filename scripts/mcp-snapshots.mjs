@@ -16,6 +16,13 @@
  * made into a project with history, built and diffed first
  * (`diff-fixture.mjs`); so are the prompts and resources the server lists. A
  * case whose tool starts with `#` asks the client that, not a tool.
+ *
+ * `tools.listed` records, per project, the names of the tools the server
+ * lists for it as it is (P201: `auto`, the default): what the project can
+ * answer with the options the suite hands the server, so a fixture that
+ * gains an observed file, a rule or a channel shows the tools it gains. The
+ * whole list (`all`) is the same twenty-six names for every fixture and is
+ * held by the tool tests, with its size.
  */
 import { isDeepStrictEqual } from 'node:util';
 import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -44,6 +51,7 @@ const requestIn = (method) => resolveNodeId(graph, { type: 'http_out', calledBy:
 
 /** One question per file, named for what it asks. */
 const CASES = [
+  ['tools.listed', '#listToolNames', {}],
   ['list_entries.all', 'list_entries', {}],
   ['list_entries.by-service', 'list_entries', { service: 'orders' }],
   ['list_entries.truncated', 'list_entries', { maxNodes: 3 }],
@@ -216,6 +224,7 @@ const PLUMBING_CASES = [
  * resources that start such a review.
  */
 const DIFF_CASES = [
+  ['tools.listed', '#listToolNames', {}],
   ['what_changed.verdict', 'what_changed', { verdict: true }],
   ['what_changed.by-service', 'what_changed', { verdict: true, service: 'orders' }],
   ['what_changed.plain', 'what_changed', { service: 'billing' }],
@@ -248,6 +257,7 @@ const DEPLOYED_CASES = [
 
 /** The architecture rules of `fixtures/multi-repo-rules` (P114), as an assistant is handed them. */
 const RULES_CASES = [
+  ['tools.listed', '#listToolNames', {}],
   ['check_rules.all', 'check_rules', {}],
   ['check_rules.by-service', 'check_rules', { service: 'billing' }],
   ['check_rules.one-rule', 'check_rules', { rule: 'frontends-reach-only-edge' }],
@@ -263,6 +273,7 @@ const RULES_CASES = [
  * document recorded: the listing as it comes, a resource's JSON read back.
  */
 const CLIENT_ASKS = {
+  '#listToolNames': async (client) => (await client.listTools()).tools.map((tool) => tool.name),
   '#listPrompts': (client) => client.listPrompts(),
   '#getPrompt': (client, args) => client.getPrompt(args),
   '#listResources': (client) => client.listResources(),
@@ -287,6 +298,7 @@ const PROMPTS = {
  */
 const housePatterns = join(root, 'fixtures', 'house-patterns');
 const PATTERN_CASES = [
+  ['tools.listed', '#listToolNames', {}],
   ['test_pattern.draft', 'test_pattern', {
     yaml: '- id: shop-bus-emit\n  kind: publish\n  on: { receiverType: ShopBus }\n  pattern: "$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })"\n  channel: $CHANNEL\n  payload: $PAYLOAD\n',
     code: "bus.emit({ topic: 'book.added', data: book })",
@@ -310,6 +322,7 @@ const patternTester = (input) =>
  * describe_for_prompt (P106).
  */
 const OBSERVED_CASES = [
+  ['tools.listed', '#listToolNames', {}],
   ['hot_paths.all', 'hot_paths', {}],
   ['hot_paths.by-service', 'hot_paths', { service: 'billing', limit: 1, joins: 1 }],
   ['slow_steps.all', 'slow_steps', { minCount: 1 }],
@@ -476,6 +489,8 @@ for (const suite of SUITES) {
   const copy = suite.copy?.();
   const server = createFlowatlasServer({
     configPath,
+    // Nothing changes under a suite while it runs; the list is decided at each question.
+    toolsPollMs: 0,
     ...(copy === undefined ? {} : { dbPath: join(copy, 'graph.db') }),
     ...(typeof suite.options === 'function' ? suite.options(copy) : (suite.options ?? {})),
   });

@@ -55,6 +55,8 @@ export interface ToolContext {
   missingCandidates?: MissingCandidates;
   /** Filled by the contracts package: a route's traffic shapes against its code (P113). */
   trafficChecker?: TrafficChecker;
+  /** The tools not listed and when each appears, for `start_here` to say in one line (P201). */
+  listing?: { hiddenLine(): string | undefined };
 }
 
 /** The directories that look like each group's repository, by path, aligned with `groups`. */

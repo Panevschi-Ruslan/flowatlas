@@ -127,6 +127,7 @@
     "unchecked": 0
   },
   "checks": "canary: undecided · prod: not deployable · staging: not deployable",
+  "hidden": "test_pattern: under flowatlas mcp · hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe",
   "next": [
     "what_changed({file: \"check.prod.json\", verdict: true})",
     "check_rules()",

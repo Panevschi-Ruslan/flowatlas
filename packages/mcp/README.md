@@ -7,8 +7,9 @@ This package is private: it is compiled into the `flowatlas` command, and
 
 Everything else builds a graph; these twenty-six tools, three prompts and three
 resources are how a session sitting in one repository answers a question about
-another one without opening it. [docs/mcp.md](../../docs/mcp.md) is the full
-reference.
+another one without opening it. A session is offered only the tools the project
+can answer (`tool-needs.ts` says what each needs), and told when that changes.
+[docs/mcp.md](../../docs/mcp.md) is the full reference.
 
 ## Setting it up
 
@@ -52,7 +53,8 @@ Inside this workspace, where the package is linked rather than published:
 
 `--db <path>` names a database directly, and `FLOWATLAS_DB` does the same through
 the environment. With neither, the server looks for a configuration from the
-directory it was started in.
+directory it was started in. `--all-tools` lists every tool, not only those the
+project can answer.
 
 The server answers `initialize` as `flowatlas`. Under `flowatlas mcp` its
 `serverInfo.version` is the installed command's version; the workspace bin

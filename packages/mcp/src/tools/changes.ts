@@ -660,6 +660,15 @@ const verdictNextOf = (changes: WhatChanged): string[] => {
 /** A document `what_changed` may be pointed at: `diff.json`, or a `check.<env>.json` (P117), beside the database. */
 const READABLE = /^(?:diff\.json|check\.[A-Za-z0-9][A-Za-z0-9._-]*\.json)$/;
 
+/** The documents `what_changed` reads that are beside the database, by name: what it is listed by (P201). */
+export const changeDocumentsBeside = (dbPath: string): string[] => {
+  try {
+    return readdirSync(dirname(dbPath)).filter((name) => READABLE.test(name)).sort();
+  } catch {
+    return [];
+  }
+};
+
 /** What a check document adds to the answer: which environment, and its verdict (P117). */
 export interface CheckSaid {
   environment: string;
