@@ -1,8 +1,89 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-08T07:27:21.618Z",
+  "generatedAt": "2026-10-18T11:26:33.455Z",
   "edges": [
+    {
+      "edge": {
+        "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/invoices/invoices.service.ts:33:7|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:@fx/contracts#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderView",
+        "symbol": "billing#src/invoices/invoices.service.ts:InvoicesService.create"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+            "to": "entry:orders:http:GET:/orders/:param",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:billing#src/invoices/invoices.service.ts:33:7|http_calls|entry:orders:http:GET:/orders/:param",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:@fx/contracts#OrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#OrderView",
+            "symbol": "billing#src/invoices/invoices.service.ts:InvoicesService.create"
+          },
+          "typeId": "type:billing#OrderView",
+          "field": "customerId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender orders sends `customerId: string`; receiver billing declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+            "to": "entry:orders:http:GET:/orders/:param",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:billing#src/invoices/invoices.service.ts:33:7|http_calls|entry:orders:http:GET:/orders/:param",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:@fx/contracts#OrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#OrderView",
+            "symbol": "billing#src/invoices/invoices.service.ts:InvoicesService.create"
+          },
+          "typeId": "type:billing#OrderView",
+          "field": "total",
+          "expected": null,
+          "actual": "type:@fx/contracts#Money",
+          "rule": null,
+          "message": "sender orders sends `total: type:@fx/contracts#Money`; receiver billing declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
     {
       "edge": {
         "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
@@ -180,6 +261,64 @@
       "severity": "info",
       "kind": "extra_field",
       "edge": {
+        "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/invoices/invoices.service.ts:33:7|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:@fx/contracts#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderView",
+        "symbol": "billing#src/invoices/invoices.service.ts:InvoicesService.create"
+      },
+      "typeId": "type:billing#OrderView",
+      "field": "customerId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender orders sends `customerId: string`; receiver billing declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/invoices/invoices.service.ts:33:7|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:@fx/contracts#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderView",
+        "symbol": "billing#src/invoices/invoices.service.ts:InvoicesService.create"
+      },
+      "typeId": "type:billing#OrderView",
+      "field": "total",
+      "expected": null,
+      "actual": "type:@fx/contracts#Money",
+      "rule": null,
+      "message": "sender orders sends `total: type:@fx/contracts#Money`; receiver billing declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
         "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
         "to": "entry:billing:http:POST:/invoices",
         "type": "http_calls"
@@ -231,6 +370,18 @@
       "reason": "channel-without-consumer",
       "message": "channel:order.archived is published to and nothing handles it",
       "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/invoices/invoices.service.ts:33:7|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "billing#src/invoices/invoices.service.ts:InvoicesService.create declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     },
     {
       "edge": {
@@ -414,14 +565,14 @@
     }
   ],
   "summary": {
-    "edges": 6,
+    "edges": 7,
     "shared": 1,
     "identical": 0,
-    "hash_differs": 5,
-    "unchecked": 17,
+    "hash_differs": 6,
+    "unchecked": 18,
     "errors": 0,
     "warnings": 0,
-    "infos": 1,
+    "infos": 3,
     "ignored": 0
   }
 }

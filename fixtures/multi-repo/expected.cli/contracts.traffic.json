@@ -212,6 +212,18 @@
     },
     {
       "edge": {
+        "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/invoices/invoices.service.ts:33:7|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "billing#src/invoices/invoices.service.ts:InvoicesService.create declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
         "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
         "to": "entry:orders:http:GET:/orders/:param",
         "type": "http_calls"
@@ -396,7 +408,7 @@
     "shared": 1,
     "identical": 0,
     "hash_differs": 4,
-    "unchecked": 17,
+    "unchecked": 18,
     "errors": 0,
     "warnings": 0,
     "infos": 1,

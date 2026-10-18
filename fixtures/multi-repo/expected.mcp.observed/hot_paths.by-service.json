@@ -8,7 +8,17 @@
       "p50": 8.35,
       "p95": 11.81,
       "max": 41.5,
-      "errorRate": 0.0455
+      "errorRate": 0.0455,
+      "joins": [
+        {
+          "id": "http_out:billing#src/invoices/invoices.service.ts:33:7 -http_calls-> entry:orders:http:GET:/orders/:param",
+          "count": 2,
+          "p50": 0.31,
+          "p95": 1.2,
+          "max": 1.2,
+          "errorRate": 0
+        }
+      ]
     }
   ],
   "total": 3,

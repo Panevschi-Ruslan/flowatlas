@@ -1593,11 +1593,10 @@ answered, and what ran that the code does not show. Local only: it reads the
 files named and sends nothing anywhere.
 
 ```
-$ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json traces/billing.batches.observe.json
-72 spans read from 3 file(s)
-3 joins seen, 6 entries hit, 4 seen at run time but not found in code, 1 that could be more than one place
+$ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json traces/billing.batches.observe.json traces/orders.observe.json
+77 spans read from 4 file(s)
+4 joins seen, 6 entries hit, 3 seen at run time but not found in code, 1 that could be more than one place
   db        billing  invoices  (2)
-  client    billing  GET /orders/:value  (1)
   http      gateway  GET /metrics  (1)
   messaging orders  order.audited  (1)
 could be more than one place, so counted on none:
@@ -1605,7 +1604,7 @@ could be more than one place, so counted on none:
     any of http_out:gateway#src/clients/orders.client.ts:33:12, http_out:gateway#src/clients/orders.client.ts:59:12
 slowest entries (p95):
   gateway GET /orders/:param  count 2  p50 47.26ms  p95 520ms  max 520ms  errors 0%
-  orders GET /orders/:param  count 1  p50 496ms  p95 496ms  max 496ms  errors 0%
+  orders GET /orders/:param  count 2  p50 1.04ms  p95 496ms  max 496ms  errors 0%
   orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
   billing event order.created  count 2  p50 0.96ms  p95 12ms  max 12ms  errors 0%
   billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
@@ -1687,6 +1686,10 @@ own, or with a glob. [Run time in five minutes](run-time.md) is the recipe.
   agent, reports the same `ti`: its server span, which names no parent, is
   paired with the one client span of that trace in another service with the
   same method and path, and the join is counted as if the parent were named.
+  The span ids the reader makes up for a batch name its service, so the two
+  services' snapshots of one request each keep their own tree and body (P222).
+  `fixtures/multi-repo` has the pair: billing reads the order it invoices from
+  orders, and `traces/orders.observe.json` is orders' answer in the same trace.
 - **Zipkin v2 JSON** (P112), what the Zipkin UI's *JSON* button and its
   `/api/v2/traces` give: a list of spans, or a list of traces. Read: `traceId`,
   `id`, `parentId`, `kind` (none is internal), `timestamp` and `duration`

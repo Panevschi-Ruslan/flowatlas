@@ -44,7 +44,7 @@
       ]
     }
   ],
-  "truncated": "1 more nodes past depth 2; raise depth",
+  "truncated": "2 more nodes past depth 2; raise depth",
   "stoppedBy": [
     "depth"
   ],

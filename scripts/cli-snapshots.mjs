@@ -123,15 +123,16 @@ const docsWritten = (io) => {
 };
 
 /**
- * `observe` over the fixture's four trace files (P105; P110 added the web
- * one, twenty page loads through a best-guess join), on a copy of the
+ * `observe` over the fixture's five trace files (P105; P110 added the web
+ * one, twenty page loads through a best-guess join; P209 the orders one, the
+ * answer to billing's call in the trace both agents report), on a copy of the
  * fixture's output so no other snapshot reads the file it writes: the summary,
  * the file itself (`--format json`), and a second run over a file already read.
  * The clock is fixed, so the window and `readAt` are the same every run.
  * `observe.json` is also the observed file the MCP snapshots and tests answer from.
  */
 const OBSERVE_NOW = new Date('2025-10-16T09:00:00.000Z');
-const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json', 'web.otlp.json'].map((file) =>
+const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json', 'web.otlp.json', 'orders.observe.json'].map((file) =>
   join(fixture, 'traces', file),
 );
 /**

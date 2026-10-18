@@ -46,12 +46,16 @@ sequenceDiagram
   n_orders->>n_table_orders_orders: write orders
   n_orders-)n_channel_order_created: order.created
   n_channel_order_created-)n_billing: order.created
+  n_billing->>n_orders: GET /orders/:param
+  n_orders->>n_table_orders_orders: read orders
 ```
-<!-- /flowatlas:flow fingerprint="4bb04c97"
+<!-- /flowatlas:flow fingerprint="0311e9f4"
 ["enters","caller","orders","POST /orders","",["type:@fx/contracts#CreateOrderDto"],"type:@fx/contracts#OrderDto"]
 ["queries","orders","table:orders/orders","write orders"]
 ["emits","orders","channel:order.created","order.created","",["type:@fx/contracts#OrderDto"]]
 ["consumes","channel:order.created","billing","order.created","",[],"",["type:billing#OrderCreatedEvent"]]
+["http_calls","billing","orders","GET /orders/:param","",[],"type:billing#OrderView",["string"]]
+["queries","orders","table:orders/orders","read orders"]
 -->
 
 What each crossing sends and gets back:
@@ -70,7 +74,9 @@ What each crossing sends and gets back:
 - `OrderCreatedEvent` (object, billing): `id: string`, `customerId: string`, `status: string`, `total: {amount:number;currency:string}`
 
 **Fails with:** no failure was read from the code on this path
-<!-- /flowatlas:flow fingerprint="163d7807"
+
+_not walked: ≥1 more nodes past depth 8 (raise max-nodes or depth on the block)_
+<!-- /flowatlas:flow fingerprint="0b3c60c2"
 ["enters","caller","orders","POST /orders","",["type:@fx/contracts#CreateOrderDto"],"type:@fx/contracts#OrderDto"]
 ["queries","orders","table:orders/orders","write orders"]
 ["emits","orders","channel:order.created","order.created","",["type:@fx/contracts#OrderDto"]]
@@ -88,24 +94,38 @@ flowchart LR
   subgraph sg_billing["billing"]
     n_billing_src_invoices_invoices_consumer_ts_InvoicesConsumer_onOrderCreated["InvoicesConsumer.onOrderCreated"]
     n_billing_src_invoices_invoices_service_ts_InvoicesService_create["InvoicesService.create"]
+    n_config_key_billing_ORDERS_URL["ORDERS_URL"]
     n_consumer_billing_src_invoices_invoices_consumer_ts_InvoicesConsumer_onOrderCreated["InvoicesConsumer.onOrderCreated"]
+    n_http_out_billing_src_invoices_invoices_service_ts_33_7["GET /orders/:param"]
   end
   subgraph sg_orders["orders"]
+    n_db_query_orders_src_orders_orders_service_ts_26_23[("read orders")]
+    n_entry_orders_http_GET__orders__param(["GET /orders/:param"])
+    n_orders_src_orders_orders_controller_ts_OrdersController_findOne["OrdersController.findOne"]
+    n_orders_src_orders_orders_service_ts_OrdersService_findOne["OrdersService.findOne"]
     n_producer_orders_src_orders_orders_service_ts_49_5["event order.created"]
   end
   n_channel_order_created["order.created"]
   n_channel_order_created_consumers["consumers (1)"]
   n_channel_order_created_producers["producers (1)"]
   n_billing_src_invoices_invoices_consumer_ts_InvoicesConsumer_onOrderCreated -->|"calls"| n_billing_src_invoices_invoices_service_ts_InvoicesService_create
+  n_billing_src_invoices_invoices_service_ts_InvoicesService_create -->|"reads_config"| n_config_key_billing_ORDERS_URL
+  n_billing_src_invoices_invoices_service_ts_InvoicesService_create -->|"calls"| n_http_out_billing_src_invoices_invoices_service_ts_33_7
   n_channel_order_created -->|"contains"| n_channel_order_created_consumers
   n_channel_order_created -->|"contains"| n_channel_order_created_producers
   n_channel_order_created_consumers -->|"consumes"| n_consumer_billing_src_invoices_invoices_consumer_ts_InvoicesConsumer_onOrderCreated
   n_channel_order_created_producers -->|"emits"| n_producer_orders_src_orders_orders_service_ts_49_5
   n_consumer_billing_src_invoices_invoices_consumer_ts_InvoicesConsumer_onOrderCreated -->|"handles"| n_billing_src_invoices_invoices_consumer_ts_InvoicesConsumer_onOrderCreated
+  n_entry_orders_http_GET__orders__param -->|"handles"| n_orders_src_orders_orders_controller_ts_OrdersController_findOne
+  n_http_out_billing_src_invoices_invoices_service_ts_33_7 -->|"http_calls"| n_entry_orders_http_GET__orders__param
+  n_orders_src_orders_orders_controller_ts_OrdersController_findOne -->|"calls"| n_orders_src_orders_orders_service_ts_OrdersService_findOne
+  n_orders_src_orders_orders_service_ts_OrdersService_findOne -->|"calls"| n_db_query_orders_src_orders_orders_service_ts_26_23
+  %% not walked: 1 more nodes past depth 8 (raise max-nodes or depth on the block)
 ```
-<!-- /flowatlas:channel fingerprint="9c02a67b"
+<!-- /flowatlas:channel fingerprint="8bd99de0"
 ["emits","orders","channel:order.created","order.created","",["type:@fx/contracts#OrderDto"]]
 ["consumes","channel:order.created","billing","order.created","",[],"",["type:billing#OrderCreatedEvent"]]
+["http_calls","billing","orders","GET /orders/:param","",[],"type:billing#OrderView",["string"]]
 -->
 
 ## A tour of reading an order

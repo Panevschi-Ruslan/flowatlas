@@ -1,18 +1,17 @@
 unresolved: total=0 (skipped) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=1
 
-unresolved: 0 to act on · missed: 2 · notes: 1 · findings: 1
-  2 missed places static reading cannot see, folded into 2 rows
+unresolved: 0 to act on · missed: 1 · notes: 1 · findings: 1
+  1 missed place static reading cannot see, folded into 1 row
   1 finding: 1 status seen that the code does not declare
-  seen-not-in-code (info): 2 rows
-    Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it in the map (the MCP tool cant_follow names the call for each), add the service to the configuration if it is missing, and a later build that reads it makes the row go away. Nothing is drawn from it: a blind spot is a question, not an edge.
-      billing  traffic in billing reached 1 collection no reader drew, 2 spans in 2h: invoices (2)
-      billing  traffic in billing reached 1 outbound request no reader drew, 1 span in 2h: GET /orders/:value (1)
   failure-declared-unseen (note): 1 row
     The code says the way in can fail with this and no request in the observed window answered it: an error path nothing exercised, or one that cannot happen any more. Traffic differs per environment and per week, so it is a question for a test, not proof the path is dead.
-      billing/src/invoices/invoices.service.ts:15  POST /invoices declares 409 ConflictException, and none of its 22 requests from 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z answered it
+      billing/src/invoices/invoices.service.ts:31  POST /invoices declares 409 ConflictException, and none of its 22 requests from 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z answered it
   failure-seen-undeclared (finding): 1 row
     Real traffic got this status from the way in and no failure read off its code says it can: an unhandled throw, a constraint nobody mapped, a framework answer. Read a failing request (the MCP tool trace_for) and map the exception to the status it should answer, or declare it, and the route says what it really fails with.
       billing/src/invoices/invoices.controller.ts:15  POST /invoices answered 500 to 1 of 22 requests (4.6%) from 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z, and no failure in its code declares it
+  seen-not-in-code (info): 1 row
+    Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it in the map (the MCP tool cant_follow names the call for each), add the service to the configuration if it is missing, and a later build that reads it makes the row go away. Nothing is drawn from it: a blind spot is a question, not an edge.
+      billing  traffic in billing reached 1 collection no reader drew, 2 spans in 2h: invoices (2)
 
 verdict:
   2 failures traffic answered and the code does not declare, or the code declares and nothing answered (--strict-runtime)

@@ -22,6 +22,10 @@ const graph = JSON.parse(readFileSync(join(fixture, 'expected.project-graph.json
   edges: GraphEdge[];
 };
 const batchFile = join(fixture, 'traces/billing.observe.json');
+const ordersBatch = join(fixture, 'traces/orders.observe.json');
+/** billing's one call in code (P209), and its join into orders' `GET /orders/:param`. */
+const BILLING_OUT = 'http_out:billing#src/invoices/invoices.service.ts:33:7';
+const BILLING_JOIN = `${BILLING_OUT} -http_calls-> entry:orders:http:GET:/orders/:param`;
 const traces = [join(fixture, 'traces/checkout.otlp.json'), batchFile];
 const scratch = mkdtempSync(join(tmpdir(), 'flowatlas-observe-'));
 
@@ -95,15 +99,35 @@ describe('matchSpans over the multi-repo fixture', () => {
       'billing#src/invoices/invoices.service.ts:InvoicesService.findOne': { hits: 2 },
       'billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated': { hits: 1 },
     });
-    // billing calls nothing in code, so its outgoing request and its collection are seen, not joined;
-    // the message it consumed confirms the channel's consuming join (P202).
+    // billing's one call in code (P209): both requests it made to orders, from the POST's tree and the
+    // message's, are that call site and its join, with nothing from orders read; the message it consumed
+    // confirms the channel's consuming join (P202). Its collection is not in code.
     expect(Object.keys(alone.joins)).toEqual([
       'channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated',
+      BILLING_JOIN,
     ]);
+    expect(alone.joins[BILLING_JOIN]).toMatchObject({ count: 2, measuredAt: 'caller', max: 1.2 });
+    expect(alone.symbols[BILLING_OUT]).toMatchObject({ hits: 2 });
     expect(alone.unmatched.map(({ service, kind, name, count }) => ({ service, kind, name, count }))).toEqual([
-      { service: 'billing', kind: 'client', name: 'GET /orders/:value', count: 1 },
       { service: 'billing', kind: 'db', name: 'invoices', count: 1 },
     ]);
+  });
+
+  it("pairs billing's call with orders' answer in the trace both agents report, each keeping its own spans (P202, P209, P222)", () => {
+    const both = matchSpans(index, readTraceFiles([batchFile, ordersBatch]).spans);
+    // orders' snapshot names no parent: it is paired with billing's request of the same trace, so the
+    // join is measured on billing's side, and the request it answered is the entry's one hit.
+    expect(both.joins[BILLING_JOIN]).toMatchObject({ count: 2, measuredAt: 'caller' });
+    expect(both.joins[BILLING_JOIN]).not.toHaveProperty('callee');
+    expect(both.entries['entry:orders:http:GET:/orders/:param']).toMatchObject({ hits: 1, statuses: { '200': 1 } });
+    expect(both.symbols['table:orders#orders']).toMatchObject({ hits: 1 });
+    // The two snapshots share a trace id and an index: each tree stays under its own root.
+    type Tree = { label: string; children?: Tree[] };
+    const labelsOf = (tree: Tree): string[] => [tree.label, ...(tree.children ?? []).flatMap(labelsOf)];
+    const [answer] = both.samples['entry:orders:http:GET:/orders/:param']!.slow;
+    expect(labelsOf(answer!.tree)).toEqual(['GET /orders/:id', 'OrdersController.findOne', 'OrdersService.findOne', 'orders']);
+    const [write] = both.samples['entry:billing:http:POST:/invoices']!.slow;
+    expect(labelsOf(write!.tree)).toEqual(['POST /invoices', 'InvoicesController.create', 'InvoicesService.create', 'GET /orders/:value', 'invoices']);
   });
 
   it('confirms the cross-service HTTP join from parent and child spans', () => {
@@ -148,7 +172,6 @@ describe('matchSpans over the multi-repo fixture', () => {
 
   it('lists what ran but is not in code', () => {
     expect(observed.unmatched.map(({ service, kind, name }) => `${service} ${kind} ${name}`)).toEqual([
-      'billing client GET /orders/:value',
       'billing db invoices',
       'gateway http GET /metrics',
       'orders messaging order.audited',

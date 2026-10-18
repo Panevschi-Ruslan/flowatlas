@@ -76,6 +76,10 @@ describe('the fixtures follow the @nestjs/observe 0.3.12 wire contract', () => {
     expect(problemsOf(fixture('billing.observe.json'))).toEqual([]);
   });
 
+  it('orders.observe.json, the answer to billing in the same trace (P209)', () => {
+    expect(problemsOf(fixture('orders.observe.json'))).toEqual([]);
+  });
+
   it('billing.batches.observe.json, batch by batch', () => {
     for (const batch of fixture('billing.batches.observe.json')['batches'] as Json[]) expect(problemsOf(batch)).toEqual([]);
   });
@@ -131,7 +135,7 @@ describe('a request snapshot (P202)', () => {
     ).spans;
     expect(server).toEqual({
       traceId: 'a',
-      spanId: 'a:0',
+      spanId: 'a:shop/0',
       kind: 'server',
       service: 'shop',
       method: 'POST',
@@ -158,8 +162,8 @@ describe('a request snapshot (P202)', () => {
       ]),
     );
     expect(spans.map((span) => [span.kind, span.symbol, span.parentId])).toEqual([
-      ['internal', 'InvoicesResolver.invoices', 'g:0'],
-      ['internal', 'PaymentsResolver.pay', 'h:1'],
+      ['internal', 'InvoicesResolver.invoices', 'g:shop/0'],
+      ['internal', 'PaymentsResolver.pay', 'h:shop/1'],
     ]);
     expect(skipped).toEqual([{ noun: 'snapshot', why: 'of a GraphQL operation, read for its spans only', count: 2 }]);
     expect(JSON.stringify(spans)).not.toContain('cus-9');
@@ -178,7 +182,7 @@ describe('a request snapshot (P202)', () => {
       { destination: 'order.created', durationMs: 2, error: true },
       { destination: 'invoice.requested', durationMs: undefined, error: undefined },
     ]);
-    expect(spans.find((span) => span.symbol === 'CartGateway.onUpdated')?.parentId).toBe('w:0');
+    expect(spans.find((span) => span.symbol === 'CartGateway.onUpdated')?.parentId).toBe('w:shop/0');
   });
 
   it('reads a request on another transport (TCP, gRPC, a custom one) as a server span of its RPC pattern', () => {
@@ -194,6 +198,24 @@ describe('a request snapshot (P202)', () => {
       { kind: 'server', rpc: 'HeroesService/FindOne' },
     ]);
     expect(skipped).toEqual([{ noun: 'snapshot', why: 'of protocol my-transport without an operation', count: 1 }]);
+  });
+
+  it("keeps two services' snapshots of one request apart: the span ids it makes up say the service (P222)", () => {
+    // The caller's agent sends its `ti` on and the callee's adopts it, so both batches report `r1`, each as its snapshot 0.
+    const idsOf = (serviceId: string): Array<[string, string | undefined]> =>
+      read({ serviceId, snapshots: [{ ti: 'r1', p: 'http', op: '/a', a: { m: 'GET', sc: 200 }, t: [node('A', 'b')] }] }).spans.map(
+        (span) => [span.spanId, span.parentId],
+      );
+    expect(idsOf('caller')).toEqual([
+      ['r1:caller/0', undefined],
+      ['r1:caller/0:1', 'r1:caller/0'],
+    ]);
+    expect(idsOf('callee')).toEqual([
+      ['r1:callee/0', undefined],
+      ['r1:callee/0:1', 'r1:callee/0'],
+    ]);
+    // A bare array of snapshots names no service: its ids are as they were.
+    expect(read([{ ti: 'r1', p: 'http', op: '/a', a: { m: 'GET' }, t: [] }]).spans[0]!.spanId).toBe('r1:0');
   });
 });
 
@@ -215,7 +237,7 @@ describe('a span tree (P202)', () => {
       }),
     ]);
     expect(spans.map((span) => [span.symbol, span.parentId])).toEqual([
-      ['OrdersController.list', 'a:0'],
+      ['OrdersController.list', 'a:shop/0'],
       ['OrdersService.page', spans[0]!.spanId],
     ]);
   });
@@ -280,7 +302,7 @@ describe('a job (P202)', () => {
     expect(spans).toEqual([
       {
         traceId: 'req-7',
-        spanId: 'req-7:job:0',
+        spanId: 'req-7:job:shop/0',
         kind: 'consumer',
         service: 'shop',
         destination: 'receipts',
@@ -288,7 +310,7 @@ describe('a job (P202)', () => {
         durationMs: 120,
         error: true,
       },
-      expect.objectContaining({ symbol: 'ReceiptsProcessor.process', parentId: 'req-7:job:0', at: '2026-03-01T10:00:00.001Z' }),
+      expect.objectContaining({ symbol: 'ReceiptsProcessor.process', parentId: 'req-7:job:shop/0', at: '2026-03-01T10:00:00.001Z' }),
       expect.objectContaining({ kind: 'consumer', destination: 'receipts', durationMs: 80 }),
     ]);
     expect(spans[2]).not.toHaveProperty('error');

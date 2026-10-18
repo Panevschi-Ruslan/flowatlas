@@ -111,11 +111,14 @@
       ]
     }
   ],
-  "truncated": "2 more nodes past depth 6; raise depth",
+  "truncated": "5 more nodes past depth 6; raise depth",
   "stoppedBy": [
     "depth"
   ],
   "frontier": [
+    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+    "entry:billing:http:POST:/invoices",
     "entry:gateway:http:GET:/orders/:param"
   ],
   "next": [

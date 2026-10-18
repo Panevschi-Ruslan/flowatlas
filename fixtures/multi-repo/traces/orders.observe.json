@@ -1,0 +1,47 @@
+{
+  "serviceId": "orders",
+  "snapshots": [
+    {
+      "ct": "2025-10-16T07:33:30.000Z",
+      "ti": "e1000000000000000000000000000001",
+      "d": 1.0,
+      "p": "http",
+      "op": "/orders/:id",
+      "a": { "m": "GET", "sc": 200, "ou": "/orders/ord-1043?expand=lines&session=s3cr3t" },
+      "t": [
+        {
+          "o": "auto",
+          "c": "OrdersController",
+          "m": "findOne",
+          "d": 0.9,
+          "s": "0199f3a2-7c40-7e2a-9b51-3c0e4d5f6b01",
+          "so": 0.05,
+          "ch": [
+            {
+              "o": "auto",
+              "c": "OrdersService",
+              "m": "findOne",
+              "d": 0.7,
+              "s": "0199f3a2-7c40-7e2a-9b51-3c0e4d5f6b02",
+              "so": 0.1,
+              "ch": [
+                {
+                  "o": "auto",
+                  "c": "mongodb",
+                  "m": "find orders",
+                  "d": 0.4,
+                  "s": "0199f3a2-7c40-7e2a-9b51-3c0e4d5f6b03",
+                  "so": 0.2,
+                  "t": {
+                    "db.system": "mongodb",
+                    "db.statement": "{\"find\":\"orders\",\"filter\":{\"_id\":\"ord-1043\"}}"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

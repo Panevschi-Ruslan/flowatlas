@@ -1,9 +1,8 @@
-121 spans read from 5 file(s)
+126 spans read from 6 file(s)
 not read: 1 entry of type document, 1 entry of type script, 1 entry of type image, 1 entry of a static file
 otlp files carry no bodies, so --shapes read nothing of them
-7 joins seen, 6 entries hit, 5 seen at run time but not found in code, 4 that could be more than one place
+8 joins seen, 6 entries hit, 4 seen at run time but not found in code, 4 that could be more than one place
   db        billing  invoices  (2)
-  client    billing  GET /orders/:value  (1)
   http      gateway  GET /metrics  (1)
   messaging orders  order.audited  (1)
   external  web  analytics.example.net  (1)
@@ -17,7 +16,7 @@ could be more than one place, so counted on none:
   client    web  POST /orders/:value/invoice  (1)
     any of ui_api_call:web#src/app/orders-api.service.ts:123:3, ui_api_call:web#src/app/orders-api.service.ts:138:3, ui_api_call:web#src/app/orders-api.service.ts:61:12
 slowest entries (p95):
-  orders GET /orders/:param  count 1  p50 496ms  p95 496ms  max 496ms  errors 0%
+  orders GET /orders/:param  count 2  p50 1.04ms  p95 496ms  max 496ms  errors 0%
   gateway GET /orders/:param  count 22  p50 61.29ms  p95 72.88ms  max 520ms  errors 0%
   orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
   billing event order.created  count 2  p50 0.96ms  p95 12ms  max 12ms  errors 0%

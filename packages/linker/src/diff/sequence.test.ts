@@ -81,6 +81,47 @@ describe('sequenceOf (P116)', () => {
     ]);
   });
 
+  it('lands a row the walk wrote again where its node was drawn: a table read twice is one table (P223)', () => {
+    // orders writes the order and publishes it; billing takes it and reads the order back, and that
+    // read reaches the table the write already drew.
+    const tree = row({ id: 'entry:orders:http:POST:/orders', type: 'entry', kind: 'http', label: 'POST /orders', service: 'orders' }, undefined, [
+      row({ id: 'orders#s:OrdersService.create', type: 'method', label: 'OrdersService.create', service: 'orders' }, by('handles'), [
+        row({ id: 'db_query:orders#s:20', type: 'db_query', label: 'write orders', service: 'orders' }, by('calls'), [
+          row({ id: 'table:orders#orders', type: 'table', label: 'orders', service: 'orders' }, by('queries')),
+        ]),
+        row({ id: 'producer:orders#s:22', type: 'producer', label: 'event order.created', service: 'orders' }, by('calls'), [
+          row({ id: 'channel:order.created', type: 'channel', label: 'order.created', service: 'orders' }, by('emits'), [
+            row({ id: 'billing#c:InvoicesConsumer.on', type: 'method', label: 'InvoicesConsumer.on', service: 'billing' }, by('consumes'), [
+              row({ id: 'http_out:billing#s:9', type: 'http_out', label: 'GET /orders/:param', service: 'billing' }, by('calls'), [
+                row({ id: 'entry:orders:http:GET:/orders/:param', type: 'entry', kind: 'http', label: 'GET /orders/:param', service: 'orders' }, by('http_calls'), [
+                  row({ id: 'db_query:orders#s:12', type: 'db_query', label: 'read orders', service: 'orders' }, by('calls'), [
+                    // As the walk writes a node it already wrote: its id and label, no type or service.
+                    row({ id: 'table:orders#orders', type: 'ref', label: 'orders', ref: true }, by('queries')),
+                  ]),
+                ]),
+              ]),
+              row({ id: 'http_out:billing#s:11', type: 'http_out', label: 'POST /orders', service: 'billing' }, by('calls'), [
+                row({ id: 'entry:orders:http:POST:/orders', type: 'ref', label: 'POST /orders', ref: true }, by('http_calls')),
+              ]),
+            ]),
+          ]),
+        ]),
+      ]),
+    ]);
+    const sequence = sequenceOf(tree);
+    expect(lines(sequence)).toEqual([
+      'client → orders POST /orders',
+      'orders → orders (table) write orders',
+      'orders → order.created order.created',
+      'order.created → billing order.created',
+      'billing → orders GET /orders/:param',
+      'orders → orders (table) read orders',
+      // The way in, reached again: in its service, not a participant named after its label.
+      'billing → orders POST /orders',
+    ]);
+    expect(sequence.participants.map((participant) => participant.id)).toEqual(['caller', 'orders', 'table:orders/orders', 'channel:order.created', 'billing']);
+  });
+
   it('draws the classes inside a service at class detail, and a call between them', () => {
     const sequence = sequenceOf(ordersFlow(), { detail: 'class' });
     expect(lines(sequence).slice(0, 3)).toEqual([

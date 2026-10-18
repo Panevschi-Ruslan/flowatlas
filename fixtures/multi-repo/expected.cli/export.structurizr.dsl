@@ -14,6 +14,7 @@ workspace "bookshop" "Containers and flows read from the code by flowatlas." {
     }
     api_stripe_com = softwareSystem "api.stripe.com" "Outside the project; called from the code." "External"
 
+    billing -> orders "GET /orders/:param" "HTTP"
     gateway -> api_stripe_com "POST /v1/charges" "HTTP"
     gateway -> billing "POST /invoices" "HTTP"
     gateway -> orders "GET /orders/:param" "HTTP"
@@ -39,21 +40,31 @@ workspace "bookshop" "Containers and flows read from the code by flowatlas." {
       autolayout lr
     }
 
+    dynamic bookshop "gateway-post-orders-param-invoice" "POST /orders/:param/invoice (gateway)" {
+      gateway -> billing "POST ?" "HTTP"
+      billing -> orders "GET /orders/:param" "HTTP"
+      orders -> orders_store "reads orders" "SQL"
+      autolayout lr
+    }
+
     dynamic bookshop "orders-post-orders" "POST /orders (orders)" {
       orders -> orders_store "writes orders" "SQL"
       orders -> order_messages "publishes order.created" "Messaging"
       order_messages -> billing "delivers order.created" "Messaging"
+      billing -> orders "GET /orders/:param" "HTTP"
+      orders -> orders_store "reads orders" "SQL"
+      autolayout lr
+    }
+
+    dynamic bookshop "billing-event-invoice.requested" "event invoice.requested (billing)" {
+      billing -> orders "GET /orders/:param" "HTTP"
+      orders -> orders_store "reads orders" "SQL"
       autolayout lr
     }
 
     dynamic bookshop "gateway-get-orders-param" "GET /orders/:param (gateway)" {
       gateway -> orders "GET /orders/:param" "HTTP"
       orders -> orders_store "reads orders" "SQL"
-      autolayout lr
-    }
-
-    dynamic bookshop "gateway-post-orders-param-invoice" "POST /orders/:param/invoice (gateway)" {
-      gateway -> billing "POST ?" "HTTP"
       autolayout lr
     }
 

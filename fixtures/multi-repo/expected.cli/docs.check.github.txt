@@ -1,6 +1,6 @@
-::warning file=docs/architecture.md,line=59,title=flowatlas docs::flow POST /orders is changed: never written: run flowatlas docs --write
-::warning file=docs/architecture.md,line=126,title=flowatlas docs::flow GET /orders/:param/export is gone: nearest: entry:gateway:http:GET:/orders/:param, entry:orders:http:GET:/orders/:param
-::warning file=docs/architecture.md,line=133,title=flowatlas docs::flow GET /orders/:param is ambiguous: could mean: entry:gateway:http:GET:/orders/:param, entry:orders:http:GET:/orders/:param; add service="…" or use a full id
+::warning file=docs/architecture.md,line=63,title=flowatlas docs::flow POST /orders is changed: never written: run flowatlas docs --write
+::warning file=docs/architecture.md,line=144,title=flowatlas docs::flow GET /orders/:param/export is gone: nearest: entry:gateway:http:GET:/orders/:param, entry:orders:http:GET:/orders/:param
+::warning file=docs/architecture.md,line=151,title=flowatlas docs::flow GET /orders/:param is ambiguous: could mean: entry:gateway:http:GET:/orders/:param, entry:orders:http:GET:/orders/:param; add service="…" or use a full id
 docs: 8 blocks in 1 of 1 file: 5 ok, 1 changed, 1 gone, 1 ambiguous
 --- stderr ---
 exit 1

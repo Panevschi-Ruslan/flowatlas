@@ -75,7 +75,7 @@
     ]
   },
   "unresolvedOnPath": 0,
-  "truncated": "4 more nodes past maxNodes 5; raise maxNodes or ask get_flow on a child id",
+  "truncated": "7 more nodes past maxNodes 5; raise maxNodes or ask get_flow on a child id",
   "stoppedBy": [
     "maxNodes"
   ],

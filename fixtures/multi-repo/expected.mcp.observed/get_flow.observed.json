@@ -118,6 +118,9 @@
                           ],
                           "returns": "type:@fx/contracts#OrderDto"
                         },
+                        "observed": 1,
+                        "p95": 0.9,
+                        "errorRate": 0,
                         "children": [
                           {
                             "node": {
@@ -134,7 +137,7 @@
                               ],
                               "returns": "type:@fx/contracts#OrderDto"
                             },
-                            "observed": 1,
+                            "observed": 2,
                             "p95": 492,
                             "errorRate": 0,
                             "children": [
@@ -160,7 +163,8 @@
                                       "type": "queries",
                                       "confidence": "static"
                                     },
-                                    "observed": 1,
+                                    "observed": 2,
+                                    "p95": 0.4,
                                     "errorRate": 0,
                                     "children": []
                                   }
@@ -190,7 +194,7 @@
     },
     {
       "file": "docs/architecture.md",
-      "line": 95,
+      "line": 113,
       "kind": "flow",
       "state": "ok"
     }

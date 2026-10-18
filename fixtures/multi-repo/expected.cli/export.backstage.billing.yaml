@@ -13,6 +13,7 @@ spec:
     - billing-openapi
   consumesApis:
     - orders-asyncapi
+    - orders-openapi
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API

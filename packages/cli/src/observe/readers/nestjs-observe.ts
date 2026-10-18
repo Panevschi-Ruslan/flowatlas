@@ -398,8 +398,11 @@ export const nestjsObserveReader: TraceReader = {
         dropped,
         ...(bodies === undefined ? {} : { bodies }),
       };
-      // The first batch's spans keep the ids they always had; a later batch's say which batch.
-      const key = (index: number): string => `${part}${at === 0 ? String(index) : `${at}.${index}`}`;
+      // The ids are made up here, and two services' snapshots of one request share its `ti`: each
+      // says its service, so neither takes the other's place as a parent or a body's span (P222).
+      // A later batch's say which batch.
+      const who = context.service === undefined ? '' : `${context.service}/`;
+      const key = (index: number): string => `${who}${part}${at === 0 ? String(index) : `${at}.${index}`}`;
       return [
         ...list(batch['snapshots']).flatMap((snapshot, index) => snapshotSpans(snapshot, key(index), context)),
         ...list(batch['jobs']).flatMap((job, index) => jobSpans(job, key(index), context)),

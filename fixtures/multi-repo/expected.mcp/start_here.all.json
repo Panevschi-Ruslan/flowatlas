@@ -2,7 +2,7 @@
   "services": [
     {
       "service": "billing",
-      "nodes": 18,
+      "nodes": 22,
       "entries": 4,
       "entriesByKind": {
         "event": 2,

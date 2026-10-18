@@ -254,8 +254,9 @@ describe('building a project', () => {
 
     expect(result.failed).toBe(false);
     expect(result.report.httpOut).toEqual({
-      total: 6,
-      linked: 2,
+      // Billing reads the order it invoices from orders through `ORDERS_URL` (P209).
+      total: 7,
+      linked: 3,
       byMarker: 1,
       unknownEnv: 1,
       noRoute: 1,
@@ -288,7 +289,7 @@ describe('building a project', () => {
       },
     });
     expect(result.project.builtAt).toBe(FIXED);
-    expect(summariseBuild(result).join('\n')).toContain('calls out: 6 total, 2 linked');
+    expect(summariseBuild(result).join('\n')).toContain('calls out: 7 total, 3 linked');
     expect(summariseBuild(result).join('\n')).toContain('ui calls: 13 total, 6 joined to a route');
   }, 120_000);
 

@@ -1,14 +1,14 @@
 {
   "total": {
-    "rows": 4,
-    "sites": 4,
+    "rows": 3,
+    "sites": 3,
     "causes": 1
   },
   "causes": [
     {
       "cause": "seen-not-in-code",
       "label": "seen-not-in-code",
-      "sites": 4,
+      "sites": 3,
       "reasons": [
         "seen-not-in-code"
       ],
@@ -35,23 +35,6 @@
           ],
           "next": [
             "search({query: \"invoices\"})"
-          ]
-        },
-        {
-          "service": "billing",
-          "kind": "client",
-          "count": 1,
-          "places": 1,
-          "lastSeen": "2025-10-16T07:33:30.000Z",
-          "names": [
-            {
-              "name": "GET /orders/:value",
-              "count": 1,
-              "lastSeen": "2025-10-16T07:33:30.000Z"
-            }
-          ],
-          "next": [
-            "search({query: \"/orders/:value\"})"
           ]
         },
         {

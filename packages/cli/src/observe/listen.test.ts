@@ -139,7 +139,8 @@ describe('observe --listen gives the file a file run gives', () => {
     expect(listened.sources).toEqual([
       { sha256: expect.stringMatching(/^[0-9a-f]{64}$/), format: 'listen', spans: listened.spans, readAt: NOW.toISOString() },
     ]);
-    expect(stats).toMatchObject({ posts: 7, spans: listened.sources[0]!.spans, metricPosts: 1, logPosts: 1, bad: 0, refused: 0, flushes: 1 });
+    // Seven posts of the checkout and billing traffic, and orders' batch answering billing's call (P209).
+    expect(stats).toMatchObject({ posts: 8, spans: listened.sources[0]!.spans, metricPosts: 1, logPosts: 1, bad: 0, refused: 0, flushes: 1 });
     expect(stats.joins).toBe(Object.keys(listened.joins).length);
     expect(stats.unmatched).toBe(listened.unmatched.length);
     expect(printed).toEqual([`${stats.spans} spans, ${stats.joins} joins, ${stats.unmatched} unmatched since start; dropped: 1 metric post, 1 log post`]);

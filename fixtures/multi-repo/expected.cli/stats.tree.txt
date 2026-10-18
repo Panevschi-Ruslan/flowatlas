@@ -1,43 +1,43 @@
-126 nodes, 109 edges, 14 types, missed: 9 · notes: 0 · findings: 4
+130 nodes, 114 edges, 15 types, missed: 9 · notes: 0 · findings: 4
 
 nodes by type
   repo          4
   module        4
   entry         17
-  provider      18
+  provider      20
   method        47
   db_query      4
   table         1
   channel       3
   producer      2
   consumer      2
-  http_out      6
+  http_out      7
   external_api  1
   ui_component  1
   ui_action     1
   ui_api_call   13
-  config_key    2
+  config_key    3
 
 nodes by service
-  billing  18
+  billing  22
   gateway  43
   orders   33
   web      32
 
 edges by type
   imports       1
-  injects       16
-  calls         49
+  injects       18
+  calls         50
   handles       21
   queries       4
   emits         2
   consumes      2
-  http_calls    2
+  http_calls    3
   hits          8
-  reads_config  4
+  reads_config  5
 
 edges by confidence
-  static     99
+  static     104
   marker     5
   heuristic  5
 
@@ -51,7 +51,7 @@ receivers explained by a drawn call: 0
 loops set aside: none
 
 link report
-  calls out: 6 total, 2 linked (33%), 1 no route, 1 unknown setting, 0 ambiguous, 1 third party, 1 dynamic
+  calls out: 7 total, 3 linked (43%), 1 no route, 1 unknown setting, 0 ambiguous, 1 third party, 1 dynamic
   channels with no handler: 1
     channel:order.archived
   channels with no publisher: 1

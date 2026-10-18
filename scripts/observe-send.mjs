@@ -28,6 +28,8 @@ export const DEFAULT_FILES = [
   join(root, 'fixtures/multi-repo/traces/checkout.otlp.json'),
   join(root, 'fixtures/multi-repo/traces/billing.observe.json'),
   join(root, 'fixtures/multi-repo/traces/billing.batches.observe.json'),
+  // orders' answer to billing's call, the same trace from the other agent (P209).
+  join(root, 'fixtures/multi-repo/traces/orders.observe.json'),
 ];
 
 /** How the OTLP posts are written, in turn. */
