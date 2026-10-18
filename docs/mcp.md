@@ -6,7 +6,8 @@ frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
 Twenty-six tools, three prompts and three resources. Only one of the tools
-returns code.
+returns code, and a session is offered only the tools its project can answer
+([which tools appear when](#which-tools-appear-when)).
 
 ---
 
@@ -75,6 +76,7 @@ and let it talk on stdin and stdout.
 | `--install` | write `.mcp.json` into every repository of the project, and serve nothing |
 | `--repo <name>` | with `--install`, only this service |
 | `--dry-run` | with `--install`, say what would change and write nothing |
+| `--all-tools` | list every tool, not only those the project can answer, whatever the configuration's `mcp` block says |
 
 The server answers `initialize` as `flowatlas`, with the version of the command
 you installed as `serverInfo.version` (`flowatlas --version` prints the same).
@@ -97,6 +99,63 @@ own limits (`perService`; `top` and `samples`; `maxSteps` and `maxChars`;
 `never_seen` (`limit`), `trace_for` (`maxNodes` per tree), `get_spec`
 (`maxChars`) and `test_pattern` (ten rules, ten tests a rule). Answers are
 bounded and say when they were cut, rather than filling a context window.
+
+### Which tools appear when
+
+Every tool's name, description and inputs are read by the assistant at the
+start of a session, about 13,000 characters for all twenty-six. A tool the
+project cannot answer yet would cost that and answer an error, so the server
+lists only the tools whose needs hold. Tools follow what the project has, not
+which frameworks it uses:
+
+| Tools | Listed when | Read from |
+|---|---|---|
+| `start_here`, `list_entries`, `find_symbol`, `get_flow`, `who_calls`, `impact`, `search`, `describe_for_prompt`, `cant_follow`, `dead`, `findings` | always | |
+| `get_source` | the server knows where each repository is (`--config`, not `--db` alone) | the server's options |
+| `who_emits`, `who_consumes` | the graph holds a channel | the graph |
+| `get_type`, `type_usage` | the graph holds a type | the graph |
+| `check_contract` | a request or a message crosses between two places, or traffic was observed (traffic against a route) | the graph, the observed file |
+| `get_spec` | the graph holds an HTTP route or a channel | the graph |
+| `what_changed` | a `diff.json` or a `check.<env>.json` is beside the graph | the output directory |
+| `check_rules` | the configuration has `rules` | the configuration |
+| `test_pattern` | the readers are there to run a pattern (always under `flowatlas mcp`) | the server's options |
+| `hot_paths`, `slow_steps`, `trace_for`, `undeclared_failures`, `never_seen` | an observed file is beside the graph (`flowatlas observe`) | the observed file |
+
+Before any graph is built only the "always" tools are listed, each answering
+that `flowatlas build` comes first, with `test_pattern`, which needs no graph.
+
+The list follows the project while the server runs. It is decided again before
+every `tools/list` and every call, when a build replaces the graph, and every
+two seconds while a client is connected if the graph, the observed file or a
+diff beside it changed. When it changes the server sends
+`notifications/tools/list_changed` (it declares `tools.listChanged`), so after a
+first `flowatlas observe` the run-time tools appear without a restart, and go
+again if the file is removed.
+
+`start_here` says in one line, under `hidden`, which tools are not listed and
+when each appears (`check_rules: after rules[] in flowatlas.config.json ·
+hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after
+flowatlas observe`), so the assistant knows they exist. A client that kept an
+older list and calls a tool no longer listed gets a failed call (`isError`)
+saying what it needs, not a crash:
+
+```json
+{ "error": "check_rules is not listed for this project: no rules are configured; it appears after rules[] in flowatlas.config.json", "needs": ["rules"] }
+```
+
+The `mcp` block of `flowatlas.config.json` changes the choice:
+
+```json
+{ "mcp": { "tools": "auto", "include": ["check_rules"], "exclude": ["get_spec"] } }
+```
+
+`tools` is `auto` (the default: by what each needs) or `all` (every tool).
+`include` lists a tool whatever it needs, and the tool then answers for itself;
+`exclude` never lists one, and a call of it says it is turned off. A name that is
+no tool stops the server at start with a configuration error that names it and
+the nearest tool (`mcp.exclude.0: no tool is named "check_rule"; did you mean
+check_rules?`); a tool in both lists is refused too. `flowatlas mcp --all-tools`
+lists every tool and ignores the block.
 
 ### Answers
 
@@ -854,7 +913,9 @@ flowatlas build --watch    # rebuild on every save, project held open
 
 A rebuild with nothing moved reads only what changed, so it is a fraction of a
 cold build; the [README](../README.md#measured-on-the-demo-project) has both
-timed on the demo project.
+timed on the demo project. The tools listed follow too: a build that first reads
+a channel lists the channel tools, and `flowatlas observe` the run-time ones
+([which tools appear when](#which-tools-appear-when)).
 
 ---
 
@@ -867,6 +928,17 @@ same shell the client starts from.
 **It lists the server but every call fails.** The graph has not been built, or
 `--config` points at a configuration whose `output` directory is empty. Run
 `flowatlas build` and check that `.flowatlas/graph.db` exists.
+
+**A tool this page names is not listed.** The project cannot answer it yet:
+`start_here` says when it appears under `hidden` (`flowatlas observe` for the
+run-time tools, `rules` in the configuration for `check_rules`). A client that
+does not act on `tools/list_changed` shows a new tool only after it reconnects.
+To list every tool anyway, add `--all-tools` to the command, or set
+`"mcp": { "tools": "all" }` in the configuration.
+
+**The server will not start, naming a tool.** The configuration's
+`mcp.include` or `mcp.exclude` names a tool there is none of; the message names
+the nearest one.
 
 **A tool answers, but with nothing in it.** That is an answer: nothing reaches
 the symbol you named, or nothing handles the channel. `flowatlas doctor` says what

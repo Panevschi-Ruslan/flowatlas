@@ -94,6 +94,7 @@
       ]
     }
   ],
+  "hidden": "get_type, type_usage: once a build reads a type · what_changed: after flowatlas diff or check --env · check_rules: after rules[] in flowatlas.config.json · test_pattern: under flowatlas mcp · hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe",
   "next": [
     "get_flow({entry: \"entry:gateway:http:POST:/checkout/:param/pay\"})",
     "describe_for_prompt({id: \"entry:gateway:http:POST:/checkout/:param/pay\"})",

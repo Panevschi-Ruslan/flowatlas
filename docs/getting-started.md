@@ -449,7 +449,8 @@ them gets the whole project.
 
 Twenty-six tools, and only one of them returns source code. A trace never drags in the
 body of every method along it; the agent asks the graph which name to look at,
-then asks for that one name.
+then asks for that one name. A session is offered only the tools your project can
+answer: the run-time ones appear once you have run `flowatlas observe`.
 
 ```sh
 flowatlas mcp --install       # register in every repository, merging what is there

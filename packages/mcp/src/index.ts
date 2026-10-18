@@ -7,6 +7,10 @@
  */
 export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS } from './server.js';
 export type { ServerOptions } from './server.js';
+export { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS } from './tool-needs.js';
+export type { Need, NeedSource, ToolFacts, ToolName } from './tool-needs.js';
+export { LISTING_POLL_MS, listingSettingsOf, ToolListing } from './tool-listing.js';
+export type { ListingOptions, ListingSettings } from './tool-listing.js';
 export { DbHandle } from './query/db.js';
 export { ruleBreaksAt, rulesReportOf, violatedHops } from './tools/rules.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';

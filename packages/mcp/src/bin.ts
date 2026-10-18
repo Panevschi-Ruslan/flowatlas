@@ -15,13 +15,14 @@ const manifestVersion = (): string | undefined => {
   }
 };
 
-/** `--config <path>` and `--db <path>`, kept deliberately small. */
-const readArgs = (argv: readonly string[]): { configPath?: string; dbPath?: string } => {
-  const out: { configPath?: string; dbPath?: string } = {};
+/** `--config <path>`, `--db <path>` and `--all-tools`, kept deliberately small. */
+const readArgs = (argv: readonly string[]): { configPath?: string; dbPath?: string; allTools?: boolean } => {
+  const out: { configPath?: string; dbPath?: string; allTools?: boolean } = {};
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     const value = argv[index + 1];
-    if (flag === '--config' && value !== undefined) {
+    if (flag === '--all-tools') out.allTools = true;
+    else if (flag === '--config' && value !== undefined) {
       out.configPath = value;
       index += 1;
     } else if (flag === '--db' && value !== undefined) {
@@ -42,6 +43,7 @@ const options = {
     : {}),
   ...(args.configPath === undefined ? {} : { configPath: args.configPath }),
   ...(args.dbPath ?? fromEnv ? { dbPath: args.dbPath ?? fromEnv } : {}),
+  ...(args.allTools === true ? { allTools: true } : {}),
 };
 
 const version = manifestVersion();

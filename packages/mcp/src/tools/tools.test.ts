@@ -37,7 +37,8 @@ const call = async (name: string, args: Record<string, unknown> = {}): Promise<a
 
 beforeAll(async () => {
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-  const server = createFlowatlasServer({ configPath: CONFIG });
+  // Every tool (P201): the questions below are about each of them, listed for this graph or not.
+  const server = createFlowatlasServer({ configPath: CONFIG, allTools: true });
   await server.connect(serverSide);
   client = new Client({ name: 'test', version: '0' });
   await client.connect(clientSide);
@@ -195,12 +196,44 @@ describe('the tools a session is offered', () => {
    * 28,900; P120, P121, P105 to P113, P122 and the page tickets on the other,
    * 12,250 and 31,200): twenty-six tools, 13,133 and 32,625, each ceiling the
    * measured size rounded up to the next 50.
+   *
+   * P201 lists only the tools a project can answer, and this is every tool
+   * (`allTools`), so these ceilings stay the whole list's. `start_here`'s
+   * output schema gained `hidden` (the tools not listed, as one line), 27
+   * characters a client checks answers against and no model reads: 13,133
+   * and 32,652, the read ceiling holds and the full one moves to the next 50
+   * above. What a project without an observed file or rules is offered is
+   * measured below.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
     expect(read.length).toBeLessThan(13150);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(32650);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(32700);
+  });
+
+  /**
+   * The list a project with no observed file, no rules and no diff is
+   * offered, as `flowatlas mcp` serves it (with the pattern tester): the
+   * multi-repo graph without the five run-time tools, `check_rules` and
+   * `what_changed` (P201). Nineteen tools, 10,081 and 28,543 against the
+   * whole list's 13,133 and 32,652, each ceiling the measured size rounded
+   * up to the next 50.
+   */
+  it('cost less again where the project cannot answer every tool (P201)', async () => {
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+    await createFlowatlasServer({ configPath: CONFIG, toolsPollMs: 0, patternTester: async () => ({ rules: [] }) }).connect(serverSide);
+    const plain = new Client({ name: 'test', version: '0' });
+    await plain.connect(clientSide);
+    try {
+      const { tools } = await plain.listTools();
+      expect(tools).toHaveLength(19);
+      const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
+      expect(read.length).toBeLessThan(10100);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(28550);
+    } finally {
+      await plain.close();
+    }
   });
 
   it('declare an output schema where the shape of the answer is settled', async () => {

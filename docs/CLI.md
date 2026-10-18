@@ -292,6 +292,15 @@ runs; you rarely type it yourself.
 | `--install` | off | write `.mcp.json` into every repository of the project |
 | `--repo <name>` | every service | with `--install`, only this one |
 | `--dry-run` | off | with `--install`, say what would change and write nothing |
+| `--all-tools` | off | list every tool, not only those the project can answer, whatever the configuration's `mcp` block says |
+
+Without `--all-tools` the server lists the tools the project can answer and
+tells the client when that changes: the run-time tools appear after
+`flowatlas observe`, `check_rules` once rules are configured, and so on
+([which tools appear when](mcp.md#which-tools-appear-when)); `mcp` in the
+configuration tunes it. A configuration whose `mcp.include` or `mcp.exclude`
+names a tool there is none of stops the command at start, exit code 2, naming
+the tool and the nearest one.
 
 `--install` merges rather than overwrites, so servers a repository already has
 survive. It writes the bare `flowatlas` command when one is on your path and an
@@ -3618,6 +3627,9 @@ worked example of a document that declares routes.
 | `docs.files` | string[] | every `*.md` under this file | the Markdown files `flowatlas docs` reads for blocks tied to flows: paths or globs, relative to this configuration. Files in the output directory and `node_modules` are never read |
 | `rules` | object[] | `[]` | architecture rules: who may call, write, publish to or consume what ([`rules`](#rules)) |
 | `rulesSettings.failOnHeuristic` | boolean | `false` | whether a violation along a guessed edge can fail `rules --fail-on`, `doctor --strict` and `diff --fail-on-rule-break`; it is always shown |
+| `mcp.tools` | `"auto"` or `"all"` | `"auto"` | which tools the MCP server lists: `auto` those the project can answer (the run-time tools once an observed file is beside the graph, `check_rules` once `rules` holds one, …; see [which tools appear when](mcp.md#which-tools-appear-when)), `all` every tool |
+| `mcp.include` | string[] | `[]` | tools listed whatever they need; each then answers for itself |
+| `mcp.exclude` | string[] | `[]` | tools never listed; a call of one says it is turned off. A name in either list that is no tool, or a tool in both, stops `flowatlas mcp` at start with a configuration error naming it |
 
 **A path segment written as a closed set.** A segment whose type is a union of
 string literals — `action: 'ship' | 'refund'` — is a segment that was

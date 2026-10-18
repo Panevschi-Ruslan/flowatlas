@@ -23,6 +23,7 @@ import { registerSpec } from './tools/spec.js';
 import { registerStart } from './tools/start.js';
 import { registerTypeUsage } from './tools/type-usage.js';
 import { registerTypes } from './tools/types.js';
+import { listingSettingsOf, ToolListing } from './tool-listing.js';
 
 export const SERVER_NAME = 'flowatlas';
 
@@ -56,6 +57,7 @@ export const INSTRUCTIONS = [
   'get_flow writes each node once: met again it is `{id, ref: true, seenAt}`, seenAt the row its subtree is under. It stops at `maxNodes` (60) or about `maxChars` (12000) characters, says which in `stoppedBy`, and lists the crossings it did not follow in `crossingsLeft`: ask get_flow on one.',
   'who_calls says `stoppedBy` and the `frontier` ids when depth cut it, and `topOfChain` with `gapsInFile` on a node nothing calls: dead, or called from behind a gap (dead({id}) says which it is likely to be). On a class it answers for its methods. A route said aloud (`GET /orders/123`) resolves to the most specific route, naming the others under `alsoAnswers`. A failed call is `isError` and names the nearest under `suggestions`.',
   'Prompts before-rename, pr-review and trace-route write out the calls those reviews take, ids resolved; resources flowatlas://reasons (why a step was not followed) and flowatlas://services/{name} read without asking. what_changed({verdict: true}) says safe, unsafe or unknown, and why.',
+  'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`; the list changes as the project does.',
   '`detail` is 0 for ids only, 1 (the default) adds file:line, service and kind, 2 adds what the reader knows about each row; 3 is answered at 2.',
 ].join('\n');
 
@@ -75,32 +77,77 @@ export interface ServerOptions extends DbHandleOptions {
   /** A route's traffic shapes against its code, when the contracts package is installed (P113). */
   trafficChecker?: TrafficChecker;
   version?: string;
+  /**
+   * List every tool, whatever the project can answer and whatever the
+   * configuration's `mcp` block says (`flowatlas mcp --all-tools`, P201).
+   */
+  allTools?: boolean;
+  /** How often, in ms, a connected server looks for a graph, observed file or diff that changed; 0 never. */
+  toolsPollMs?: number;
 }
 
 /**
- * The server, with every tool registered.
+ * The server, with every tool registered and those the project can answer
+ * listed (P201).
  *
  * Nothing is read here: the database is opened on the first question and
  * reopened if a build replaced it, so a server can start before a graph exists
- * and start answering as soon as one does.
+ * and start answering as soon as one does. Before one exists only the tools
+ * that need nothing but a graph are listed - each says to build one - and
+ * `test_pattern`, which needs no graph. A configuration whose `mcp` block
+ * names a tool there is none of is refused here, naming it.
  */
 export const createFlowatlasServer = (options: ServerOptions = {}): McpServer => {
   const handle = new DbHandle(options);
+  const settings = listingSettingsOf(handle.config?.mcp, {
+    ...(options.allTools === undefined ? {} : { allTools: options.allTools }),
+    ...(handle.configPath === undefined ? {} : { configPath: handle.configPath }),
+  });
+
+  const server = new McpServer(
+    { name: SERVER_NAME, version: options.version ?? '0.0.0' },
+    {
+      instructions: INSTRUCTIONS,
+      // The list follows the project, so a client is told when it changes.
+      capabilities: { tools: { listChanged: true } },
+    },
+  );
+  const listing = new ToolListing(server, {
+    handle,
+    settings,
+    tester: options.patternTester !== undefined,
+    ...(options.toolsPollMs === undefined ? {} : { pollMs: options.toolsPollMs }),
+  });
   const context: ToolContext = {
     handle,
+    listing,
     ...(options.contractChecker === undefined ? {} : { contractChecker: options.contractChecker }),
     ...(options.patternTester === undefined ? {} : { patternTester: options.patternTester }),
     ...(options.missingCandidates === undefined ? {} : { missingCandidates: options.missingCandidates }),
     ...(options.trafficChecker === undefined ? {} : { trafficChecker: options.trafficChecker }),
   };
 
-  const server = new McpServer(
-    { name: SERVER_NAME, version: options.version ?? '0.0.0' },
-    {
-      instructions: INSTRUCTIONS,
-    },
-  );
+  listing.capture(() => registerTools(server, context));
+  registerPrompts(server, context);
+  registerResources(server, context, options.reasonCatalog);
 
+  // A closed connection lets go of the database (P199). On Windows a file held
+  // open can be neither removed nor replaced, so a server that kept it after
+  // its client left would block the next build's rename and every clean-up of
+  // the directory. The next question on a new connection opens it again; the
+  // listing stops looking for changes until then.
+  const closed = server.server.onclose;
+  server.server.onclose = () => {
+    listing.stop();
+    handle.close();
+    closed?.();
+  };
+
+  return server;
+};
+
+/** Every tool, each with its row in `TOOL_NEEDS` (`tool-needs.ts`). */
+const registerTools = (server: McpServer, context: ToolContext): void => {
   registerStart(server, context);
   registerEntries(server, context);
   registerFlow(server, context);
@@ -118,22 +165,8 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   registerTypeUsage(server, context);
   registerRules(server, context);
   registerSpec(server, context);
-  registerPrompts(server, context);
-  registerResources(server, context, options.reasonCatalog);
   registerPatterns(server, context);
   registerRuntime(server, context);
-
-  // A closed connection lets go of the database (P199). On Windows a file held
-  // open can be neither removed nor replaced, so a server that kept it after
-  // its client left would block the next build's rename and every clean-up of
-  // the directory. The next question on a new connection opens it again.
-  const closed = server.server.onclose;
-  server.server.onclose = () => {
-    handle.close();
-    closed?.();
-  };
-
-  return server;
 };
 
 /** Runs the server over stdin and stdout, which is how an editor talks to it. */

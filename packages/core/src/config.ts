@@ -1077,6 +1077,18 @@ export const adapterForceSchema = z.strictObject({
   frontend: adapterNamesSchema.optional(),
 });
 
+/** How a tool is named in `mcp.include` and `mcp.exclude`: as the server lists it. */
+const toolNameSchema = z.string().regex(/^[a-z][a-z0-9_]*$/, 'a tool is named in lower case with underscores, as the server lists it (check_rules)');
+
+/** The `mcp` block (P201): which tools the server lists. */
+export const mcpSettingsSchema = z.strictObject({
+  tools: z.enum(['auto', 'all']).default('auto'),
+  include: z.array(toolNameSchema).default([]),
+  exclude: z.array(toolNameSchema).default([]),
+});
+
+export type McpSettings = z.infer<typeof mcpSettingsSchema>;
+
 export const flowatlasConfigSchema = z
   .strictObject({
     services: z.array(serviceConfigSchema).default([]),
@@ -1388,8 +1400,24 @@ export const flowatlasConfigSchema = z
     rules: z.array(ruleSchema).default([]),
     /** How the rules are read: whether a guessed edge can fail a run. */
     rulesSettings: rulesSettingsSchema.default({ failOnHeuristic: false }),
+    /**
+     * Which tools the MCP server lists (P201). `auto` lists those the
+     * project can answer - the run-time tools once an observed file is beside
+     * the graph, `check_rules` once `rules` holds one - and `all` every tool.
+     * `include` lists a tool whatever it needs, `exclude` never lists one;
+     * both take tool names, which the server checks when it starts, naming
+     * any it does not have.
+     */
+    mcp: mcpSettingsSchema.optional(),
   })
   .superRefine((config, ctx) => {
+    // A tool both listed whatever it needs and never listed says nothing (P201).
+    const excluded = new Set(config.mcp?.exclude ?? []);
+    config.mcp?.include.forEach((tool, index) => {
+      if (excluded.has(tool)) {
+        ctx.addIssue({ code: 'custom', path: ['mcp', 'include', index], message: `${JSON.stringify(tool)} is in both mcp.include and mcp.exclude.` });
+      }
+    });
     // A rule's name is the key a baseline and an accept hold it by, so two
     // rules of one name would be one rule to both.
     const ruleNames = new Set<string>();

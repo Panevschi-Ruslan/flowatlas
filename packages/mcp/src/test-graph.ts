@@ -76,6 +76,14 @@ const directory = mkdtempSync(join(tmpdir(), 'flowatlas-mcp-'));
 export const buildTestDb = (graph: TestGraph): GraphDb => {
   written += 1;
   const path = join(directory, `graph-${written}.db`);
+  writeTestDb(graph, path);
+  const db = openGraphDb(path);
+  opened.push(db);
+  return db;
+};
+
+/** The same database written at `path`, for a test that serves it rather than reads it. */
+export const writeTestDb = (graph: TestGraph, path: string): void => {
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
     builtAt: FIXED,
@@ -86,9 +94,6 @@ export const buildTestDb = (graph: TestGraph): GraphDb => {
     unresolved: graph.unresolved ?? [],
   };
   writeGraphDb(project, emptyReport(), path);
-  const db = openGraphDb(path);
-  opened.push(db);
-  return db;
 };
 
 /** Every database {@link buildTestDb} opened, so the directory can be let go of whole. */

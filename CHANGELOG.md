@@ -41,7 +41,7 @@ twenty-six, with prompts, resources and paged, structured answers.
   refuses a configuration that uses any of the new keys: at the top level
   `shapes`, `packageSources` (P78), `builtInShapes` (P70), `settingFiles`
   (P77), `patterns` (P121), `callShape` (P89), `dead` (P91), `docs` (P120),
-  `rules` and `rulesSettings` (P114) and `deployed` (P117); on a service
+  `rules` and `rulesSettings` (P114), `deployed` (P117) and `mcp` (P201); on a service
   `hosts` (P77), `aliases` (P91), `tags` (P114), `apiDocuments` (P195),
   `catalog` (P119), `builtInShapes`, `shapes`, `patterns` and
   `packageSources`; and `adapters.http.clients` (P121). An `accepted.json`
@@ -77,6 +77,12 @@ twenty-six, with prompts, resources and paged, structured answers.
   (`deployedFormatVersion: 1`) and the build's own `stand-ins.json` (P82).
   `doctor.json` stays at `doctorFormatVersion: 2` and the contracts report at
   format 5; their new fields are optional.
+- **A session lists only the tools its project can answer (P201).** A prompt
+  or a script that expects a tool the project cannot answer yet (a run-time
+  tool before `flowatlas observe`, `check_rules` without rules) finds it
+  missing from `tools/list`; `start_here` says when each appears, and
+  `flowatlas mcp --all-tools` or `"mcp": { "tools": "all" }` lists every tool
+  as 0.5.1 did.
 - **Accepted rules use the `shapes` glob grammar (P80):** `?` is one
   character, `**` as a whole segment matches zero segments too, and route
   patterns keep `*` as any run, `/` included.
@@ -1344,8 +1350,32 @@ twenty-six, with prompts, resources and paged, structured answers.
   short sentence with no output schema, and the server's instructions name
   them as chains. A test holds the list's size: the part a model reads (names,
   descriptions, input schemas) under 13,150 characters and the whole list
-  under 32,650 (13,133 and 32,625 measured), each ceiling raised only with the
+  under 32,700 (13,133 and 32,652 measured), each ceiling raised only with the
   tool that needed it.
+- **A session is offered the tools its project can answer (P201).** Tools
+  follow what the project has, not its frameworks: the five run-time tools are
+  listed once an observed file is beside the graph, `check_rules` once the
+  configuration has `rules`, `what_changed` once a `diff.json` or a
+  `check.<env>.json` is there, `who_emits` / `who_consumes` and `get_type` /
+  `type_usage` once the graph holds a channel or a type, `check_contract` once
+  something crosses between services (or traffic was observed), `get_spec` once
+  there is a route or a channel, `get_source` when the server knows the
+  repositories, and `test_pattern` when the readers are there; the other eleven
+  always. One table in the server (`tool-needs.ts`) says what each tool needs
+  and where that is read, and the server refuses to start with a tool missing
+  from it. The list is decided again before every list and call, when a build
+  replaces the graph, and every two seconds while a client is connected, and the
+  server sends `tools/list_changed` (declaring `listChanged`), so after a first
+  `flowatlas observe` the run-time tools appear without a restart. Before any
+  graph only the always-listed tools (which say to build one) and
+  `test_pattern` are listed. `start_here` says in one line under `hidden` which
+  tools are not listed and when each appears, and a call of a tool not listed
+  is a failed call saying what it needs (`needs`). The multi-repo fixture,
+  with no observed file and no rules, is offered nineteen tools: 10,081
+  characters read and 28,543 in all, against 13,133 and 32,652 for the whole
+  list. An `mcp` block in `flowatlas.config.json` tunes it (`tools: "auto" |
+  "all"`, `include`, `exclude`; a name that is no tool is a configuration error
+  naming it and the nearest), and `flowatlas mcp --all-tools` lists every tool.
 - **Smaller answers (P93).** Every answer is written as compact JSON, and each
   fact once: a `cant_follow` place is `{ loc, id?, symbol?, service? }`, a
   `check_contract` finding `{ severity, kind, direction, field, expected,

@@ -125,6 +125,8 @@ describe('writing and reading back', () => {
 
     expect(db.schemaVersion()).toBe(SCHEMA_VERSION);
     expect(db.counts()).toEqual({ nodes: 2, edges: 1, types: 1, unresolved: 1 });
+    // What the MCP server lists its tools by (P201): each type held once.
+    expect(db.held()).toEqual({ nodes: ['entry', 'method'], entryKinds: ['http'], edges: ['handles'] });
     expect(db.node('entry:orders:http:GET:/orders')).toEqual(graph.nodes[0]);
     expect(db.edgesFrom('entry:orders:http:GET:/orders')).toEqual(graph.edges);
     expect(db.type('type:orders#OrderDto')).toEqual({ id: 'type:orders#OrderDto', ...type() });

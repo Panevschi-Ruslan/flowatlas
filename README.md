@@ -477,7 +477,11 @@ flowatlas mcp                 # serve over stdio, which the editor does for you
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`
 shows `flowatlas`, and a session has these twenty-six tools, beside three
-prompts and the `flowatlas://` resources:
+prompts and the `flowatlas://` resources. Only the tools the project can answer
+are listed: the run-time ones appear after `flowatlas observe`, `check_rules`
+once rules are configured, `what_changed` after `flowatlas diff`, and the
+channel and type tools once the graph holds one, without restarting anything
+(`flowatlas mcp --all-tools` lists all of them):
 
 | Tool | Answers |
 |---|---|

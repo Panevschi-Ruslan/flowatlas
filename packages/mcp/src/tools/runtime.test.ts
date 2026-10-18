@@ -174,7 +174,8 @@ describe('undeclared_failures', () => {
   });
 
   it('says there is nothing to read without an observed file', async () => {
-    expect(await none('undeclared_failures', {})).toEqual({ error: expect.stringContaining('flowatlas observe') });
+    // Not listed without one (P201): the call says what it needs.
+    expect(await none('undeclared_failures', {})).toEqual({ error: expect.stringContaining('flowatlas observe'), needs: ['observed'] });
   });
 });
 
@@ -225,7 +226,7 @@ describe('never_seen', () => {
     expect(week.window).toMatchObject({ since: '7d', label: '2h', short: true });
     expect(week.rows.every((row: { confidence: string }) => row.confidence === 'weak')).toBe(true);
     expect(await call('never_seen', { since: '30m' })).toEqual({ error: expect.stringContaining('2h, 7d, 2w') });
-    expect(await none('never_seen', {})).toEqual({ error: expect.stringContaining('flowatlas observe') });
+    expect(await none('never_seen', {})).toEqual({ error: expect.stringContaining('flowatlas observe'), needs: ['observed'] });
   });
 });
 

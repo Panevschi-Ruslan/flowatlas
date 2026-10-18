@@ -56,6 +56,12 @@ export const startOutput = {
    * A line rather than a record: the tool list has no room for one.
    */
   checks: z.string().optional(),
+  /**
+   * The tools not listed for this project and when each appears, as one line
+   * (`hot_paths, slow_steps: after flowatlas observe`, P201); absent when
+   * every tool is listed.
+   */
+  hidden: z.string().optional(),
   next: nextOutput,
 };
 
@@ -144,6 +150,7 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
               };
         const checks = checksBeside(ctx.handle.path);
         const blocked = Object.keys(checks).find((environment) => checks[environment] === 'not deployable');
+        const hidden = ctx.listing?.hiddenLine();
         return withNext(
           {
             ...summary,
@@ -151,6 +158,7 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
             ...(missingRepos.length === 0 ? {} : { missingRepos }),
             ...(rules === undefined ? {} : { rules }),
             ...(Object.keys(checks).length === 0 ? {} : { checks: Object.entries(checks).map(([environment, verdict]) => `${environment}: ${verdict}`).join(' · ') }),
+            ...(hidden === undefined ? {} : { hidden }),
           },
           [
             ...(blocked === undefined ? [] : [`what_changed({file: ${JSON.stringify(`check.${blocked}.json`)}, verdict: true})`]),

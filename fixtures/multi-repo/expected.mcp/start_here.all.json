@@ -211,6 +211,7 @@
       "token": "payments"
     }
   ],
+  "hidden": "what_changed: after flowatlas diff or check --env · check_rules: after rules[] in flowatlas.config.json · test_pattern: under flowatlas mcp · hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe",
   "next": [
     "get_flow({entry: \"entry:billing:http:GET:/invoices/:param\"})",
     "describe_for_prompt({id: \"entry:billing:http:GET:/invoices/:param\"})",

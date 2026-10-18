@@ -455,6 +455,20 @@ export class GraphDb {
     return { nodes: one('nodes'), edges: one('edges'), types: one('types'), unresolved: one('unresolved') };
   }
 
+  /**
+   * The node types, entry kinds and edge types the graph holds at least one
+   * of, read off the type indexes: what the MCP server decides its tool list
+   * by (P201) without reading a row it does not need.
+   */
+  held(): { nodes: string[]; entryKinds: string[]; edges: string[] } {
+    const column = (sql: string): string[] => (this.#db.prepare(sql).all() as Array<{ value: string | null }>).flatMap((row) => (row.value === null ? [] : [row.value]));
+    return {
+      nodes: column('SELECT DISTINCT type AS value FROM nodes ORDER BY value'),
+      entryKinds: column("SELECT DISTINCT kind AS value FROM nodes WHERE type = 'entry' ORDER BY value"),
+      edges: column('SELECT DISTINCT type AS value FROM edges ORDER BY value'),
+    };
+  }
+
   close(): void {
     this.#db.close();
   }

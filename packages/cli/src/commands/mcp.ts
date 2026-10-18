@@ -222,6 +222,7 @@ export const registerMcp = (program: Command): void => {
     .option('--install', `write ${MCP_FILE} into every repository of the project`)
     .option('--repo <name>', 'with --install, only this service')
     .option('--dry-run', 'with --install, say what would change and write nothing')
+    .option('--all-tools', 'list every tool, not only those the project can answer')
     .action(
       async (options: {
         config?: string;
@@ -229,6 +230,7 @@ export const registerMcp = (program: Command): void => {
         install?: boolean;
         repo?: string;
         dryRun?: boolean;
+        allTools?: boolean;
       }) => {
         if (options.install === true) {
           installMcp({
@@ -268,6 +270,7 @@ export const registerMcp = (program: Command): void => {
           }),
           patternTester: patternTesterFor(options.config),
           ...missingCandidatesFor(options.config),
+          ...(options.allTools === true ? { allTools: true } : {}),
         });
       },
     );
