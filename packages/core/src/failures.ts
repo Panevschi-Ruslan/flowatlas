@@ -8,8 +8,12 @@
  */
 import { compareFailChoices, groupFails } from './prompt-text.js';
 
-/** Where a failure comes from. */
-export const FAILURE_SOURCES = ['throw', 'guard', 'pipe'] as const;
+/**
+ * Where a failure comes from: a body's `throw`, a guard's or a pipe's refusal,
+ * or what an interceptor gives in place of an error that reached it, or
+ * raises itself (`timeout()`), written where the interceptor writes it (P207).
+ */
+export const FAILURE_SOURCES = ['throw', 'guard', 'pipe', 'interceptor'] as const;
 
 export type FailureSource = (typeof FAILURE_SOURCES)[number];
 

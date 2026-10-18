@@ -64,6 +64,12 @@ export interface Site {
    * filters on its own, since a filter may catch one of them and not another.
    */
   choices?: readonly ChoiceSite[];
+  /**
+   * It passed an interceptor whose handling of errors could not be read
+   * (P207): what reaches the filters may not be this exception, so whatever
+   * they answer it with is assumed.
+   */
+  unread?: true;
 }
 
 /** One exception a helper can give, as a filter sees it (P90). */
@@ -73,6 +79,8 @@ export interface ChoiceSite {
   assumed?: true;
   lineage: readonly string[];
   own?: number;
+  /** As {@link Site.unread}, for this choice alone. */
+  unread?: true;
 }
 
 /** The calls a response is given its status with: Express, Fastify, the HTTP adapter, plain Node. */
@@ -124,7 +132,7 @@ const together = (answers: readonly FilterAnswer[], fallsBack = false): FilterAn
 };
 
 /** `exception instanceof Name` with the exception on the left. */
-const instanceOfTest = (condition: Node, isException: (node: Node) => boolean): string | undefined => {
+export const instanceOfTest = (condition: Node, isException: (node: Node) => boolean): string | undefined => {
   const test = bare(condition);
   if (!Node.isBinaryExpression(test) || test.getOperatorToken().getKind() !== SyntaxKind.InstanceOfKeyword) return undefined;
   const right = test.getRight();
@@ -386,6 +394,11 @@ const catches = (filter: FilterInFront, lineage: readonly string[]): boolean =>
  * filter, the framework's answer stands as the body reader gave it.
  */
 export const throughFilters = (site: Site, filters: readonly FilterInFront[]): Failure => {
+  const answered = answeredByFilters(site, filters);
+  return site.unread === true && answered.status !== undefined && answered.assumed !== true ? { ...answered, assumed: true } : answered;
+};
+
+const answeredByFilters = (site: Site, filters: readonly FilterInFront[]): Failure => {
   if (site.choices !== undefined) return throughFiltersChosen(site, site.choices, filters);
   const filter = filters.find((each) => catches(each, site.lineage));
   if (filter === undefined || filter.answer.kind === 'framework') return site.failure;
@@ -422,6 +435,7 @@ const throughFiltersChosen = (site: Site, choices: readonly ChoiceSite[], filter
         },
         lineage: choice.lineage,
         ...(choice.own === undefined ? {} : { own: choice.own }),
+        ...(site.unread === true || choice.unread === true ? { unread: true as const } : {}),
       },
       filters,
     );

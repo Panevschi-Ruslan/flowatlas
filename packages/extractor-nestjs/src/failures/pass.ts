@@ -18,6 +18,14 @@ import { scopesOf, type Scope } from '../scopes.js';
 import type { EntryRecord } from '../wrapping/types.js';
 import { filtersFor, readFilters, throughFilters, type FilterInFront, type Site } from './filters.js';
 import { guardRefusals } from './guards.js';
+import {
+  interceptorsFor,
+  outsideOf,
+  raisedByInterceptors,
+  readInterceptors,
+  throughInterceptors,
+  type InterceptorInFront,
+} from './interceptors.js';
 import { GUARD_REFUSAL, HTTP_EXCEPTION, knownRefusal, NEST_PACKAGES, type Refusal } from './statuses.js';
 import { classNamed, throwsIn } from './throws.js';
 
@@ -67,8 +75,8 @@ const push = <T>(map: Map<string, T[]>, key: string, value: T): void => {
   else list.push(value);
 };
 
-const throwsOf = (scope: Scope): Site[] =>
-  throwsIn(scope.body).map((thrown) => ({
+const throwsOf = (scope: Scope, leaveOut: ReadonlySet<Node>): Site[] =>
+  throwsIn(scope.body, leaveOut).map((thrown) => ({
     failure: {
       ...(thrown.status === undefined ? {} : { status: thrown.status }),
       exception: thrown.exception,
@@ -248,7 +256,7 @@ const parameterPipes = (
     .filter((decorator: Decorator) => PARAMETER_DECORATORS.has(decorator.getName()))
     .flatMap((decorator) => decorator.getArguments().flatMap((argument) => parameterPipe(ctx, handler, argument, reading)));
 
-const read = (ctx: NestExtractContext): Reading => {
+const read = (ctx: NestExtractContext, leaveOut: ReadonlySet<Node>): Reading => {
   const scopes = [...scopesOf(ctx)];
   const throws = new Map<string, Site[]>();
   const methodsOf = new Map<string, string[]>();
@@ -258,7 +266,7 @@ const read = (ctx: NestExtractContext): Reading => {
     if (id !== undefined) classes.set(id, indexed.declaration);
   }
   for (const scope of scopes) {
-    const found = throwsOf(scope);
+    const found = throwsOf(scope, leaveOut);
     if (found.length > 0) throws.set(scope.id, found);
     if (scope.owner !== undefined) {
       const owner = ctx.classIdOf(scope.owner);
@@ -288,34 +296,55 @@ const read = (ctx: NestExtractContext): Reading => {
 
 /**
  * Every failure of the code one way in reaches, walking this service only,
- * each answered through the filters in front of it.
+ * each answered through the interceptors around it (P207) and then the
+ * filters in front of it.
+ *
+ * Where a failure is raised decides which interceptors it passes: a guard's
+ * or a middleware's before every one of them, so through none; one of the
+ * handler, the code it calls or a pipe inside all of them; one an interceptor
+ * throws itself through those outside it.
  */
 const failuresFrom = (
   ctx: NestExtractContext,
   record: EntryRecord,
   reading: Reading,
   filters: readonly FilterInFront[],
+  interceptors: readonly InterceptorInFront[],
 ): Failure[] => {
   const entry = record.node;
-  const found: Site[] = [];
+  const inside: Site[] = [];
+  const before: Site[] = [];
+  const fromInterceptors: Site[] = [];
   const seen = new Set<string>([entry.id]);
   const queue = [entry.id];
   for (let at = 0; at < queue.length && seen.size < MAX_REACHED; at += 1) {
     const id = queue[at] as string;
-    found.push(...(reading.throws.get(id) ?? []), ...(reading.parameterPipes.get(id) ?? []));
+    inside.push(...(reading.throws.get(id) ?? []), ...(reading.parameterPipes.get(id) ?? []));
     for (const to of reading.next.get(id) ?? []) {
       if (seen.has(to)) continue;
       seen.add(to);
       const node = ctx.builder.getNode(to);
       if (node !== undefined && (node.type === 'guard' || node.type === 'pipe' || node.type === 'interceptor' || node.type === 'middleware')) {
         const edge = reading.checks.get(checkKey(id, to));
-        if (edge !== undefined) found.push(...checkFailures(node, edge, reading, record));
+        if (edge === undefined) continue;
+        const sites = checkFailures(node, edge, reading, record);
+        if (node.type === 'pipe') inside.push(...sites);
+        else if (node.type === 'interceptor') {
+          const outside = outsideOf(interceptors, classOfCheck(node, reading));
+          fromInterceptors.push(...sites.flatMap((site) => throughInterceptors(site, interceptors, outside)));
+        } else before.push(...sites);
         continue;
       }
       queue.push(to);
     }
   }
-  return settleFailures(found.map((site) => throughFilters(site, filters)));
+  const answered = [
+    ...before,
+    ...inside.flatMap((site) => throughInterceptors(site, interceptors)),
+    ...fromInterceptors,
+    ...raisedByInterceptors(interceptors),
+  ];
+  return settleFailures(answered.map((site) => throughFilters(site, filters)));
 };
 
 /** A failure with no status line to set: on a bot or a message handler. */
@@ -336,11 +365,20 @@ const withoutStatus = ({ status: _status, assumed: _assumed, declared: _declared
  */
 export const failuresPass = definePass('failures', (ctx: NestExtractContext) => {
   if (!hasAnyDependency(readPackageJson(ctx.repoDir) ?? {}, NEST_PACKAGES)) return;
-  const reading = read(ctx);
+  const interceptors = readInterceptors(ctx);
+  const reading = read(ctx, interceptors.mappingThrows);
   const filters = readFilters(ctx);
   for (const record of ctx.entries) {
     const http = record.kind === 'http';
-    const found = failuresFrom(ctx, record, reading, http ? filtersFor(filters, record) : []);
+    // Interceptors and filters both answer a request: on a bot or a message
+    // handler neither is read, as before.
+    const found = failuresFrom(
+      ctx,
+      record,
+      reading,
+      http ? filtersFor(filters, record) : [],
+      http ? interceptorsFor(interceptors, record) : [],
+    );
     // The same exception reaches a bot or a message handler too, and there is
     // no status line for it to set there.
     const fails = http ? found : settleFailures(found.map(withoutStatus));

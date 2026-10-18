@@ -1,0 +1,1463 @@
+{
+  "schemaVersion": 6,
+  "repo": "nest-fails-intercepted",
+  "generatedAt": "2026-10-18T10:34:59.152Z",
+  "nodes": [
+    {
+      "id": "entry:nest-fails-intercepted:http:GET:/books/:param",
+      "type": "entry",
+      "label": "GET /books/:param",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/books/:param",
+        "rawPath": "/books/:id",
+        "controller": "BooksController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-fails-intercepted#src/guards/member.guard.ts:MemberGuard",
+              "name": "MemberGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on BooksController",
+              "file": "src/books/books.controller.ts",
+              "line": 9
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-fails-intercepted#src/guards/member.guard.ts:MemberGuard",
+            "file": "src/books/books.controller.ts",
+            "line": 9,
+            "source": "guard"
+          },
+          {
+            "status": 408,
+            "exception": "RequestTimeoutException",
+            "at": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor.intercept",
+            "file": "src/interceptors/timeout.interceptor.ts",
+            "line": 13,
+            "source": "interceptor"
+          },
+          {
+            "status": 502,
+            "exception": "BadGatewayException",
+            "at": "nest-fails-intercepted#src/interceptors/upstream.interceptor.ts:UpstreamInterceptor.intercept",
+            "file": "src/interceptors/upstream.interceptor.ts",
+            "line": 9,
+            "source": "interceptor"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "type": "entry",
+      "label": "GET /books/:param/price",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/books/:param/price",
+        "rawPath": "/books/:id/price",
+        "controller": "BooksController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-fails-intercepted#src/guards/member.guard.ts:MemberGuard",
+              "name": "MemberGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on BooksController",
+              "file": "src/books/books.controller.ts",
+              "line": 9
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-fails-intercepted#src/guards/member.guard.ts:MemberGuard",
+            "file": "src/books/books.controller.ts",
+            "line": 9,
+            "source": "guard"
+          },
+          {
+            "status": 408,
+            "exception": "RequestTimeoutException",
+            "at": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor.intercept",
+            "file": "src/interceptors/timeout.interceptor.ts",
+            "line": 13,
+            "source": "interceptor"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-intercepted:http:GET:/reports/sales",
+      "type": "entry",
+      "label": "GET /reports/sales",
+      "repo": "nest-fails-intercepted",
+      "file": "src/reports/reports.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/sales",
+        "rawPath": "/reports/sales",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 408,
+            "exception": "RequestTimeoutException",
+            "at": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor.intercept",
+            "file": "src/interceptors/timeout.interceptor.ts",
+            "line": 13,
+            "source": "interceptor"
+          },
+          {
+            "status": 429,
+            "exception": "HttpException",
+            "at": "nest-fails-intercepted#src/interceptors/quota.interceptor.ts:QuotaInterceptor.intercept",
+            "file": "src/interceptors/quota.interceptor.ts",
+            "line": 11,
+            "source": "throw"
+          },
+          {
+            "exception": "ReportUnavailable",
+            "at": "nest-fails-intercepted#src/interceptors/report-errors.interceptor.ts:ReportErrorsInterceptor.intercept",
+            "file": "src/interceptors/report-errors.interceptor.ts",
+            "line": 13,
+            "source": "interceptor",
+            "status": 503
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-intercepted:http:GET:/stats/:param",
+      "type": "entry",
+      "label": "GET /stats/:param",
+      "repo": "nest-fails-intercepted",
+      "file": "src/stats/stats.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stats/:param",
+        "rawPath": "/stats/:id",
+        "controller": "StatsController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "exception": "BookNotFound",
+            "at": "nest-fails-intercepted#src/books/books.service.ts:BooksService.price",
+            "file": "src/books/books.service.ts",
+            "line": 17,
+            "source": "throw",
+            "status": 404,
+            "assumed": true
+          },
+          {
+            "status": 408,
+            "exception": "RequestTimeoutException",
+            "at": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor.intercept",
+            "file": "src/interceptors/timeout.interceptor.ts",
+            "line": 13,
+            "source": "interceptor"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-intercepted:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-fails-intercepted",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-fails-intercepted#node_modules/@nestjs/common:ValidationPipe",
+            "file": "src/main.ts",
+            "line": 10,
+            "source": "pipe"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-fails-intercepted#src/interceptors/stock.interceptor.ts:StockInterceptor.intercept",
+            "file": "src/interceptors/stock.interceptor.ts",
+            "line": 16,
+            "source": "interceptor"
+          },
+          {
+            "status": 408,
+            "exception": "RequestTimeoutException",
+            "at": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor.intercept",
+            "file": "src/interceptors/timeout.interceptor.ts",
+            "line": 13,
+            "source": "interceptor"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-fails-intercepted#src/interceptors/stock.interceptor.ts:StockInterceptor.intercept",
+            "file": "src/interceptors/stock.interceptor.ts",
+            "line": 14,
+            "source": "interceptor"
+          },
+          {
+            "status": 500,
+            "exception": "PlainFailure",
+            "at": "nest-fails-intercepted#src/orders/orders.service.ts:OrdersService.place",
+            "file": "src/orders/orders.service.ts",
+            "line": 14,
+            "source": "throw",
+            "assumed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#node_modules/@nestjs/common:ClassSerializerInterceptor",
+      "type": "interceptor",
+      "label": "ClassSerializerInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#node_modules/@nestjs/common:ValidationPipe",
+      "type": "pipe",
+      "label": "ValidationPipe",
+      "repo": "nest-fails-intercepted",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-fails-intercepted",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "APP_INTERCEPTOR"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/books/books.controller.ts:BooksController",
+      "type": "provider",
+      "label": "BooksController",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "BooksModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/books/books.controller.ts:BooksController.find",
+      "type": "method",
+      "label": "BooksController.find",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/books/books.controller.ts:BooksController.price",
+      "type": "method",
+      "label": "BooksController.price",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{price:number}"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/books/books.module.ts:BooksModule",
+      "type": "module",
+      "label": "BooksModule",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "BooksController"
+        ],
+        "providers": [
+          "BooksService",
+          "MemberGuard"
+        ],
+        "exports": [
+          "BooksService"
+        ]
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/books/books.service.ts:BooksService",
+      "type": "provider",
+      "label": "BooksService",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "BooksModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/books/books.service.ts:BooksService.find",
+      "type": "method",
+      "label": "BooksService.find",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/books/books.service.ts:BooksService.price",
+      "type": "method",
+      "label": "BooksService.price",
+      "repo": "nest-fails-intercepted",
+      "file": "src/books/books.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{price:number}"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/guards/member.guard.ts:MemberGuard",
+      "type": "guard",
+      "label": "MemberGuard",
+      "repo": "nest-fails-intercepted",
+      "file": "src/guards/member.guard.ts",
+      "line": 4,
+      "meta": {
+        "module": "BooksModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/guards/member.guard.ts:MemberGuard.canActivate",
+      "type": "method",
+      "label": "MemberGuard.canActivate",
+      "repo": "nest-fails-intercepted",
+      "file": "src/guards/member.guard.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/audit.interceptor.ts:AuditInterceptor",
+      "type": "interceptor",
+      "label": "AuditInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/audit.interceptor.ts",
+      "line": 6,
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/audit.interceptor.ts:AuditInterceptor.intercept",
+      "type": "method",
+      "label": "AuditInterceptor.intercept",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/audit.interceptor.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            },
+            {
+              "name": "next",
+              "type": "type:@nestjs/common#CallHandler<any>"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "answered in {} ms",
+            "at": 11
+          },
+          {
+            "level": "warn",
+            "text": "failed after {} ms",
+            "at": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/fallback-price.interceptor.ts:FallbackPriceInterceptor",
+      "type": "interceptor",
+      "label": "FallbackPriceInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/fallback-price.interceptor.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/quota.interceptor.ts:QuotaInterceptor",
+      "type": "interceptor",
+      "label": "QuotaInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/quota.interceptor.ts",
+      "line": 5
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/report-errors.interceptor.ts:ReportErrorsInterceptor",
+      "type": "interceptor",
+      "label": "ReportErrorsInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/report-errors.interceptor.ts",
+      "line": 8
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/stock.interceptor.ts:StockInterceptor",
+      "type": "interceptor",
+      "label": "StockInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/stock.interceptor.ts",
+      "line": 8
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor",
+      "type": "interceptor",
+      "label": "TimeoutInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/timeout.interceptor.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/translate.interceptor.ts:TranslateInterceptor",
+      "type": "interceptor",
+      "label": "TranslateInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/translate.interceptor.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/translate.interceptor.ts:TranslateInterceptor.intercept",
+      "type": "method",
+      "label": "TranslateInterceptor.intercept",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/translate.interceptor.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            },
+            {
+              "name": "next",
+              "type": "type:@nestjs/common#CallHandler<any>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/translate.interceptor.ts:TranslateInterceptor.translate",
+      "type": "method",
+      "label": "TranslateInterceptor.translate",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/translate.interceptor.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "err",
+              "type": "unknown"
+            }
+          ],
+          "returns": "never"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/interceptors/upstream.interceptor.ts:UpstreamInterceptor",
+      "type": "interceptor",
+      "label": "UpstreamInterceptor",
+      "repo": "nest-fails-intercepted",
+      "file": "src/interceptors/upstream.interceptor.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-fails-intercepted#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-fails-intercepted",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-fails-intercepted",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-fails-intercepted#CreateOrderDto"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/orders/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "nest-fails-intercepted",
+      "file": "src/orders/orders.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-fails-intercepted",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/orders/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "nest-fails-intercepted",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-fails-intercepted#CreateOrderDto"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/reports/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "nest-fails-intercepted",
+      "file": "src/reports/reports.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "ReportsModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/reports/reports.controller.ts:ReportsController.sales",
+      "type": "method",
+      "label": "ReportsController.sales",
+      "repo": "nest-fails-intercepted",
+      "file": "src/reports/reports.controller.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number[]"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/reports/reports.module.ts:ReportsModule",
+      "type": "module",
+      "label": "ReportsModule",
+      "repo": "nest-fails-intercepted",
+      "file": "src/reports/reports.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ReportsController"
+        ],
+        "providers": [
+          "ReportsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/reports/reports.service.ts:ReportsService",
+      "type": "provider",
+      "label": "ReportsService",
+      "repo": "nest-fails-intercepted",
+      "file": "src/reports/reports.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "ReportsModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/reports/reports.service.ts:ReportsService.sales",
+      "type": "method",
+      "label": "ReportsService.sales",
+      "repo": "nest-fails-intercepted",
+      "file": "src/reports/reports.service.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number[]"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/stats/stats.controller.ts:StatsController",
+      "type": "provider",
+      "label": "StatsController",
+      "repo": "nest-fails-intercepted",
+      "file": "src/stats/stats.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "StatsModule"
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/stats/stats.controller.ts:StatsController.price",
+      "type": "method",
+      "label": "StatsController.price",
+      "repo": "nest-fails-intercepted",
+      "file": "src/stats/stats.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{price:number}"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-intercepted#src/stats/stats.module.ts:StatsModule",
+      "type": "module",
+      "label": "StatsModule",
+      "repo": "nest-fails-intercepted",
+      "file": "src/stats/stats.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "StatsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "repo:nest-fails-intercepted",
+      "type": "repo",
+      "label": "nest-fails-intercepted",
+      "repo": "nest-fails-intercepted",
+      "meta": {
+        "stats": {
+          "files": 25,
+          "filesRead": 25,
+          "filesUnreadable": 0,
+          "classes": 28,
+          "skippedExternalCalls": {
+            "@nestjs/common": 12,
+            "rxjs": 7
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param",
+      "to": "nest-fails-intercepted#node_modules/@nestjs/common:ClassSerializerInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 3,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param",
+      "to": "nest-fails-intercepted#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 5,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param",
+      "to": "nest-fails-intercepted#src/books/books.controller.ts:BooksController.find",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 14,
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param",
+      "to": "nest-fails-intercepted#src/guards/member.guard.ts:MemberGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param",
+      "to": "nest-fails-intercepted#src/interceptors/audit.interceptor.ts:AuditInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param",
+      "to": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 11,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param",
+      "to": "nest-fails-intercepted#src/interceptors/upstream.interceptor.ts:UpstreamInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 4,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "to": "nest-fails-intercepted#node_modules/@nestjs/common:ClassSerializerInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 3,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "to": "nest-fails-intercepted#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 6,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "to": "nest-fails-intercepted#src/books/books.controller.ts:BooksController.price",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ],
+      "returns": "{price:number}",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "to": "nest-fails-intercepted#src/guards/member.guard.ts:MemberGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "to": "nest-fails-intercepted#src/interceptors/audit.interceptor.ts:AuditInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "to": "nest-fails-intercepted#src/interceptors/fallback-price.interceptor.ts:FallbackPriceInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 20,
+      "meta": {
+        "order": 5,
+        "scope": "method",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "to": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 11,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/books/:param/price",
+      "to": "nest-fails-intercepted#src/interceptors/upstream.interceptor.ts:UpstreamInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 4,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/reports/sales",
+      "to": "nest-fails-intercepted#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 4,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/reports/sales",
+      "to": "nest-fails-intercepted#src/interceptors/audit.interceptor.ts:AuditInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/reports/sales",
+      "to": "nest-fails-intercepted#src/interceptors/quota.interceptor.ts:QuotaInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 8,
+      "meta": {
+        "order": 3,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/reports/sales",
+      "to": "nest-fails-intercepted#src/interceptors/report-errors.interceptor.ts:ReportErrorsInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 8,
+      "meta": {
+        "order": 2,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/reports/sales",
+      "to": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 11,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/reports/sales",
+      "to": "nest-fails-intercepted#src/reports/reports.controller.ts:ReportsController.sales",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 12,
+      "params": [],
+      "returns": "number[]"
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/stats/:param",
+      "to": "nest-fails-intercepted#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/stats/:param",
+      "to": "nest-fails-intercepted#src/interceptors/audit.interceptor.ts:AuditInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/stats/:param",
+      "to": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 11,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/stats/:param",
+      "to": "nest-fails-intercepted#src/interceptors/translate.interceptor.ts:TranslateInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/stats/stats.controller.ts",
+      "line": 7,
+      "meta": {
+        "order": 2,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:GET:/stats/:param",
+      "to": "nest-fails-intercepted#src/stats/stats.controller.ts:StatsController.price",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stats/stats.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "{price:number}",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:POST:/orders",
+      "to": "nest-fails-intercepted#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:POST:/orders",
+      "to": "nest-fails-intercepted#src/interceptors/audit.interceptor.ts:AuditInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:POST:/orders",
+      "to": "nest-fails-intercepted#src/interceptors/stock.interceptor.ts:StockInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "order": 2,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:POST:/orders",
+      "to": "nest-fails-intercepted#src/interceptors/timeout.interceptor.ts:TimeoutInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 11,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-intercepted:http:POST:/orders",
+      "to": "nest-fails-intercepted#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "params": [
+        "type:nest-fails-intercepted#CreateOrderDto"
+      ],
+      "returns": "{id:string}",
+      "meta": {
+        "body": "type:nest-fails-intercepted#CreateOrderDto"
+      }
+    },
+    {
+      "from": "nest-fails-intercepted#src/app.module.ts:AppModule",
+      "to": "nest-fails-intercepted#src/books/books.module.ts:BooksModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-fails-intercepted#src/app.module.ts:AppModule",
+      "to": "nest-fails-intercepted#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-fails-intercepted#src/app.module.ts:AppModule",
+      "to": "nest-fails-intercepted#src/reports/reports.module.ts:ReportsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-fails-intercepted#src/app.module.ts:AppModule",
+      "to": "nest-fails-intercepted#src/stats/stats.module.ts:StatsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-fails-intercepted#src/books/books.controller.ts:BooksController",
+      "to": "nest-fails-intercepted#src/books/books.service.ts:BooksService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-fails-intercepted#src/books/books.controller.ts:BooksController.find",
+      "to": "nest-fails-intercepted#src/books/books.service.ts:BooksService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}"
+    },
+    {
+      "from": "nest-fails-intercepted#src/books/books.controller.ts:BooksController.price",
+      "to": "nest-fails-intercepted#src/books/books.service.ts:BooksService.price",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 22,
+      "params": [
+        "string"
+      ],
+      "returns": "{price:number}"
+    },
+    {
+      "from": "nest-fails-intercepted#src/interceptors/translate.interceptor.ts:TranslateInterceptor.intercept",
+      "to": "nest-fails-intercepted#src/interceptors/translate.interceptor.ts:TranslateInterceptor.translate",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/interceptors/translate.interceptor.ts",
+      "line": 9,
+      "params": [
+        "unknown"
+      ],
+      "returns": "never"
+    },
+    {
+      "from": "nest-fails-intercepted#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-fails-intercepted#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-fails-intercepted#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-fails-intercepted#src/orders/orders.service.ts:OrdersService.place",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "params": [
+        "type:nest-fails-intercepted#CreateOrderDto"
+      ],
+      "returns": "{id:string}"
+    },
+    {
+      "from": "nest-fails-intercepted#src/reports/reports.controller.ts:ReportsController",
+      "to": "nest-fails-intercepted#src/reports/reports.service.ts:ReportsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-fails-intercepted#src/reports/reports.controller.ts:ReportsController.sales",
+      "to": "nest-fails-intercepted#src/reports/reports.service.ts:ReportsService.sales",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "number[]"
+    },
+    {
+      "from": "nest-fails-intercepted#src/stats/stats.controller.ts:StatsController",
+      "to": "nest-fails-intercepted#src/books/books.service.ts:BooksService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stats/stats.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-fails-intercepted#src/stats/stats.controller.ts:StatsController.price",
+      "to": "nest-fails-intercepted#src/books/books.service.ts:BooksService.price",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/stats/stats.controller.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "returns": "{price:number}"
+    },
+    {
+      "from": "nest-fails-intercepted#src/stats/stats.module.ts:StatsModule",
+      "to": "nest-fails-intercepted#src/books/books.module.ts:BooksModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/stats/stats.module.ts",
+      "line": 6
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#CallHandler<any>": {
+      "name": "CallHandler",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "7398ff7b62cfd6d1",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:nest-fails-intercepted#CreateOrderDto": {
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "nest-fails-intercepted#src/orders/create-order.dto.ts",
+      "structuralHash": "107f923570ba040d",
+      "fields": [
+        {
+          "name": "bookId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "copies",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/interceptors/translate.interceptor.ts",
+      "line": 8,
+      "reason": "fails-interceptor-unread",
+      "level": "info",
+      "message": "TranslateInterceptor handles the errors of the routes behind it in a way that cannot be read (what its catchError(...) gives cannot be read); what they fail with is assumed.",
+      "hint": "Map an error in catchError(...) with throwError(() => new SomeException()), a throw, a rethrow (throwError(() => err)) or a value (of(...)).",
+      "symbol": "TranslateInterceptor"
+    },
+    {
+      "file": "src/shop-error.filter.ts",
+      "line": 9,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "ShopErrorFilter.catch -> host.switchToHttp().getResponse().status(e.status).json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "untyped-value",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/shop-error.filter.ts",
+                "line": 9,
+                "symbol": "ShopErrorFilter.catch -> host.switchToHttp().getResponse().status(e.status).json"
+              },
+              {
+                "file": "src/shop-error.filter.ts",
+                "line": 9,
+                "symbol": "ShopErrorFilter.catch -> host.switchToHttp().getResponse().status"
+              }
+            ]
+          }
+        ]
+      },
+      "sites": 2
+    }
+  ]
+}

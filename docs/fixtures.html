@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>167 fixtures</span>
-    <span>415 snapshot files</span>
+    <span>168 fixtures</span>
+    <span>416 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -782,7 +782,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>NestJS <span class="count" data-total="34">34</span></h2>
+    <h2>NestJS <span class="count" data-total="35">35</span></h2>
     <ul>
       <li class="fixture" data-search="nest-addressing nestjs where a nestjs service's addresses are decided, and what it costs to read the wrong file (r89).">
         <div class="head">
@@ -862,6 +862,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>What a route can really answer with (P87): a library-loans API whose <code>main.ts</code> installs a global <code>ValidationPipe</code> and a global <code>DomainErrorFilter</code> (<code>@Catch(DomainError)</code>, answering <code>e.status</code>).</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-fails-intercepted nestjs what a route fails with once its interceptors have had their say (p207): a bookshop api whose `main.ts` installs a global `validationpipe`, a global `timeoutinterceptor` (the framework's documented one: `timeout(5000)`, then a `catcherror` that turns a `timeouterror` into a `requesttimeoutexception` and hands every other error on) and a global `shoperrorfilter` (`@catch(shoperror)`, answering `e.status`).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-fails-intercepted">nest-fails-intercepted</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>What a route fails with once its interceptors have had their say (P207): a bookshop API whose <code>main.ts</code> installs a global <code>ValidationPipe</code>, a global <code>TimeoutInterceptor</code> (the framework's documented one: <code>timeout(5000)</code>, then a <code>catchError</code> that turns a <code>TimeoutError</code> into a <code>RequestTimeoutException</code> and hands every other error on) and a global <code>ShopErrorFilter</code> (<code>@Catch(ShopError)</code>, answering <code>e.status</code>).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-failures nestjs what each route can fail with (p68), written on the entry as `meta.fails`: `[{ status, exception, at, file, line, source }]`, sorted by status.">

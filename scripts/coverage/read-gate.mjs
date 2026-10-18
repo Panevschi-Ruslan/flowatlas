@@ -135,6 +135,7 @@ const GATED = {
       'marker-reason-missing',
       'route-shadowed',
       'fails-filter-unread',
+      'fails-interceptor-unread',
       // What traffic answered beside what a route declares (P106), asked at doctor time.
       'failure-seen-undeclared',
       'failure-declared-unseen',

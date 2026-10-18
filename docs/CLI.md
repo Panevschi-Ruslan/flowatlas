@@ -387,8 +387,35 @@ not re-read it. The pattern files a service lists (`patterns`, below) are
 recorded the same way, each with a hash: a file added under a listed glob, an
 edited one and a removed one read the services that list it again
 (`stand-ins changed: pattern file flowatlas-patterns/house.yml changed`). The package index is worked out again on every build, a
-`--watch` rebuild included; a new directory beside the configuration does not
-start a rebuild by itself, and the next save in a repository does.
+`--watch` rebuild included, workspace members and all.
+
+`--watch` watches each repository, and beside them what stands in for a
+package, so a change there rebuilds without a save in a repository and reads
+again only the services it concerns, with the reasons above:
+
+- the directories directly beside the configuration, each one appearing or
+  going away, and the `package.json` or `pnpm-workspace.yaml` at the top of
+  each and of the configuration's own directory (when a service reads package
+  sources from there, the default);
+- the members a workspace kept there declares: the directories its globs name
+  and each member's `package.json`;
+- every `shapes` and `patterns` entry, from its directory, or from the deepest
+  directory of it that exists while it does not;
+- the files a reading read from outside every repository (a package's source,
+  its manifest), each by name;
+- where each repository is: one removed and put back is opened and watched
+  again;
+- the configuration file itself (below).
+
+Nothing deeper is walked, so a large directory appearing beside the
+configuration costs one listing. A file inside a repository is its watch's;
+the output directory, `node_modules`, `dist`, `build` and dot directories are
+never watched, unless a `shapes` or `patterns` entry names one. The line the watch prints when it starts says what it watches,
+for example `watching 2 repositories, the directories beside the configuration
+and 1 shapes entry`. The configuration file is watched too: an edit to it
+rebuilds from the edited one, with every repository opened again for it, a
+service it adds watched and one it drops let go. One that does not load says
+why, and the watch goes on until it does.
 
 Each repository is read in a process of its own, and the whole of it is held in
 memory while it is read, so a large monorepo with its dependencies installed can
@@ -2469,7 +2496,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | The project's own extraction patterns | `pattern-file-unread`, `pattern-not-expressible` (a rule refused, the part named), `pattern-ambiguous` (two rules on one call, neither read), `pattern-shadowed` (info: a written description reads the call), `pattern-unmatched` (info: a rule nothing matches) |
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
-| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic`, `fails-filter-unread` |
+| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic`, `fails-filter-unread`, `fails-interceptor-unread` |
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
@@ -2911,7 +2938,7 @@ The `x-flowatlas-*` extensions:
 | `x-flowatlas-public`, `x-flowatlas-public-by` | route | open on purpose, and what says so: `@flowatlas-public <why>`, a decorator `doctor.publicDecorators` names, or `doctor.publicRoutes` |
 | `x-flowatlas-unread` | schema, response, message | why it is `{}`: `any-typed`, `transformed`, `too-deep`, `type-not-found`, `external-type`, `type-unread`, `generic-unread`, `not-json`, `nothing-sent`, `ref-unparsed`, `answer-unread`, `status-unread`, `payload-unread` |
 | `x-flowatlas-assumed` | response | every site of that status is the framework's default, written nowhere (P87) |
-| `x-flowatlas-sources` | response | `throw`, `guard`, `pipe` |
+| `x-flowatlas-sources` | response | `throw`, `guard`, `pipe`, `interceptor` |
 | `x-flowatlas-claimed` | body, response | only a cast says the type |
 | `x-flowatlas-unnamed` | path parameter | the name is numbered, not the code's |
 | `x-flowatlas-type` | component | the registry id it was written from |
@@ -4865,8 +4892,10 @@ A NestJS entry carries `meta.fails`: what a request to it can end in, as
 per place, sorted by status. `source` is `throw` for an exception its handler
 throws, or a service or helper it calls throws - the built-in HTTP exceptions,
 `new HttpException(..., status)`, classes that extend them, and the project's
-own error classes; `guard` for a guard's refusal; and `pipe` for the
-framework's pipes on the route or on a parameter (400). A throw caught in the
+own error classes; `guard` for a guard's refusal; `pipe` for the
+framework's pipes on the route or on a parameter (400); and `interceptor` for
+what an interceptor gives in place of an error, or raises itself, written where
+the interceptor writes it (below). A throw caught in the
 same body is left out, and so is a rethrow; an entry that is not a request
 keeps the exception and no status (`fixtures/nest-failures`).
 
@@ -4904,6 +4933,29 @@ What is listed is what the route can actually answer (`fixtures/nest-fails-accur
   bases too long to follow, a status behind a filter whose answer cannot be
   read. Such a filter is a `fails-filter-unread` row at `info`. The page draws
   an assumed status as `500?`.
+
+- **Interceptors.** An error the handler, the code it calls or a pipe raises
+  passes the route's interceptors on its way out, before the filters: those
+  of `useGlobalInterceptors` and `APP_INTERCEPTOR` providers, then the
+  controller's `@UseInterceptors`, then the handler's, the handler's
+  last-written first. A guard refuses before any of them runs, so its refusal
+  passes none; what an interceptor throws itself passes those outside it. Each
+  RxJS `catchError(...)` in an interceptor's `intercept` is read, branch by
+  `instanceof` test (an `if`, or a conditional): `throwError(() => new X())`
+  or a `throw new X()` in the callback gives `X` in place of the error, which
+  the interceptors outside and then the filters answer
+  (`source: 'interceptor'`); `throwError(() => err)` or `throw err` hands it
+  on; `of(...)`, `from(...)` or `EMPTY` answers with a value, and the failure
+  is gone. A `timeout(...)` raises a `TimeoutError` (or what its `with`
+  gives) that the steps after it see, so the framework's documented
+  `TimeoutInterceptor` adds a 408 to every route behind it. The framework's
+  serializer, cache and upload interceptors hand errors on. An interceptor
+  whose handling cannot be read - a callback that calls a helper or is a
+  method, a `try`/`catch` or a promise's `.catch`, an installed interceptor
+  of another package - leaves what passes it `assumed`, whatever a filter
+  answers, and is a `fails-interceptor-unread` row at `info`
+  (`fixtures/nest-fails-intercepted`). Only an HTTP entry is read through
+  them, as through filters.
 
 - **Through a helper.** `throw toHttpError(check)` names the helper as the
   exception and carries `via: 'helper'`, `chosenFrom: [{exception, status?,

@@ -873,7 +873,9 @@ prove, and the path is given so you can run it.
   a validation 400 only where a class is validated, a domain error's own
   status where an exception filter reads it, a guard's 403 only where it can
   say no, and every status that is only a default marked assumed
-  (`fixtures/nest-fails-accurate`).
+  (`fixtures/nest-fails-accurate`); and what an interceptor's `catchError`
+  makes of an error on its way out: another exception, the same one, or a
+  value that means the request does not fail (`fixtures/nest-fails-intercepted`).
   A loop that runs a query, request or publish once per item is one
   `query-in-loop` row naming everything it reaches, ranked by how many ways in
   reach it; loops bounded on purpose (chunks, pages, cursors, retries, literal

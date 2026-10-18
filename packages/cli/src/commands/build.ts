@@ -21,6 +21,7 @@ import {
   SCHEMA_VERSION,
   forgetPackageAliases,
   forgetPackageIndexes,
+  forgetWorkspaces,
   hashShapeFile,
   STAND_INS_FILENAME,
   standInsFingerprintOfBuild,
@@ -1038,9 +1039,11 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
 
   // What stands in for a missing package is worked out again on every build
   // (P83), from the disk as it is now: a watch is one long process, and the
-  // index and aliases one build remembered would otherwise answer the next.
+  // index, the aliases and the workspace members (P206) one build remembered
+  // would otherwise answer the next.
   forgetPackageIndexes();
   forgetPackageAliases();
+  forgetWorkspaces();
   const standIns = standInsOfBuild(loaded.config, loaded.rootDir);
   const shapeHashes = new Map<string, string>();
   const hashOf = (file: string): string => {

@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { parseConfig } from './config.js';
 import { forgetPackageIndexes, packageIndexOf, rangeIncludes } from './package-index.js';
+import { forgetWorkspaces } from './workspace.js';
 import { readStandInsOfBuild, standInsFor, standInsOfBuild, type StandInsOfBuild } from './stand-ins.js';
 import { WORK_COUNTS } from './work-counts.js';
 
@@ -209,5 +210,34 @@ describe('an index that is not remembered (P125)', () => {
     writeTo(join(root, 'flags'), 'package.json', { name: '@acme/flags' });
     expect(packageIndexOf(input, { remember: false }).sources.has('@acme/flags')).toBe(true);
     expect(packageIndexOf(input)).toBe(remembered);
+  });
+});
+
+describe('a workspace member that appears in a long process (P206)', () => {
+  it('is a package once the workspaces are forgotten, and at once for an index that is not remembered', () => {
+    const root = treeOf({
+      'loans/package.json': { name: 'loans' },
+      'libs/package.json': { name: 'libs', workspaces: ['packages/*'] },
+      'libs/packages/money/package.json': { name: '@acme/money' },
+    });
+    const input = { services: [{ name: 'loans', dir: join(root, 'loans') }], folders: root };
+    forgetPackageIndexes();
+    forgetWorkspaces();
+    expect(packageIndexOf(input).sources.has('@acme/money')).toBe(true);
+    mkdirSync(join(root, 'libs/packages/flags'), { recursive: true });
+    writeTo(join(root, 'libs/packages/flags'), 'package.json', { name: '@acme/flags' });
+
+    // The index forgotten alone still finds the members the walk remembered.
+    forgetPackageIndexes();
+    expect(packageIndexOf(input).sources.has('@acme/flags')).toBe(false);
+    expect(packageIndexOf(input, { remember: false }).sources.get('@acme/flags')?.dir).toBe(
+      join(root, 'libs/packages/flags'),
+    );
+
+    mkdirSync(join(root, 'libs/packages/ledger'), { recursive: true });
+    writeTo(join(root, 'libs/packages/ledger'), 'package.json', { name: '@acme/ledger' });
+    forgetPackageIndexes();
+    forgetWorkspaces();
+    expect(packageIndexOf(input).sources.get('@acme/ledger')?.dir).toBe(join(root, 'libs/packages/ledger'));
   });
 });

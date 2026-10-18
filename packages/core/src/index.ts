@@ -409,6 +409,7 @@ export {
 export type { Location, Reach } from './location.js';
 
 export {
+  forgetWorkspaces,
   isServiceSource,
   serviceExtent,
   serviceSourceDirs,
@@ -452,7 +453,7 @@ export {
   shapeFilesOf,
 } from './declaration-shapes.js';
 export type { DeclarationShape, ResolutionSource, ShapeFileReading } from './declaration-shapes.js';
-export { forgetPackageIndexes, packageIndexOf, rangeIncludes, serviceDirOf } from './package-index.js';
+export { forgetPackageIndexes, NEVER_A_SOURCE, packageIndexOf, rangeIncludes, serviceDirOf } from './package-index.js';
 export type { PackageIndex, PackageIndexInput, PackageSource, PackageSourceOrigin } from './package-index.js';
 export {
   closeStandIns,

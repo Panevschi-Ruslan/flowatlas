@@ -53,7 +53,7 @@ export const PROMPT_WALK = Object.freeze({
 export const PROMPT_MAX_NEXT = 4;
 
 /** Where a failure comes from, in the order a group lists them. */
-export const PROMPT_FAIL_SOURCES = Object.freeze(['throw', 'guard', 'pipe']);
+export const PROMPT_FAIL_SOURCES = Object.freeze(['throw', 'guard', 'pipe', 'interceptor']);
 
 /**
  * What each kind of subject is called in its heading, by scope (P95) and then

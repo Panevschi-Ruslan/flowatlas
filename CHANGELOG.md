@@ -1495,6 +1495,40 @@ twenty-six, with prompts, resources and paged, structured answers.
   ref build links `node_modules` with a junction, query commands and a
   disconnected MCP server let go of `graph.db`, and `get_source` drops the `\r`
   of a CRLF file. A checkout is LF on every OS (`.gitattributes`).
+- **`build --watch` sees what stands in for a package (P206).** A watch
+  looked only inside the repositories, so a package directory appearing beside
+  the configuration, a new workspace member there, a shape or pattern file
+  added or edited outside a repository, an edit to a package source read from
+  outside every repository, and a repository removed and put back rebuilt
+  nothing until the next save in a repository. It now watches those places,
+  one level deep where a level is all the package index reads, and a change
+  there reads again only the services it concerns, with the build's own reason
+  (`stand-ins changed: package @acme/flags now at flags-lib`). The line it
+  starts with says what it watches. A build also forgets the workspace members
+  it found, so a member that appears during a watch is a package the next
+  rebuild can mount.
+- **`build --watch` follows an edit to its configuration (P219).** Every
+  rebuild loaded the configuration again, but the repositories the watch held
+  open and listened to were the ones it started with: a service added was
+  read in a process of its own with nothing watching it, a dropped one kept
+  its watch, and an edit to the file itself rebuilt nothing. The file is now
+  watched; an edit rebuilds once from it, every repository opened again, the
+  added ones watched and the dropped ones let go. One that does not load says
+  why, and the next edit is tried again.
+- **What a NestJS route fails with, through its interceptors (P207).** P87
+  read failures through exception filters only, so an interceptor that maps
+  errors in an RxJS `catchError(...)` left a route listing what its handler
+  throws rather than what the caller gets: a `BookNotFound` 404 where every
+  error becomes a `BadGatewayException` 502, a failure a fallback `of(...)`
+  answers with a value, and no 408 from the framework's documented
+  `TimeoutInterceptor`. Interceptors installed globally (`useGlobalInterceptors`,
+  `APP_INTERCEPTOR`), on the controller and on the handler are now read in
+  the framework's order, inside the filters: each `catchError` branch by
+  `instanceof` test gives a new exception (`source: 'interceptor'`), hands the
+  error on, or swallows it; `timeout()` raises its error; a guard's refusal
+  passes none of them. An interceptor whose handling cannot be read leaves
+  the statuses behind it `assumed` and is a `fails-interceptor-unread` row
+  (`fixtures/nest-fails-intercepted`).
 - **`flowatlas mcp` reports its version (P86).** `initialize` answered every
   client `serverInfo.version: "0.0.0"`; it now answers the command's version.
   The standalone server bin answers its own package's.

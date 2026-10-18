@@ -18,7 +18,7 @@
 import { readdirSync } from 'node:fs';
 import { isAbsolute, join, resolve } from 'node:path';
 import { readPackageJson } from './package-json.js';
-import { workspaceGlobs, workspacePackages } from './workspace.js';
+import { forgetWorkspaces, workspaceGlobs, workspacePackages } from './workspace.js';
 import { WORK_COUNTS } from './work-counts.js';
 
 /** Where a package's directory was found: a configured repository, a member of one, or a directory under the configuration. */
@@ -53,8 +53,8 @@ export interface PackageIndexInput {
   readonly folders?: string;
 }
 
-/** Directories a search under the configuration never takes for a package. */
-const NEVER_A_SOURCE = new Set(['node_modules', 'dist', 'build', 'coverage', 'tmp']);
+/** Directories a search under the configuration never takes for a package (a watch skips them too, P206). */
+export const NEVER_A_SOURCE: ReadonlySet<string> = new Set(['node_modules', 'dist', 'build', 'coverage', 'tmp']);
 
 const text = (value: unknown): string | undefined => (typeof value === 'string' && value !== '' ? value : undefined);
 
@@ -142,6 +142,9 @@ export const packageIndexOf = (
   const key = JSON.stringify([input.services.map((service) => [service.name, service.dir]), input.folders ?? null]);
   const known = remember ? INDEXES.get(key) : undefined;
   if (known !== undefined) return known;
+  // A workspace's members are remembered too; asked of the disk as it is now,
+  // they are walked again with it (P206).
+  if (!remember) forgetWorkspaces();
   WORK_COUNTS.packageIndexes += 1;
 
   const strong = input.services.flatMap((service) => packagesIn(service.dir, 'service', service.name));

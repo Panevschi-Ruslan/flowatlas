@@ -34,7 +34,7 @@ export declare const PROMPT_WALK: Readonly<{
   reachedFrom: number;
 }>;
 export declare const PROMPT_MAX_NEXT: number;
-export declare const PROMPT_FAIL_SOURCES: readonly ['throw', 'guard', 'pipe'];
+export declare const PROMPT_FAIL_SOURCES: readonly ['throw', 'guard', 'pipe', 'interceptor'];
 
 /** One exception a helper can choose to throw (P90). */
 export interface PromptFailChoice {
@@ -51,7 +51,7 @@ export interface PromptFailure {
   at: string;
   file?: string;
   line?: number;
-  source: 'throw' | 'guard' | 'pipe';
+  source: 'throw' | 'guard' | 'pipe' | 'interceptor';
   assumed?: true;
   declared?: number;
   via?: 'helper';
