@@ -1,6 +1,7 @@
-import { dirname, relative, resolve, sep } from 'node:path';
+import { dirname, posix } from 'node:path';
 import {
   hasAnyDependency,
+  isBelowDir,
   normalizeFilePath,
   normalizePath,
   type EntryAdapter,
@@ -178,16 +179,26 @@ export const configuredRoutes = (config: SourceFile, flat: FlatRoutes = NO_FLAT_
  * named, placed by Remix's flat convention, its module relative to the app.
  */
 const flatRoutesOf = (ctx: ExtractContext, appDir: string): FlatRoutes => (rootDirectory) => {
-  const directory = resolve(appDir, rootDirectory);
+  // Worked out in the compiler's spelling, forward slashes on every OS (P199):
+  // the OS's `resolve` would put a drive in front of a path that has none.
+  const directory = moduleAt(appDir, rootDirectory);
   const router = { ...REMIX_ROUTES, root: normalizeFilePath(directory, ctx.repoDir) };
   return [...repoSources(ctx)].flatMap((source) => {
     const path = source.getFilePath();
-    if (!resolve(path).startsWith(`${directory}${sep}`)) return [];
+    if (!isBelowDir(path, directory)) return [];
     const address = routeAddressOfFile(normalizeFilePath(path, ctx.repoDir), router);
-    // Spelled as a config spells a module, with forward slashes on every OS (P199).
-    return address === null ? [] : [{ module: toPosixPath(relative(appDir, path)), rawPath: address.rawPath }];
+    // Spelled as a config spells a module, relative to the app.
+    return address === null ? [] : [{ module: normalizeFilePath(path, appDir), rawPath: address.rawPath }];
   });
 };
+
+/**
+ * A module the config names, at the path the compiler names it by: the app
+ * directory as the compiler spelled it, joined with forward slashes (P199).
+ * `path.resolve` gave `D:\app\...` on Windows for an app at `/app`, which no
+ * source file of the project is named.
+ */
+const moduleAt = (appDir: string, module: string): string => posix.join(toPosixPath(appDir), toPosixPath(module));
 
 /** Where React Router v7 keeps its route config. */
 const ROUTE_CONFIG = /(?:^|\/)app\/routes\.[cm]?[jt]s$/;
@@ -218,7 +229,7 @@ export const reactRouterRoutesAdapter: EntryAdapter = {
       const appDir = dirname(config.getFilePath());
       const configFile = normalizeFilePath(config.getFilePath(), ctx.repoDir);
       for (const route of configuredRoutes(config, flatRoutesOf(ctx, appDir))) {
-        const sourceFile = ctx.project.getSourceFile(resolve(appDir, route.module));
+        const sourceFile = ctx.project.getSourceFile(moduleAt(appDir, route.module));
         if (sourceFile === undefined) {
           reportMissingModule(ctx, configFile, route);
           continue;

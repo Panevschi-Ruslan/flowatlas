@@ -1,12 +1,13 @@
-import { rmSync } from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
-import { buildTestDb, edge, entry, node, testDbDirectory, type TestGraph } from '../test-graph.js';
+import { buildTestDb, edge, entry, node, removeTestDbs, type TestGraph } from '../test-graph.js';
 import { projectDetail, truncate } from './detail.js';
 import { isResolved, resolveEntryRef, resolveSymbol } from './entry-ref.js';
 import { buildFlowTree, defaultFlowDepth, flatten, walkBack } from './flow.js';
 import type { FlowNode } from './types.js';
 
-afterAll(() => rmSync(testDbDirectory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
+// Every database closed first (P199): a describe below keeps one open for all
+// its cases, and Windows will not remove a file held open.
+afterAll(removeTestDbs);
 
 /** One route, its guards, its handler, and what the handler reaches. */
 const straightLine = (kind: string, key: string): TestGraph => ({
