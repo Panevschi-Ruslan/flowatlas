@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -86,7 +86,28 @@ export const buildTestDb = (graph: TestGraph): GraphDb => {
     unresolved: graph.unresolved ?? [],
   };
   writeGraphDb(project, emptyReport(), path);
-  return openGraphDb(path);
+  const db = openGraphDb(path);
+  opened.push(db);
+  return db;
 };
 
+/** Every database {@link buildTestDb} opened, so the directory can be let go of whole. */
+const opened: GraphDb[] = [];
+
 export const testDbDirectory = directory;
+
+/**
+ * Closes every test database still open, then removes their directory (P199).
+ * On Windows a database held open can not be removed, and a test that keeps
+ * one for a whole `describe` never closes it itself.
+ */
+export const removeTestDbs = (): void => {
+  for (const db of opened.splice(0)) {
+    try {
+      db.close();
+    } catch {
+      // Already closed by the test that opened it.
+    }
+  }
+  rmSync(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+};
