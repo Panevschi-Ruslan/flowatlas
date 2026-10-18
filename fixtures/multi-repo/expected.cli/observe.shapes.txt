@@ -1,11 +1,9 @@
-119 spans read from 5 file(s)
-not read: 1 snapshot of protocol ws, 1 node without o, c and m, 1 job without a span tree, 1 entry of type document, 1 entry of type script, 1 entry of type image, 1 entry of a static file
+121 spans read from 5 file(s)
+not read: 1 entry of type document, 1 entry of type script, 1 entry of type image, 1 entry of a static file
 otlp files carry no bodies, so --shapes read nothing of them
-7 joins seen, 6 entries hit, 7 seen at run time but not found in code, 4 that could be more than one place
+7 joins seen, 6 entries hit, 5 seen at run time but not found in code, 4 that could be more than one place
   db        billing  invoices  (2)
   client    billing  GET /orders/:value  (1)
-  code      billing  LedgerClient.post  (1)
-  http      billing  GET /healthz  (1)
   http      gateway  GET /metrics  (1)
   messaging orders  order.audited  (1)
   external  web  analytics.example.net  (1)
@@ -22,7 +20,7 @@ slowest entries (p95):
   orders GET /orders/:param  count 1  p50 496ms  p95 496ms  max 496ms  errors 0%
   gateway GET /orders/:param  count 22  p50 61.29ms  p95 72.88ms  max 520ms  errors 0%
   orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
-  billing event order.created  count 1  p50 12ms  p95 12ms  max 12ms  errors 0%
+  billing event order.created  count 2  p50 0.96ms  p95 12ms  max 12ms  errors 0%
   billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
 failing most:
   orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%

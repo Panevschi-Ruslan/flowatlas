@@ -1,14 +1,14 @@
 {
   "total": {
-    "rows": 6,
-    "sites": 6,
+    "rows": 4,
+    "sites": 4,
     "causes": 1
   },
   "causes": [
     {
       "cause": "seen-not-in-code",
       "label": "seen-not-in-code",
-      "sites": 6,
+      "sites": 4,
       "reasons": [
         "seen-not-in-code"
       ],
@@ -52,40 +52,6 @@
           ],
           "next": [
             "search({query: \"/orders/:value\"})"
-          ]
-        },
-        {
-          "service": "billing",
-          "kind": "code",
-          "count": 1,
-          "places": 1,
-          "lastSeen": "2025-10-16T07:33:30.000Z",
-          "names": [
-            {
-              "name": "LedgerClient.post",
-              "count": 1,
-              "lastSeen": "2025-10-16T07:33:30.000Z"
-            }
-          ],
-          "next": [
-            "find_symbol({query: \"LedgerClient.post\", service: \"billing\"})"
-          ]
-        },
-        {
-          "service": "billing",
-          "kind": "http",
-          "count": 1,
-          "places": 1,
-          "lastSeen": "2025-10-16T07:33:33.000Z",
-          "names": [
-            {
-              "name": "GET /healthz",
-              "count": 1,
-              "lastSeen": "2025-10-16T07:33:33.000Z"
-            }
-          ],
-          "next": [
-            "list_entries({service: \"billing\"})"
           ]
         },
         {

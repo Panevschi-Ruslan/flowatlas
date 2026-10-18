@@ -106,25 +106,6 @@
   "gone": [
     {
       "kind": "entry",
-      "id": "entry:billing:event:order.created",
-      "count": [
-        1,
-        0
-      ],
-      "p95": [
-        12,
-        null
-      ],
-      "errorRate": [
-        0,
-        null
-      ],
-      "newStatuses": [],
-      "gone": true,
-      "new": false
-    },
-    {
-      "kind": "entry",
       "id": "entry:orders:http:GET:/orders/:param",
       "count": [
         1,
@@ -155,25 +136,6 @@
       ],
       "errorRate": [
         1,
-        null
-      ],
-      "newStatuses": [],
-      "gone": true,
-      "new": false
-    },
-    {
-      "kind": "join",
-      "id": "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-      "count": [
-        1,
-        0
-      ],
-      "p95": [
-        12,
-        null
-      ],
-      "errorRate": [
-        0,
         null
       ],
       "newStatuses": [],
@@ -219,5 +181,5 @@
       "new": false
     }
   ],
-  "tooFew": 1
+  "tooFew": 3
 }

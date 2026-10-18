@@ -63,7 +63,7 @@
         },
         "observed": 22,
         "p95": 11.81,
-        "errorRate": 0,
+        "errorRate": 0.0455,
         "children": [
           {
             "node": {
@@ -80,9 +80,9 @@
               ],
               "returns": "type:billing#InvoiceDto"
             },
-            "observed": 2,
+            "observed": 3,
             "p95": 40.2,
-            "errorRate": 0.5,
+            "errorRate": 0.3333,
             "children": []
           }
         ]

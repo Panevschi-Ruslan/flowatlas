@@ -273,7 +273,7 @@ read again and the others come from the cache.
 | `flowatlas config <selector>` | the settings one flow depends on |
 | `flowatlas hotspots` | what the most things point at |
 | `flowatlas visualise` | the whole graph as one page you can open |
-| `flowatlas observe <file...>` | which joins real traffic went through, how long each step took and how it answered, from trace files you already have (OTLP JSON or protobuf, @nestjs/observe, Zipkin, Jaeger, a browser HAR, AWS exports); runs add up over a window. `--listen` takes the same from exporters posting to `127.0.0.1:4318` while the service runs, and `--diff` compares two observed files |
+| `flowatlas observe <file...>` | which joins real traffic went through, how long each step took and how it answered, from trace files you already have (OTLP JSON or protobuf, @nestjs/observe, Zipkin, Jaeger, a browser HAR, AWS exports), or a directory of HAR files an end-to-end test run left; runs add up over a window. `--listen` takes the same from exporters posting to `127.0.0.1:4318` while the service runs, and `--diff` compares two observed files. **[Run time in five minutes](docs/run-time.md)**: Playwright's `recordHar`, your e2e tests, `flowatlas observe test-results` |
 | `flowatlas shapes --suggest` | which packages that are not installed are used the most, with the names used of each; `--out` writes a starter shape file per package |
 | `flowatlas patterns test\|explain\|suggest` | the project's own extraction patterns: run their tests, explain a near miss part by part, write starters |
 
@@ -1104,7 +1104,8 @@ not changed; only something written from the source proves it is right.
 `scripts/demo/page.mjs` writes the same thing as `docs/index.html`, which is what
 GitHub Pages serves at <https://panevschi-ruslan.github.io/flowatlas/>.
 `docs/CLI.md` is the complete reference: every command, every flag, every
-configuration key. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
+configuration key. `docs/run-time.md` adds run time from an end-to-end test
+run in five minutes. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
 it in a build. `docs/coverage.md` is how this tool is measured against
 repositories nobody here wrote, by one counting rule; the list of repositories and
 the reports stay on the machine that measures. The [fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)

@@ -278,3 +278,76 @@ describe('a call that names its peer', () => {
     expect(observed.unmatched.map((row) => [row.kind, row.name])).toEqual([['peer', ':value']]);
   });
 });
+
+/**
+ * Two services read with @nestjs/observe (P202): the caller's agent sends its
+ * trace id on as `x-request-id`, the callee's adopts it, and neither batch
+ * names a parent. The server span is paired with the one client span of the
+ * same trace, method and path in another service.
+ */
+describe('a server span that names no parent', () => {
+  // Two call sites fit the call; only one of them joins the route the far side answered on.
+  const THREE = 'http_out:shop#src/c.ts:3:1';
+  const ELSEWHERE = 'entry:ledger:http:GET:/products/:param';
+  const graph = indexGraph(
+    [call(ONE, '/products/:id'), call(THREE, '/products/:id'), route(PRODUCT, '/products/:id'), { ...route(ELSEWHERE, '/products/:id'), id: ELSEWHERE, repo: 'ledger' }],
+    [joined(ONE, PRODUCT), joined(THREE, ELSEWHERE)],
+  );
+  const client = (spanId: string, over: Partial<ObservedSpan> = {}): ObservedSpan => ({
+    ...caller('client', '/products/:value'),
+    spanId,
+    parentId: 'shop-root',
+    at: '2026-01-01T00:00:00.000Z',
+    ...over,
+  });
+
+  it('is paired with the client span of its trace that made the call, which settles which call site it was', () => {
+    const observed = matchSpans(graph, [client('call'), server('/products/:value')]);
+    expect(observed.joins[edgeIdOf(joined(ONE, PRODUCT))]).toMatchObject({ count: 1, measuredAt: 'caller' });
+    expect(observed.symbols[ONE]?.hits).toBe(1);
+    expect(observed.ambiguous).toEqual([]);
+  });
+
+  it('pairs each client once: two calls of one trace, two server spans', () => {
+    const second = { ...server('/products/:value'), spanId: 'server-2' };
+    const observed = matchSpans(graph, [client('a'), client('b'), server('/products/:value'), second]);
+    expect(observed.joins[edgeIdOf(joined(ONE, PRODUCT))]?.count).toBe(2);
+    expect(observed.symbols[ONE]?.hits).toBe(2);
+    expect(observed.ambiguous).toEqual([]);
+  });
+
+  it('is not paired with a client of its own service, of another path, or of another trace', () => {
+    for (const other of [
+      client('own', { service: 'catalog' }),
+      client('path', { path: '/products/:value/x' }),
+      client('trace', { traceId: 'other' }),
+    ]) {
+      const observed = matchSpans(graph, [other, server('/products/:value')]);
+      expect(observed.joins).toEqual({});
+    }
+  });
+});
+
+/** A path segment such as `v1` is masked like a value (`:value`), and still fits the literal it was (P213). */
+describe('a versioned path', () => {
+  const versioned = (id: string, path: string): GraphNode => ({ ...route(id, path), id });
+  const V1 = 'entry:catalog:http:GET:/api/v1/products';
+  const ANY = 'entry:catalog:http:GET:/api/:version/products';
+
+  it('reaches a route whose literal segment holds a digit', () => {
+    const observed = matchSpans(indexGraph([versioned(V1, '/api/v1/products')], []), [server('/api/:value/products')]);
+    expect(observed.entries[V1]?.hits).toBe(1);
+    expect(observed.unmatched).toEqual([]);
+  });
+
+  it('is not more specific than a parameter in the same place: both fit, so neither is credited', () => {
+    const observed = matchSpans(indexGraph([versioned(V1, '/api/v1/products'), versioned(ANY, '/api/:version/products')], []), [server('/api/:value/products')]);
+    expect(observed.entries).toEqual({});
+    expect(observed.ambiguous.map((row) => row.candidates)).toEqual([[ANY, V1]]);
+  });
+
+  it('never lets a value fit a literal name', () => {
+    const observed = matchSpans(indexGraph([versioned(V1, '/api/latest/products')], []), [server('/api/:value/products')]);
+    expect(observed.entries).toEqual({});
+  });
+});

@@ -334,8 +334,9 @@ planted that no reader may keep (`packages/cli/src/observe/__fixtures__/planted.
 | file | format | what it is there for |
 |---|---|---|
 | `checkout.otlp.json` | OTLP/JSON | a slow `GET /orders/:id` hop from `gateway` to `orders` (500 ms on the caller's span), a `POST /orders` that answers 500 with `status.code: 2`, a publish and its consumer, a call that fits two call sites, and a span with no times |
-| `billing.observe.json` | @nestjs/observe batch | one batch with jobs, a WebSocket snapshot and a node the contract refuses |
-| `billing.batches.observe.json` | @nestjs/observe `{ batches }` | three posts an hour later: two reads (200 and 404), a write that fails with `e` on its nodes, and twenty writes that answer 201 |
+| `billing.observe.json` | @nestjs/observe batch | one batch in the SDK's 0.3.12 wire contract (P202): two HTTP requests with span trees (an outgoing call, a database insert, a manual span), a NATS message on `order.created`, a scheduled job, and logs, objectives, runtime and custom metrics no reader may keep |
+| `billing.batches.observe.json` | @nestjs/observe `{ batches }` | three posts an hour later: two reads (200 and 404), a write that fails with the error on its root span and `e: true` below it, and twenty writes that answer 201 |
+| `playwright/` | Playwright `recordHar` output (P205) | a test run's directory: an embedded full-mode HAR (with a request-API seed, a `route.fulfill` mock and a failed call), an attached minimal-mode HAR with its body files (one gone), a `.zip` HAR with its bodies, and files that are not HAR (`trace.zip`, `error-context.md`, `.last-run.json`); `expected.cli/observe.playwright*.txt` |
 | `web.otlp.json` | OTLP/JSON | twenty page loads of one order (P110): the browser's request, made by `OrdersApiService.one` (`code.function`), and the gateway's answer |
 
 The protobuf copy of `checkout.otlp.json` is written by the test's encoder at

@@ -94,11 +94,12 @@ const mimeOf = (value: unknown): string | undefined => text(value)?.split(';')[0
  * dropped here, or the names of its form fields; never a field's value. A
  * body of another type is counted, not read.
  */
-const requestShape = (request: Json, skips: Skips, dropped: Dropped): Shape | undefined => {
+const requestShape = (request: Json, skips: Skips, dropped: Dropped, attachment: Attachment): Shape | undefined => {
   const { postData } = only(request, HAR_READS.shapesRequest);
   if (!isObject(postData)) return undefined;
   dropped.outside(postData, HAR_READS.postData);
-  const { mimeType, text: body, params } = only(postData, HAR_READS.postData);
+  const { mimeType, text: inline, params, _file } = only(postData, HAR_READS.postData);
+  const body = inline === undefined || inline === '' ? (attachedText(_file, attachment, skips) ?? inline) : inline;
   const mime = mimeOf(mimeType);
   if ((mime !== undefined && JSON_TYPE.test(mime)) || (mime === undefined && typeof body === 'string' && /^\s*[{[]/.test(body))) {
     return shapeOfText(body, undefined, skips);
@@ -116,13 +117,43 @@ const requestShape = (request: Json, skips: Skips, dropped: Dropped): Shape | un
 };
 
 /** The shape of the JSON content a call was answered with (P113), decoded from base64 when it says so. */
-const responseShape = (content: unknown, mime: string | undefined, skips: Skips): Shape | undefined => {
-  const { text: body, encoding } = only(content, HAR_READS.shapesContent);
+const responseShape = (content: unknown, mime: string | undefined, skips: Skips, attachment: Attachment): Shape | undefined => {
+  const { text: inline, encoding, _file } = only(content, HAR_READS.shapesContent);
   if (mime === undefined || !JSON_TYPE.test(mime)) {
-    if (typeof body === 'string' && body !== '' && mime !== undefined) skips.add('body', 'not JSON');
+    if (((typeof inline === 'string' && inline !== '') || typeof _file === 'string') && mime !== undefined) skips.add('body', 'not JSON');
     return undefined;
   }
-  return shapeOfText(body, encoding, skips);
+  // An attached body is the file's bytes as they came, never base64.
+  if (inline === undefined || inline === '') return shapeOfText(attachedText(_file, attachment, skips), undefined, skips);
+  return shapeOfText(inline, encoding, skips);
+};
+
+/**
+ * Whether the HAR holds a body of a call at all: inline, or in a file it
+ * attached (P205). Playwright's `content: 'omit'` keeps none.
+ */
+const holdsBody = (request: Json, content: unknown): boolean => {
+  const postData = only(request, HAR_READS.shapesRequest)['postData'];
+  const sent = only(postData, HAR_READS.postData);
+  const answered = only(content, HAR_READS.shapesContent);
+  return [sent['text'], sent['_file'], answered['text'], answered['_file']].some((value) => typeof value === 'string' && value !== '');
+};
+
+type Attachment = ReadContext['attachment'];
+
+/** The text of a body a HAR attached in a file of its own (P205), or nothing, counted. */
+const attachedText = (name: unknown, attachment: Attachment, skips: Skips): string | undefined => {
+  if (typeof name !== 'string' || name === '') return undefined;
+  if (attachment === undefined) {
+    skips.add('body', 'attached in a file of its own, not looked for');
+    return undefined;
+  }
+  const attached = attachment(name);
+  if ('why' in attached) {
+    skips.add('body', attached.why);
+    return undefined;
+  }
+  return attached.text;
 };
 
 /** The document's entries, or nothing when it is not a HAR. */
@@ -151,9 +182,29 @@ const isApiCall = (resourceType: string | undefined, mime: string | undefined, m
  * HTTP, are counted in `skips`. Refuses an entry it cannot read, by index and
  * field only.
  */
+interface Walk {
+  skips: Skips;
+  dropped: Dropped;
+  shapes?: boolean;
+  attachment?: Attachment;
+  /** With `shapes`: the API calls kept, and how many of them the HAR holds a body of. */
+  held?: { calls: number; withBody: number };
+}
+
+/**
+ * Playwright's marks on an entry that was not the page's own call to a
+ * server (P205), each read for whether it is there: what is skipped, and why.
+ */
+const NOT_THE_PAGES: ReadonlyArray<[mark: string, why: string]> = [
+  ['_apiRequestRef', 'made by the test through its request API, not by the page'],
+  ['_serviceWorkerRef', 'made by a service worker'],
+  ['_wasFulfilled', 'answered by the test (route.fulfill), not by a server'],
+  ['_wasAborted', 'stopped by the test (route.abort)'],
+];
+
 const walkEntries = (
   document: unknown,
-  { skips, dropped, shapes = false }: { skips: Skips; dropped: Dropped; shapes?: boolean },
+  { skips, dropped, shapes = false, attachment, held }: Walk,
   visit: (entry: HarEntry, origin: { origin: string; hostname: string }) => void,
 ): void => {
   const requestFields = shapes ? [...HAR_READS.request, ...HAR_READS.shapesRequest] : HAR_READS.request;
@@ -163,7 +214,8 @@ const walkEntries = (
   (entriesOf(document) ?? []).forEach((raw, index) => {
     if (!isObject(raw)) throw new TraceFileError(`HAR entry ${index} is not an object`);
     dropped.outside(raw, HAR_READS.entry);
-    const { startedDateTime, time, request, response, _resourceType } = only(raw, HAR_READS.entry);
+    const fields = only(raw, HAR_READS.entry);
+    const { startedDateTime, time, request, response, _resourceType } = fields;
     if (!isObject(request)) throw new TraceFileError(`HAR entry ${index} has no request`);
     dropped.outside(request, requestFields);
     const { method, url } = only(request, HAR_READS.request);
@@ -190,19 +242,28 @@ const walkEntries = (
       skips.add('entry', kept);
       return;
     }
+    const mark = NOT_THE_PAGES.find(([name]) => fields[name] !== undefined && fields[name] !== false && fields[name] !== null);
+    if (mark !== undefined) {
+      skips.add('entry', mark[1]);
+      return;
+    }
     const answered = typeof status === 'number' && Number.isInteger(status) ? status : undefined;
     const entry: HarEntry = { index, method: verb, path };
     if (answered !== undefined && answered >= 100 && answered < 600) entry.status = answered;
-    // Status 0: the browser blocked or cancelled the request; nothing answered.
-    if (answered === 0) entry.error = true;
+    // Status 0 (a browser) or -1 (Playwright): the request was blocked, cancelled or failed; nothing answered.
+    if (answered !== undefined && answered <= 0) entry.error = true;
     const durationMs = msOf(time);
     if (durationMs !== undefined) entry.durationMs = durationMs;
     const at = isoOfText(startedDateTime);
     if (at !== undefined) entry.at = at;
     if (shapes) {
-      const sent = requestShape(request, skips, dropped);
+      if (held !== undefined) {
+        held.calls += 1;
+        if (holdsBody(request, content)) held.withBody += 1;
+      }
+      const sent = requestShape(request, skips, dropped, attachment);
       if (sent !== undefined) entry.request = sent;
-      const answer = responseShape(content, mime, skips);
+      const answer = responseShape(content, mime, skips, attachment);
       if (answer !== undefined) entry.response = answer;
     }
     visit(entry, { origin: parsed.origin, hostname: parsed.hostname.toLowerCase() });
@@ -255,7 +316,10 @@ const read = (document: unknown, fallbackService?: string, readContext?: ReadCon
   const spans: ObservedSpan[] = [];
   const bodies: SpanBodies[] = [];
   let ours = 0;
-  walkEntries(document, { skips, dropped, shapes: readContext?.shapes === true }, (entry, origin) => {
+  const held = { calls: 0, withBody: 0 };
+  const walk: Walk = { skips, dropped, shapes: readContext?.shapes === true, held };
+  if (readContext?.attachment !== undefined) walk.attachment = readContext.attachment;
+  walkEntries(document, walk, (entry, origin) => {
     const id = `har:${source}:${entry.index}`;
     const place = placeOf(origin, frontEnd, context);
     // A third party's bodies are its own business: only a call into the map is read for shapes.
@@ -294,6 +358,9 @@ const read = (document: unknown, fallbackService?: string, readContext?: ReadCon
             'name the API’s host under services[].hosts',
         ]
       : [];
+  if (held.calls > 0 && held.withBody === 0) {
+    notes.push('the HAR holds no bodies (Playwright’s content: \'omit\'), so --shapes read nothing of it: record with content: \'embed\' or \'attach\'');
+  }
   return {
     spans,
     skipped: skips.list(),

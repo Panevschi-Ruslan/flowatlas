@@ -1554,13 +1554,10 @@ files named and sends nothing anywhere.
 
 ```
 $ flowatlas observe traces/checkout.otlp.json traces/billing.observe.json traces/billing.batches.observe.json
-70 spans read from 3 file(s)
-not read: 1 snapshot of protocol ws, 1 node without o, c and m, 1 job without a span tree
-3 joins seen, 6 entries hit, 6 seen at run time but not found in code, 1 that could be more than one place
+72 spans read from 3 file(s)
+3 joins seen, 6 entries hit, 4 seen at run time but not found in code, 1 that could be more than one place
   db        billing  invoices  (2)
   client    billing  GET /orders/:value  (1)
-  code      billing  LedgerClient.post  (1)
-  http      billing  GET /healthz  (1)
   http      gateway  GET /metrics  (1)
   messaging orders  order.audited  (1)
 could be more than one place, so counted on none:
@@ -1570,7 +1567,7 @@ slowest entries (p95):
   gateway GET /orders/:param  count 2  p50 47.26ms  p95 520ms  max 520ms  errors 0%
   orders GET /orders/:param  count 1  p50 496ms  p95 496ms  max 496ms  errors 0%
   orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
-  billing event order.created  count 1  p50 12ms  p95 12ms  max 12ms  errors 0%
+  billing event order.created  count 2  p50 0.96ms  p95 12ms  max 12ms  errors 0%
   billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
 failing most:
   orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
@@ -1583,7 +1580,16 @@ Six ways a trace file can be written, and four AWS exports (see
 [AWS exports](#aws-exports-without-a-collector) below), each picked by looking
 at the file, and any of them may be gzipped (a file that starts with gzip's
 magic bytes is unpacked first, so a body captured from a POST is read as it
-is):
+is). A quoted glob (`'traces/**/*.json'`) is the files it matches, for a
+shell that does not expand `**`, and one that matches nothing is an error. A
+directory is what an end-to-end test run left (P205): every `*.har` and
+`*.har.gz` under it, and every `.zip` that holds a HAR (Playwright's
+`recordHar` with a `.zip` path), are read; everything else in it - videos,
+screenshots, Playwright's own `trace.zip`, the bodies a HAR attached,
+`.last-run.json`, trace files of other formats - is left alone and counted
+(`left alone in test-results: 6 files that are not HAR`), and a directory
+with no HAR in it is an error. Name a trace file of another format on its
+own, or with a glob. [Run time in five minutes](run-time.md) is the recipe.
 
 - **OTLP/JSON** (`resourceSpans` / `scopeSpans` / `spans`, one document or one
   per line). Read: `service.name`, span kind, `http.request.method` /
@@ -1602,18 +1608,45 @@ is):
   request is walked, never decoded, and so are span names, events and the
   status message. A request that is cut short says where:
   `traces/x.pb is not an OTLP trace request (byte 1832)`.
-- **@nestjs/observe** telemetry batches, the JSON the SDK (0.3.x) posts to its
-  endpoint: `{ serviceId, snapshots, jobs, ... }`, a saved series of posts
-  `{ batches: [ ... ] }` (read one after another), or a bare array of request
-  snapshots exported by hand. Read: `serviceId` (else `--service`); per
-  snapshot `ti` trace id, `ct` time, `d` duration, `e` (an error, read as
-  *it failed*), `p` protocol, `op` the route the router matched, `a.m` method,
-  `a.sc` status and the path of `a.ou`; and the span tree in `t`, whose nodes
-  need `o`, `c` and `m` and give `d` and `e` too. A node of class `http` is an
-  outgoing request (`http.method` and the path of `http.url`); one of class
-  `mongodb`, `pg` or `mysql2` names its collection as the second word of `m`;
-  any other is the method `c.m`. Only `http` and `https` snapshots are read as
-  requests; a job is read for its span tree.
+- **@nestjs/observe** telemetry batches, the JSON the SDK posts (gzipped) to
+  `<endpoint>/applications/telemetry`: `{ serviceId, snapshots, jobs, ... }`,
+  a saved series of posts `{ batches: [ ... ] }` (read one after another), or
+  a bare array of request snapshots exported by hand. The reader was checked
+  against the SDK's own wire contract in **0.3.12** (P202); a newer version is
+  read the same way, field by field, and a field it adds is dropped unread.
+  Read: `serviceId` (else `--service`); per snapshot `ti` trace id, `ct` time
+  (ISO), `d` duration (ms), `e` (an error, read as *it failed*), `p` protocol,
+  `op` operation, `a.m` method, `a.sc` status and the path of `a.ou`; and the
+  span tree in `t`, whose nodes need `o`, `c` and `m` and give `d`, `e` and
+  `so` (the start, in ms after the request's) too. What a snapshot is depends
+  on its protocol:
+
+  | `p` | Read as |
+  |---|---|
+  | `http`, `https` | a server span: `op` is the route template Nest matched; a request that matched none carries its URL folded (query cut, UUIDs as `:id`), read as the URL's path shape |
+  | `http` with `op` a GraphQL root field (`Query.invoices`) | its span tree only; `a.ou` holds the document, never read |
+  | `ws` | a consumer span of the event (`op` is `<Gateway>:<event>`) |
+  | `KAFKA`, `NATS`, `REDIS`, `MQTT`, `RMQ` | a consumer span of the topic, subject, channel or pattern in `op`: the channel, its consuming join and the event handler |
+  | `TCP`, `GRPC`, a custom transport | a server span of the RPC pattern in `op`, matched to the `@MessagePattern` handler |
+  | `graphql` | its span tree only |
+
+  A node of class `http` is an outgoing request (`http.method` and the path of
+  `http.url`); one of class `mongodb`, `pg` or `mysql2` names its collection
+  or table as the second word of `m`; any other is the method `c.m`. A
+  `manual` node is a span the code opened inside a method and names that
+  method again, so it is not counted as a call of its own; its children are.
+  A node the agent folded (`observe.collapsed: N` in its tags) is N calls,
+  each the mean of their summed duration; a folded `http` node keeps none of
+  its calls' URLs and is counted as not read. A job is `q` its queue, `c` when
+  it ran (ISO), `s` `completed` or `failed` (*it failed*), `d` ms and the same
+  tree: a queue's job is a consumer span of the queue, and a scheduled run
+  (`q` is `cron`, `interval`, `timeout` or `schedule`) is read for its tree.
+  `ti` is the inbound `x-request-id` the agent adopted, or an id it minted -
+  never a W3C trace id - and the agent sends it on as `x-request-id` with the
+  HTTP calls it records, so the service that answers, read with the same
+  agent, reports the same `ti`: its server span, which names no parent, is
+  paired with the one client span of that trace in another service with the
+  same method and path, and the join is counted as if the parent were named.
 - **Zipkin v2 JSON** (P112), what the Zipkin UI's *JSON* button and its
   `/api/v2/traces` give: a list of spans, or a list of traces. Read: `traceId`,
   `id`, `parentId`, `kind` (none is internal), `timestamp` and `duration`
@@ -1633,14 +1666,24 @@ is):
   Never read: `operationName`, `logs`, `warnings`, a process's `tags` (host
   name, IP, client version) and every other tag. An export of the same
   traffic as an OTLP file gives the same observed file.
-- **A browser's HAR** (P112): the Network tab's *Save all as HAR*, the record
-  of exactly the calls a front end makes into its API. Each call a script made
+- **A browser's HAR** (P112): the Network tab's *Save all as HAR*, or what
+  Playwright's `recordHar` writes for each test (P205), the record of exactly
+  the calls a front end makes into its API. Each call a script made
   (`_resourceType` `xhr` or `fetch`; where the browser does not write it, a
   JSON answer, or no answer type for a method other than `GET`) is a client
-  span of the front end: method, the path's shape, `response.status` (`0`, a
-  call the browser blocked or cancelled, is *it failed* with no status),
-  `time` and `startedDateTime`. Scripts, styles, images, fonts and pages are
-  skipped and counted. The front end is `--service`, else the one service the
+  span of the front end: method, the path's shape, `response.status` (`0`
+  from a browser or `-1` from Playwright, a call blocked, cancelled or left
+  unanswered, is *it failed* with no status), `time` and `startedDateTime`.
+  Scripts, styles, images, fonts and pages are skipped and counted, and so is
+  what Playwright marks as not the page's own call to a server: a request the
+  test made through its `request` API (`_apiRequestRef`), one a service
+  worker made (`_serviceWorkerRef`), and one the test answered
+  (`route.fulfill`, `_wasFulfilled`) or stopped (`route.abort`,
+  `_wasAborted`). Playwright's `mode: 'minimal'` and `'full'` read the same,
+  and so do its `content` settings: `'omit'` keeps no body, `'embed'` keeps
+  them inline, `'attach'` writes each to a file beside the HAR (`_file`), or
+  into the `.zip` with it, which `--shapes` reads from there and from nowhere
+  else (a name that is not a plain file name is refused). The front end is `--service`, else the one service the
   map has browser calls for; with several, the file is refused with that hint.
   The URL's origin is compared with where the front end's base URLs point -
   the values its own files give `apiBaseEnv` keys, through `apiTarget`, and
@@ -1660,7 +1703,8 @@ is):
   `queryString`, `postData`, `response.headers`, `cookies`, `content` (only its
   `mimeType`, to tell a call from a file), `redirectURL`, `serverIPAddress`,
   `connection`, `timings`, `pages`, `creator`, `browser`, `comment`, or any
-  key starting `_` but `_resourceType`; the query and fragment are cut before
+  key starting `_` but `_resourceType` and Playwright's four marks above (read
+  for whether they are there, never their value); the query and fragment are cut before
   a span exists, and an error names the entry and the field, never quotes the
   file. Nothing of the file is cached or written. Delete the HAR after the
   run.
@@ -1682,7 +1726,13 @@ hosts, and @nestjs/observe's `u`, `rq`, `tg` and `logs`. The file says so in a
 `privacy` block: the kept list, the dropped categories as fixed text, and how
 many attribute keys were seen and not read — a count, never a name. What a
 reader saw and did not read as a whole is counted in the summary too:
-`not read: 1 snapshot of protocol ws, 1 node without o, c and m`.
+`not read: 1 node without o, c and m, 1 entry of type image`.
+
+A masked segment still fits a declared literal the same rule masks (P213):
+`/api/:value/orders` reaches `GET /api/v1/orders`, as a parameter would, so a
+versioned path is matched without the version being kept; where the same
+place is also a parameter (`/api/:version/orders`), both fit and the span is
+counted as could be either.
 
 A server span is matched to an entry by method and route template (the most
 literal template wins); a `Class.method` to a handler or method; a messaging
@@ -1827,8 +1877,11 @@ The contract check compares one side's code with the other's, and both can be
 wrong the same way; a body built by hand can carry fields neither declares.
 With `--shapes`, and only then, `observe` reads the bodies a file carries - a
 HAR's JSON `postData.text` (or the names of its form fields) and JSON
-`response.content.text` (base64-decoded when `encoding` says so), a
-@nestjs/observe snapshot's `rq.body` - and keeps their **shape**: key names,
+`response.content.text` (base64-decoded when `encoding` says so), or the
+file Playwright's `content: 'attach'` put either in (beside the HAR, or in its
+`.zip`), a @nestjs/observe snapshot's `rq.body` (the JSON text the agent
+serialised; one it cut to its size limit, `bodyTruncated`, is counted and
+not parsed) - and keeps their **shape**: key names,
 JSON types (`string`, `number`, `boolean`, `null`, `object`, `array`, `mixed`)
 and how many bodies carried each key. Each body is parsed, walked and dropped
 in one function. No value is kept: not a string, a number, an enum member, a
@@ -1893,8 +1946,10 @@ OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf     # or http/json; grpc is not taken
 OTEL_TRACES_EXPORTER=otlp
 ```
 
-and the @nestjs/observe agent's endpoint setting at `http://127.0.0.1:4318`
-(it posts its batches to `/applications/telemetry`). What it answers is what
+and the @nestjs/observe agent's `endpoint` option, or `OBSERVE_ENDPOINT`, at
+`http://127.0.0.1:4318` (it posts its gzipped batches to
+`/applications/telemetry`; its `x-api-key` and `x-api-secret` headers are
+never read). What it answers is what
 each sender's own server answers: `200` with an empty
 `ExportTraceServiceResponse` (`{}`, or no bytes for protobuf) on
 `/v1/traces`, `/v1/metrics` and `/v1/logs`, `202` with no body for a batch.

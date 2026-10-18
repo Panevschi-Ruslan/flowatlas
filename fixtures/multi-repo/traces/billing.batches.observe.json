@@ -2,6 +2,7 @@
   "batches": [
     {
       "serviceId": "billing",
+      "forwardLogs": false,
       "serviceVersion": "1.4.2-build.77",
       "snapshots": [
         {
@@ -27,6 +28,7 @@
     },
     {
       "serviceId": "billing",
+      "forwardLogs": false,
       "snapshots": [
         {
           "ct": "2025-10-16T08:06:00.000Z",
@@ -35,27 +37,31 @@
           "p": "http",
           "op": "/invoices",
           "a": { "m": "POST", "sc": 500, "ou": "/invoices" },
-          "e": { "message": "post to ledger failed for customer cus-311" },
-          "rq": { "headers": { "cookie": "sid=cookie-val-55" }, "body": { "orderId": "ord-1043" } },
+          "e": { "cls": "Error", "message": "timeout from ledger.internal, post to ledger failed for customer cus-311", "stack": "Error: timeout from ledger.internal at InvoicesService.create" },
+          "rq": { "headers": { "cookie": "sid=cookie-val-55" }, "body": "{\"orderId\":\"ord-1043\"}" },
           "t": [
             {
               "o": "auto",
               "c": "InvoicesController",
               "m": "create",
               "d": 41,
+              "so": 0.2,
+              "e": { "cls": "Error", "message": "timeout from ledger.internal, post to ledger failed for customer cus-311", "stack": "Error: timeout from ledger.internal at InvoicesService.create" },
               "ch": [
                 {
                   "o": "auto",
                   "c": "InvoicesService",
                   "m": "create",
                   "d": 40.2,
-                  "e": { "message": "timeout from ledger.internal", "stack": "at InvoicesService.create" },
+                  "so": 0.5,
+                  "e": true,
                   "ch": [
                     {
                       "o": "auto",
                       "c": "mongodb",
                       "m": "insert invoices",
                       "d": 38.9,
+                      "so": 0.9,
                       "t": { "db.statement": "{\"insert\":\"invoices\",\"documents\":[{\"_id\":\"inv-9001\"}]}" }
                     }
                   ]
@@ -68,6 +74,7 @@
     },
     {
       "serviceId": "billing",
+      "forwardLogs": false,
       "snapshots": [
         { "ct": "2025-10-16T08:20:00.000Z", "ti": "f1000000000000000000000000000004", "d": 5.0, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 4.5 }] },
         { "ct": "2025-10-16T08:21:00.000Z", "ti": "f1000000000000000000000000000005", "d": 5.35, "p": "http", "op": "/invoices", "a": { "m": "POST", "sc": 201, "ou": "/invoices" }, "t": [{ "o": "auto", "c": "InvoicesController", "m": "create", "d": 4.85 }] },

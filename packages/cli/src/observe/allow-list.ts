@@ -89,29 +89,47 @@ export const OTLP_READS = {
 } as const satisfies AllowList;
 
 /**
- * `@nestjs/observe` 0.3.x telemetry batches, as its wire contract names the
- * fields. Not read: `serviceVersion`, `logs`, `objectives`, `runtime`,
- * `custom` on a batch; `u` (user), `rq` (the request), `tg` on a snapshot;
- * `n`, `s`, `so` on a node; `db.statement` and every other tag.
+ * `@nestjs/observe` telemetry batches, as the SDK's own wire contract
+ * (`dist/agent/telemetry-wire-contract.js`, checked against 0.3.12, P202)
+ * names the fields. Not read: `serviceVersion`, `truncatedSpans`,
+ * `forwardLogs`, `logs`, `objectives`, `runtime`, `custom` on a batch; `u`
+ * (user), `rq` (the request), `tg` (tags) on a snapshot; `i` (id), `n` (name),
+ * `ea` (enqueued at), `wd` (wait), `am`, `ma` (attempts) and `tg` on a job;
+ * `n` (name) and `s` (span id) on a node; `db.statement`, `db.system` and
+ * every other tag.
  */
 export const NESTJS_OBSERVE_READS = {
   batch: ['serviceId', 'snapshots', 'jobs'],
-  /** `p` protocol, `op` operation, `a` the answer, `e` an error (read as `true`), `t` the span tree. */
+  /**
+   * `ct` called at (ISO), `d` duration (ms), `p` protocol, `op` operation (a
+   * route template, a message pattern, a `Gateway:event`, a GraphQL field), `a`
+   * the answer, `e` an error (read as `true`), `t` the span tree.
+   */
   snapshot: ['ti', 'ct', 'd', 'p', 'op', 'a', 'e', 't'],
   /** `a.ou`, the original URL, is reduced to the shape of its path. */
   answer: ['m', 'sc', 'ou'],
-  job: ['ti', 'ct', 'd', 'e', 't'],
-  /** `o` origin, `c` class, `m` method key, `d` duration, `e` error (read as `true`), `t` tags, `ch` children. */
-  node: ['o', 'c', 'm', 'd', 'e', 't', 'ch'],
-  /** `http.url` is reduced to the shape of its path. */
-  tags: ['http.method', 'http.url'],
+  /** `c` called at (ISO), `q` the queue, `s` `completed` or `failed`, `d` duration (ms), `e` an error (read as `true`). */
+  job: ['ti', 'c', 'q', 's', 'd', 'e', 't'],
+  /**
+   * `o` origin (`auto` or `manual`), `c` class, `m` method key, `d` duration
+   * (ms), `so` start offset from the trace's start (ms), `e` error (read as
+   * `true`), `t` tags, `ch` children.
+   */
+  node: ['o', 'c', 'm', 'd', 'so', 'e', 't', 'ch'],
+  /**
+   * `http.url` is reduced to the shape of its path; `observe.collapsed` is the
+   * number of calls a node the agent folded stands for.
+   */
+  tags: ['http.method', 'http.url', 'observe.collapsed'],
   /**
    * Of a snapshot, only with `--shapes` (P113): the captured request, and of
-   * it only `body`, walked for its shape (key names and JSON types) and
-   * dropped. Never its `headers`. Version 0.3.x captures no response body.
+   * it only `body` (the JSON text the agent serialised), walked for its shape
+   * (key names and JSON types) and dropped, and `bodyTruncated`, which says it
+   * was cut and cannot be parsed. Never its `headers`. The SDK captures no
+   * response body.
    */
   shapesSnapshot: ['rq'],
-  capturedRequest: ['body'],
+  capturedRequest: ['body', 'bodyTruncated'],
 } as const satisfies AllowList;
 
 /**
@@ -163,7 +181,14 @@ export const JAEGER_READS = {
 export const HAR_READS = {
   document: ['log'],
   log: ['entries'],
-  entry: ['startedDateTime', 'time', 'request', 'response', '_resourceType'],
+  /**
+   * `_resourceType` (Chrome DevTools and Playwright) tells a call from a file.
+   * Playwright's marks are read for whether they are there, never their value
+   * (P205): `_apiRequestRef`, a request the test made through its `request`
+   * API; `_serviceWorkerRef`, one a service worker made; `_wasFulfilled` and
+   * `_wasAborted`, a call the test answered or stopped itself.
+   */
+  entry: ['startedDateTime', 'time', 'request', 'response', '_resourceType', '_apiRequestRef', '_serviceWorkerRef', '_wasFulfilled', '_wasAborted'],
   request: ['method', 'url'],
   response: ['status', 'content'],
   content: ['mimeType'],
@@ -173,11 +198,13 @@ export const HAR_READS = {
    * never a field's `value`) and the response content's `text` when its type
    * is JSON (base64-decoded when `encoding` says so). Each is parsed, walked
    * for its shape (key names and JSON types) and dropped in the same function.
+   * `_file` names the file Playwright's `content: 'attach'` wrote the body to
+   * (P205), read the same way from beside the HAR or from its archive.
    */
   shapesRequest: ['postData'],
-  postData: ['mimeType', 'text', 'params'],
+  postData: ['mimeType', 'text', 'params', '_file'],
   param: ['name'],
-  shapesContent: ['mimeType', 'text', 'encoding'],
+  shapesContent: ['mimeType', 'text', 'encoding', '_file'],
 } as const satisfies AllowList;
 
 /**

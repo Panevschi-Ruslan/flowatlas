@@ -11,10 +11,10 @@ Failing more · 2
 Newly seen in after.json · 0
   nothing new
 
-No longer seen in after.json · 6
-  way in  entry:billing:event:order.created  1 request in before.json
+No longer seen in after.json · 4
   way in  entry:orders:http:GET:/orders/:param  1 request in before.json
   way in  entry:orders:http:POST:/orders  1 request in before.json
-  join  channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated  1 request in before.json
   join  http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param  1 request in before.json
   join  producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created  1 request in before.json
+
+2 seen on both sides had fewer than 2 requests on one: not compared (--min-count)

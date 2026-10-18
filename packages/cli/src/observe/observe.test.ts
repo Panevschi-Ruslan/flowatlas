@@ -83,20 +83,26 @@ describe('matchSpans over the multi-repo fixture', () => {
     expect(alone.entries).toEqual({
       'entry:billing:http:GET:/invoices/:param': expect.objectContaining({ hits: 1, lastSeen: '2025-10-16T07:33:31.000Z', p95: 1.1, statuses: { '200': 1 } }),
       'entry:billing:http:POST:/invoices': expect.objectContaining({ hits: 1, lastSeen: '2025-10-16T07:33:30.000Z', max: 6.4, errors: 0 }),
+      // The NATS message the batch carries, on its pattern (P202).
+      'entry:billing:event:order.created': expect.objectContaining({ hits: 1, lastSeen: '2025-10-16T07:33:32.000Z', max: 0.9 }),
     });
+    expect(alone.channels['channel:order.created']).toMatchObject({ hits: 1 });
     expect(alone.symbols).toMatchObject({
       'billing#src/invoices/invoices.controller.ts:InvoicesController.create': { hits: 1 },
-      'billing#src/invoices/invoices.service.ts:InvoicesService.create': { hits: 1 },
-      // From the job's tree.
-      'billing#src/invoices/invoices.service.ts:InvoicesService.findOne': { hits: 1 },
+      // From the POST and from the NATS message's tree.
+      'billing#src/invoices/invoices.service.ts:InvoicesService.create': { hits: 2 },
+      // From the GET and from the scheduled job's tree.
+      'billing#src/invoices/invoices.service.ts:InvoicesService.findOne': { hits: 2 },
+      'billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated': { hits: 1 },
     });
-    // billing calls nothing in code, so its outgoing request and its collection are seen, not joined.
-    expect(alone.joins).toEqual({});
+    // billing calls nothing in code, so its outgoing request and its collection are seen, not joined;
+    // the message it consumed confirms the channel's consuming join (P202).
+    expect(Object.keys(alone.joins)).toEqual([
+      'channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated',
+    ]);
     expect(alone.unmatched.map(({ service, kind, name, count }) => ({ service, kind, name, count }))).toEqual([
       { service: 'billing', kind: 'client', name: 'GET /orders/:value', count: 1 },
-      { service: 'billing', kind: 'code', name: 'LedgerClient.post', count: 1 },
       { service: 'billing', kind: 'db', name: 'invoices', count: 1 },
-      { service: 'billing', kind: 'http', name: 'GET /healthz', count: 1 },
     ]);
   });
 
@@ -126,8 +132,9 @@ describe('matchSpans over the multi-repo fixture', () => {
 
   it('confirms both ends of a channel and the consuming entry', () => {
     expect(Object.keys(observed.joins)).toContain('producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created');
-    expect(observed.entries['entry:billing:event:order.created']?.hits).toBe(1);
-    expect(observed.channels['channel:order.created']?.hits).toBe(2);
+    // One message from the OTLP file, one from the @nestjs/observe batch (P202).
+    expect(observed.entries['entry:billing:event:order.created']?.hits).toBe(2);
+    expect(observed.channels['channel:order.created']?.hits).toBe(3);
   });
 
   it('counts entry hits by method and route template, and symbols by Class.method', () => {
@@ -142,9 +149,7 @@ describe('matchSpans over the multi-repo fixture', () => {
   it('lists what ran but is not in code', () => {
     expect(observed.unmatched.map(({ service, kind, name }) => `${service} ${kind} ${name}`)).toEqual([
       'billing client GET /orders/:value',
-      'billing code LedgerClient.post',
       'billing db invoices',
-      'billing http GET /healthz',
       'gateway http GET /metrics',
       'orders messaging order.audited',
     ]);
@@ -183,8 +188,8 @@ describe('flowatlas observe, then visualise', () => {
   const printed: string[] = [];
   const run = runObserve(traces, { db: dbPath, print: (line) => printed.push(line) });
 
-  it('says what it did not read and what it could not single out', () => {
-    expect(printed).toContain('not read: 1 snapshot of protocol ws, 1 node without o, c and m, 1 job without a span tree');
+  it('says what it could not single out, and reads every part of batches in the contract', () => {
+    expect(printed.some((line) => line.startsWith('not read:'))).toBe(false);
     expect(printed).toContain('could be more than one place, so counted on none:');
     expect(printed.some((line) => line.includes('any of http_out:gateway#src/clients/orders.client.ts:33:12'))).toBe(true);
   });

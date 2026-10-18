@@ -22,8 +22,6 @@ describe('blind spots in doctor', () => {
     expect(rows.map((row) => [row.service, (row.meta?.['seen'] as { kind: string }).kind])).toEqual([
       ['billing', 'db'],
       ['billing', 'client'],
-      ['billing', 'code'],
-      ['billing', 'http'],
       ['gateway', 'http'],
       ['orders', 'messaging'],
     ]);

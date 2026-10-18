@@ -29,7 +29,8 @@
         "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
         "label": "InvoicesController.create",
         "kind": "internal",
-        "ms": 41
+        "ms": 41,
+        "error": true
       }
     ]
   },

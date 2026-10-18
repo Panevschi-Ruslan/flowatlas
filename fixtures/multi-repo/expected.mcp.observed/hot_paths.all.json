@@ -44,8 +44,8 @@
       "id": "entry:billing:event:order.created",
       "label": "event order.created",
       "service": "billing",
-      "count": 1,
-      "p50": 12,
+      "count": 2,
+      "p50": 0.96,
       "p95": 12,
       "max": 12,
       "errorRate": 0
@@ -72,8 +72,8 @@
       "joins": [
         {
           "id": "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-          "count": 1,
-          "p50": 12,
+          "count": 2,
+          "p50": 0.96,
           "p95": 12,
           "max": 12,
           "errorRate": 0
