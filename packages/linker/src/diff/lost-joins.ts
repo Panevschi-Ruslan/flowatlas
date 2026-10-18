@@ -13,7 +13,7 @@
  * `diff.json` once and P117's check against a deployed graph calls the same
  * function on its own two sides.
  */
-import { kindOfRow, type GraphEdge, type GraphNode, type Unresolved } from '@flowatlas/core';
+import { rowKindOf, type GraphEdge, type GraphNode, type Unresolved } from '@flowatlas/core';
 import type { LostJoin } from './types.js';
 
 /** As much of a graph as this reads. */
@@ -78,7 +78,7 @@ const lostRequests = (base: JoinGraph, head: JoinGraph): LostJoin[] => {
   // What the head side wrote about the caller instead: a gap or a finding
   // before a note, which says how a join was made rather than why none was.
   const said = new Map<string, string>();
-  for (const row of [...head.unresolved].sort((a, b) => Number(kindOfRow(a) === 'note') - Number(kindOfRow(b) === 'note'))) {
+  for (const row of [...head.unresolved].sort((a, b) => Number(rowKindOf(a) === 'note') - Number(rowKindOf(b) === 'note'))) {
     if (row.symbol !== undefined && !said.has(row.symbol)) said.set(row.symbol, row.reason);
   }
   const lost: LostJoin[] = [];

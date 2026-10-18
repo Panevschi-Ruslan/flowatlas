@@ -3,7 +3,7 @@ import {
   CONFIDENCE_LEVELS,
   countsOf,
   EDGE_TYPES,
-  kindOfRow,
+  rowKindOf,
   NODE_TYPES,
   tally,
   wasMissed,
@@ -154,7 +154,7 @@ export const collectStats = (db: GraphDb): Stats => {
   const nothingRows: Array<{ sites?: number }> = [];
   for (const row of rows) {
     if (!wasMissed(row)) {
-      if (kindOfRow(row) === 'gap') nothingRows.push(row);
+      if (rowKindOf(row) === 'gap') nothingRows.push(row);
       continue;
     }
     unresolvedByReason.set(row.reason, (unresolvedByReason.get(row.reason) ?? 0) + 1);

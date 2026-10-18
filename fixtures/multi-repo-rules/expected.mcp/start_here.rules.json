@@ -199,7 +199,7 @@
     }
   ],
   "rules": {
-    "errors": 3,
+    "errors": 4,
     "warnings": 0,
     "unchecked": 1
   },

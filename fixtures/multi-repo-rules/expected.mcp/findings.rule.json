@@ -31,20 +31,34 @@
     },
     {
       "kind": "rule",
+      "id": "producer:orders#src/orders/orders.service.ts:49:5",
+      "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:49",
+      "message": "only-gateway-reaches-billing: orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may",
+      "severity": "error",
+      "rank": 3,
+      "reach": {
+        "callers": 1
+      },
+      "next": "check_rules({rule: \"only-gateway-reaches-billing\"})"
+    },
+    {
+      "kind": "rule",
       "id": "ui_api_call:web#src/app/orders-api.service.ts:34:12",
       "to": "entry:orders:http:GET:/orders/:param",
       "service": "web",
       "loc": "src/app/orders-api.service.ts:34",
       "message": "frontends-reach-only-edge: web (frontend) requests orders GET /orders/:param, and orders carries none of edge",
       "severity": "error",
-      "rank": 3,
+      "rank": 4,
       "reach": {
         "callers": 0
       },
       "next": "check_rules({rule: \"frontends-reach-only-edge\"})"
     }
   ],
-  "total": 3,
+  "total": 4,
   "next": [
     "check_rules({rule: \"only-orders-writes-orders\"})",
     "check_rules({rule: \"only-billing-consumes-order-events\"})"

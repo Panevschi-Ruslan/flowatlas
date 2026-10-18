@@ -103,6 +103,7 @@ export {
 } from './model/graph.js';
 export {
   findingsWithoutRisk,
+  isRowKind,
   kindOfRow,
   reasonsWithoutKind,
   RISK_NAMES,
@@ -110,9 +111,13 @@ export {
   riskOf,
   ROW_KIND_NAMES,
   ROW_KINDS,
+  rowClassOf,
+  rowKindOf,
+  rowRiskOf,
   type KindedRow,
   type Risk,
   type RowKind,
+  type StoredKindRow,
 } from './model/row-kind.js';
 export type {
   DetailLevel,
@@ -182,6 +187,7 @@ export {
   RULE_EDGE_KINDS,
   RULE_NAME,
   RULE_OPS,
+  RULE_REACHES,
   RULE_SEVERITIES,
   RULE_SHAPES,
   ruleSchema,
@@ -195,6 +201,7 @@ export {
 export type {
   RuleConfig,
   RuleEdgeKind,
+  RuleReach,
   RuleSelector,
   RuleSet,
   RuleSeverity,

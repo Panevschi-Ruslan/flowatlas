@@ -95,6 +95,10 @@
       ]
     }
   ],
+  "apart": {
+    "notes": 0,
+    "findings": 2
+  },
   "next": [
     "get_source({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})",
     "describe_for_prompt({id: \"gap:gateway|src/checkout.controller.ts|unknown-base-url-env\"})",

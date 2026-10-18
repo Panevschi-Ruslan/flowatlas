@@ -125,17 +125,18 @@ describe('flowatlas link --suggested (P122)', () => {
     await buildProject({ config, builtAt: FIXED, cache: false });
     const before = runMissingCommand({ config }, quiet).missing;
     expect(before.map((entry) => [entry.token, entry.kinds, entry.candidates.map((candidate) => candidate.path)])).toEqual([
-      ['payments', ['setting', 'package', 'channel'], ['./payments-api']],
+      ['payments', ['setting', 'package', 'channel', 'subscription'], ['./payments-api']],
     ]);
 
     const said: string[] = [];
     const dry = linkSuggested({ config, dryRun: true, print: (line) => said.push(line) });
     expect(dry.chosen).toEqual([join(dir, 'payments-api')]);
-    expect(JSON.parse(readFileSync(config, 'utf8')).services).toHaveLength(2);
+    expect(JSON.parse(readFileSync(config, 'utf8')).services).toHaveLength(3);
 
     linkSuggested({ config, mcp: false, print: () => {} });
     expect(JSON.parse(readFileSync(config, 'utf8')).services.map((service: { name: string }) => service.name)).toEqual([
       'gateway',
+      'jobs',
       'orders',
       'payments-api',
     ]);

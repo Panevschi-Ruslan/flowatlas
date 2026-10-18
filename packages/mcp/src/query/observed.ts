@@ -5,6 +5,7 @@ import {
   joinIdOf,
   observedPathFor,
   readObserved,
+  rowClassOf,
   type AmbiguousSpan,
   type FailureComparison,
   type GraphNode,
@@ -107,6 +108,8 @@ export const blindSpotsAsRows = (observed: Parameters<typeof blindSpotRows>[0]):
     hint: null,
     node: null,
     ...(row.meta === undefined ? {} : { meta: row.meta }),
+    // Made here, not stored: classified as the database classifies the rows it holds (P208).
+    ...rowClassOf(row),
   }));
 
 /** The blind-spot rows of the observed file beside a database. */

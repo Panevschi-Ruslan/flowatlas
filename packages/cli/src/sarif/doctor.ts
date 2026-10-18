@@ -9,7 +9,7 @@
  * is `unchanged`, one it does not `new`; a row `accepted.json` names is written
  * suppressed, with the note it was accepted with.
  */
-import { describeAcceptedProblem, kindOfRow, type AcceptedGap, type Unresolved } from '@flowatlas/core';
+import { describeAcceptedProblem, rowKindOf, type AcceptedGap, type RowKind, type Unresolved } from '@flowatlas/core';
 import { hintFor } from '../doctor/hints.js';
 import { noWayInSentence } from '../doctor/ways-in.js';
 import type { DoctorReport, DoctorRow } from '../doctor/schema.js';
@@ -50,7 +50,7 @@ const placeKey = (row: { service: string; file: string; line: number; reason: st
 
 /** One unresolved row, at the level its level and kind give it. */
 const rowFinding = (
-  row: Omit<DoctorRow, 'hint'> & { hint: string; reason: string; kind: ReturnType<typeof kindOfRow> },
+  row: Omit<DoctorRow, 'hint'> & { hint: string; reason: string; kind: RowKind },
   extra: { baselineState?: BaselineState; suppression?: SarifSuppression; level?: SarifLevel },
 ): SarifFinding => {
   const level = extra.level ?? sarifLevelOf({ from: 'unresolved', level: row.level, kind: row.kind });
@@ -124,7 +124,7 @@ export const doctorFindings = (report: DoctorReport, options: DoctorSarifOptions
           message: row.message ?? row.reason,
           hint: hintFor(row),
           reason: row.reason,
-          kind: kindOfRow(row),
+          kind: rowKindOf(row),
         },
         { baselineState: 'unchanged', suppression: { kind: 'external', justification: entry.note } },
       ),

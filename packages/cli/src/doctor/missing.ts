@@ -142,7 +142,7 @@ export interface MissingRepoEntry {
   score: number;
   places: number;
   kinds: string[];
-  /** True for a lone package or channel with nothing on disk that looks like it: listed by `--missing` only. */
+  /** True for a lone package, channel, subscription or traffic with nothing on disk that looks like it: listed by `--missing` only. */
   weak: boolean;
   signals: Array<{
     kind: string;

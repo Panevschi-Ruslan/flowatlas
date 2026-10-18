@@ -35,8 +35,9 @@ twenty-six, with prompts, resources and paged, structured answers.
 - **Rebuild once.** The build cache moved from version 4 to 5 (P83), so the
   first `flowatlas build` after upgrading reads every repository again and says
   `cache-invalid:version`. The graph's `SCHEMA_VERSION` is unchanged at 6, and
-  `graph.db` gained an `unresolved.meta` column (P75) that is read with or
-  without it, so a 0.5.1 database still opens.
+  `graph.db` gained an `unresolved.meta` column (P75) and `unresolved.kind` and
+  `risk` columns (P208, `db_format_version` 2), each read with or without it,
+  so a 0.5.1 database still opens and reads the same.
 - **Upgrade a team together.** The configuration schema is strict, and 0.5.1
   refuses a configuration that uses any of the new keys: at the top level
   `shapes`, `packageSources` (P78), `builtInShapes` (P70), `settingFiles`
@@ -388,6 +389,23 @@ twenty-six, with prompts, resources and paged, structured answers.
     `doctor.json`'s traffic places gain an optional `seen.called`. A peer
     blind-spot row carries every name under `meta.peers` when it lists only
     five.
+  - **A subscription nothing here writes to (P204).** `stream-no-writer` (a
+    stream a function reads that nothing configured writes to) and
+    `subscription-matches-nothing` (a rule taking events by a pattern nothing
+    published matches) stay findings, and are evidence of a kind of their own,
+    `subscription`: the stream by its name, as a channel is named, and a
+    rule's pattern by each `source` it names, its last dotted word the token
+    (`acme.payments` → `payments`; the platform's `aws.*` sources name none).
+    Weak alone, like a channel with one end, since another account, a partner
+    or the platform feeds as many; a declared stream read and never written is
+    said only as a subscription, no longer also as a channel. Both reasons'
+    checks now open *How to close it* with the `flowatlas link` line, naming
+    the repository when the row is its evidence, on the page and from
+    `describe_for_prompt`; `doctor --missing` says `stream kinesis/payments is
+    read by jobs and nothing here writes to it` and `events from
+    acme.payments* are taken by jobs (1 rule) and nothing here publishes one`.
+    `fixtures/missing-repo` gained a configured `jobs` service whose stream and
+    rule are both such evidence for "payments".
 - **Every gap says how to close it (P122).** A check's prompt - the page's
   *Copy as prompt* and `describe_for_prompt` on a gap id - ends with *How to
   close it*, one line per way that applies to its reason from one table
@@ -752,6 +770,18 @@ twenty-six, with prompts, resources and paged, structured answers.
   `describe_for_prompt`, `rules` counts on `start_here`, a `rule` kind in
   `findings` and a verdict that is `unsafe` on a new rule violation
   (`fixtures/multi-repo-rules`).
+- **An `only` rule that reaches through (P203).** `only` takes `reach:
+  "direct" | "transitive"`, as `forbid` does. Transitive, "only billing may
+  reach the payments table, even through other services" is one rule:
+  whatever `from` reaches acts for it (a workflow it starts, a route it calls,
+  a handler of a channel it publishes onto), and a violation is a path into
+  `to` that does not go through `from`, reported where it starts, at the
+  nearest node `from` neither selects nor reaches, with its path and its
+  weakest confidence; a gateway in front of that node is not reported again.
+  A `via` without `emits` and `consumes` leaves channels out of what acts for
+  `from`. `fixtures/multi-repo-rules` gained `only-gateway-reaches-billing`:
+  `orders` publishing what billing consumes breaks it, which a direct `only`
+  cannot see.
 - **SARIF output for code scanning (P115).** `contracts`, `dead`, `cycles`,
   `rules`, `doctor` and `diff` gained `--format sarif`: one SARIF 2.1.0 run per
   command, under the category `flowatlas/<command>/`, which GitHub code
@@ -1060,6 +1090,17 @@ twenty-six, with prompts, resources and paged, structured answers.
   baseline changes verdict on upgrade; only its `info` and `nothing` tallies
   were recounted by kind. The read gate fails on a reason doctor knows with no
   kind.
+- **A row's kind stored on the row (P208).** `graph.db`'s `unresolved` table
+  gained `kind` (gap, note, finding) and `risk` (a finding's auth, performance
+  or wiring), written once by `kindOfRow`, which stays the one place a kind is
+  decided; the database records `db_format_version` 2
+  (`GRAPH_DB_FORMAT_VERSION`). Doctor, the page's pack, `stats`, the SARIF log,
+  the diff's gap references and the MCP server's `start_here`, `cant_follow`,
+  `search` and prompts read the stored answer (`rowKindOf`, `rowRiskOf` in
+  `@flowatlas/core`); a database written before the columns, a graph file's
+  rows and a row made at read time are decided as before, so every answer is
+  the same. Nothing printed changed. `SCHEMA_VERSION` (6) and the build cache
+  (5) are unchanged: the database is written whole on every build.
 - **`query-in-loop`, `package-from-repo` and `shape-file-unmatched` at `info`
   (P81).** They had been written at `nothing` only to stay out of the count of
   what was missed; their kind does that now, and `nothing` again means only a

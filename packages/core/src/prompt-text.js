@@ -577,7 +577,7 @@ export const PROMPT_REMEDY_REASONS = Object.freeze({
     'unknown-base-url-env', 'service-binding-unknown', 'route-root-not-found', 'invoke-target-not-found',
     'function-handler-not-found', 'function-source-unread', 'reference-not-found', 'marker-service-unknown',
     'procedure-not-found', 'delivery-target-unread', 'channel-without-producer', 'channel-without-consumer',
-    'seen-not-in-code',
+    'seen-not-in-code', 'stream-no-writer', 'subscription-matches-nothing',
   ]),
   setting: Object.freeze(['unknown-base-url-env']),
   alias: Object.freeze(['service-binding-unknown', 'marker-service-unknown']),

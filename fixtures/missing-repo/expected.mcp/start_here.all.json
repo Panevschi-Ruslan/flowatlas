@@ -10,6 +10,16 @@
       "gaps": 2
     },
     {
+      "service": "jobs",
+      "nodes": 9,
+      "entries": 3,
+      "entriesByKind": {
+        "event": 1,
+        "invoke": 2
+      },
+      "gaps": 0
+    },
+    {
       "service": "orders",
       "nodes": 11,
       "entries": 1,
@@ -23,7 +33,7 @@
     "gaps": 4,
     "sites": 4,
     "notes": 0,
-    "findings": 0,
+    "findings": 2,
     "nothing": 0
   },
   "topGaps": [
@@ -53,12 +63,41 @@
       }
     }
   ],
-  "topFindings": [],
+  "topFindings": [
+    {
+      "reason": "stream-no-writer",
+      "count": 1,
+      "services": [
+        "jobs"
+      ],
+      "example": {
+        "message": "kinesis/payments is read by a function and nothing in the configured services writes to it",
+        "service": "jobs",
+        "loc": "infra/main.tf:46",
+        "id": "channel:kinesis/payments"
+      }
+    },
+    {
+      "reason": "subscription-matches-nothing",
+      "count": 1,
+      "services": [
+        "jobs"
+      ],
+      "example": {
+        "message": "rule acme-payment-captured takes events by a pattern that no publisher in the configured services matches",
+        "service": "jobs",
+        "loc": "infra/main.tf:68",
+        "id": "consumer:jobs#infra/main.tf:aws_cloudwatch_event_target.receipts"
+      }
+    }
+  ],
   "channels": {
     "noConsumers": [
       "channel:payment.requested"
     ],
-    "noProducers": []
+    "noProducers": [
+      "channel:kinesis/payments"
+    ]
   },
   "startFrom": [
     {
@@ -78,6 +117,30 @@
       "kind": "http"
     },
     {
+      "id": "entry:jobs:event:kinesis/payments",
+      "type": "entry",
+      "label": "event kinesis/payments",
+      "loc": "infra/main.tf:51",
+      "service": "jobs",
+      "kind": "event"
+    },
+    {
+      "id": "entry:jobs:invoke:acme-jobs-ledger",
+      "type": "entry",
+      "label": "acme-jobs-ledger",
+      "loc": "infra/main.tf:33",
+      "service": "jobs",
+      "kind": "invoke"
+    },
+    {
+      "id": "entry:jobs:invoke:acme-jobs-receipts",
+      "type": "entry",
+      "label": "acme-jobs-receipts",
+      "loc": "infra/main.tf:33",
+      "service": "jobs",
+      "kind": "invoke"
+    },
+    {
       "id": "entry:orders:http:POST:/orders/:param/confirm",
       "type": "entry",
       "label": "POST /orders/:param/confirm",
@@ -94,7 +157,7 @@
       ]
     }
   ],
-  "hidden": "get_type, type_usage: once a build reads a type · what_changed: after flowatlas diff or check --env · check_rules: after rules[] in flowatlas.config.json · test_pattern: under flowatlas mcp · hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe",
+  "hidden": "what_changed: after flowatlas diff or check --env · check_rules: after rules[] in flowatlas.config.json · test_pattern: under flowatlas mcp · hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe",
   "next": [
     "get_flow({entry: \"entry:gateway:http:POST:/checkout/:param/pay\"})",
     "describe_for_prompt({id: \"entry:gateway:http:POST:/checkout/:param/pay\"})",

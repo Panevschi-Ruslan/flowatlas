@@ -88,6 +88,7 @@ export {
   servicesOfReport,
   servicesOfSignal,
   STRONG_KINDS,
+  subscriptionSources,
   worthSaying,
 } from './missing-repo.js';
 export type {
@@ -103,6 +104,7 @@ export type {
 } from './missing-repo.js';
 export type { LinkReport, LinkTotals, ServicePackages, ServiceReport } from './report.js';
 export { replaceService, writeGraphDb } from './db/writer.js';
+export { GRAPH_DB_FORMAT_VERSION } from './db/schema.js';
 export type { WriteOptions } from './db/writer.js';
 export { blastRadius, BLAST_EDGES, DEFAULT_BLAST_DEPTH, PROVIDER_EDGES } from './diff/blast-radius.js';
 export { compareDeclarations } from './diff/compare-declarations.js';
@@ -259,6 +261,7 @@ export {
 export type { DemotableRow, MarkerGraph } from './answered.js';
 export type {
   AnchoredUnresolvedRow,
+  KindOfStoredRow,
   SearchOptions,
   TraverseOptions,
   TraverseResult,

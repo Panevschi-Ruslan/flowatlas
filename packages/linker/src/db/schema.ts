@@ -8,6 +8,16 @@
  * project has spent a day removing in three other places. So the SQL lives
  * here, in the one place that is always shipped with the code that runs it.
  */
+/**
+ * Version of the database's own layout, beside the graph's `SCHEMA_VERSION`:
+ * kept in `meta` as `db_format_version`, absent (1) from a database written
+ * before it was. Bump it when a table gains or loses a column a reader asks
+ * for; a reader says what an older layout lacks rather than refusing it.
+ *
+ * 2 stores each row's kind and a finding's risk on `unresolved` (P208).
+ */
+export const GRAPH_DB_FORMAT_VERSION = 2;
+
 export const SCHEMA_SQL = `-- Projection of the project graph, rebuilt from scratch on every build.
 -- The JSON graph stays the canonical artefact; this exists so that questions
 -- can be answered without loading the whole thing into memory.
@@ -68,7 +78,13 @@ CREATE TABLE unresolved (
   hint    TEXT,
   node_id TEXT,
   -- Why the step could not be followed, and the package it points into (P75).
-  meta    TEXT NOT NULL DEFAULT '{}'
+  meta    TEXT NOT NULL DEFAULT '{}',
+  -- What the row is, as core's kindOfRow decided when the graph was written
+  -- (gap, note, finding), and a finding's risk (auth, performance, wiring):
+  -- one stored answer every reader reads (P208). A database without them is
+  -- read by deciding them again.
+  kind    TEXT NOT NULL DEFAULT 'gap',
+  risk    TEXT
 );
 
 CREATE INDEX idx_edges_from      ON edges(from_id);

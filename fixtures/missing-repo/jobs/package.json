@@ -1,0 +1,9 @@
+{
+  "name": "@acme/jobs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The bookshop's background functions: a ledger fed by a stream, and receipts sent when a payment is captured.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

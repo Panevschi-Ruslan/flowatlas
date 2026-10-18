@@ -1,13 +1,17 @@
 import {
   blindSpotPlaces,
   causePartsOf,
+  CHANNEL_DECLARED_META,
+  CHANNEL_PATTERN_META,
   gapIdOf,
   hostOf,
   innerServiceName,
   isInnerHost,
   SEEN_NOT_IN_CODE,
+  type ChannelPattern,
   type GraphEdge,
   type GraphNode,
+  type ValueFilter,
 } from '@flowatlas/core';
 import { cmp } from './order.js';
 import type { LinkReport } from './report.js';
@@ -22,7 +26,9 @@ import type { LinkReport } from './report.js';
  * those is read here as a signal - the word it points at and the places it
  * comes from - and the signals that point at one word are put together and
  * ranked, first by how many kinds of evidence agree, then by how many places.
- * Traffic is one more kind (P144): spans from a service the configuration
+ * A stream a function reads that nothing writes to, and a rule taking events
+ * by a pattern nothing here publishes, are one more (P204): the writer may be
+ * in a repository nobody added. Traffic is one more kind (P144): spans from a service the configuration
  * does not list, and calls whose OTel `peer.service` names a service the map
  * lacks (P146), both read from the blind-spot rows P110 makes of what
  * `observe` matched to nothing, so the file is read by whoever counts the rows.
@@ -34,18 +40,25 @@ import type { LinkReport } from './report.js';
 
 /**
  * The kinds of evidence, strongest first: the order a group's lines are said
- * in. Traffic is last: it agrees with what the code says, and alone it is as
- * often a proxy, a collector or a browser that names itself in its spans.
+ * in. A subscription (P204) - a stream a function reads that nothing here
+ * writes to, a rule taking events nothing here publishes - comes after a
+ * channel with one end: it is the same kind of fact, read from what the
+ * deployment declares rather than from a call, and its hint says first that
+ * the writer may be outside any repository. Traffic is last: it agrees with
+ * what the code says, and alone it is as often a proxy, a collector or a
+ * browser that names itself in its spans.
  */
-export const MISSING_KINDS = ['setting', 'host', 'deployment', 'package', 'channel', 'traffic'] as const;
+export const MISSING_KINDS = ['setting', 'host', 'deployment', 'package', 'channel', 'subscription', 'traffic'] as const;
 export type MissingKind = (typeof MISSING_KINDS)[number];
 
 /**
  * Kinds that name an address or a deployment nothing configured answers: a
  * group with one of them is worth saying on its own. A package nobody
  * installed and a channel with one end are, alone, as often a checkout without
- * its dependencies or a message nothing reads yet; traffic from a service
- * nobody configured, as often infrastructure that writes spans of its own.
+ * its dependencies or a message nothing reads yet; a subscription nothing
+ * writes to, as often another account, a partner or the platform itself
+ * (P204); traffic from a service nobody configured, as often infrastructure
+ * that writes spans of its own.
  */
 export const STRONG_KINDS: ReadonlySet<MissingKind> = new Set(['setting', 'host', 'deployment']);
 
@@ -88,6 +101,8 @@ export interface MissingSignal {
   token: string;
   /** For a channel, the end nothing here has. */
   lacks?: 'consumer' | 'producer';
+  /** For a subscription (P204): what is read, a stream by its name or events by a rule's pattern. */
+  reads?: 'stream' | 'rule';
   places: MissingPlace[];
 }
 
@@ -291,10 +306,17 @@ const peersOfRow = (row: MissingRow): Array<{ name: string; count: number }> => 
 class Signals {
   readonly #by = new Map<string, MissingSignal>();
 
-  add(kind: MissingKind, name: string, token: string, place: MissingPlace, lacks?: MissingSignal['lacks']): void {
+  add(kind: MissingKind, name: string, token: string, place: MissingPlace, lacks?: MissingSignal['lacks'], reads?: MissingSignal['reads']): void {
     if (missingKeyOf(token) === '') return;
-    const key = `${kind}\u0000${name}\u0000${lacks ?? ''}`;
-    const signal = this.#by.get(key) ?? { kind, name, token, ...(lacks === undefined ? {} : { lacks }), places: [] };
+    const key = `${kind}\u0000${name}\u0000${lacks ?? ''}\u0000${reads ?? ''}`;
+    const signal = this.#by.get(key) ?? {
+      kind,
+      name,
+      token,
+      ...(lacks === undefined ? {} : { lacks }),
+      ...(reads === undefined ? {} : { reads }),
+      places: [],
+    };
     this.#by.set(key, signal);
     const same = signal.places.some(
       (seen) =>
@@ -325,6 +347,40 @@ export const channelToken = (node: Pick<GraphNode, 'label' | 'meta'>): string =>
   const parts = node.label.split('/').filter((part) => part !== '');
   while (parts.length > 1 && transport.has((parts[0] as string).toLowerCase())) parts.shift();
   return (parts[0] ?? '').split(/[.:]/)[0] ?? '';
+};
+
+/** Sources the platform writes, never a repository: `aws.s3`, and a SaaS partner's `aws.partner/...`. */
+const PLATFORM_SOURCE = /^aws\./;
+
+/** The value a filter of a pattern names, as written, and how it is said: a prefix with its `*`. */
+const filterValue = (filter: ValueFilter): { value: string; said: string } | undefined => {
+  if ('equals' in filter) return { value: filter.equals, said: filter.equals };
+  if ('equalsIgnoreCase' in filter) return { value: filter.equalsIgnoreCase, said: filter.equalsIgnoreCase };
+  if ('prefix' in filter) return { value: filter.prefix, said: `${filter.prefix}*` };
+  if ('wildcard' in filter) return { value: filter.wildcard, said: filter.wildcard };
+  return undefined;
+};
+
+/**
+ * Who a rule's pattern says its events come from (P204): each value of its
+ * `source`, the name a publisher puts on its events, said as written
+ * (`acme.payments`, `partner.*`). Its token is the last dotted word that
+ * names something - `acme.payments` and `com.acme.payments` are payments, as
+ * the reversed-domain convention writes a publisher. A pattern that names no
+ * source names no writer, and the platform's own sources are not one.
+ */
+export const subscriptionSources = (node: Pick<GraphNode, 'meta'>): Array<{ name: string; token: string }> => {
+  const pattern = node.meta?.[CHANNEL_PATTERN_META] as ChannelPattern | undefined;
+  const source = (pattern?.parts ?? []).find((part) => part.name === 'source');
+  return (source?.filters ?? []).flatMap((filter) => {
+    const named = filterValue(filter);
+    if (named === undefined || named.value === '' || PLATFORM_SOURCE.test(named.value)) return [];
+    const token = named.value
+      .split('.')
+      .filter((word) => !word.includes('*') && missingKeyOf(word) !== '')
+      .pop();
+    return token === undefined ? [] : [{ name: named.said, token }];
+  });
 };
 
 /**
@@ -399,6 +455,8 @@ export const missingRepoSignals = (project: MissingRepoProject, report?: Pick<Li
     const channel = nodes.get(id);
     if (channel === undefined) return;
     const there = ends(id, lacks === 'consumer' ? 'emits' : 'consumes');
+    // A declared stream something reads and nothing writes is its `stream-no-writer` row's, a subscription (P204): one fact, one kind.
+    if (lacks === 'producer' && there.length > 0 && channel.meta?.[CHANNEL_DECLARED_META] !== undefined) return;
     for (const node of there.length === 0 ? [channel] : there) signals.add('channel', channel.label, channelToken(channel), placeOfNode(node), lacks);
   };
   // The report's lists; a report without them (a hand-built one) by the counts each channel node keeps.
@@ -408,6 +466,22 @@ export const missingRepoSignals = (project: MissingRepoProject, report?: Pick<Li
   };
   for (const id of listed('noConsumers', 'consumers')) channelSignal(id, 'consumer');
   for (const id of listed('noProducers', 'producers')) channelSignal(id, 'producer');
+
+  // Something here takes what nothing configured writes (P204): a stream a
+  // function reads with nothing writing to it, by the stream's name as a
+  // channel is named, and a rule whose pattern nothing published matches, by
+  // the sources it names. Each place is its row's, gap id and all, so its
+  // check names the repository too.
+  for (const row of project.unresolved) {
+    const node = nodeOf(row);
+    if (node === undefined) continue;
+    if (row.reason === 'stream-no-writer' && node.type === 'channel') {
+      signals.add('subscription', node.label, channelToken(node), placeOfRow(row), 'producer', 'stream');
+    }
+    if (row.reason === 'subscription-matches-nothing') {
+      for (const source of subscriptionSources(node)) signals.add('subscription', source.name, source.token, placeOfRow(row), 'producer', 'rule');
+    }
+  }
 
   // A deployment that starts or roots something no configured service declares.
   for (const row of project.unresolved) {
@@ -531,6 +605,10 @@ const SAYS: { readonly [K in MissingKind]: (signal: MissingSignal, by: string) =
     signal.lacks === 'producer'
       ? `channel ${signal.name} is consumed by ${by} and nothing here publishes it`
       : `channel ${signal.name} is published by ${by} and nobody here consumes it`,
+  subscription: (signal, by) =>
+    signal.reads === 'rule'
+      ? `events from ${signal.name} are taken by ${by} (${plural(signal.places.length, 'rule')}) and nothing here publishes one`
+      : `stream ${signal.name} is read by ${by} and nothing here writes to it`,
   traffic: (signal) => {
     // Spans of the name's own (P144), and calls that named it as their peer (P146): one sentence, both halves when both are there.
     const own = signal.places.filter((place) => place.seen?.called !== true);

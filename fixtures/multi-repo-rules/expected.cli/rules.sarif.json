@@ -45,6 +45,23 @@
               }
             },
             {
+              "id": "rule/only-gateway-reaches-billing",
+              "name": "rule/only-gateway-reaches-billing",
+              "shortDescription": {
+                "text": "architecture rule only-gateway-reaches-billing (only)"
+              },
+              "help": {
+                "text": "billing is asked through the gateway, never by another service. `flowatlas rules --rule only-gateway-reaches-billing` lists every violation.",
+                "markdown": "billing is asked through the gateway, never by another service. `flowatlas rules --rule only-gateway-reaches-billing` lists every violation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "shape": "only"
+              }
+            },
+            {
               "id": "rule/only-orders-writes-orders",
               "name": "rule/only-orders-writes-orders",
               "shortDescription": {
@@ -115,7 +132,7 @@
       "results": [
         {
           "ruleId": "rule/only-orders-writes-orders",
-          "ruleIndex": 2,
+          "ruleIndex": 3,
           "level": "error",
           "message": {
             "text": "billing writes table orders (billing), which only service orders may. orders owns its table; everyone else asks orders."
@@ -190,7 +207,7 @@
         },
         {
           "ruleId": "rule/typo-rule",
-          "ruleIndex": 3,
+          "ruleIndex": 4,
           "level": "error",
           "message": {
             "text": "not checked (to): service \"biling\" names nothing in this graph; did you mean billing? (rule-matches-nothing)."
@@ -203,7 +220,7 @@
                   "uriBaseId": "%SRCROOT%"
                 },
                 "region": {
-                  "startLine": 107
+                  "startLine": 120
                 }
               }
             }
@@ -307,6 +324,116 @@
             "service": "gateway",
             "shape": "only",
             "via": "consumes",
+            "confidence": "static",
+            "heuristic": false
+          }
+        },
+        {
+          "ruleId": "rule/only-gateway-reaches-billing",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may. billing is asked through the gateway, never by another service. ([target InvoicesConsumer.onOrderCreated](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              },
+              "message": {
+                "text": "target InvoicesConsumer.onOrderCreated"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "orders/src/orders/orders.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 49
+                          }
+                        },
+                        "message": {
+                          "text": "orders event order.created"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/audit/order-audit.consumer.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "emits order.created"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "billing/src/invoices/invoices.consumer.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17
+                          }
+                        },
+                        "message": {
+                          "text": "consumes InvoicesConsumer.onOrderCreated"
+                        }
+                      },
+                      "executionOrder": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "c62a032d7b9a18bcb978b05ee5cf09cf",
+            "primaryLocationLineHash": "c62a032d7b9a18bc:1"
+          },
+          "properties": {
+            "service": "orders",
+            "shape": "only",
+            "via": "emits",
             "confidence": "static",
             "heuristic": false
           }

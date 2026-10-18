@@ -4,7 +4,7 @@ import {
   describeAcceptedProblem,
   gapIdOf,
   isRule,
-  kindOfRow,
+  rowKindOf,
   riskOf,
   ROW_KINDS,
   STEP_OF_META,
@@ -137,11 +137,11 @@ const reasonClassOf = (reason: string): ReasonClass => {
   return risk === undefined ? [kind] : [kind, risk];
 };
 
-/** The rows whose own kind (`kindOfRow`, by what they recorded) is not their reason's. */
+/** The rows whose own kind (as stored, `kindOfRow`'s by what they recorded) is not their reason's. */
 const rowKindsOf = (rows: readonly AnchoredUnresolvedRow[]): { rowKinds?: Record<string, RowKind> } => {
   const out: Record<string, RowKind> = {};
   rows.forEach((row, index) => {
-    const kind = kindOfRow(row);
+    const kind = rowKindOf(row);
     if (kind !== (ROW_KINDS.get(row.reason) ?? 'gap')) out[String(index)] = kind;
   });
   return Object.keys(out).length === 0 ? {} : { rowKinds: out };
@@ -473,7 +473,7 @@ const metaPacker = (nodes: readonly GraphNode[], position: ReadonlyMap<string, n
 const byReason = (rows: readonly AnchoredUnresolvedRow[]): PackedGraph['unresolved'] => {
   const found = new Map<string, PackedGraph['unresolved'][number]>();
   for (const row of rows) {
-    const kind = kindOfRow(row);
+    const kind = rowKindOf(row);
     const key = `${row.reason}\u0000${kind}`;
     const seen = found.get(key);
     if (seen === undefined) {
