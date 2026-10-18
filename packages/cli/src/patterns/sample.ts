@@ -1,7 +1,9 @@
 import { dirname, join, relative } from 'node:path';
 import {
+  isBelowDir,
   isParsed,
   matchPatternAt,
+  toPosixPath,
   parseConfig,
   parsePattern,
   withCompiledRules,
@@ -232,7 +234,9 @@ export const runSample = async (rule: PatternRule, compiled: CompiledRule, code:
       })
     : createRepoProject({ rootDir: inService.repoDir, repo: inService.service.name, service: inService.service, config, configDir: inService.configDir });
   const dir = inService === undefined ? SAMPLE_ROOT : sampleDirIn(project, inService.repoDir, firstType(rule));
-  const path = join(dir, inService === undefined ? SAMPLE_FILE : '.flowatlas-pattern-sample.ts');
+  // Spelled as the compiler spells the files beside it, forward slashes on
+  // every OS (P199), so its directory compares equal to theirs.
+  const path = toPosixPath(join(dir, inService === undefined ? SAMPLE_FILE : '.flowatlas-pattern-sample.ts'));
 
   // First as written, to find what it leaves undeclared and which call the
   // rule is about; then with those declared.
@@ -274,7 +278,8 @@ const sampleDirIn = (project: Project, repoDir: string, type: string | undefined
   if (type === undefined) return repoDir;
   for (const source of project.getSourceFiles()) {
     const path = source.getFilePath();
-    if (path.includes('/node_modules/') || !path.startsWith(`${repoDir}/`)) continue;
+    // The compiler's path against the OS's directory (P199).
+    if (path.includes('/node_modules/') || !isBelowDir(path, repoDir)) continue;
     const imports = source.getImportDeclarations().some((declaration) => declaration.getNamedImports().some((named) => named.getName() === type));
     if (imports || source.getClass(type) !== undefined || source.getInterface(type) !== undefined) return dirname(path);
   }

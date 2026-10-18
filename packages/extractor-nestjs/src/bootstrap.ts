@@ -1,11 +1,15 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 import type { CallExpression, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import {
   decoratorArgs,
   evaluateExpression,
+  isBelowDir,
+  isWithinDir,
   normalizeFilePath,
+  pathKey,
+  toPosixPath,
   resolveStaticString,
   UNREAD_SPAN,
   wasRead,
@@ -140,7 +144,7 @@ export const BOOTSTRAP_CANDIDATES = ['src/main.ts', 'main.ts', 'src/index.ts'] a
 export const findBootstrapFile = (rootDir: string, bootstrap?: string): string | undefined => {
   const candidates = bootstrap === undefined ? BOOTSTRAP_CANDIDATES : [bootstrap];
   for (const candidate of candidates) {
-    const path = candidate.startsWith('/') ? candidate : join(rootDir, candidate);
+    const path = isAbsolute(candidate) ? candidate : join(rootDir, candidate);
     if (existsSync(path)) return path;
   }
   return undefined;
@@ -441,9 +445,12 @@ export const repoSourcesOf = function* (
   rootDir: string,
   except: string | undefined,
 ): Generator<SourceFile> {
+  // The compiler names a file with forward slashes on every OS, and the root
+  // and the entry file are the OS's own paths (P199): compared as one spelling.
+  const skipped = except === undefined ? undefined : pathKey(toPosixPath(except));
   for (const sourceFile of project.getSourceFiles()) {
     const path = sourceFile.getFilePath();
-    if (!path.startsWith(rootDir) || path === except) continue;
+    if (!isWithinDir(path, rootDir) || pathKey(toPosixPath(path)) === skipped) continue;
     if (path.includes('/node_modules/') || path.endsWith('.d.ts')) continue;
     // A test may set a prefix of its own for one case, and that is not the
     // prefix the service answers on.
@@ -879,7 +886,7 @@ const mountOf = (info: BootstrapInfo, project: Project, rootDir: string): Mount 
       if (pkg === undefined) return undefined;
       for (const sourceFile of project.getSourceFiles()) {
         const path = sourceFile.getFilePath();
-        if (!path.startsWith(`${pkg.dir}/`) || path.includes('/node_modules/')) continue;
+        if (!isBelowDir(path, pkg.dir) || path.includes('/node_modules/')) continue;
         if (sourceFile.isDeclarationFile()) continue;
         const exported = sourceFile.getExportedDeclarations().get(name)?.[0];
         if (exported !== undefined) return exported;

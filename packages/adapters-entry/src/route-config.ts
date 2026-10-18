@@ -7,6 +7,7 @@ import {
   type EntryNode,
   type ExtractContext,
   startLineOf,
+  toPosixPath,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -183,7 +184,8 @@ const flatRoutesOf = (ctx: ExtractContext, appDir: string): FlatRoutes => (rootD
     const path = source.getFilePath();
     if (!resolve(path).startsWith(`${directory}${sep}`)) return [];
     const address = routeAddressOfFile(normalizeFilePath(path, ctx.repoDir), router);
-    return address === null ? [] : [{ module: relative(appDir, path), rawPath: address.rawPath }];
+    // Spelled as a config spells a module, with forward slashes on every OS (P199).
+    return address === null ? [] : [{ module: toPosixPath(relative(appDir, path)), rawPath: address.rawPath }];
   });
 };
 

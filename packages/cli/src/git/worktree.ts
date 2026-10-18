@@ -19,6 +19,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
+import { pathKey, toPosixPath } from '@flowatlas/core';
 
 const run = promisify(execFile);
 
@@ -36,12 +37,31 @@ const quietly = async (repo: string, args: readonly string[]): Promise<string | 
   }
 };
 
+/**
+ * A path as the file system knows it. The native call, because on Windows it
+ * is the one that expands a short name (`RUNNER~1`, which a temporary
+ * directory is often spelled with) into the long one git prints (P199).
+ */
 const real = (path: string): string => {
   try {
-    return realpathSync(path);
+    return realpathSync.native(path);
   } catch {
     return resolve(path);
   }
+};
+
+/**
+ * Whether two paths name one directory, each spelled as its source spells it
+ * (P199): git prints `C:/work/api` on Windows where Node gives `C:\work\api`,
+ * and a Windows file system does not tell letters apart by their case.
+ */
+export const samePlace = (a: string, b: string, caseless: boolean = process.platform === 'win32'): boolean => {
+  const key = (path: string): string => {
+    const posix = pathKey(toPosixPath(path));
+    const trimmed = posix.length > 1 ? posix.replace(/\/+$/, '') : posix;
+    return caseless ? trimmed.toLowerCase() : trimmed;
+  };
+  return key(a) === key(b);
 };
 
 /**
@@ -53,7 +73,7 @@ const real = (path: string): string => {
  */
 export const isGitRepo = async (dir: string): Promise<boolean> => {
   const top = await quietly(dir, ['rev-parse', '--show-toplevel']);
-  return top !== null && real(top) === real(dir);
+  return top !== null && samePlace(real(top), real(dir));
 };
 
 /** The commit a ref names, or null when the repository has no such ref. */
@@ -125,7 +145,10 @@ const linkDependencies = (repo: string, dir: string): NodeModules => {
   const source = join(repo, 'node_modules');
   if (!existsSync(source)) return 'missing';
   try {
-    symlinkSync(source, target, 'dir');
+    // A junction on Windows (P199): a directory symbolic link there needs a
+    // privilege an ordinary account and a CI runner lack, and a junction does
+    // the same job for a local directory without one.
+    symlinkSync(source, target, process.platform === 'win32' ? 'junction' : 'dir');
     return 'linked';
   } catch {
     return 'missing';
@@ -161,7 +184,7 @@ export const withWorktree = async <T>(
 
   // The one thing this must never do. A worktree at the checkout itself would
   // mean git rewriting the files somebody is working in.
-  if (real(parent) === root || dir === root) {
+  if (samePlace(real(parent), root) || samePlace(dir, root)) {
     rmSync(parent, { recursive: true, force: true });
     throw new Error(`refusing to make a worktree of ${repo} inside itself`);
   }

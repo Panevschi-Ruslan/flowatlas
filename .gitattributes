@@ -1,0 +1,7 @@
+# Every text file is checked out with LF on every OS (P199). A Windows checkout
+# converts to CRLF by default, and the fixtures, the snapshots and the line
+# numbers the tests read are written with LF.
+* text=auto eol=lf
+
+*.gif binary
+*.png binary

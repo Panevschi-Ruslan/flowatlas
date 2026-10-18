@@ -1,6 +1,6 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
   DeployedInvalidError,
@@ -62,8 +62,9 @@ describe('the pins file (P117)', () => {
   });
 
   it('finds the file beside the configuration, at deployed.file, or where --pins says', () => {
-    expect(deployedPathOf('/project')).toBe(join('/project', 'flowatlas.deployed.json'));
-    expect(deployedPathOf('/project', 'ops/pins.json')).toBe(join('/project', 'ops/pins.json'));
+    // Resolved, as the code resolves it: on Windows `/project` is on the current drive (P199).
+    expect(deployedPathOf('/project')).toBe(resolve('/project', 'flowatlas.deployed.json'));
+    expect(deployedPathOf('/project', 'ops/pins.json')).toBe(resolve('/project', 'ops/pins.json'));
     expect(deployedPathOf('/project', 'ops/pins.json', '/elsewhere/pins.json')).toBe('/elsewhere/pins.json');
   });
 });

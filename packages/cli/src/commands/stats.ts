@@ -302,7 +302,15 @@ export const summariseStats = (stats: Stats): string[] => {
 /** Counts of everything, and the numbers the build wrote down. */
 export const runStats = (options: QueryOptions, io: QueryIo = processIo): void => {
   const settings = settingsFor(options, io, ['json', 'tree']);
-  const stats = collectStats(openDbFromOptions(settings));
+  const db = openDbFromOptions(settings);
+  // Closed once counted (P199): on Windows an open database can be neither
+  // replaced by the next build nor removed with its directory.
+  let stats: ReturnType<typeof collectStats>;
+  try {
+    stats = collectStats(db);
+  } finally {
+    db.close();
+  }
   io.out(
     settings.format === 'json'
       ? `${JSON.stringify(stats, null, 2)}\n`

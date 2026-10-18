@@ -26,6 +26,7 @@ import {
 } from './stand-ins.js';
 import { forgetPackageIndexes, packageIndexOf, type PackageIndex } from './package-index.js';
 import { WORK_COUNTS } from './work-counts.js';
+import { toPosixPath } from './ids.js';
 
 const dirs: string[] = [];
 
@@ -86,6 +87,9 @@ const open = (root: string, config: Record<string, unknown> = CONFIG) => {
   return createProject({ rootDir: join(root, 'loans'), ...(standIns === undefined ? {} : { standIns }) });
 };
 
+/** A path under the tree as the compiler names a file it read: forward slashes on every OS (P199). */
+const compiled = (root: string, path: string): string => toPosixPath(join(root, path));
+
 const declaredIn = (project: ReturnType<typeof open>, name: string): string | undefined =>
   project.getSourceFileOrThrow('main.ts').getVariableDeclarationOrThrow(name).getType().getSymbol()?.getDeclarations()[0]?.getSourceFile().getFilePath();
 
@@ -102,7 +106,7 @@ describe('the order a missing package is answered in', () => {
     const root = treeOf(PROJECT);
     const project = open(root);
     const declared = declaredIn(project, 'cash');
-    expect(declared).toBe(join(root, 'loans/node_modules/@acme/money/src/money.ts'));
+    expect(declared).toBe(compiled(root, 'loans/node_modules/@acme/money/src/money.ts'));
     expect(standInOfFile(project, declared as string)).toEqual({ via: 'package-from-repo', package: '@acme/money' });
     // Types only: the package's files are no source of the service.
     expect(countSources(project).files).toBe(1);
@@ -112,7 +116,7 @@ describe('the order a missing package is answered in', () => {
   it('reads a shape file for a package nothing on disk is, and not for one whose source is', () => {
     const root = treeOf(PROJECT);
     const project = open(root);
-    expect(declaredIn(project, 'queue')).toBe(join(root, 'loans/node_modules/@acme/queue/index.d.ts'));
+    expect(declaredIn(project, 'queue')).toBe(compiled(root, 'loans/node_modules/@acme/queue/index.d.ts'));
     expect([...shapeFilesOf(project)]).toEqual([['@acme/queue', join(root, 'shapes/queue.d.ts')]]);
     const call = project.getSourceFileOrThrow('main.ts').getVariableDeclarationOrThrow('sent').getType().getText();
     expect(call).toBe('Promise<void>');
@@ -125,9 +129,9 @@ describe('the order a missing package is answered in', () => {
       'loans/node_modules/@acme/money/index.d.ts': 'export declare class Money { constructor(n: number); format(): string; }\n',
     });
     const project = open(root);
-    expect(declaredIn(project, 'cash')).toBe(join(root, 'loans/node_modules/@acme/money/index.d.ts'));
+    expect(declaredIn(project, 'cash')).toBe(compiled(root, 'loans/node_modules/@acme/money/index.d.ts'));
     const money = project.getSourceFileOrThrow('main.ts').getImportDeclarations()[0]?.getModuleSpecifierSourceFile()?.getFilePath();
-    expect(money).toBe(join(root, 'loans/node_modules/@acme/money/index.d.ts'));
+    expect(money).toBe(compiled(root, 'loans/node_modules/@acme/money/index.d.ts'));
     expect(standInOfFile(project, money as string)).toBeUndefined();
   });
 

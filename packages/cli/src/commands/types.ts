@@ -113,49 +113,55 @@ const registryOf = (db: GraphDb, options: TypesOptions, service?: string): Regis
 export const runTypes = (options: TypesOptions, io: QueryIo = processIo): void => {
   const settings = settingsFor(options, io, ['json', 'tree']);
   const db = openDbFromOptions(settings);
-  const entries = registryOf(db, options, settings.service);
+  // Closed when the answer is out (P199): on Windows an open database can
+  // be neither replaced by the next build nor removed with its directory.
+  try {
+    const entries = registryOf(db, options, settings.service);
 
-  if (entries.length === 0 && options.name === undefined && settings.service === undefined) {
-    io.out(
-      settings.format === 'json'
-        ? `${JSON.stringify({ types: [], total: 0, note: EMPTY_NOTE }, null, 2)}\n`
-        : `${EMPTY_NOTE}\n`,
-    );
-    return;
-  }
+    if (entries.length === 0 && options.name === undefined && settings.service === undefined) {
+      io.out(
+        settings.format === 'json'
+          ? `${JSON.stringify({ types: [], total: 0, note: EMPTY_NOTE }, null, 2)}\n`
+          : `${EMPTY_NOTE}\n`,
+      );
+      return;
+    }
 
-  if (options.drift === true) {
-    const drifted = driftOf(entries);
-    io.out(
-      settings.format === 'json'
-        ? `${JSON.stringify({ drift: drifted, note: DRIFT_NOTE }, null, 2)}\n`
-        : `${driftLines(drifted).join('\n')}\n`,
-    );
-    return;
-  }
+    if (options.drift === true) {
+      const drifted = driftOf(entries);
+      io.out(
+        settings.format === 'json'
+          ? `${JSON.stringify({ drift: drifted, note: DRIFT_NOTE }, null, 2)}\n`
+          : `${driftLines(drifted).join('\n')}\n`,
+      );
+      return;
+    }
 
-  if (settings.format === 'json') {
-    io.out(
-      `${JSON.stringify(
-        {
-          types: entries.map((entry) => ({
-            id: entry.id,
-            name: entry.name,
-            kind: entry.kind,
-            ...(settings.detail <= 0
-              ? {}
-              : { declaredIn: entry.declaredIn, structuralHash: entry.structuralHash }),
-            ...(settings.detail >= 2 && entry.fields !== undefined ? { fields: entry.fields } : {}),
-          })),
-          total: entries.length,
-        },
-        null,
-        2,
-      )}\n`,
-    );
-    return;
+    if (settings.format === 'json') {
+      io.out(
+        `${JSON.stringify(
+          {
+            types: entries.map((entry) => ({
+              id: entry.id,
+              name: entry.name,
+              kind: entry.kind,
+              ...(settings.detail <= 0
+                ? {}
+                : { declaredIn: entry.declaredIn, structuralHash: entry.structuralHash }),
+              ...(settings.detail >= 2 && entry.fields !== undefined ? { fields: entry.fields } : {}),
+            })),
+            total: entries.length,
+          },
+          null,
+          2,
+        )}\n`,
+      );
+      return;
+    }
+    io.out(`${listLines(entries, settings.detail).join('\n')}\n`);
+  } finally {
+    db.close();
   }
-  io.out(`${listLines(entries, settings.detail).join('\n')}\n`);
 };
 
 export const registerTypes = (program: Command): void => {

@@ -34,38 +34,44 @@ export const sequenceDetailOf = (value: string | undefined): SequenceDetail => {
 export const runFlow = (ref: string, options: FlowOptions, io: QueryIo = processIo): void => {
   const settings = settingsFor(options, io, FLOW_FORMATS);
   const db = openDbFromOptions(settings);
-  const entry = resolveEntry(db, ref, settings.service);
-  const sequence = settings.format === 'sequence';
-  const sequenceDetail = sequenceDetailOf(options.sequenceDetail);
+  // Closed when the answer is out (P199): on Windows an open database can
+  // be neither replaced by the next build nor removed with its directory.
+  try {
+    const entry = resolveEntry(db, ref, settings.service);
+    const sequence = settings.format === 'sequence';
+    const sequenceDetail = sequenceDetailOf(options.sequenceDetail);
 
-  // A sequence is the walk `diff` draws for a changed flow, so it is read the
-  // same way: with the edge behind each row, at the detail a participant needs.
-  const edgesOf = sequence ? new Map<FlowNode, GraphEdge>() : undefined;
-  const flow = buildFlowTree(db, entry.id, {
-    // Without `--depth` the walk goes as far as the entry needs: a workflow is
-    // walked through every step and into what each reaches (`defaultFlowDepth`);
-    // a sequence as far as `diff` walks one (`sequenceDepth`).
-    ...(options.depth !== undefined ? { depth: settings.depth } : sequence ? { depth: sequenceDepth(db.node(entry.id)) } : {}),
-    maxNodes: settings.maxNodes,
-    detail: sequence ? SEQUENCE_WALK_DETAIL : settings.detail,
-    ...(edgesOf === undefined ? {} : { edgesOf }),
-  });
+    // A sequence is the walk `diff` draws for a changed flow, so it is read the
+    // same way: with the edge behind each row, at the detail a participant needs.
+    const edgesOf = sequence ? new Map<FlowNode, GraphEdge>() : undefined;
+    const flow = buildFlowTree(db, entry.id, {
+      // Without `--depth` the walk goes as far as the entry needs: a workflow is
+      // walked through every step and into what each reaches (`defaultFlowDepth`);
+      // a sequence as far as `diff` walks one (`sequenceDepth`).
+      ...(options.depth !== undefined ? { depth: settings.depth } : sequence ? { depth: sequenceDepth(db.node(entry.id)) } : {}),
+      maxNodes: settings.maxNodes,
+      detail: sequence ? SEQUENCE_WALK_DETAIL : settings.detail,
+      ...(edgesOf === undefined ? {} : { edgesOf }),
+    });
 
-  present(
-    db,
-    settings,
-    {
-      tree: flow.root,
-      // Nothing unresolvable is dropped quietly: the count of findings on this
-      // path is part of the answer, not a detail of the build (I3).
-      footer: [`unresolved on this path: ${flow.unresolvedOnPath}`],
-      extra: { entry: entry.id, unresolvedOnPath: flow.unresolvedOnPath },
-      ...(flow.truncated === undefined ? {} : { truncated: flow.truncated }),
-      ...(edgesOf === undefined ? {} : { siteOf: sitesFrom(edgesOf), stopOf: stopsIn(db), sequenceDetail }),
-    },
-    io,
-    settings.detail >= 3 ? sourceRootsFor(settings) : undefined,
-  );
+    present(
+      db,
+      settings,
+      {
+        tree: flow.root,
+        // Nothing unresolvable is dropped quietly: the count of findings on this
+        // path is part of the answer, not a detail of the build (I3).
+        footer: [`unresolved on this path: ${flow.unresolvedOnPath}`],
+        extra: { entry: entry.id, unresolvedOnPath: flow.unresolvedOnPath },
+        ...(flow.truncated === undefined ? {} : { truncated: flow.truncated }),
+        ...(edgesOf === undefined ? {} : { siteOf: sitesFrom(edgesOf), stopOf: stopsIn(db), sequenceDetail }),
+      },
+      io,
+      settings.detail >= 3 ? sourceRootsFor(settings) : undefined,
+    );
+  } finally {
+    db.close();
+  }
 };
 
 export const registerFlow = (program: Command): void => {

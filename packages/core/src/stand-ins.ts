@@ -28,7 +28,7 @@ import {
   shapeFilesOf,
   type ShapeFileReading,
 } from './declaration-shapes.js';
-import { normalizeFilePath, pathKey, toPosixPath } from './ids.js';
+import { isWithinDir, normalizeFilePath, pathKey, toPosixPath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readResolvedPackageJson } from './adapters/manifest.js';
 import {
@@ -361,15 +361,8 @@ const keyOf = (path: string): string => pathKey(toPosixPath(path));
 export const virtualRootOf = (root: string, name: string): string =>
   posix.join(toPosixPath(root), 'node_modules', name);
 
-/**
- * Whether a path is a directory or inside it, both spelled any way the OS
- * writes them (P83): compared with forward slashes, a drive letter in any case.
- */
-export const isWithinDir = (path: string, dir: string): boolean => {
-  const at = keyOf(path);
-  const base = keyOf(dir).replace(/\/+$/, '');
-  return at === base || at.startsWith(`${base}/`);
-};
+/** Where it was first written; it now lives beside the other path helpers (P199). */
+export { isWithinDir };
 
 /** Builds the table; a mount whose virtual root is not `<dir>/node_modules/<name>` is a caller's mistake. */
 export const mountTableOf = (mounts: readonly Mount[]): MountTable => {

@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { parseCheckReport, parseGraphDiff, type DiffReport } from '@flowatlas/linker';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { makeDeployedProject } from '../../../../scripts/deployed-fixture.mjs';
@@ -105,7 +105,8 @@ describe('flowatlas check --env (P117)', () => {
     expect(both.exitCode).toBe(EXIT.failed);
     const undecidable = await check({ env: ['prod', 'canary'], service: ['gateway'], head: 'invoice-on-checkout' });
     expect(undecidable.exitCode).toBe(EXIT.cannotRun);
-    expect(undecidable.sections.map((section) => section.file.split('/').pop())).toEqual(['check.prod.json', 'check.canary.json']);
+    // The file is an absolute path in the OS's own spelling (P199).
+    expect(undecidable.sections.map((section) => basename(section.file))).toEqual(['check.prod.json', 'check.canary.json']);
   }, 300_000);
 
   it('says there is nothing to deploy for a service whose head is its pin', async () => {

@@ -19,6 +19,7 @@ import { MAX_LINES, sourceWindow } from './source.js';
 const FIXED = '2026-01-01T00:00:00.000Z';
 const ROUTE = 'entry:orders:http:POST:/orders';
 const LONG = 'orders#src/long.ts:Ledger.replay';
+const CRLF = 'orders#src/crlf.ts:Refund.issue';
 const LOOP_A = 'orders#src/loop.ts:Loop.a';
 const LOOP_B = 'orders#src/loop.ts:Loop.b';
 const REQUEST = 'http_out:orders#src/client.ts:3:1';
@@ -49,6 +50,7 @@ const graph: ProjectGraph = {
   nodes: [
     entry(ROUTE, { label: 'POST /orders' }),
     node(LONG, { label: 'Ledger.replay', file: 'src/long.ts', line: 2 }),
+    node(CRLF, { label: 'Refund.issue', file: 'src/crlf.ts', line: 2 }),
     node(LOOP_A, { label: 'Loop.a' }),
     node(LOOP_B, { label: 'Loop.b' }),
     node(REQUEST, { type: 'http_out', label: 'POST /invoices' }),
@@ -119,6 +121,8 @@ beforeAll(async () => {
   mkdirSync(join(root, '.flowatlas'), { recursive: true });
   const body = Array.from({ length: BODY_LINES }, (_, index) => `    step(${index});`);
   writeFileSync(join(root, 'orders', 'src', 'long.ts'), ['export class Ledger {', '  replay() {', ...body, '  }', '}', ''].join('\n'));
+  // Checked out the way Windows checks out by default (P199).
+  writeFileSync(join(root, 'orders', 'src', 'crlf.ts'), ['export class Refund {', '  issue() {', '    pay();', '  }', '}', ''].join('\r\n'));
   writeFileSync(
     join(root, 'flowatlas.config.json'),
     JSON.stringify({
@@ -166,6 +170,11 @@ describe('get_source on a declaration longer than one answer', () => {
     expect(await call('get_source', { symbol: LONG, maxLines: 10 })).toMatchObject({ line: 2, endLine: 11 });
     const past = await call('get_source', { symbol: LONG, fromLine: end + 5 });
     expect(past).toMatchObject({ code: '', endLine: end, note: `the declaration ends at line ${end}` });
+  });
+
+  it('reads a file with CRLF line endings by the same lines, and answers no carriage return', async () => {
+    const answer = await call('get_source', { symbol: CRLF });
+    expect(answer).toMatchObject({ line: 2, endLine: 4, code: '  issue() {\n    pay();\n  }' });
   });
 
   it('widens only the outer edges of a declaration by context', () => {

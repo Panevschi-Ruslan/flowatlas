@@ -389,7 +389,8 @@ const SKIPPED_TEST_DIRECTORIES = new WeakMap<Project, ReadonlyMap<string, readon
 
 /**
  * The test directories {@link createProject} left out of a project, by absolute
- * path, with the absolute paths of the source files each held.
+ * path, with the absolute paths of the source files each held: all spelled
+ * with forward slashes, as the compiler spells the files it opened (P199).
  */
 export const skippedTestDirectories = (
   project: Project,
@@ -397,7 +398,7 @@ export const skippedTestDirectories = (
 
 export const findTsconfig = (rootDir: string, tsconfig?: string): string | undefined => {
   if (tsconfig !== undefined) {
-    const path = tsconfig.startsWith('/') ? tsconfig : join(rootDir, tsconfig);
+    const path = isAbsolute(tsconfig) ? tsconfig : join(rootDir, tsconfig);
     return existsSync(path) ? path : undefined;
   }
   for (const candidate of TSCONFIG_CANDIDATES) {
@@ -542,8 +543,7 @@ const namedMembersOf = (rootDir: string): ReadonlyMap<string, NamedMember> => {
   const extent = serviceSourceDirs(rootDir);
   const own = extent[0] as string;
   const roots = [...(workspaceGlobs(own).length > 0 ? [own] : []), ...workspaceRootsAbove(own)];
-  const inExtent = (dir: string): boolean =>
-    extent.some((at) => dir === at || dir.startsWith(`${at}/`));
+  const inExtent = (dir: string): boolean => extent.some((at) => isWithinDir(dir, at));
   const found = new Map<string, NamedMember>();
   for (const root of roots) {
     for (const { name, dir } of workspacePackages(root)) {
@@ -907,7 +907,9 @@ const workspaceResolution = (
     if (byDepth.length === 0) return undefined;
     const dir = dirname(file);
     if (owners.has(dir)) return owners.get(dir);
-    const owner = byDepth.find((pkg) => dir === pkg.dir || dir.startsWith(`${pkg.dir}/`));
+    // The file as the compiler spells it, the package as the extent does: on
+    // Windows forward slashes against backslashes (P199).
+    const owner = byDepth.find((pkg) => isWithinDir(dir, pkg.dir));
     owners.set(dir, owner);
     return owner;
   };
@@ -957,8 +959,12 @@ const workspaceResolution = (
 export const createProject = (options: CreateProjectOptions): Project => {
   const { rootDir, tsconfig, readTestDirectories } = options;
   const skipped = new Map<string, string[]>();
+  // Recorded with forward slashes, as the compiler names the files it opened
+  // (P199), so one directory is one key and a path sliced from it is POSIX on
+  // every OS.
   const tests = testDirectoriesOf(rootDir, readTestDirectories, (dir, files) => {
-    skipped.set(dir, [...(skipped.get(dir) ?? []), ...files]);
+    const key = toPosixPath(dir);
+    skipped.set(key, [...(skipped.get(key) ?? []), ...files.map(toPosixPath)]);
   });
   const tsConfigFilePath = findTsconfig(rootDir, tsconfig);
   // Every package of the extent, one nested in the service's directory too: a

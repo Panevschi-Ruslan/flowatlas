@@ -26,8 +26,10 @@ jobs:
       - run: pnpm check
 
   # Builds and runs the unit tests on Windows (P83). Informational, not a gate:
-  # the fixture snapshots hold POSIX paths and are not run here, and whether
-  # this job becomes required is a decision for the repository's settings.
+  # the fixture snapshot gate is not run here, and whether this job becomes
+  # required is a decision for the repository's settings. The fixture graphs
+  # are made first (P199), because the linker's and the MCP server's tests read
+  # them and a clean checkout has none; `check` makes them the same way.
   windows-unit:
     runs-on: windows-latest
     continue-on-error: true
@@ -43,4 +45,5 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r build
+      - run: node scripts/fixtures-run.mjs
       - run: pnpm -r test

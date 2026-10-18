@@ -1,5 +1,6 @@
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { ts, type Project } from 'ts-morph';
+import { pathKey, toPosixPath } from './ids.js';
 import { WORK_COUNTS } from './work-counts.js';
 
 /**
@@ -119,6 +120,9 @@ const PATHS_OF = new WeakMap<Project, ReadonlySet<string>>();
 /** The shape files of the project's own a project installed, by the path each is held at. */
 const BY_PATH_OF = new WeakMap<Project, ReadonlyMap<string, { readonly package: string; readonly origin: string }>>();
 
+/** A path as the shapes are looked up by: forward slashes, the drive letter in one case (P199). */
+const keyOf = (path: string): string => pathKey(toPosixPath(path));
+
 /** The probe a package is resolved from: a file at the root, which need not exist. */
 const PROBE = '__flowatlas_shape_probe__.ts';
 
@@ -161,16 +165,19 @@ export const installDeclarationShapes = (
   const resolves = resolverAt(project, rootDir);
   for (const shape of shapes) {
     if (installed.has(shape.package) || resolves(shape.package)) continue;
-    const path = join(rootDir, 'node_modules', shape.package, 'index.d.ts');
+    // Spelled with forward slashes, as the compiler names every file on every
+    // OS (P199): held at a backslashed path on Windows, no file the program
+    // reads was ever told to be a shape.
+    const path = posix.join(toPosixPath(rootDir), 'node_modules', shape.package, 'index.d.ts');
     if (project.getSourceFile(path) !== undefined) continue;
     project.createSourceFile(path, shape.declarations, { overwrite: false });
     installed.set(shape.package, path);
     if (shape.origin !== undefined) origins.set(shape.package, { path, origin: shape.origin });
   }
   SHAPES_OF.set(project, installed);
-  PATHS_OF.set(project, new Set(installed.values()));
+  PATHS_OF.set(project, new Set([...installed.values()].map(keyOf)));
   ORIGINS_OF.set(project, origins);
-  BY_PATH_OF.set(project, new Map([...origins].map(([pkg, { path, origin }]) => [path, { package: pkg, origin }])));
+  BY_PATH_OF.set(project, new Map([...origins].map(([pkg, { path, origin }]) => [keyOf(path), { package: pkg, origin }])));
   return [...installed.keys()].sort();
 };
 
@@ -178,9 +185,9 @@ export const installDeclarationShapes = (
 export const declarationShapesOf = (project: Project): string[] =>
   [...(SHAPES_OF.get(project)?.keys() ?? [])].sort();
 
-/** Whether a file is a shape held in memory rather than a file of the repository. */
+/** Whether a file is a shape held in memory rather than a file of the repository, its path spelled either way (P199). */
 export const isDeclarationShape = (project: Project, filePath: string): boolean =>
-  PATHS_OF.get(project)?.has(filePath) === true;
+  PATHS_OF.get(project)?.has(keyOf(filePath)) === true;
 
 /**
  * The shape file of the project's own that a file held in memory was read
@@ -190,7 +197,7 @@ export const isDeclarationShape = (project: Project, filePath: string): boolean 
 export const shapeFileOf = (
   project: Project,
   filePath: string,
-): { readonly package: string; readonly origin: string } | undefined => BY_PATH_OF.get(project)?.get(filePath);
+): { readonly package: string; readonly origin: string } | undefined => BY_PATH_OF.get(project)?.get(keyOf(filePath));
 
 /** The packages a shape file of the project's own stands in for in this project, to the file. */
 export const shapeFilesOf = (project: Project): ReadonlyMap<string, string> =>

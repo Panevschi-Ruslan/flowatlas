@@ -1,6 +1,6 @@
 import type { ClassDeclaration, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { normalizeFilePath } from './ids.js';
+import { normalizeFilePath, toPosixPath } from './ids.js';
 import { packageOfPath } from './origin.js';
 import { lineAndColumnAt, startLineOf } from './line-numbers.js';
 
@@ -18,8 +18,8 @@ export const lineOf = (node: TsNode): number => startLineOf(node);
 export const siteOf = (node: TsNode): { line: number; column: number } =>
   lineAndColumnAt(node.getSourceFile(), node.getStart());
 
-/** True when the declaration comes from an installed package rather than the repository. */
-export const isExternalFile = (filePath: string): boolean => filePath.includes('/node_modules/');
+/** True when the declaration comes from an installed package rather than the repository; the path spelled either way (P199). */
+export const isExternalFile = (filePath: string): boolean => toPosixPath(filePath).includes('/node_modules/');
 
 /** {@link packageOfPath} in the spelling the id-building code reads more easily. */
 export const packageOfFile = (filePath: string): string | undefined =>

@@ -71,7 +71,8 @@ const unplacedHint = (helper: string | undefined): string =>
 const LABEL_LENGTH = 40;
 
 const label = (node: TsNode | undefined): string =>
-  node === undefined ? '' : (node.getText().split('\n')[0]?.slice(0, LABEL_LENGTH) ?? '');
+  // The first line without the carriage return a CRLF file ends it with (P199).
+  node === undefined ? '' : (node.getText().split(/\r?\n/)[0]?.slice(0, LABEL_LENGTH) ?? '');
 
 const unwrap = (expr: TsNode): TsNode =>
   Node.isParenthesizedExpression(expr) || Node.isAsExpression(expr)

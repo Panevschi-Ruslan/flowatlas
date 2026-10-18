@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { AdapterRegistry, declarationShapesOf, parseConfig } from '@flowatlas/core';
+import { AdapterRegistry, declarationShapesOf, parseConfig, toPosixPath } from '@flowatlas/core';
 import { Node } from 'ts-morph';
 import { afterAll, describe, expect, it } from 'vitest';
 import { registerFrontendAdapters } from '../adapter.js';
@@ -90,7 +90,8 @@ describe('built-in shapes for an Angular application with nothing installed', ()
     const pipe = service.getMethodOrThrow('total').getDescendants().find(
       (node) => Node.isPropertyAccessExpression(node) && node.getName() === 'pipe',
     );
-    expect(pipe?.getSymbol()?.getDeclarations()[0]?.getSourceFile().getFilePath()).toBe(join(root, 'node_modules/rxjs/index.d.ts'));
+    // The compiler names files with forward slashes on every OS (P199).
+    expect(pipe?.getSymbol()?.getDeclarations()[0]?.getSourceFile().getFilePath()).toBe(toPosixPath(join(root, 'node_modules/rxjs/index.d.ts')));
   });
 
   it('writes no shape file into the repository, and counts none as a source', async () => {

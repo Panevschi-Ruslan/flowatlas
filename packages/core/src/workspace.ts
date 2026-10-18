@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
+import { isBelowDir, isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
 
 /**
@@ -456,7 +457,7 @@ export const serviceExtent = (repoDir: string): readonly ExtentPackage[] => {
         const dir = byName.get(name);
         // A package the service is inside of would bring the whole repository
         // with it, and the answer to "what is this service" would be "all of it".
-        if (dir === undefined || own === dir || own.startsWith(`${dir}/`)) continue;
+        if (dir === undefined || isWithinDir(own, dir)) continue;
         declares.push(dir);
         if (seen.has(dir)) continue;
         seen.add(dir);
@@ -498,13 +499,17 @@ const allDeclared = (pkg: PackageJson): Record<string, string> =>
  */
 export const serviceSourceDirs = (repoDir: string): readonly string[] => {
   const [own, ...members] = serviceExtent(repoDir).map((pkg) => pkg.dir) as [string, ...string[]];
-  return [own, ...members.filter((dir) => !dir.startsWith(`${own}/`)).sort()];
+  return [own, ...members.filter((dir) => !isBelowDir(dir, own)).sort()];
 };
 
 
-/** Whether a file belongs to one of a service's own directories. */
+/**
+ * Whether a file belongs to one of a service's own directories. The file may
+ * be spelled as the compiler spells it or as the OS does (P199): on Windows
+ * the one has forward slashes and the other backslashes.
+ */
 export const isServiceSource = (file: string, repoDir: string): boolean => {
-  const path = file.replace(/\\/g, '/');
+  const path = toPosixPath(file);
   if (path.includes('/node_modules/')) return false;
-  return serviceSourceDirs(repoDir).some((dir) => path.startsWith(`${dir}/`));
+  return serviceSourceDirs(repoDir).some((dir) => isBelowDir(path, dir));
 };

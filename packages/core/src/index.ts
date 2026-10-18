@@ -56,6 +56,7 @@ export {
   makeUnnamedWorkflowKey,
   makeTypeId,
   makeWorkflowEntryKey,
+  isBelowDir,
   normalizeFilePath,
   normalizePath,
   pathKey,

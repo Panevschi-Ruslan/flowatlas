@@ -1,6 +1,7 @@
 import { relative, sep } from 'node:path';
 import {
   addressOnly,
+  isBelowDir,
   applicationOfFile,
   classMembersOf,
   localBaseClassNames,
@@ -750,7 +751,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   const workspacePackageOf = (declaration: TsNode | undefined): string | undefined => {
     if (declaration === undefined) return undefined;
     const path = declaration.getSourceFile().getFilePath();
-    if (path.startsWith(`${ctx.repoDir}/`) || path.includes('/node_modules/')) return undefined;
+    // The compiler's path against the OS's: forward slashes against backslashes on Windows (P199).
+    if (isBelowDir(path, ctx.repoDir) || path.includes('/node_modules/')) return undefined;
     return packageNameOf(path) ?? undefined;
   };
 
@@ -1984,7 +1986,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       const path = source.getFilePath();
       // A file of an installed package, or of another repository read into the
       // same project, is not this repository's to answer for.
-      if (path.includes('/node_modules/') || !path.startsWith(`${ctx.repoDir}/`)) continue;
+      // Compared spelled either way: the compiler names files with forward
+      // slashes on Windows too, and the repository's directory has backslashes (P199).
+      if (path.includes('/node_modules/') || !isBelowDir(path, ctx.repoDir)) continue;
       yield source;
     }
   };
