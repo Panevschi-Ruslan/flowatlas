@@ -34,7 +34,7 @@ import { missingKeyOf } from '@flowatlas/linker';
 import { channelLabelOf } from './aws.js';
 import { matchAws } from './match-aws.js';
 import type { SpanBodies } from './readers/index.js';
-import { VALUE, type ObservedSpan } from './span.js';
+import { isValueKey, VALUE, type ObservedSpan } from './span.js';
 
 export { OBSERVED_FORMAT_VERSION, type Observed } from '@flowatlas/core';
 
@@ -83,6 +83,10 @@ export const routeScore = (declared: readonly string[], seen: readonly string[])
       if (got === '') return -1;
       continue;
     }
+    // A value seen (`:value`) fits a declared literal the same rule would have
+    // masked (`v1`, `oauth2`), so a versioned path still reaches its route
+    // (P213); it scores as a parameter does, below an exact segment.
+    if (got === VALUE && isValueKey(want)) continue;
     if (got === VALUE || got === PARAM || want !== got) return -1;
     score += 1;
   }
@@ -463,6 +467,35 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
   const byId = new Map(spans.map((span) => [`${span.traceId}/${span.spanId}`, span]));
   const parentOf = (span: ObservedSpan): ObservedSpan | undefined =>
     span.parentId === undefined ? undefined : byId.get(`${span.traceId}/${span.parentId}`);
+  /**
+   * The caller of a server span that names no parent (P202): a client span of
+   * the same trace in another service, with the same method and path shape,
+   * not already the parent of a server span. The @nestjs/observe agent sends
+   * its trace id on as `x-request-id` and the agent of the service answering
+   * adopts it, so the two services' batches share a trace id and name no
+   * parent; a caller whose trace id a service adopts the same way pairs too.
+   * Each client is the caller of one server span at most, in the order read.
+   */
+  const adopted = new Map<ObservedSpan, ObservedSpan>();
+  {
+    const clients = new Map<string, ObservedSpan[]>();
+    const taken = new Set<ObservedSpan>();
+    for (const span of spans) {
+      if (span.kind === 'client' && span.method !== undefined && span.path !== undefined) push(clients, span.traceId, span);
+      const parent = span.kind === 'server' ? parentOf(span) : undefined;
+      if (parent !== undefined) taken.add(parent);
+    }
+    for (const span of spans) {
+      if (span.kind !== 'server' || span.parentId !== undefined || span.method === undefined || span.path === undefined) continue;
+      const caller = (clients.get(span.traceId) ?? []).find(
+        (client) => !taken.has(client) && client.service !== span.service && client.method === span.method && client.path === span.path,
+      );
+      if (caller === undefined) continue;
+      taken.add(caller);
+      adopted.set(span, caller);
+    }
+  }
+  const callerOf = (span: ObservedSpan): ObservedSpan | undefined => parentOf(span) ?? adopted.get(span);
   /** What each client span's call reached, filled while server spans are read. */
   const outsOf = new Map<ObservedSpan, GraphNode[]>();
   const clientOuts = (span: ObservedSpan): GraphNode[] => {
@@ -513,7 +546,7 @@ export const matchSpans = (index: GraphIndex, spans: readonly ObservedSpan[], op
       tally.miss(span, 'http', nameOf(span));
       return;
     }
-    const parent = parentOf(span);
+    const parent = callerOf(span);
     let credited: GraphEdge | undefined;
     if (parent !== undefined && parent.service !== span.service) {
       const outs = parent.kind === 'client' ? new Set(clientOuts(parent).map((node) => node.id)) : new Set<string>();

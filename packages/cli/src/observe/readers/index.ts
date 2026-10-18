@@ -25,6 +25,7 @@ export {
   TraceFileError,
   type AccessLogKeys,
   type AccessLogRole,
+  type Attached,
   type FrontEndContext,
   type ReadContext,
   type ReaderFlag,

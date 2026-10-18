@@ -142,9 +142,15 @@ const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.o
  */
 const tracesWith = (file) => TRACES.map((path, index) => (index === 0 ? join(fixture, 'traces', file) : path));
 const HAR = [join(fixture, 'traces', 'web.har')];
+/**
+ * A Playwright test run's output directory (P205): HAR files in each shape
+ * `recordHar` writes, beside the files a run leaves that are not HAR.
+ */
+const PLAYWRIGHT = [join(fixture, 'traces', 'playwright')];
 const observeOnCopy = (io, runs, from = fixture) => {
   const copy = mkdtempSync(join(tmpdir(), 'flowatlas-observe-'));
-  const said = (text) => text.split(copy).join('<copy>');
+  // A directory read is named in a note as it was given: said from the repository's root.
+  const said = (text) => text.split(copy).join('<copy>').split(`${root.split('\\').join('/')}/`).join('');
   try {
     cpSync(join(from, '.flowatlas'), copy, { recursive: true });
     const db = join(copy, 'graph.db');
@@ -288,6 +294,8 @@ const CASES = [
   ['observe.zipkin.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.zipkin.json'), {}]])],
   ['observe.jaeger.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.jaeger.json'), {}]])],
   ['observe.har.txt', (io) => observeOnCopy(io, [[HAR, { config }]])],
+  ['observe.playwright.txt', (io) => observeOnCopy(io, [[PLAYWRIGHT, { config }]])],
+  ['observe.playwright.shapes.txt', (io) => observeOnCopy(io, [[PLAYWRIGHT, { config, shapes: true }]])],
   ['observe.shapes.txt', (io) => observeOnCopy(io, [[SHAPED, { config, shapes: true }]])],
   ['observe.shapes.json', (io) => observeOnCopy(io, [[SHAPED, { config, shapes: true, format: 'json' }]])],
   ['contracts.traffic.json', contractsOnShapedCopy],

@@ -38,25 +38,39 @@ describe('the @nestjs/observe reader', () => {
         durationMs: 6.4,
       },
       expect.objectContaining({ method: 'GET', route: '/invoices/:id', path: '/invoices/:value', status: 200 }),
-      // No operation: the request ended before routing, so the URL's shape stands in.
-      expect.objectContaining({ method: 'GET', path: '/healthz', status: 404 }),
     ]);
-    expect(servers[2]).not.toHaveProperty('route');
   });
 
-  it('reads the span tree from t, nested, with parents; n is optional', () => {
+  it('reads a message on a broker transport as a consumer span of its pattern (P202)', () => {
+    expect(read.spans.filter((span) => span.kind === 'consumer')).toEqual([
+      {
+        traceId: 'e1000000000000000000000000000003',
+        spanId: 'e1000000000000000000000000000003:2',
+        kind: 'consumer',
+        service: 'billing',
+        destination: 'order.created',
+        at: '2025-10-16T07:33:32.000Z',
+        durationMs: 0.9,
+      },
+    ]);
+  });
+
+  it('reads the span tree from t, nested, with parents; a manual span is not a call of its own', () => {
     const symbols = read.spans.filter((span) => span.symbol !== undefined);
     expect(symbols.map((span) => span.symbol)).toEqual([
       'InvoicesController.create',
       'InvoicesService.create',
-      'LedgerClient.post',
       'InvoicesController.findOne',
       'InvoicesService.findOne',
+      'InvoicesConsumer.onOrderCreated',
+      'InvoicesService.create',
+      'InvoicesService.findOne',
     ]);
-    const [controller, service, ledger] = symbols;
+    const [controller, service] = symbols;
     expect(controller!.parentId).toBe('e1000000000000000000000000000001:0');
     expect(service!.parentId).toBe(controller!.spanId);
-    expect(ledger).toMatchObject({ parentId: controller!.spanId, error: true, durationMs: 2 });
+    // The manual span names InvoicesController.create again, the method it was opened in: not counted twice.
+    expect(symbols.filter((span) => span.traceId === controller!.traceId && span.symbol === 'InvoicesController.create')).toHaveLength(1);
     expect(symbols.at(-1)).toMatchObject({ traceId: 'e1000000000000000000000000000005', at: '2025-10-16T07:33:40.000Z' });
   });
 
@@ -72,16 +86,11 @@ describe('the @nestjs/observe reader', () => {
     expect(Object.keys(db!).sort()).toEqual(['at', 'collection', 'durationMs', 'kind', 'parentId', 'service', 'spanId', 'traceId']);
   });
 
-  it('counts what it does not read: other protocols, nodes the contract refuses, jobs without a tree', () => {
-    expect(read.skipped).toEqual([
-      { noun: 'snapshot', why: 'of protocol ws', count: 1 },
-      { noun: 'node', why: 'without o, c and m', count: 1 },
-      { noun: 'job', why: 'without a span tree', count: 1 },
-    ]);
-    expect(read.spans.some((span) => span.symbol === 'InvoicesGateway.watch')).toBe(false);
+  it('reads every part of a batch in the contract: nothing skipped', () => {
+    expect(read.skipped).toEqual([]);
   });
 
-  it('counts a database node without a collection and an http node without a URL', () => {
+  it('counts a database node without a collection, an http node without a URL and a node the contract refuses', () => {
     const { spans, skipped } = nestjsObserveReader.read({
       serviceId: 'shop',
       snapshots: [
@@ -93,6 +102,7 @@ describe('the @nestjs/observe reader', () => {
           t: [
             { o: 'auto', c: 'pg', m: 'SELECT' },
             { o: 'auto', c: 'http', m: 'GET catalog.internal', t: {} },
+            { n: 'a node the contract refuses', d: 0.1 },
           ],
         },
       ],
@@ -101,6 +111,7 @@ describe('the @nestjs/observe reader', () => {
     expect(skipped).toEqual([
       { noun: 'node', why: 'of class pg without a collection', count: 1 },
       { noun: 'node', why: 'of class http without a method and a URL', count: 1 },
+      { noun: 'node', why: 'without o, c and m', count: 1 },
     ]);
   });
 

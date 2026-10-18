@@ -1,6 +1,6 @@
 {
   "observedFormatVersion": 3,
-  "spans": 119,
+  "spans": 121,
   "privacy": {
     "kept": [
       "traceId",
@@ -55,7 +55,7 @@
       "the origin of a browser call (compared with the base URLs, then dropped)",
       "the path of a call to a third party (kept by host only)"
     ],
-    "droppedAttributes": 315,
+    "droppedAttributes": 329,
     "samples": {
       "kept": true,
       "perEntry": 3,
@@ -75,13 +75,13 @@
       "readAt": "2025-10-16T09:00:00.000Z"
     },
     {
-      "sha256": "0d0b1e56866c203783f104d7e5d70a9796873df7e45c6401c4a6ea6c51887f3b",
+      "sha256": "b76ad49d0bb8de5b68e2fed4cd87c8b296f00f9a7b33df8af81c0bbbde27d1df",
       "format": "nestjs-observe",
-      "spans": 10,
+      "spans": 12,
       "readAt": "2025-10-16T09:00:00.000Z"
     },
     {
-      "sha256": "12749c3cca637c47e3d602c554aab511047450df05e4e1e5e69003e26d6d0bf3",
+      "sha256": "b9258f37a771e45dadecb6fde05567fa39dccea795bd8fd84a8135c9ecc0ad98",
       "format": "nestjs-observe",
       "spans": 48,
       "readAt": "2025-10-16T09:00:00.000Z"
@@ -101,10 +101,10 @@
   ],
   "joins": {
     "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated": {
-      "count": 1,
-      "lastSeen": "2025-10-16T07:33:23.500Z",
+      "count": 2,
+      "lastSeen": "2025-10-16T07:33:32.000Z",
       "firstSeen": "2025-10-16T07:33:23.500Z",
-      "p50": 12,
+      "p50": 0.96,
       "p95": 12,
       "max": 12,
       "errors": 0,
@@ -192,10 +192,10 @@
   },
   "entries": {
     "entry:billing:event:order.created": {
-      "hits": 1,
-      "lastSeen": "2025-10-16T07:33:23.500Z",
+      "hits": 2,
+      "lastSeen": "2025-10-16T07:33:32.000Z",
       "firstSeen": "2025-10-16T07:33:23.500Z",
-      "p50": 12,
+      "p50": 0.96,
       "p95": 12,
       "max": 12,
       "errors": 0,
@@ -270,6 +270,16 @@
     }
   },
   "symbols": {
+    "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T07:33:32.000Z",
+      "firstSeen": "2025-10-16T07:33:32.000Z",
+      "p50": 0.8,
+      "p95": 0.8,
+      "max": 0.8,
+      "errors": 0,
+      "errorRate": 0
+    },
     "billing#src/invoices/invoices.controller.ts:InvoicesController.create": {
       "hits": 22,
       "lastSeen": "2025-10-16T08:39:00.000Z",
@@ -277,8 +287,8 @@
       "p50": 7.66,
       "p95": 11.81,
       "max": 41,
-      "errors": 0,
-      "errorRate": 0
+      "errors": 1,
+      "errorRate": 0.0455
     },
     "billing#src/invoices/invoices.controller.ts:InvoicesController.findOne": {
       "hits": 3,
@@ -291,20 +301,20 @@
       "errorRate": 0
     },
     "billing#src/invoices/invoices.service.ts:InvoicesService.create": {
-      "hits": 2,
+      "hits": 3,
       "lastSeen": "2025-10-16T08:06:00.000Z",
       "firstSeen": "2025-10-16T07:33:30.000Z",
       "p50": 3.22,
       "p95": 40.2,
       "max": 40.2,
       "errors": 1,
-      "errorRate": 0.5
+      "errorRate": 0.3333
     },
     "billing#src/invoices/invoices.service.ts:InvoicesService.findOne": {
-      "hits": 1,
+      "hits": 2,
       "lastSeen": "2025-10-16T07:33:40.000Z",
-      "firstSeen": "2025-10-16T07:33:40.000Z",
-      "p50": 0.5,
+      "firstSeen": "2025-10-16T07:33:31.000Z",
+      "p50": 0.4,
       "p95": 0.5,
       "max": 0.5,
       "errors": 0,
@@ -421,8 +431,8 @@
   },
   "channels": {
     "channel:order.created": {
-      "hits": 2,
-      "lastSeen": "2025-10-16T07:33:23.500Z",
+      "hits": 3,
+      "lastSeen": "2025-10-16T07:33:32.000Z",
       "firstSeen": "2025-10-16T07:33:23.001Z",
       "p50": 3.22,
       "p95": 12,
@@ -438,7 +448,7 @@
       "name": "invoices",
       "count": 2,
       "lastSeen": "2025-10-16T08:06:00.000Z",
-      "firstSeen": "2025-10-16T07:33:30.000Z",
+      "firstSeen": "2025-10-16T07:33:30.001Z",
       "p50": 0.81,
       "p95": 38.9,
       "max": 38.9,
@@ -455,35 +465,6 @@
       "p50": 1.2,
       "p95": 1.2,
       "max": 1.2,
-      "errors": 0,
-      "errorRate": 0
-    },
-    {
-      "service": "billing",
-      "kind": "code",
-      "name": "LedgerClient.post",
-      "count": 1,
-      "lastSeen": "2025-10-16T07:33:30.000Z",
-      "firstSeen": "2025-10-16T07:33:30.000Z",
-      "p50": 2,
-      "p95": 2,
-      "max": 2,
-      "errors": 1,
-      "errorRate": 1
-    },
-    {
-      "service": "billing",
-      "kind": "http",
-      "name": "GET /healthz",
-      "count": 1,
-      "lastSeen": "2025-10-16T07:33:33.000Z",
-      "firstSeen": "2025-10-16T07:33:33.000Z",
-      "p50": 0.2,
-      "p95": 0.2,
-      "max": 0.2,
-      "statuses": {
-        "404": 1
-      },
       "errors": 0,
       "errorRate": 0
     },
@@ -591,6 +572,39 @@
             "kind": "consumer",
             "ms": 12
           }
+        },
+        {
+          "traceId": "e1000000000000000000000000000003",
+          "at": "2025-10-16T07:33:32.000Z",
+          "ms": 0.9,
+          "spans": 3,
+          "tree": {
+            "id": "entry:billing:event:order.created",
+            "label": "order.created",
+            "service": "billing",
+            "kind": "consumer",
+            "ms": 0.9,
+            "children": [
+              {
+                "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                "label": "InvoicesConsumer.onOrderCreated",
+                "service": "billing",
+                "kind": "internal",
+                "start": 0,
+                "ms": 0.8,
+                "children": [
+                  {
+                    "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                    "label": "InvoicesService.create",
+                    "service": "billing",
+                    "kind": "internal",
+                    "start": 0,
+                    "ms": 0.5
+                  }
+                ]
+              }
+            ]
+          }
         }
       ],
       "failing": []
@@ -652,7 +666,7 @@
           "at": "2025-10-16T07:33:31.000Z",
           "ms": 1.1,
           "status": 200,
-          "spans": 2,
+          "spans": 3,
           "tree": {
             "id": "entry:billing:http:GET:/invoices/:param",
             "label": "GET /invoices/:id",
@@ -667,7 +681,17 @@
                 "service": "billing",
                 "kind": "internal",
                 "start": 0,
-                "ms": 1
+                "ms": 1,
+                "children": [
+                  {
+                    "id": "billing#src/invoices/invoices.service.ts:InvoicesService.findOne",
+                    "label": "InvoicesService.findOne",
+                    "service": "billing",
+                    "kind": "internal",
+                    "start": 0,
+                    "ms": 0.4
+                  }
+                ]
               }
             ]
           }
@@ -700,6 +724,7 @@
                 "kind": "internal",
                 "start": 0,
                 "ms": 41,
+                "error": true,
                 "children": [
                   {
                     "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
@@ -799,6 +824,7 @@
                 "kind": "internal",
                 "start": 0,
                 "ms": 41,
+                "error": true,
                 "children": [
                   {
                     "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
@@ -1370,18 +1396,19 @@
   "buckets": [
     {
       "hour": "2025-10-16T07:00:00.000Z",
-      "spans": 22,
+      "spans": 24,
       "joins": {
         "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated": {
-          "count": 1,
+          "count": 2,
           "errors": 0,
           "firstSeen": "2025-10-16T07:33:23.500Z",
-          "lastSeen": "2025-10-16T07:33:23.500Z",
+          "lastSeen": "2025-10-16T07:33:32.000Z",
           "hist": {
-            "29": 1
+            "29": 1,
+            "-1": 1
           },
           "max": 12,
-          "callee": 1
+          "callee": 2
         },
         "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param": {
           "count": 1,
@@ -1409,12 +1436,13 @@
       },
       "entries": {
         "entry:billing:event:order.created": {
-          "count": 1,
+          "count": 2,
           "errors": 0,
           "firstSeen": "2025-10-16T07:33:23.500Z",
-          "lastSeen": "2025-10-16T07:33:23.500Z",
+          "lastSeen": "2025-10-16T07:33:32.000Z",
           "hist": {
-            "29": 1
+            "29": 1,
+            "-1": 1
           },
           "max": 12
         },
@@ -1486,6 +1514,16 @@
         }
       },
       "symbols": {
+        "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T07:33:32.000Z",
+          "lastSeen": "2025-10-16T07:33:32.000Z",
+          "hist": {
+            "-3": 1
+          },
+          "max": 0.8
+        },
         "billing#src/invoices/invoices.controller.ts:InvoicesController.create": {
           "count": 1,
           "errors": 0,
@@ -1507,21 +1545,23 @@
           "max": 1
         },
         "billing#src/invoices/invoices.service.ts:InvoicesService.create": {
-          "count": 1,
+          "count": 2,
           "errors": 0,
           "firstSeen": "2025-10-16T07:33:30.000Z",
-          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "lastSeen": "2025-10-16T07:33:32.000Z",
           "hist": {
-            "13": 1
+            "13": 1,
+            "-8": 1
           },
           "max": 3
         },
         "billing#src/invoices/invoices.service.ts:InvoicesService.findOne": {
-          "count": 1,
+          "count": 2,
           "errors": 0,
-          "firstSeen": "2025-10-16T07:33:40.000Z",
+          "firstSeen": "2025-10-16T07:33:31.000Z",
           "lastSeen": "2025-10-16T07:33:40.000Z",
           "hist": {
+            "-11": 1,
             "-8": 1
           },
           "max": 0.5
@@ -1571,13 +1611,14 @@
       },
       "channels": {
         "channel:order.created": {
-          "count": 2,
+          "count": 3,
           "errors": 0,
           "firstSeen": "2025-10-16T07:33:23.001Z",
-          "lastSeen": "2025-10-16T07:33:23.500Z",
+          "lastSeen": "2025-10-16T07:33:32.000Z",
           "hist": {
             "13": 1,
-            "29": 1
+            "29": 1,
+            "-1": 1
           },
           "max": 12
         }
@@ -1598,45 +1639,16 @@
         },
         {
           "service": "billing",
-          "kind": "code",
-          "name": "LedgerClient.post",
-          "count": 1,
-          "errors": 1,
-          "firstSeen": "2025-10-16T07:33:30.000Z",
-          "lastSeen": "2025-10-16T07:33:30.000Z",
-          "hist": {
-            "8": 1
-          },
-          "max": 2
-        },
-        {
-          "service": "billing",
           "kind": "db",
           "name": "invoices",
           "count": 1,
           "errors": 0,
-          "firstSeen": "2025-10-16T07:33:30.000Z",
-          "lastSeen": "2025-10-16T07:33:30.000Z",
+          "firstSeen": "2025-10-16T07:33:30.001Z",
+          "lastSeen": "2025-10-16T07:33:30.001Z",
           "hist": {
             "-3": 1
           },
           "max": 0.8
-        },
-        {
-          "service": "billing",
-          "kind": "http",
-          "name": "GET /healthz",
-          "count": 1,
-          "errors": 0,
-          "firstSeen": "2025-10-16T07:33:33.000Z",
-          "lastSeen": "2025-10-16T07:33:33.000Z",
-          "statuses": {
-            "404": 1
-          },
-          "hist": {
-            "-19": 1
-          },
-          "max": 0.2
         },
         {
           "service": "gateway",
@@ -1833,7 +1845,7 @@
       "symbols": {
         "billing#src/invoices/invoices.controller.ts:InvoicesController.create": {
           "count": 21,
-          "errors": 0,
+          "errors": 1,
           "firstSeen": "2025-10-16T08:06:00.000Z",
           "lastSeen": "2025-10-16T08:39:00.000Z",
           "hist": {

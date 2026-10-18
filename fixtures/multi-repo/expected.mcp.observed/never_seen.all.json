@@ -213,21 +213,7 @@
       "neighbours": {
         "seen": 1,
         "of": 1,
-        "most": 2
-      },
-      "confidence": "weak"
-    },
-    {
-      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
-      "type": "method",
-      "service": "billing",
-      "loc": "src/invoices/invoices.consumer.ts:28",
-      "window": "2h",
-      "reachableFrom": "code",
-      "neighbours": {
-        "seen": 1,
-        "of": 1,
-        "most": 1
+        "most": 3
       },
       "confidence": "weak"
     },
@@ -239,6 +225,20 @@
       "loc": "src/invoices/invoices.consumer.ts:28",
       "window": "2h",
       "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 1,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+      "type": "method",
+      "service": "billing",
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "window": "2h",
+      "reachableFrom": "code",
       "neighbours": {
         "seen": 1,
         "of": 1,

@@ -258,7 +258,7 @@ describe('the page made of its parts (P103)', () => {
     // Run time changes: the page loads got slower and fail now and then; the checkout went quiet.
     const changes = await bootAt(html, '#runtime', 'page-runtime-changes');
     const heads = changes.querySelectorAll('#tab-sheet h4').map(textOf);
-    expect(heads).toEqual(['Slower · 2', 'Failing more · 2', 'Newly seen · 0', 'No longer seen · 6']);
+    expect(heads).toEqual(['Slower · 2', 'Failing more · 2', 'Newly seen · 0', 'No longer seen · 4']);
     expect(textOf(changes.querySelector('#tab-sheet .rt-table tbody tr'))).toContain('79 ms → 198 ms +150%');
     // Nothing in the page can be joined back to a request.
     expect(html).not.toMatch(/"traceId"|a1000000000000000000000000000001/);

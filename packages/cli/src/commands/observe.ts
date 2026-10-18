@@ -50,6 +50,8 @@ import {
   TraceFileError,
 } from '../observe/readers/index.js';
 import type { ObservedSpan } from '../observe/span.js';
+import { attachedBeside, harsInZip, traceFilesNamed } from '../observe/trace-paths.js';
+import { isZip } from '../observe/zip.js';
 import { ObservedLocked, readObservedBeside, saveObserved, withObservedLock, type LockOptions } from '../observe/store.js';
 
 export interface ObserveOptions extends DbOptions {
@@ -271,7 +273,10 @@ export const readTraceFiles = (files: readonly string[], service?: string, optio
     }
     known.add(sha256);
     let read = 0;
-    for (const [part, document] of documentsOf(file, bytes, said).entries()) {
+    // A Playwright archive (P205) holds its HARs and the bodies they attached; a HAR on disk has them beside it.
+    const zipped = isZip(bytes) ? harsInZip(file, bytes) : undefined;
+    const attachment = zipped?.attachment ?? attachedBeside(file);
+    for (const [part, document] of (zipped?.documents ?? documentsOf(file, bytes, said)).entries()) {
       const reader = readerFor(document, said);
       if (reader === undefined) throw cannotRun(`${file} is none of the formats observe reads: ${FORMATS_SAID}`);
       formats[file] = reader.name;
@@ -281,7 +286,7 @@ export const readTraceFiles = (files: readonly string[], service?: string, optio
       }
       let result;
       try {
-        result = reader.read(document, service, { ...said, part, source: sha256 });
+        result = reader.read(document, service, { ...said, part, source: sha256, ...(said.shapes === true ? { attachment } : {}) });
       } catch (cause) {
         if (cause instanceof NameNeeded) throw cannotRun(`${file} ${cause.message}; name it with ${cause.flag} <name>`);
         // A reader's refusal names the format, the record and the field, never the file's contents.
@@ -450,8 +455,11 @@ const projectOf = (options: ObserveOptions) => {
  * Lays trace files over the built graph and adds them to the observed file
  * beside it: what the file held, plus this run, cut to the window.
  */
-export const runObserve = (files: readonly string[], options: ObserveOptions = {}): ObserveRun => {
-  if (files.length === 0) throw cannotRun('name at least one trace file');
+export const runObserve = (paths: readonly string[], options: ObserveOptions = {}): ObserveRun => {
+  if (paths.length === 0) throw cannotRun('name at least one trace file');
+  // A directory is its HAR files, a glob the files it matches (P205).
+  const named = traceFilesNamed(paths);
+  const files = named.files;
   const since = sinceOf(options.since);
   // A malformed --access-log-keys is refused before a configuration or database is looked for.
   const accessLogKeys = parseAccessLogKeys(options.accessLogKeys);
@@ -469,6 +477,7 @@ export const runObserve = (files: readonly string[], options: ObserveOptions = {
     );
   }
   const { result, labels, observed } = written;
+  result.notes.unshift(...named.notes);
   const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
   if (options.format === 'json') print(JSON.stringify(observed, null, 2));
   else for (const line of summary(result, labels)) print(line);
@@ -710,6 +719,7 @@ export const registerObserve = (program: Command): void => {
       '[file...]',
       'OTLP JSON, JSON lines or protobuf, @nestjs/observe batches, Zipkin or Jaeger JSON, a browser HAR, or AWS exports ' +
         '(X-Ray traces, a Step Functions execution history, API Gateway access logs, Lambda REPORT lines), gzipped or not; ' +
+        'a quoted glob is the files it matches, and a directory (a test run\'s output) the HAR files under it; ' +
         'nothing is sent anywhere',
     )
     .option('--config <path>', 'configuration file (default: found from the working directory)')

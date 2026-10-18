@@ -42,7 +42,17 @@ export interface ReadContext {
    * only. Without it no reader looks at a body at all.
    */
   shapes?: boolean;
+  /**
+   * A body a HAR keeps in a file of its own (Playwright's `content: 'attach'`,
+   * P205), by the name its entry gives: the text, or why it cannot be read.
+   * Asked only with `--shapes`; `observe` reads it from beside the HAR, or from
+   * the archive the HAR came in, and from nowhere else.
+   */
+  attachment?: (name: string) => Attached;
 }
+
+/** A body read from the file a HAR attached it in, or why it was not (P205). */
+export type Attached = { text: string } | { why: string };
 
 /**
  * What `observe` says beside a file: the names a file may not say itself

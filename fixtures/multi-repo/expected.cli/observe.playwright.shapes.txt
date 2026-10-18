@@ -1,0 +1,17 @@
+7 spans read from 3 file(s)
+not read: 1 entry of type image, 1 body attached in a file that is not beside the HAR, 1 entry made by a service worker, 1 entry of type document, 1 entry of type script, 1 entry made by the test through its request API, not by the page, 1 entry answered by the test (route.fulfill), not by a server
+left alone in fixtures/multi-repo/traces/playwright: 6 files that are not HAR (a directory is read for its HAR files; name other trace files on their own)
+2 joins seen, 0 entries hit, 1 seen at run time but not found in code, 2 that could be more than one place
+  client    web  POST /orders/:value/cancel  (1)
+could be more than one place, so counted on none:
+  client    web  GET /orders/:value  (2)
+    any of ui_api_call:web#src/app/orders-api.service.ts:21:12, ui_api_call:web#src/app/orders-api.service.ts:73:12
+  client    web  POST /orders/:value/invoice  (1)
+    any of ui_api_call:web#src/app/orders-api.service.ts:123:3, ui_api_call:web#src/app/orders-api.service.ts:138:3, ui_api_call:web#src/app/orders-api.service.ts:61:12
+bodies read for shape only (key names and JSON types, no value): 5 exchanges placed on a route, 1 on none (no single route fits the call)
+traffic differs from the code on 2 route(s):
+  gateway POST /orders/:param/invoice  6 fields: request customerId, request dueInDays, request id and 3 more
+  gateway GET /orders/:param  1 field: 200 customerId
+3 route(s) carried bodies the code declares no type for, so there was nothing to compare them with
+window 2025-10-16T08:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
+<copy>/observed.json

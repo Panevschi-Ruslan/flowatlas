@@ -301,6 +301,19 @@ twenty-six, with prompts, resources and paged, structured answers.
   `traffic differs: n fields` (and the Ways in row beside the way in's p95 and
   error rate), and `flowatlas dead` lists declared optional fields no traffic
   carried. Without `--shapes` no body is read.
+- **Run time from an end-to-end test run (P205).** `flowatlas observe
+  test-results` reads every HAR a Playwright run left under the directory
+  (`*.har`, `*.har.gz`, and the `.zip` a `recordHar` path ending in `.zip`
+  writes), leaves everything else alone and says how many files it left; a
+  quoted glob is the files it matches. The HAR reader reads Playwright's
+  files in each shape (`mode: 'minimal'` or `'full'`; `content: 'omit'`,
+  `'embed'`, or `'attach'`, whose body files beside the HAR or in its archive
+  `--shapes` reads), counts what was not the page's own call to a server (a
+  request the test made through its `request` API, a service worker's, one the
+  test answered with `route.fulfill` or stopped with `route.abort`), and reads
+  Playwright's status `-1` as a call that failed. `docs/run-time.md` is the
+  recipe: `recordHar` in a fixture, the e2e tests, `observe`, then what the
+  page and the graph server's `slow_steps` and `never_seen` say.
 
 #### What the map could not read, and how to close it
 
@@ -1600,6 +1613,31 @@ twenty-six, with prompts, resources and paged, structured answers.
   passes none of them. An interceptor whose handling cannot be read leaves
   the statuses behind it `assumed` and is a `fails-interceptor-unread` row
   (`fixtures/nest-fails-intercepted`).
+- **The @nestjs/observe reader against the SDK's own contract (P202).** P85
+  wrote the reader from field names alone; it is now checked against the wire
+  contract of `@nestjs/observe` 0.3.12, and newer versions are read the same
+  way, field by field. A job's time is `c`, not `ct`, and a queue's job is
+  now a consumer span of its queue (a `@nestjs/schedule` run is read for its
+  tree); a `manual` span, which names the method it was opened in, is no
+  longer counted as a second call of it; a node the agent folded
+  (`observe.collapsed`) counts as the calls it stands for; a node's `so` places
+  it in time; a request no route matched, which the agent names by its folded
+  URL, is read by the URL's shape, so no id in it becomes a route; a GraphQL
+  operation over HTTP is read for its spans, its document never taken for a
+  path; WebSocket and broker messages (Kafka, NATS, Redis, MQTT, RabbitMQ) are
+  consumer spans of their event or pattern, and TCP and gRPC requests server
+  spans of their RPC pattern, where they were skipped; a failed job, `e: true`
+  on any node and a body the agent cut short (`bodyTruncated`) are read as
+  such. `ti` is the `x-request-id` the agent adopts and passes on, not a W3C
+  trace id, so a server snapshot that names no parent is paired with the one
+  client span of its trace in another service with the same method and path,
+  and the join between two services read with the agent is counted. The
+  fixture batches were rewritten from the contract.
+- **A versioned path reached no route (P213).** A path segment such as `v1`
+  is masked as `:value` like any segment with a digit, and `:value` fitted
+  only a parameter, so every call to `/api/v1/...` read from a HAR, an OTLP
+  client span or a URL missed its route. A masked segment now fits a declared
+  literal the same rule masks, scored as a parameter.
 - **`flowatlas mcp` reports its version (P86).** `initialize` answered every
   client `serverInfo.version: "0.0.0"`; it now answers the command's version.
   The standalone server bin answers its own package's.

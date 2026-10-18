@@ -1,15 +1,11 @@
-can't follow: 6 places over 6 rows, by cause (cause seen-not-in-code)
+can't follow: 4 places over 4 rows, by cause (cause seen-not-in-code)
 
-  seen-not-in-code: 6 places  3 services
+  seen-not-in-code: 4 places  3 services
     Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it with the call beside it; a later build that reads it makes the row go away.
     billing db: 2 spans, last 2025-10-16T08:06:00.000Z: invoices (2)
       next: search({query: "invoices"})
     billing client: 1 span, last 2025-10-16T07:33:30.000Z: GET /orders/:value (1)
       next: search({query: "/orders/:value"})
-    billing code: 1 span, last 2025-10-16T07:33:30.000Z: LedgerClient.post (1)
-      next: find_symbol({query: "LedgerClient.post", service: "billing"})
-    billing http: 1 span, last 2025-10-16T07:33:33.000Z: GET /healthz (1)
-      next: list_entries({service: "billing"})
     gateway http: 1 span, last 2025-10-16T07:33:25.000Z: GET /metrics (1)
       next: list_entries({service: "gateway"})
     orders messaging: 1 span, last 2025-10-16T07:33:23.002Z: order.audited (1)
