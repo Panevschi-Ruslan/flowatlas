@@ -13,7 +13,7 @@
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { loadConfig, serviceDirOf, type LoadedConfig } from '@flowatlas/core';
+import { loadConfig, serviceDirOf, toPosixPath, type LoadedConfig } from '@flowatlas/core';
 import {
   BACKSTAGE_LOCATION_FILE,
   DEFAULT_EXPORT_FLOWS,
@@ -226,7 +226,9 @@ const structurizrLines = (summary: StructurizrSummary, maxFlows: number, maxLabe
 /** A file as a person reads it: from the configuration's directory when it is under it. */
 const shownPath = (rootDir: string, file: string): string => {
   const path = relative(rootDir, file);
-  return path.startsWith('..') ? file : path;
+  // With `/` on every OS, as every other path the run prints (P199); a file on
+  // another drive has no relative path and keeps its own.
+  return path.startsWith('..') || isAbsolute(path) ? file : toPosixPath(path);
 };
 
 /**
@@ -331,7 +333,7 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
     if (structurizr !== undefined) {
       const { summary } = structurizr;
       lines.push(
-        `structurizr: ${plural(summary.containers, 'container')}, ${plural(summary.externals, 'system')} outside, ${plural(summary.relationships, 'relationship')}, ${plural(summary.flows.drawn, 'dynamic view')} -> ${join(shownDir, STRUCTURIZR_FILE)}`,
+        `structurizr: ${plural(summary.containers, 'container')}, ${plural(summary.externals, 'system')} outside, ${plural(summary.relationships, 'relationship')}, ${plural(summary.flows.drawn, 'dynamic view')} -> ${isAbsolute(shownDir) ? join(shownDir, STRUCTURIZR_FILE) : `${shownDir}/${STRUCTURIZR_FILE}`}`,
         ...structurizrLines(summary, maxFlows, maxLabels),
       );
     }

@@ -5,7 +5,9 @@ import {
   guessPatternKind,
   httpVerbOf,
   importOf,
+  isBelowDir,
   isCompiled,
+  isWithinDir,
   patternFilesFor,
   patternRuleSchema,
   PATTERN_CAUSES,
@@ -219,7 +221,8 @@ const callsOfGroup = (sources: ServiceSources, loaded: LoadedConfig, service: st
   const found: CallExpression[] = [];
   for (const source of sources.project(config).getSourceFiles()) {
     const path = source.getFilePath();
-    if (path.includes('/node_modules/') || !path.startsWith(`${repoDir}/`)) continue;
+    // The compiler's path against the OS's directory (P199).
+    if (path.includes('/node_modules/') || !isBelowDir(path, repoDir)) continue;
     source.forEachDescendant((node) => {
       if (!Node.isCallExpression(node)) return;
       const callee = node.getExpression();
@@ -371,7 +374,7 @@ export const writeStarters = (
   for (const service of loaded.config.services) {
     if (service.document !== undefined) continue;
     const dir = serviceDirOf(loaded.rootDir, service.repo);
-    if (out === dir || out.startsWith(`${dir}${sep}`)) {
+    if (isWithinDir(out, dir)) {
       throw new CliError(
         `--out ${outDir} is inside the repository of ${service.name}; pattern files are kept beside the configuration, not in a repository it reads`,
         EXIT.cannotRun,

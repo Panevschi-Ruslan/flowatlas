@@ -108,9 +108,19 @@ const insertRow = (statements: Statements, item: Unresolved, service?: string): 
  * up immediately would fail a rebuild for a race that lasts milliseconds.
  */
 const renameOver = (from: string, to: string, attempts = 20): void => {
+  whenFree(() => renameSync(from, to), attempts);
+};
+
+/**
+ * Runs a change to a file, waiting briefly while another process holds it.
+ * Removing the old database before the rename is such a change too (P199): on
+ * Windows it failed at once on a reader's handle, before the rename's own
+ * wait was ever reached.
+ */
+const whenFree = (change: () => void, attempts = 20): void => {
   for (let attempt = 1; ; attempt += 1) {
     try {
-      renameSync(from, to);
+      change();
       return;
     } catch (cause) {
       const code = (cause as NodeJS.ErrnoException).code;
@@ -168,8 +178,8 @@ export const writeGraphDb = (
   }
 
   for (const suffix of ['-wal', '-shm']) rmSync(`${temporary}${suffix}`, { force: true });
-  rmSync(dbPath, { force: true });
-  for (const suffix of ['-wal', '-shm']) rmSync(`${dbPath}${suffix}`, { force: true });
+  whenFree(() => rmSync(dbPath, { force: true }));
+  for (const suffix of ['-wal', '-shm']) whenFree(() => rmSync(`${dbPath}${suffix}`, { force: true }));
   renameOver(temporary, dbPath);
 };
 

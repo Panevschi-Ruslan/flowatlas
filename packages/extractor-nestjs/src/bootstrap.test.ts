@@ -1,9 +1,10 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { toPosixPath } from '@flowatlas/core';
 import { Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { addressingFindings, readBootstrap } from './bootstrap.js';
+import { addressingFindings, readBootstrap, repoSourcesOf } from './bootstrap.js';
 
 const ROOT = '/repo';
 
@@ -259,18 +260,34 @@ describe('a mount read from settings', () => {
       writeFileSync(join(dir, '.env.example'), '# mount\nAPI_CONTEXT_PATH=\nPORT=3000\n');
       writeFileSync(join(dir, 'src', '.env.test'), 'API_CONTEXT_PATH=""  \nexport OTHER=x\n');
       writeFileSync(join(dir, 'src', '.env.production'), 'API_CONTEXT_PATH=/api # behind the proxy\n');
+      // The files named as the compiler names them, the root as the OS does:
+      // on Windows forward slashes against backslashes (P199).
+      const at = toPosixPath(dir);
       const project = new Project({ useInMemoryFileSystem: true });
-      project.createSourceFile(`${dir}/src/main.ts`, VERSIONED);
-      project.createSourceFile(`${dir}/src/config.ts`, `export const CONTEXT_PATH = process.env.API_CONTEXT_PATH ?? '';`);
+      project.createSourceFile(`${at}/src/main.ts`, VERSIONED);
+      project.createSourceFile(`${at}/src/config.ts`, `export const CONTEXT_PATH = process.env.API_CONTEXT_PATH ?? '';`);
       const info = readBootstrap({
         project,
         rootDir: dir,
-        absolutePath: `${dir}/src/main.ts`,
+        absolutePath: join(dir, 'src', 'main.ts'),
         relativePath: 'src/main.ts',
       });
       expect(info.mount).toMatchObject({ setIn: ['src/.env.production'], envFiles: 3 });
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('the files of the repository itself, the root spelled either way (P199)', () => {
+  it('takes the files under the root and not beside it, and leaves the entry file out', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    for (const path of ['/work/svc/src/main.ts', '/work/svc/src/a.ts', '/work/svc-other/src/b.ts', '/work/svc/src/a.spec.ts']) {
+      project.createSourceFile(path, 'export const x = 1;\n');
+    }
+    const files = (root: string, entry: string) => [...repoSourcesOf(project, root, entry)].map((file) => file.getFilePath());
+    expect(files('/work/svc', '/work/svc/src/main.ts')).toEqual(['/work/svc/src/a.ts']);
+    // A Windows caller hands the root and the entry with backslashes; the compiler names files with forward slashes.
+    expect(files('\\work\\svc\\', '\\work\\svc\\src\\main.ts')).toEqual(['/work/svc/src/a.ts']);
   });
 });

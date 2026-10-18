@@ -123,6 +123,16 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   registerPatterns(server, context);
   registerRuntime(server, context);
 
+  // A closed connection lets go of the database (P199). On Windows a file held
+  // open can be neither removed nor replaced, so a server that kept it after
+  // its client left would block the next build's rename and every clean-up of
+  // the directory. The next question on a new connection opens it again.
+  const closed = server.server.onclose;
+  server.server.onclose = () => {
+    handle.close();
+    closed?.();
+  };
+
   return server;
 };
 

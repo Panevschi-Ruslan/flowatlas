@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { parseConfig, patternFilesFor } from '../config.js';
 import { GraphBuilder } from '../builder.js';
+import { normalizeFilePath } from '../ids.js';
 import { readPatterns, reportPatterns } from './apply.js';
 import { PATTERN_CAUSES, patternsFor, readPatternText } from './schema.js';
 
@@ -63,7 +64,8 @@ describe('pattern files', () => {
       services: [{ name: 'shop', repo: '.', patterns: ['./own/c.yml', './patterns/a.yml'] }],
     });
     const service = config.services[0];
-    expect(patternFilesFor(config, service, dir).map((path) => path.slice(dir.length + 1))).toEqual([
+    // Absolute paths in the OS's own spelling; compared relative and POSIX (P199).
+    expect(patternFilesFor(config, service, dir).map((path) => normalizeFilePath(path, dir))).toEqual([
       'patterns/a.yml',
       'patterns/b.yml',
       'own/c.yml',

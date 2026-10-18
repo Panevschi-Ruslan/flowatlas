@@ -1,4 +1,5 @@
 import { dirname, join, resolve } from 'node:path';
+import { isWithinDir } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 
 /**
@@ -146,9 +147,8 @@ export const prismaSchemaFor = (file: SourceFile): PrismaSchema | undefined => {
  * there, not because anything about it is spelled like one.
  */
 export const isGeneratedPrismaClient = (from: SourceFile, target: string): boolean =>
-  (prismaSchemaFor(from)?.clientOutputs ?? []).some(
-    (output) => target === output || target.startsWith(`${output}/`),
-  );
+  // Either path may be spelled with either separator on Windows (P199).
+  (prismaSchemaFor(from)?.clientOutputs ?? []).some((output) => isWithinDir(target, output));
 
 /**
  * The table a model is stored in, by the delegate a call names it with.

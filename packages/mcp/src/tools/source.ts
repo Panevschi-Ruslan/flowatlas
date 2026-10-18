@@ -130,7 +130,9 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
         const path = join(root, node.file);
         if (!existsSync(path)) return { error: 'source unavailable', file: path };
 
-        const lines = readFileSync(path, 'utf8').split('\n');
+        // A file checked out with CRLF, as Windows does by default, is read
+        // by the same lines and answers no `\r` (P199).
+        const lines = readFileSync(path, 'utf8').split(/\r?\n/);
         const start = Math.max((node.line ?? 1) - 1, 0);
         const window = sourceWindow(lines, start, {
           ...(input.fromLine === undefined ? {} : { fromLine: input.fromLine }),

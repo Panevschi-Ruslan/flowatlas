@@ -1484,6 +1484,17 @@ twenty-six, with prompts, resources and paged, structured answers.
 - **A pack after an incremental build shipped stale chunks (P198).** A build
   over an earlier one left the earlier, hash-named bundle chunks in `dist/`,
   and a pack shipped them all; the bundle now starts from an empty `dist/`.
+- **A reading on Windows compared two spellings of one path (P199).** The
+  compiler names files with forward slashes on Windows too, and a directory
+  built with `path.join` has backslashes, so every "is this file under that
+  directory" answered no: shape files went unrecognised, a declared workspace
+  package's files were not the service's, the NestJS reader found no global
+  prefix, the data reader read no query, and `patterns suggest` found no calls.
+  Both spellings are now compared as one, and paths recorded or printed are
+  POSIX. On Windows a temporary repository is now seen as a git repository, a
+  ref build links `node_modules` with a junction, query commands and a
+  disconnected MCP server let go of `graph.db`, and `get_source` drops the `\r`
+  of a CRLF file. A checkout is LF on every OS (`.gitattributes`).
 - **`flowatlas mcp` reports its version (P86).** `initialize` answered every
   client `serverInfo.version: "0.0.0"`; it now answers the command's version.
   The standalone server bin answers its own package's.

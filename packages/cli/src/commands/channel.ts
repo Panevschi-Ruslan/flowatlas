@@ -22,60 +22,66 @@ const group = (id: string, label: string, children: FlowNode[]): FlowNode => ({
 export const runChannel = (name: string, options: QueryOptions, io: QueryIo = processIo): void => {
   const settings = settingsFor(options, io);
   const db = openDbFromOptions(settings);
-  const channel = resolveChannel(db, name);
+  // Closed when the answer is out (P199): on Windows an open database can
+  // be neither replaced by the next build nor removed with its directory.
+  try {
+    const channel = resolveChannel(db, name);
 
-  const producers = db
-    .edgesTo(channel.id, ['emits'])
-    .flatMap((edge) => {
-      const publisher = db.node(edge.from);
-      return publisher === undefined
-        ? []
-        : [
-            {
-              node: projectDetail(publisher, settings.detail),
-              edge: projectEdge(edge, settings.detail),
-              children: [],
-            } satisfies FlowNode,
-          ];
-    })
-    .sort((a, b) => (a.node.id < b.node.id ? -1 : 1));
+    const producers = db
+      .edgesTo(channel.id, ['emits'])
+      .flatMap((edge) => {
+        const publisher = db.node(edge.from);
+        return publisher === undefined
+          ? []
+          : [
+              {
+                node: projectDetail(publisher, settings.detail),
+                edge: projectEdge(edge, settings.detail),
+                children: [],
+              } satisfies FlowNode,
+            ];
+      })
+      .sort((a, b) => (a.node.id < b.node.id ? -1 : 1));
 
-  // The consumer side is an ordinary forward walk from the channel, so what a
-  // handler goes on to do is part of the answer.
-  const forward = buildFlowTree(db, channel.id, {
-    depth: settings.depth,
-    maxNodes: settings.maxNodes,
-    detail: settings.detail,
-  });
+    // The consumer side is an ordinary forward walk from the channel, so what a
+    // handler goes on to do is part of the answer.
+    const forward = buildFlowTree(db, channel.id, {
+      depth: settings.depth,
+      maxNodes: settings.maxNodes,
+      detail: settings.detail,
+    });
 
-  const warnings: string[] = [];
-  const mark = settings.ascii ? '!' : '⚠';
-  if (producers.length === 0) warnings.push(`${mark} no producers`);
-  if (forward.root.children.length === 0) warnings.push(`${mark} no consumers`);
+    const warnings: string[] = [];
+    const mark = settings.ascii ? '!' : '⚠';
+    if (producers.length === 0) warnings.push(`${mark} no producers`);
+    if (forward.root.children.length === 0) warnings.push(`${mark} no consumers`);
 
-  present(
-    db,
-    settings,
-    {
-      tree: {
-        node: forward.root.node,
-        children: [
-          group(`${channel.id}#producers`, 'producers', producers),
-          group(`${channel.id}#consumers`, 'consumers', forward.root.children),
-        ],
+    present(
+      db,
+      settings,
+      {
+        tree: {
+          node: forward.root.node,
+          children: [
+            group(`${channel.id}#producers`, 'producers', producers),
+            group(`${channel.id}#consumers`, 'consumers', forward.root.children),
+          ],
+        },
+        footer: warnings,
+        extra: {
+          channel: channel.id,
+          producers: producers.length,
+          consumers: forward.root.children.length,
+          ...(warnings.length === 0 ? {} : { warnings }),
+        },
+        ...(forward.truncated === undefined ? {} : { truncated: forward.truncated }),
       },
-      footer: warnings,
-      extra: {
-        channel: channel.id,
-        producers: producers.length,
-        consumers: forward.root.children.length,
-        ...(warnings.length === 0 ? {} : { warnings }),
-      },
-      ...(forward.truncated === undefined ? {} : { truncated: forward.truncated }),
-    },
-    io,
-    settings.detail >= 3 ? sourceRootsFor(settings) : undefined,
-  );
+      io,
+      settings.detail >= 3 ? sourceRootsFor(settings) : undefined,
+    );
+  } finally {
+    db.close();
+  }
 };
 
 export const registerChannel = (program: Command): void => {

@@ -152,6 +152,28 @@ const DRIVE = /^[A-Za-z]:(?:\/|$)/;
  */
 export const pathKey = (path: string): string => (DRIVE.test(path) ? `${path.charAt(0).toUpperCase()}${path.slice(1)}` : path);
 
+/** A path as two paths are compared: forward slashes, the drive letter in one case, no trailing separator. */
+const comparable = (path: string): string => {
+  const key = pathKey(toPosixPath(path));
+  return key.length > 1 && key.endsWith('/') ? key.replace(/\/+$/, '') : key;
+};
+
+/**
+ * Whether a path is a directory or inside it, both spelled any way the OS
+ * writes them (P83, P199): compared with forward slashes, a drive letter in any
+ * case. The compiler names every file with forward slashes on Windows too,
+ * while `path.join` and `path.resolve` give backslashes, so a test written as
+ * `path.startsWith(dir + '/')` on two such paths is false there for every file.
+ */
+export const isWithinDir = (path: string, dir: string): boolean => {
+  const at = comparable(path);
+  const base = comparable(dir);
+  return at === base || at.startsWith(base.endsWith('/') ? base : `${base}/`);
+};
+
+/** Whether a path is inside a directory and not the directory itself, spelled either way (P199). */
+export const isBelowDir = (path: string, dir: string): boolean => comparable(path) !== comparable(dir) && isWithinDir(path, dir);
+
 /** The root a POSIX-spelled absolute path starts at: `/`, or a drive as `C:`; undefined for a relative one. */
 const rootOfPath = (path: string): string | undefined =>
   path.startsWith('/') ? '/' : DRIVE.test(path) ? path.slice(0, 2).toUpperCase() : undefined;

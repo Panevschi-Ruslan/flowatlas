@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { builtInShapesFor } from './config.js';
 import { declarationShapesOf, isDeclarationShape } from './declaration-shapes.js';
+import { toPosixPath } from './ids.js';
 import { countSources, createProject } from './project.js';
 
 const dirs: string[] = [];
@@ -40,7 +41,8 @@ describe('built-in declaration shapes', () => {
     const type = project.getSourceFileOrThrow('main.ts').getVariableDeclarationOrThrow('s').getType();
     expect(type.getText(undefined, 0)).toContain('Stream<number>');
     const declared = type.getSymbolOrThrow().getDeclarations()[0]?.getSourceFile().getFilePath();
-    expect(declared).toBe(join(root, 'node_modules/@scope/stream/index.d.ts'));
+    // The compiler names files with forward slashes on every OS (P199).
+    expect(declared).toBe(toPosixPath(join(root, 'node_modules/@scope/stream/index.d.ts')));
   });
 
   it('leaves an installed package alone', () => {
@@ -61,7 +63,9 @@ describe('built-in declaration shapes', () => {
   it('is no source file of the repository when sources are counted', () => {
     const root = repoOf(SOURCE);
     const project = createProject({ rootDir: root, shapes: [SHAPE] });
+    // Asked with the OS's own spelling and with the compiler's (P199).
     expect(isDeclarationShape(project, join(root, 'node_modules/@scope/stream/index.d.ts'))).toBe(true);
+    expect(isDeclarationShape(project, toPosixPath(join(root, 'node_modules/@scope/stream/index.d.ts')))).toBe(true);
     expect(countSources(project).files).toBe(1);
   });
 

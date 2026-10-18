@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
 import { Node, SymbolFlags, VariableDeclarationKind } from 'ts-morph';
+import { toPosixPath } from './ids.js';
 import { declarationOf } from './static-value.js';
 
 /**
@@ -46,7 +47,9 @@ const LIB_FILE = /\/lib\.[^/]*\.d\.ts$/;
  * layout resolve to the package itself rather than to the directory the store
  * keeps its copies in.
  */
-export const packageOfPath = (filePath: string): string | null => {
+export const packageOfPath = (written: string): string | null => {
+  // Spelled either way (P199): the compiler's forward slashes or the OS's own.
+  const filePath = toPosixPath(written);
   const marker = '/node_modules/';
   const at = filePath.lastIndexOf(marker);
   if (at < 0) return null;

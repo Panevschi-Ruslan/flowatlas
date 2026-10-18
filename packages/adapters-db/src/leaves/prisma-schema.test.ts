@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+import { normalizeFilePath } from '@flowatlas/core';
 import { Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { isGeneratedPrismaClient, parsePrismaSchema, prismaTableOf } from './prisma-schema.js';
@@ -35,16 +37,19 @@ describe('what a Prisma schema states', () => {
   });
 
   it('resolves a client generator’s output against the schema’s own directory', () => {
-    expect(parsePrismaSchema(SCHEMA, '/repo/prisma').clientOutputs).toEqual(['/repo/src/generated/client']);
+    // Resolved as the OS resolves it: on Windows `/repo` is on the current drive (P199).
+    const outputs = parsePrismaSchema(SCHEMA, '/repo/prisma').clientOutputs;
+    expect(outputs.map((output) => normalizeFilePath(output, resolve('/repo')))).toEqual(['src/generated/client']);
   });
 
   it('finds the schema at or above the file a client is stated in', () => {
     const project = new Project({ useInMemoryFileSystem: true });
     project.getFileSystem().writeFileSync('/repo/prisma/schema.prisma', SCHEMA);
     const file = project.createSourceFile('/repo/src/db.ts', 'export {};');
-    expect(isGeneratedPrismaClient(file, '/repo/src/generated/client')).toBe(true);
-    expect(isGeneratedPrismaClient(file, '/repo/src/generated/client/index')).toBe(true);
-    expect(isGeneratedPrismaClient(file, '/repo/src/generated/clientele')).toBe(false);
+    // A module path is resolved by the reader, so it is spelled as the OS spells it (P199).
+    expect(isGeneratedPrismaClient(file, resolve('/repo/src/generated/client'))).toBe(true);
+    expect(isGeneratedPrismaClient(file, resolve('/repo/src/generated/client/index'))).toBe(true);
+    expect(isGeneratedPrismaClient(file, resolve('/repo/src/generated/clientele'))).toBe(false);
     expect(prismaTableOf(file, 'user')).toBe('users');
   });
 

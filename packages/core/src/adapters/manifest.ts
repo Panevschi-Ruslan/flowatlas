@@ -1,5 +1,6 @@
 import { readdirSync, type Dirent } from 'node:fs';
 import { join } from 'node:path';
+import { isBelowDir } from '../ids.js';
 import { extentDeclared, serviceExtent, workspaceMemberDirs, workspaceRootsAbove } from '../workspace.js';
 import { readPackageJson, type PackageJson } from '../package-json.js';
 
@@ -320,8 +321,9 @@ export const suppliedWith = (
 
   const nearestFirst = extent.map((pkg) => pkg.dir).sort((a, b) => b.length - a.length);
   return (file) => {
-    const path = file.replace(/\\/g, '/');
-    const owner = nearestFirst.find((at) => path.startsWith(`${at}/`));
+    // The file as the compiler spells it, the directories as the OS does: on
+    // Windows one has forward slashes and the other backslashes (P199).
+    const owner = nearestFirst.find((at) => isBelowDir(file, at));
     return owner !== undefined && supplied.has(owner);
   };
 };

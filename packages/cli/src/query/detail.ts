@@ -88,7 +88,8 @@ export const collectSource = (
     let lines = files.get(path);
     if (lines === undefined) {
       if (!existsSync(path)) continue;
-      lines = readFileSync(path, 'utf8').split('\n');
+      // A file checked out with CRLF (Windows) gives the same lines (P199).
+      lines = readFileSync(path, 'utf8').split(/\r?\n/);
       files.set(path, lines);
     }
 

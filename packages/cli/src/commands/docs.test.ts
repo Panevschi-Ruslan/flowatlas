@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SCHEMA_VERSION, type GraphEdge, type GraphNode, type ProjectGraph } from '@flowatlas/core';
+import { normalizeFilePath, SCHEMA_VERSION, type GraphEdge, type GraphNode, type ProjectGraph } from '@flowatlas/core';
 import { parseDocs, readDocsIndex, writeGraphDb, type LinkReport } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
 import { EXIT } from '../exit.js';
@@ -342,8 +342,9 @@ describe('which files a run reads', () => {
       writeFileSync(join(dir, path), '');
     }
     const where = { cwd: dir, rootDir: dir, outputDir: join(dir, 'out') };
-    expect(docFiles([], where).files.map((path) => path.slice(dir.length + 1))).toEqual(['b.md', 'docs/a.md']);
-    expect(docFiles([], { ...where, configured: ['docs/*.md'] }).files.map((path) => path.slice(dir.length + 1))).toEqual(['docs/a.md']);
+    // Absolute paths in the OS's own spelling, compared relative and POSIX (P199).
+    expect(docFiles([], where).files.map((path) => normalizeFilePath(path, dir))).toEqual(['b.md', 'docs/a.md']);
+    expect(docFiles([], { ...where, configured: ['docs/*.md'] }).files.map((path) => normalizeFilePath(path, dir))).toEqual(['docs/a.md']);
     expect(docFiles(['docs', 'missing.md', 'out/c.md'], where)).toEqual({ files: [join(dir, 'docs', 'a.md')], missing: ['missing.md'] });
   });
 

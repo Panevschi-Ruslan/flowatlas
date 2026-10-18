@@ -12,7 +12,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { loadConfig, serviceDirOf, type LoadedConfig } from '@flowatlas/core';
+import { loadConfig, serviceDirOf, toPosixPath, type LoadedConfig } from '@flowatlas/core';
 import {
   DEFAULT_SPEC_DEPTH,
   diffSpecs,
@@ -130,7 +130,9 @@ const countsSaid = (counts: Record<string, number>): string =>
 /** A file as a person reads it: from the configuration's directory when it is under it. */
 const shownPath = (rootDir: string, file: string): string => {
   const path = relative(rootDir, file);
-  return path.startsWith('..') ? file : path;
+  // With `/` on every OS, as every other path the run prints (P199); a file on
+  // another drive has no relative path and keeps its own.
+  return path.startsWith('..') || isAbsolute(path) ? file : toPosixPath(path);
 };
 
 /** One line per document: what it holds, what was left out and what was not read. */

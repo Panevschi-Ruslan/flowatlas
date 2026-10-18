@@ -23,36 +23,42 @@ export const runImpact = (
 ): void => {
   const settings = settingsFor(options, io);
   const db = openDbFromOptions(settings);
-  const target = resolveSymbol(db, symbol, settings.service);
+  // Closed when the answer is out (P199): on Windows an open database can
+  // be neither replaced by the next build nor removed with its directory.
+  try {
+    const target = resolveSymbol(db, symbol, settings.service);
 
-  const callers = callersOf(db, target, {
-    // Without `--depth` the walk goes as far back as the workflows it climbs
-    // through need, the way `flow` goes as far down (`walkBack`).
-    ...(options.depth === undefined ? {} : { depth: settings.depth }),
-    maxNodes: settings.maxNodes,
-    detail: settings.detail,
-    ...(options.entriesOnly === true ? { entriesOnly: true } : {}),
-  });
+    const callers = callersOf(db, target, {
+      // Without `--depth` the walk goes as far back as the workflows it climbs
+      // through need, the way `flow` goes as far down (`walkBack`).
+      ...(options.depth === undefined ? {} : { depth: settings.depth }),
+      maxNodes: settings.maxNodes,
+      detail: settings.detail,
+      ...(options.entriesOnly === true ? { entriesOnly: true } : {}),
+    });
 
-  present(
-    db,
-    settings,
-    {
-      tree: callers.root,
-      footer: [reachableSummary(callers.entries, callers.withoutEntry)],
-      extra: {
-        target: target.id,
-        reached: callers.reached,
-        reachable: groupEntries(callers.entries),
-        entries: callers.entries.map((entry) => entry.id),
-        services: callers.services,
-        servicesWithoutEntry: callers.withoutEntry,
+    present(
+      db,
+      settings,
+      {
+        tree: callers.root,
+        footer: [reachableSummary(callers.entries, callers.withoutEntry)],
+        extra: {
+          target: target.id,
+          reached: callers.reached,
+          reachable: groupEntries(callers.entries),
+          entries: callers.entries.map((entry) => entry.id),
+          services: callers.services,
+          servicesWithoutEntry: callers.withoutEntry,
+        },
+        ...(callers.truncated === undefined ? {} : { truncated: callers.truncated }),
       },
-      ...(callers.truncated === undefined ? {} : { truncated: callers.truncated }),
-    },
-    io,
-    settings.detail >= 3 ? sourceRootsFor(settings) : undefined,
-  );
+      io,
+      settings.detail >= 3 ? sourceRootsFor(settings) : undefined,
+    );
+  } finally {
+    db.close();
+  }
 };
 
 export const registerImpact = (program: Command): void => {
