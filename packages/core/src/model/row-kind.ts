@@ -161,6 +161,7 @@ const GAPS: readonly string[] = [
   'application-root-unread',
   // What a route fails with (the failures pass, P87)
   'fails-filter-unread',
+  'fails-interceptor-unread',
   // Routes and registries (the entry adapters)
   'route-path-dynamic',
   'route-mount-unread',

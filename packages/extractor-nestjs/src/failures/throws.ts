@@ -674,12 +674,14 @@ const thrownBy = (expression: Expression | undefined, statement: Node): Omit<Thr
 /**
  * Every exception a body throws and does not catch itself, in the order it is
  * written. A value thrown by name that no helper built - a rethrow, a caught
- * error - is left out: what it is was decided somewhere else.
+ * error - is left out: what it is was decided somewhere else. So is a throw
+ * in `leaveOut`: one an interceptor maps an error to, which is read as that
+ * (P207).
  */
-export const throwsIn = (body: Node): Thrown[] => {
+export const throwsIn = (body: Node, leaveOut: ReadonlySet<Node> = new Set()): Thrown[] => {
   const found: Thrown[] = [];
   for (const statement of body.getDescendantsOfKind(SyntaxKind.ThrowStatement)) {
-    if (caughtWithin(statement, body)) continue;
+    if (leaveOut.has(statement) || caughtWithin(statement, body)) continue;
     const thrown = thrownBy(statement.getExpression(), statement);
     if (thrown !== undefined) found.push({ ...thrown, line: lineOf(statement) });
   }

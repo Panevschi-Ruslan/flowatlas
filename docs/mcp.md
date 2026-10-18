@@ -537,7 +537,7 @@ What `get_flow` says beside the chain:
 - **`fails`** on each entry: what it can end in, one entry per status and
   exception - `{ status?, exception, assumed?, declared?, sources, sites, at,
   loc? }`, with `at` and `loc` the first place it is raised and `sources` how
-  (`throw`, `guard`, `pipe`). `assumed: true` is a status nothing on the path
+  (`throw`, `guard`, `pipe`, `interceptor`). `assumed: true` is a status nothing on the path
   writes, such as the framework's 500 for an error it does not know;
   `declared` is the status the error class states where no filter maps it. At
   `detail >= 2` each entry adds `places: [{ at, loc, source }]`. A throw whose

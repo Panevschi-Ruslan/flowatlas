@@ -339,6 +339,7 @@ export const PAGE_WORDS = Object.freeze({
     'failure-declared-unseen': 'declared failure never seen',
     'failure-seen-undeclared': 'status seen but not declared',
     'fails-filter-unread': 'exception filter status not read',
+    'fails-interceptor-unread': 'interceptor error handling not read',
     'file-not-parsed': 'file could not be parsed',
     'function-handler-ambiguous': 'function handler ambiguous',
     'function-handler-not-found': 'function handler not found',

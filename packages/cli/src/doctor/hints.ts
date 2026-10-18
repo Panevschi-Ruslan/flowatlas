@@ -280,6 +280,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Set services[].bootstrap in flowatlas.config.json, or pass --bootstrap, so globals can be read.',
   'fails-filter-unread': () =>
     'An exception filter in front of these routes hands the response a status this cannot read: a helper\'s answer, a lookup, a value built at run time. The statuses of what it catches are listed as assumed. Set the status in the filter itself, as a number or read off the exception (exception.status, exception.getStatus()), and the routes behind it say what they really answer.',
+  'fails-interceptor-unread': () =>
+    'An interceptor around these routes handles their errors in a way this cannot read: a catchError(...) whose callback calls a helper or is a method, a try/catch around next.handle(), a promise .catch(), an installed interceptor. What the routes fail with is listed as assumed. Map an error in catchError(...) with throwError(() => new SomeException()), a throw, a rethrow (throwError(() => err)) or a value (of(...)), branching on instanceof, and the routes behind it say what they really answer.',
   'application-root-unread': () =>
     'Hand the factory call the root module class itself. An address is only an address within one application, so an application nobody can name shares an address space with every other one in this service, and where two of them serve one path the file that loses it contributes no node at all.',
 

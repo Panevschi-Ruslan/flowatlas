@@ -1,10 +1,21 @@
-import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import type { RepoGraph } from '@flowatlas/core';
+import { dirname, join, relative, resolve, sep } from 'node:path';
+import { isWithinDir, type RepoGraph } from '@flowatlas/core';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { loadBuildCache } from '../build/cache.js';
-import { watchProject, type WatchHandle } from '../build/watch.js';
+import { watchProject, type OpenWatcher, type WatchHandle, type WatchIgnored } from '../build/watch.js';
+import type { WatchEventName } from '../build/watch-surroundings.js';
 import { buildProject, serviceGraphPath, type BuildResult } from './build.js';
 
 /**
@@ -205,6 +216,62 @@ describe('a cached graph whose stand-ins moved', () => {
   }, 120_000);
 });
 
+/**
+ * A watcher that reports what a test tells it to, the way chokidar would (P206):
+ * an event under one of its directories, every directory on the way and the
+ * path itself past its `ignored`. Nothing waits on a kernel, so what a test
+ * asserts is what the watch did with the event and not when it heard it.
+ */
+const fakeWatchers = (): {
+  openWatcher: OpenWatcher;
+  emit: (event: WatchEventName, path: string) => void;
+  /** How many watchers were ever started on a directory. */
+  opened: (dir: string) => number;
+  /** How many are watching it now. */
+  open: (dir: string) => number;
+} => {
+  interface Fake {
+    roots: Set<string>;
+    ignored: WatchIgnored;
+    listeners: Array<(event: WatchEventName, path: string) => void>;
+    closed: boolean;
+  }
+  const all: Fake[] = [];
+  const openWatcher: OpenWatcher = async (paths, ignored) => {
+    const fake: Fake = { roots: new Set(paths), ignored, listeners: [], closed: false };
+    all.push(fake);
+    return {
+      on: (listener) => {
+        fake.listeners.push(listener);
+      },
+      add: (more) => more.forEach((dir) => fake.roots.add(dir)),
+      unwatch: (gone) => gone.forEach((dir) => fake.roots.delete(dir)),
+      close: async () => {
+        fake.closed = true;
+      },
+    };
+  };
+  const sees = (fake: Fake, path: string, kind: 'dir' | 'file'): boolean =>
+    [...fake.roots].some((root) => {
+      if (!isWithinDir(path, root)) return false;
+      const parts = relative(root, path).split(sep).filter((part) => part !== '');
+      for (let depth = 1; depth < parts.length; depth += 1) {
+        if (fake.ignored(join(root, ...parts.slice(0, depth)), 'dir')) return false;
+      }
+      return !fake.ignored(path, kind);
+    });
+  const emit = (event: WatchEventName, path: string): void => {
+    const kind = event === 'addDir' || event === 'unlinkDir' ? 'dir' : 'file';
+    for (const fake of all) {
+      if (fake.closed || !sees(fake, path, kind)) continue;
+      for (const listener of fake.listeners) listener(event, path);
+    }
+  };
+  const opened = (dir: string): number => all.filter((fake) => fake.roots.has(dir)).length;
+  const open = (dir: string): number => all.filter((fake) => !fake.closed && fake.roots.has(dir)).length;
+  return { openWatcher, emit, opened, open };
+};
+
 describe('a watch whose stand-ins moved', () => {
   let handle: WatchHandle | undefined;
 
@@ -213,7 +280,146 @@ describe('a watch whose stand-ins moved', () => {
     handle = undefined;
   });
 
-  it('mounts a package directory added between two rebuilds on the second', async () => {
+  /** A watch of a fresh copy, through the fake watcher, and the rebuilds it makes. */
+  const watching = async (): Promise<{
+    root: string;
+    rebuilds: BuildResult[];
+    printed: string[];
+    fake: ReturnType<typeof fakeWatchers>;
+    /** The rebuilds an event earned, once the watch has gone quiet. */
+    after: (event: WatchEventName, path: string) => Promise<BuildResult[]>;
+  }> => {
+    const root = copyOfFixture();
+    const rebuilds: BuildResult[] = [];
+    const printed: string[] = [];
+    const fake = fakeWatchers();
+    handle = await watchProject({
+      config: join(root, 'flowatlas.config.json'),
+      builtAt: FIXED,
+      debounceMs: 10,
+      print: (line) => printed.push(line),
+      onRebuild: (result) => rebuilds.push(result),
+      openWatcher: fake.openWatcher,
+    });
+    const watch = handle;
+    const after = async (event: WatchEventName, path: string): Promise<BuildResult[]> => {
+      const before = rebuilds.length;
+      fake.emit(event, join(root, ...path.split('/')));
+      await watch.settled();
+      return rebuilds.slice(before);
+    };
+    return { root, rebuilds, printed, fake, after };
+  };
+
+  it('says what it watches beside the repositories', async () => {
+    const { printed } = await watching();
+    expect(printed.at(-1)).toBe('watching 2 repositories, the directories beside the configuration and 1 shapes entry');
+  }, 120_000);
+
+  it('reads the importer again when a package directory appears beside the configuration, and when its source is edited', async () => {
+    const { root, rebuilds, after } = await watching();
+    expect(rebuilds).toHaveLength(1);
+    expect(rowsOf(graphOf(rebuilds[0] as BuildResult, 'loans-api'), 'module-not-installed')).toContain(
+      '@acme/feature-flags',
+    );
+
+    addFlagsLibrary(root);
+    const appeared = await after('addDir', 'flags-lib');
+    expect(appeared).toHaveLength(1);
+    expect(appeared[0]?.plan['loans-api']).toEqual({
+      mode: 'full',
+      reason: 'stand-ins changed: package @acme/feature-flags now at flags-lib',
+    });
+    expect(appeared[0]?.plan['money-lib']).toEqual({ mode: 'skip', reason: '0 files changed' });
+    expect(rowsOf(graphOf(appeared[0] as BuildResult, 'loans-api'), 'package-from-repo')).toContain('@acme/feature-flags');
+
+    // Read from outside every repository, so watched by name from now on.
+    appendFileSync(join(root, 'flags-lib/src/index.ts'), 'export const isOff = (name: string): boolean => !name;\n');
+    const edited = await after('change', 'flags-lib/src/index.ts');
+    expect(edited).toHaveLength(1);
+    expect(edited[0]?.plan['loans-api']?.mode).not.toBe('skip');
+    expect(edited[0]?.plan['money-lib']).toEqual({ mode: 'skip', reason: '0 files changed' });
+  }, 120_000);
+
+  it('reads the importer again when a shape file is added beside the configuration, and when it is edited', async () => {
+    const { root, after } = await watching();
+    write(root, 'flowatlas-shapes/acme-feature-flags.d.ts', FLAGS_SHAPE);
+    const added = await after('add', 'flowatlas-shapes/acme-feature-flags.d.ts');
+    expect(added.map((result) => result.plan['loans-api'])).toEqual([
+      { mode: 'full', reason: 'stand-ins changed: shape file flowatlas-shapes/acme-feature-flags.d.ts added' },
+    ]);
+
+    appendFileSync(join(root, 'flowatlas-shapes/acme-feature-flags.d.ts'), '\n');
+    const edited = await after('change', 'flowatlas-shapes/acme-feature-flags.d.ts');
+    expect(edited.map((result) => result.plan['loans-api'])).toEqual([
+      { mode: 'full', reason: 'stand-ins changed: shape file flowatlas-shapes/acme-feature-flags.d.ts changed' },
+    ]);
+  }, 120_000);
+
+  it('does not rebuild for what nothing stands in for', async () => {
+    const { root, after } = await watching();
+    write(root, 'notes.md', '# notes\n');
+    expect(await after('add', 'notes.md')).toEqual([]);
+    write(root, 'flowatlas-shapes/readme.md', 'not a shape\n');
+    expect(await after('add', 'flowatlas-shapes/readme.md')).toEqual([]);
+    write(root, 'flags-lib/src/index.ts', 'export const isOn = true;\n');
+    expect(await after('add', 'flags-lib/src/index.ts')).toEqual([]);
+  }, 120_000);
+
+  it('watches a repository again after it went away and came back', async () => {
+    const { root, printed, fake, after } = await watching();
+    const repoDir = join(root, 'money-lib');
+    const parked = join(root, '.parked-money-lib');
+    expect(fake.opened(repoDir)).toBe(1);
+
+    renameSync(repoDir, parked);
+    expect(await after('unlinkDir', 'money-lib')).toEqual([]);
+    expect(printed.at(-1)).toContain('money-lib is not a directory');
+
+    renameSync(parked, repoDir);
+    const back = await after('addDir', 'money-lib');
+    expect(back).toHaveLength(1);
+    expect(back[0]?.failed).toBe(false);
+    expect(fake.opened(repoDir)).toBe(2);
+
+    appendFileSync(join(repoDir, 'src/format.ts'), 'export const formatCents = (cents: number): string => `${cents}`;\n');
+    const edited = await after('change', 'money-lib/src/format.ts');
+    expect(edited).toHaveLength(1);
+    expect(edited[0]?.plan['money-lib']?.mode).not.toBe('skip');
+  }, 120_000);
+
+  it('follows an edit to its configuration (P219)', async () => {
+    const { root, printed, fake, after } = await watching();
+    const configPath = join(root, 'flowatlas.config.json');
+    const original = readFileSync(configPath, 'utf8');
+    const moneyLib = join(root, 'money-lib');
+    expect(fake.open(moneyLib)).toBe(1);
+
+    const raw = JSON.parse(original) as { services: Array<{ name: string }> };
+    write(root, 'flowatlas.config.json', { ...raw, services: raw.services.filter((service) => service.name !== 'money-lib') });
+    const dropped = await after('change', 'flowatlas.config.json');
+    expect(dropped).toHaveLength(1);
+    expect(Object.keys(dropped[0]?.plan ?? {})).toEqual(['loans-api']);
+    expect(fake.open(moneyLib)).toBe(0);
+
+    // One that does not load is the build's to say, and the watch goes on.
+    writeFileSync(configPath, '{ "services": [');
+    expect(await after('change', 'flowatlas.config.json')).toEqual([]);
+    expect(printed.at(-1)).toContain('not valid JSON');
+
+    writeFileSync(configPath, original);
+    const back = await after('change', 'flowatlas.config.json');
+    expect(back).toHaveLength(1);
+    expect(Object.keys(back[0]?.plan ?? {}).sort()).toEqual(['loans-api', 'money-lib']);
+    expect(fake.open(moneyLib)).toBe(1);
+    expect(fake.opened(moneyLib)).toBe(2);
+
+    appendFileSync(join(moneyLib, 'src/format.ts'), 'export const formatCents = (cents: number): string => `${cents}`;\n');
+    const edited = await after('change', 'money-lib/src/format.ts');
+    expect(edited.map((result) => result.plan['money-lib']?.mode)).not.toContain('skip');
+  }, 120_000);
+
+  it('mounts a package directory that appears beside the configuration, with chokidar listening', async () => {
     const root = copyOfFixture();
     const rebuilds: BuildResult[] = [];
     handle = await watchProject({
@@ -224,15 +430,9 @@ describe('a watch whose stand-ins moved', () => {
       onRebuild: (result) => rebuilds.push(result),
     });
     expect(rebuilds).toHaveLength(1);
-    expect(rowsOf(graphOf(rebuilds[0] as BuildResult, 'loans-api'), 'module-not-installed')).toContain(
-      '@acme/feature-flags',
-    );
 
-    // A new directory beside the configuration is not something the watch
-    // listens to; the next save in the repository is what rebuilds, and that
-    // rebuild sees the directory.
+    // No save in any repository: the directory appearing is the change.
     addFlagsLibrary(root);
-    appendFileSync(join(root, 'loans-api/src/main.ts'), '\n// touched\n');
     const until = Date.now() + 60_000;
     const read = (): BuildResult | undefined =>
       rebuilds.slice(1).find((result) => result.plan['loans-api']?.mode === 'full');

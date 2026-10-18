@@ -340,6 +340,19 @@ export const workspaceRootOf = (dir: string): string | undefined => {
   return workspaceRootsAbove(member).find((root) => workspaceMemberDirs(root).includes(member));
 };
 
+/**
+ * Forgets every workspace this process walked (P206): the globs each root
+ * declares, the members they found and each service's extent. One build cannot
+ * see them change, but a watch is many builds in one process, and a member
+ * that appears during it would otherwise never be a package anything could
+ * import. A build forgets them when it starts, beside the package index.
+ */
+export const forgetWorkspaces = (): void => {
+  patternsByRoot.clear();
+  memberDirsByRoot.clear();
+  extentByService.clear();
+};
+
 
 type DependencySection =
   | 'dependencies'
