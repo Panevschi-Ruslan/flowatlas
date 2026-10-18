@@ -1517,6 +1517,15 @@ twenty-six, with prompts, resources and paged, structured answers.
   service's commit otherwise: `head: null` had read as "no head". Its `counts`
   are those of the service asked about, types are filtered by the service in
   their id, and `counts` gained `gaps` and `lostJoins`.
+- **The demo project's billing service calls orders (P209).** `billing` made
+  no outgoing call in code, so its @nestjs/observe batch joined nothing on its
+  own. `InvoicesService.create` now reads the order it invoices from `orders`
+  (`GET /orders/:param` through `ORDERS_URL`), and `traces/orders.observe.json`
+  is orders' answer in the same trace: billing's batch alone joins billing's
+  call, and beside orders' it is paired with orders' snapshot by their shared
+  `ti`. The demo figures in the README and on the project page are measured
+  again: 130 nodes, 114 edges, 12 of them across a repository boundary, 3 of 7
+  calls between services joined.
 
 ### Fixed
 
@@ -1638,6 +1647,25 @@ twenty-six, with prompts, resources and paged, structured answers.
   only a parameter, so every call to `/api/v1/...` read from a HAR, an OTLP
   client span or a URL missed its route. A masked segment now fits a declared
   literal the same rule masks, scored as a parameter.
+- **Two services' @nestjs/observe snapshots of one request kept apart
+  (P222).** The reader made up a snapshot's span ids from its trace id and its
+  place in the batch, so the caller's and the callee's snapshot of one request,
+  which share a `ti`, had the same ids: the second took the first's place as
+  the parent of its tree and as the span its captured body belonged to, which
+  put billing's request body on orders' route. The ids now name the service
+  (`<ti>:billing/0`).
+- **A step to something a walk already drew lands where it was drawn
+  (P223).** A walk writes a node it reached before as a reference with its id
+  and label only, so a sequence drew a table read a second time as a new
+  `orders (store)` participant, and a call back into a method or a way in
+  already drawn as a participant named after its label. It lands where that
+  node was first drawn, in `flow --format sequence`, `diff`, doc blocks and
+  the Structurizr dynamic views.
+- **A channel's doc block put a call back into its own service on the channel
+  (P224).** The walk from a channel stood in the service that declared it, and
+  each step to that service was rewritten as a step to the channel, so a
+  consumer's request back to the publisher read `billing → order.created GET
+  /orders/:param`. The walk now starts at the channel itself.
 - **`flowatlas mcp` reports its version (P86).** `initialize` answered every
   client `serverInfo.version: "0.0.0"`; it now answers the command's version.
   The standalone server bin answers its own package's.

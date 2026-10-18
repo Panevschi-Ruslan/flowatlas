@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-17T10:26:02.892Z",
+  "builtAt": "2026-10-18T11:26:33.140Z",
   "services": [
     {
       "name": "gateway",
@@ -28,6 +28,30 @@
     }
   ],
   "nodes": [
+    {
+      "id": "billing#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
     {
       "id": "billing#src/app.module.ts:AppModule",
       "type": "module",
@@ -153,7 +177,7 @@
       "label": "InvoicesService",
       "repo": "billing",
       "file": "src/invoices/invoices.service.ts",
-      "line": 10,
+      "line": 13,
       "kind": "injectable",
       "meta": {
         "module": "AppModule"
@@ -165,7 +189,7 @@
       "label": "InvoicesService.create",
       "repo": "billing",
       "file": "src/invoices/invoices.service.ts",
-      "line": 14,
+      "line": 30,
       "meta": {
         "signature": {
           "params": [
@@ -184,7 +208,7 @@
       "label": "InvoicesService.findOne",
       "repo": "billing",
       "file": "src/invoices/invoices.service.ts",
-      "line": 26,
+      "line": 45,
       "meta": {
         "signature": {
           "params": [
@@ -243,6 +267,18 @@
         ],
         "producers": 1,
         "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:billing#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "billing",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "config.get"
       }
     },
     {
@@ -396,7 +432,7 @@
             "exception": "ConflictException",
             "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
             "file": "src/invoices/invoices.service.ts",
-            "line": 15,
+            "line": 31,
             "source": "throw"
           }
         ]
@@ -418,7 +454,7 @@
             "exception": "ConflictException",
             "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
             "file": "src/invoices/invoices.service.ts",
-            "line": 15,
+            "line": 31,
             "source": "throw"
           }
         ]
@@ -444,7 +480,7 @@
             "exception": "NotFoundException",
             "at": "billing#src/invoices/invoices.service.ts:InvoicesService.findOne",
             "file": "src/invoices/invoices.service.ts",
-            "line": 28,
+            "line": 47,
             "source": "throw"
           }
         ]
@@ -470,7 +506,7 @@
             "exception": "ConflictException",
             "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
             "file": "src/invoices/invoices.service.ts",
-            "line": 15,
+            "line": 31,
             "source": "throw"
           }
         ]
@@ -1134,6 +1170,23 @@
       }
     },
     {
+      "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+      "type": "http_out",
+      "label": "GET /orders/:param",
+      "repo": "billing",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/${…}",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:billing#OrderView",
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
       "id": "http_out:gateway#src/clients/billing.client.ts:33:12",
       "type": "http_out",
       "label": "POST ?",
@@ -1577,7 +1630,10 @@
           "filesRead": 6,
           "filesUnreadable": 0,
           "classes": 4,
-          "skippedExternalCalls": {}
+          "skippedExternalCalls": {
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1
+          }
         },
         "bootstrap": "src/main.ts",
         "adapters": {
@@ -2326,6 +2382,38 @@
       "line": 28
     },
     {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "to": "billing#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 18
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "to": "billing#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 19
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "to": "config_key:billing#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "to": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33
+    },
+    {
       "from": "channel:invoice.requested",
       "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
       "type": "consumes",
@@ -2925,6 +3013,19 @@
       "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 62
+    },
+    {
+      "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33,
+      "returns": "type:billing#OrderView",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
     },
     {
       "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
@@ -3639,6 +3740,28 @@
         {
           "name": "total",
           "type": "{amount:number;currency:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:billing#OrderView": {
+      "name": "OrderView",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/invoice.dto.ts",
+      "structuralHash": "9b6c96ba536215ea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
           "optional": false
         }
       ],

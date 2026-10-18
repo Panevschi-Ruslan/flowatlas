@@ -74,16 +74,16 @@ can rebuild them from a checkout. Measured with 0.6.0.
 
 | | |
 |---|---|
-| Source read | 27 files, 934 lines of TypeScript |
+| Source read | 27 files, 962 lines of TypeScript |
 | Cold build | 1.2 s |
 | Rebuild with nothing changed | 0.3 s |
-| Graph | 126 nodes, 109 edges |
-| **Edges that cross a repository boundary** | **11** |
+| Graph | 130 nodes, 114 edges |
+| **Edges that cross a repository boundary** | **12** |
 
-That last row is the point. Eleven connections that no compiler in any of
+That last row is the point. Twelve connections that no compiler in any of
 those four checkouts can see, because each one only ever reads its own.
 
-**Where the edges come from.** 99 were read from the code, 5 were inferred and
+**Where the edges come from.** 104 were read from the code, 5 were inferred and
 marked `heuristic`, and 5 were declared by an annotation. Every edge says which
 of the three it is.
 
@@ -99,15 +99,15 @@ selling you something:
 | | first build | configured |
 |---|---|---|
 | Browser requests matched to the route that answers them | 4 of 13 | 6 of 13 |
-| Calls between services matched to a route | 2 of 6 | 2 of 6 |
+| Calls between services matched to a route | 3 of 7 | 3 of 7 |
 | Routes something in the project reaches | 6 | 7 |
 | Message channels with both a publisher and a handler | 1 of 3 | 1 of 3 |
-| Edges that cross a repository boundary | 9 | 11 |
-| Edges inferred and marked `heuristic` | 9 | 5 |
+| Edges that cross a repository boundary | 10 | 12 |
+| Edges inferred and marked `heuristic` | 10 | 5 |
 | Types read from the shared package | 0 | 4 |
 
-The first build already joins two of the six calls between services, but one of
-them only by guessing the service from the name of the setting, and it says so.
+The first build already joins three of the seven calls between services, but two
+of them only by guessing the service from the name of the setting, and it says so.
 The configuration behind the second column, the fixture's own
 `flowatlas.config.json`, names the settings key that addresses a service
 (`baseUrlEnv`), the key a frontend's requests are rooted at and where it points
@@ -126,7 +126,7 @@ third party, and an address built at run time.
 | Names declared more than one way in two repositories | 1 |
 | Channels published to and handled nowhere | 1 |
 | Channels handled and published to nowhere | 1 |
-| Contract errors, over 6 compared boundaries | 0 |
+| Contract errors, over 7 compared boundaries | 0 |
 | Front-end requests for a route nothing serves | 2 |
 
 **What it says it cannot see.** 11 findings to act on, over 13 rows, and 2

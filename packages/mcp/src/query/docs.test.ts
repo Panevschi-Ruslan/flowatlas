@@ -140,3 +140,45 @@ describe('resolveDocTarget', () => {
     }
   });
 });
+
+describe('a channel block', () => {
+  it("draws a consumer's call back into the service that declared the channel as a step to that service (P224)", () => {
+    const path = join(dir, 'channel', 'graph.db');
+    mkdirSync(join(dir, 'channel'), { recursive: true });
+    const route = 'entry:shop:http:GET:/carts/:param';
+    writeGraphDb(
+      {
+        ...graph,
+        nodes: [
+          node('channel:cart.created', { type: 'channel', label: 'cart.created', repo: 'shop' }),
+          node('producer:shop#p:4', { type: 'producer', label: 'event cart.created', repo: 'shop' }),
+          node('consumer:mail#c:MailConsumer.on', { type: 'consumer', label: 'MailConsumer.on', repo: 'mail' }),
+          node('mail#c:MailConsumer.on', { label: 'MailConsumer.on', repo: 'mail' }),
+          node('http_out:mail#c:9', { type: 'http_out', label: 'GET /carts/:param', repo: 'mail' }),
+          entry(route, { repo: 'shop', label: 'GET /carts/:param', meta: { method: 'GET', path: '/carts/:param' } }),
+        ],
+        edges: [
+          edge('producer:shop#p:4', 'channel:cart.created', { type: 'emits' }),
+          edge('channel:cart.created', 'consumer:mail#c:MailConsumer.on', { type: 'consumes' }),
+          edge('consumer:mail#c:MailConsumer.on', 'mail#c:MailConsumer.on', { type: 'handles' }),
+          edge('mail#c:MailConsumer.on', 'http_out:mail#c:9'),
+          edge('http_out:mail#c:9', route, { type: 'http_calls' }),
+        ],
+      },
+      report(),
+      path,
+    );
+    const db = openGraphDb(path, { readonly: true });
+    try {
+      const { sequence } = docSubjectOf(db, { kind: 'channel', options: {}, view: 'mermaid' }, db.node('channel:cart.created')!);
+      expect(sequence.steps.map((step) => `${step.kind} ${step.from} > ${step.to} ${step.label}`)).toEqual([
+        'emits shop > channel:cart.created cart.created',
+        'consumes channel:cart.created > mail cart.created',
+        'http_calls mail > shop GET /carts/:param',
+      ]);
+      expect(sequence.participants.map((participant) => participant.id)).toEqual(['shop', 'channel:cart.created', 'mail']);
+    } finally {
+      db.close();
+    }
+  });
+});

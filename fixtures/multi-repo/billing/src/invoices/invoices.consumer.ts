@@ -15,8 +15,8 @@ export class InvoicesConsumer {
    * across two repositories, `channels.linked` = 1 (§12).
    */
   @EventPattern('order.created')
-  onOrderCreated(@Payload() event: OrderCreatedEvent): void {
-    this.invoices.create({ orderId: event.id, amount: event.total.amount });
+  async onOrderCreated(@Payload() event: OrderCreatedEvent): Promise<void> {
+    await this.invoices.create({ orderId: event.id, amount: event.total.amount });
   }
 
   /**
@@ -26,7 +26,7 @@ export class InvoicesConsumer {
    * dead handler looks, and P11 decides whether that is an error.
    */
   @EventPattern('invoice.requested')
-  onInvoiceRequested(@Payload() event: InvoiceRequestedEvent): void {
-    this.invoices.create({ orderId: event.orderId, amount: event.amount });
+  async onInvoiceRequested(@Payload() event: InvoiceRequestedEvent): Promise<void> {
+    await this.invoices.create({ orderId: event.orderId, amount: event.amount });
   }
 }

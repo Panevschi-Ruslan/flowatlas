@@ -1,8 +1,8 @@
 {
   "totals": {
-    "nodes": 126,
-    "edges": 109,
-    "types": 14,
+    "nodes": 130,
+    "edges": 114,
+    "types": 15,
     "unresolved": 9,
     "missed": 9,
     "sites": 9,
@@ -13,40 +13,40 @@
     "repo": 4,
     "module": 4,
     "entry": 17,
-    "provider": 18,
+    "provider": 20,
     "method": 47,
     "db_query": 4,
     "table": 1,
     "channel": 3,
     "producer": 2,
     "consumer": 2,
-    "http_out": 6,
+    "http_out": 7,
     "external_api": 1,
     "ui_component": 1,
     "ui_action": 1,
     "ui_api_call": 13,
-    "config_key": 2
+    "config_key": 3
   },
   "nodesByService": {
-    "billing": 18,
+    "billing": 22,
     "gateway": 43,
     "orders": 33,
     "web": 32
   },
   "edgesByType": {
     "imports": 1,
-    "injects": 16,
-    "calls": 49,
+    "injects": 18,
+    "calls": 50,
     "handles": 21,
     "queries": 4,
     "emits": 2,
     "consumes": 2,
-    "http_calls": 2,
+    "http_calls": 3,
     "hits": 8,
-    "reads_config": 4
+    "reads_config": 5
   },
   "edgesByConfidence": {
-    "static": 99,
+    "static": 104,
     "marker": 5,
     "heuristic": 5
   },
@@ -72,8 +72,8 @@
   "loopsBounded": {},
   "link": {
     "httpOut": {
-      "total": 6,
-      "linked": 2,
+      "total": 7,
+      "linked": 3,
       "byMarker": 1,
       "unknownEnv": 1,
       "noRoute": 1,

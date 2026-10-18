@@ -314,7 +314,8 @@ describe('reading a list a page at a time', () => {
     expect((await call('find_symbol', { query: 'orders', maxNodes: 1, offset: 1 })).matches[0].id).not.toBe(found.matches[0].id);
     const symbol = 'orders#src/orders/orders.service.ts:OrdersService.findOne';
     const impact = await call('impact', { symbol, maxNodes: 1 });
-    expect(impact).toMatchObject({ total: 2, nextOffset: 1 });
+    // Billing's call reaches it too (P209): its three ways in, and the two that reach billing.
+    expect(impact).toMatchObject({ total: 7, nextOffset: 1 });
     expect(impact.next[0]).toBe(`impact({symbol: ${JSON.stringify(symbol)}, maxNodes: 1, offset: 1})`);
     const emits = await call('who_emits', { channel: 'order.created', offset: 1 });
     expect(emits).toMatchObject({ producers: [], total: 1 });
@@ -496,14 +497,21 @@ describe('working backwards', () => {
     const answer = await call('impact', {
       symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne',
     });
-    expect(answer.entries.map((entry: { id: string }) => entry.id)).toEqual([
+    // Billing reads the order it invoices (P209), so every way into billing that writes an invoice
+    // reaches it, and the gateway's and orders' ways in that reach billing do too.
+    expect(answer.entries.map((entry: { id: string }) => entry.id).sort()).toEqual([
+      'entry:billing:event:invoice.requested',
+      'entry:billing:event:order.created',
+      'entry:billing:http:POST:/invoices',
       'entry:gateway:http:GET:/orders/:param',
+      'entry:gateway:http:POST:/orders/:param/invoice',
       'entry:orders:http:GET:/orders/:param',
+      'entry:orders:http:POST:/orders',
     ]);
-    expect(answer.entriesByService).toEqual({ gateway: 1, orders: 1 });
+    expect(answer.entriesByService).toEqual({ billing: 3, gateway: 2, orders: 2 });
     // Every service the chain runs into, whether or not a way in was found
     // above it, because a change is visible in all of them (R03).
-    expect(Object.keys(answer.reachedByService).sort()).toEqual(['gateway', 'orders', 'web']);
+    expect(Object.keys(answer.reachedByService).sort()).toEqual(['billing', 'gateway', 'orders', 'web']);
     expect(answer.servicesWithoutEntry).toEqual(['web']);
   });
 
@@ -539,7 +547,8 @@ describe('working backwards', () => {
 
   it('counts the callers it left past its depth, and names the rows to ask on from (P94)', async () => {
     const answer = await call('who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 2 });
-    expect(answer.truncated).toBe('1 more nodes past depth 2; raise depth');
+    // The route's two callers past the cut: the gateway's call and billing's (P209).
+    expect(answer.truncated).toBe('2 more nodes past depth 2; raise depth');
     expect(answer.stoppedBy).toEqual(['depth']);
     expect(answer.frontier).toEqual(['entry:orders:http:GET:/orders/:param']);
     expect(answer.next[0]).toBe('who_calls({symbol: "orders#src/orders/orders.service.ts:OrdersService.findOne", depth: 4})');
@@ -807,7 +816,8 @@ describe('answers that hand on the id the next question needs', () => {
     walk(callers.callers, callers.target.service);
     expect([...services]).toEqual(['gateway']);
     const impact = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', service: 'orders' });
-    expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param']);
+    // `POST /orders` reaches it through billing, which takes `order.created` and reads the order back (P209).
+    expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param', 'entry:orders:http:POST:/orders']);
     expect((await call('who_emits', { channel: 'order.created', service: 'billing' })).producers).toEqual([]);
   });
 

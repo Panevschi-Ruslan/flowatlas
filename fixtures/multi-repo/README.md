@@ -45,16 +45,29 @@ exactly as a service with no extractor, with `error: "left out by
 
 ## Cross-service HTTP — one row per `http_out`
 
-Every outgoing call in the project is in `gateway/src/clients/`. There are five,
-which is the `httpOut.total` of §12.
+The gateway's outgoing calls are in `gateway/src/clients/`; billing makes one
+of its own (P209). There are seven, which is `httpOut.total`: §12's five, the
+two-hole address R01 added, and billing's.
 
 | Call site | file:line | Address | Links to | Confidence / `meta.via` | Bucket | `unresolved.reason` |
 |---|---|---|---|---|---|---|
 | `http.get<OrderDto>(...)` | `gateway/src/clients/orders.client.ts:33` | `${ORDERS_URL}/orders/${id}` | `entry:orders:http:GET:/orders/:param` | `static` / `baseUrlEnv` | `linked` | — |
 | `http.post<OrderDto>(...)` | `gateway/src/clients/orders.client.ts:44` | `${ORDERS_URL}/orders/${id}/cancel` | nothing — `orders` has `POST /orders/:param/archive`, never `cancel` | — | `noRoute` | `target-route-not-found` |
+| `http.get<OrderDto>(...)` | `gateway/src/clients/orders.client.ts:59` | `${ORDERS_URL}/orders/${id}${suffix}` | nothing — two holes in a row could be one segment or several (R01) | — | `dynamic` | — |
 | `http.post(...)` | `gateway/src/clients/payments.client.ts:24` | `${PAYMENTS_URL}/pay` | nothing — no service declares `PAYMENTS_URL` | — | `unknownEnv` | `unknown-base-url-env` |
 | `http.post<InvoiceDto>(registry.invoicesUrl(), …)` | `gateway/src/clients/billing.client.ts:33`, marker at `:31` | built at run time | `entry:billing:http:POST:/invoices` | `marker` / `marker` | `linked` + `byMarker` | — |
 | `axios.post('https://api.stripe.com/v1/charges', …)` | `gateway/src/clients/payments.client.ts:34` | absolute | `external_api:api.stripe.com` (already from P03) | `static` | `external` | — |
+| `http.get<OrderView>(...)` | `billing/src/invoices/invoices.service.ts:33` | `${ORDERS_URL}/orders/${body.orderId}` | `entry:orders:http:GET:/orders/:param` | `static` / `baseUrlEnv` | `linked` | — |
+
+The last row is billing reading back the order it invoices, from
+`InvoicesService.create`, which `POST /invoices` and both consumers go
+through. It lands on the route the gateway's first row reaches, so it moves no
+route from `uncalled` to `called`; it gives `order.created` a way back into
+`orders` (the `POST /orders` flow now ends at the table twice), and it gives
+billing's @nestjs/observe batch a call of its own to join (see the traces
+below). `OrderView` is billing's own copy of the two fields it reads, so the
+contract check of that edge says `info` twice: orders sends `customerId` and
+`total`, which billing does not declare.
 
 The exact message §12 pins, from row 2:
 
@@ -86,11 +99,14 @@ of them (I6, §12). Orphans on either side are **report** entries, never
 |---|---|---|
 | `entry:gateway:http:GET:/orders/:param` | `gateway/src/orders/orders.controller.ts:30` | `web`, `hits`, `static`, the head of the chain below |
 | `entry:gateway:http:POST:/orders/:param/cancel` | `gateway/src/orders/orders.controller.ts:35` | nobody, `uncalled` |
-| `entry:gateway:http:POST:/orders/:param/invoice` | `gateway/src/orders/orders.controller.ts:40` | nobody, `uncalled` |
+| `entry:gateway:http:POST:/orders/:param/invoice` | `gateway/src/orders/orders.controller.ts:40` | `web`, `hits`, one `static` and two `marker` (R39) |
 | `entry:gateway:http:POST:/orders/pay` | `gateway/src/orders/orders.controller.ts:45` | nobody, `uncalled` |
 | `entry:gateway:http:POST:/orders/charge` | `gateway/src/orders/orders.controller.ts:50` | nobody, `uncalled` |
+| `entry:gateway:http:POST:/orders/:param/ship` | `gateway/src/orders/orders.controller.ts:60` | `web`, `hits`, `static` |
+| `entry:gateway:http:POST:/orders/:param/refund` | `gateway/src/orders/orders.controller.ts:65` | `web`, `hits`, `static` |
+| `entry:gateway:http:POST:/orders/:param/resume` | `gateway/src/orders/orders.controller.ts:71` | `web`, `hits`, `static` |
 | `entry:orders:http:GET:/orders/latest` | `orders/src/orders/orders.controller.ts:19` | nobody, `uncalled` — the literal half of the §10 pair |
-| `entry:orders:http:GET:/orders/:param` | `orders/src/orders/orders.controller.ts:25` | `gateway`, `static` |
+| `entry:orders:http:GET:/orders/:param` | `orders/src/orders/orders.controller.ts:25` | `gateway` and `billing` (P209), `static` |
 | `entry:orders:http:POST:/orders` | `orders/src/orders/orders.controller.ts:31` | nobody, `uncalled` |
 | `entry:orders:http:POST:/orders/:param/archive` | `orders/src/orders/orders.controller.ts:42` | nobody, `uncalled` — the route `cancel` was renamed to |
 | `entry:orders:http:GET:/a/:param` | `orders/src/aliases/legacy-aliases.controller.ts:18` **and** `orders/src/aliases/current-aliases.controller.ts:11` | nobody, `uncalled` — the deliberate duplicate |
@@ -169,9 +185,9 @@ far it can be trusted.
 | `${environment.ordersUrl}/orders/${id}` | `web/src/app/orders-api.service.ts:34` | `ambiguous-route-target`, hint naming `services[].apiTarget` |
 
 Two reasons of §6 are **not** exercised here: `marker-service-unknown` and
-`marker-route-not-found`. Either one needs a sixth `http_out`, which would break
-the `httpOut.total` of 5 that §12 fixes, so both belong in `matchRoute`'s and
-the marker resolver's own unit tests.
+`marker-route-not-found`. Either one needs another `http_out` of its own, which
+would move every count below for a reason this project does not have, so both
+belong in `matchRoute`'s and the marker resolver's own unit tests.
 
 ### A note on the duplicate `GET /a/:param`
 
@@ -192,15 +208,19 @@ path (`/a/:param/x` and `/a/x/:param` for a client asking `/a/x/x`), and that
 pair lives in `route-match.test.ts` and `link.test.ts` rather than here, where it
 would add routes §11 does not name and move the counts below.
 
-## Expected counts (§12)
+## Expected counts (§12, as measured now)
+
+§12 fixed the first figures; the ones below are what `expected.link-report.json`
+says today, after the tickets that added to the fixture (R01's two-hole
+address, the browser's later requests and routes, billing's call in P209).
 
 ```jsonc
-"httpOut":  { "total": 5, "linked": 2, "byMarker": 1, "unknownEnv": 1,
-              "noRoute": 1, "ambiguous": 0, "external": 1, "dynamic": 0 }
+"httpOut":  { "total": 7, "linked": 3, "byMarker": 1, "unknownEnv": 1,
+              "noRoute": 1, "ambiguous": 0, "external": 1, "dynamic": 1 }
 ```
 
 `linked + unknownEnv + noRoute + ambiguous + external + dynamic == total`
-(2+1+1+0+1+0 = 5); `byMarker` is the subset of `linked` that a marker resolved.
+(3+1+1+0+1+1 = 7); `byMarker` is the subset of `linked` that a marker resolved.
 
 ```jsonc
 "channels": { "total": 3, "linked": 1,
@@ -211,10 +231,11 @@ would add routes §11 does not name and move the counts below.
 `linked + |noConsumers| + |noProducers| == total` (1+1+1 = 3).
 
 ```jsonc
-"ui":       { "total": 6, "resolved": 3, "unresolved": 3,
+"ui":       { "total": 13, "resolved": 6, "unresolved": 7,
               "byReason": { "ambiguous-route-target": 1,
+                            "api-path-dynamic": 3,
                             "api-path-partly-read": 1,
-                            "target-route-not-found": 1 } }
+                            "target-route-not-found": 2 } }
 ```
 
 `resolved + unresolved == total`, and `byReason` sums to `unresolved`: every
@@ -222,7 +243,7 @@ request the browser makes is in exactly one bucket, and every bucket but the
 first says why.
 
 ```jsonc
-"routes":   { "total": 12, "called": 3, "uncalled": [ /* 9 ids */ ],
+"routes":   { "total": 15, "called": 7, "uncalled": [ /* 8 ids */ ],
               "duplicated": ["entry:orders:http:GET:/a/:param"] }
 ```
 
@@ -233,9 +254,10 @@ registered first.
 What follows from the fixture rather than from §12, and is worth asserting once
 the passes exist:
 
-- `routes`: 13 route declarations, **12** `entry` nodes with `kind: "http"` (the
-  `/a/:param` pair is one node), `called: 3`, so `uncalled` has 9 ids and must
-  contain `entry:billing:http:GET:/invoices/:param`.
+- `routes`: 16 route declarations, **15** `entry` nodes with `kind: "http"` (the
+  `/a/:param` pair is one node), `called: 7`, so `uncalled` has 8 ids and must
+  contain `entry:billing:http:GET:/invoices/:param`. Billing's call reaches a
+  route the gateway already reaches, so it moves none of these.
 - `types`: `OrderDto` appears once as `type:@fx/contracts#OrderDto`, with
   `meta.sharedPackage: "@fx/contracts"`, and both the `returns` of the linked
   `http_calls` edge and `orders`' handler point at that id. `Money`,
@@ -245,8 +267,12 @@ the passes exist:
   which is how a frontend and a backend drift apart and is what P10 will compare
   across the `hits` edge.
 - `services[]`: four entries, all four extracted.
-- 107 nodes and 88 edges, of which `web` contributes 20 nodes and 12 edges and
-  the linker adds three `hits` edges, one of them `heuristic`.
+- 130 nodes and 114 edges (`expected.link-report.json` `totals`), of which
+  `billing` contributes 23 nodes and 18 edges and `web` 32 nodes and 21 edges;
+  the linker adds three `http_calls` edges (two `static`, one `marker`) and
+  eight `hits` edges. Billing's call is 4 of those nodes (the `http_out`, the
+  `ORDERS_URL` key, `HttpService` and `ConfigService`) and 5 of those edges
+  (two `injects`, `reads_config`, `calls` and its `http_calls`).
 - Two consecutive builds produce a byte-identical `project-graph.json` except
   `builtAt` (D8).
 
@@ -260,7 +286,7 @@ through the shared `fixtures/node_modules`:
 |---|---|
 | `@nestjs/common`, `@nestjs/core`, `@nestjs/microservices`, `rxjs` | installed for real in `fixtures/node_modules` — `ClientProxy`, `@EventPattern` and `@Payload` resolve to the library's own declarations |
 | `@flowatlas/markers` | linked into `fixtures/node_modules` from `packages/markers` (its `dist/` must be built) |
-| `@nestjs/axios`, `@nestjs/config`, `axios` | `gateway/node_modules/*` — copies of the `nest-leaves` stubs |
+| `@nestjs/axios`, `@nestjs/config`, `axios` | `gateway/node_modules/*` and `billing/node_modules/*` — copies of the `nest-leaves` stubs, byte-identical between the two |
 | `typeorm` | `orders/node_modules/typeorm` — a copy of the `nest-typeorm` stub, so the chain has a real data layer at its far end |
 | `@fx/contracts` | `gateway/node_modules/@fx/contracts` and `orders/node_modules/@fx/contracts` — two **byte-identical** copies |
 | `@angular/core`, `@angular/common/http`, `rxjs` | `web/node_modules/*` — copies of the `angular-basic` stubs, holding only the declarations the extractor reads |
@@ -276,11 +302,9 @@ diff fixtures/multi-repo/gateway/node_modules/@fx/contracts/index.d.ts \
      fixtures/multi-repo/orders/node_modules/@fx/contracts/index.d.ts
 ```
 
-> The repository's `.gitignore` re-includes `fixtures/*/node_modules/**`, which
-> is one level short of these: the stubs live at
-> `fixtures/multi-repo/<repo>/node_modules/**`. Add
-> `!fixtures/*/*/node_modules/` and `!fixtures/*/*/node_modules/**` to commit
-> them, or the fixture only type-checks on the machine that created it.
+> The stubs live at `fixtures/multi-repo/<repo>/node_modules/**`, which the
+> repository's `.gitignore` re-includes (`!fixtures/*/*/node_modules/**`), so
+> they are committed and the fixture type-checks on a fresh clone.
 
 `expected.project-graph.json` and `expected.link-report.json` are generated by
 running the tool and reviewed as a diff, never written by hand:
@@ -334,15 +358,27 @@ planted that no reader may keep (`packages/cli/src/observe/__fixtures__/planted.
 | file | format | what it is there for |
 |---|---|---|
 | `checkout.otlp.json` | OTLP/JSON | a slow `GET /orders/:id` hop from `gateway` to `orders` (500 ms on the caller's span), a `POST /orders` that answers 500 with `status.code: 2`, a publish and its consumer, a call that fits two call sites, and a span with no times |
-| `billing.observe.json` | @nestjs/observe batch | one batch in the SDK's 0.3.12 wire contract (P202): two HTTP requests with span trees (an outgoing call, a database insert, a manual span), a NATS message on `order.created`, a scheduled job, and logs, objectives, runtime and custom metrics no reader may keep |
+| `billing.observe.json` | @nestjs/observe batch | one batch in the SDK's 0.3.12 wire contract (P202): two HTTP requests with span trees (billing's call to `orders`, a database insert, a manual span), a NATS message on `order.created` whose tree makes the same call, a scheduled job, and logs, objectives, runtime and custom metrics no reader may keep |
+| `orders.observe.json` | @nestjs/observe batch | orders' answer to billing's call in the `POST /invoices` trace (P209): the same `ti`, which billing's agent sent on as `x-request-id` and orders' adopted, and no parent, so the matcher pairs it with billing's client span (P202); its tree reaches the `orders` collection |
 | `billing.batches.observe.json` | @nestjs/observe `{ batches }` | three posts an hour later: two reads (200 and 404), a write that fails with the error on its root span and `e: true` below it, and twenty writes that answer 201 |
 | `playwright/` | Playwright `recordHar` output (P205) | a test run's directory: an embedded full-mode HAR (with a request-API seed, a `route.fulfill` mock and a failed call), an attached minimal-mode HAR with its body files (one gone), a `.zip` HAR with its bodies, and files that are not HAR (`trace.zip`, `error-context.md`, `.last-run.json`); `expected.cli/observe.playwright*.txt` |
 | `web.otlp.json` | OTLP/JSON | twenty page loads of one order (P110): the browser's request, made by `OrdersApiService.one` (`code.function`), and the gateway's answer |
 
 The protobuf copy of `checkout.otlp.json` is written by the test's encoder at
 test time, not checked in. `expected.cli/observe.json` is the observed file
-over all four, and the MCP snapshots in `expected.mcp.observed/` answer from
-it; regenerate the CLI snapshots before the MCP ones.
+over the five files `scripts/cli-snapshots.mjs` names in `TRACES` (all of the
+above but the Playwright run), and the MCP snapshots in
+`expected.mcp.observed/` answer from it; regenerate the CLI snapshots before
+the MCP ones.
+
+Billing's call in code (P209) is what its batch joins on its own. Read alone,
+the batch's two requests to orders, from the `POST /invoices` tree and from the
+message's, are that call site and its `http_calls` join, with nothing from
+orders read; with `orders.observe.json` beside it, orders' snapshot of the
+first is paired with billing's request by their shared `ti` and counted as the
+hit on orders' `GET /orders/:param`, the join still measured on billing's side.
+Both services' snapshots are snapshot 0 of that trace: each keeps its own tree
+and body, because the span ids the reader makes up name the service (P222).
 
 What traffic says of the map itself (P110). The twenty page loads go through
 the one best guess traffic can single out: `OrdersApiService.one`'s request
@@ -357,9 +393,11 @@ where `POST /orders/:param/cancel` turns from `unknown` to `likely-dead`) -
 while `orders`, touched once a route, is `weak`, and over `since: "1h"` says
 `nothing from orders in the window`. `billing`'s `GET /invoices/:id`, which the
 build found nobody calls, was seen three times: `alive`, a blind spot of
-static reach. The six spans that matched nothing are the blind-spot rows of
-`expected.cli/doctor.unresolved.observed.txt` and
-`expected.mcp.observed/cant_follow.seen-not-in-code`.
+static reach. The four spans that matched nothing (billing's collection twice,
+the gateway's `GET /metrics`, orders' `order.audited`) are the blind-spot rows
+of `expected.cli/doctor.unresolved.observed.txt` and
+`expected.mcp.observed/cant_follow.seen-not-in-code`; billing's request to
+orders was one of them until billing made that call in code (P209).
 
 What the traffic answered against what the code declares (P106):
 `InvoicesService` throws a `NotFoundException` in `findOne` and a
@@ -385,7 +423,7 @@ listed. It writes to the same `.flowatlas`, so it reads the graph
 |---|---|
 | `web` consumes `gateway-openapi`, and nothing else | the browser's requests join only the gateway's routes |
 | `gateway` consumes `orders-openapi` and `billing-openapi` | the base-address request and the marker request |
-| `billing` consumes `orders-asyncapi` | `order.created`, which orders publishes and billing handles |
+| `billing` consumes `orders-asyncapi` and `orders-openapi` | `order.created`, which orders publishes and billing handles, and billing's call to `GET /orders/:param` (P209) |
 | `gateway` depends on `resource:api.stripe.com` | the request that leaves the project |
 | `orders` depends on `resource:orders` | its queries on the `orders` table |
 | `invoice.requested` | consumed by billing, published by nothing: listed, consumes nothing |

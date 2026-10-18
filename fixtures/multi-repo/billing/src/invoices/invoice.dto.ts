@@ -20,6 +20,15 @@ export interface InvoiceRequestedEvent {
   amount: number;
 }
 
+/**
+ * What billing reads back from `orders` before it invoices: its own copy of the
+ * two fields it uses, for the same reason as `OrderCreatedEvent`.
+ */
+export interface OrderView {
+  id: string;
+  status: string;
+}
+
 export interface CreateInvoiceDto {
   orderId: string;
   amount: number;

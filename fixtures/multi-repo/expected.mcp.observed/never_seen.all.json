@@ -233,20 +233,6 @@
       "confidence": "weak"
     },
     {
-      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
-      "type": "method",
-      "service": "billing",
-      "loc": "src/invoices/invoices.consumer.ts:28",
-      "window": "2h",
-      "reachableFrom": "code",
-      "neighbours": {
-        "seen": 1,
-        "of": 1,
-        "most": 1
-      },
-      "confidence": "weak"
-    },
-    {
       "id": "entry:orders:http:GET:/a/:param",
       "type": "entry",
       "kind": "http",
@@ -257,7 +243,7 @@
       "neighbours": {
         "seen": 2,
         "of": 4,
-        "most": 1
+        "most": 2
       },
       "confidence": "weak"
     },
@@ -272,7 +258,7 @@
       "neighbours": {
         "seen": 2,
         "of": 4,
-        "most": 1
+        "most": 2
       },
       "confidence": "weak"
     },
@@ -287,7 +273,21 @@
       "neighbours": {
         "seen": 2,
         "of": 4,
-        "most": 1
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.archive",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:59",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 3,
+        "most": 2
       },
       "confidence": "weak"
     }

@@ -106,7 +106,27 @@
           "d": 0.8,
           "s": "0199f3a2-7c42-7e2a-9b51-3c0e4d5f6a08",
           "so": 0.02,
-          "ch": [{ "o": "auto", "c": "InvoicesService", "m": "create", "d": 0.5, "s": "0199f3a2-7c42-7e2a-9b51-3c0e4d5f6a09", "so": 0.1 }]
+          "ch": [
+            {
+              "o": "auto",
+              "c": "InvoicesService",
+              "m": "create",
+              "d": 0.5,
+              "s": "0199f3a2-7c42-7e2a-9b51-3c0e4d5f6a09",
+              "so": 0.1,
+              "ch": [
+                {
+                  "o": "auto",
+                  "c": "http",
+                  "m": "GET orders.internal:3000",
+                  "d": 0.3,
+                  "s": "0199f3a2-7c42-7e2a-9b51-3c0e4d5f6a12",
+                  "so": 0.15,
+                  "t": { "http.method": "GET", "http.url": "http://orders.internal:3000/orders/ord-1042" }
+                }
+              ]
+            }
+          ]
         }
       ]
     }

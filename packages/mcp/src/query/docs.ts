@@ -238,7 +238,11 @@ export const docSubjectOf = (db: GraphDb, block: Pick<DocAsk, 'kind' | 'options'
   const detail = view === 'sequence' ? SEQUENCE_WALK_DETAIL : (block.options.detail ?? DOC_WALK.detail);
   const edgesOf = new Map<FlowNode, GraphEdge>();
   const flow = buildFlowTree(db, node.id, { depth, maxNodes, detail, edgesOf });
-  const read = sequenceOf(flow.root, { siteOf: sitesFrom(edgesOf), stopOf: stopsIn(db) });
+  const channelId = `channel:${node.label}`;
+  // A channel's walk starts at the channel, never at the service that declared it: a consumer's
+  // call back into that service is a step to the service, not to the channel (P224).
+  const root = node.type === 'channel' ? { ...flow.root, node: { ...flow.root.node, service: channelId } } : flow.root;
+  const read = sequenceOf(root, { siteOf: sitesFrom(edgesOf), stopOf: stopsIn(db) });
 
   let tree = flow.root;
   let sequence = read;
@@ -261,11 +265,15 @@ export const docSubjectOf = (db: GraphDb, block: Pick<DocAsk, 'kind' | 'options'
     // The walk from a channel starts at the channel: its consumers take it
     // from there, and what publishes onto it comes first.
     const start = read.steps[0]?.to;
-    const channel: Participant = { id: `channel:${node.label}`, label: node.label, kind: 'channel' };
+    const channel: Participant = { id: channelId, label: node.label, kind: 'channel' };
     const services = new Map<string, Participant>();
     for (const { publisher } of producers) if (publisher.repo !== '') services.set(publisher.repo, { id: publisher.repo, label: publisher.repo, kind: 'service', service: publisher.repo });
     sequence = {
-      participants: [...services.values(), channel, ...read.participants.filter((item) => item.id !== start && item.kind !== 'caller')],
+      participants: [
+        ...services.values(),
+        channel,
+        ...read.participants.filter((item) => item.id !== start && item.kind !== 'caller' && !services.has(item.id)),
+      ],
       steps: [
         ...producers.map(({ publisher, edge }) => ({
           kind: 'emits' as const,

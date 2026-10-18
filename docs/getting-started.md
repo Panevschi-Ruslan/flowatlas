@@ -149,17 +149,17 @@ The summary is the part to read (each service's line also says how long it
 took, left out here):
 
 ```
-built 126 nodes, 109 edges from 4 service(s)
-  billing        19 nodes, 0 unresolved
+built 130 nodes, 114 edges from 4 service(s)
+  billing        23 nodes, 0 unresolved
   gateway        43 nodes, 1 unresolved
   orders         33 nodes, 0 unresolved
   web            32 nodes, 3 unresolved
-calls out: 6 total, 2 linked, 1 by annotation, 1 no route, 1 unknown setting, 0 ambiguous, 1 third party, 1 dynamic
+calls out: 7 total, 3 linked, 1 by annotation, 1 no route, 1 unknown setting, 0 ambiguous, 1 third party, 1 dynamic
 ui calls: 13 total, 6 joined to a route, 7 not (ambiguous-route-target 1, api-path-dynamic 3, api-path-partly-read 1, target-route-not-found 2)
 channels: 3 total, 1 joined, 1 with no handler, 1 with no publisher
 routes: 15 total, 7 reached, 8 never called, 1 claimed by two handlers
 ways in: 17 found, 17 with a handler that was read, 0 without — only the second number is coverage of what happens after the request arrives
-types: 14 (4 from shared packages)
+types: 15 (4 from shared packages)
 missed: 9 · notes: 0 · findings: 4
 ```
 

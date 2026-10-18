@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-17T04:49:49.426Z",
+  "builtAt": "2026-10-18T11:34:29.805Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -8,17 +8,20 @@
       "repo": "./billing",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 19,
-      "edges": 14,
-      "types": 4,
+      "nodes": 23,
+      "edges": 18,
+      "types": 5,
       "unresolved": 0,
-      "durationMs": 772,
+      "durationMs": 818,
       "packages": {
         "name": "billing",
         "runtime": [
+          "@nestjs/axios",
           "@nestjs/common",
+          "@nestjs/config",
           "@nestjs/core",
           "@nestjs/microservices",
+          "axios",
           "rxjs"
         ],
         "dev": []
@@ -33,7 +36,7 @@
       "edges": 38,
       "types": 7,
       "unresolved": 1,
-      "durationMs": 806,
+      "durationMs": 850,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -58,7 +61,7 @@
       "edges": 26,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 775,
+      "durationMs": 827,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -81,7 +84,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 610,
+      "durationMs": 658,
       "packages": {
         "name": "web",
         "runtime": [
@@ -94,8 +97,8 @@
     }
   ],
   "httpOut": {
-    "total": 6,
-    "linked": 2,
+    "total": 7,
+    "linked": 3,
     "byMarker": 1,
     "unknownEnv": 1,
     "noRoute": 1,
@@ -147,7 +150,7 @@
     }
   },
   "types": {
-    "total": 14,
+    "total": 15,
     "sharedPackage": 4
   },
   "unresolved": [
@@ -234,9 +237,9 @@
     }
   ],
   "totals": {
-    "nodes": 126,
-    "edges": 109,
-    "types": 14,
+    "nodes": 130,
+    "edges": 114,
+    "types": 15,
     "missed": 9,
     "sites": 9,
     "notes": 0,

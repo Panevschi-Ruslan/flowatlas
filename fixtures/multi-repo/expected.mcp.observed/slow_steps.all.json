@@ -18,8 +18,8 @@
       "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
       "label": "OrdersService.findOne",
       "service": "orders",
-      "count": 1,
-      "p50": 492,
+      "count": 2,
+      "p50": 0.74,
       "p95": 492,
       "max": 492,
       "errorRate": 0
@@ -117,8 +117,8 @@
       "measuredAt": "caller"
     }
   ],
-  "total": 12,
-  "truncated": "2 more steps; ask with a larger limit",
+  "total": 15,
+  "truncated": "5 more steps; ask with a larger limit",
   "next": [
     "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
     "trace_for({entry: \"entry:gateway:http:GET:/orders/:param\"})",

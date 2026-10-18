@@ -20,8 +20,8 @@ describe('blind spots in doctor', () => {
   it('are one file-less info row per service and kind, with the group as meta', () => {
     const rows = blindSpotRows(observed);
     expect(rows.map((row) => [row.service, (row.meta?.['seen'] as { kind: string }).kind])).toEqual([
+      // billing's request to orders is its call in code since P209, no blind spot.
       ['billing', 'db'],
-      ['billing', 'client'],
       ['gateway', 'http'],
       ['orders', 'messaging'],
     ]);

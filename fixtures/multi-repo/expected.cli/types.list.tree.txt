@@ -12,4 +12,5 @@ type:billing#OrderCreatedEvent               object   13c4f1b476f9  billing#src/
 type:@fx/contracts#OrderDto                  object   1fe9aae8bb47  @fx/contracts
 type:web#OrderDto                            object   13c4f1b476f9  web#src/app/order.dto.ts
 type:@fx/contracts#OrderStatus               union    3961cde6eaf5  @fx/contracts
-14 type(s)
+type:billing#OrderView                       object   9b6c96ba5362  billing#src/invoices/invoice.dto.ts
+15 type(s)

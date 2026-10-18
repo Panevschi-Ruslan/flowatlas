@@ -12,7 +12,7 @@ Newly seen in after.json · 0
   nothing new
 
 No longer seen in after.json · 4
-  way in  entry:orders:http:GET:/orders/:param  1 request in before.json
+  way in  entry:orders:http:GET:/orders/:param  2 requests in before.json
   way in  entry:orders:http:POST:/orders  1 request in before.json
   join  http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param  1 request in before.json
   join  producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created  1 request in before.json

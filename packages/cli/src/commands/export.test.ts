@@ -77,7 +77,8 @@ describe('flowatlas export backstage (P119)', () => {
     const component = (name: string) => run.backstage!.entities.find((each) => each.kind === 'Component' && each.metadata.name === name)!;
     expect(component('web').spec['consumesApis']).toEqual(['gateway-openapi']);
     expect(component('web').spec['dependsOn']).toBeUndefined();
-    expect(component('billing').spec['consumesApis']).toEqual(['orders-asyncapi']);
+    // `order.created`, and the order billing reads back from orders (P209).
+    expect(component('billing').spec['consumesApis']).toEqual(['orders-asyncapi', 'orders-openapi']);
     expect(component('orders').spec['providesApis']).toEqual(['orders-asyncapi', 'orders-openapi']);
     expect(component('gateway').spec).toMatchObject({ owner: 'team-storefront', lifecycle: 'production', system: 'bookshop' });
     expect(run.text).toContain('owner not given for 1 service, written as unknown: web');
@@ -146,7 +147,14 @@ describe('flowatlas export structurizr (P119)', () => {
     const text = readFileSync(join(out, 'workspace.dsl'), 'utf8');
     expect(dslProblems(text)).toEqual([]);
     const post = run.structurizr!.model.views.find((view) => view.entry === 'entry:orders:http:POST:/orders')!;
-    expect(post.steps.map((step) => `${step.from} -> ${step.to}`)).toEqual(['orders -> orders_store', 'orders -> order_messages', 'order_messages -> billing']);
+    // billing takes `order.created` and reads the order back, which reads the store again (P209, P223).
+    expect(post.steps.map((step) => `${step.from} -> ${step.to}`)).toEqual([
+      'orders -> orders_store',
+      'orders -> order_messages',
+      'order_messages -> billing',
+      'billing -> orders',
+      'orders -> orders_store',
+    ]);
   });
 
   it('draws only the flows named with --flow, and bounds the rest with --max-flows', () => {

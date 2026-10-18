@@ -27,7 +27,7 @@ describe('the @nestjs/observe reader', () => {
     expect(servers).toEqual([
       {
         traceId: 'e1000000000000000000000000000001',
-        spanId: 'e1000000000000000000000000000001:0',
+        spanId: 'e1000000000000000000000000000001:billing/0',
         kind: 'server',
         service: 'billing',
         method: 'POST',
@@ -45,7 +45,7 @@ describe('the @nestjs/observe reader', () => {
     expect(read.spans.filter((span) => span.kind === 'consumer')).toEqual([
       {
         traceId: 'e1000000000000000000000000000003',
-        spanId: 'e1000000000000000000000000000003:2',
+        spanId: 'e1000000000000000000000000000003:billing/2',
         kind: 'consumer',
         service: 'billing',
         destination: 'order.created',
@@ -67,7 +67,7 @@ describe('the @nestjs/observe reader', () => {
       'InvoicesService.findOne',
     ]);
     const [controller, service] = symbols;
-    expect(controller!.parentId).toBe('e1000000000000000000000000000001:0');
+    expect(controller!.parentId).toBe('e1000000000000000000000000000001:billing/0');
     expect(service!.parentId).toBe(controller!.spanId);
     // The manual span names InvoicesController.create again, the method it was opened in: not counted twice.
     expect(symbols.filter((span) => span.traceId === controller!.traceId && span.symbol === 'InvoicesController.create')).toHaveLength(1);
@@ -117,7 +117,7 @@ describe('the @nestjs/observe reader', () => {
 
   it('takes the service from --service when the batch names none, and a time only Date.parse trusts', () => {
     const { spans } = nestjsObserveReader.read([{ ti: 't1', ct: 'yesterday', a: { m: 'get', ou: '/cart' } }], 'shop');
-    expect(spans).toEqual([{ traceId: 't1', spanId: 't1:0', kind: 'server', service: 'shop', method: 'GET', path: '/cart' }]);
+    expect(spans).toEqual([{ traceId: 't1', spanId: 't1:shop/0', kind: 'server', service: 'shop', method: 'GET', path: '/cart' }]);
   });
 
   it('copies no planted value: no token, user, statement, query, host, tag, log line or batch extra', () => {
@@ -269,7 +269,7 @@ describe('the @nestjs/observe reader with --shapes (P113)', () => {
     expect(bodies).toEqual([
       {
         traceId: 'e1000000000000000000000000000001',
-        spanId: 'e1000000000000000000000000000001:0',
+        spanId: 'e1000000000000000000000000000001:billing/0',
         request: {
           t: 'object',
           n: 1,

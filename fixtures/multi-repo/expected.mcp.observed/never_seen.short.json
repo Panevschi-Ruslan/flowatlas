@@ -25,7 +25,7 @@
       "neighbours": {
         "seen": 2,
         "of": 4,
-        "most": 1
+        "most": 2
       },
       "confidence": "weak"
     },
@@ -40,7 +40,7 @@
       "neighbours": {
         "seen": 2,
         "of": 4,
-        "most": 1
+        "most": 2
       },
       "confidence": "weak"
     },
@@ -55,7 +55,49 @@
       "neighbours": {
         "seen": 2,
         "of": 4,
-        "most": 1
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.archive",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:59",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 3,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:40",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 3,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.latest",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:30",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 3,
+        "most": 2
       },
       "confidence": "weak"
     },
@@ -82,48 +124,6 @@
       "reachableFrom": "code",
       "neighbours": {
         "seen": 2,
-        "of": 3,
-        "most": 1
-      },
-      "confidence": "weak"
-    },
-    {
-      "id": "orders#src/orders/orders.service.ts:OrdersService.archive",
-      "type": "method",
-      "service": "orders",
-      "loc": "src/orders/orders.service.ts:59",
-      "window": "2h",
-      "reachableFrom": "code",
-      "neighbours": {
-        "seen": 1,
-        "of": 3,
-        "most": 1
-      },
-      "confidence": "weak"
-    },
-    {
-      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
-      "type": "method",
-      "service": "orders",
-      "loc": "src/orders/orders.service.ts:40",
-      "window": "2h",
-      "reachableFrom": "code",
-      "neighbours": {
-        "seen": 1,
-        "of": 3,
-        "most": 1
-      },
-      "confidence": "weak"
-    },
-    {
-      "id": "orders#src/orders/orders.service.ts:OrdersService.latest",
-      "type": "method",
-      "service": "orders",
-      "loc": "src/orders/orders.service.ts:30",
-      "window": "2h",
-      "reachableFrom": "code",
-      "neighbours": {
-        "seen": 1,
         "of": 3,
         "most": 1
       },

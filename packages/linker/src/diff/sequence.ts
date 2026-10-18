@@ -284,6 +284,21 @@ export const sequenceOf = <T extends SequenceTree>(tree: T, options: SequenceOpt
     return { id: `channel:${node.label}`, label: typeof kind === 'string' ? `${node.label} (${kind})` : node.label, kind: 'channel' };
   };
 
+  /**
+   * Where each node a row walked in full was drawn. A row the walk wrote again
+   * (`ref`) says only the node's id and label, not its type or its service, so
+   * it lands where the node was drawn the first time: a table read again is the
+   * table, not a store named after it (P223). One whose first row was not walked
+   * yet is read from its own row, as before.
+   */
+  const drawnAt = new Map<string, Participant>();
+  const placed = (row: SequenceTree, of: (row: SequenceTree) => Participant): Participant => {
+    if (row.node.ref === true) return drawnAt.get(row.node.id) ?? of(row);
+    const participant = of(row);
+    if (!drawnAt.has(row.node.id)) drawnAt.set(row.node.id, participant);
+    return participant;
+  };
+
   /** Where a crossing lands. */
   const targetOf = (row: SequenceTree): Participant => {
     if (row.node.type === 'channel') return channelOf(row.node);
@@ -376,26 +391,26 @@ export const sequenceOf = <T extends SequenceTree>(tree: T, options: SequenceOpt
       case 'handles':
       case 'calls': {
         if (CALL_SITES.has(row.node.type)) break;
-        const to = bodyOf(row);
+        const to = placed(row, bodyOf);
         next = to.id === at ? at : message('calls', to, row.node.label);
         break;
       }
       case 'http_calls':
       case 'hits':
-        next = message(type, targetOf(row), fromSite?.node.label ?? row.node.label);
+        next = message(type, placed(row, targetOf), fromSite?.node.label ?? row.node.label);
         break;
       case 'emits':
-        next = message('emits', channelOf(row.node), row.node.label);
+        next = message('emits', placed(row, (one) => channelOf(one.node)), row.node.label);
         break;
       case 'consumes':
-        next = message('consumes', bodyOf(row), parent.node.type === 'channel' ? parent.node.label : row.node.label);
+        next = message('consumes', placed(row, bodyOf), parent.node.type === 'channel' ? parent.node.label : row.node.label);
         break;
       case 'queries':
       case 'caches':
-        next = message(type, storeOf(row.node), fromSite?.node.label ?? row.node.label);
+        next = message(type, placed(row, (one) => storeOf(one.node)), fromSite?.node.label ?? row.node.label);
         break;
       case 'triggers':
-        next = message('triggers', targetOf(row), row.node.label);
+        next = message('triggers', placed(row, targetOf), row.node.label);
         break;
       default:
         break;
@@ -413,7 +428,7 @@ export const sequenceOf = <T extends SequenceTree>(tree: T, options: SequenceOpt
     return [...row.children].sort(byCallOrder(sites));
   };
 
-  const start = bodyOf(tree);
+  const start = placed(tree, bodyOf);
   const handles = tree.children.find((child) => child.edge?.type === 'handles');
   meet({ id: CALLER, label: CALLER_LABEL[tree.node.kind ?? ''] ?? (tree.node.type === 'ui_action' ? 'user' : 'caller'), kind: 'caller' });
   const first = meet(start);

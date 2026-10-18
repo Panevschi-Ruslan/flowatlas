@@ -1,7 +1,14 @@
-~  order.created                          src/orders/orders.service.ts:49
+~  order.created                             src/orders/orders.service.ts:49
   -  producers (1)
-    ~  event order.created                orders/src/orders/orders.service.ts:49
+    ~  event order.created                   orders/src/orders/orders.service.ts:49
   -  consumers (1)
-    ~  InvoicesConsumer.onOrderCreated    billing/src/invoices/invoices.consumer.ts:17
-      -> InvoicesConsumer.onOrderCreated  billing/src/invoices/invoices.consumer.ts:17
-        -> InvoicesService.create         billing/src/invoices/invoices.service.ts:14
+    ~  InvoicesConsumer.onOrderCreated       billing/src/invoices/invoices.consumer.ts:17
+      -> InvoicesConsumer.onOrderCreated     billing/src/invoices/invoices.consumer.ts:17
+        -> InvoicesService.create            billing/src/invoices/invoices.service.ts:30
+          $  ORDERS_URL                      billing/src/invoices/invoices.service.ts:33
+          ^  GET /orders/:param              billing/src/invoices/invoices.service.ts:33
+            => orders @  GET /orders/:param  orders/src/orders/orders.controller.ts:25
+              -> OrdersController.findOne    orders/src/orders/orders.controller.ts:25
+                -> OrdersService.findOne     orders/src/orders/orders.service.ts:25
+                  [] read orders             orders/src/orders/orders.service.ts:26
+... truncated: 1 more nodes (raise --depth)

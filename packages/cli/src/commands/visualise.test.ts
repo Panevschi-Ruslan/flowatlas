@@ -188,7 +188,8 @@ describe('the page made of its parts (P103)', () => {
     expect(row.querySelectorAll('.fail-chip').map(textOf)).toContain('500 ×1 not declared');
   });
 
-  /* The fixture with all four trace files observed, and a second file a day
+  /* The fixture with the five trace files the CLI snapshots read (P209 added
+     orders' answer to billing), and a second file a day
      later with the page loads slower and failing (P111): what Steps, the Map,
      Traces and Run time changes draw. */
   const runTimePage = (): string => {
@@ -199,7 +200,10 @@ describe('the page made of its parts (P103)', () => {
       runObserve(files, { config: CONFIG, db: join(copy, 'graph.db'), now: new Date('2025-10-16T09:00:00.000Z'), print: () => {} });
       return copy;
     };
-    const before = observeInto('runtime-before', traces(['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json', 'web.otlp.json']));
+    const before = observeInto(
+      'runtime-before',
+      traces(['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json', 'web.otlp.json', 'orders.observe.json']),
+    );
     const after = observeInto('runtime-after', traces(['billing.observe.json', 'billing.batches.observe.json', 'diff/web.slower.otlp.json']));
     const file = join(before, 'graph.html');
     runVisualise({
@@ -240,6 +244,10 @@ describe('the page made of its parts (P103)', () => {
     const traced = await bootAt(html, '#traces', 'page-runtime-traces');
     expect(traced.getElementById('tab-traces')!.hidden).toBe(false);
     expect(textOf(traced.querySelector('#tab-sheet [data-trace-pick]'))).toBe('GET /orders/:paramgateway · 520 ms · 200 · slowest');
+    // The tab opens on the way in the page opened on, the first that leaves its service: since billing
+    // calls orders (P209) that is billing's POST /invoices. The slowest request is the first to pick.
+    expect(textOf(traced.querySelector('#tab-sheet .tr-head'))).toContain('POST /invoices');
+    traced.querySelector('#tab-sheet [data-trace-pick="0"]')!.click();
     const spans = traced.querySelectorAll('#tab-sheet .tr-row').map((row) => textOf(row.querySelector('.tr-ms')));
     expect(spans.slice(0, 3)).toEqual(['520 ms · 200', '500 ms · 200', '496 ms · 200']);
     // Steps: a waterfall in typical time, the hop the widest step under the way in.

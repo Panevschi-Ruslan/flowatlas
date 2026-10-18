@@ -108,7 +108,7 @@
       "kind": "entry",
       "id": "entry:orders:http:GET:/orders/:param",
       "count": [
-        1,
+        2,
         0
       ],
       "p95": [
@@ -181,5 +181,5 @@
       "new": false
     }
   ],
-  "tooFew": 3
+  "tooFew": 4
 }

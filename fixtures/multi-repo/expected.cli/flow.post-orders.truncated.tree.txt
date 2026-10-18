@@ -3,5 +3,5 @@
     -> OrdersService.create   orders/src/orders/orders.service.ts:40
       [] write orders         orders/src/orders/orders.service.ts:41
       ~  event order.created  orders/src/orders/orders.service.ts:49
-... truncated: 5 more nodes (raise --max-nodes)
+... truncated: 7 more nodes (raise --max-nodes)
 unresolved on this path: 0

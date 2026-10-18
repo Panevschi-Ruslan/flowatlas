@@ -130,7 +130,7 @@
                                   "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
                                   "type": "method",
                                   "label": "InvoicesService.create",
-                                  "loc": "src/invoices/invoices.service.ts:14"
+                                  "loc": "src/invoices/invoices.service.ts:30"
                                 },
                                 "edge": {
                                   "type": "calls",
@@ -140,7 +140,34 @@
                                   ],
                                   "returns": "type:billing#InvoiceDto"
                                 },
-                                "children": []
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "config_key:billing#ORDERS_URL",
+                                      "type": "config_key",
+                                      "label": "ORDERS_URL",
+                                      "loc": "src/invoices/invoices.service.ts:33"
+                                    },
+                                    "edge": {
+                                      "type": "reads_config",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  },
+                                  {
+                                    "node": {
+                                      "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+                                      "type": "http_out",
+                                      "label": "GET /orders/:param",
+                                      "loc": "src/invoices/invoices.service.ts:33"
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  }
+                                ]
                               }
                             ]
                           }
@@ -157,6 +184,18 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "truncated": "≥1 more nodes past depth 8; raise depth",
+  "stoppedBy": [
+    "depth"
+  ],
+  "crossingsLeft": [
+    {
+      "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "service": "orders"
+    }
+  ],
   "docs": [
     {
       "file": "docs/architecture.md",
@@ -166,13 +205,14 @@
     },
     {
       "file": "docs/architecture.md",
-      "line": 59,
+      "line": 63,
       "kind": "flow",
       "state": "changed"
     }
   ],
   "next": [
     "describe_for_prompt({id: \"entry:orders:http:POST:/orders\"})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
     "impact({symbol: \"entry:orders:http:POST:/orders\"})",
     "get_source({symbol: \"orders#src/orders/orders.controller.ts:OrdersController.create\"})"
   ]
