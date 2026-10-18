@@ -453,12 +453,14 @@ const projectOf = (options: ObserveOptions) => {
 export const runObserve = (files: readonly string[], options: ObserveOptions = {}): ObserveRun => {
   if (files.length === 0) throw cannotRun('name at least one trace file');
   const since = sinceOf(options.since);
+  // A malformed --access-log-keys is refused before a configuration or database is looked for.
+  const accessLogKeys = parseAccessLogKeys(options.accessLogKeys);
   const now = options.now ?? new Date();
   const dbPath = dbPathFor(options);
   const lock: LockOptions = options.lockWaitMs === undefined ? {} : { waitMs: options.lockWaitMs };
   let written: ReturnType<typeof observeLocked>;
   try {
-    written = withObservedLock(dirname(observedPathFor(dbPath)), () => observeLocked(files, options, dbPath, since, now), lock);
+    written = withObservedLock(dirname(observedPathFor(dbPath)), () => observeLocked(files, options, accessLogKeys, dbPath, since, now), lock);
   } catch (cause) {
     if (!(cause instanceof ObservedLocked)) throw cause;
     throw cannotRun(
@@ -477,6 +479,7 @@ export const runObserve = (files: readonly string[], options: ObserveOptions = {
 const observeLocked = (
   files: readonly string[],
   options: ObserveOptions,
+  accessLogKeys: AccessLogKeys | undefined,
   dbPath: string,
   since: string | undefined,
   now: Date,
@@ -486,8 +489,6 @@ const observeLocked = (
     throw cannotRun(`${describeObservedProblem(before.problem)}; run again with --reset to start a new one`);
   }
   const previous = before.observed;
-  // A malformed --access-log-keys is refused before the database is opened.
-  const accessLogKeys = parseAccessLogKeys(options.accessLogKeys);
   const db = openDbFromOptions(options);
   let run: Observed;
   let labels: Map<string, string>;
