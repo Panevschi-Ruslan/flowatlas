@@ -22,6 +22,7 @@ import {
   type Unresolved,
   lineAndColumnAt,
   startLineOf,
+  toPosixPath,
 } from '@flowatlas/core';
 import { ENVELOPES, GATEWAY_REQUEST } from '@flowatlas/aws';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
@@ -86,7 +87,8 @@ const readTsconfig = (path: string): { outDir?: string; rootDir?: string } | und
   } catch {
     return undefined;
   }
-  const parsed = ts.parseConfigFileTextToJson(path, text);
+  // The compiler's own spelling of the path, or a syntax error trips its assertion on Windows (P199).
+  const parsed = ts.parseConfigFileTextToJson(toPosixPath(path), text);
   const options = (parsed.config as { compilerOptions?: { outDir?: unknown; rootDir?: unknown } } | undefined)?.compilerOptions;
   if (options === undefined) return {};
   return {

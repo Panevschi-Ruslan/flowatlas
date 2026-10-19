@@ -198,9 +198,11 @@ describe('one writer (P109)', () => {
   it('never frees a lock another process took over', () => {
     const db = freshDb();
     const release = acquireObservedLock(dirname(db));
-    writeFileSync(lockOf(db), '1\n');
+    // Another process that is running on every platform: this one's parent (Windows has no pid 1).
+    const other = `${process.ppid}\n`;
+    writeFileSync(lockOf(db), other);
     release();
-    expect(readFileSync(lockOf(db), 'utf8')).toBe('1\n');
+    expect(readFileSync(lockOf(db), 'utf8')).toBe(other);
     expect(() => acquireObservedLock(dirname(db), { waitMs: 0 })).toThrow(ObservedLocked);
   });
 

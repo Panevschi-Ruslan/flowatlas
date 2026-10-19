@@ -258,6 +258,15 @@ const isDirectory = (path: string): boolean => {
 };
 
 /**
+ * A tsconfig read as the compiler reads it. The compiler keeps file names with
+ * forward slashes and asserts that a parse error's file is the one it parsed,
+ * so a Windows path handed in as written fails that assertion on the first
+ * syntax error instead of returning it (P199).
+ */
+const readTsconfig = (configPath: string): ReturnType<typeof ts.readConfigFile> =>
+  ts.readConfigFile(toPosixPath(configPath), ts.sys.readFile);
+
+/**
  * The roots a tsconfig names through `include` and `files`, following a
  * relative `extends` when it names neither, as the compiler does. Empty when it
  * names none: a tsconfig with neither means "everything", which is not a
@@ -266,7 +275,7 @@ const isDirectory = (path: string): boolean => {
  */
 const tsconfigRoots = (rootDir: string, configPath: string | undefined, depth = 0): string[] => {
   if (configPath === undefined || depth > 8) return [];
-  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  const read = readTsconfig(configPath);
   const config = read.error === undefined ? (read.config as Record<string, unknown>) : undefined;
   if (config === undefined) return [];
   const entries = [config['include'], config['files']]
@@ -457,7 +466,7 @@ export const forgetPackageAliases = (): void => {
 const readAliases = (dir: string): PackageAliases | undefined => {
   const configPath = findTsconfig(dir);
   if (configPath === undefined) return undefined;
-  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  const read = readTsconfig(configPath);
   if (read.error !== undefined) return undefined;
   const parsed = ts.parseJsonConfigFileContent(
     read.config,
@@ -690,7 +699,7 @@ const sourceTargets = (targets: readonly string[], subpath: string): string[] =>
 /** The compiler options a root is read with, for asking what resolves before anything is mounted. */
 const compilerOptionsAt = (configPath: string | undefined): ts.CompilerOptions => {
   if (configPath === undefined) return { ...FALLBACK_COMPILER_OPTIONS };
-  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  const read = readTsconfig(configPath);
   if (read.error !== undefined) return {};
   return ts.parseJsonConfigFileContent(
     read.config,

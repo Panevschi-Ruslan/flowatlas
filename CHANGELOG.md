@@ -1587,7 +1587,11 @@ twenty-six, with prompts, resources and paged, structured answers.
   POSIX. On Windows a temporary repository is now seen as a git repository, a
   ref build links `node_modules` with a junction, query commands and a
   disconnected MCP server let go of `graph.db`, and `get_source` drops the `\r`
-  of a CRLF file. A checkout is LF on every OS (`.gitattributes`).
+  of a CRLF file. A checkout is LF on every OS (`.gitattributes`). A
+  `tsconfig.json` with a syntax error no longer stops the build on Windows (the
+  compiler asserted on the path's spelling instead of reporting the error), and
+  a watch from a directory that does not exist yet is held in the platform's
+  spelling like every other.
 - **`build --watch` sees what stands in for a package (P206).** A watch
   looked only inside the repositories, so a package directory appearing beside
   the configuration, a new workspace member there, a shape or pattern file

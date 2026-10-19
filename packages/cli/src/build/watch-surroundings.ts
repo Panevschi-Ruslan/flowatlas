@@ -118,7 +118,8 @@ const anchorOf = (absolute: string, lastIsFile: boolean): { dir: string; rest: s
     const dir = segments.slice(0, depth).join('/') || '/';
     if (!isDirectory(dir)) continue;
     if (dirname(dir) === dir) return undefined;
-    return { dir, rest: segments.slice(depth) };
+    // In the platform's spelling, as every other place watched is.
+    return { dir: resolve(dir), rest: segments.slice(depth) };
   }
   return undefined;
 };

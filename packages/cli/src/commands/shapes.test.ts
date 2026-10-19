@@ -1,6 +1,7 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { toPosixPath } from '@flowatlas/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { runCantFollowCommand } from './doctor.js';
 import { runShapesSuggest, shapeFileName, SHAPES_SUGGEST_FORMAT_VERSION } from './shapes.js';
@@ -67,7 +68,8 @@ describe('shapes --suggest', () => {
     const first = runShapesSuggest({ config: CONFIG, suggest: true, out }, quiet);
     const path = join(out, shapeFileName('@acme/feature-flags'));
     expect(first.report.written?.map((entry) => entry.packages)).toEqual([['@acme/feature-flags']]);
-    expect(first.report.listShapes).toBe(`${out}/*.d.ts`);
+    // A glob for the configuration, so written with forward slashes on every platform.
+    expect(first.report.listShapes).toBe(`${toPosixPath(out)}/*.d.ts`);
     const text = readFileSync(path, 'utf8');
     expect(text).toContain("declare module '@acme/feature-flags' {");
     expect(text).toContain('variant(...args: any[]): any;');
