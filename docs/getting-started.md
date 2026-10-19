@@ -463,6 +463,8 @@ After that, `claude mcp list` shows `flowatlas`.
 
 ## Where to go next
 
+- [Through a change, start to finish](workflow.md) — which command to reach for
+  before a change, while coding, before the PR, in CI, at deploy and after it runs.
 - [The graph server](mcp.md) — setup for Claude Code, Cursor, VS Code and Claude
   Desktop, what each of the twenty-six tools takes, and the order to call them in.
 - [The command reference](CLI.md) — every command, every flag, every
