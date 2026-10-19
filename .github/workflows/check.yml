@@ -25,14 +25,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
 
-  # Builds and runs the unit tests on Windows (P83). Informational, not a gate:
-  # the fixture snapshot gate is not run here, and whether this job becomes
-  # required is a decision for the repository's settings. The fixture graphs
-  # are made first (P199), because the linker's and the MCP server's tests read
-  # them and a clean checkout has none; `check` makes them the same way.
+  # Builds and runs the unit tests on Windows (P83). A failure fails the run
+  # since the tests passed there (P199, P200); the fixture snapshot gate is not
+  # run here, and requiring the job before a merge is the repository's branch
+  # protection. The fixture graphs are made first (P199), because the linker's
+  # and the MCP server's tests read them and a clean checkout has none; `check`
+  # makes them the same way.
   windows-unit:
     runs-on: windows-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
