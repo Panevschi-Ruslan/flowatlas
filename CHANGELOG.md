@@ -1666,6 +1666,14 @@ twenty-six, with prompts, resources and paged, structured answers.
   each step to that service was rewritten as a step to the channel, so a
   consumer's request back to the publisher read `billing → order.created GET
   /orders/:param`. The walk now starts at the channel itself.
+- **An EventBridge event with one end named its bus as the missing repository
+  (P225).** `doctor --missing` read an event's first segment after
+  `eventbridge/`, which is its bus, so an event nobody here published on the
+  default bus pointed at a repository called `default`. It is named by its
+  `source` now, as P204 reads a rule's pattern (`com.acme.payments` →
+  `payments`), which is how AWS, the schema registry and EventCatalog say who
+  sent an event; a custom bus names it only when its source names nobody, and
+  the platform's `aws.*` sources and a partner's bus name none.
 - **`flowatlas mcp` reports its version (P86).** `initialize` answered every
   client `serverInfo.version: "0.0.0"`; it now answers the command's version.
   The standalone server bin answers its own package's.

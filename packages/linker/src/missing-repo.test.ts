@@ -119,7 +119,33 @@ describe('missingRepoSignals', () => {
     ]);
     expect(signals[0]?.places).toEqual([{ service: 'orders', file: 'src/o.ts', line: 7 }]);
     expect(saySignal(signals[0] as never)).toBe('channel payment.requested is published by orders and nobody here consumes it');
-    expect(channelToken({ label: 'eventbridge/shop/orders.placed', meta: { adapters: ['aws-eventbridge'] } })).toBe('shop');
+  });
+
+  it('names an EventBridge event by its source, and by its bus only when the source names nobody (P225)', () => {
+    const token = (label: string): string => channelToken({ label, meta: { adapters: ['aws-eventbridge'] } });
+    // The source, by the reversed-domain convention: never the default bus everyone shares.
+    expect(token('eventbridge/default/com.acme.payments/PaymentCaptured')).toBe('payments');
+    expect(token('eventbridge/default/payments/PaymentCaptured')).toBe('payments');
+    expect(token('eventbridge/shop/acme.payments/PaymentCaptured')).toBe('payments');
+    // A source read as any: a bus of its own says who, the default bus says nobody.
+    expect(token('eventbridge/shop/*/*')).toBe('shop');
+    expect(token('eventbridge/default/*/*')).toBe('');
+    // The platform's sources, a partner's among them, are no repository.
+    expect(token('eventbridge/default/aws.s3/Object Created')).toBe('');
+    expect(token('eventbridge/aws.partner/example.com/123/aws.partner/example.com/123/Ticket Created')).toBe('');
+    // Every other channel keeps its first segment.
+    expect(channelToken({ label: 'sqs/ledger-audit', meta: { adapters: ['aws-sqs'] } })).toBe('ledger-audit');
+  });
+
+  it('lists an event nobody publishes by its source, and leaves one on the default bus with no source out', () => {
+    const event = (id: string): GraphNode => ({ id, type: 'channel', label: id.slice('channel:'.length), repo: 'billing', meta: { adapters: ['aws-eventbridge'] } });
+    const named = event('channel:eventbridge/default/com.acme.payments/PaymentCaptured');
+    const any = event('channel:eventbridge/default/*/*');
+    const report = { ...(REPORT as object), channels: { noConsumers: [], noProducers: [named.id, any.id] } } as never;
+    const signals = missingRepoSignals({ nodes: [named, any], edges: [], unresolved: [] }, report);
+    expect(signals.map((signal) => [signal.name, signal.token, signal.lacks])).toEqual([
+      ['eventbridge/default/com.acme.payments/PaymentCaptured', 'payments', 'producer'],
+    ]);
   });
 
   it('reads a deployment that starts something nobody deploys, by its service part', () => {

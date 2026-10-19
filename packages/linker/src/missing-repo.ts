@@ -341,16 +341,49 @@ const transportWords = (node: GraphNode): Set<string> => {
   return new Set((Array.isArray(adapters) ? adapters : []).flatMap((adapter) => (typeof adapter === 'string' ? wordsOf(adapter) : [])));
 };
 
-/** A channel's first segment, its transport's words left off the front: `payment.captured` → `payment`. */
+/** Sources the platform writes, never a repository: `aws.s3`, and a SaaS partner's `aws.partner/...`. */
+const PLATFORM_SOURCE = /^aws\./;
+
+/**
+ * The publisher an event's `source` names: the last dotted word that names
+ * something, as the reversed-domain convention writes a publisher -
+ * `acme.payments` and `com.acme.payments` are payments. A source the platform
+ * writes, and one read as any (`*`), names none.
+ */
+const sourceToken = (source: string): string | undefined =>
+  source === '' || PLATFORM_SOURCE.test(source)
+    ? undefined
+    : source
+        .split('.')
+        .filter((word) => !word.includes('*') && missingKeyOf(word) !== '')
+        .pop();
+
+/** The bus an event goes to when its entry names none, as `@flowatlas/aws` writes it: everyone's, so nobody's. */
+const DEFAULT_BUS = 'default';
+
+/**
+ * A channel's first segment, its transport's words left off the front:
+ * `payment.captured` → `payment`. An EventBridge event,
+ * `eventbridge/<bus>/<source>/<detail type>`, is named by its source, the name
+ * its publisher puts on it (AWS's own guidance, the schema registry's
+ * `source@detailType` and EventCatalog all say who sent an event by it), and
+ * by a bus of its own only when the source names nobody: the default bus is
+ * everyone's, and a shared bus is as often the subscriber's (P225).
+ */
 export const channelToken = (node: Pick<GraphNode, 'label' | 'meta'>): string => {
   const transport = transportWords(node as GraphNode);
   const parts = node.label.split('/').filter((part) => part !== '');
+  if (parts[0] === 'eventbridge' && parts.length >= 4) {
+    const [, bus = '', ...rest] = parts;
+    // A partner's bus and source (`aws.partner/<domain>/...`) have slashes of their own, and only the partner sends on its bus.
+    if (PLATFORM_SOURCE.test(bus)) return '';
+    const source = rest.slice(0, -1).join('/');
+    if (PLATFORM_SOURCE.test(source)) return '';
+    return sourceToken(source) ?? (bus === DEFAULT_BUS ? '' : bus);
+  }
   while (parts.length > 1 && transport.has((parts[0] as string).toLowerCase())) parts.shift();
   return (parts[0] ?? '').split(/[.:]/)[0] ?? '';
 };
-
-/** Sources the platform writes, never a repository: `aws.s3`, and a SaaS partner's `aws.partner/...`. */
-const PLATFORM_SOURCE = /^aws\./;
 
 /** The value a filter of a pattern names, as written, and how it is said: a prefix with its `*`. */
 const filterValue = (filter: ValueFilter): { value: string; said: string } | undefined => {
@@ -374,12 +407,8 @@ export const subscriptionSources = (node: Pick<GraphNode, 'meta'>): Array<{ name
   const source = (pattern?.parts ?? []).find((part) => part.name === 'source');
   return (source?.filters ?? []).flatMap((filter) => {
     const named = filterValue(filter);
-    if (named === undefined || named.value === '' || PLATFORM_SOURCE.test(named.value)) return [];
-    const token = named.value
-      .split('.')
-      .filter((word) => !word.includes('*') && missingKeyOf(word) !== '')
-      .pop();
-    return token === undefined ? [] : [{ name: named.said, token }];
+    const token = named === undefined ? undefined : sourceToken(named.value);
+    return named === undefined || token === undefined ? [] : [{ name: named.said, token }];
   });
 };
 
