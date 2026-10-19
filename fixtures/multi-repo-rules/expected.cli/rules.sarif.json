@@ -1,0 +1,537 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.6.0",
+          "semanticVersion": "0.6.0",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "rule/frontends-reach-only-edge",
+              "name": "rule/frontends-reach-only-edge",
+              "shortDescription": {
+                "text": "architecture rule frontends-reach-only-edge (tags)"
+              },
+              "help": {
+                "text": "the browser talks to the gateway, never to a domain service. `flowatlas rules --rule frontends-reach-only-edge` lists every violation.",
+                "markdown": "the browser talks to the gateway, never to a domain service. `flowatlas rules --rule frontends-reach-only-edge` lists every violation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "shape": "tags"
+              }
+            },
+            {
+              "id": "rule/only-billing-consumes-order-events",
+              "name": "rule/only-billing-consumes-order-events",
+              "shortDescription": {
+                "text": "architecture rule only-billing-consumes-order-events (only)"
+              },
+              "help": {
+                "text": "order events are billing's to act on. `flowatlas rules --rule only-billing-consumes-order-events` lists every violation.",
+                "markdown": "order events are billing's to act on. `flowatlas rules --rule only-billing-consumes-order-events` lists every violation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "shape": "only"
+              }
+            },
+            {
+              "id": "rule/only-gateway-reaches-billing",
+              "name": "rule/only-gateway-reaches-billing",
+              "shortDescription": {
+                "text": "architecture rule only-gateway-reaches-billing (only)"
+              },
+              "help": {
+                "text": "billing is asked through the gateway, never by another service. `flowatlas rules --rule only-gateway-reaches-billing` lists every violation.",
+                "markdown": "billing is asked through the gateway, never by another service. `flowatlas rules --rule only-gateway-reaches-billing` lists every violation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "shape": "only"
+              }
+            },
+            {
+              "id": "rule/only-orders-writes-orders",
+              "name": "rule/only-orders-writes-orders",
+              "shortDescription": {
+                "text": "architecture rule only-orders-writes-orders (only)"
+              },
+              "help": {
+                "text": "orders owns its table; everyone else asks orders. `flowatlas rules --rule only-orders-writes-orders` lists every violation.",
+                "markdown": "orders owns its table; everyone else asks orders. `flowatlas rules --rule only-orders-writes-orders` lists every violation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "shape": "only"
+              }
+            },
+            {
+              "id": "rule/typo-rule",
+              "name": "rule/typo-rule",
+              "shortDescription": {
+                "text": "architecture rule typo-rule (forbid)"
+              },
+              "help": {
+                "text": "The forbid rule typo-rule in flowatlas.config.json is broken. `flowatlas rules --rule typo-rule` lists every violation.",
+                "markdown": "The forbid rule typo-rule in flowatlas.config.json is broken. `flowatlas rules --rule typo-rule` lists every violation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "shape": "forbid"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/rules/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "billing": {
+          "uri": "billing/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "gateway": {
+          "uri": "gateway/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "orders": {
+          "uri": "orders/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "web": {
+          "uri": "web/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "rule/only-orders-writes-orders",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "billing writes table orders (billing), which only service orders may. orders owns its table; everyone else asks orders."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 33
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "target orders"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "billing/src/invoices/invoices.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 33
+                          }
+                        },
+                        "message": {
+                          "text": "billing write orders"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "message": {
+                          "text": "queries orders"
+                        }
+                      },
+                      "executionOrder": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "1bd13589097bfbf0abb9c82039764e7e",
+            "primaryLocationLineHash": "1bd13589097bfbf0:1"
+          },
+          "properties": {
+            "service": "billing",
+            "shape": "only",
+            "via": "queries",
+            "confidence": "static",
+            "heuristic": false
+          }
+        },
+        {
+          "ruleId": "rule/typo-rule",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "not checked (to): service \"biling\" names nothing in this graph; did you mean billing? (rule-matches-nothing)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "flowatlas.config.json",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 120
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "83830e4b85aa07c5d8ced31413ccc762",
+            "primaryLocationLineHash": "83830e4b85aa07c5:1"
+          },
+          "properties": {
+            "shape": "forbid",
+            "reason": "rule-matches-nothing",
+            "side": "to"
+          }
+        },
+        {
+          "ruleId": "rule/only-billing-consumes-order-events",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "gateway OrderAuditConsumer.onOrderCreated consumes channel order.created, which only service billing may. order events are billing's to act on. ([target order.created](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/audit/order-audit.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/audit/order-audit.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              },
+              "message": {
+                "text": "target order.created"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/audit/order-audit.consumer.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "gateway order.created"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/audit/order-audit.consumer.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "consumes OrderAuditConsumer.onOrderCreated"
+                        }
+                      },
+                      "executionOrder": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "503f169dceb8e5ec652e49094c822455",
+            "primaryLocationLineHash": "503f169dceb8e5ec:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "shape": "only",
+            "via": "consumes",
+            "confidence": "static",
+            "heuristic": false
+          }
+        },
+        {
+          "ruleId": "rule/only-gateway-reaches-billing",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may. billing is asked through the gateway, never by another service. ([target InvoicesConsumer.onOrderCreated](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              },
+              "message": {
+                "text": "target InvoicesConsumer.onOrderCreated"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "orders/src/orders/orders.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 49
+                          }
+                        },
+                        "message": {
+                          "text": "orders event order.created"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "gateway/src/audit/order-audit.consumer.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 14
+                          }
+                        },
+                        "message": {
+                          "text": "emits order.created"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "billing/src/invoices/invoices.consumer.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17
+                          }
+                        },
+                        "message": {
+                          "text": "consumes InvoicesConsumer.onOrderCreated"
+                        }
+                      },
+                      "executionOrder": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "c62a032d7b9a18bcb978b05ee5cf09cf",
+            "primaryLocationLineHash": "c62a032d7b9a18bc:1"
+          },
+          "properties": {
+            "service": "orders",
+            "shape": "only",
+            "via": "emits",
+            "confidence": "static",
+            "heuristic": false
+          }
+        },
+        {
+          "ruleId": "rule/frontends-reach-only-edge",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "web (frontend) requests orders GET /orders/:param, and orders carries none of edge. the browser talks to the gateway, never to a domain service. ([target GET /orders/:param](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "web/src/app/orders-api.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 34
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 25
+                }
+              },
+              "message": {
+                "text": "target GET /orders/:param"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "web/src/app/orders-api.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 34
+                          }
+                        },
+                        "message": {
+                          "text": "web GET /orders/:param"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "orders/src/orders/orders.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 25
+                          }
+                        },
+                        "message": {
+                          "text": "hits GET /orders/:param"
+                        }
+                      },
+                      "executionOrder": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "3ce88a856cf55cbef4b51bd293f2986c",
+            "primaryLocationLineHash": "3ce88a856cf55cbe:1"
+          },
+          "properties": {
+            "service": "web",
+            "shape": "tags",
+            "via": "hits",
+            "confidence": "static",
+            "heuristic": false
+          }
+        }
+      ]
+    }
+  ]
+}

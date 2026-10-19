@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { toPosixPath } from './ids.js';
 import {
   isServiceSource,
   serviceExtent,
@@ -264,6 +265,9 @@ describe('isServiceSource', () => {
     expect(isServiceSource(join(lib, 'src', 'index.ts'), web)).toBe(true);
     expect(isServiceSource(join(web, 'node_modules', '@p', 'lib', 'index.d.ts'), web)).toBe(false);
     expect(isServiceSource(join(root, 'packages', 'other', 'x.ts'), web)).toBe(false);
+    // Spelled as the compiler names files, with forward slashes on every OS (P199).
+    expect(isServiceSource(toPosixPath(join(lib, 'src', 'index.ts')), web)).toBe(true);
+    expect(isServiceSource(toPosixPath(join(web, 'node_modules', '@p', 'lib', 'index.d.ts')), web)).toBe(false);
   });
 });
 
@@ -349,6 +353,8 @@ describe('suppliedWith', () => {
     // Reached through a supplied package, but supplied nothing itself.
     expect(reads(join(root, 'packages', 'transport', 'src', 'index.ts'))).toBe(false);
     expect(reads(join(api, 'src', 'e2e', 'helpers.ts'))).toBe(false);
+    // The compiler's spelling of the same file reads the same (P199).
+    expect(reads(toPosixPath(join(root, 'packages', 'mail', 'src', 'Receipt.tsx')))).toBe(true);
   });
 
   it('supplies every file when the service itself declares the framework', () => {

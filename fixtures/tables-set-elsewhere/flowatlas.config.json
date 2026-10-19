@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "recipes-api", "repo": "./recipes-api", "type": "nestjs" },
+    { "name": "ratings-api", "repo": "./ratings-api", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

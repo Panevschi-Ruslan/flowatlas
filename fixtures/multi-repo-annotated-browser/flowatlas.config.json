@@ -1,0 +1,15 @@
+{
+  "services": [
+    { "name": "catalog-api", "repo": "./catalog-api", "type": "nestjs", "aliases": ["catalog"] },
+    { "name": "orders", "repo": "./orders", "type": "nestjs" },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "orders" }
+    },
+    { "name": "admin", "repo": "./admin", "type": "react" }
+  ],
+  "output": ".flowatlas"
+}

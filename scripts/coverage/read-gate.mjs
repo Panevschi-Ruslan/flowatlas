@@ -130,12 +130,23 @@ const GATED = {
       'route-claimed-twice',
       'route-unguarded',
       'route-guard-skipped',
+      'route-checked-in-body',
+      'route-public-declared',
+      'marker-reason-missing',
       'route-shadowed',
+      'fails-filter-unread',
+      'fails-interceptor-unread',
+      // What traffic answered beside what a route declares (P106), asked at doctor time.
+      'failure-seen-undeclared',
+      'failure-declared-unseen',
+      // What traffic reached and no reader drew (P110), asked at doctor time; it names no file.
+      'seen-not-in-code',
       'server-action-unread',
       // The application or module the routes hang from.
       'application-root-unread',
       'bootstrap-not-found',
       'module-controllers-unread',
+      'module-providers-unread',
       'global-wrapper-dynamic',
       'middleware-route-dynamic',
       'middleware-matcher-unread',
@@ -274,6 +285,17 @@ export const EXEMPT = [
       'call here carries an `unknown-db-package` row instead, which is the honest ' +
       'output; a table would be a guess wearing a node. One descriptor turns all of ' +
       'them into tables at once, and then this entry goes.',
+  },
+  {
+    where: 'missing-repo',
+    path: 'payments-api/**',
+    family: 'routes',
+    why:
+      'The fixture is about the repository nobody added to the configuration (P122): ' +
+      '`payments-api` sits beside the two configured ones on purpose and is read only ' +
+      'by `variants/linked`, which configures it and whose graph the CLI snapshots ' +
+      'build on their own. Reading it here would be the very configuration the ' +
+      'fixture exists to be without.',
   },
   // A measured target's exemptions are not here. They name files of a
   // repository this project does not own, so they live with the target itself,

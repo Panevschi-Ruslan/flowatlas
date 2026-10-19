@@ -1,5 +1,5 @@
 import { builtExportFunctions } from '@flowatlas/adapters-entry';
-import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction } from '@flowatlas/core';
+import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction, startLineOf } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 
@@ -212,7 +212,7 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
     const body = statement.getBody();
     if (body === undefined) continue;
     const name = file.replace(/\.[jt]sx?$/, '').split('/').slice(-2).join('/');
-    return { name, declaration: statement, body, line: statement.getStartLineNumber() };
+    return { name, declaration: statement, body, line: startLineOf(statement) };
   }
   return undefined;
 };

@@ -13,8 +13,8 @@ four of these into tables at once.
 | `this.orderRepo.find()` / `.persist()` | a query with no table, op `null`, heuristic, one `unknown-db-package` row each |
 | `this.db.selectFrom('widgets')` | a query with no table and one `unknown-db-package` row. The type argument is `DB`, the whole schema; the table is the string argument |
 | `this.videos.findAll()` | a query with no table and one `unknown-db-package` row. The first type argument of the base class is `AttributesOnly`, declared in `node_modules` |
-| `this.localRepo.find()` | **no query node at all**, one `db-receiver-name-only` row |
-| `this.jobRepository.enqueue('rebuild')` | **no query node at all**, one `db-receiver-name-only` row. It is a job queue |
+| `this.localRepo.find()` | **no query node at all**, and no row: the call is drawn as a static edge into `OrdersRepository.find`, which explains it (counted as `receiversExplainedByEdge`, P88) |
+| `this.jobRepository.enqueue('rebuild')` | **no query node at all**, and no row for the same reason: a static edge into `JobBus.enqueue`. It is a job queue |
 
 `OrdersRepository` is a hand-written class that looks like a data layer and is
 never read as one, so it also carries one `db-layer-unread` row naming it. That

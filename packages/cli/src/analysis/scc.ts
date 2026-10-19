@@ -53,8 +53,8 @@ const MAX_HOPS = 20;
  * Tarjan's algorithm, iterative.
  *
  * Recursion would be the shorter way to write it and would run out of stack on
- * a real project: the graph of a five-repository monolith has call chains
- * hundreds deep.
+ * a real project, whose graph can have call chains far deeper than the stack
+ * allows.
  */
 const components = (graph: AnalysisGraph): string[][] => {
   const index = new Map<string, number>();

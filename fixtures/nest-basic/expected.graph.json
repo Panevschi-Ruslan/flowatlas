@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-basic",
-  "generatedAt": "2026-10-07T14:34:03.470Z",
+  "generatedAt": "2026-10-16T15:11:31.352Z",
   "nodes": [
     {
       "id": "entry:nest-basic:http:DELETE:/api/orders/:param",
@@ -272,7 +272,14 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "listing orders",
+            "at": 21
+          }
+        ]
       }
     },
     {
@@ -343,7 +350,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "empty order id",
+            "at": 43
+          }
+        ]
       }
     },
     {
@@ -724,6 +738,9 @@
       "line": 17,
       "reason": "di-type-unresolved",
       "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "meta": {
+        "cause": "interface-type"
+      },
       "symbol": "OrdersService.constructor[2]"
     },
     {
@@ -732,7 +749,10 @@
       "reason": "call-dynamic-receiver",
       "level": "info",
       "hint": "The method is chosen at run time; nothing static to point at.",
-      "symbol": "OrdersService.runHook -> this[this.hook]"
+      "symbol": "OrdersService.runHook -> this[this.hook]",
+      "meta": {
+        "cause": "dynamic-member"
+      }
     }
   ]
 }

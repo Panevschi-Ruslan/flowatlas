@@ -1,0 +1,1042 @@
+{
+  "schemaVersion": 6,
+  "repo": "nest-query-loop",
+  "generatedAt": "2026-10-17T03:50:33.752Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-query-loop#src/orders/orders.service.ts:17:27",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "typeorm",
+        "method": "findOne",
+        "receiver": "this.orders",
+        "source": "type-arg",
+        "entityType": "Order"
+      }
+    },
+    {
+      "id": "db_query:nest-query-loop#src/orders/orders.service.ts:25:40",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "typeorm",
+        "method": "findOne",
+        "receiver": "this.orders",
+        "source": "type-arg",
+        "entityType": "Order"
+      }
+    },
+    {
+      "id": "db_query:nest-query-loop#src/orders/orders.service.ts:30:25",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 30,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.orders",
+        "source": "type-arg",
+        "entityType": "Order"
+      }
+    },
+    {
+      "id": "db_query:nest-query-loop#src/orders/orders.service.ts:30:66",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 30,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "typeorm",
+        "method": "findOne",
+        "receiver": "this.orders",
+        "source": "type-arg",
+        "entityType": "Order"
+      }
+    },
+    {
+      "id": "db_query:nest-query-loop#src/orders/orders.service.ts:36:31",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 36,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.orders",
+        "source": "type-arg",
+        "entityType": "Order"
+      }
+    },
+    {
+      "id": "db_query:nest-query-loop#src/orders/orders.service.ts:48:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 48,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.orders",
+        "source": "type-arg",
+        "entityType": "Order",
+        "entityTypeId": "type:nest-query-loop#Order"
+      }
+    },
+    {
+      "id": "db_query:nest-query-loop#src/orders/orders.service.ts:54:42",
+      "type": "db_query",
+      "label": "delete orders",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 54,
+      "meta": {
+        "op": "delete",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "typeorm",
+        "method": "delete",
+        "receiver": "this.orders",
+        "source": "type-arg",
+        "entityType": "Order"
+      }
+    },
+    {
+      "id": "entry:nest-query-loop:http:GET:/orders/summary/:param",
+      "type": "entry",
+      "label": "GET /orders/summary/:param",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/summary/:param",
+        "rawPath": "/orders/summary/:userId",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-query-loop:http:GET:/orders/totals",
+      "type": "entry",
+      "label": "GET /orders/totals",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/totals",
+        "rawPath": "/orders/totals",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-query-loop:http:POST:/orders/bulk",
+      "type": "entry",
+      "label": "POST /orders/bulk",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/bulk",
+        "rawPath": "/orders/bulk",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-query-loop:http:POST:/orders/later",
+      "type": "entry",
+      "label": "POST /orders/later",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/later",
+        "rawPath": "/orders/later",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-query-loop:http:POST:/orders/one-by-one",
+      "type": "entry",
+      "label": "POST /orders/one-by-one",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/one-by-one",
+        "rawPath": "/orders/one-by-one",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-query-loop:http:POST:/orders/together",
+      "type": "entry",
+      "label": "POST /orders/together",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/together",
+        "rawPath": "/orders/together",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-query-loop#node_modules/typeorm:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "nest-query-loop",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-query-loop#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-query-loop",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.bulk",
+      "type": "method",
+      "label": "OrdersController.bulk",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "list",
+              "type": "type:nest-query-loop#Order[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.later",
+      "type": "method",
+      "label": "OrdersController.later",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.oneByOne",
+      "type": "method",
+      "label": "OrdersController.oneByOne",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "type:nest-query-loop#Order[]"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.summary",
+      "type": "method",
+      "label": "OrdersController.summary",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "[type:nest-query-loop#Order[],type:nest-query-loop#Order]"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.together",
+      "type": "method",
+      "label": "OrdersController.together",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "type:nest-query-loop#Order[]"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.totals",
+      "type": "method",
+      "label": "OrdersController.totals",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsOneByOne",
+      "type": "method",
+      "label": "OrdersService.byIdsOneByOne",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "type:nest-query-loop#Order[]"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsTogether",
+      "type": "method",
+      "label": "OrdersService.byIdsTogether",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "type:nest-query-loop#Order[]"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.service.ts:OrdersService.later",
+      "type": "method",
+      "label": "OrdersService.later",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ids",
+              "type": "string[]"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}[]"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveAll",
+      "type": "method",
+      "label": "OrdersService.saveAll",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "list",
+              "type": "type:nest-query-loop#Order[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveOne",
+      "type": "method",
+      "label": "OrdersService.saveOne",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 47,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-query-loop#Order"
+            }
+          ],
+          "returns": "type:nest-query-loop#Order"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.service.ts:OrdersService.summary",
+      "type": "method",
+      "label": "OrdersService.summary",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "[type:nest-query-loop#Order[],type:nest-query-loop#Order]"
+        }
+      }
+    },
+    {
+      "id": "nest-query-loop#src/orders/orders.service.ts:OrdersService.totals",
+      "type": "method",
+      "label": "OrdersService.totals",
+      "repo": "nest-query-loop",
+      "file": "src/orders/orders.service.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "repo:nest-query-loop",
+      "type": "repo",
+      "label": "nest-query-loop",
+      "repo": "nest-query-loop",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "typeorm": 7
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-query-loop#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "nest-query-loop"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-query-loop#src/orders/orders.service.ts:17:27",
+      "to": "table:nest-query-loop#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:nest-query-loop#src/orders/orders.service.ts:25:40",
+      "to": "table:nest-query-loop#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "db_query:nest-query-loop#src/orders/orders.service.ts:30:25",
+      "to": "table:nest-query-loop#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 30
+    },
+    {
+      "from": "db_query:nest-query-loop#src/orders/orders.service.ts:30:66",
+      "to": "table:nest-query-loop#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 30
+    },
+    {
+      "from": "db_query:nest-query-loop#src/orders/orders.service.ts:36:31",
+      "to": "table:nest-query-loop#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 36
+    },
+    {
+      "from": "db_query:nest-query-loop#src/orders/orders.service.ts:48:12",
+      "to": "table:nest-query-loop#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 48
+    },
+    {
+      "from": "db_query:nest-query-loop#src/orders/orders.service.ts:54:42",
+      "to": "table:nest-query-loop#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 54
+    },
+    {
+      "from": "entry:nest-query-loop:http:GET:/orders/summary/:param",
+      "to": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.summary",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "params": [
+        "string"
+      ],
+      "returns": "[type:nest-query-loop#Order[],type:nest-query-loop#Order]",
+      "meta": {
+        "params": "{userId:string}"
+      }
+    },
+    {
+      "from": "entry:nest-query-loop:http:GET:/orders/totals",
+      "to": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.totals",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "params": [],
+      "returns": "number"
+    },
+    {
+      "from": "entry:nest-query-loop:http:POST:/orders/bulk",
+      "to": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.bulk",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 30,
+      "params": [
+        "type:nest-query-loop#Order[]"
+      ],
+      "returns": "void",
+      "meta": {
+        "body": "type:nest-query-loop#Order[]"
+      }
+    },
+    {
+      "from": "entry:nest-query-loop:http:POST:/orders/later",
+      "to": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.later",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "params": [
+        "string[]"
+      ],
+      "returns": "number",
+      "meta": {
+        "body": "string[]"
+      }
+    },
+    {
+      "from": "entry:nest-query-loop:http:POST:/orders/one-by-one",
+      "to": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.oneByOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "params": [
+        "string[]"
+      ],
+      "returns": "type:nest-query-loop#Order[]",
+      "meta": {
+        "body": "string[]"
+      }
+    },
+    {
+      "from": "entry:nest-query-loop:http:POST:/orders/together",
+      "to": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.together",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [
+        "string[]"
+      ],
+      "returns": "type:nest-query-loop#Order[]",
+      "meta": {
+        "body": "string[]"
+      }
+    },
+    {
+      "from": "nest-query-loop#src/app.module.ts:AppModule",
+      "to": "nest-query-loop#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 5
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-query-loop#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.bulk",
+      "to": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32,
+      "params": [
+        "type:nest-query-loop#Order[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.later",
+      "to": "nest-query-loop#src/orders/orders.service.ts:OrdersService.later",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 37,
+      "params": [
+        "string[]"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}[]"
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.oneByOne",
+      "to": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsOneByOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "params": [
+        "string[]"
+      ],
+      "returns": "type:nest-query-loop#Order[]"
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.summary",
+      "to": "nest-query-loop#src/orders/orders.service.ts:OrdersService.summary",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "params": [
+        "string"
+      ],
+      "returns": "[type:nest-query-loop#Order[],type:nest-query-loop#Order]"
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.together",
+      "to": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsTogether",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "params": [
+        "string[]"
+      ],
+      "returns": "type:nest-query-loop#Order[]"
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.controller.ts:OrdersController.totals",
+      "to": "nest-query-loop#src/orders/orders.service.ts:OrdersService.totals",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 27,
+      "params": [],
+      "returns": "number"
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-query-loop#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsOneByOne",
+      "to": "db_query:nest-query-loop#src/orders/orders.service.ts:17:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 16
+        }
+      }
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsTogether",
+      "to": "db_query:nest-query-loop#src/orders/orders.service.ts:25:40",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "meta": {
+        "inLoop": {
+          "kind": "map",
+          "line": 25
+        },
+        "concurrent": true,
+        "together": {
+          "by": "Promise.all",
+          "line": 25
+        }
+      }
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService.later",
+      "to": "db_query:nest-query-loop#src/orders/orders.service.ts:54:42",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 54
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveAll",
+      "to": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 43,
+      "meta": {
+        "inLoop": {
+          "kind": "for",
+          "line": 42
+        }
+      },
+      "params": [
+        "type:nest-query-loop#Order"
+      ],
+      "returns": "type:nest-query-loop#Order"
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveOne",
+      "to": "db_query:nest-query-loop#src/orders/orders.service.ts:48:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 48
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService.summary",
+      "to": "db_query:nest-query-loop#src/orders/orders.service.ts:30:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 30,
+      "meta": {
+        "concurrent": true,
+        "together": {
+          "by": "Promise.all",
+          "line": 30
+        }
+      }
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService.summary",
+      "to": "db_query:nest-query-loop#src/orders/orders.service.ts:30:66",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 30,
+      "meta": {
+        "concurrent": true,
+        "together": {
+          "by": "Promise.all",
+          "line": 30
+        }
+      }
+    },
+    {
+      "from": "nest-query-loop#src/orders/orders.service.ts:OrdersService.totals",
+      "to": "db_query:nest-query-loop#src/orders/orders.service.ts:36:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 36
+    }
+  ],
+  "types": {
+    "type:nest-query-loop#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "nest-query-loop#src/orders/order.entity.ts",
+      "structuralHash": "66571ed2e8a475e5",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 database query once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsOneByOne",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 16
+        },
+        "reaches": [
+          {
+            "id": "db_query:nest-query-loop#src/orders/orders.service.ts:17:27",
+            "type": "db_query",
+            "words": "database query"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:nest-query-loop:http:POST:/orders/one-by-one"
+        ]
+      }
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `map` loop runs 1 database query once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsTogether",
+      "meta": {
+        "loop": {
+          "kind": "map",
+          "line": 25
+        },
+        "reaches": [
+          {
+            "id": "db_query:nest-query-loop#src/orders/orders.service.ts:25:40",
+            "type": "db_query",
+            "words": "database query"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:nest-query-loop:http:POST:/orders/together"
+        ],
+        "concurrent": true
+      }
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 42,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for` loop runs 1 database query once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveAll",
+      "meta": {
+        "loop": {
+          "kind": "for",
+          "line": 42
+        },
+        "reaches": [
+          {
+            "id": "db_query:nest-query-loop#src/orders/orders.service.ts:48:12",
+            "type": "db_query",
+            "words": "database query",
+            "via": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveOne"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:nest-query-loop:http:POST:/orders/bulk"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.6.0",
+          "semanticVersion": "0.6.0",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "spec/endpoint-added",
+              "name": "spec/endpoint-added",
+              "shortDescription": {
+                "text": "route or channel end added"
+              },
+              "help": {
+                "text": "Nothing that worked before can break.",
+                "markdown": "Nothing that worked before can break."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "spec/method-removed",
+              "name": "spec/method-removed",
+              "shortDescription": {
+                "text": "verb removed from a path"
+              },
+              "help": {
+                "text": "The path still answers other verbs, not this one. Keep the verb, or move its callers first.",
+                "markdown": "The path still answers other verbs, not this one. Keep the verb, or move its callers first."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/spec-against/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "shop": {
+          "uri": "shop/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "spec/method-removed",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "DELETE /products/{productId}: the document declares this verb on the path; the code answers the path but not this verb"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "shop/openapi.yaml",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 56
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "e65cf528ebb9f1bff9c3c99d858e7a51",
+            "primaryLocationLineHash": "e65cf528ebb9f1bf:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "shop",
+            "document": "shop",
+            "operation": "DELETE /products/{productId}",
+            "confidence": "declared",
+            "callers": 0
+          }
+        },
+        {
+          "ruleId": "spec/endpoint-added",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "GET /products/{id}/reviews: the code answers this; the document does not say it"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "shop/src/products/products.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 27
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "22b9b68dddfa7a5f6d36772a7c31dffc",
+            "primaryLocationLineHash": "22b9b68dddfa7a5f:1"
+          },
+          "baselineState": "new",
+          "properties": {
+            "service": "shop",
+            "document": "shop",
+            "operation": "GET /products/{id}/reviews",
+            "confidence": "static",
+            "callers": 0
+          }
+        }
+      ]
+    }
+  ]
+}

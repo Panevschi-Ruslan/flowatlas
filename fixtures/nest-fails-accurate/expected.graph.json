@@ -1,0 +1,1449 @@
+{
+  "schemaVersion": 6,
+  "repo": "nest-fails-accurate",
+  "generatedAt": "2026-10-17T01:51:16.998Z",
+  "nodes": [
+    {
+      "id": "entry:nest-fails-accurate:http:GET:/loans",
+      "type": "entry",
+      "label": "GET /loans",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "controller": "LoansController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+              "name": "MemberGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on LoansController",
+              "file": "src/loans/loans.controller.ts",
+              "line": 10
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+            "file": "src/loans/loans.controller.ts",
+            "line": 10,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-accurate:http:GET:/loans/:param",
+      "type": "entry",
+      "label": "GET /loans/:param",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/loans/:param",
+        "rawPath": "/loans/:id",
+        "controller": "LoansController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+              "name": "MemberGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on LoansController",
+              "file": "src/loans/loans.controller.ts",
+              "line": 10
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+            "file": "src/loans/loans.controller.ts",
+            "line": 10,
+            "source": "guard"
+          },
+          {
+            "exception": "LoanNotFound",
+            "at": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.findOne",
+            "file": "src/loans/loans.service.ts",
+            "line": 29,
+            "source": "throw",
+            "status": 404
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-accurate:http:GET:/loans/:param/shelf",
+      "type": "entry",
+      "label": "GET /loans/:param/shelf",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/loans/:param/shelf",
+        "rawPath": "/loans/:id/shelf",
+        "controller": "LoansController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+              "name": "MemberGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on LoansController",
+              "file": "src/loans/loans.controller.ts",
+              "line": 10
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+            "file": "src/loans/loans.controller.ts",
+            "line": 10,
+            "source": "guard"
+          },
+          {
+            "exception": "LoanNotFound",
+            "at": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.findOne",
+            "file": "src/loans/loans.service.ts",
+            "line": 29,
+            "source": "throw",
+            "status": 404
+          },
+          {
+            "exception": "ShelfLocked",
+            "at": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.shelf",
+            "file": "src/loans/loans.service.ts",
+            "line": 46,
+            "source": "throw",
+            "status": 423
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-accurate:http:GET:/loans/search",
+      "type": "entry",
+      "label": "GET /loans/search",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/loans/search",
+        "rawPath": "/loans/search",
+        "controller": "LoansController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+              "name": "MemberGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on LoansController",
+              "file": "src/loans/loans.controller.ts",
+              "line": 10
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+            "file": "src/loans/loans.controller.ts",
+            "line": 10,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-accurate:http:GET:/reports/overdue",
+      "type": "entry",
+      "label": "GET /reports/overdue",
+      "repo": "nest-fails-accurate",
+      "file": "src/reports/reports.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/overdue",
+        "rawPath": "/reports/overdue",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "exception": "LoanOverdue",
+            "at": "nest-fails-accurate#src/reports/reports.service.ts:ReportsService.overdue",
+            "file": "src/reports/reports.service.ts",
+            "line": 10,
+            "source": "throw",
+            "status": 409,
+            "assumed": true
+          },
+          {
+            "exception": "PlainFailure",
+            "at": "nest-fails-accurate#src/reports/reports.service.ts:ReportsService.overdue",
+            "file": "src/reports/reports.service.ts",
+            "line": 9,
+            "source": "throw",
+            "status": 500,
+            "assumed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-accurate:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "controller": "LoansController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+              "name": "MemberGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on LoansController",
+              "file": "src/loans/loans.controller.ts",
+              "line": 10
+            },
+            {
+              "id": "nest-fails-accurate#src/guards/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@UseGuards on LoansController.create",
+              "file": "src/loans/loans.controller.ts",
+              "line": 30
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+            "file": "src/main.ts",
+            "line": 9,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-fails-accurate#src/guards/staff.guard.ts:StaffGuard.canActivate",
+            "file": "src/guards/staff.guard.ts",
+            "line": 8,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+            "file": "src/loans/loans.controller.ts",
+            "line": 10,
+            "source": "guard"
+          },
+          {
+            "exception": "LoanOverdue",
+            "at": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.create",
+            "file": "src/loans/loans.service.ts",
+            "line": 36,
+            "source": "throw",
+            "status": 409
+          },
+          {
+            "exception": "LoanOverdue",
+            "at": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.create",
+            "file": "src/loans/loans.service.ts",
+            "line": 37,
+            "source": "throw",
+            "status": 409
+          },
+          {
+            "status": 500,
+            "exception": "PlainFailure",
+            "at": "nest-fails-accurate#src/loans/checks.ts:assertBookId",
+            "file": "src/loans/checks.ts",
+            "line": 5,
+            "source": "throw",
+            "assumed": true
+          },
+          {
+            "status": 500,
+            "exception": "PlainFailure",
+            "at": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.create",
+            "file": "src/loans/loans.service.ts",
+            "line": 39,
+            "source": "throw",
+            "assumed": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-fails-accurate:http:POST:/returns/:param",
+      "type": "entry",
+      "label": "POST /returns/:param",
+      "repo": "nest-fails-accurate",
+      "file": "src/returns/returns.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns/:param",
+        "rawPath": "/returns/:id",
+        "controller": "ReturnsController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "exception": "LoanNotFound",
+            "at": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.findOne",
+            "file": "src/loans/loans.service.ts",
+            "line": 29,
+            "source": "throw",
+            "status": 400
+          },
+          {
+            "exception": "ShelfLocked",
+            "at": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.shelf",
+            "file": "src/loans/loans.service.ts",
+            "line": 46,
+            "source": "throw",
+            "status": 400
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe",
+      "type": "pipe",
+      "label": "ValidationPipe",
+      "repo": "nest-fails-accurate",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "pipe",
+      "label": "ValidationPipe({\"whitelist\":true})",
+      "repo": "nest-fails-accurate",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-fails-accurate",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+      "type": "guard",
+      "label": "MemberGuard",
+      "repo": "nest-fails-accurate",
+      "file": "src/guards/member.guard.ts",
+      "line": 6,
+      "meta": {
+        "module": "LoansModule"
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard.canActivate",
+      "type": "method",
+      "label": "MemberGuard.canActivate",
+      "repo": "nest-fails-accurate",
+      "file": "src/guards/member.guard.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/guards/staff.guard.ts:StaffGuard",
+      "type": "guard",
+      "label": "StaffGuard",
+      "repo": "nest-fails-accurate",
+      "file": "src/guards/staff.guard.ts",
+      "line": 4,
+      "meta": {
+        "module": "LoansModule"
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/guards/staff.guard.ts:StaffGuard.canActivate",
+      "type": "method",
+      "label": "StaffGuard.canActivate",
+      "repo": "nest-fails-accurate",
+      "file": "src/guards/staff.guard.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController",
+      "type": "provider",
+      "label": "LoansController",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 9,
+      "kind": "controller",
+      "meta": {
+        "module": "LoansModule"
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.create",
+      "type": "method",
+      "label": "LoansController.create",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-fails-accurate#CreateLoanDto"
+            }
+          ],
+          "returns": "type:nest-fails-accurate#Loan"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.findOne",
+      "type": "method",
+      "label": "LoansController.findOne",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-fails-accurate#Loan"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.list",
+      "type": "method",
+      "label": "LoansController.list",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-fails-accurate#Loan[]"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.search",
+      "type": "method",
+      "label": "LoansController.search",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "q",
+              "type": "type:nest-fails-accurate#SearchQuery"
+            }
+          ],
+          "returns": "type:nest-fails-accurate#Loan[]"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.shelf",
+      "type": "method",
+      "label": "LoansController.shelf",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.controller.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.module.ts:LoansModule",
+      "type": "module",
+      "label": "LoansModule",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "LoansController"
+        ],
+        "providers": [
+          "LoansService",
+          "MembersService",
+          "MemberGuard",
+          "StaffGuard"
+        ],
+        "exports": [
+          "LoansService"
+        ]
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.service.ts:LoansService",
+      "type": "provider",
+      "label": "LoansService",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "LoansModule"
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.create",
+      "type": "method",
+      "label": "LoansService.create",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.service.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-fails-accurate#CreateLoanDto"
+            }
+          ],
+          "returns": "type:nest-fails-accurate#Loan"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.findOne",
+      "type": "method",
+      "label": "LoansService.findOne",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-fails-accurate#Loan"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.list",
+      "type": "method",
+      "label": "LoansService.list",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-fails-accurate#Loan[]"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.search",
+      "type": "method",
+      "label": "LoansService.search",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "type:nest-fails-accurate#SearchQuery"
+            }
+          ],
+          "returns": "type:nest-fails-accurate#Loan[]"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.shelf",
+      "type": "method",
+      "label": "LoansService.shelf",
+      "repo": "nest-fails-accurate",
+      "file": "src/loans/loans.service.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/members/members.service.ts:MembersService",
+      "type": "provider",
+      "label": "MembersService",
+      "repo": "nest-fails-accurate",
+      "file": "src/members/members.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "LoansModule"
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/members/members.service.ts:MembersService.isMember",
+      "type": "method",
+      "label": "MembersService.isMember",
+      "repo": "nest-fails-accurate",
+      "file": "src/members/members.service.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "user",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/reports/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "nest-fails-accurate",
+      "file": "src/reports/reports.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "ReportsModule"
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/reports/reports.controller.ts:ReportsController.overdue",
+      "type": "method",
+      "label": "ReportsController.overdue",
+      "repo": "nest-fails-accurate",
+      "file": "src/reports/reports.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/reports/reports.module.ts:ReportsModule",
+      "type": "module",
+      "label": "ReportsModule",
+      "repo": "nest-fails-accurate",
+      "file": "src/reports/reports.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ReportsController"
+        ],
+        "providers": [
+          "ReportsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/reports/reports.service.ts:ReportsService",
+      "type": "provider",
+      "label": "ReportsService",
+      "repo": "nest-fails-accurate",
+      "file": "src/reports/reports.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "ReportsModule"
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/reports/reports.service.ts:ReportsService.overdue",
+      "type": "method",
+      "label": "ReportsService.overdue",
+      "repo": "nest-fails-accurate",
+      "file": "src/reports/reports.service.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/returns/returns.controller.ts:ReturnsController",
+      "type": "provider",
+      "label": "ReturnsController",
+      "repo": "nest-fails-accurate",
+      "file": "src/returns/returns.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "ReturnsModule"
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/returns/returns.controller.ts:ReturnsController.giveBack",
+      "type": "method",
+      "label": "ReturnsController.giveBack",
+      "repo": "nest-fails-accurate",
+      "file": "src/returns/returns.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "nest-fails-accurate#src/returns/returns.module.ts:ReturnsModule",
+      "type": "module",
+      "label": "ReturnsModule",
+      "repo": "nest-fails-accurate",
+      "file": "src/returns/returns.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ReturnsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "repo:nest-fails-accurate",
+      "type": "repo",
+      "label": "nest-fails-accurate",
+      "repo": "nest-fails-accurate",
+      "meta": {
+        "stats": {
+          "files": 20,
+          "filesRead": 20,
+          "filesUnreadable": 0,
+          "classes": 22,
+          "skippedExternalCalls": {
+            "@nestjs/common": 10
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans",
+      "to": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans",
+      "to": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans",
+      "to": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "type:nest-fails-accurate#Loan[]"
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/:param",
+      "to": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/:param",
+      "to": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/:param",
+      "to": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 24,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-fails-accurate#Loan",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/:param/shelf",
+      "to": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/:param/shelf",
+      "to": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/:param/shelf",
+      "to": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.shelf",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 35,
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/search",
+      "to": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/search",
+      "to": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/loans/search",
+      "to": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.search",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 19,
+      "params": [
+        "type:nest-fails-accurate#SearchQuery"
+      ],
+      "returns": "type:nest-fails-accurate#Loan[]",
+      "meta": {
+        "query": "type:nest-fails-accurate#SearchQuery"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/reports/overdue",
+      "to": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:GET:/reports/overdue",
+      "to": "nest-fails-accurate#src/reports/reports.controller.ts:ReportsController.overdue",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 11,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:POST:/loans",
+      "to": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:POST:/loans",
+      "to": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:POST:/loans",
+      "to": "nest-fails-accurate#src/guards/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 30,
+      "meta": {
+        "order": 1,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:POST:/loans",
+      "to": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 29,
+      "params": [
+        "type:nest-fails-accurate#CreateLoanDto"
+      ],
+      "returns": "type:nest-fails-accurate#Loan",
+      "meta": {
+        "body": "type:nest-fails-accurate#CreateLoanDto"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:POST:/returns/:param",
+      "to": "nest-fails-accurate#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-fails-accurate:http:POST:/returns/:param",
+      "to": "nest-fails-accurate#src/returns/returns.controller.ts:ReturnsController.giveBack",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/returns.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "nest-fails-accurate#src/app.module.ts:AppModule",
+      "to": "nest-fails-accurate#src/loans/loans.module.ts:LoansModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-fails-accurate#src/app.module.ts:AppModule",
+      "to": "nest-fails-accurate#src/reports/reports.module.ts:ReportsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-fails-accurate#src/app.module.ts:AppModule",
+      "to": "nest-fails-accurate#src/returns/returns.module.ts:ReturnsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard",
+      "to": "nest-fails-accurate#src/members/members.service.ts:MembersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/guards/member.guard.ts",
+      "line": 8
+    },
+    {
+      "from": "nest-fails-accurate#src/guards/member.guard.ts:MemberGuard.canActivate",
+      "to": "nest-fails-accurate#src/members/members.service.ts:MembersService.isMember",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/guards/member.guard.ts",
+      "line": 12,
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "boolean"
+    },
+    {
+      "from": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.create",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 32,
+      "params": [
+        "type:nest-fails-accurate#CreateLoanDto"
+      ],
+      "returns": "type:nest-fails-accurate#Loan"
+    },
+    {
+      "from": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.findOne",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 26,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-fails-accurate#Loan"
+    },
+    {
+      "from": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.list",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 16,
+      "params": [],
+      "returns": "type:nest-fails-accurate#Loan[]"
+    },
+    {
+      "from": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.search",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.search",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 21,
+      "params": [
+        "type:nest-fails-accurate#SearchQuery"
+      ],
+      "returns": "type:nest-fails-accurate#Loan[]"
+    },
+    {
+      "from": "nest-fails-accurate#src/loans/loans.controller.ts:LoansController.shelf",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.shelf",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/loans.controller.ts",
+      "line": 37,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.search",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/loans.service.ts",
+      "line": 24,
+      "params": [],
+      "returns": "type:nest-fails-accurate#Loan[]"
+    },
+    {
+      "from": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.shelf",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/loans.service.ts",
+      "line": 46,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-fails-accurate#Loan"
+    },
+    {
+      "from": "nest-fails-accurate#src/reports/reports.controller.ts:ReportsController",
+      "to": "nest-fails-accurate#src/reports/reports.service.ts:ReportsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-fails-accurate#src/reports/reports.controller.ts:ReportsController.overdue",
+      "to": "nest-fails-accurate#src/reports/reports.service.ts:ReportsService.overdue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 13,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "nest-fails-accurate#src/returns/returns.controller.ts:ReturnsController",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/returns/returns.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-fails-accurate#src/returns/returns.controller.ts:ReturnsController.giveBack",
+      "to": "nest-fails-accurate#src/loans/loans.service.ts:LoansService.shelf",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/returns/returns.controller.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-fails-accurate#src/returns/returns.module.ts:ReturnsModule",
+      "to": "nest-fails-accurate#src/loans/loans.module.ts:LoansModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/returns/returns.module.ts",
+      "line": 6
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:nest-fails-accurate#CreateLoanDto": {
+      "name": "CreateLoanDto",
+      "kind": "object",
+      "declaredIn": "nest-fails-accurate#src/loans/create-loan.dto.ts",
+      "structuralHash": "4a035894138c4b28",
+      "fields": [
+        {
+          "name": "bookId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "memberId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:nest-fails-accurate#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "nest-fails-accurate#src/loans/loans.service.ts",
+      "structuralHash": "00a5aebbd982168e",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "bookId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "memberId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "overdue",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:nest-fails-accurate#SearchQuery": {
+      "name": "SearchQuery",
+      "kind": "object",
+      "declaredIn": "nest-fails-accurate#src/loans/search-query.ts",
+      "structuralHash": "0b6aa97dcca64bf9",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/domain-error.filter.ts",
+      "line": 9,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "DomainErrorFilter.catch -> host.switchToHttp().getResponse().status(e.status).json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "untyped-value",
+            "sites": 6,
+            "samples": [
+              {
+                "file": "src/domain-error.filter.ts",
+                "line": 9,
+                "symbol": "DomainErrorFilter.catch -> host.switchToHttp().getResponse().status(e.status).json"
+              },
+              {
+                "file": "src/domain-error.filter.ts",
+                "line": 9,
+                "symbol": "DomainErrorFilter.catch -> host.switchToHttp().getResponse().status"
+              },
+              {
+                "file": "src/reports/picked-status.filter.ts",
+                "line": 11,
+                "symbol": "PickedStatusFilter.catch -> host.switchToHttp().getResponse().status(pick(exception)).json"
+              }
+            ]
+          }
+        ]
+      },
+      "sites": 6
+    },
+    {
+      "file": "src/reports/picked-status.filter.ts",
+      "line": 10,
+      "reason": "fails-filter-unread",
+      "level": "info",
+      "message": "PickedStatusFilter answers the exceptions it catches in a way that cannot be read (the status it sets is not a number, a constant or the exception's own); the statuses behind it are assumed.",
+      "hint": "Hand the response a status written in the filter, or one read off the exception (exception.status, exception.getStatus()).",
+      "symbol": "PickedStatusFilter"
+    }
+  ]
+}

@@ -418,3 +418,52 @@ describe('a boundary that is reached by importing it', () => {
     expect(written?.label).toMatch(/^action archiveOrder@\d+$/);
   });
 });
+
+describe('an annotation above a function (P127)', () => {
+  const marked = (graph: RepoGraph): GraphNode[] => requests(graph).filter((node) => node.meta?.['via'] === 'marker');
+
+  it('reads the request and the service it names', () => {
+    const graph = read({
+      '/src/api.ts': `
+        /** @flowatlas-calls catalog GET /items/:id */
+        export const loadItem = (path: string) => fetch(path);
+      `,
+    });
+    const [request] = marked(graph);
+    expect(request?.meta).toMatchObject({ method: 'GET', path: '/items/:param', service: 'catalog' });
+    expect(edge(graph, 'web#src/api.ts:loadItem', request?.id ?? '')?.confidence).toBe('marker');
+  });
+
+  it('reads the two-word form with no service, on a function declaration', () => {
+    const graph = read({
+      '/src/api.ts': `
+        /** @flowatlas-calls POST /orders */
+        export function send(path: string, body: unknown) { return fetch(path, { method: 'POST', body: JSON.stringify(body) }); }
+      `,
+    });
+    const [request] = marked(graph);
+    expect(request?.meta).toMatchObject({ method: 'POST', path: '/orders' });
+    expect(request?.meta).not.toHaveProperty('service');
+  });
+
+  it('reads no request from a tag with no verb in it', () => {
+    const graph = read({
+      '/src/api.ts': `
+        /** @flowatlas-calls catalog items */
+        export const loadItem = (path: string) => fetch(path);
+      `,
+    });
+    expect(marked(graph)).toEqual([]);
+  });
+
+  it('puts the service on a request it read, rather than a second request', () => {
+    const graph = read({
+      '/src/api.ts': `
+        /** @flowatlas-calls catalog GET /items */
+        export const loadItems = () => fetch('/items');
+      `,
+    });
+    expect(requests(graph)).toHaveLength(1);
+    expect(requests(graph)[0]?.meta).toMatchObject({ path: '/items', service: 'catalog' });
+  });
+});

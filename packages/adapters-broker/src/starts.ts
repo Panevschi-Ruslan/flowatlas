@@ -18,6 +18,7 @@ import {
   type StartedEntry,
   type TypeRef,
   packageOfSpecifier,
+  lineAndColumnAt,
 } from '@flowatlas/core';
 import type { Holder, PassContext } from '@flowatlas/extract-scopes';
 import { Node, type CallExpression, type Node as TsNode, type ParameterDeclaration, type SourceFile } from 'ts-morph';
@@ -52,7 +53,7 @@ export type StartPattern = CallPattern & { readonly starts: StartedEntry };
 export const isStartPattern = (pattern: CallPattern): pattern is StartPattern => pattern.starts !== undefined;
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
-  node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+  lineAndColumnAt(node.getSourceFile(), node.getStart());
 
 /** What one element of the address names, once a `names` table has had its say. */
 type Named =
@@ -371,6 +372,8 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
         confidence,
         ...(names.length === 0 ? {} : { [REACHES_META]: names.map((name) => makeDeployedReference(starts.entry, name)) }),
         ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting }),
+        // Which rule of the project's patterns drew it, when one did (P121).
+        ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
       },
     });
     ctx.builder.addEdge({
@@ -429,7 +432,13 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
         file: holder.file,
         line,
         kind,
-        meta: { kind, adapter: spec.name, method: pattern.method, resumes: pattern.starts.entry },
+        meta: {
+          kind,
+          adapter: spec.name,
+          method: pattern.method,
+          resumes: pattern.starts.entry,
+          ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
+        },
       });
       ctx.builder.addEdge({ from: holder.id, to: id, type: 'calls', confidence: evidence === 'checked' ? 'static' : 'heuristic', file: holder.file, line });
       return;

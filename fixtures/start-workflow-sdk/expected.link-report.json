@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:59.771Z",
+  "builtAt": "2026-10-16T23:29:46.098Z",
   "configHash": "f38fa4940897",
   "services": [
     {
@@ -67,6 +67,10 @@
     "nodes": 34,
     "edges": 31,
     "types": 6,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 0
   }
 }

@@ -15,5 +15,12 @@
       "service": "billing",
       "kind": "event"
     }
+  ],
+  "total": 1,
+  "next": [
+    "who_emits({channel: \"channel:order.created\"})",
+    "who_calls({symbol: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})",
+    "impact({symbol: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})",
+    "get_source({symbol: \"consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})"
   ]
 }

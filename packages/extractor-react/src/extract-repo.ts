@@ -7,9 +7,15 @@ import {
   parseConfig,
   readResolvedPackageJson,
   recordApplications,
+  closeStandIns,
   reportSkippedTestDirectories,
+  reportPatterns,
+  readPatterns,
+  reportStandIns,
   reportUnreadableSources,
   silentLogger,
+  standInsFor,
+  type StandInsOfBuild,
   suppliedWith,
   type ExtractContext,
   type FlowatlasConfig,
@@ -27,6 +33,7 @@ import { callsPass } from './passes/calls.js';
 import { entriesPass } from './passes/entries.js';
 import { functionsPass } from './passes/functions.js';
 import { httpPass } from './passes/http.js';
+import { markersPass } from './passes/markers.js';
 import { proceduresPass } from './passes/procedures.js';
 import { routesPass } from './passes/routes.js';
 import { signaturesPass } from './passes/signatures.js';
@@ -40,6 +47,20 @@ export interface ExtractRepoOptions {
   repo: string;
   service?: ServiceConfig;
   config?: FlowatlasConfig;
+  /**
+   * The directory of the configuration the service is read under, which the
+   * stand-ins of P78 resolve against: the shape files it lists and the
+   * repositories whose source may stand in for a package. Without it neither
+   * is read.
+   */
+  configDir?: string;
+  /**
+   * The stand-ins the build worked out once for every repository (P82), read
+   * instead of indexing the package sources and parsing the shape files again.
+   * Without it, or when it does not answer for this service, they are worked
+   * out here.
+   */
+  standInsOfBuild?: StandInsOfBuild;
   /** Adapters to use. Without a frontend adapter nothing is read. */
   registry?: AdapterRegistry;
   tsconfig?: string;
@@ -61,12 +82,19 @@ export interface ExtractRepoOptions {
 export const openProject = (options: ExtractRepoOptions): Project => {
   const service = options.service ?? defaultService(options.repo, options.rootDir);
   const tsconfig = options.tsconfig ?? service.tsconfig;
+  const standIns = standInsFor({
+    config: options.config,
+    service,
+    configDir: options.configDir,
+    ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
+  });
   return createReactProject({
     rootDir: options.rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(service.readTestDirectories === undefined
       ? {}
       : { readTestDirectories: service.readTestDirectories }),
+    ...(standIns === undefined ? {} : { standIns }),
   });
 };
 
@@ -78,7 +106,8 @@ export const openProject = (options: ExtractRepoOptions): Project => {
  * components are screens before any other pass reads that fact; the calls are
  * drawn before the requests, so that a request attributed to a caller lands on
  * a node the walk has already created; a procedure asked for by its path is a
- * request of the same standing and goes beside them; and the ways in are read
+ * request of the same standing and goes beside them; an annotation's request
+ * comes after both, so one the source already says is not said twice; and the ways in are read
  * last, because the edge from a component to a server action needs the
  * component to exist. What a function takes is written after all of them, once
  * every edge into it is drawn.
@@ -90,6 +119,7 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   actionsPass,
   httpPass,
   proceduresPass,
+  markersPass,
   entriesPass,
   signaturesPass,
 ];
@@ -181,8 +211,11 @@ const defaultService = (repo: string, rootDir: string): ServiceConfig => ({
 export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGraph> => {
   const { rootDir, repo } = options;
   const logger = options.logger ?? silentLogger;
-  const config = options.config ?? parseConfig({});
   const service = options.service ?? defaultService(repo, rootDir);
+  // The project's own extraction patterns, compiled into the descriptions
+  // every reader below already reads (P121).
+  const patterns = readPatterns({ config: options.config ?? parseConfig({}), service, configDir: options.configDir });
+  const config = patterns.config;
 
   const project = options.project ?? openProject(options);
   // The manifest that answers what this repository can import, which on a
@@ -224,6 +257,8 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // does the count of them the repository node carries.
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
+  reportStandIns(base);
+  reportPatterns(base, patterns);
 
   // Every adapter goes through the registry, this one included: a repository no
   // frontend adapter recognises is read by none of them.
@@ -237,6 +272,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     });
   }
 
+  closeStandIns(base);
   return builder.build();
 };
 

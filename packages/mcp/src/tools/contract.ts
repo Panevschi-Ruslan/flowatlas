@@ -1,8 +1,106 @@
-import type { GraphEdge } from '@flowatlas/core';
+import { isEntryId, type GraphEdge } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { bound, commonInput, withDb, type ToolContext } from './common.js';
+import { MAX_NEXT, withNext } from '../query/next.js';
+import { loadObserved } from '../query/observed.js';
+import {
+  callOf,
+  commonInput,
+  READ_ONLY,
+  withDb,
+  type ContractFinding,
+  type ToolContext,
+  type TrafficSideSaid,
+} from './common.js';
+
+/**
+ * A finding as it goes out (P93): what disagrees and how. The checker's own
+ * finding names the edge, its key and both parties on every row, and the
+ * answer names the edge once at the top.
+ */
+export const wireFinding = (finding: ContractFinding): ContractFinding => ({
+  severity: finding.severity,
+  kind: finding.kind,
+  direction: finding.direction,
+  field: finding.field,
+  expected: finding.expected,
+  actual: finding.actual,
+  message: finding.message,
+  ...(finding.ignored === true ? { ignored: true } : {}),
+});
+
+/** One difference traffic showed (P113), as it goes out: the field, how often it was carried, and the sentence. */
+const wireTrafficDiff = (diff: TrafficSideSaid['diffs'][number]) => ({
+  severity: diff.severity,
+  kind: diff.kind,
+  field: diff.path,
+  expected: diff.expected,
+  actual: diff.actual,
+  seenIn: diff.seenIn,
+  of: diff.of,
+  message: diff.message,
+});
+
+/** What traffic carried into an entry, against what its code declares (P113). */
+export interface TrafficAnswer {
+  /** Exchanges read for shapes. */
+  samples: number;
+  /** The hours the shapes were seen over. */
+  window: { from: string | null; to: string | null };
+  /** The declared types compared against, by direction. */
+  against?: { request?: string; response?: string };
+  request?: ReturnType<typeof wireTrafficDiff>[];
+  responses?: Record<string, ReturnType<typeof wireTrafficDiff>[]>;
+  /** What was not compared, and why: `request: no-declared-type`, `response 500: status-not-declared`. */
+  unchecked?: string[];
+}
+
+/**
+ * What traffic carried into `entry` against its code (P113): nothing when the
+ * observed file holds no shapes of it or no checker was handed in. `caller`
+ * is the call being checked, whose expected answer stands in for a route
+ * that declares none.
+ */
+export const trafficFor = (ctx: ToolContext, entry: string, caller?: GraphEdge): TrafficAnswer | undefined => {
+  const observed = loadObserved(ctx.handle.path);
+  const shapes = observed?.shapes?.[entry];
+  if (observed === undefined || shapes === undefined || ctx.trafficChecker === undefined) return undefined;
+  const compared = ctx.trafficChecker({ entry, shapes, ...(caller === undefined ? {} : { caller }) });
+  if (compared === undefined) return undefined;
+  const responses = Object.entries(compared.responses ?? {});
+  const response = responses[0]?.[1].against.typeId;
+  return {
+    samples: compared.samples,
+    window: { from: observed.window.from, to: observed.window.to },
+    ...(compared.request === undefined && response === undefined
+      ? {}
+      : {
+          against: {
+            ...(compared.request === undefined ? {} : { request: compared.request.against.typeId }),
+            ...(response === undefined ? {} : { response }),
+          },
+        }),
+    ...(compared.request === undefined ? {} : { request: compared.request.diffs.map(wireTrafficDiff) }),
+    ...(responses.length === 0
+      ? {}
+      : { responses: Object.fromEntries(responses.map(([status, side]) => [status, side.diffs.map(wireTrafficDiff)])) }),
+    ...(compared.unchecked.length === 0
+      ? {}
+      : {
+          unchecked: compared.unchecked.map(
+            (row) => `${row.direction}${row.status === undefined ? '' : ` ${row.status}`}: ${row.reason}`,
+          ),
+        }),
+  };
+};
+
+/** Whether traffic into an entry differs from its code (P113): what `get_flow` hints `check_contract` on. */
+export const trafficDiffers = (ctx: ToolContext, entry: string): boolean => {
+  const observed = loadObserved(ctx.handle.path);
+  const shapes = observed?.shapes?.[entry];
+  return shapes !== undefined && (ctx.trafficChecker?.({ entry, shapes })?.differs ?? 0) > 0;
+};
 
 /**
  * How well the two ends of an edge agree about what crosses it.
@@ -55,13 +153,15 @@ export const classify = (
   };
 };
 
-/** The worse of two verdicts, so one number says whether to look closer. */
-const RANK: Record<ContractStatus, number> = {
+/** The worse of two verdicts, so one number says whether to look closer; the page reads the same order (P134). */
+export const CONTRACT_STATUS_RANK: Readonly<Record<ContractStatus, number>> = {
   shared: 0,
   identical: 1,
   unchecked: 2,
   hash_differs: 3,
 };
+
+const RANK = CONTRACT_STATUS_RANK;
 
 const worse = (a: ContractStatus, b: ContractStatus): ContractStatus => (RANK[a] >= RANK[b] ? a : b);
 
@@ -84,6 +184,86 @@ const sidesOf = (
   };
 };
 
+/**
+ * One crossing from one service into another (P94): a request that reaches an
+ * entry of the other, or a publish onto a channel the other handles, with its
+ * verdict and the call that checks it in full.
+ */
+export interface Crossing {
+  from: string;
+  to: string;
+  type: string;
+  /** The channel a publish crosses through. */
+  via?: string;
+  status: ContractStatus;
+  check: string;
+}
+
+/** The edges that cross by a request, from a call site to an entry. */
+export const REQUEST_EDGES = ['http_calls', 'hits'] as const;
+
+/**
+ * The verdict on one crossing: a request edge by both halves, as
+ * `check_contract` judges it, or a publish by what the publisher sends
+ * against what the consumer's subscription (`consumed`) reads. The page
+ * ships it for the crossings it lists (P134), since it holds no registry.
+ */
+export const crossingStatusOf = (db: GraphDb, edge: GraphEdge, consumed?: GraphEdge): ContractStatus => {
+  if (consumed !== undefined) return classify(db, edge.params?.[0], consumed.params?.[0]).status;
+  const { request, response } = sidesOf(db, edge);
+  return worse(request.status, response.status);
+};
+
+const byWorstThenId = (a: Crossing, b: Crossing): number =>
+  RANK[b.status] - RANK[a.status] || (a.from < b.from ? -1 : a.from > b.from ? 1 : a.to < b.to ? -1 : a.to > b.to ? 1 : 0);
+
+/**
+ * Every crossing from service `a` into service `b`, worst verdict first.
+ *
+ * Requests are judged as `check_contract` judges one edge, both halves; a
+ * publish by what the publisher sends against what the handler's subscription
+ * reads, which is unchecked where either side names no type.
+ */
+export const crossingsBetween = (db: GraphDb, a: string, b: string): Crossing[] => {
+  const serviceOf = (id: string): string | undefined => db.node(id)?.repo;
+  const crossings: Crossing[] = [];
+  for (const edge of db.allEdges()) {
+    const isRequest = (REQUEST_EDGES as readonly string[]).includes(edge.type);
+    if ((!isRequest && edge.type !== 'emits') || serviceOf(edge.from) !== a) continue;
+    if (isRequest) {
+      const target = db.node(edge.to);
+      if (target?.type !== 'entry' || target.repo !== b) continue;
+      crossings.push({
+        from: edge.from,
+        to: edge.to,
+        type: edge.type,
+        status: crossingStatusOf(db, edge),
+        check: callOf('check_contract', { from: edge.from, to: edge.to }),
+      });
+    } else if (edge.type === 'emits') {
+      for (const consumed of db.edgesFrom(edge.to, ['consumes'])) {
+        if (serviceOf(consumed.to) !== b) continue;
+        crossings.push({
+          from: edge.from,
+          to: consumed.to,
+          type: 'emits',
+          via: edge.to,
+          status: crossingStatusOf(db, edge, consumed),
+          check: callOf('check_contract', { from: edge.from, to: edge.to }),
+        });
+      }
+    }
+  }
+  return crossings.sort(byWorstThenId);
+};
+
+/** Two names that are services and not nodes: a question about every crossing between them. */
+const asServices = (db: GraphDb, from: string, to: string): boolean => {
+  if (db.node(from) !== undefined || db.node(to) !== undefined) return false;
+  const names = new Set(db.services().map((service) => service.name));
+  return names.has(from) && names.has(to);
+};
+
 /** `from -type-> to`, the way an edge is named when one is asked for by hand. */
 const parseEdgeRef = (ref: string): { from: string; type?: string; to: string } | undefined => {
   const arrow = /^(.*?)\s*-([a-z_]+)->\s*(.*)$/.exec(ref.trim());
@@ -100,21 +280,40 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
     'check_contract',
     {
       title: 'Check a contract',
-      description:
-        'Compare what one side of a cross-service edge sends against what the other side expects. Identifies an edge by its two ends, or by "from -http_calls-> to".',
+      description: 'Whether what one side of a crossing sends is what the other side expects.',
       inputSchema: {
-        edge: z.string().optional().describe('"<from> -http_calls-> <to>"'),
-        from: z.string().optional().describe('the calling node'),
-        to: z.string().optional().describe('the node it reaches'),
+        edge: z.string().optional().describe('"<from> -http_calls-> <to>", or an entry id'),
+        from: z.string().optional(),
+        to: z.string().optional(),
         // `maxNodes` only. This answers about one crossing, so there is no tree
         // to thin and `detail` had nothing to apply itself to — it was declared,
         // ignored, and answered `detail: 3` with a note saying the level had
         // been clamped. A knob accepted and not read is worse than one absent.
         maxNodes: commonInput.maxNodes,
       },
+      annotations: READ_ONLY,
     },
     (input) =>
       withDb(ctx.handle, (db) => {
+        // An entry on its own (P113): what traffic carried into it against its code, and the calls into it.
+        if (input.edge !== undefined && parseEdgeRef(input.edge) === undefined && isEntryId(input.edge.trim())) {
+          const entry = input.edge.trim();
+          if (db.node(entry) === undefined) return { error: `no entry ${entry}` };
+          const into = db
+            .edgesTo(entry, [...REQUEST_EDGES])
+            .sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
+          const traffic = trafficFor(ctx, entry);
+          return withNext(
+            {
+              entry,
+              ...(traffic === undefined
+                ? { note: 'no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches' }
+                : { traffic }),
+              callers: into.length,
+            },
+            into.slice(0, MAX_NEXT).map((edge) => callOf('check_contract', { from: edge.from, to: edge.to })),
+          );
+        }
         const parsed =
           input.edge !== undefined
             ? parseEdgeRef(input.edge)
@@ -123,6 +322,33 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
               : undefined;
         if (parsed === undefined) {
           return { error: 'give either edge, or both from and to' };
+        }
+
+        // Two service names (a node of either name wins, as before): every
+        // crossing between them, each with the call that checks it (P94).
+        if (parsed.type === undefined && asServices(db, parsed.from, parsed.to)) {
+          const all = crossingsBetween(db, parsed.from, parsed.to);
+          const shown = all.slice(0, input.maxNodes);
+          const byStatus: Partial<Record<ContractStatus, number>> = {};
+          for (const crossing of all) byStatus[crossing.status] = (byStatus[crossing.status] ?? 0) + 1;
+          const back = all.length === 0 ? crossingsBetween(db, parsed.to, parsed.from).length : 0;
+          return withNext(
+            {
+              services: { from: parsed.from, to: parsed.to },
+              crossings: shown,
+              total: all.length,
+              byStatus,
+              ...(shown.length === all.length ? {} : { truncated: `${all.length - shown.length} more crossing(s); raise maxNodes` }),
+              ...(all.length > 0
+                ? {}
+                : { note: `nothing crosses from ${parsed.from} to ${parsed.to}${back > 0 ? `; ${back} crossing(s) go the other way` : ''}` }),
+            },
+            all.length > 0
+              ? shown.slice(0, MAX_NEXT).map((crossing) => crossing.check)
+              : back > 0
+                ? [callOf('check_contract', { from: parsed.to, to: parsed.from })]
+                : [],
+          );
         }
 
         const candidates = db
@@ -145,8 +371,12 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
             ...(hash(response.right) === undefined ? {} : { right: hash(response.right)! }),
           }) ?? [];
 
-        const shown = findings.slice(0, input.maxNodes);
-        return {
+        const shown = findings.slice(0, input.maxNodes).map(wireFinding);
+        const traffic = isEntryId(edge.to) ? trafficFor(ctx, edge.to, edge) : undefined;
+        const shapes = [request.left, request.right, response.left, response.right].filter(
+          (id): id is string => typeof id === 'string' && id.startsWith('type:'),
+        );
+        return withNext({
           edge: { from: edge.from, to: edge.to, type: edge.type, confidence: edge.confidence },
           status,
           request,
@@ -155,7 +385,8 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           ...(findings.length === shown.length
             ? {}
             : { cut: `${findings.length - shown.length} more finding(s); raise maxNodes` }),
-        };
+          ...(traffic === undefined ? {} : { traffic }),
+        }, [...new Set(shapes)].slice(0, 2).map((id) => `get_type({type: ${JSON.stringify(id)}})`));
       }),
   );
 };

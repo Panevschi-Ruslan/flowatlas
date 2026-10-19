@@ -1,0 +1,108 @@
+{
+  "total": {
+    "rows": 4,
+    "sites": 4,
+    "causes": 3
+  },
+  "causes": [
+    {
+      "cause": "unknown-base-url-env",
+      "label": "unknown-base-url-env",
+      "sites": 2,
+      "reasons": [
+        "unknown-base-url-env"
+      ],
+      "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
+      "services": [
+        "gateway"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 2,
+          "samples": [
+            {
+              "loc": "src/checkout.controller.ts:12",
+              "id": "http_out:gateway#src/checkout.controller.ts:12:26"
+            },
+            {
+              "loc": "src/checkout.controller.ts:21",
+              "id": "http_out:gateway#src/checkout.controller.ts:21:26"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "module-not-installed",
+      "label": "module-not-installed:@acme/payments-client",
+      "sites": 1,
+      "reasons": [
+        "call-dynamic-receiver"
+      ],
+      "hint": "Install the repository's dependencies so @acme/payments-client resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.",
+      "services": [
+        "orders"
+      ],
+      "packages": [
+        {
+          "package": "@acme/payments-client",
+          "sites": 1,
+          "samples": [
+            {
+              "loc": "src/orders.service.ts:17",
+              "id": "orders#src/orders.service.ts:OrdersService.confirm",
+              "symbol": "OrdersService.confirm -> this.payments.authorize"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "type-unresolved",
+      "label": "type-unresolved",
+      "sites": 1,
+      "reasons": [
+        "type-unresolved"
+      ],
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "services": [
+        "orders"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 1,
+          "samples": [
+            {
+              "loc": "src/orders.service.ts:18",
+              "symbol": "any"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "package": "@acme/payments-client",
+      "sites": 1,
+      "causes": [
+        {
+          "cause": "module-not-installed",
+          "sites": 1
+        }
+      ]
+    }
+  ],
+  "apart": {
+    "notes": 0,
+    "findings": 2
+  },
+  "next": [
+    "get_source({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})",
+    "describe_for_prompt({id: \"gap:gateway|src/checkout.controller.ts|unknown-base-url-env\"})",
+    "cant_follow({cause: \"unknown-base-url-env\"})",
+    "cant_follow({package: \"@acme/payments-client\"})"
+  ]
+}

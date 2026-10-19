@@ -1,0 +1,7 @@
+{
+  "name": "@fixture/tables-set-elsewhere-ratings",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "@nestjs/common": "^11.0.0", "@nestjs/core": "^11.0.0", "typeorm": "^0.3.20" }
+}

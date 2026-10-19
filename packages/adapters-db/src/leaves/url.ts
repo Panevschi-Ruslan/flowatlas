@@ -3,7 +3,7 @@ import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
 import { readConfig } from './config.js';
-import { deref, rootConfigKey, type SplitAddress } from './trace.js';
+import { deref, rootConfigAddress, type SplitAddress } from './trace.js';
 
 export interface UrlInfo {
   /** The address as written, with interpolations shown as `${…}`. */
@@ -12,6 +12,11 @@ export interface UrlInfo {
   path: string | null;
   /** Environment key the address is rooted at, when it is. */
   baseUrlEnv: string | null;
+  /**
+   * What the code falls back to where that key is not set, when it writes one:
+   * `process.env.ORDERS_URL ?? 'http://orders:3000'` (P77).
+   */
+  baseUrlDefault?: string;
   /** Host, when the address names one outright. */
   host: string | null;
 }
@@ -47,7 +52,7 @@ const fromAbsolute = (text: string): UrlInfo | null => {
  * route later. Everything else is recorded as far as it can be read, and a fully
  * computed address is reported rather than guessed at.
  */
-export const analyzeUrl = (node: TsNode): UrlInfo => {
+export const analyzeUrl = (node: TsNode, options: { readonly whole?: boolean } = {}): UrlInfo => {
   // An address is often given a name before it is used; the name is not the
   // address, so follow it to what it was given.
   const argument = deref(node);
@@ -61,12 +66,32 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
     };
   }
 
-  if (!Node.isTemplateExpression(argument)) return EMPTY;
+  if (Node.isBinaryExpression(argument)) return fromConcatenation(argument);
+  // The whole address is a setting: `fetch(process.env.REINDEX_URL)` asks for
+  // whatever the setting holds, path and all, and nothing more (P91). The path
+  // is empty rather than unread: it is the value's, which the linker reads.
+  // Only for the address a request is made to (`whole`): a setting handed to a
+  // helper as one piece of an address is that piece, not an address.
+  // Read where it stands, not followed: a helper that builds an address on a
+  // setting has written a path of its own, which following it would lose.
+  if (!Node.isTemplateExpression(argument)) {
+    const whole = options.whole === true ? readConfig(argument) : null;
+    if (whole === null || whole.dynamic === true) return EMPTY;
+    const otherwise = typeof whole.defaultValue === 'string' && whole.defaultValue !== '' ? whole.defaultValue : undefined;
+    return {
+      url: `\${${whole.key}}`,
+      path: '',
+      baseUrlEnv: whole.key,
+      host: null,
+      ...(otherwise === undefined ? {} : { baseUrlDefault: otherwise }),
+    };
+  }
 
   const head = argument.getHead().getLiteralText();
   const spans = argument.getTemplateSpans();
 
   let baseUrlEnv: string | null = null;
+  let baseUrlDefault: string | undefined;
   let rest = head;
   let written = head;
   let start = 0;
@@ -77,12 +102,11 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
   // followed rather than only looked for in place.
   const [firstSpan] = spans;
   if (head === '' && firstSpan !== undefined) {
-    const direct = readConfig(firstSpan.getExpression());
-    const key = direct !== null && direct.dynamic !== true
-      ? direct.key
-      : rootConfigKey(firstSpan.getExpression());
-    if (key !== null) {
-      baseUrlEnv = key;
+    const root = rootOf(firstSpan.getExpression());
+    if (root !== null) {
+      baseUrlEnv = root.key;
+      baseUrlDefault = root.otherwise;
+      const key = root.key;
       rest = firstSpan.getLiteral().getLiteralText();
       written = `\${${key}}${rest}`;
       start = 1;
@@ -111,9 +135,82 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
     written += (read ?? HOLE) + text;
   }
 
+  const fallback = baseUrlDefault === undefined ? {} : { baseUrlDefault };
   const absolute = fromAbsolute(rest);
-  if (absolute !== null) return { ...absolute, url: written, baseUrlEnv };
-  return { url: written, path: routePathOf(rest), baseUrlEnv, host: null };
+  if (absolute !== null) return { ...absolute, url: written, baseUrlEnv, ...fallback };
+  return { url: written, path: routePathOf(rest), baseUrlEnv, host: null, ...fallback };
+};
+
+/**
+ * The settings key a value is rooted at, read where it stands first and then
+ * followed back, with what the code falls back to where it writes one.
+ */
+const rootOf = (expression: TsNode): { key: string; otherwise?: string } | null => {
+  const direct = readConfig(expression);
+  if (direct !== null && direct.dynamic !== true) {
+    return {
+      key: direct.key,
+      ...(typeof direct.defaultValue === 'string' && direct.defaultValue !== '' ? { otherwise: direct.defaultValue } : {}),
+    };
+  }
+  const followed = rootConfigAddress(expression);
+  return followed === null ? null : { key: followed.key, ...(followed.otherwise === undefined ? {} : { otherwise: followed.otherwise }) };
+};
+
+/**
+ * `process.env.X + '/loans'`: an address rooted at a setting, joined with
+ * `+` rather than written as a template (P54). Only a setting followed by text
+ * that is read is an address; anything else is not read as one.
+ */
+const fromConcatenation = (argument: TsNode): UrlInfo => {
+  if (!Node.isBinaryExpression(argument) || argument.getOperatorToken().getText() !== '+') return EMPTY;
+  const root = rootOf(argument.getLeft());
+  const rest = evaluateExpression(argument.getRight());
+  if (root === null) return fromWrittenConcatenation(argument);
+  if (!rest.resolved || typeof rest.value !== 'string') return EMPTY;
+  return {
+    url: `\${${root.key}}${rest.value}`,
+    path: routePathOf(rest.value),
+    baseUrlEnv: root.key,
+    host: null,
+    ...(root.otherwise === undefined ? {} : { baseUrlDefault: root.otherwise }),
+  };
+};
+
+/** The pieces of `a + b + c`, left to right. */
+const piecesOf = (node: TsNode): TsNode[] =>
+  Node.isBinaryExpression(node) && node.getOperatorToken().getText() === '+'
+    ? [...piecesOf(node.getLeft()), ...piecesOf(node.getRight())]
+    : [node];
+
+/**
+ * `'https://catalog/items/' + id`: an address written out and joined with `+`
+ * to a value read at run time (P91). Read as the same address written as a
+ * template would be - text that is read, and a hole where it is not - so long
+ * as it opens with text that is read.
+ */
+const fromWrittenConcatenation = (argument: TsNode): UrlInfo => {
+  const [first, ...more] = piecesOf(argument);
+  const opening = first === undefined ? undefined : evaluateExpression(first);
+  if (opening?.resolved !== true || typeof opening.value !== 'string' || opening.value === '') return EMPTY;
+  let rest = opening.value;
+  let written = opening.value;
+  more.forEach((piece, index) => {
+    const value = evaluateExpression(piece);
+    if (value.resolved && (typeof value.value === 'string' || typeof value.value === 'number')) {
+      rest += String(value.value);
+      written += String(value.value);
+      return;
+    }
+    const next = more[index + 1];
+    const after = next === undefined ? undefined : evaluateExpression(next);
+    const text = after?.resolved === true && typeof after.value === 'string' ? after.value : '';
+    rest += holeIn(rest, text, index === more.length - 1);
+    written += HOLE;
+  });
+  const absolute = fromAbsolute(rest);
+  if (absolute !== null) return { ...absolute, url: written };
+  return { url: written, path: routePathOf(rest), baseUrlEnv: null, host: null };
 };
 
 /** `scheme://host` at the start of an address, and the host inside it. */
@@ -164,11 +261,13 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => 
     };
   }
   const env = split.baseUrlEnv ?? info.baseUrlEnv;
+  const otherwise = split.baseUrlEnv === null ? info.baseUrlDefault : split.otherwise;
   return {
     url: path === null ? info.url : `${env === null ? '' : `\${${env}}`}${path}`,
     path,
     baseUrlEnv: env,
     host: null,
+    ...(otherwise === undefined ? {} : { baseUrlDefault: otherwise }),
   };
 };
 

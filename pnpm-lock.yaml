@@ -167,6 +167,9 @@ importers:
       '@flowatlas/adapters-entry':
         specifier: workspace:*
         version: link:../adapters-entry
+      '@flowatlas/aws':
+        specifier: workspace:*
+        version: link:../aws
       '@flowatlas/contracts':
         specifier: workspace:*
         version: link:../contracts

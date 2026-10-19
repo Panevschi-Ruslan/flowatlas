@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -55,7 +55,7 @@ const emptyReport = (): LinkReport => ({
   routes: { total: 0, called: 0, uncalled: [], duplicated: [] },
   types: { total: 0, sharedPackage: 0 },
   unresolved: [],
-  totals: { nodes: 0, edges: 0, types: 0, unresolved: 0 },
+  totals: { nodes: 0, edges: 0, types: 0, missed: 0, sites: 0, notes: 0, findings: 0, unresolved: 0 },
 });
 
 export interface TestGraph {
@@ -76,6 +76,14 @@ const directory = mkdtempSync(join(tmpdir(), 'flowatlas-mcp-'));
 export const buildTestDb = (graph: TestGraph): GraphDb => {
   written += 1;
   const path = join(directory, `graph-${written}.db`);
+  writeTestDb(graph, path);
+  const db = openGraphDb(path);
+  opened.push(db);
+  return db;
+};
+
+/** The same database written at `path`, for a test that serves it rather than reads it. */
+export const writeTestDb = (graph: TestGraph, path: string): void => {
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
     builtAt: FIXED,
@@ -86,7 +94,25 @@ export const buildTestDb = (graph: TestGraph): GraphDb => {
     unresolved: graph.unresolved ?? [],
   };
   writeGraphDb(project, emptyReport(), path);
-  return openGraphDb(path);
 };
 
+/** Every database {@link buildTestDb} opened, so the directory can be let go of whole. */
+const opened: GraphDb[] = [];
+
 export const testDbDirectory = directory;
+
+/**
+ * Closes every test database still open, then removes their directory (P199).
+ * On Windows a database held open can not be removed, and a test that keeps
+ * one for a whole `describe` never closes it itself.
+ */
+export const removeTestDbs = (): void => {
+  for (const db of opened.splice(0)) {
+    try {
+      db.close();
+    } catch {
+      // Already closed by the test that opened it.
+    }
+  }
+  rmSync(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+};

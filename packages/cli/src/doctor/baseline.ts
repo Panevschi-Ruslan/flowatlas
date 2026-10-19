@@ -17,7 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { userInfo } from 'node:os';
-import { tally, wasMissed, type Unresolved } from '@flowatlas/core';
+import { rowKindOf, tally, type Unresolved } from '@flowatlas/core';
 import { z } from 'zod';
 import { BASELINE_FORMAT_VERSION, type BaselineDelta } from './schema.js';
 
@@ -39,7 +39,7 @@ export interface UnresolvedSnapshot {
   /** Every actionable key with its count, in key order. */
   keys: KeyCount[];
   /**
-   * The informational side, recorded and never compared.
+   * The informational side - gap rows at `info` - recorded and never compared.
    *
    * Kept so a reader can see it move — 731 places folded into 17 rows is a
    * number worth watching — without a build ever failing on it.
@@ -74,6 +74,12 @@ export interface Baseline {
   markers: { warnings: number };
   /** The same for contracts: recorded for a reader, never compared. */
   contracts: { warnings: number; infos: number; ignored: number };
+  /**
+   * The rule violations accepted, by key (`rule|<name>|<from>|<to>`, or
+   * `rule|<name>|unchecked|<side>`), version 2 (P114). Keys carry no line
+   * (D5). A version-1 baseline reads as `{}`: nothing accepted.
+   */
+  rules?: Record<string, 1>;
 }
 
 const counts = z.record(z.string(), z.number().int().nonnegative());
@@ -112,7 +118,12 @@ export const baselineSchema = z.object({
     infos: z.number().int().nonnegative(),
     ignored: z.number().int().nonnegative(),
   }),
+  rules: z.record(z.string(), z.literal(1)).default({}),
 });
+
+/** The rule keys a run would accept: every violation nothing excused, and every rule that could not be checked. */
+export const rulesSnapshotOf = (report: { violations: ReadonlyArray<{ key: string }>; unchecked: ReadonlyArray<{ key: string }> }): Record<string, 1> =>
+  Object.fromEntries([...report.violations, ...report.unchecked].map((item) => item.key).sort().map((key) => [key, 1 as const]));
 
 /**
  * The symbol as a key can hold it: one line, and not an essay.
@@ -162,8 +173,13 @@ export const snapshotOf = (
   const byService = new Map<string, number>();
   const keys = new Map<string, number>();
   let total = 0;
-  const info = tally(rows.filter((row) => wasMissed(row) && !isActionable(row)));
-  const nothing = tally(rows.filter((row) => !wasMissed(row)));
+  // Gaps only (P81): a note or a finding at `info` is neither a place static
+  // reading cannot see nor a place with nothing to join. `total` and `keys`
+  // below still count every actionable row, findings included, exactly as
+  // they did before kinds existed, so no baseline changes verdict on upgrade.
+  const gaps = rows.filter((row) => rowKindOf(row) === 'gap');
+  const info = tally(gaps.filter((row) => row.level === 'info'));
+  const nothing = tally(gaps.filter((row) => row.level === 'nothing'));
 
   for (const row of rows) {
     const sites = sitesOf(row);

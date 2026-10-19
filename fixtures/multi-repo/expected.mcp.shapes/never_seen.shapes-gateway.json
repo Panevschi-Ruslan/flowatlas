@@ -1,0 +1,199 @@
+{
+  "rows": [
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:35",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 5,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/charge",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:50",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 5,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/pay",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:45",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 5,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:35",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 5,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.charge",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:50",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 5,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.pay",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:45",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 5,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/clients/billing.client.ts:31",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 0,
+        "most": 0
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/clients/orders.client.ts:43",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 1,
+        "most": 0
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/clients/orders.client.ts:32",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 1,
+        "most": 0
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "gateway#src/clients/payments.client.ts:PaymentsClient.charge",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/clients/payments.client.ts:33",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 1,
+        "most": 0
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "gateway#src/clients/payments.client.ts:PaymentsClient.pay",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/clients/payments.client.ts:23",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 1,
+        "most": 0
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "gateway#src/clients/service-registry.ts:ServiceRegistry.baseUrlOf",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/clients/service-registry.ts:23",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 1,
+        "most": 0
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "gateway#src/clients/service-registry.ts:ServiceRegistry.invoicesUrl",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/clients/service-registry.ts:19",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 1,
+        "most": 0
+      },
+      "confidence": "weak"
+    }
+  ],
+  "window": {
+    "from": "2025-10-16T07:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z",
+    "label": "2h"
+  },
+  "total": 13,
+  "next": [
+    "dead({id: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
+    "get_flow({entry: \"entry:gateway:http:POST:/orders/:param/cancel\"})"
+  ]
+}

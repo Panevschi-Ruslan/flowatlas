@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:58.917Z",
+  "builtAt": "2026-10-16T23:28:40.657Z",
   "configHash": "66238374aa03",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 58,
       "types": 4,
       "unresolved": 8,
-      "durationMs": 598,
+      "durationMs": 613,
       "packages": {
         "name": "nest-broker-markers",
         "runtime": [
@@ -74,6 +74,10 @@
     "nodes": 55,
     "edges": 58,
     "types": 4,
+    "missed": 8,
+    "sites": 8,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 8
   }
 }

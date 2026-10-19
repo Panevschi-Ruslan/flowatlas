@@ -1,0 +1,233 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/orders.controller.ts:22",
+      "service": "orders",
+      "kind": "http"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
+          "type": "method",
+          "label": "OrdersController.create",
+          "loc": "src/orders/orders.controller.ts:22"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "type:orders#CreateOrderDto"
+          ],
+          "returns": "type:orders#OrderDto"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "orders#src/common/app-logger.ts:AppLogger.log",
+              "type": "method",
+              "label": "AppLogger.log",
+              "loc": "src/common/app-logger.ts:12"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string",
+                "string"
+              ],
+              "returns": "void"
+            },
+            "children": []
+          },
+          {
+            "node": {
+              "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+              "type": "method",
+              "label": "OrdersService.create",
+              "loc": "src/orders/orders.service.ts:28"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "type:orders#CreateOrderDto"
+              ],
+              "returns": "type:orders#OrderDto"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "orders#src/common/app-logger.ts:AppLogger.log",
+                  "ref": true,
+                  "seenAt": "orders#src/orders/orders.controller.ts:OrdersController.create"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string",
+                    "string"
+                  ],
+                  "returns": "void"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "orders#src/common/metrics.ts:Metrics.count",
+                  "type": "method",
+                  "label": "Metrics.count",
+                  "loc": "src/common/metrics.ts:12"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string"
+                  ],
+                  "returns": "void"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "orders#src/orders/order.repository.ts:OrderRepository.save",
+                  "type": "method",
+                  "label": "OrderRepository.save",
+                  "loc": "src/orders/order.repository.ts:28"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "type:orders#Order"
+                  ],
+                  "returns": "type:orders#Order"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "orders#src/orders/order.mapper.ts:OrderMapper.toDto",
+                  "type": "method",
+                  "label": "OrderMapper.toDto",
+                  "loc": "src/orders/order.mapper.ts:9"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "type:orders#Order"
+                  ],
+                  "returns": "type:orders#OrderDto"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "orders#src/orders/order.repository.ts:OrderRepository.findOne",
+                  "type": "method",
+                  "label": "OrderRepository.findOne",
+                  "loc": "src/orders/order.repository.ts:22"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string"
+                  ],
+                  "returns": "type:orders#Order"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "orders#src/orders/order.events.ts:OrderEvents.created",
+                  "type": "method",
+                  "label": "OrderEvents.created",
+                  "loc": "src/orders/order.events.ts:22"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "type:orders#OrderDto"
+                  ],
+                  "returns": "void"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "orders#src/common/app-logger.ts:AppLogger.log",
+                      "ref": true,
+                      "seenAt": "orders#src/orders/orders.controller.ts:OrdersController.create"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "string",
+                        "string"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": []
+                  },
+                  {
+                    "node": {
+                      "id": "producer:orders#src/orders/order.events.ts:25:5",
+                      "type": "producer",
+                      "label": "event order.created",
+                      "loc": "src/orders/order.events.ts:25",
+                      "kind": "event"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "truncated": "23 more nodes past maxNodes 12; raise maxNodes or ask get_flow on a child id",
+  "stoppedBy": [
+    "maxNodes"
+  ],
+  "crossingsLeft": [
+    {
+      "from": "producer:orders#src/orders/order.events.ts:25:5",
+      "to": "channel:order.created",
+      "type": "emits",
+      "service": "orders"
+    },
+    {
+      "from": "orders#src/orders/order.repository.ts:OrderRepository.save",
+      "to": "db_query:orders#src/orders/order.repository.ts:31:12",
+      "type": "calls",
+      "service": "orders"
+    },
+    {
+      "from": "orders#src/orders/order.repository.ts:OrderRepository.findOne",
+      "to": "db_query:orders#src/orders/order.repository.ts:25:12",
+      "type": "calls",
+      "service": "orders"
+    }
+  ],
+  "next": [
+    "describe_for_prompt({id: \"entry:orders:http:POST:/orders\"})",
+    "get_flow({entry: \"channel:order.created\"})",
+    "impact({symbol: \"entry:orders:http:POST:/orders\"})",
+    "get_source({symbol: \"orders#src/orders/orders.controller.ts:OrdersController.create\"})"
+  ]
+}

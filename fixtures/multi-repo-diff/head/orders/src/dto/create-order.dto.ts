@@ -23,3 +23,8 @@ export interface OrderCreatedEvent {
   orderId: string;
   customerId: string;
 }
+
+/** What goes on `order.gift-wrapped`, published only by the head revision. */
+export interface OrderGiftWrappedEvent {
+  orderId: string;
+}

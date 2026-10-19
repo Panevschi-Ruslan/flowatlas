@@ -1,0 +1,2847 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T03:01:25.196Z",
+  "services": [
+    {
+      "name": "recipes-api",
+      "repo": "./recipes-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ratings-api",
+      "repo": "./ratings-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.repository.ts:17:12",
+      "type": "db_query",
+      "label": "read ratings",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 17,
+      "meta": {
+        "op": "read",
+        "table": "ratings",
+        "tables": [
+          "ratings"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.em",
+        "source": "entity-arg",
+        "entityType": "Rating"
+      }
+    },
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.repository.ts:22:12",
+      "type": "db_query",
+      "label": "read Reviewer",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 22,
+      "meta": {
+        "op": "read",
+        "table": "Reviewer",
+        "tables": [
+          "Reviewer"
+        ],
+        "package": "typeorm",
+        "method": "createQueryBuilder",
+        "receiver": "this.em",
+        "source": "entity-arg"
+      }
+    },
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.repository.ts:27:12",
+      "type": "db_query",
+      "label": "read ratings",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 27,
+      "meta": {
+        "op": "read",
+        "table": "ratings",
+        "tables": [
+          "ratings"
+        ],
+        "package": "typeorm",
+        "method": "count",
+        "receiver": "this.dataSource.getRepository(Rating)",
+        "source": "type-arg",
+        "entityType": "Rating"
+      }
+    },
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.repository.ts:33:12",
+      "type": "db_query",
+      "label": "read reviewer_badges",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 33,
+      "meta": {
+        "op": "read",
+        "table": "reviewer_badges",
+        "tables": [
+          "reviewer_badges"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "repository",
+        "source": "type-arg",
+        "entityType": "Badge"
+      }
+    },
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.repository.ts:38:12",
+      "type": "db_query",
+      "label": "write reviewer_badges",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 38,
+      "meta": {
+        "op": "write",
+        "table": "reviewer_badges",
+        "tables": [
+          "reviewer_badges"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.em",
+        "source": "entity-arg",
+        "entityType": "Badge",
+        "entityTypeId": "type:ratings-api#Badge"
+      }
+    },
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.repository.ts:43:12",
+      "type": "db_query",
+      "label": "read ratings",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 43,
+      "meta": {
+        "op": "read",
+        "table": "ratings",
+        "tables": [
+          "ratings"
+        ],
+        "package": "typeorm",
+        "method": "createQueryBuilder",
+        "receiver": "this.em",
+        "source": "entity-arg",
+        "entityType": "Rating"
+      }
+    },
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.repository.ts:48:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 48,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "typeorm",
+        "method": "createQueryBuilder",
+        "receiver": "this.em",
+        "source": "none"
+      }
+    },
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.repository.ts:53:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 53,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "typeorm",
+        "method": "query",
+        "receiver": "this.em",
+        "source": "none"
+      }
+    },
+    {
+      "id": "db_query:ratings-api#src/ratings/ratings.service.ts:22:12",
+      "type": "db_query",
+      "label": "read ratings",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 22,
+      "meta": {
+        "op": "read",
+        "table": "ratings",
+        "tables": [
+          "ratings"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.ratings",
+        "source": "type-arg",
+        "entityType": "Rating"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/comments/comments.store.ts:23:12",
+      "type": "db_query",
+      "label": "write comments",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 23,
+      "meta": {
+        "op": "write",
+        "table": "comments",
+        "tables": [
+          "comments"
+        ],
+        "package": "mongodb",
+        "method": "insertOne",
+        "receiver": "this.coll()",
+        "source": "string-arg",
+        "tableFrom": "helper"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/comments/comments.store.ts:28:12",
+      "type": "db_query",
+      "label": "read comments",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 28,
+      "meta": {
+        "op": "read",
+        "table": "comments",
+        "tables": [
+          "comments"
+        ],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "this.collection",
+        "source": "string-arg",
+        "tableFrom": "helper"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/comments/comments.store.ts:37:12",
+      "type": "db_query",
+      "label": "write ?",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 37,
+      "meta": {
+        "op": "write",
+        "table": null,
+        "tables": [],
+        "package": "mongodb",
+        "method": "insertOne",
+        "receiver": "this.named('comment_flags')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/db/base.repository.ts:16:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "recipes-api",
+      "file": "src/db/base.repository.ts",
+      "line": 16,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "this.mongo.database().collection<T>(this.collectionName)",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/db/base.repository.ts:20:12",
+      "type": "db_query",
+      "label": "write ?",
+      "repo": "recipes-api",
+      "file": "src/db/base.repository.ts",
+      "line": 20,
+      "meta": {
+        "op": "write",
+        "table": null,
+        "tables": [],
+        "package": "mongodb",
+        "method": "insertOne",
+        "receiver": "this.mongo.database().collection<T>(this.collectionName)",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/db/timestamped.repository.ts:7:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "recipes-api",
+      "file": "src/db/timestamped.repository.ts",
+      "line": 7,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "this.mongo.database().collection<T>(this.collectionName)",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/recipes/recipes.repository.ts:14:12",
+      "type": "db_query",
+      "label": "read recipes",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.repository.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "recipes",
+        "tables": [
+          "recipes"
+        ],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "this.mongo.database().collection<Recipe>(this.collectionName)",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/recipes/recipes.service.ts:22:12",
+      "type": "db_query",
+      "label": "read recipes",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 22,
+      "meta": {
+        "op": "read",
+        "table": "recipes",
+        "tables": [
+          "recipes"
+        ],
+        "package": "local:BaseRepository",
+        "method": "findAll",
+        "receiver": "this.recipesRepository",
+        "source": "string-arg",
+        "tableFrom": "inferred-property"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/recipes/recipes.service.ts:27:12",
+      "type": "db_query",
+      "label": "read recipes",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 27,
+      "meta": {
+        "op": "read",
+        "table": "recipes",
+        "tables": [
+          "recipes"
+        ],
+        "package": "local:BaseRepository",
+        "method": "findPopular",
+        "receiver": "this.recipesRepository",
+        "source": "string-arg",
+        "tableFrom": "inferred-property"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/recipes/recipes.service.ts:32:12",
+      "type": "db_query",
+      "label": "read tags",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 32,
+      "meta": {
+        "op": "read",
+        "table": "tags",
+        "tables": [
+          "tags"
+        ],
+        "package": "local:BaseRepository",
+        "method": "findAll",
+        "receiver": "this.tagsRepository",
+        "source": "string-arg",
+        "tableFrom": "inferred-property"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/recipes/recipes.service.ts:37:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 37,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "local:BaseRepository",
+        "method": "findAll",
+        "receiver": "this.draftsRepository",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/recipes/recipes.service.ts:42:12",
+      "type": "db_query",
+      "label": "read cookbooks",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 42,
+      "meta": {
+        "op": "read",
+        "table": "cookbooks",
+        "tables": [
+          "cookbooks"
+        ],
+        "package": "local:TimestampedRepository",
+        "method": "findAll",
+        "receiver": "this.cookbooksRepository",
+        "source": "string-arg",
+        "tableFrom": "inferred-property"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/recipes/recipes.service.ts:46:12",
+      "type": "db_query",
+      "label": "read cookbooks",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 46,
+      "meta": {
+        "op": "read",
+        "table": "cookbooks",
+        "tables": [
+          "cookbooks"
+        ],
+        "package": "local:TimestampedRepository",
+        "method": "findLatest",
+        "receiver": "this.cookbooksRepository",
+        "source": "string-arg",
+        "tableFrom": "inferred-property"
+      }
+    },
+    {
+      "id": "db_query:recipes-api#src/search/search.repository.ts:13:12",
+      "type": "db_query",
+      "label": "read search_index",
+      "repo": "recipes-api",
+      "file": "src/search/search.repository.ts",
+      "line": 13,
+      "meta": {
+        "op": "read",
+        "table": "search_index",
+        "tables": [
+          "search_index"
+        ],
+        "package": "mongodb",
+        "method": "findOne",
+        "receiver": "this.mongo.database().collection('search_index')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "entry:ratings-api:http:GET:/ratings",
+      "type": "entry",
+      "label": "GET /ratings",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ratings",
+        "rawPath": "/ratings",
+        "controller": "RatingsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:ratings-api:http:GET:/ratings/best",
+      "type": "entry",
+      "label": "GET /ratings/best",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ratings/best",
+        "rawPath": "/ratings/best",
+        "controller": "RatingsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:ratings-api:http:GET:/ratings/recent",
+      "type": "entry",
+      "label": "GET /ratings/recent",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ratings/recent",
+        "rawPath": "/ratings/recent",
+        "controller": "RatingsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:recipes-api:http:GET:/recipes",
+      "type": "entry",
+      "label": "GET /recipes",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recipes",
+        "rawPath": "/recipes",
+        "controller": "RecipesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:recipes-api:http:GET:/recipes/cookbooks",
+      "type": "entry",
+      "label": "GET /recipes/cookbooks",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recipes/cookbooks",
+        "rawPath": "/recipes/cookbooks",
+        "controller": "RecipesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:recipes-api:http:GET:/recipes/cookbooks/newest",
+      "type": "entry",
+      "label": "GET /recipes/cookbooks/newest",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recipes/cookbooks/newest",
+        "rawPath": "/recipes/cookbooks/newest",
+        "controller": "RecipesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:recipes-api:http:GET:/recipes/drafts",
+      "type": "entry",
+      "label": "GET /recipes/drafts",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recipes/drafts",
+        "rawPath": "/recipes/drafts",
+        "controller": "RecipesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:recipes-api:http:GET:/recipes/popular",
+      "type": "entry",
+      "label": "GET /recipes/popular",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recipes/popular",
+        "rawPath": "/recipes/popular",
+        "controller": "RecipesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:recipes-api:http:GET:/recipes/search",
+      "type": "entry",
+      "label": "GET /recipes/search",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 39,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recipes/search",
+        "rawPath": "/recipes/search",
+        "controller": "RecipesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:recipes-api:http:GET:/recipes/tags",
+      "type": "entry",
+      "label": "GET /recipes/tags",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/recipes/tags",
+        "rawPath": "/recipes/tags",
+        "controller": "RecipesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:recipes-api:http:POST:/recipes/comments",
+      "type": "entry",
+      "label": "POST /recipes/comments",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 44,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/recipes/comments",
+        "rawPath": "/recipes/comments",
+        "controller": "RecipesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "ratings-api#node_modules/typeorm:DataSource",
+      "type": "provider",
+      "label": "DataSource",
+      "repo": "ratings-api",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "ratings-api#node_modules/typeorm:EntityManager",
+      "type": "provider",
+      "label": "EntityManager",
+      "repo": "ratings-api",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "ratings-api#node_modules/typeorm:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "ratings-api",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "ratings-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "ratings-api",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "RatingsController"
+        ],
+        "providers": [
+          "RatingsRepository",
+          "RatingsService",
+          "REVIEWS"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "ratings-api#src/app.module.ts:REVIEWS",
+      "type": "provider",
+      "label": "REVIEWS",
+      "repo": "ratings-api",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "factory",
+      "meta": {
+        "token": "REVIEWS"
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.controller.ts:RatingsController",
+      "type": "provider",
+      "label": "RatingsController",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.all",
+      "type": "method",
+      "label": "RatingsController.all",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.best",
+      "type": "method",
+      "label": "RatingsController.best",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.recent",
+      "type": "method",
+      "label": "RatingsController.recent",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository",
+      "type": "provider",
+      "label": "RatingsRepository",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.award",
+      "type": "method",
+      "label": "RatingsRepository.award",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "badge",
+              "type": "{id?:number;label?:string}"
+            }
+          ],
+          "returns": "type:ratings-api#Badge"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.badges",
+      "type": "method",
+      "label": "RatingsRepository.badges",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:ratings-api#Badge[]"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.count",
+      "type": "method",
+      "label": "RatingsRepository.count",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.fromBuilder",
+      "type": "method",
+      "label": "RatingsRepository.fromBuilder",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:ratings-api#Rating[]"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.nested",
+      "type": "method",
+      "label": "RatingsRepository.nested",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 47,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.raw",
+      "type": "method",
+      "label": "RatingsRepository.raw",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "where",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.reviewersNamed",
+      "type": "method",
+      "label": "RatingsRepository.reviewersNamed",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:ratings-api#Reviewer[]"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.topRated",
+      "type": "method",
+      "label": "RatingsRepository.topRated",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:ratings-api#Rating[]"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.service.ts:RatingsService",
+      "type": "provider",
+      "label": "RatingsService",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.service.ts:RatingsService.all",
+      "type": "method",
+      "label": "RatingsService.all",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:ratings-api#Rating[]"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.service.ts:RatingsService.best",
+      "type": "method",
+      "label": "RatingsService.best",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ratings-api#src/ratings/ratings.service.ts:RatingsService.recent",
+      "type": "method",
+      "label": "RatingsService.recent",
+      "repo": "ratings-api",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "recipes-api",
+      "file": "src/app.module.ts",
+      "line": 13,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "RecipesController"
+        ],
+        "providers": [
+          "MongoConnection",
+          "SettingsService",
+          "RecipesRepository",
+          "TagsRepository",
+          "DraftsRepository",
+          "CookbooksRepository",
+          "CommentsStore",
+          "SearchRepository",
+          "RecipesService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "recipes-api#src/comments/comments.store.ts:CommentsStore",
+      "type": "provider",
+      "label": "CommentsStore",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/comments/comments.store.ts:CommentsStore.add",
+      "type": "method",
+      "label": "CommentsStore.add",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "comment",
+              "type": "type:recipes-api#Comment"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/comments/comments.store.ts:CommentsStore.coll",
+      "type": "method",
+      "label": "CommentsStore.coll",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:mongodb#Collection<type:recipes-api#Comment>"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/comments/comments.store.ts:CommentsStore.flag",
+      "type": "method",
+      "label": "CommentsStore.flag",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "comment",
+              "type": "type:recipes-api#Comment"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/comments/comments.store.ts:CommentsStore.forRecipe",
+      "type": "method",
+      "label": "CommentsStore.forRecipe",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "recipeId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:recipes-api#Comment[]"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/comments/comments.store.ts:CommentsStore.named",
+      "type": "method",
+      "label": "CommentsStore.named",
+      "repo": "recipes-api",
+      "file": "src/comments/comments.store.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:mongodb#Collection<type:recipes-api#Comment>"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/db/base.repository.ts:BaseRepository",
+      "type": "provider",
+      "label": "BaseRepository",
+      "repo": "recipes-api",
+      "file": "src/db/base.repository.ts",
+      "line": 10,
+      "kind": "injectable"
+    },
+    {
+      "id": "recipes-api#src/db/base.repository.ts:BaseRepository.findAll",
+      "type": "method",
+      "label": "BaseRepository.findAll",
+      "repo": "recipes-api",
+      "file": "src/db/base.repository.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "T[]"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/db/base.repository.ts:BaseRepository.insert",
+      "type": "method",
+      "label": "BaseRepository.insert",
+      "repo": "recipes-api",
+      "file": "src/db/base.repository.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "doc",
+              "type": "T"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/db/connection.ts:MongoConnection",
+      "type": "provider",
+      "label": "MongoConnection",
+      "repo": "recipes-api",
+      "file": "src/db/connection.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/db/connection.ts:MongoConnection.database",
+      "type": "method",
+      "label": "MongoConnection.database",
+      "repo": "recipes-api",
+      "file": "src/db/connection.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:mongodb#Db"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/db/timestamped.repository.ts:TimestampedRepository",
+      "type": "provider",
+      "label": "TimestampedRepository",
+      "repo": "recipes-api",
+      "file": "src/db/timestamped.repository.ts",
+      "line": 5,
+      "kind": "injectable"
+    },
+    {
+      "id": "recipes-api#src/db/timestamped.repository.ts:TimestampedRepository.findLatest",
+      "type": "method",
+      "label": "TimestampedRepository.findLatest",
+      "repo": "recipes-api",
+      "file": "src/db/timestamped.repository.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "T[]"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/cookbooks.repository.ts:CookbooksRepository",
+      "type": "provider",
+      "label": "CookbooksRepository",
+      "repo": "recipes-api",
+      "file": "src/recipes/cookbooks.repository.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/drafts.repository.ts:DraftsRepository",
+      "type": "provider",
+      "label": "DraftsRepository",
+      "repo": "recipes-api",
+      "file": "src/recipes/drafts.repository.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController",
+      "type": "provider",
+      "label": "RecipesController",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.comment",
+      "type": "method",
+      "label": "RecipesController.comment",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "comment",
+              "type": "type:recipes-api#Comment"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.cookbooks",
+      "type": "method",
+      "label": "RecipesController.cookbooks",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.drafts",
+      "type": "method",
+      "label": "RecipesController.drafts",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.list",
+      "type": "method",
+      "label": "RecipesController.list",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.newestCookbooks",
+      "type": "method",
+      "label": "RecipesController.newestCookbooks",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.popular",
+      "type": "method",
+      "label": "RecipesController.popular",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.search",
+      "type": "method",
+      "label": "RecipesController.search",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "term",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.tags",
+      "type": "method",
+      "label": "RecipesController.tags",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.repository.ts:RecipesRepository",
+      "type": "provider",
+      "label": "RecipesRepository",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.repository.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.repository.ts:RecipesRepository.findPopular",
+      "type": "method",
+      "label": "RecipesRepository.findPopular",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.repository.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:recipes-api#Recipe[]"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService",
+      "type": "provider",
+      "label": "RecipesService",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService.comment",
+      "type": "method",
+      "label": "RecipesService.comment",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "comment",
+              "type": "type:recipes-api#Comment"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService.cookbooks",
+      "type": "method",
+      "label": "RecipesService.cookbooks",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService.drafts",
+      "type": "method",
+      "label": "RecipesService.drafts",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService.list",
+      "type": "method",
+      "label": "RecipesService.list",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:recipes-api#Recipe[]"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService.newestCookbooks",
+      "type": "method",
+      "label": "RecipesService.newestCookbooks",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService.popular",
+      "type": "method",
+      "label": "RecipesService.popular",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:recipes-api#Recipe[]"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService.search",
+      "type": "method",
+      "label": "RecipesService.search",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "term",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/recipes.service.ts:RecipesService.tags",
+      "type": "method",
+      "label": "RecipesService.tags",
+      "repo": "recipes-api",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/recipes/tags.repository.ts:TagsRepository",
+      "type": "provider",
+      "label": "TagsRepository",
+      "repo": "recipes-api",
+      "file": "src/recipes/tags.repository.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/search/search.repository.ts:SearchRepository",
+      "type": "provider",
+      "label": "SearchRepository",
+      "repo": "recipes-api",
+      "file": "src/search/search.repository.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/search/search.repository.ts:SearchRepository.lookup",
+      "type": "method",
+      "label": "SearchRepository.lookup",
+      "repo": "recipes-api",
+      "file": "src/search/search.repository.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "term",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "recipes-api#src/settings/settings.service.ts:SettingsService",
+      "type": "provider",
+      "label": "SettingsService",
+      "repo": "recipes-api",
+      "file": "src/settings/settings.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "recipes-api#src/settings/settings.service.ts:SettingsService.valueOf",
+      "type": "method",
+      "label": "SettingsService.valueOf",
+      "repo": "recipes-api",
+      "file": "src/settings/settings.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "repo:ratings-api",
+      "type": "repo",
+      "label": "ratings-api",
+      "repo": "ratings-api",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 8,
+          "skippedExternalCalls": {
+            "typeorm": 19,
+            "typeorm.getMany": 2,
+            "typeorm.where": 1,
+            "typeorm.getRepository": 2,
+            "typeorm.from": 1,
+            "typeorm.select": 2,
+            "typeorm.getQuery": 1,
+            "typeorm.subQuery": 1
+          },
+          "receiversExplainedByEdge": 1
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:recipes-api",
+      "type": "repo",
+      "label": "recipes-api",
+      "repo": "recipes-api",
+      "meta": {
+        "stats": {
+          "files": 16,
+          "filesRead": 16,
+          "filesUnreadable": 0,
+          "classes": 13,
+          "skippedExternalCalls": {
+            "mongodb": 20,
+            "mongodb.collection": 7,
+            "mongodb.toArray": 4,
+            "mongodb.db": 1
+          },
+          "receiversExplainedByEdge": 1
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:ratings-api#Reviewer",
+      "type": "table",
+      "label": "Reviewer",
+      "repo": "ratings-api"
+    },
+    {
+      "id": "table:ratings-api#ratings",
+      "type": "table",
+      "label": "ratings",
+      "repo": "ratings-api"
+    },
+    {
+      "id": "table:ratings-api#reviewer_badges",
+      "type": "table",
+      "label": "reviewer_badges",
+      "repo": "ratings-api"
+    },
+    {
+      "id": "table:recipes-api#comments",
+      "type": "table",
+      "label": "comments",
+      "repo": "recipes-api"
+    },
+    {
+      "id": "table:recipes-api#cookbooks",
+      "type": "table",
+      "label": "cookbooks",
+      "repo": "recipes-api"
+    },
+    {
+      "id": "table:recipes-api#recipes",
+      "type": "table",
+      "label": "recipes",
+      "repo": "recipes-api"
+    },
+    {
+      "id": "table:recipes-api#search_index",
+      "type": "table",
+      "label": "search_index",
+      "repo": "recipes-api"
+    },
+    {
+      "id": "table:recipes-api#tags",
+      "type": "table",
+      "label": "tags",
+      "repo": "recipes-api"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:ratings-api#src/ratings/ratings.repository.ts:17:12",
+      "to": "table:ratings-api#ratings",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:ratings-api#src/ratings/ratings.repository.ts:22:12",
+      "to": "table:ratings-api#Reviewer",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 22
+    },
+    {
+      "from": "db_query:ratings-api#src/ratings/ratings.repository.ts:27:12",
+      "to": "table:ratings-api#ratings",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 27
+    },
+    {
+      "from": "db_query:ratings-api#src/ratings/ratings.repository.ts:33:12",
+      "to": "table:ratings-api#reviewer_badges",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 33
+    },
+    {
+      "from": "db_query:ratings-api#src/ratings/ratings.repository.ts:38:12",
+      "to": "table:ratings-api#reviewer_badges",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 38
+    },
+    {
+      "from": "db_query:ratings-api#src/ratings/ratings.repository.ts:43:12",
+      "to": "table:ratings-api#ratings",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 43
+    },
+    {
+      "from": "db_query:ratings-api#src/ratings/ratings.service.ts:22:12",
+      "to": "table:ratings-api#ratings",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 22
+    },
+    {
+      "from": "db_query:recipes-api#src/comments/comments.store.ts:23:12",
+      "to": "table:recipes-api#comments",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/comments/comments.store.ts",
+      "line": 23
+    },
+    {
+      "from": "db_query:recipes-api#src/comments/comments.store.ts:28:12",
+      "to": "table:recipes-api#comments",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/comments/comments.store.ts",
+      "line": 28
+    },
+    {
+      "from": "db_query:recipes-api#src/recipes/recipes.repository.ts:14:12",
+      "to": "table:recipes-api#recipes",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/recipes/recipes.repository.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:recipes-api#src/recipes/recipes.service.ts:22:12",
+      "to": "table:recipes-api#recipes",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 22
+    },
+    {
+      "from": "db_query:recipes-api#src/recipes/recipes.service.ts:27:12",
+      "to": "table:recipes-api#recipes",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 27
+    },
+    {
+      "from": "db_query:recipes-api#src/recipes/recipes.service.ts:32:12",
+      "to": "table:recipes-api#tags",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 32
+    },
+    {
+      "from": "db_query:recipes-api#src/recipes/recipes.service.ts:42:12",
+      "to": "table:recipes-api#cookbooks",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 42
+    },
+    {
+      "from": "db_query:recipes-api#src/recipes/recipes.service.ts:46:12",
+      "to": "table:recipes-api#cookbooks",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 46
+    },
+    {
+      "from": "db_query:recipes-api#src/search/search.repository.ts:13:12",
+      "to": "table:recipes-api#search_index",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/search/search.repository.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:ratings-api:http:GET:/ratings",
+      "to": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.all",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:ratings-api:http:GET:/ratings/best",
+      "to": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.best",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:ratings-api:http:GET:/ratings/recent",
+      "to": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.recent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:recipes-api:http:GET:/recipes",
+      "to": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:recipes-api:http:GET:/recipes/cookbooks",
+      "to": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.cookbooks",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 29
+    },
+    {
+      "from": "entry:recipes-api:http:GET:/recipes/cookbooks/newest",
+      "to": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.newestCookbooks",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 34
+    },
+    {
+      "from": "entry:recipes-api:http:GET:/recipes/drafts",
+      "to": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.drafts",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:recipes-api:http:GET:/recipes/popular",
+      "to": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.popular",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:recipes-api:http:GET:/recipes/search",
+      "to": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.search",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 39,
+      "meta": {
+        "query": "{q:string}"
+      }
+    },
+    {
+      "from": "entry:recipes-api:http:GET:/recipes/tags",
+      "to": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.tags",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:recipes-api:http:POST:/recipes/comments",
+      "to": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.comment",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:recipes-api#Comment"
+      ],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 44,
+      "meta": {
+        "body": "type:recipes-api#Comment"
+      }
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.controller.ts:RatingsController",
+      "to": "ratings-api#src/ratings/ratings.service.ts:RatingsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.all",
+      "to": "ratings-api#src/ratings/ratings.service.ts:RatingsService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:ratings-api#Rating[]",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.best",
+      "to": "ratings-api#src/ratings/ratings.service.ts:RatingsService.best",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.controller.ts:RatingsController.recent",
+      "to": "ratings-api#src/ratings/ratings.service.ts:RatingsService.recent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository",
+      "to": "ratings-api#node_modules/typeorm:DataSource",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 12
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository",
+      "to": "ratings-api#node_modules/typeorm:EntityManager",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 11
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.award",
+      "to": "db_query:ratings-api#src/ratings/ratings.repository.ts:38:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 38
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.badges",
+      "to": "db_query:ratings-api#src/ratings/ratings.repository.ts:33:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 33
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.count",
+      "to": "db_query:ratings-api#src/ratings/ratings.repository.ts:27:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 27
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.fromBuilder",
+      "to": "db_query:ratings-api#src/ratings/ratings.repository.ts:43:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 43
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.nested",
+      "to": "db_query:ratings-api#src/ratings/ratings.repository.ts:48:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 48
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.raw",
+      "to": "db_query:ratings-api#src/ratings/ratings.repository.ts:53:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 53
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.reviewersNamed",
+      "to": "db_query:ratings-api#src/ratings/ratings.repository.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 22
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.topRated",
+      "to": "db_query:ratings-api#src/ratings/ratings.repository.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 17
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.service.ts:RatingsService",
+      "to": "ratings-api#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 11
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.service.ts:RatingsService",
+      "to": "ratings-api#src/app.module.ts:REVIEWS",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 12,
+      "meta": {
+        "token": "REVIEWS",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.service.ts:RatingsService",
+      "to": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 10
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.service.ts:RatingsService.all",
+      "to": "db_query:ratings-api#src/ratings/ratings.service.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 22
+    },
+    {
+      "from": "ratings-api#src/ratings/ratings.service.ts:RatingsService.best",
+      "to": "ratings-api#src/ratings/ratings.repository.ts:RatingsRepository.topRated",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:ratings-api#Rating[]",
+      "file": "src/ratings/ratings.service.ts",
+      "line": 17
+    },
+    {
+      "from": "recipes-api#src/comments/comments.store.ts:CommentsStore",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/comments/comments.store.ts",
+      "line": 11
+    },
+    {
+      "from": "recipes-api#src/comments/comments.store.ts:CommentsStore.add",
+      "to": "db_query:recipes-api#src/comments/comments.store.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/comments/comments.store.ts",
+      "line": 23
+    },
+    {
+      "from": "recipes-api#src/comments/comments.store.ts:CommentsStore.add",
+      "to": "recipes-api#src/comments/comments.store.ts:CommentsStore.coll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Collection<type:recipes-api#Comment>",
+      "file": "src/comments/comments.store.ts",
+      "line": 23
+    },
+    {
+      "from": "recipes-api#src/comments/comments.store.ts:CommentsStore.coll",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection.database",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Db",
+      "file": "src/comments/comments.store.ts",
+      "line": 14
+    },
+    {
+      "from": "recipes-api#src/comments/comments.store.ts:CommentsStore.flag",
+      "to": "db_query:recipes-api#src/comments/comments.store.ts:37:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/comments/comments.store.ts",
+      "line": 37
+    },
+    {
+      "from": "recipes-api#src/comments/comments.store.ts:CommentsStore.flag",
+      "to": "recipes-api#src/comments/comments.store.ts:CommentsStore.named",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:mongodb#Collection<type:recipes-api#Comment>",
+      "file": "src/comments/comments.store.ts",
+      "line": 37
+    },
+    {
+      "from": "recipes-api#src/comments/comments.store.ts:CommentsStore.forRecipe",
+      "to": "db_query:recipes-api#src/comments/comments.store.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/comments/comments.store.ts",
+      "line": 28
+    },
+    {
+      "from": "recipes-api#src/comments/comments.store.ts:CommentsStore.named",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection.database",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Db",
+      "file": "src/comments/comments.store.ts",
+      "line": 33
+    },
+    {
+      "from": "recipes-api#src/db/base.repository.ts:BaseRepository.findAll",
+      "to": "db_query:recipes-api#src/db/base.repository.ts:16:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/db/base.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "recipes-api#src/db/base.repository.ts:BaseRepository.findAll",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection.database",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Db",
+      "file": "src/db/base.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "recipes-api#src/db/base.repository.ts:BaseRepository.insert",
+      "to": "db_query:recipes-api#src/db/base.repository.ts:20:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/db/base.repository.ts",
+      "line": 20
+    },
+    {
+      "from": "recipes-api#src/db/base.repository.ts:BaseRepository.insert",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection.database",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Db",
+      "file": "src/db/base.repository.ts",
+      "line": 20
+    },
+    {
+      "from": "recipes-api#src/db/timestamped.repository.ts:TimestampedRepository.findLatest",
+      "to": "db_query:recipes-api#src/db/timestamped.repository.ts:7:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/db/timestamped.repository.ts",
+      "line": 7
+    },
+    {
+      "from": "recipes-api#src/db/timestamped.repository.ts:TimestampedRepository.findLatest",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection.database",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Db",
+      "file": "src/db/timestamped.repository.ts",
+      "line": 7
+    },
+    {
+      "from": "recipes-api#src/recipes/drafts.repository.ts:DraftsRepository",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/drafts.repository.ts",
+      "line": 13
+    },
+    {
+      "from": "recipes-api#src/recipes/drafts.repository.ts:DraftsRepository",
+      "to": "recipes-api#src/settings/settings.service.ts:SettingsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/drafts.repository.ts",
+      "line": 13
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.comment",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService.comment",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:recipes-api#Comment"
+      ],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 46
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.cookbooks",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService.cookbooks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 31
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.drafts",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService.drafts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.list",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:recipes-api#Recipe[]",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.newestCookbooks",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService.newestCookbooks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 36
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.popular",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService.popular",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:recipes-api#Recipe[]",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.search",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService.search",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 41
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.controller.ts:RecipesController.tags",
+      "to": "recipes-api#src/recipes/recipes.service.ts:RecipesService.tags",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.repository.ts:RecipesRepository.findPopular",
+      "to": "db_query:recipes-api#src/recipes/recipes.repository.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/recipes/recipes.repository.ts",
+      "line": 14
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.repository.ts:RecipesRepository.findPopular",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection.database",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Db",
+      "file": "src/recipes/recipes.repository.ts",
+      "line": 14
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService",
+      "to": "recipes-api#src/comments/comments.store.ts:CommentsStore",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 15
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService",
+      "to": "recipes-api#src/recipes/cookbooks.repository.ts:CookbooksRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 17
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService",
+      "to": "recipes-api#src/recipes/drafts.repository.ts:DraftsRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 14
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService",
+      "to": "recipes-api#src/recipes/recipes.repository.ts:RecipesRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 12
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService",
+      "to": "recipes-api#src/recipes/tags.repository.ts:TagsRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 13
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService",
+      "to": "recipes-api#src/search/search.repository.ts:SearchRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 16
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.comment",
+      "to": "recipes-api#src/comments/comments.store.ts:CommentsStore.add",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:recipes-api#Comment"
+      ],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 50
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.cookbooks",
+      "to": "db_query:recipes-api#src/recipes/recipes.service.ts:42:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 42
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.cookbooks",
+      "to": "recipes-api#src/db/base.repository.ts:BaseRepository.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "T[]",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 42
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.drafts",
+      "to": "db_query:recipes-api#src/recipes/recipes.service.ts:37:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 37
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.drafts",
+      "to": "recipes-api#src/db/base.repository.ts:BaseRepository.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "T[]",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 37
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.list",
+      "to": "db_query:recipes-api#src/recipes/recipes.service.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 22
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.list",
+      "to": "recipes-api#src/db/base.repository.ts:BaseRepository.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "T[]",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 22
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.newestCookbooks",
+      "to": "db_query:recipes-api#src/recipes/recipes.service.ts:46:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 46
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.newestCookbooks",
+      "to": "recipes-api#src/db/timestamped.repository.ts:TimestampedRepository.findLatest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "T[]",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 46
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.popular",
+      "to": "db_query:recipes-api#src/recipes/recipes.service.ts:27:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 27
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.popular",
+      "to": "recipes-api#src/recipes/recipes.repository.ts:RecipesRepository.findPopular",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:recipes-api#Recipe[]",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 27
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.search",
+      "to": "recipes-api#src/search/search.repository.ts:SearchRepository.lookup",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 56
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.tags",
+      "to": "db_query:recipes-api#src/recipes/recipes.service.ts:32:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 32
+    },
+    {
+      "from": "recipes-api#src/recipes/recipes.service.ts:RecipesService.tags",
+      "to": "recipes-api#src/db/base.repository.ts:BaseRepository.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "T[]",
+      "file": "src/recipes/recipes.service.ts",
+      "line": 32
+    },
+    {
+      "from": "recipes-api#src/search/search.repository.ts:SearchRepository",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/search/search.repository.ts",
+      "line": 10
+    },
+    {
+      "from": "recipes-api#src/search/search.repository.ts:SearchRepository.lookup",
+      "to": "db_query:recipes-api#src/search/search.repository.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/search/search.repository.ts",
+      "line": 13
+    },
+    {
+      "from": "recipes-api#src/search/search.repository.ts:SearchRepository.lookup",
+      "to": "recipes-api#src/db/connection.ts:MongoConnection.database",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Db",
+      "file": "src/search/search.repository.ts",
+      "line": 13
+    }
+  ],
+  "types": {
+    "type:mongodb#Collection<type:recipes-api#Comment>": {
+      "name": "Collection",
+      "kind": "external",
+      "declaredIn": "mongodb",
+      "structuralHash": "270854a4f441623c",
+      "meta": {
+        "declKind": "external",
+        "package": "mongodb"
+      }
+    },
+    "type:mongodb#Db": {
+      "name": "Db",
+      "kind": "external",
+      "declaredIn": "mongodb",
+      "structuralHash": "f07b82636835ac93",
+      "meta": {
+        "declKind": "external",
+        "package": "mongodb"
+      }
+    },
+    "type:ratings-api#Badge": {
+      "name": "Badge",
+      "kind": "object",
+      "declaredIn": "ratings-api#src/ratings/badge.entity.ts",
+      "structuralHash": "313cb4d5e878ea79",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:ratings-api#Rating": {
+      "name": "Rating",
+      "kind": "object",
+      "declaredIn": "ratings-api#src/ratings/rating.entity.ts",
+      "structuralHash": "5cf61ec7136796eb",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "stars",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:ratings-api#Reviewer": {
+      "name": "Reviewer",
+      "kind": "object",
+      "declaredIn": "ratings-api#src/ratings/reviewer.entity.ts",
+      "structuralHash": "bb21d778b864d488",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:recipes-api#Comment": {
+      "name": "Comment",
+      "kind": "object",
+      "declaredIn": "recipes-api#src/comments/comments.store.ts",
+      "structuralHash": "5cb495fdb60262f3",
+      "fields": [
+        {
+          "name": "_id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "recipeId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:recipes-api#Recipe": {
+      "name": "Recipe",
+      "kind": "object",
+      "declaredIn": "recipes-api#src/recipes/recipes.repository.ts",
+      "structuralHash": "a2807fbca71f80a4",
+      "fields": [
+        {
+          "name": "_id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "popular",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 8,
+      "reason": "route-unguarded",
+      "message": "GET /ratings/best has no guard in front of it and reaches ratings.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /ratings/best"
+    },
+    {
+      "service": "ratings-api",
+      "file": "src/ratings/ratings.controller.ts",
+      "line": 13,
+      "reason": "route-unguarded",
+      "message": "GET /ratings has no guard in front of it and reaches ratings.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /ratings"
+    },
+    {
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 48,
+      "reason": "dynamic-table-name",
+      "hint": "The table this.em.createQueryBuilder touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "this.em.createQueryBuilder",
+      "service": "ratings-api"
+    },
+    {
+      "file": "src/ratings/ratings.repository.ts",
+      "line": 53,
+      "reason": "dynamic-table-name",
+      "hint": "The table this.em.query touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "this.em.query",
+      "service": "ratings-api"
+    },
+    {
+      "file": "src/ratings/ratings.service.ts",
+      "line": 27,
+      "reason": "call-through-token",
+      "hint": "Cannot follow a value provided for REVIEWS; provide it with useClass to make calls visible.",
+      "symbol": "RatingsService.recent -> this.reviewsRepository.recent",
+      "meta": {
+        "cause": "untyped-di-token"
+      },
+      "service": "ratings-api"
+    },
+    {
+      "file": "src/ratings/ratings.service.ts",
+      "line": 27,
+      "reason": "db-receiver-name-only",
+      "hint": "this.reviewsRepository is typed as ReviewsRepositoryPort, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
+      "symbol": "this.reviewsRepository.recent",
+      "meta": {
+        "cause": "data-layer-unnamed"
+      },
+      "service": "ratings-api"
+    },
+    {
+      "file": "src/comments/comments.store.ts",
+      "line": 37,
+      "reason": "dynamic-table-name",
+      "hint": "The table this.named('comment_flags').insertOne touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "this.named('comment_flags').insertOne",
+      "service": "recipes-api"
+    },
+    {
+      "file": "src/db/base.repository.ts",
+      "line": 15,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 3,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "recipes-api"
+    },
+    {
+      "file": "src/db/base.repository.ts",
+      "line": 16,
+      "reason": "dynamic-table-name",
+      "level": "info",
+      "sites": 3,
+      "hint": "BaseRepository declares this query for every class that extends it; the table is each class's own, and is recorded at each call made through one of them.",
+      "symbol": "this.mongo.database().collection<T>(this.collectionName).find",
+      "service": "recipes-api"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 9,
+      "reason": "route-unguarded",
+      "message": "GET /recipes has no guard in front of it and reaches recipes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 14,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/popular has no guard in front of it and reaches recipes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/popular"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 19,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/tags has no guard in front of it and reaches tags.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/tags"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 24,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/drafts has no guard in front of it and reaches stored data.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/drafts"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 29,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/cookbooks has no guard in front of it and reaches cookbooks.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/cookbooks"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 34,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/cookbooks/newest has no guard in front of it and reaches cookbooks.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/cookbooks/newest"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 39,
+      "reason": "route-unguarded",
+      "message": "GET /recipes/search has no guard in front of it and reaches search_index.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /recipes/search"
+    },
+    {
+      "service": "recipes-api",
+      "file": "src/recipes/recipes.controller.ts",
+      "line": 44,
+      "reason": "route-unguarded",
+      "message": "POST /recipes/comments has no guard in front of it and reaches comments.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "POST /recipes/comments"
+    },
+    {
+      "file": "src/recipes/recipes.service.ts",
+      "line": 37,
+      "reason": "dynamic-table-name",
+      "hint": "DraftsRepository sets collectionName, the property BaseRepository names its table by, to a value that is not a literal or a constant, so the table this.draftsRepository.findAll touches cannot be read. Set it to a literal or a constant, or annotate the call.",
+      "symbol": "this.draftsRepository.findAll",
+      "service": "recipes-api"
+    }
+  ]
+}

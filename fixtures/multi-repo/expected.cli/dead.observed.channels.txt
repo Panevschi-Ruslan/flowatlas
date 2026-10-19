@@ -1,0 +1,7 @@
+nothing here is proof: every row is a heuristic with the reason it fired
+traffic over 2h: seen is alive whatever the code says; never seen is strong only beside a busy neighbour
+
+channels:
+  channel                    publishes  handles  verdict  seen                why
+  channel:invoice.requested  —          billing  dead     never in 2h (weak)  no producer in any repo
+  channel:order.archived     orders     —        dead     never in 2h (weak)  no consumer in any repo

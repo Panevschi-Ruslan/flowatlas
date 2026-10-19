@@ -11,7 +11,7 @@ handlers in calls no decorator adapter can see.
 | Declaration | Expected |
 |---|---|
 | `@Start()` / `@Help()` | `bot_command:start` / `bot_command:help`, `meta.decorator` tells them from `@Command('start')` |
-| `@Command('depots')` | `bot_command:menu` |
+| `@Command('depots')` | `bot_command:depots` |
 | `@Command(['orders', 'o'])` | two entries, both handled by the same method, `meta.trigger` keeps the array |
 | `@Hears('Depots')` | `bot_command:Depots` — a reply-keyboard button is a typed command |
 | `@Hears(/^hi/i)` | `bot_command:/^hi/i` |

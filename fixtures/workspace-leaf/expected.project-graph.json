@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:35:08.676Z",
+  "builtAt": "2026-10-16T15:12:02.223Z",
   "services": [
     {
       "name": "api",
@@ -305,7 +305,7 @@
       "line": 8,
       "reason": "route-unguarded",
       "message": "GET /orders has no guard in front of it and reaches orders.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /orders"
     },
     {
@@ -314,7 +314,7 @@
       "line": 13,
       "reason": "route-unguarded",
       "message": "POST /orders has no guard in front of it and reaches orders.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders"
     }
   ]

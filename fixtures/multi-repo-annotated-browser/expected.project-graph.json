@@ -1,0 +1,769 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T05:54:54.539Z",
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/items.ts:addItem",
+      "type": "function",
+      "label": "addItem",
+      "repo": "admin",
+      "file": "src/items.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "catalog-api",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 9,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.create",
+      "type": "method",
+      "label": "ItemsController.create",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{title:string}"
+            }
+          ],
+          "returns": "type:catalog-api#Item"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.list",
+      "type": "method",
+      "label": "ItemsController.list",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog-api#Item[]"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/items",
+      "type": "entry",
+      "label": "POST /items",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "orders#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders.controller.ts:OrdersController.items",
+      "type": "method",
+      "label": "OrdersController.items",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders.controller.ts:OrdersController.list",
+      "type": "method",
+      "label": "OrdersController.list",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:catalog-api",
+      "type": "repo",
+      "label": "catalog-api",
+      "repo": "catalog-api",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {
+            "@angular/common": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "storefront#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "storefront",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "storefront#src/app/shop.client.ts:ShopClient",
+      "type": "provider",
+      "label": "ShopClient",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "storefront#src/app/shop.client.ts:ShopClient.items",
+      "type": "method",
+      "label": "ShopClient.items",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "storefront#src/app/shop.client.ts:ShopClient.misspelt",
+      "type": "method",
+      "label": "ShopClient.misspelt",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "storefront#src/app/shop.client.ts:ShopClient.orders",
+      "type": "method",
+      "label": "ShopClient.orders",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/items.ts:7:1",
+      "type": "ui_api_call",
+      "label": "POST /items",
+      "repo": "admin",
+      "file": "src/items.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "service": "catalog-api",
+        "via": "marker",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/items.ts:8:10",
+      "type": "ui_api_call",
+      "label": "POST ?",
+      "repo": "admin",
+      "file": "src/items.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{title:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "title"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": null
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/shop.client.ts:15:3",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/items",
+        "path": "/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "service": "catalog",
+        "via": "marker",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/shop.client.ts:16:12",
+      "type": "ui_api_call",
+      "label": "GET /${…}",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}${…}",
+        "path": "/${…}",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/shop.client.ts:20:3",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/orders",
+        "path": "/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "marker",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/shop.client.ts:21:12",
+      "type": "ui_api_call",
+      "label": "GET /${…}",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}${…}",
+        "path": "/${…}",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/shop.client.ts:25:3",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/items",
+        "path": "/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "service": "catalogue",
+        "via": "marker"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/shop.client.ts:26:12",
+      "type": "ui_api_call",
+      "label": "GET /${…}",
+      "repo": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}${…}",
+        "path": "/${…}",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/items.ts:addItem",
+      "to": "ui_api_call:admin#src/items.ts:7:1",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/items.ts",
+      "line": 7
+    },
+    {
+      "from": "admin#src/items.ts:addItem",
+      "to": "ui_api_call:admin#src/items.ts:8:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/items.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog-api#Item[]",
+      "file": "src/items/items.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/items",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{title:string}"
+      ],
+      "returns": "type:catalog-api#Item",
+      "file": "src/items/items.controller.ts",
+      "line": 16,
+      "meta": {
+        "body": "{title:string}"
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/items",
+      "to": "orders#src/orders.controller.ts:OrdersController.items",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/orders.controller.ts:OrdersController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "storefront#src/app/shop.client.ts:ShopClient",
+      "to": "storefront#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/shop.client.ts",
+      "line": 12
+    },
+    {
+      "from": "storefront#src/app/shop.client.ts:ShopClient.items",
+      "to": "ui_api_call:storefront#src/app/shop.client.ts:15:3",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/app/shop.client.ts",
+      "line": 15
+    },
+    {
+      "from": "storefront#src/app/shop.client.ts:ShopClient.items",
+      "to": "ui_api_call:storefront#src/app/shop.client.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/shop.client.ts",
+      "line": 16
+    },
+    {
+      "from": "storefront#src/app/shop.client.ts:ShopClient.misspelt",
+      "to": "ui_api_call:storefront#src/app/shop.client.ts:25:3",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/app/shop.client.ts",
+      "line": 25
+    },
+    {
+      "from": "storefront#src/app/shop.client.ts:ShopClient.misspelt",
+      "to": "ui_api_call:storefront#src/app/shop.client.ts:26:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/shop.client.ts",
+      "line": 26
+    },
+    {
+      "from": "storefront#src/app/shop.client.ts:ShopClient.orders",
+      "to": "ui_api_call:storefront#src/app/shop.client.ts:20:3",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/app/shop.client.ts",
+      "line": 20
+    },
+    {
+      "from": "storefront#src/app/shop.client.ts:ShopClient.orders",
+      "to": "ui_api_call:storefront#src/app/shop.client.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/shop.client.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_api_call:admin#src/items.ts:7:1",
+      "to": "entry:catalog-api:http:POST:/items",
+      "type": "hits",
+      "confidence": "marker",
+      "file": "src/items.ts",
+      "line": 7,
+      "meta": {
+        "via": "marker",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/app/shop.client.ts:15:3",
+      "to": "entry:catalog-api:http:GET:/items",
+      "type": "hits",
+      "confidence": "marker",
+      "file": "src/app/shop.client.ts",
+      "line": 15,
+      "meta": {
+        "via": "marker",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/app/shop.client.ts:20:3",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "hits",
+      "confidence": "marker",
+      "file": "src/app/shop.client.ts",
+      "line": 20,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    }
+  ],
+  "types": {
+    "type:catalog-api#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "catalog-api#src/items/items.controller.ts",
+      "structuralHash": "18b09d07301e3307",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/items.ts",
+      "line": 8,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "fetch(path, { method: 'POST', body: JSON.stringify({ title }) })",
+      "service": "admin"
+    },
+    {
+      "service": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 25,
+      "reason": "marker-service-unknown",
+      "message": "@flowatlas-calls names catalogue, which is not a configured service nor an alias of one (the aliases are catalog)",
+      "hint": "Add catalogue to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
+      "symbol": "ui_api_call:storefront#src/app/shop.client.ts:25:3"
+    }
+  ]
+}

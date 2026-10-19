@@ -73,11 +73,13 @@ const jsonSchemaOf = (content: Record<string, { schema?: unknown }> | undefined)
  * The lowest success code, because that is the one the caller's declared return
  * type is about. An error body is a different shape on a different path, and
  * comparing a caller's success type against a `404` payload would report drift
- * on every route that documents its failures well.
+ * on every route that documents its failures well. `2XX`, the range a document
+ * writes when it does not know which success it is (as flowatlas writes one,
+ * P118), sorts after every exact code.
  */
 const successResponse = (operation: Operation): unknown => {
   const responses = Object.entries(operation.responses ?? {})
-    .filter(([code]) => /^2\d\d$/.test(code))
+    .filter(([code]) => /^2(?:\d\d|XX)$/i.test(code))
     .sort(([a], [b]) => (a < b ? -1 : 1));
   for (const [, response] of responses) {
     const schema = jsonSchemaOf(response.content as Record<string, { schema?: unknown }> | undefined);

@@ -1,11 +1,15 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 import type { CallExpression, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import {
   decoratorArgs,
   evaluateExpression,
+  isBelowDir,
+  isWithinDir,
   normalizeFilePath,
+  pathKey,
+  toPosixPath,
   resolveStaticString,
   UNREAD_SPAN,
   wasRead,
@@ -13,6 +17,7 @@ import {
   workspaceRootOf,
   type StaticValue,
   type Unresolved,
+  startLineOf,
 } from '@flowatlas/core';
 import { resolveCallableRef, resolveClassExpression, type ClassRef } from './util/resolve-class.js';
 
@@ -115,6 +120,13 @@ export interface BootstrapInfo {
   globals: BootstrapGlobal[];
   /** Call sites that name a wrapper the analysis could not follow. */
   dynamicGlobals: Array<{ layer: WrappingLayer; line: number; text: string }>;
+  /**
+   * Exception filters installed with `useGlobalFilters` (P87). Not a wrapping
+   * layer: a filter is not drawn, it only decides what a throw is answered with.
+   */
+  filters: WrapperRef[];
+  /** `useGlobalFilters` arguments that name no class. */
+  dynamicFilters: Array<{ line: number; text: string }>;
   /** Address parts that open with a hole, by the call that wrote them. */
   leadingHoles: Partial<Record<AddressingCall, LeadingHole>>;
   /** The leading part of every address, when it is read from settings (R144). */
@@ -132,7 +144,7 @@ export const BOOTSTRAP_CANDIDATES = ['src/main.ts', 'main.ts', 'src/index.ts'] a
 export const findBootstrapFile = (rootDir: string, bootstrap?: string): string | undefined => {
   const candidates = bootstrap === undefined ? BOOTSTRAP_CANDIDATES : [bootstrap];
   for (const candidate of candidates) {
-    const path = candidate.startsWith('/') ? candidate : join(rootDir, candidate);
+    const path = isAbsolute(candidate) ? candidate : join(rootDir, candidate);
     if (existsSync(path)) return path;
   }
   return undefined;
@@ -146,7 +158,7 @@ export const findBootstrapFile = (rootDir: string, bootstrap?: string): string |
  * arguments travel with the reference.
  */
 const readWrapper = (argument: Node): WrapperRef | undefined => {
-  const line = argument.getStartLineNumber();
+  const line = startLineOf(argument);
   const text = argument.getText();
 
   if (Node.isNewExpression(argument)) {
@@ -196,7 +208,7 @@ const readWrapper = (argument: Node): WrapperRef | undefined => {
 /** Where one call sits, in the form a row and a record both want. */
 const siteOf = (call: CallExpression, file: string): Omit<UnreadAddressing, 'call'> => ({
   file,
-  line: call.getStartLineNumber(),
+  line: startLineOf(call),
   // One line, however it was laid out in the source: an options object spread
   // over six lines is six lines of noise in a report that has one row per line.
   text: call.getText().replace(/\s+/g, ' ').slice(0, 90),
@@ -234,7 +246,7 @@ const noteLeadingHole = (
   if (!Node.isTemplateExpression(node) || node.getHead().getLiteralText() !== '') return;
   const [first] = node.getTemplateSpans();
   if (first === undefined) return;
-  info.leadingHoles[call] = { node: first.getExpression(), at: `${file}:${node.getStartLineNumber()}` };
+  info.leadingHoles[call] = { node: first.getExpression(), at: `${file}:${startLineOf(node)}` };
 };
 
 const readGlobalPrefix = (call: CallExpression, info: BootstrapInfo, file: string): void => {
@@ -362,7 +374,7 @@ const readGlobals =
       if (wrapper === undefined) {
         info.dynamicGlobals.push({
           layer,
-          line: argument.getStartLineNumber(),
+          line: startLineOf(argument),
           text: argument.getText(),
         });
         continue;
@@ -370,6 +382,15 @@ const readGlobals =
       info.globals.push({ layer, wrapper });
     }
   };
+
+/** `app.useGlobalFilters(new DomainErrorFilter())`: what answers a throw for every route (P87). */
+const readGlobalFilters: CallReader = (call, info) => {
+  for (const argument of call.getArguments()) {
+    const wrapper = readWrapper(argument);
+    if (wrapper === undefined) info.dynamicFilters.push({ line: startLineOf(argument), text: argument.getText() });
+    else info.filters.push(wrapper);
+  }
+};
 
 /**
  * The two calls that decide where every route of the service answers.
@@ -393,6 +414,7 @@ const ADDRESS_READERS: ReadonlyMap<string, CallReader> = new Map([
 const ENTRY_READERS: ReadonlyMap<string, CallReader> = new Map([
   ...ADDRESS_READERS,
   ...Object.entries(GLOBAL_METHODS).map(([name, layer]) => [name, readGlobals(layer)] as const),
+  ['useGlobalFilters', readGlobalFilters],
 ]);
 
 /** Walks one file, handing each call it knows to the reader for it. */
@@ -423,9 +445,12 @@ export const repoSourcesOf = function* (
   rootDir: string,
   except: string | undefined,
 ): Generator<SourceFile> {
+  // The compiler names a file with forward slashes on every OS, and the root
+  // and the entry file are the OS's own paths (P199): compared as one spelling.
+  const skipped = except === undefined ? undefined : pathKey(toPosixPath(except));
   for (const sourceFile of project.getSourceFiles()) {
     const path = sourceFile.getFilePath();
-    if (!path.startsWith(rootDir) || path === except) continue;
+    if (!isWithinDir(path, rootDir) || pathKey(toPosixPath(path)) === skipped) continue;
     if (path.includes('/node_modules/') || path.endsWith('.d.ts')) continue;
     // A test may set a prefix of its own for one case, and that is not the
     // prefix the service answers on.
@@ -549,6 +574,8 @@ const emptyInfo = (): BootstrapInfo => ({
   unreadAddressing: [],
   globals: [],
   dynamicGlobals: [],
+  filters: [],
+  dynamicFilters: [],
   leadingHoles: {},
 });
 
@@ -859,7 +886,7 @@ const mountOf = (info: BootstrapInfo, project: Project, rootDir: string): Mount 
       if (pkg === undefined) return undefined;
       for (const sourceFile of project.getSourceFiles()) {
         const path = sourceFile.getFilePath();
-        if (!path.startsWith(`${pkg.dir}/`) || path.includes('/node_modules/')) continue;
+        if (!isBelowDir(path, pkg.dir) || path.includes('/node_modules/')) continue;
         if (sourceFile.isDeclarationFile()) continue;
         const exported = sourceFile.getExportedDeclarations().get(name)?.[0];
         if (exported !== undefined) return exported;

@@ -25,10 +25,8 @@
                   -> composeNotice                        lending/src/lib/notices.ts:8
                   -> sendNotice                           lending/src/lib/notices.ts:19
               -> LoanApproved [Succeed]                   lending/statemachine/loan-approval.asl.json:149
-          -> RejectLoan [Pass]                            lending/statemachine/loan-approval.asl.json:152
-            -> LoanRejected [Fail]                        lending/statemachine/loan-approval.asl.json:159
-      -> RejectLoan [Pass]                                lending/statemachine/loan-approval.asl.json:152
-        -> LoanRejected [Fail]                            lending/statemachine/loan-approval.asl.json:159
+          (again) RejectLoan [Pass]
+      (again) RejectLoan [Pass]
     -> RejectLoan [Pass]                                  lending/statemachine/loan-approval.asl.json:152
       -> LoanRejected [Fail]                              lending/statemachine/loan-approval.asl.json:159
 unresolved on this path: 0

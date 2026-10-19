@@ -13,18 +13,45 @@
  * bytes the same on every terminal. The one exception is named `.ansi.txt` and
  * exists to lock the repository palette.
  */
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  buildProject,
+  renderSarif,
+  runAccept,
+  runCantFollowCommand,
+  runPatternsExplain,
+  runPatternsSuggest,
+  runPatternsTest,
   runChannel,
   runContracts,
+  runCycles,
+  runDead,
+  runDiff,
+  runDocs,
   runDoctorCommand,
+  runMissingCommand,
+  linkSuggested,
   runFlow,
   runImpact,
+  runObserve,
+  runObserveDiff,
+  runRules,
+  runShapesSuggest,
   runStats,
   runTypes,
+  runCheck,
+  runDeployedShow,
+  runSpec,
+  runSpecDiff,
+  runSpecAgainst,
+  runExport,
 } from '../packages/cli/dist/index.js';
+import { catalogProblems, dslProblems } from '../packages/linker/dist/index.js';
+import { diffFixtureProject } from './diff-fixture.mjs';
+import { makeDeployedProject, SHIPPED } from './deployed-fixture.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = join(root, 'fixtures', 'multi-repo');
@@ -40,8 +67,240 @@ const contractsConfig = join(contractsFixture, 'flowatlas.config.json');
 const GATEWAY_ORDERS = 'entry:gateway:http:GET:/orders/:param';
 const ORDERS_CREATE = 'orders#src/orders/orders.service.ts:OrdersService.create';
 
+/**
+ * `accept` handed an `accepted.json` it cannot read (P80): what `--list` says,
+ * then the refusal to write over it, as stderr says it, with the exit code.
+ * Run on a copy of the fixture's output, so nothing another snapshot reads is
+ * written, and the copy's path said as `<copy>`.
+ */
+const acceptUnreadable = (io) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-accept-unreadable-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    writeFileSync(join(copy, 'accepted.json'), '{\n  "acceptedFormatVersion": 2,\n  "gaps": [\n<<<<<<< HEAD\n');
+    const db = join(copy, 'graph.db');
+    const print = (line) => io.out(said(`${line}\n`));
+    runAccept(undefined, { db, list: true, print });
+    try {
+      runAccept('channel-dynamic', { db, note: 'known', print });
+    } catch (error) {
+      io.err(said(`${error.message}\n${error.details.map((line) => `${line}\n`).join('')}exit ${error.code}\n`));
+    }
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
+/**
+ * `flowatlas docs` over the fixture's own page (P120): what a check says, as
+ * text, JSON and workflow commands, with the exit code; every block listed;
+ * and the page as `--write` leaves it. The write is made on a copy of the
+ * page and of the database, so neither the fixture nor the `docs.json` the
+ * MCP snapshots read is touched; the checks write that index, the same one
+ * `fixtures-run` writes.
+ */
+const docsAsked = (options) => (io) => {
+  const run = runDocs([], { config, ...options }, io);
+  io.err(`exit ${run.exitCode}\n`);
+};
+
+const docsWritten = (io) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-docs-'));
+  try {
+    cpSync(join(fixture, 'docs'), join(copy, 'docs'), { recursive: true });
+    // The database beside its own copy of the output, which a run never reads Markdown from.
+    mkdirSync(join(copy, 'out'));
+    for (const name of readdirSync(join(fixture, '.flowatlas')).filter((file) => file.startsWith('graph.db'))) {
+      cpSync(join(fixture, '.flowatlas', name), join(copy, 'out', name));
+    }
+    const page = join(copy, 'docs', 'architecture.md');
+    runDocs([page], { config, db: join(copy, 'out', 'graph.db'), write: true }, { out() {}, err() {} });
+    io.out(readFileSync(page, 'utf8'));
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
+/**
+ * `observe` over the fixture's five trace files (P105; P110 added the web
+ * one, twenty page loads through a best-guess join; P209 the orders one, the
+ * answer to billing's call in the trace both agents report), on a copy of the
+ * fixture's output so no other snapshot reads the file it writes: the summary,
+ * the file itself (`--format json`), and a second run over a file already read.
+ * The clock is fixed, so the window and `readAt` are the same every run.
+ * `observe.json` is also the observed file the MCP snapshots and tests answer from.
+ */
+const OBSERVE_NOW = new Date('2025-10-16T09:00:00.000Z');
+const TRACES = ['checkout.otlp.json', 'billing.observe.json', 'billing.batches.observe.json', 'web.otlp.json', 'orders.observe.json'].map((file) =>
+  join(fixture, 'traces', file),
+);
+/**
+ * The same traffic exported by Zipkin and by Jaeger (P112) in place of the
+ * OTLP file: each summary is `observe.txt` again, which is the point. And the
+ * fixture's front end saved as a HAR, read with the configuration so its
+ * calls' origins name the services they reached.
+ */
+const tracesWith = (file) => TRACES.map((path, index) => (index === 0 ? join(fixture, 'traces', file) : path));
+const HAR = [join(fixture, 'traces', 'web.har')];
+/**
+ * A Playwright test run's output directory (P205): HAR files in each shape
+ * `recordHar` writes, beside the files a run leaves that are not HAR.
+ */
+const PLAYWRIGHT = [join(fixture, 'traces', 'playwright')];
+const observeOnCopy = (io, runs, from = fixture) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-observe-'));
+  // A directory read is named in a note as it was given: said from the repository's root.
+  const said = (text) => text.split(copy).join('<copy>').split(`${root.split('\\').join('/')}/`).join('');
+  try {
+    cpSync(join(from, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    for (const [files, options] of runs) {
+      runObserve(files, { db, now: OBSERVE_NOW, print: (line) => io.out(said(`${line}\n`)), ...options });
+    }
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
+/**
+ * `doctor` beside the observed file (P106): the rows about failures traffic
+ * answered and the code does not declare, and declared ones nobody answered,
+ * for billing, under `--strict-runtime` so the verdict says them too.
+ */
+const doctorObservedOnCopy = (io, service = 'billing', extra = { strictRuntime: true }) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-doctor-observed-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    runObserve(TRACES, { db, now: OBSERVE_NOW, print: () => {} });
+    runDoctorCommand(
+      { config, db, out: copy, section: ['unresolved'], service, ...extra },
+      { ...io, out: (text) => io.out(said(text)) },
+    );
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
+/**
+ * Beside the same file, what traffic says of the map itself (P110): the web
+ * service's best guesses, one of which twenty page loads went through;
+ * `doctor --unresolved` with the blind spots under their own cause; and
+ * `dead` with the seen column, over everything the file holds and over its
+ * last hour.
+ */
+const onObservedCopy = async (io, run) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-traffic-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    runObserve(TRACES, { db, now: OBSERVE_NOW, print: () => {} });
+    await run({ db, out: copy }, { ...io, out: (text) => io.out(said(text)) });
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+/**
+ * `observe --shapes` (P113) over the same traces and the HAR, with the
+ * configuration so the HAR's origins name their services: the summary, the
+ * file itself (the observed file the shapes MCP suite answers from), and
+ * `contracts` beside it, whose `traffic` section compares each route's
+ * bodies with its code, for the gateway the front end calls.
+ */
+const SHAPED = [...TRACES, ...HAR];
+const contractsOnShapedCopy = (io) =>
+  onObservedCopy(io, async ({ db, out }, said) => {
+    runObserve(SHAPED, { db, config, now: OBSERVE_NOW, shapes: true, reset: true, print: () => {} });
+    runContracts({ config, db, out, format: 'json', service: 'gateway' }, said);
+  });
+const deadOnObservedCopy = (io, options) =>
+  onObservedCopy(io, async ({ db }, out) => {
+    const { lines } = await runDead({ config, db, ...options });
+    out.out(`${lines.join('\n')}\n`);
+  });
+
+/**
+ * `observe --diff` (P111): the fixture's traffic, then a day later the same
+ * page loads slower and failing now and then (`traces/diff/web.slower.otlp.json`)
+ * and the checkout requests gone (no `checkout.otlp.json`), each read into an observed
+ * file of its own on a copy, and the two compared.
+ */
+const AFTER = [TRACES[1], TRACES[2], join(fixture, 'traces', 'diff', 'web.slower.otlp.json')];
+const observeDiffOnCopy = (io, options = {}) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-observe-diff-'));
+  try {
+    cpSync(join(fixture, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    const keep = (files, name) => {
+      runObserve(files, { db, now: OBSERVE_NOW, reset: true, print: () => {} });
+      cpSync(join(copy, 'observed.json'), join(copy, name));
+      return join(copy, name);
+    };
+    const before = keep(TRACES, 'before.json');
+    const after = keep(AFTER, 'after.json');
+    runObserveDiff([before, after], { print: (line) => io.out(`${line.split(copy).join('<copy>')}\n`), ...options });
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
+/**
+ * What `flowatlas export` writes (P119), into a directory of its own that is
+ * removed afterwards: one written file, or what the run said, with that
+ * directory written as `<out>`. Every run is held to Backstage's entity rules
+ * and the DSL's statements first (`catalogProblems`, `dslProblems`), so a
+ * snapshot can never record a catalogue Backstage would refuse.
+ */
+const exportRun = (kind, exportConfig, options, show) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-export-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    const run = runExport(kind, { config: exportConfig, out, ...options }, { out: (text) => show === undefined && io.out(said(text)), err: (text) => io.err(said(text)), tty: false });
+    const problems = run.backstage !== undefined ? catalogProblems(run.backstage.entities) : dslProblems(run.structurizr.files[0].text);
+    if (problems.length > 0) throw new Error(`the export breaks its format: ${problems.join('; ')}`);
+    if (show !== undefined) io.out(readFileSync(join(out, show), 'utf8'));
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+
+/** The bookshop with what a catalogue says of each service (P119), every service but the browser given an owner. */
+const catalogConfig = join(fixture, 'flowatlas.catalog.json');
+
 /** One question per file, named for what it asks and how it is drawn. */
 const CASES = [
+  ['docs.architecture.md', docsWritten],
+  ['docs.check.txt', docsAsked({ check: true })],
+  ['docs.check.json', docsAsked({ check: true, format: 'json' })],
+  ['docs.check.github.txt', docsAsked({ check: true, format: 'github' })],
+  ['docs.list.txt', docsAsked({ list: true })],
+  ['doctor.observed.txt', doctorObservedOnCopy],
+  ['doctor.observed.web.txt', (io) => doctorObservedOnCopy(io, 'web', {})],
+  [
+    'doctor.unresolved.observed.txt',
+    (io) => onObservedCopy(io, ({ db }, out) => runCantFollowCommand({ config, db, unresolved: true, cause: 'seen-not-in-code' }, out)),
+  ],
+  ['dead.observed.txt', (io) => deadOnObservedCopy(io, { kind: 'entries' })],
+  ['dead.observed.since-1h.txt', (io) => deadOnObservedCopy(io, { kind: 'entries', since: '1h' })],
+  ['dead.observed.channels.txt', (io) => deadOnObservedCopy(io, { kind: 'channels' })],
+  ['observe.txt', (io) => observeOnCopy(io, [[TRACES, {}]])],
+  ['observe.json', (io) => observeOnCopy(io, [[TRACES, { format: 'json' }]])],
+  ['observe.diff.txt', (io) => observeDiffOnCopy(io)],
+  ['observe.diff.json', (io) => observeDiffOnCopy(io, { format: 'json' })],
+  ['observe.diff.min-count.txt', (io) => observeDiffOnCopy(io, { minCount: '2' })],
+  ['observe.again.txt', (io) => observeOnCopy(io, [[TRACES.slice(0, 1), { print: () => {} }], [TRACES, {}]])],
+  ['observe.zipkin.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.zipkin.json'), {}]])],
+  ['observe.jaeger.txt', (io) => observeOnCopy(io, [[tracesWith('checkout.jaeger.json'), {}]])],
+  ['observe.har.txt', (io) => observeOnCopy(io, [[HAR, { config }]])],
+  ['observe.playwright.txt', (io) => observeOnCopy(io, [[PLAYWRIGHT, { config }]])],
+  ['observe.playwright.shapes.txt', (io) => observeOnCopy(io, [[PLAYWRIGHT, { config, shapes: true }]])],
+  ['observe.shapes.txt', (io) => observeOnCopy(io, [[SHAPED, { config, shapes: true }]])],
+  ['observe.shapes.json', (io) => observeOnCopy(io, [[SHAPED, { config, shapes: true, format: 'json' }]])],
+  ['contracts.traffic.json', contractsOnShapedCopy],
+  ['accept.unreadable.txt', acceptUnreadable],
   ['flow.get-orders.tree.l0.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '0' }, io)],
   ['flow.get-orders.tree.l1.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree' }, io)],
   ['flow.get-orders.tree.l2.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'tree', detail: '2' }, io)],
@@ -54,6 +313,8 @@ const CASES = [
   ['flow.get-orders.mermaid.l2.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'mermaid', detail: '2' }, io)],
   ['flow.post-orders.tree.ansi.txt', (io) => runFlow('entry:orders:http:POST:/orders', { config, format: 'tree' }, { ...io, tty: true })],
   ['flow.post-orders.truncated.tree.txt', (io) => runFlow('entry:orders:http:POST:/orders', { ...plain, format: 'tree', maxNodes: '5' }, io)],
+  ['flow.post-orders.sequence.txt', (io) => runFlow('entry:orders:http:POST:/orders', { ...plain, format: 'sequence' }, io)],
+  ['flow.get-orders.sequence.class.txt', (io) => runFlow(GATEWAY_ORDERS, { ...plain, format: 'sequence', sequenceDetail: 'class' }, io)],
   ['impact.orders-create.tree.txt', (io) => runImpact(ORDERS_CREATE, { ...plain, format: 'tree' }, io)],
   ['impact.orders-create.json', (io) => runImpact(ORDERS_CREATE, { ...plain, format: 'json' }, io)],
   ['impact.orders-create.entries-only.tree.txt', (io) => runImpact(ORDERS_CREATE, { ...plain, format: 'tree', entriesOnly: true }, io)],
@@ -67,6 +328,17 @@ const CASES = [
   ['types.list.json.l2.json', (io) => runTypes({ ...plain, format: 'json', detail: '2' }, io)],
   ['stats.tree.txt', (io) => runStats({ ...plain, format: 'tree' }, io)],
   ['stats.json', (io) => runStats({ ...plain, format: 'json' }, io)],
+  // The SARIF logs (P115): what nothing reaches, and the cycles (none here, so
+  // the empty run a project without one uploads).
+  ['dead.sarif.json', async (io) => io.out(renderSarif((await runDead({ config, format: 'sarif' })).sarif))],
+  ['cycles.sarif.json', (io) => io.out(renderSarif(runCycles({ config, format: 'sarif' }).sarif))],
+  // The bookshop as a Backstage catalogue and a Structurizr workspace (P119):
+  // what each run says, each entity file, and the workspace.
+  ['export.backstage.txt', exportRun('backstage', catalogConfig, {})],
+  ...['gateway', 'orders', 'billing', 'web', 'resources', 'catalog-locations'].map((name) => [`export.backstage.${name}.yaml`, exportRun('backstage', catalogConfig, {}, `${name}.yaml`)]),
+  ['export.structurizr.txt', exportRun('structurizr', catalogConfig, {})],
+  ['export.structurizr.dsl', exportRun('structurizr', catalogConfig, {}, 'workspace.dsl')],
+  ['export.structurizr.post-orders.dsl', exportRun('structurizr', catalogConfig, { flow: ['POST /orders'], maxLabels: '1' }, 'workspace.dsl')],
 ];
 
 /**
@@ -85,6 +357,7 @@ const CONTRACT_CASES = [
     (io) => runContracts({ config: contractsConfig, format: 'markdown' }, io),
   ],
   ['expected.contracts.json', (io) => runContracts({ config: contractsConfig, format: 'json' }, io)],
+  ['expected.contracts.sarif.json', (io) => runContracts({ config: contractsConfig, format: 'sarif' }, io)],
 ];
 
 const doctorFixture = join(root, 'fixtures', 'multi-repo-doctor');
@@ -112,6 +385,16 @@ const DOCTOR_CASES = [
     'expected.doctor.github.txt',
     (io) =>
       runDoctorCommand({ config: doctorConfig, baseline: doctorBaseline, format: 'github' }, io),
+  ],
+  // One reason on its own (P141), every place of it: the nine the report
+  // above lists six of.
+  [
+    'expected.doctor.reason.txt',
+    (io) => runDoctorCommand({ config: doctorConfig, reason: ['unknown-db-package'], maxNodes: '20' }, io),
+  ],
+  [
+    'expected.doctor.sarif.json',
+    (io) => runDoctorCommand({ config: doctorConfig, baseline: doctorBaseline, format: 'sarif' }, io),
   ],
 ];
 
@@ -220,6 +503,47 @@ const DEPLOYED_WORKFLOW_CASES = [
   ['doctor.txt', (io) => runDoctorCommand({ config: deployedWorkflowsPlain.config }, io)],
 ];
 
+/**
+ * `observe` over a Lambda project's trace (P107): one checkout through an
+ * HTTP API, a queue, a table's stream and a workflow, as an OpenTelemetry
+ * Lambda layer writes it, laid over the map its Terraform and state machine
+ * draw. The summary and the file, with the clock fixed.
+ */
+const lambdaTracesFixture = join(root, 'fixtures', 'lambda-traces');
+const LAMBDA_TRACES = [join(lambdaTracesFixture, 'traces', 'adot.otlp.json')];
+/**
+ * The same checkout as the four exports a Lambda team can make without a
+ * collector (P108): X-Ray traces, the workflow's execution history, the API's
+ * access log and the functions' REPORT lines, each read on its own, and all
+ * of them together as the file they make.
+ */
+const lambdaExport = (file) => join(lambdaTracesFixture, 'exports', file);
+const LAMBDA_EXPORTS = {
+  xray: lambdaExport('xray.batch-get-traces.json'),
+  history: lambdaExport('fulfil-order.history.json'),
+  accessLog: lambdaExport('checkout.access-log.jsonl'),
+  reportsJson: lambdaExport('report-lines.insights.json'),
+  reportsCsv: lambdaExport('report-lines.insights.csv'),
+};
+const LAMBDA_TRACE_CASES = [
+  ['observe.txt', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { reset: true }]], lambdaTracesFixture)],
+  ['observe.json', (io) => observeOnCopy(io, [[LAMBDA_TRACES, { format: 'json', reset: true }]], lambdaTracesFixture)],
+  ['observe.xray.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.xray], { reset: true }]], lambdaTracesFixture)],
+  ['observe.sfn-history.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.history], { reset: true }]], lambdaTracesFixture)],
+  ['observe.apigw-access-log.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.accessLog], { reset: true }]], lambdaTracesFixture)],
+  ['observe.lambda-report.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.reportsJson], { reset: true }]], lambdaTracesFixture)],
+  ['observe.lambda-report.csv.txt', (io) => observeOnCopy(io, [[[LAMBDA_EXPORTS.reportsCsv], { reset: true }]], lambdaTracesFixture)],
+  [
+    'observe.exports.json',
+    (io) =>
+      observeOnCopy(
+        io,
+        [[[LAMBDA_EXPORTS.xray, LAMBDA_EXPORTS.history, LAMBDA_EXPORTS.accessLog, LAMBDA_EXPORTS.reportsJson], { format: 'json', reset: true }]],
+        lambdaTracesFixture,
+      ),
+  ],
+];
+
 const multiRepoWorkflowsFixture = join(root, 'fixtures', 'multi-repo-stepfunctions');
 const multiRepoWorkflowsPlain = { config: join(multiRepoWorkflowsFixture, 'flowatlas.config.json'), color: false, ascii: true };
 
@@ -267,10 +591,60 @@ const QUEUE_CASES = [
   ['doctor.txt', (io) => runDoctorCommand({ config: queuesPlain.config }, io)],
 ];
 
+/**
+ * What `flowatlas spec` writes (P118), into a directory of its own that is
+ * removed afterwards: one written file, or what the run said, with that
+ * directory written as `<out>`.
+ */
+const specFile = (specConfig, options, file) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-spec-'));
+  try {
+    runSpec({ config: specConfig, out, ...options }, { out() {}, err() {}, tty: false });
+    io.out(readFileSync(join(out, file), 'utf8'));
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+const specSaid = (specConfig, options) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-spec-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    runSpec({ config: specConfig, out, ...options }, { out: (text) => io.out(said(text)), err: (text) => io.err(said(text)), tty: false });
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+
+/**
+ * The bookshop whose services disagree on purpose, as documents (P118): the
+ * routes orders answers, the channel ends of orders and billing, and every
+ * route in one table.
+ */
+const SPEC_CASES = [
+  ['spec.txt', specSaid(contractsConfig, { inventory: true })],
+  ['spec.orders.openapi.yaml', specFile(contractsConfig, {}, 'orders.openapi.yaml')],
+  ['spec.orders.asyncapi.yaml', specFile(contractsConfig, {}, 'orders.asyncapi.yaml')],
+  ['spec.billing.asyncapi.yaml', specFile(contractsConfig, {}, 'billing.asyncapi.yaml')],
+  ['spec.inventory.md', specFile(contractsConfig, { inventory: true, kind: 'openapi' }, 'inventory.md')],
+];
+
 const MULTI_EVENT_CASES = [
   ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...multiEventsPlain, format: 'tree' }, io)],
   ['channel.loan-returned.json', (io) => runChannel('eventbridge/library/library.loans/LoanReturned', { ...multiEventsPlain, format: 'json' }, io)],
   ['doctor.txt', (io) => runDoctorCommand({ config: multiEventsPlain.config }, io)],
+  // The channels as AsyncAPI documents (P118): a publish, a delivery that
+  // forwards, and a consumer handed the message wrapped (`x-flowatlas-envelope`).
+  ['spec.loans.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'loans.asyncapi.yaml')],
+  ['spec.routing.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'routing.asyncapi.yaml')],
+  ['spec.notifications.asyncapi.yaml', specFile(multiEventsPlain.config, { kind: 'asyncapi' }, 'notifications.asyncapi.yaml')],
+  // Functions and channels as a catalogue and a workspace (P119): AsyncAPI
+  // APIs, a function started by name, queues, and the delivery matched by a
+  // pattern only, drawn when asked and named as a guess.
+  ['export.backstage.txt', exportRun('backstage', multiEventsPlain.config, {})],
+  ['export.backstage.routing.yaml', exportRun('backstage', multiEventsPlain.config, {}, 'routing.yaml')],
+  ['export.backstage.notifications.yaml', exportRun('backstage', multiEventsPlain.config, {}, 'notifications.yaml')],
+  ['export.backstage.heuristic.platform-events.yaml', exportRun('backstage', multiEventsPlain.config, { includeHeuristic: true }, 'platform-events.yaml')],
+  ['export.structurizr.dsl', exportRun('structurizr', multiEventsPlain.config, {}, 'workspace.dsl')],
 ];
 
 /**
@@ -365,7 +739,8 @@ const FALLBACK_CASES = [
 /**
  * Terraform shapes read since R174: configuration written as JSON, an API
  * created from its OpenAPI document, a WebSocket API, base paths a domain puts
- * in front of an API, and a rule that forwards to another bus by a pattern.
+ * in front of an API, a rule that forwards to another bus by a pattern, and a
+ * write to a table reaching the function its stream runs (P51).
  * Each fixture's health check is the proof it is read without a row; the walk
  * is what each shape adds.
  */
@@ -381,6 +756,322 @@ const terraformShape = (name, cases) => {
   };
 };
 
+/**
+ * What the reader could not follow, grouped by cause and package (P75): the
+ * breakdown as a terminal prints it and as a script reads it, the whole
+ * project and narrowed to one package.
+ */
+const cantFollowPlain = plainFor('cant-follow');
+
+const CANT_FOLLOW_CASES = [
+  ['doctor.unresolved.txt', (io) => runCantFollowCommand({ config: cantFollowPlain.config }, io)],
+  ['doctor.unresolved.json', (io) => runCantFollowCommand({ config: cantFollowPlain.config, json: true }, io)],
+  [
+    'doctor.unresolved.ledger.txt',
+    (io) => runCantFollowCommand({ config: cantFollowPlain.config, package: '@shopkit/ledger', samples: '1' }, io),
+  ],
+  ['doctor.unresolved.top2.txt', (io) => runCantFollowCommand({ config: cantFollowPlain.config, top: '2' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: cantFollowPlain.config }, io)],
+];
+
+/**
+ * A project read with nothing installed, where a repository's source and a
+ * shape file stand in for two of its packages and nothing for the third (P78):
+ * what is still missing, and what `shapes --suggest` says to write for it.
+ */
+const standInsPlain = plainFor('uninstalled-internal-packages');
+
+/**
+ * Tables written down one step away from the query (P88): what is still a gap
+ * once the three shapes are read, and the calls an edge explains, counted.
+ */
+const tablesElsewherePlain = plainFor('tables-set-elsewhere');
+
+const TABLES_ELSEWHERE_CASES = [
+  ['doctor.txt', (io) => runDoctorCommand({ config: tablesElsewherePlain.config }, io)],
+  ['stats.tree.txt', (io) => runStats({ ...tablesElsewherePlain, format: 'tree' }, io)],
+];
+
+/**
+ * Loops that run a query per item (P89): the likely N+1 loops ranked by the
+ * ways in that reach them, the per-item ones as notes, and the loops set aside
+ * counted by why.
+ */
+const loopsPlain = plainFor('loops-worth-fixing');
+
+const LOOPS_CASES = [
+  ['doctor.txt', (io) => runDoctorCommand({ config: loopsPlain.config }, io)],
+  ['stats.tree.txt', (io) => runStats({ ...loopsPlain, format: 'tree' }, io)],
+];
+
+const STAND_IN_CASES = [
+  ['doctor.unresolved.txt', (io) => runCantFollowCommand({ config: standInsPlain.config }, io)],
+  ['shapes.suggest.txt', (io) => runShapesSuggest({ config: standInsPlain.config, suggest: true }, io)],
+  ['shapes.suggest.json', (io) => runShapesSuggest({ config: standInsPlain.config, suggest: true, json: true }, io)],
+];
+
+/**
+ * Routes that refuse a request through a helper, and routes public by a marker
+ * only (P90): the health check names the helper with what it can choose, lists
+ * the declared ones at info, and leaves the rest unguarded.
+ */
+const helperCheckPlain = plainFor('nest-check-through-helper');
+
+const HELPER_CHECK_CASES = [['doctor.txt', (io) => runDoctorCommand({ config: helperCheckPlain.config }, io)]];
+
+/**
+ * Routes nobody calls, told apart (P91): the one the command is for, the one a
+ * request read in part could still reach, and the probes, webhooks and
+ * callbacks something outside calls, folded and then listed.
+ */
+const deadRoutesPlain = plainFor('multi-repo-dead-routes');
+const deadText = async (io, options) => {
+  const { lines } = await runDead({ config: deadRoutesPlain.config, kind: 'entries', ...options });
+  io.out(`${lines.join('\n')}\n`);
+};
+
+const DEAD_ROUTE_CASES = [
+  ['dead.txt', (io) => deadText(io, {})],
+  ['dead.infrastructure.txt', (io) => deadText(io, { class: 'infrastructure' })],
+  [
+    'dead.json',
+    async (io) => {
+      const { result } = await runDead({ config: deadRoutesPlain.config, kind: 'entries' });
+      io.out(`${JSON.stringify(result, null, 2)}\n`);
+    },
+  ],
+  ['doctor.txt', (io) => runDoctorCommand({ config: deadRoutesPlain.config }, io)],
+];
+
+/**
+ * The project's own extraction patterns (P121): the rules' tests, one that
+ * fails on purpose, starters suggested for the variant that lists no pattern
+ * file, a near miss explained on the variant with two rules on one call, and
+ * what the reader could not follow with the file and without it. The variants
+ * are built into their own output, which nothing else reads.
+ */
+const housePlain = plainFor('house-patterns');
+const houseVariant = (name) => join(root, 'fixtures', 'house-patterns', 'variants', name, 'flowatlas.config.json');
+const builtVariants = new Map();
+const variantBuilt = async (name) => {
+  if (!builtVariants.has(name)) builtVariants.set(name, buildProject({ config: houseVariant(name), builtAt: '1970-01-01T00:00:00.000Z', cache: false }));
+  await builtVariants.get(name);
+  return houseVariant(name);
+};
+
+const HOUSE_CASES = [
+  ['patterns.test.txt', (io) => runPatternsTest([], { config: housePlain.config }, io)],
+  ['patterns.test.json', (io) => runPatternsTest([], { config: housePlain.config, json: true }, io)],
+  ['patterns.test.descriptor.txt', (io) => runPatternsTest([], { config: housePlain.config, rule: 'api-client-call', showDescriptor: true }, io)],
+  [
+    'patterns.test.wrong.txt',
+    (io) => runPatternsTest([join(root, 'fixtures', 'house-patterns', 'variants', 'wrong-expectation.yml')], { config: housePlain.config }, io),
+  ],
+  ['patterns.suggest.txt', async (io) => runPatternsSuggest({ config: await variantBuilt('no-patterns'), minSites: '1' }, io)],
+  [
+    'patterns.explain.txt',
+    async (io) => runPatternsExplain('catalog/src/books/books.service.ts:23', { config: await variantBuilt('ambiguous') }, io),
+  ],
+  ['doctor.unresolved.txt', (io) => runCantFollowCommand({ config: housePlain.config }, io)],
+  ['doctor.unresolved.no-patterns.txt', async (io) => runCantFollowCommand({ config: await variantBuilt('no-patterns') }, io)],
+  ['doctor.ambiguous.txt', async (io) => runDoctorCommand({ config: await variantBuilt('ambiguous') }, io)],
+];
+
+/**
+ * The repository nobody added to the configuration (P122): the group the
+ * health check opens its unresolved section with, as text, as workflow
+ * commands, and alone with every place; what `link --suggested` would add,
+ * changing nothing; and the variant that configures it, built into its own
+ * output, where the joins are made and no group is left.
+ */
+const missingRepoPlain = plainFor('missing-repo');
+const missingRepoDir = join(root, 'fixtures', 'missing-repo');
+const missingRepoLinked = join(root, 'fixtures', 'missing-repo', 'variants', 'linked', 'flowatlas.config.json');
+let missingRepoLinkedBuilt;
+const missingRepoLinkedOnce = async () => {
+  missingRepoLinkedBuilt ??= buildProject({ config: missingRepoLinked, builtAt: '1970-01-01T00:00:00.000Z', cache: false });
+  await missingRepoLinkedBuilt;
+  return missingRepoLinked;
+};
+
+/**
+ * The same project with traffic beside it (P144): four checkouts through the
+ * gateway, each answered by `payments`, a service the configuration does not
+ * list. `observe` matches its routes and methods to nothing, and those blind
+ * spots are a fourth kind of evidence for the same group. The observed file
+ * is also what the MCP snapshots of the traffic answer from.
+ *
+ * And the calls whose OTel peer.service names it (P146): gateway calling
+ * `payments-api` and orders calling `payments`, kept as `peer` blind spots
+ * under the configured callers, read by P144 as traffic to the same group;
+ * alone, and beside the spans `payments` wrote itself.
+ */
+const MISSING_REPO_TRAFFIC = [join(missingRepoDir, 'traces', 'payments.otlp.json')];
+const MISSING_REPO_PEER = [join(missingRepoDir, 'traces', 'peer.otlp.json')];
+const missingRepoTraffic = (run, traces = MISSING_REPO_TRAFFIC) => async (io) => {
+  const copy = mkdtempSync(join(tmpdir(), 'flowatlas-missing-traffic-'));
+  const said = (text) => text.split(copy).join('<copy>');
+  try {
+    cpSync(join(missingRepoDir, '.flowatlas'), copy, { recursive: true });
+    const db = join(copy, 'graph.db');
+    runObserve(traces, { db, now: OBSERVE_NOW, print: () => {} });
+    await run({ config: missingRepoPlain.config, db, out: copy }, { ...io, out: (text) => io.out(said(text)) });
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+};
+
+const MISSING_REPO_CASES = [
+  ['doctor.txt', (io) => runDoctorCommand({ config: missingRepoPlain.config }, io)],
+  ['observe.traffic.json', (io) => observeOnCopy(io, [[MISSING_REPO_TRAFFIC, { format: 'json' }]], missingRepoDir)],
+  ['doctor.traffic.txt', missingRepoTraffic((options, io) => runDoctorCommand({ ...options, section: ['unresolved'] }, io))],
+  ['doctor.missing.traffic.txt', missingRepoTraffic((options, io) => runMissingCommand(options, io))],
+  ['doctor.missing.traffic.json', missingRepoTraffic((options, io) => runMissingCommand({ ...options, json: true }, io))],
+  ['doctor.github.txt', (io) => runDoctorCommand({ config: missingRepoPlain.config, format: 'github' }, io)],
+  ['doctor.missing.txt', (io) => runMissingCommand({ config: missingRepoPlain.config }, io)],
+  ['doctor.missing.json', (io) => runMissingCommand({ config: missingRepoPlain.config, json: true }, io)],
+  ['link.suggested.txt', (io) => linkSuggested({ config: missingRepoPlain.config, dryRun: true, print: (line) => io.out(`${line}\n`) })],
+  ['doctor.linked.txt', async (io) => runDoctorCommand({ config: await missingRepoLinkedOnce() }, io)],
+  ['doctor.missing.linked.txt', async (io) => runMissingCommand({ config: await missingRepoLinkedOnce() }, io)],
+  // Calls whose OTel peer.service names the unconfigured repository (P146): counted as `peer`, the evidence P144 reads.
+  ['observe.peer.txt', (io) => observeOnCopy(io, [[MISSING_REPO_PEER, {}]], missingRepoDir)],
+  ['observe.peer.json', (io) => observeOnCopy(io, [[MISSING_REPO_PEER, { format: 'json' }]], missingRepoDir)],
+  ['doctor.missing.peer.txt', missingRepoTraffic((options, io) => runMissingCommand(options, io), MISSING_REPO_PEER)],
+  ['doctor.missing.peer.json', missingRepoTraffic((options, io) => runMissingCommand({ ...options, json: true }, io), MISSING_REPO_PEER)],
+  [
+    'doctor.missing.traffic-peer.txt',
+    missingRepoTraffic((options, io) => runMissingCommand(options, io), [...MISSING_REPO_TRAFFIC, ...MISSING_REPO_PEER]),
+  ],
+];
+
+/**
+ * The pull-request document `flowatlas diff` writes for `fixtures/multi-repo-diff`
+ * (P116), with its changed flows drawn, and the `diff.json` beside it. The
+ * project's history is made once, the same commits on every machine
+ * (`diff-fixture.mjs`); what still differs between runs - how long each side
+ * took, and where the copy was made - is written as a placeholder.
+ */
+const FIXED = '2026-01-01T00:00:00.000Z';
+let diffProject;
+const diffProjectOnce = async () => (diffProject ??= await diffFixtureProject(root));
+const quiet = { out() {}, err() {}, tty: false };
+const diffRun = async (options) => {
+  const { scratch, config: diffConfig } = await diffProjectOnce();
+  const run = await runDiff('HEAD~1', undefined, { config: diffConfig, generatedAt: FIXED, ...options }, quiet);
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  return { run, placed };
+};
+const diffMarkdown = (options) => async (io) => {
+  const { run, placed } = await diffRun(options);
+  io.out(placed(run.text).replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total'));
+};
+
+/** `flowatlas spec diff HEAD~1`; the summary line it ends with on stderr is kept beside the text only, so a JSON file is JSON. */
+const specDiff = (options) => async (io) => {
+  const { scratch, config: diffConfig } = await diffProjectOnce();
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  const said = options.format === undefined ? (text) => io.err(placed(text)) : () => undefined;
+  await runSpecDiff('HEAD~1', undefined, { config: diffConfig, ...options }, { out: (text) => io.out(placed(text)), err: said, tty: false });
+};
+
+const DIFF_CASES = [
+  ['diff.md', diffMarkdown({})],
+  ['diff.class.md', diffMarkdown({ sequenceDetail: 'class', maxDiagrams: '1', context: '0' })],
+  [
+    'diff.json',
+    async (io) => {
+      const { run, placed } = await diffRun({});
+      const report = { ...run.report, timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 } };
+      io.out(placed(`${JSON.stringify(report, null, 2)}\n`));
+    },
+  ],
+  // The new and fixed contract findings and rule violations as SARIF (P115).
+  ['diff.sarif.json', diffMarkdown({ format: 'sarif' })],
+  // The API documents' change (P118): under "API changes" with --spec, and
+  // as `flowatlas spec diff` draws it in each format.
+  ['diff.spec.md', diffMarkdown({ spec: true, diagrams: false })],
+  ['spec-diff.txt', specDiff({})],
+  ['spec-diff.md', specDiff({ format: 'markdown' })],
+  ['spec-diff.json', specDiff({ format: 'json' })],
+  ['spec-diff.sarif.json', specDiff({ format: 'sarif' })],
+];
+
+/**
+ * `flowatlas check --env` over `fixtures/multi-repo-deployed` (P117): the
+ * `drop-lookup` branch of orders against prod as a document and as the file
+ * beside it, the gateway's branch against staging (a field billing's `main`
+ * requires) and against prod and canary at once (canary's pin names a tag
+ * nobody made), the SARIF log, and the pins file as `deployed show` reads it.
+ * The repositories are made once with fixed dates, so every sha is the same
+ * on every machine; where the copy was made is a placeholder.
+ */
+let deployedProject;
+const deployedOnce = () => (deployedProject ??= makeDeployedProject(root));
+const deployedPlaced = (text) => text.split(deployedOnce().scratch).join('<scratch>');
+const checkRun = (options) => async (io) => {
+  const said = { out: (text) => io.out(deployedPlaced(text)), err: (text) => io.err(deployedPlaced(text)), tty: false };
+  await runCheck({ config: deployedOnce().config, generatedAt: FIXED, environ: {}, ...options }, said);
+};
+const GATEWAY_BRANCH = { service: ['gateway'], head: 'invoice-on-checkout' };
+
+const DEPLOYED_CASES = [
+  [
+    'check.prod.md',
+    async (io) => {
+      let text = '';
+      await checkRun({ env: ['prod'], format: 'markdown', ...SHIPPED })({ out: (more) => (text += more), err: () => undefined });
+      io.out(text.replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total'));
+    },
+  ],
+  [
+    'check.prod.json',
+    async (io) => {
+      const run = await runCheck({ config: deployedOnce().config, env: ['prod'], generatedAt: FIXED, environ: {}, ...SHIPPED }, quiet);
+      const { report } = run.sections[0];
+      const zeroed = { ...report, diff: report.diff === null ? null : { ...report.diff, timing: { baseMs: 0, headMs: 0, diffMs: 0, totalMs: 0 } } };
+      io.out(deployedPlaced(`${JSON.stringify(zeroed, null, 2)}\n`));
+    },
+  ],
+  ['check.staging.txt', checkRun({ env: ['staging'], ...GATEWAY_BRANCH })],
+  ['check.matrix.txt', checkRun({ env: ['prod', 'canary'], ...GATEWAY_BRANCH })],
+  ['check.prod.sarif.json', checkRun({ env: ['prod'], format: 'sarif', ...SHIPPED })],
+  ['deployed.show.txt', (io) => runDeployedShow(undefined, { config: deployedOnce().config, now: '2026-01-04T00:00:00.000Z' }, io)],
+  // `diff --env` (P193): check.prod.md's comparison, headed by the pins and no verdict.
+  [
+    'diff.env-prod.md',
+    async (io) => {
+      const run = await runDiff(undefined, SHIPPED.head, { config: deployedOnce().config, env: 'prod', service: SHIPPED.service, generatedAt: FIXED, environ: {} }, quiet);
+      io.out(deployedPlaced(run.text.replace(/base \d+ms · head \d+ms · diff \d+ms · \d+ms total/, 'base <ms> · head <ms> · diff <ms> · <ms> total')));
+    },
+  ],
+];
+
+/**
+ * A committed OpenAPI document against the code (P195), over
+ * `fixtures/nest-committed-openapi`: the route the document still declares
+ * and the one it leaves out, in every format, and the same as a section of
+ * `contracts`. Each run writes into a directory of its own, said as `<out>`.
+ */
+const committedConfig = join(root, 'fixtures', 'nest-committed-openapi', 'flowatlas.config.json');
+const againstSaid = (run) => (io) => {
+  const out = mkdtempSync(join(tmpdir(), 'flowatlas-against-'));
+  const said = (text) => text.split(out).join('<out>');
+  try {
+    run(out, { out: (text) => io.out(said(text)), err: () => undefined, tty: false });
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+};
+const against = (options) => againstSaid((out, io) => runSpecAgainst({ config: committedConfig, out, against: ['shop'], ...options }, io));
+
+const AGAINST_CASES = [
+  ['spec-against.txt', against({})],
+  ['spec-against.md', against({ format: 'markdown' })],
+  ['spec-against.json', against({ format: 'json' })],
+  ['spec-against.sarif.json', against({ format: 'sarif' })],
+  ['contracts.txt', againstSaid((out, io) => runContracts({ config: committedConfig, out }, io))],
+];
+
 const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
   terraformShape('lambda-terraform-openapi', [
@@ -390,6 +1081,45 @@ const TERRAFORM_SHAPE_SUITES = [
   terraformShape('lambda-terraform-websocket', [['flow.ask-librarian.tree.txt', 'event:websocket/library-reading-room/askLibrarian']]),
   terraformShape('lambda-terraform-base-paths', [['flow.check-item.tree.txt', 'invoke:library-kiosk-check-item']]),
   terraformShape('lambda-terraform-bus-forward', [['flow.renew-loan.tree.txt', 'POST /loans/:param/renewals']]),
+  terraformShape('lambda-terraform-bucket-notification', [
+    ['flow.upload-cover.tree.txt', 'POST /covers/:param'],
+    ['flow.make-thumbnail.tree.txt', 'invoke:library-make-thumbnail'],
+  ]),
+  terraformShape('lambda-terraform-table-stream', [
+    ['flow.cancel-order.tree.txt', 'POST /orders/:param/cancel'],
+    ['flow.track-click.tree.txt', 'POST /clicks'],
+    ['flow.fulfil-order.tree.txt', 'workflow:shop-fulfil-order'],
+  ]),
+  terraformShape('lambda-terraform-other-ways-in', [
+    ['flow.shelf-weight.tree.txt', 'event:iot/library/shelves/+/weight'],
+    ['flow.book-returned.tree.txt', 'event:iot/library/returns/+/dropped'],
+  ]),
+  terraformShape('lambda-terraform-destinations', [
+    ['flow.kiosk.tree.txt', 'invoke:library-lending-kiosk'],
+    ['flow.return-item.tree.txt', 'invoke:library-lending-return-item'],
+  ]),
+  terraformShape('lambda-terraform-shared-paths', [['flow.status-board.tree.txt', 'invoke:library-branch-kiosk-status-board']]),
+  terraformShape('lambda-terraform-bucket-module', [
+    ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
+    ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],
+  ]),
+];
+
+const rulesConfig = join(root, 'fixtures', 'multi-repo-rules', 'flowatlas.config.json');
+
+/**
+ * The architecture rules (P114) of the bookshop with tags: three broken once
+ * each, one kept, one naming a service that does not exist - in every format
+ * `flowatlas rules` draws, the list, and what `doctor` says of them.
+ */
+const RULES_CASES = [
+  ['rules.txt', (io) => runRules({ config: rulesConfig }, io)],
+  ['rules.json', (io) => runRules({ config: rulesConfig, format: 'json' }, io)],
+  ['rules.md', (io) => runRules({ config: rulesConfig, format: 'markdown' }, io)],
+  ['rules.github.txt', (io) => runRules({ config: rulesConfig, format: 'github' }, io)],
+  ['rules.sarif.json', (io) => runRules({ config: rulesConfig, format: 'sarif' }, io)],
+  ['rules.list.txt', (io) => runRules({ config: rulesConfig, list: true }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: rulesConfig, baseline: false }, io)],
 ];
 
 /**
@@ -402,6 +1132,7 @@ const TERRAFORM_SHAPE_SUITES = [
 const SUITES = [
   { dir: outDir, owned: true, cases: CASES },
   { dir: contractsFixture, owned: false, cases: CONTRACT_CASES },
+  { dir: join(contractsFixture, 'expected.cli'), owned: true, cases: SPEC_CASES },
   { dir: doctorFixture, owned: false, cases: DOCTOR_CASES },
   { dir: foldedFixture, owned: false, cases: FOLDED_CASES },
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
@@ -410,6 +1141,7 @@ const SUITES = [
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },
+  { dir: join(lambdaTracesFixture, 'expected.cli'), owned: true, cases: LAMBDA_TRACE_CASES },
   { dir: join(root, 'fixtures', 'eventbridge-terraform', 'expected.cli'), owned: true, cases: EVENT_CASES },
   { dir: join(root, 'fixtures', 'sqs-sns-terraform', 'expected.cli'), owned: true, cases: QUEUE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-events', 'expected.cli'), owned: true, cases: MULTI_EVENT_CASES },
@@ -421,6 +1153,18 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'start-workflow-function-helper', 'expected.cli'), owned: true, cases: FUNCTION_START_CASES },
   { dir: join(root, 'fixtures', 'lambda-workspace-root', 'expected.cli'), owned: true, cases: WORKSPACE_ROOT_CASES },
   { dir: join(root, 'fixtures', 'sqs-environment-fallback', 'expected.cli'), owned: true, cases: FALLBACK_CASES },
+  { dir: join(root, 'fixtures', 'cant-follow', 'expected.cli'), owned: true, cases: CANT_FOLLOW_CASES },
+  { dir: join(root, 'fixtures', 'uninstalled-internal-packages', 'expected.cli'), owned: true, cases: STAND_IN_CASES },
+  { dir: join(root, 'fixtures', 'nest-check-through-helper', 'expected.cli'), owned: true, cases: HELPER_CHECK_CASES },
+  { dir: join(root, 'fixtures', 'tables-set-elsewhere', 'expected.cli'), owned: true, cases: TABLES_ELSEWHERE_CASES },
+  { dir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.cli'), owned: true, cases: LOOPS_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
+  { dir: join(root, 'fixtures', 'house-patterns', 'expected.cli'), owned: true, cases: HOUSE_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
+  { dir: join(root, 'fixtures', 'missing-repo', 'expected.cli'), owned: true, cases: MISSING_REPO_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-rules', 'expected.cli'), owned: true, cases: RULES_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.cli'), owned: true, cases: DEPLOYED_CASES },
+  { dir: join(root, 'fixtures', 'nest-committed-openapi', 'expected.cli'), owned: true, cases: AGAINST_CASES },
   ...TERRAFORM_SHAPE_SUITES,
 ];
 
@@ -453,7 +1197,7 @@ for (const [file, ask] of CASES) {
   let stderr = '';
   const io = { out: (text) => (stdout += text), err: (text) => (stderr += text), tty: false };
   try {
-    ask(io);
+    await ask(io);
   } catch (error) {
     problems.push(`${file}: ${error instanceof Error ? error.message : String(error)}`);
     continue;
@@ -478,6 +1222,9 @@ for (const [file, ask] of CASES) {
   if (expected !== actual) problems.push(`${file}: output differs from the snapshot`);
 }
 }
+
+if (diffProject !== undefined) rmSync(diffProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+if (deployedProject !== undefined) rmSync(deployedProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 
 for (const { dir, owned, cases } of SUITES) {
   if (update || !owned) continue;

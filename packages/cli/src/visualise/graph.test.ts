@@ -261,12 +261,12 @@ group('where the person has been', () => {
 
 /**
  * A flow through shared helpers, as on an admin route that provisions a
- * restaurant:
+ * workspace:
  *
- *   POST /restaurants ─handles→ Admin.create ─calls→ Platform.provision ─calls→ Roles.parse ─queries→ roles
+ *   POST /workspaces ─handles→ Admin.create ─calls→ Platform.provision ─calls→ Roles.parse ─queries→ roles
  *                                    │ calls                                        ↑ calls
  *                                    ↓                         Invites.mint, and seven methods of
- *                                 Metrics.count                Shifts, Staff and Toppings
+ *                                 Metrics.count                Shifts, Staff and Labels
  */
 const shared = (() => {
   const types = ['entry', 'method', 'table'];
@@ -278,7 +278,7 @@ const shared = (() => {
     return nodes.length - 1;
   };
   const join = (from: number, to: number, type: string) => edges.push([from, to, edgeTypes.indexOf(type), 0]);
-  const route = add('entry', 'POST /restaurants');
+  const route = add('entry', 'POST /workspaces');
   const create = add('method', 'Admin.create');
   const provision = add('method', 'Platform.provision');
   const parse = add('method', 'Roles.parse');
@@ -291,8 +291,8 @@ const shared = (() => {
   join(provision, parse, 'calls');
   join(parse, roles, 'queries');
   join(mint, parse, 'calls');
-  const elsewhere = ['Shifts.open', 'Shifts.close', 'Staff.add', 'Staff.remove', 'Toppings.list', 'Toppings.save',
-    'Toppings.drop'].map((label) => {
+  const elsewhere = ['Shifts.open', 'Shifts.close', 'Staff.add', 'Staff.remove', 'Labels.list', 'Labels.save',
+    'Labels.drop'].map((label) => {
     const v = add('method', label);
     join(v, parse, 'calls');
     return v;
@@ -374,7 +374,7 @@ group('expanding in the flow, and who else', () => {
     expect(hood.layer.get(mint)).toBe(0);
     expect(hood.context.get(mint)).toEqual({ of: parse, look: 'in' });
     const groups = [...hood.groups.values()];
-    expect(groups.map((g) => [g.owner, g.members.length])).toEqual([['Toppings', 3], ['Shifts', 2], ['Staff', 2]]);
+    expect(groups.map((g) => [g.owner, g.members.length])).toEqual([['Labels', 3], ['Shifts', 2], ['Staff', 2]]);
     for (const g of groups) expect(hood.context.get(g.id)).toEqual({ of: parse, look: 'in' });
     // The flow itself is not context, and the count says how many there are.
     expect(hood.context.has(provision)).toBe(false);

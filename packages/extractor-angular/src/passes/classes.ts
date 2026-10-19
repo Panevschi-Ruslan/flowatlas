@@ -1,4 +1,5 @@
 import {
+  causeMeta,
   lineOf,
   resolveClassOfExpression,
   resolveConstructorInjection,
@@ -145,6 +146,7 @@ export const classesPass = definePass('classes', (ctx) => {
           reason: resolution.reason,
           ...(resolution.level === undefined ? {} : { level: resolution.level }),
           hint: resolution.hint,
+          ...causeMeta(resolution.cause),
           symbol: where,
         });
         continue;

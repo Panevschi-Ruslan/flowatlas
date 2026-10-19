@@ -15,14 +15,21 @@ import type { RenderOptions, SourceBlock } from './types.js';
 /** Widest a label column gets before the paths stop being aligned to it. */
 const MAX_LABEL_COLUMN = 72;
 
-/** The count out of the walker's sentence, said the way the flags read. */
-const CUT = /^(≥?)(\d+) more nodes/;
+/** The count out of the walker's sentence, and the limit it names (P92), said the way the flags read. */
+const CUT = /^(≥?)(\d+) more nodes(?: past (depth|maxNodes))?/;
+
+/** The flag that shows more, for the limit that cut the walk. */
+const FLAG_FOR: Readonly<Record<string, string>> = {
+  depth: 'raise --depth',
+  maxNodes: 'raise --max-nodes',
+};
 
 export const truncationLine = (message: string, ascii = false): string => {
   const lead = ascii ? '...' : '…';
   const match = CUT.exec(message);
   if (match === null) return `${lead} truncated: ${message}`;
-  return `${lead} truncated: ${match[1] ?? ''}${match[2] ?? ''} more nodes (raise --max-nodes or lower --depth)`;
+  const advice = FLAG_FOR[match[3] ?? ''] ?? 'raise --max-nodes or lower --depth';
+  return `${lead} truncated: ${match[1] ?? ''}${match[2] ?? ''} more nodes (${advice})`;
 };
 
 interface Row {

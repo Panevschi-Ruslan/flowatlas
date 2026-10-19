@@ -1,9 +1,11 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { parseSpecDiff } from '@flowatlas/linker';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { EXIT } from '../exit.js';
 import { runDiff, type DiffRun } from './diff.js';
+import { runSpecDiff } from './spec.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -37,6 +39,8 @@ beforeAll(async () => {
           { name: 'billing', repo: './billing', type: 'nestjs', baseUrlEnv: ['BILLING_URL'] },
         ],
         output: '.flowatlas',
+        // The head side breaks it: billing starts consuming order.gift-wrapped (P114).
+        rules: [{ name: 'billing-stays-out-of-gift-wrapping', forbid: { from: { service: 'billing' }, to: { channel: 'order.gift-*' } } }],
       },
       null,
       2,
@@ -47,7 +51,7 @@ beforeAll(async () => {
     git(repo, 'add', '-A');
     git(repo, 'commit', '-q', '-m', 'base');
   }
-  // The head revision, laid over the base as four files.
+  // The head revision, laid over the base as eight files.
   cpSync(join(FIXTURE, 'head'), project, { recursive: true });
   for (const repo of EDITED) {
     git(repo, 'add', '-A');
@@ -106,6 +110,73 @@ describe('what a revision changed, across four repositories', () => {
     expect(labels.some((label) => label.includes('OrdersController'))).toBe(false);
   });
 
+  it('says which call lost its target when the route it asks for was renamed (P96)', () => {
+    // The gateway was not touched, and still asks for the old path. Nothing
+    // on either side fails to compile; the join is what broke.
+    expect(run.report.joins.lost).toEqual([
+      expect.objectContaining({
+        kind: 'target-gone',
+        service: 'gateway',
+        target: 'entry:orders:http:GET:/shipments/:param',
+        targetService: 'orders',
+        now: 'target-route-not-found',
+        targetRemoved: true,
+      }),
+    ]);
+    expect(run.text).toContain('## Calls that stopped joining');
+  });
+
+  it('names a gap the revision added, in the method it changed, by gap id (P96)', () => {
+    expect(run.report.diffFormatVersion).toBe(5);
+    expect(run.report.unresolved.added).toContainEqual(
+      expect.objectContaining({
+        id: 'gap:orders|src/shipments/shipments.service.ts|call-dynamic-receiver',
+        kind: 'gap',
+        node: 'orders#src/shipments/shipments.service.ts:ShipmentsService.track',
+      }),
+    );
+    expect(run.report.nodes.changed.map((change) => change.id)).toContain('orders#src/shipments/shipments.service.ts:ShipmentsService.track');
+    expect(run.report.unresolved.removed).toEqual([]);
+  });
+
+  it('walks each way in on both sides and says what its flow does now (P116)', () => {
+    const flow = run.report.flows.find((item) => item.entry === 'entry:gateway:http:POST:/orders');
+    const said = (flow?.steps ?? []).filter((step) => step.status !== 'same').map((step) => [step.status, step.kind, step.label, step.note]);
+    // The gateway's request carries the body the head's handler now wants more
+    // of, and orders publishes once more, which billing takes.
+    expect(said).toEqual([
+      ['changed', 'http_calls', 'POST /orders', 'body: +channel (required)'],
+      ['added', 'emits', 'order.gift-wrapped', undefined],
+      ['added', 'consumes', 'order.gift-wrapped', undefined],
+    ]);
+    expect(flow?.side).toBe('both');
+    // The first flow drawn is the one that changed most across most services.
+    expect(run.report.flows[0]?.entry).toBe('entry:gateway:http:POST:/orders');
+    expect(run.text).toContain('## Changed flows');
+    expect(run.text).toContain('```mermaid\nsequenceDiagram');
+  });
+
+  it('draws the request to the renamed route removed, read off the base graph, and the stop that took its place (P116)', () => {
+    const flow = run.report.flows.find((item) => item.entry === 'entry:gateway:http:GET:/orders/:param/shipment');
+    expect(flow?.steps.filter((step) => step.status !== 'same').map((step) => [step.status, step.kind, step.label])).toEqual([
+      ['removed', 'http_calls', 'GET /shipments/:param'],
+      ['added', 'stop', 'target-route-not-found'],
+    ]);
+    // A way in one side has is drawn on that side alone.
+    expect(run.report.flows.find((item) => item.entry === 'entry:orders:http:GET:/shipments/:param')?.side).toBe('base');
+    expect(run.report.flows.find((item) => item.entry === 'entry:orders:http:GET:/shipments/:param/status')?.side).toBe('head');
+  });
+
+  it('matches a step whose line moved as the same step, and a flow that did nothing new as unchanged (P116)', () => {
+    // The import split moved `POST /orders` five lines down in orders: its way
+    // in is one step on both sides, changed only by the body it takes.
+    const orders = run.report.flows.find((item) => item.entry === 'entry:orders:http:POST:/orders');
+    expect(orders?.steps.filter((step) => step.kind === 'enters').map((step) => [step.status, step.line])).toEqual([['changed', 23]]);
+    // The billing handler of order.created changed by an annotation only.
+    const billing = run.report.flows.find((item) => item.entry === 'entry:billing:event:order.created');
+    expect(billing?.counts).toMatchObject({ added: 0, removed: 0, changed: 0 });
+  });
+
   it('stops a build on a break this revision introduced, when asked to', async () => {
     const strict = await runDiff(
       'HEAD~1',
@@ -116,6 +187,23 @@ describe('what a revision changed, across four repositories', () => {
     expect(strict.exitCode).toBe(EXIT.failed);
   }, 300_000);
 
+  it('classifies the rules\' violations by what this revision did to them (P114)', () => {
+    const { rules } = run.report;
+    expect(rules.new.map((item) => [item.rule, item.from, item.to])).toEqual([
+      ['billing-stays-out-of-gift-wrapping', 'consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped', 'channel:order.gift-wrapped'],
+    ]);
+    expect(rules.fixed).toEqual([]);
+    expect(rules.existing).toEqual([]);
+    expect(run.text).toContain('## Rules');
+  });
+
+  it('stops a build on a rule violation this revision introduced, and only when asked to (P114)', async () => {
+    expect(run.exitCode).toBe(EXIT.ok);
+    const strict = await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED, failOnRuleBreak: true }, quiet);
+    expect(strict.exitCode).toBe(EXIT.failed);
+    expect(strict.failedOn).toEqual(['rule']);
+  }, 300_000);
+
   it('answers the same twice, whether it read the commits or remembered them', async () => {
     // The second run takes its graphs from the cache, which is the only thing
     // that should differ: what it found cannot.
@@ -123,5 +211,36 @@ describe('what a revision changed, across four repositories', () => {
     expect(again.report.contracts).toEqual(run.report.contracts);
     expect(again.report.impact).toEqual(run.report.impact);
     expect(again.report.counts).toEqual(run.report.counts);
+    expect(again.report.flows).toEqual(run.report.flows);
   }, 300_000);
+});
+
+describe('what the revision does to the API documents (P118)', () => {
+  it('reports the new required request field as breaking, naming the gateway call that does not send it', async () => {
+    const spec = await runSpecDiff('HEAD~1', undefined, { config }, quiet);
+    expect(spec.exitCode).toBe(EXIT.failed);
+    expect(spec.report.changes.map((change) => `${change.level} ${change.kind} ${change.document} ${change.operation}${change.field === null ? '' : ` ${change.field}`}`)).toEqual([
+      'error endpoint-removed orders GET /shipments/{id}',
+      'error request-property-added-required orders POST /orders body.channel',
+      'info endpoint-added billing receive order.gift-wrapped',
+      'info endpoint-added orders GET /shipments/{id}/status',
+      'info endpoint-added orders send order.gift-wrapped',
+    ]);
+    const required = spec.report.changes.find((change) => change.kind === 'request-property-added-required')!;
+    expect(required.callers.map((caller) => `${caller.service} ${caller.file}:${caller.line}`)).toEqual(['gateway src/clients/orders.client.ts:21']);
+    // The removed service method answers no route: no operation changed for it.
+    expect(spec.report.changes.some((change) => change.operation.includes('legacy'))).toBe(false);
+    expect(parseSpecDiff(JSON.parse(readFileSync(spec.file, 'utf8')))).toEqual(spec.report);
+    expect(spec.text).toContain('callers: gateway src/clients/orders.client.ts:21 (static)');
+    expect((await runSpecDiff('HEAD~1', undefined, { config, failOn: 'none' }, quiet)).exitCode).toBe(EXIT.ok);
+  });
+
+  it('adds "API changes" to the document and `spec` to diff.json with --spec, and nothing without it', async () => {
+    const withSpec = await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED, spec: true }, quiet);
+    expect(withSpec.report.spec?.summary).toMatchObject({ errors: 2, warnings: 0, infos: 3 });
+    expect(withSpec.text).toContain('## API changes');
+    expect(withSpec.text.indexOf('## API changes')).toBeGreaterThan(withSpec.text.indexOf('## Contract changes'));
+    expect(run.report.spec).toBeNull();
+    expect(run.text).not.toContain('## API changes');
+  });
 });

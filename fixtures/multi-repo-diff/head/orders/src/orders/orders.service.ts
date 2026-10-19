@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 
-import type { CreateOrderDto, OrderCreatedEvent, OrderDto } from '../dto/create-order.dto';
+import type { CreateOrderDto, OrderCreatedEvent, OrderDto, OrderGiftWrappedEvent } from '../dto/create-order.dto';
 
 /**
  * The method the whole fixture is about.
@@ -18,6 +18,9 @@ export class OrdersService {
     const order: OrderDto = { id: '1', customerId: body.customerId, status: 'created' };
     const event: OrderCreatedEvent = { orderId: order.id, customerId: order.customerId };
     this.events.emit('order.created', event);
+    // New in the head revision: a second publish, which billing takes.
+    const wrapped: OrderGiftWrappedEvent = { orderId: order.id };
+    this.events.emit('order.gift-wrapped', wrapped);
     return order;
   }
 

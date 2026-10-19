@@ -1,4 +1,4 @@
-import type { DeployedDelivery, RouteTarget, Unresolved } from '@flowatlas/core';
+import type { DeclaredStream, DeployedDelivery, RouteTarget, Unresolved } from '@flowatlas/core';
 import type { Because, Instance } from '../eval/values.js';
 import type { Integration } from './integrations.js';
 
@@ -32,6 +32,12 @@ export interface RouteDraft {
   /** The API it belongs to, when the path does not already say. */
   readonly api?: Instance;
   readonly guards: readonly RouteGuard[];
+  /**
+   * What else the route's entry says about it: a host it answers on, what it is
+   * reached by, and - as `key` - the key its entry is drawn under where its
+   * method and path do not tell it apart, as a function URL's do not.
+   */
+  readonly meta?: Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -45,6 +51,8 @@ export interface RouteDraft {
 export interface ResourceReading {
   readonly rows: Unresolved[];
   readonly deliveries: DeployedDelivery[];
+  /** The streams declared: a table's, or a stream of its own (P51). */
+  readonly streams: DeclaredStream[];
   /** Every instance of one type, managed or looked up. */
   ofType(mode: 'managed' | 'data', type: string): readonly Instance[];
   /** The position among the deployment's functions of one it creates. */

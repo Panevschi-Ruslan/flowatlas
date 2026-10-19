@@ -82,7 +82,7 @@ const callerOf = (lookup: GraphLookup, callId: string): string =>
 const handlerOf = (edge: GraphEdge | undefined, fallback: string): string => edge?.to ?? fallback;
 
 /** The type a handler declares for the body it is given, when it declares one. */
-const bodyTypeOf = (handles: GraphEdge | undefined): string | undefined => {
+export const bodyTypeOf = (handles: GraphEdge | undefined): string | undefined => {
   const body = handles?.meta?.['body'];
   if (typeof body === 'string') return body;
   // Without an annotated body the only honest candidate is a lone parameter
@@ -93,7 +93,7 @@ const bodyTypeOf = (handles: GraphEdge | undefined): string | undefined => {
 };
 
 /** `handles` edges out of an entry point, in a fixed order. */
-const handlesOf = (lookup: GraphLookup, entryId: string): GraphEdge[] =>
+export const handlesOf = (lookup: GraphLookup, entryId: string): GraphEdge[] =>
   lookup.edgesFrom(entryId, ['handles']).sort((a, b) => (a.to < b.to ? -1 : a.to > b.to ? 1 : 0));
 
 /**

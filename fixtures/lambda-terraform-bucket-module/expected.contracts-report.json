@@ -1,0 +1,213 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-14T21:20:56.507Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+        "to": "consumer:scans#infra/main.tf:aws_lambda_event_source_mapping.catalogue_import",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]|emits|consumer:scans#infra/main.tf:aws_lambda_event_source_mapping.catalogue_import",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0] hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+        "to": "consumer:scans#infra/main.tf:aws_sns_topic_subscription.note_withdrawal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]|emits|consumer:scans#infra/main.tf:aws_sns_topic_subscription.note_withdrawal",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0] hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/import-batch.ts:13:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/import-batch.ts:13:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/import-batch.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/import-batch.ts:13:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/import-batch.ts:13:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/import-batch.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/import-batch.ts:13:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/import-batch.ts:13:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/import-batch.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/purge-version.ts:12:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/purge-version.ts:12:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/purge-version.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/purge-version.ts:12:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/purge-version.ts:12:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/purge-version.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/purge-version.ts:12:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/purge-version.ts:12:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/purge-version.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/store-page.ts:11:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/store-page.ts:11:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/store-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/store-page.ts:11:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/store-page.ts:11:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/store-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/store-page.ts:11:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/store-page.ts:11:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/store-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/withdraw-page.ts:16:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:16:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/withdraw-page.ts:16:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:16:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/withdraw-page.ts:16:9",
+        "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:16:9|emits|consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/withdraw-page.ts:17:9",
+        "to": "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:17:9|emits|consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:scans#src/pages/withdraw-page.ts:18:9",
+        "to": "consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:scans#src/pages/withdraw-page.ts:18:9|emits|consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "scans#src/pages/withdraw-page.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 16,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

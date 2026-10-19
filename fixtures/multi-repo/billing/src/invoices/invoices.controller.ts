@@ -13,7 +13,7 @@ export class InvoicesController {
    * by a `marker` edge rather than by a base URL.
    */
   @Post()
-  create(@Body() body: CreateInvoiceDto): InvoiceDto {
+  create(@Body() body: CreateInvoiceDto): Promise<InvoiceDto> {
     return this.invoices.create(body);
   }
 

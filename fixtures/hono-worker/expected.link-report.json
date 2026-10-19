@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:30.298Z",
+  "builtAt": "2026-10-16T23:28:04.615Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 39,
       "types": 4,
       "unresolved": 4,
-      "durationMs": 676,
+      "durationMs": 731,
       "packages": {
         "name": "api",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 557,
+      "durationMs": 577,
       "packages": {
         "name": "web",
         "runtime": [
@@ -95,6 +95,10 @@
     "nodes": 53,
     "edges": 50,
     "types": 4,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 4
   }
 }

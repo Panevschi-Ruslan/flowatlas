@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:34.859Z",
+  "builtAt": "2026-10-16T23:28:09.200Z",
   "configHash": "8efb81aeaad3",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 25,
       "types": 5,
       "unresolved": 3,
-      "durationMs": 494,
+      "durationMs": 510,
       "packages": {
         "name": "lending-library-desk-entrypoints",
         "runtime": [
@@ -69,6 +69,10 @@
     "nodes": 29,
     "edges": 27,
     "types": 5,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 1
   }
 }

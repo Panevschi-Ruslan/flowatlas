@@ -297,8 +297,49 @@ describe('a table the task reads or writes', () => {
     ]);
   });
 
+  it('reads a batch or a transaction whose whole list is chosen at run time as one table it cannot name (P62)', () => {
+    const cases = [
+      ['batchWriteItem', 'RequestItems', { 'RequestItems.$': '$.writes' }, 'jsonpath'],
+      ['transactWriteItems', 'TransactItems', { 'TransactItems.$': '$.items' }, 'jsonpath'],
+      ['batchGetItem', 'RequestItems', { RequestItems: '{% $states.input.reads %}' }, 'jsonata'],
+    ] as const;
+    for (const [action, field, Parameters, cause] of cases) {
+      const found = classify({ Resource: `arn:aws:states:::aws-sdk:dynamodb:${action}`, Parameters });
+      expect(found.kind === 'table' && found.field).toBe(field);
+      expect(found.kind === 'table' && found.tables).toEqual([expect.objectContaining({ read: false, cause })]);
+    }
+    const named = classify({ Resource: 'arn:aws:states:::dynamodb:putItem', Parameters: { TableName: 'library-loans' } });
+    expect(named.kind === 'table' && named.field).toBe('TableName');
+  });
+
+  it('reads no table for a condition a transaction checks (P55)', () => {
+    const transaction = classify({
+      Resource: 'arn:aws:states:::aws-sdk:dynamodb:transactWriteItems',
+      Parameters: {
+        TransactItems: [{ ConditionCheck: { TableName: 'library-members' } }, { Put: { TableName: 'library-loans' } }],
+      },
+    });
+    expect(transaction.kind === 'table' && transaction.tables.map((each) => each.read && each.value)).toEqual(['library-loans']);
+  });
+
   it('reads an operation on the table itself as a call on the service', () => {
     expect(classify({ Resource: 'arn:aws:states:::aws-sdk:dynamodb:describeTable', Parameters: { TableName: 'library-loans' } }).kind).toBe('service');
+  });
+});
+
+describe('records the task puts on a stream (P55)', () => {
+  it('reads the stream by its name or its ARN', () => {
+    const byName = classify({ Resource: 'arn:aws:states:::aws-sdk:kinesis:putRecord', Parameters: { StreamName: 'library-scans' } });
+    expect(byName).toEqual(expect.objectContaining({ kind: 'records', streams: [expect.objectContaining(read('library-scans'))] }));
+    const byArn = classify({
+      Resource: 'arn:aws:states:::aws-sdk:kinesis:putRecords',
+      Parameters: { StreamARN: 'arn:aws:kinesis:eu-west-1:123456789012:stream/library-scans' },
+    });
+    expect(byArn).toEqual(expect.objectContaining({ kind: 'records', streams: [expect.objectContaining(read('library-scans'))] }));
+  });
+
+  it('reads any other Kinesis action as a call on the service', () => {
+    expect(classify({ Resource: 'arn:aws:states:::aws-sdk:kinesis:describeStream', Parameters: { StreamName: 'library-scans' } }).kind).toBe('service');
   });
 });
 

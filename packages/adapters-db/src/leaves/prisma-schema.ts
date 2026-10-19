@@ -1,4 +1,5 @@
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, posix } from 'node:path';
+import { isWithinDir, toPosixPath } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 
 /**
@@ -43,6 +44,15 @@ const SCHEMA_PLACES = ['schema.prisma', join('prisma', 'schema.prisma')];
  */
 const CLIENT_PROVIDERS: ReadonlySet<string> = new Set(['prisma-client-js', 'prisma-client']);
 
+/**
+ * A path written relative to a directory, in the compiler's spelling: forward
+ * slashes on every OS, and no drive added to a path that has none (P199).
+ * `path.resolve` gave `D:\repo\...` on Windows for a project held at `/repo`,
+ * which no module the reader asks about is named.
+ */
+export const besidePath = (dir: string, written: string): string =>
+  isAbsolute(written) ? toPosixPath(written) : posix.join(toPosixPath(dir), toPosixPath(written));
+
 /** How far up from a file a schema is looked for, which is enough for any monorepo. */
 const MAX_ASCENT = 16;
 
@@ -78,7 +88,7 @@ export const parsePrismaSchema = (text: string, schemaDir: string): PrismaSchema
       if (block.kind === 'model') tables.set(delegateOf(block.name), block.map ?? block.name);
       const { provider, output } = block;
       if (block.kind === 'generator' && provider !== undefined && CLIENT_PROVIDERS.has(provider) && output !== undefined) {
-        clientOutputs.push(resolve(schemaDir, output));
+        clientOutputs.push(besidePath(schemaDir, output));
       }
       block = undefined;
       continue;
@@ -146,9 +156,8 @@ export const prismaSchemaFor = (file: SourceFile): PrismaSchema | undefined => {
  * there, not because anything about it is spelled like one.
  */
 export const isGeneratedPrismaClient = (from: SourceFile, target: string): boolean =>
-  (prismaSchemaFor(from)?.clientOutputs ?? []).some(
-    (output) => target === output || target.startsWith(`${output}/`),
-  );
+  // Either path may be spelled with either separator on Windows (P199).
+  (prismaSchemaFor(from)?.clientOutputs ?? []).some((output) => isWithinDir(target, output));
 
 /**
  * The table a model is stored in, by the delegate a call names it with.

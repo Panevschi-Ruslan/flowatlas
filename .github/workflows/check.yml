@@ -24,3 +24,26 @@ jobs:
       # invariants, snapshots.
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+
+  # Builds and runs the unit tests on Windows (P83). A failure fails the run
+  # since the tests passed there (P199, P200); the fixture snapshot gate is not
+  # run here, and requiring the job before a merge is the repository's branch
+  # protection. The fixture graphs are made first (P199), because the linker's
+  # and the MCP server's tests read them and a clean checkout has none; `check`
+  # makes them the same way.
+  windows-unit:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: node scripts/fixtures-run.mjs
+      - run: pnpm -r test

@@ -1,0 +1,119 @@
+{
+  "analyticsFormatVersion": 2,
+  "confidence": "heuristic",
+  "entries": [
+    {
+      "id": "entry:catalog-api:http:GET:/items/export",
+      "service": "catalog-api",
+      "kind": "http",
+      "key": "GET:/items/export",
+      "file": "src/items/items.controller.ts",
+      "line": 25,
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "class": "actionable",
+      "why": "no caller read",
+      "confidence": "dead",
+      "verdict": "dead"
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/:param/price",
+      "service": "catalog-api",
+      "kind": "http",
+      "key": "GET:/items/:param/price",
+      "file": "src/items/items.controller.ts",
+      "line": 50,
+      "reason": "no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it",
+      "class": "actionable",
+      "why": "no caller read",
+      "confidence": "likely-dead",
+      "verdict": "likely-dead",
+      "evidence": {
+        "couldHit": [
+          {
+            "call": "ui_api_call:storefront#src/app/items.client.ts:59:12",
+            "path": "/items/:param/${…}${…}",
+            "file": "src/app/items.client.ts",
+            "line": 59
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/healthz",
+      "service": "catalog-api",
+      "kind": "http",
+      "key": "GET:/healthz",
+      "file": "src/health/health.controller.ts",
+      "line": 7,
+      "reason": "looks like a health or status probe; whatever runs it is outside the graph",
+      "class": "infrastructure",
+      "why": "path /healthz",
+      "role": "probe",
+      "confidence": "dead",
+      "verdict": "unknown",
+      "evidence": {
+        "outside": "probe"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/oauth/callback",
+      "service": "catalog-api",
+      "kind": "http",
+      "key": "GET:/oauth/callback",
+      "file": "src/oauth/oauth.controller.ts",
+      "line": 6,
+      "reason": "looks like a callback a provider redirects to; whoever sends it there is outside the project",
+      "class": "infrastructure",
+      "why": "path /oauth/callback",
+      "role": "callback",
+      "confidence": "dead",
+      "verdict": "unknown",
+      "evidence": {
+        "outside": "callback"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/ready",
+      "service": "catalog-api",
+      "kind": "http",
+      "key": "GET:/ready",
+      "file": "src/health/health.controller.ts",
+      "line": 12,
+      "reason": "looks like a health or status probe; whatever runs it is outside the graph",
+      "class": "infrastructure",
+      "why": "decorator @HealthCheck",
+      "role": "probe",
+      "confidence": "dead",
+      "verdict": "unknown",
+      "evidence": {
+        "outside": "probe"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/webhooks/payments",
+      "service": "catalog-api",
+      "kind": "http",
+      "key": "POST:/webhooks/payments",
+      "file": "src/webhooks/webhooks.controller.ts",
+      "line": 6,
+      "reason": "looks like a webhook receiver; whatever posts to it is outside the project",
+      "class": "infrastructure",
+      "why": "path /webhooks/payments",
+      "role": "webhook",
+      "confidence": "dead",
+      "verdict": "unknown",
+      "evidence": {
+        "outside": "webhook"
+      }
+    }
+  ],
+  "excludedEntryKinds": [
+    "cron",
+    "bot_command",
+    "bot_callback",
+    "bot_event",
+    "scene_step",
+    "invoke"
+  ],
+  "unresolvedInjects": 0
+}

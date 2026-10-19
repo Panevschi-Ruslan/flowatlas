@@ -4,6 +4,7 @@ import {
   boundDeclaration,
   hasAnyDependency,
   makeEntryId,
+  makeApiRouteEntryKey,
   makeHttpEntryKey,
   makeInvokeEntryKey,
   makeUnnamedInvokeKey,
@@ -19,6 +20,9 @@ import {
   type EntryWrapping,
   type ExtractContext,
   type Unresolved,
+  lineAndColumnAt,
+  startLineOf,
+  toPosixPath,
 } from '@flowatlas/core';
 import { ENVELOPES, GATEWAY_REQUEST } from '@flowatlas/aws';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
@@ -83,7 +87,8 @@ const readTsconfig = (path: string): { outDir?: string; rootDir?: string } | und
   } catch {
     return undefined;
   }
-  const parsed = ts.parseConfigFileTextToJson(path, text);
+  // The compiler's own spelling of the path, or a syntax error trips its assertion on Windows (P199).
+  const parsed = ts.parseConfigFileTextToJson(toPosixPath(path), text);
   const options = (parsed.config as { compilerOptions?: { outDir?: unknown; rootDir?: unknown } } | undefined)?.compilerOptions;
   if (options === undefined) return {};
   return {
@@ -204,7 +209,7 @@ const unwrapChain = (start: TsNode, ctx: ExtractContext): Chain => {
     scope: 'route',
     source,
     file: fileOfNode(node, ctx),
-    line: node.getStartLineNumber(),
+    line: startLineOf(node),
     kind,
   });
   for (let depth = 0; depth < 16 && Node.isCallExpression(expression); depth += 1) {
@@ -393,20 +398,20 @@ const resolveHandler = (
   const declaration = boundDeclaration(exported);
   let unreadCall: CallExpression | undefined;
   if (Node.isFunctionDeclaration(declaration) && declaration.getName() !== undefined) {
-    return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName() as string, line: declaration.getStartLineNumber() }, 'function');
+    return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName() as string, line: startLineOf(declaration) }, 'function');
   }
   if (Node.isVariableDeclaration(declaration)) {
     const initializer = declaration.getInitializer();
     const value = initializer === undefined ? undefined : unwrapValue(initializer);
     if (value !== undefined && isWrittenFunction(value)) {
-      return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName(), line: declaration.getStartLineNumber() }, 'function');
+      return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName(), line: startLineOf(declaration) }, 'function');
     }
     const built = value !== undefined && Node.isCallExpression(value) ? value : undefined;
     if (built !== undefined) {
       const chain = unwrapChain(built, ctx);
       if (chain.inner !== undefined) {
         if (isWrittenFunction(chain.inner)) {
-          const where = chain.inner.getSourceFile().getLineAndColumnAtPos(chain.inner.getStart());
+          const where = lineAndColumnAt(chain.inner.getSourceFile(), chain.inner.getStart());
           return done(
             { file: fileOfNode(chain.inner, ctx), line: where.line, column: where.column, label: handler.export, inline: true },
             'inline',
@@ -467,6 +472,97 @@ const reportRows = (ctx: ExtractContext, rows: readonly Unresolved[], drawn: Rea
  * repository holds anything it reads: a repository of nothing but Terraform has
  * no manifest at all, and is still where an API's routes are declared.
  */
+type DeployedRoute = Deployment['routes'][number];
+
+/** Whether the reader gave the route a key of its own: a function URL's, which its method and path cannot tell apart. */
+const ownKeyOf = (route: DeployedRoute): string | undefined => {
+  const key = route.meta?.['key'];
+  return typeof key === 'string' && key !== makeHttpEntryKey(route.method, route.path) ? key : undefined;
+};
+
+/** The API a route belongs to: its name, else its declaration's address, so an API whose name is not read is still one of its own (P61). */
+export const apiIdOf = (route: DeployedRoute): string | undefined => {
+  const address = route.meta?.['apiAddress'];
+  return route.api ?? (typeof address === 'string' ? address : undefined);
+};
+
+const listenerOf = (route: DeployedRoute): string | undefined => {
+  const listener = route.meta?.['listener'];
+  return typeof listener === 'string' ? listener : undefined;
+};
+
+/** A route of the repository, with what it reaches spelled so two deployments' targets compare. */
+export interface PlacedRoute {
+  readonly route: DeployedRoute;
+  readonly target: string;
+}
+
+/** How a route's key is kept apart from another's at its method and path. */
+export interface RouteKey {
+  readonly key: string;
+  /** Its API's address, where that and not the name keeps it apart. */
+  readonly apiAddress?: string;
+  /** Its listener, where that keeps it apart from the same load balancer's other listener. */
+  readonly listener?: string;
+}
+
+const groupBy = <T>(items: readonly T[], keyOf: (item: T) => string): Map<string, T[]> => {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = keyOf(item);
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  return groups;
+};
+
+/** The pair a load balancer's listeners are told apart within. */
+const apiAt = (plain: string, api: string): string => `${plain} ${api}`;
+
+/**
+ * The entry key of each route of a repository, across every deployment the
+ * repository is read from (P59, P61).
+ *
+ * A method and path more than one API (or load balancer) serves is keyed with
+ * each route's API; one load balancer's listeners sending the same method and
+ * path to different targets are keyed with the listener as well, while
+ * listeners sending it to one target stay one route, since a caller reaches
+ * the same code whichever port it uses. Every other route keeps the key it
+ * always had.
+ */
+export const routeKeysOf = (routes: readonly PlacedRoute[]): RouteKey[] => {
+  const plainOf = ({ route }: PlacedRoute): string => makeHttpEntryKey(route.method, route.path);
+  const apart = ({ route }: PlacedRoute): boolean => ownKeyOf(route) === undefined && apiIdOf(route) !== undefined;
+  const sharedByApis = new Set<string>();
+  const sharedByListeners = new Set<string>();
+  for (const [plain, serving] of groupBy(routes.filter(apart), plainOf)) {
+    const byApi = groupBy(serving, ({ route }) => apiIdOf(route) as string);
+    if (byApi.size > 1) sharedByApis.add(plain);
+    for (const [api, ofApi] of byApi) {
+      const listeners = groupBy(ofApi, ({ route }) => listenerOf(route) ?? '');
+      const targets = new Set(ofApi.map(({ target }) => target));
+      if (listeners.size > 1 && targets.size > 1) sharedByListeners.add(apiAt(plain, api));
+    }
+  }
+  return routes.map((placed) => {
+    const { route } = placed;
+    const own = ownKeyOf(route);
+    if (own !== undefined) return { key: own };
+    const plain = plainOf(placed);
+    const api = apiIdOf(route);
+    if (api === undefined) return { key: plain };
+    const listener = sharedByListeners.has(apiAt(plain, api)) ? listenerOf(route) : undefined;
+    if (!sharedByApis.has(plain) && listener === undefined) return { key: plain };
+    return {
+      key: makeApiRouteEntryKey(route.method, route.path, api, listener),
+      ...(route.api === undefined ? { apiAddress: api } : {}),
+      ...(listener === undefined ? {} : { listener }),
+    };
+  });
+};
+
+/** What the reader records to key a route by, which the entry holds only where it did. */
+const KEYING_META = new Set(['key', 'apiAddress', 'listener']);
+
 export const deployedFunctionsAdapter: EntryAdapter = {
   name: DEPLOYED_FUNCTIONS,
   // The platform invokes the function; nothing of an application the extractor
@@ -495,8 +591,19 @@ export const deployedFunctionsAdapter: EntryAdapter = {
 
     const entries: EntryNode[] = [];
     const roots: Array<Record<string, unknown>> = [];
-    for (const reader of readers) {
+    const deployments = readers.map((reader) => {
       const deployment: Deployment = reader.read({ repoDir: ctx.repoDir, service: ctx.service, config: ctx.config });
+      return { reader, deployment };
+    });
+    // Routes are kept apart across every deployment of the repository, not
+    // only within one: two readers may each declare an API at one address (P61).
+    const keys = routeKeysOf(
+      deployments.flatMap(({ deployment }, at) =>
+        deployment.routes.map((route) => ({ route, target: `${at}:${JSON.stringify(route.target ?? null)}` })),
+      ),
+    );
+    let placedAt = 0;
+    for (const { reader, deployment } of deployments) {
       const rows: Unresolved[] = [...deployment.rows];
       /** The node drawn for each declaration, by its address, for `reportRows`. */
       const drawn = new Map<string, string>();
@@ -533,6 +640,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       });
 
       for (const route of deployment.routes) {
+        const keyed = keys[placedAt++] as RouteKey;
         const target = route.target;
         const local = target !== undefined && 'function' in target ? target.function : undefined;
         const fn = local === undefined ? undefined : deployment.functions[local];
@@ -547,7 +655,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
           kind: 'authorizer',
         }));
         const wrapping = [...guards, ...(reading?.wrapping ?? [])];
-        const key = makeHttpEntryKey(route.method, route.path);
+        const { key } = keyed;
         const id = makeEntryId(ctx.repo, 'http', key);
         const declaredAs = route.meta?.['declaredAs'];
         if (typeof declaredAs === 'string') drawn.set(declaredAs, id);
@@ -580,7 +688,9 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             // What the reader records about the route - where it is declared,
             // the domains, base path and stages it is reached at - less the
             // key, which is the entry's own.
-            ...Object.fromEntries(Object.entries(route.meta ?? {}).filter(([name]) => name !== 'key')),
+            ...Object.fromEntries(Object.entries(route.meta ?? {}).filter(([name]) => !KEYING_META.has(name))),
+            ...(keyed.apiAddress === undefined ? {} : { apiAddress: keyed.apiAddress }),
+            ...(keyed.listener === undefined ? {} : { listener: keyed.listener }),
             ...(target === undefined ? { integration: 'none' } : {}),
             ...(target !== undefined && 'sends' in target ? { integration: target.sends.kind, ...(sends === undefined ? {} : { [SENDS_META]: sends }) } : {}),
           },
@@ -594,6 +704,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
         }
       }
 
+      // A function's entry, for what its runs end in to start from (P54).
+      const invokeEntries = new Map(entries.filter((entry) => entry.kind === 'invoke').map((entry) => [entry.id, entry]));
       // The subscribers the deployment declares: rules, subscriptions,
       // mappings, schedules, pipes and redrives, onto the channels code
       // publishes to (P23).
@@ -607,7 +719,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
                 ...(reading.confidence === undefined ? {} : { handlerConfidence: reading.confidence }),
                 ...(reading.wrapping.length === 0 ? {} : { wrapping: reading.wrapping }),
               };
-        }),
+        }, (id) => invokeEntries.get(id)),
       );
 
       for (const root of deployment.roots) roots.push({ ...root, deployedBy: reader.name });

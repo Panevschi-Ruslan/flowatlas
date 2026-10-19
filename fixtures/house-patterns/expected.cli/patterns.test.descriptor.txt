@@ -1,0 +1,36 @@
+ok  api-client-call (http-request)  flowatlas-patterns/house.yml:34  2/2 tests
+  compiles to, under adapters.http.clients:
+    {
+      "receiverType": "ApiClient",
+      "method": "call",
+      "verbAt": [
+        {
+          "kind": "argument",
+          "index": 0
+        }
+      ],
+      "url": [
+        {
+          "kind": "argument",
+          "index": 1
+        }
+      ],
+      "body": [
+        {
+          "kind": "argument",
+          "index": 2
+        }
+      ],
+      "describedBy": "pattern:api-client-call"
+    }
+  pass  api.call('POST', '/stock/reserve', { isbn, copies: 1 })
+        expect verb: POST, url: /stock/reserve
+        drew   http_out POST /stock/reserve
+        holes  $API = api; $VERB = 'POST'; $URL = '/stock/reserve'; $BODY = { isbn, copies: 1 }
+  pass  api.call(verb, '/stock/reserve', body)
+        expect url: /stock/reserve, row: api-method-dynamic
+        drew   http_out ? /stock/reserve
+        row    api-method-dynamic
+        holes  $API = api; $VERB = verb; $URL = '/stock/reserve'; $BODY = body
+
+1 rule(s), 0 refused; 2 test(s), 0 failed

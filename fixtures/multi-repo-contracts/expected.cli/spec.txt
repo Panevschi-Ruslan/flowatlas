@@ -1,0 +1,4 @@
+asyncapi billing: 2 operations -> <out>/billing.asyncapi.yaml
+asyncapi orders: 2 operations -> <out>/orders.asyncapi.yaml
+openapi orders: 15 operations · not read: any-typed 1, transformed 1 -> <out>/orders.openapi.yaml
+inventory: 16 rows -> <out>/inventory.md

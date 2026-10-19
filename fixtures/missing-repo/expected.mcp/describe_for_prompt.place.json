@@ -1,0 +1,10 @@
+{
+  "id": "gap:gateway|src/checkout.controller.ts|unknown-base-url-env",
+  "markdown": "# Check: unknown-base-url-env\n\n`gap:gateway|src/checkout.controller.ts|unknown-base-url-env` — check / action in gateway at `src/checkout.controller.ts`\n\nRead from the source by flowatlas, without running it. Steps are in call order; a best guess is a join it inferred, not one the code proves.\n\n## Where · 2\n\n- `src/checkout.controller.ts:12`: no service declares PAYMENTS_URL (Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.) — on **POST /charges** `http_out:gateway#src/checkout.controller.ts:12:26`\n- `src/checkout.controller.ts:21`: no service declares PAYMENTS_URL (Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.) — on **POST /refunds** `http_out:gateway#src/checkout.controller.ts:21:26`\n\n## How to close it\n\n- Add the repository that answers it: one for \"payments\" looks missing here; `flowatlas doctor --missing` names where it may be, and `flowatlas link <path>` adds it.\n- Or name the setting under `services[].baseUrlEnv` of the one service that answers it, or its host under `services[].hosts`.\n- Or, if it is right as it is, accept it: `flowatlas accept unknown-base-url-env --service gateway --file src/checkout.controller.ts --note '<why this one is fine>'`.\n\n## Reached from\n\n- **POST /checkout/:param/pay** `entry:gateway:http:POST:/checkout/:param/pay` — gateway `src/checkout.controller.ts:10`\n\n## Ask next\n\n- `who_calls({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})`\n- `impact({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})`\n- `get_source({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})`\n- `get_flow({entry: \"entry:gateway:http:POST:/checkout/:param/pay\"})`\n",
+  "next": [
+    "who_calls({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})",
+    "impact({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})",
+    "get_source({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})",
+    "get_flow({entry: \"entry:gateway:http:POST:/checkout/:param/pay\"})"
+  ]
+}

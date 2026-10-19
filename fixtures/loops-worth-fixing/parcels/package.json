@@ -1,0 +1,13 @@
+{
+  "name": "loops-worth-fixing-parcels",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.700.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "mongodb": "^6.0.0",
+    "nodemailer": "^6.9.0",
+    "typeorm": "^0.3.20"
+  }
+}

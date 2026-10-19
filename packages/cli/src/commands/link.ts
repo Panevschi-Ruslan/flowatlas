@@ -12,7 +12,9 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
+import { CliError, EXIT } from '../exit.js';
 import { declaresDeployment, guessDirectoryType, guessType, UNKNOWN_TYPE } from '../stacks.js';
+import { runMissingCommand } from './doctor.js';
 import { repoPathFor, suggestName } from './init.js';
 import { installMcp, MCP_FILE, SERVER_KEY } from './mcp.js';
 
@@ -156,6 +158,69 @@ export const linkRepos = (paths: readonly string[], options: LinkOptions = {}): 
   return { configPath, config: next, added, already };
 };
 
+export interface SuggestedOptions extends LinkOptions {
+  /** The database the suggestion is read from (default: the configured one). */
+  db?: string;
+  /** More directories to look in, one level down, as `doctor --scan`. */
+  scan?: string[];
+  /** Most repositories to consider, as `doctor --missing --top` (default 5). */
+  top?: string;
+}
+
+export interface SuggestedResult {
+  /** The directories linked, or that would be with `--dry-run`, absolute. */
+  chosen: string[];
+  /** Tokens with more than one directory that fits, left for the person to choose. */
+  undecided: string[];
+  link?: LinkResult;
+}
+
+/**
+ * `flowatlas link --suggested` (P122): what `doctor --missing` names, printed
+ * first, then `link` on the one directory that fits each repository. Where two
+ * fit, neither is chosen: the person names the path, or narrows the search
+ * with `--scan`. Nothing else is decided here; the link is the ordinary one,
+ * and `--dry-run` says what it would change.
+ */
+export const linkSuggested = (options: SuggestedOptions = {}): SuggestedResult => {
+  const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
+  const configPath = resolve(options.config ?? join(process.cwd(), CONFIG_FILENAME));
+  if (!existsSync(configPath)) {
+    throw new CliError(`no configuration at ${configPath}`, EXIT.cannotRun, [
+      'A suggestion is read from a built project: run flowatlas link <repo...> and flowatlas build first.',
+    ]);
+  }
+  const configDir = resolve(configPath, '..');
+  const { missing } = runMissingCommand(
+    {
+      config: configPath,
+      ...(options.db === undefined ? {} : { db: options.db }),
+      ...(options.scan === undefined ? {} : { scan: options.scan }),
+      ...(options.top === undefined ? {} : { top: options.top }),
+    },
+    { out: (text: string) => print(text.replace(/\n$/, '')), err: () => {} },
+  );
+  const chosen: string[] = [];
+  const undecided: string[] = [];
+  for (const entry of missing) {
+    const [only, ...others] = entry.candidates;
+    if (only === undefined) continue;
+    if (others.length > 0) {
+      undecided.push(entry.token);
+      print(`"${entry.token}": ${entry.candidates.length} directories fit, so none is linked; link the one it is, or narrow the search with --scan.`);
+      continue;
+    }
+    const dir = resolve(configDir, only.path);
+    if (!chosen.includes(dir)) chosen.push(dir);
+  }
+  if (chosen.length === 0) {
+    print('Nothing to link.');
+    return { chosen, undecided };
+  }
+  const link = linkRepos(chosen, { ...options, config: configPath, print });
+  return { chosen, undecided, link };
+};
+
 export interface UnlinkResult {
   configPath: string;
   removed: ServiceConfig[];
@@ -228,12 +293,25 @@ export const unlinkRepos = (names: readonly string[], options: LinkOptions = {})
 export const registerLink = (program: Command): void => {
   program
     .command('link')
-    .argument('<repo...>', 'paths to the repositories that belong together')
+    .argument('[repo...]', 'paths to the repositories that belong together')
     .description('put repositories into one project, and register the graph server in each')
     .option('--config <path>', `configuration file (default: ./${CONFIG_FILENAME})`)
     .option('--no-mcp', 'do not register the graph server')
     .option('--dry-run', 'say what would change and change nothing')
-    .action((repos: string[], options: LinkOptions) => {
+    .option('--suggested', 'link the directory that fits each repository flowatlas doctor --missing names')
+    .option('--db <path>', 'with --suggested: database to read (default: the configured one)')
+    .option(
+      '--scan <dir>',
+      'with --suggested: also look in this directory, one level down (repeatable)',
+      (value: string, all: string[] = []) => [...all, value],
+    )
+    .action((repos: string[], options: SuggestedOptions & { suggested?: boolean }) => {
+      if (options.suggested === true) {
+        if (repos.length > 0) throw new CliError('--suggested chooses the paths itself; pass paths or --suggested, not both', EXIT.cannotRun);
+        linkSuggested(options);
+        return;
+      }
+      if (repos.length === 0) throw new CliError('name the repositories to link, or pass --suggested', EXIT.cannotRun);
       linkRepos(repos, options);
     });
 

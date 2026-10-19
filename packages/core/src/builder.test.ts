@@ -155,9 +155,9 @@ describe('GraphBuilder', () => {
 
   it('deduplicates unresolved rows per site and exposes the count', () => {
     const b = builder();
-    b.addUnresolved({ file: 'src/a.ts', line: 3, reason: 'dynamic-channel-name' });
-    b.addUnresolved({ file: 'src/a.ts', line: 3, reason: 'dynamic-channel-name' });
-    b.addUnresolved({ file: 'src/a.ts', line: 4, reason: 'dynamic-channel-name' });
+    b.addUnresolved({ file: 'src/a.ts', line: 3, reason: 'channel-dynamic' });
+    b.addUnresolved({ file: 'src/a.ts', line: 3, reason: 'channel-dynamic' });
+    b.addUnresolved({ file: 'src/a.ts', line: 4, reason: 'channel-dynamic' });
     expect(b.unresolved).toHaveLength(2);
     expect(b.counts.unresolved).toBe(2);
     expect(b.build().unresolved).toHaveLength(2);

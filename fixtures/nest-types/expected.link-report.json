@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:31.327Z",
+  "builtAt": "2026-10-16T23:29:16.783Z",
   "configHash": "7b44b59bceba",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 32,
       "types": 24,
       "unresolved": 4,
-      "durationMs": 619,
+      "durationMs": 633,
       "packages": {
         "name": "nest-types",
         "runtime": [
@@ -73,6 +73,10 @@
     "nodes": 46,
     "edges": 32,
     "types": 24,
+    "missed": 4,
+    "sites": 5,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 4
   }
 }

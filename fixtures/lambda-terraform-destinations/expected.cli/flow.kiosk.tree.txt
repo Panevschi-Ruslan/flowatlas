@@ -1,0 +1,14 @@
+@  library-lending-kiosk  lending/infra/main.tf:61
+  -> handler              lending/src/kiosk/kiosk.ts:4
+    $  CARD_LOOKUP_URL    lending/src/kiosk/kiosk.ts:5
+    ^  GET /cards         lending/src/kiosk/kiosk.ts:5
+      @  ALL /*           lending/infra/modules/function-url/main.tf:6
+        -> handler        lending/src/cards/card-lookup.ts:4
+    ^  GET /${…}          lending/src/kiosk/kiosk.ts:7
+      (again) ALL /* ~heuristic
+    $  LOAN_URL           lending/src/kiosk/kiosk.ts:8
+    ^  POST /loans        lending/src/kiosk/kiosk.ts:8
+      @  ALL /*           lending/infra/main.tf:56
+        !  AWS_IAM
+        -> handler        lending/src/loans/request-loan.ts:2
+unresolved on this path: 0

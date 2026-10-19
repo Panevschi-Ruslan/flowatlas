@@ -1,0 +1,96 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:40",
+      "service": "gateway",
+      "kind": "http"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
+          "type": "method",
+          "label": "OrdersController.invoice",
+          "loc": "src/orders/orders.controller.ts:40"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "type:@fx/contracts#OrderDto"
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#InvoiceDto>"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+              "type": "method",
+              "label": "BillingClient.requestInvoice",
+              "loc": "src/clients/billing.client.ts:31"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "type:@fx/contracts#OrderDto"
+              ],
+              "returns": "type:axios#AxiosResponse<type:gateway#InvoiceDto>"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "gateway#src/clients/service-registry.ts:ServiceRegistry.invoicesUrl",
+                  "type": "method",
+                  "label": "ServiceRegistry.invoicesUrl",
+                  "loc": "src/clients/service-registry.ts:19"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "returns": "string"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "http_out:gateway#src/clients/billing.client.ts:33:12",
+                  "type": "http_out",
+                  "label": "POST ?",
+                  "loc": "src/clients/billing.client.ts:33"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "heuristic"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "truncated": "7 more nodes past maxNodes 5; raise maxNodes or ask get_flow on a child id",
+  "stoppedBy": [
+    "maxNodes"
+  ],
+  "crossingsLeft": [
+    {
+      "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
+      "to": "entry:billing:http:POST:/invoices",
+      "type": "http_calls",
+      "service": "billing"
+    }
+  ],
+  "next": [
+    "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
+    "check_contract({edge: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
+    "get_flow({entry: \"entry:billing:http:POST:/invoices\"})",
+    "impact({symbol: \"entry:gateway:http:POST:/orders/:param/invoice\"})"
+  ]
+}

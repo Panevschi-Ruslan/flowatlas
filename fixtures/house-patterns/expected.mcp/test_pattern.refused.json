@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "id": "shop-bus-later",
+      "kind": "publish",
+      "refused": {
+        "part": "argument 0 of later()",
+        "reason": "a hole inside a callback ($TOPIC) is not a place in the call; write $HANDLER for the function"
+      },
+      "tests": []
+    }
+  ],
+  "next": [
+    "fix argument 0 of later() of shop-bus-later, then test_pattern again"
+  ]
+}

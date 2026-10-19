@@ -2,5 +2,9 @@
   "candidates": [
     "type:billing#InvoiceDto",
     "type:gateway#InvoiceDto"
+  ],
+  "next": [
+    "get_type({type: \"type:billing#InvoiceDto\"})",
+    "get_type({type: \"type:gateway#InvoiceDto\"})"
   ]
 }

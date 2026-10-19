@@ -1,0 +1,18 @@
+sequenceDiagram
+  autonumber
+  actor n_caller as client
+  box rgba(128,128,128,0.08) gateway
+    participant n_gateway_OrdersController as OrdersController
+    participant n_gateway_OrdersClient as OrdersClient
+  end
+  box rgba(128,128,128,0.08) orders
+    participant n_orders_OrdersController as OrdersController
+    participant n_orders_OrdersService as OrdersService
+    participant n_table_orders_orders as orders (table)
+  end
+  n_caller->>n_gateway_OrdersController: GET /orders/:param
+  n_gateway_OrdersController->>n_gateway_OrdersClient: OrdersClient.fetchOne
+  n_gateway_OrdersClient->>n_orders_OrdersController: GET /orders/:param
+  n_orders_OrdersController->>n_orders_OrdersService: OrdersService.findOne
+  n_orders_OrdersService->>n_table_orders_orders: read orders
+  %% unresolved on this path: 0

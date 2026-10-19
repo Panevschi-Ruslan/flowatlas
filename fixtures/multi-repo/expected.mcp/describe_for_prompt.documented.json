@@ -1,0 +1,24 @@
+{
+  "id": "entry:gateway:http:GET:/orders/:param",
+  "markdown": "# Way in: GET /orders/:param\n\n`entry:gateway:http:GET:/orders/:param` — entry / http in gateway at `src/orders/orders.controller.ts:30`\n\nRead from the source by flowatlas, without running it. Steps are in call order; a best guess is a join it inferred, not one the code proves.\n\n## Steps\n\n- **OrdersController.findOne** `gateway#src/orders/orders.controller.ts:OrdersController.findOne` — gateway `src/orders/orders.controller.ts:30` — handles (static) — takes `string`; returns `type:axios#AxiosResponse<type:@fx/contracts#OrderDto>`\n  - **OrdersClient.fetchOne** `gateway#src/clients/orders.client.ts:OrdersClient.fetchOne` — gateway `src/clients/orders.client.ts:32` — calls (static) — takes `string`; returns `type:axios#AxiosResponse<type:@fx/contracts#OrderDto>`\n    - **ORDERS_URL** `config_key:gateway#ORDERS_URL` — gateway `src/clients/orders.client.ts:33` — reads_config (static)\n- … 6 more step(s) not shown; ask get_flow with a higher maxNodes\n\n## Shapes\n\n- in: `string`\n- out: `type:axios#AxiosResponse<type:@fx/contracts#OrderDto>`\n\n## Gaps\n\n- none recorded on this chain\n\n## Ask next\n\n- `get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})`\n- `describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})`\n- `impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})`\n- `who_calls({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})`\n",
+  "docs": [
+    {
+      "file": "docs/architecture.md",
+      "line": 10,
+      "kind": "flow",
+      "state": "ok"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 113,
+      "kind": "flow",
+      "state": "ok"
+    }
+  ],
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})",
+    "who_calls({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.findOne\"})"
+  ]
+}

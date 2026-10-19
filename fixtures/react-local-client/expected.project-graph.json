@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:35.628Z",
+  "builtAt": "2026-10-17T04:50:58.025Z",
   "services": [
     {
       "name": "web",
@@ -96,13 +96,13 @@
     {
       "id": "ui_api_call:web#src/api/transport.ts:12:24",
       "type": "ui_api_call",
-      "label": "GET ?",
+      "label": "? ?",
       "repo": "web",
       "file": "src/api/transport.ts",
       "line": 12,
       "kind": "http",
       "meta": {
-        "method": "GET",
+        "method": null,
         "url": null,
         "path": null,
         "baseUrlEnv": null,
@@ -317,6 +317,14 @@
     }
   },
   "unresolved": [
+    {
+      "file": "src/api/transport.ts",
+      "line": 12,
+      "reason": "api-method-dynamic",
+      "hint": "The verb comes from an options object assembled elsewhere. Annotate the function with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "fetch(path, { method, body: JSON.stringify(body) })",
+      "service": "web"
+    },
     {
       "file": "src/api/transport.ts",
       "line": 12,

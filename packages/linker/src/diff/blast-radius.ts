@@ -156,6 +156,12 @@ const order = (a: BlastEntry, b: BlastEntry): number =>
   a.depth - b.depth || byText(a.service, b.service) || byText(a.id, b.id);
 
 /**
+ * How many hops back a blast radius walks when nobody says. A flow walked
+ * forward as far reaches every changed node a way in was listed for (P116).
+ */
+export const DEFAULT_BLAST_DEPTH = 16;
+
+/**
  * Every way in that reaches each of these nodes.
  *
  * `side` only labels the answer: a caller diffing two revisions asks the head
@@ -168,7 +174,7 @@ export const blastRadius = (
   options: BlastOptions & { side?: 'head' | 'base' } = {},
 ): BlastRadius => {
   const maxEntries = options.maxEntries ?? 150;
-  const maxDepth = options.maxDepth ?? 16;
+  const maxDepth = options.maxDepth ?? DEFAULT_BLAST_DEPTH;
   const maxWalk = options.maxWalk ?? 4000;
   const side = options.side ?? 'head';
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValuePosition, sqlOperation, sqlTables } from './sql.js';
+import { isValuePosition, sqlIsBatch, sqlIsConditional, sqlOperation, sqlTables } from './sql.js';
 
 describe('reading tables out of a query', () => {
   it('finds the table a select reads from', () => {
@@ -121,5 +121,30 @@ describe('where a substitution can only be a value (R155)', () => {
     '"',
   ])('does not take the hole after %j for one', (before) => {
     expect(isValuePosition(before)).toBe(false);
+  });
+});
+
+describe('statements run per item or in one go (P89)', () => {
+  it.each([
+    'SELECT * FROM parcels WHERE id IN (?)',
+    'SELECT * FROM parcels WHERE id = ANY($1)',
+    'INSERT INTO parcels (id) SELECT * FROM UNNEST($1::text[])',
+    'INSERT INTO parcels (id, status) VALUES ($1, $2), ($3, $4)',
+  ])('reads a batch in %s', (sql) => {
+    expect(sqlIsBatch(sql)).toBe(true);
+  });
+
+  it.each(['SELECT * FROM parcels WHERE id = $1', 'INSERT INTO parcels (id, status) VALUES ($1, $2)', 'INSERT INTO parcels (id) SELECT id FROM drafts JOIN x ON true'])(
+    'reads one row at a time in %s',
+    (sql) => {
+      expect(sqlIsBatch(sql)).toBe(false);
+    },
+  );
+
+  it('reads an update guarded by a second column, or handing the row back, as conditional', () => {
+    expect(sqlIsConditional("UPDATE parcels SET status = 'claimed' WHERE id = $1 AND status = 'queued'")).toBe(true);
+    expect(sqlIsConditional("UPDATE parcels SET status = 'claimed' WHERE id = $1 RETURNING id")).toBe(true);
+    expect(sqlIsConditional("UPDATE parcels SET status = 'claimed' WHERE id = $1")).toBe(false);
+    expect(sqlIsConditional("SELECT * FROM parcels WHERE id = $1 AND status = 'queued'")).toBe(false);
   });
 });

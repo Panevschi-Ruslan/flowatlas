@@ -1,0 +1,3 @@
+{
+  "error": "\"graph.db\" is not a document what_changed reads: diff.json, or check.<env>.json beside the database"
+}

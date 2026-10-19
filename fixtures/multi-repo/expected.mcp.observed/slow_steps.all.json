@@ -1,0 +1,127 @@
+{
+  "steps": [
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param",
+      "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "label": "gateway GET /orders/:param -> orders GET /orders/:param",
+      "service": "gateway",
+      "count": 1,
+      "p50": 500,
+      "p95": 500,
+      "max": 500,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "label": "OrdersService.findOne",
+      "service": "orders",
+      "count": 2,
+      "p50": 0.74,
+      "p95": 492,
+      "max": 492,
+      "errorRate": 0
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:73:12 -hits-> entry:gateway:http:GET:/orders/:param",
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:73:12",
+      "to": "entry:gateway:http:GET:/orders/:param",
+      "type": "hits",
+      "label": "web GET /orders/:param -> gateway GET /orders/:param",
+      "service": "web",
+      "count": 20,
+      "p50": 72.88,
+      "p95": 79,
+      "max": 79,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.one",
+      "label": "OrdersApiService.one",
+      "service": "web",
+      "count": 20,
+      "p50": 72.88,
+      "p95": 79,
+      "max": 79,
+      "errorRate": 0
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+      "label": "OrdersController.findOne",
+      "service": "gateway",
+      "count": 21,
+      "p50": 61.29,
+      "p95": 72.88,
+      "max": 520,
+      "errorRate": 0
+    },
+    {
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "label": "InvoicesService.create",
+      "service": "billing",
+      "count": 3,
+      "p50": 3.22,
+      "p95": 40.2,
+      "max": 40.2,
+      "errorRate": 0.3333
+    },
+    {
+      "id": "channel:order.created -consumes-> consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "from": "channel:order.created",
+      "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "type": "consumes",
+      "label": "orders order.created -> billing InvoicesConsumer.onOrderCreated",
+      "service": "orders",
+      "count": 2,
+      "p50": 0.96,
+      "p95": 12,
+      "max": 12,
+      "errorRate": 0,
+      "measuredAt": "callee"
+    },
+    {
+      "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+      "label": "InvoicesController.create",
+      "service": "billing",
+      "count": 22,
+      "p50": 7.66,
+      "p95": 11.81,
+      "max": 41,
+      "errorRate": 0.0455
+    },
+    {
+      "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.findOne",
+      "label": "InvoicesController.findOne",
+      "service": "billing",
+      "count": 3,
+      "p50": 2.71,
+      "p95": 3,
+      "max": 3,
+      "errorRate": 0
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:49:5 -emits-> channel:order.created",
+      "from": "producer:orders#src/orders/orders.service.ts:49:5",
+      "to": "channel:order.created",
+      "type": "emits",
+      "label": "orders event order.created -> orders order.created",
+      "service": "orders",
+      "count": 1,
+      "p50": 3,
+      "p95": 3,
+      "max": 3,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    }
+  ],
+  "total": 15,
+  "truncated": "5 more steps; ask with a larger limit",
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "trace_for({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_source({symbol: \"http_out:gateway#src/clients/orders.client.ts:33:12\"})"
+  ]
+}

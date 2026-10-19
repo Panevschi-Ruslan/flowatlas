@@ -1,0 +1,3 @@
+{
+  "error": "check.canary.json holds no comparison: canary is undecided; orders: v9 (from the pins file) does not resolve in ./orders. Fetch it first: git -C ./orders fetch --tags (in CI, check out with fetch-depth: 0)."
+}

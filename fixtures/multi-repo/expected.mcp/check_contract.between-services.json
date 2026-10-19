@@ -1,0 +1,22 @@
+{
+  "services": {
+    "from": "gateway",
+    "to": "billing"
+  },
+  "crossings": [
+    {
+      "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
+      "to": "entry:billing:http:POST:/invoices",
+      "type": "http_calls",
+      "status": "hash_differs",
+      "check": "check_contract({from: \"http_out:gateway#src/clients/billing.client.ts:33:12\", to: \"entry:billing:http:POST:/invoices\"})"
+    }
+  ],
+  "total": 1,
+  "byStatus": {
+    "hash_differs": 1
+  },
+  "next": [
+    "check_contract({from: \"http_out:gateway#src/clients/billing.client.ts:33:12\", to: \"entry:billing:http:POST:/invoices\"})"
+  ]
+}

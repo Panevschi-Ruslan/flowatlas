@@ -1,5 +1,5 @@
 import type { EntryAdapter, EntryNode, ExtractContext } from '@flowatlas/core';
-import { firstStringArg, getDecorator, hasAnyDependency, makeEntryId } from '@flowatlas/core';
+import { firstStringArg, getDecorator, hasAnyDependency, makeEntryId, startLineOf } from '@flowatlas/core';
 import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
 import { fileOfNode, handlerOf, repoClasses } from '../shared.js';
 import { BOT_DECORATORS, BOT_KINDS, deriveKey, entryMeta, type BotDecorator } from './ids.js';
@@ -57,7 +57,7 @@ const entryOf = (ctx: ExtractContext, scope: ClassScope, site: HandlerSite): Ent
     key,
     handler: handlerOf(site.method, ctx),
     file: scope.file,
-    line: site.method.getStartLineNumber(),
+    line: startLineOf(site.method),
     meta: {
       // The key is how a person names this entry: `bot:order_confirm`. Recorded
       // so a reference resolves to it without knowing the id grammar.
@@ -92,7 +92,7 @@ const reportStrays = (
       const scene = BOT_KINDS[name] === 'scene_step';
       ctx.builder.addUnresolved({
         file: scope.file,
-        line: method.getStartLineNumber(),
+        line: startLineOf(method),
         reason: scene ? 'orphan-scene-decorator' : 'orphan-update-decorator',
         hint: scene ? ORPHAN_SCENE_HINT : ORPHAN_UPDATE_HINT,
         symbol: `${scope.owner}.${method.getName()}`,
@@ -123,7 +123,7 @@ const classEntries = (
     for (const decorator of method.getDecorators()) {
       const name = telegrafDecoratorName(decorator, BOT_DECORATORS);
       if (name === undefined) continue;
-      const line = method.getStartLineNumber();
+      const line = startLineOf(method);
       const symbol = `${scope.owner}.${method.getName()}`;
       const report = (reason: string, hint: string): void => {
         ctx.builder.addUnresolved({ file: scope.file, line, reason, hint, symbol, adapter: ADAPTER });
@@ -245,7 +245,7 @@ export const nestjsTelegrafAdapter: EntryAdapter = {
       if (bot.role === 'unnamed-scene') {
         ctx.builder.addUnresolved({
           file: scope.file,
-          line: declaration.getStartLineNumber(),
+          line: startLineOf(declaration),
           reason: 'dynamic-bot-trigger',
           hint: `Give @${bot.decorator} a literal id; every handler inside it is keyed by that id.`,
           symbol: scope.owner,

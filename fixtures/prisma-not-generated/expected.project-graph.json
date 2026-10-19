@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:57.959Z",
+  "builtAt": "2026-10-17T03:50:57.039Z",
   "services": [
     {
       "name": "api",
@@ -365,7 +365,8 @@
         "package": "@prisma/client",
         "method": "updateMany",
         "receiver": "db.order",
-        "source": "receiver-prop"
+        "source": "receiver-prop",
+        "batch": true
       }
     },
     {
@@ -688,6 +689,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "Prisma.TransactionClient",
+      "meta": {
+        "cause": "re-export-missing",
+        "package": "@acme/db"
+      },
       "service": "api"
     },
     {
@@ -696,6 +701,10 @@
       "reason": "di-type-unresolved",
       "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
       "symbol": "OrdersService.constructor[0]",
+      "meta": {
+        "cause": "re-export-missing",
+        "package": "@acme/db"
+      },
       "service": "api"
     },
     {
@@ -706,6 +715,39 @@
       "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "OrdersService.cancel -> this.db.order.delete",
+      "meta": {
+        "causes": [
+          {
+            "cause": "import-unresolved",
+            "package": "./generated/prisma/client",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/users/users.service.ts",
+                "line": 14,
+                "symbol": "UsersService.findAll -> prisma.user.findMany"
+              },
+              {
+                "file": "src/users/users.service.ts",
+                "line": 18,
+                "symbol": "UsersService.place -> client.order.create"
+              }
+            ]
+          },
+          {
+            "cause": "re-export-missing",
+            "package": "@acme/db",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/orders/orders.service.ts",
+                "line": 10,
+                "symbol": "OrdersService.cancel -> this.db.order.delete"
+              }
+            ]
+          }
+        ]
+      },
       "service": "api"
     },
     {
@@ -714,6 +756,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "PrismaClient",
+      "meta": {
+        "cause": "re-export-missing",
+        "package": "@acme/db"
+      },
       "service": "api"
     }
   ]

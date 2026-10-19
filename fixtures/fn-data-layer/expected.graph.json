@@ -1,78 +1,81 @@
 {
   "schemaVersion": 6,
   "repo": "fn-data-layer",
-  "generatedAt": "2026-10-07T18:28:44.456Z",
+  "generatedAt": "2026-10-17T03:00:13.436Z",
   "nodes": [
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
       "type": "db_query",
-      "label": "read Order",
+      "label": "read orders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.class.ts",
       "line": 17,
       "meta": {
         "op": "read",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:21:12",
       "type": "db_query",
-      "label": "write Order",
+      "label": "write orders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.class.ts",
       "line": 21,
       "meta": {
         "op": "write",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "save",
         "receiver": "this.orders",
         "source": "type-arg",
+        "entityType": "Order",
         "entityTypeId": "type:fn-data-layer#Order"
       }
     },
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:26:13",
       "type": "db_query",
-      "label": "delete Order",
+      "label": "delete orders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.class.ts",
       "line": 26,
       "meta": {
         "op": "delete",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "delete",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:32:12",
       "type": "db_query",
-      "label": "write Invoice",
+      "label": "write invoices",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.class.ts",
       "line": 32,
       "meta": {
         "op": "write",
-        "table": "Invoice",
+        "table": "invoices",
         "tables": [
-          "Invoice"
+          "invoices"
         ],
         "package": "typeorm",
         "method": "save",
@@ -85,92 +88,96 @@
     {
       "id": "db_query:fn-data-layer#src/orders/orders.object.ts:13:39",
       "type": "db_query",
-      "label": "read Order",
+      "label": "read orders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.object.ts",
       "line": 13,
       "meta": {
         "op": "read",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:fn-data-layer#src/orders/orders.repository.ts:17:10",
       "type": "db_query",
-      "label": "read Order",
+      "label": "read orders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.repository.ts",
       "line": 17,
       "meta": {
         "op": "read",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:fn-data-layer#src/orders/orders.repository.ts:21:66",
       "type": "db_query",
-      "label": "write Order",
+      "label": "write orders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.repository.ts",
       "line": 21,
       "meta": {
         "op": "write",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "save",
         "receiver": "orders",
         "source": "type-arg",
+        "entityType": "Order",
         "entityTypeId": "type:fn-data-layer#Order"
       }
     },
     {
       "id": "db_query:fn-data-layer#src/orders/orders.repository.ts:31:11",
       "type": "db_query",
-      "label": "delete Order",
+      "label": "delete orders",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.repository.ts",
       "line": 31,
       "meta": {
         "op": "delete",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "delete",
         "receiver": "orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:fn-data-layer#src/orders/orders.repository.ts:38:3",
       "type": "db_query",
-      "label": "write Invoice",
+      "label": "write invoices",
       "repo": "fn-data-layer",
       "file": "src/orders/orders.repository.ts",
       "line": 38,
       "meta": {
         "op": "write",
-        "table": "Invoice",
+        "table": "invoices",
         "tables": [
-          "Invoice"
+          "invoices"
         ],
         "package": "typeorm",
         "method": "save",
@@ -370,22 +377,22 @@
       }
     },
     {
-      "id": "table:fn-data-layer#Invoice",
+      "id": "table:fn-data-layer#invoices",
       "type": "table",
-      "label": "Invoice",
+      "label": "invoices",
       "repo": "fn-data-layer"
     },
     {
-      "id": "table:fn-data-layer#Order",
+      "id": "table:fn-data-layer#orders",
       "type": "table",
-      "label": "Order",
+      "label": "orders",
       "repo": "fn-data-layer"
     }
   ],
   "edges": [
     {
       "from": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
-      "to": "table:fn-data-layer#Order",
+      "to": "table:fn-data-layer#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.class.ts",
@@ -393,7 +400,7 @@
     },
     {
       "from": "db_query:fn-data-layer#src/orders/orders.class.ts:21:12",
-      "to": "table:fn-data-layer#Order",
+      "to": "table:fn-data-layer#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.class.ts",
@@ -401,7 +408,7 @@
     },
     {
       "from": "db_query:fn-data-layer#src/orders/orders.class.ts:26:13",
-      "to": "table:fn-data-layer#Order",
+      "to": "table:fn-data-layer#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.class.ts",
@@ -409,7 +416,7 @@
     },
     {
       "from": "db_query:fn-data-layer#src/orders/orders.class.ts:32:12",
-      "to": "table:fn-data-layer#Invoice",
+      "to": "table:fn-data-layer#invoices",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.class.ts",
@@ -417,7 +424,7 @@
     },
     {
       "from": "db_query:fn-data-layer#src/orders/orders.object.ts:13:39",
-      "to": "table:fn-data-layer#Order",
+      "to": "table:fn-data-layer#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.object.ts",
@@ -425,7 +432,7 @@
     },
     {
       "from": "db_query:fn-data-layer#src/orders/orders.repository.ts:17:10",
-      "to": "table:fn-data-layer#Order",
+      "to": "table:fn-data-layer#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
@@ -433,7 +440,7 @@
     },
     {
       "from": "db_query:fn-data-layer#src/orders/orders.repository.ts:21:66",
-      "to": "table:fn-data-layer#Order",
+      "to": "table:fn-data-layer#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
@@ -441,7 +448,7 @@
     },
     {
       "from": "db_query:fn-data-layer#src/orders/orders.repository.ts:31:11",
-      "to": "table:fn-data-layer#Order",
+      "to": "table:fn-data-layer#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
@@ -449,7 +456,7 @@
     },
     {
       "from": "db_query:fn-data-layer#src/orders/orders.repository.ts:38:3",
-      "to": "table:fn-data-layer#Invoice",
+      "to": "table:fn-data-layer#invoices",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",

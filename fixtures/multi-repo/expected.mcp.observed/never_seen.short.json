@@ -1,0 +1,173 @@
+{
+  "rows": [
+    {
+      "id": "channel:order.archived",
+      "type": "channel",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:61",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 1,
+        "most": 3
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "entry:orders:http:GET:/a/:param",
+      "type": "entry",
+      "kind": "http",
+      "service": "orders",
+      "loc": "src/aliases/current-aliases.controller.ts:11",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 2,
+        "of": 4,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "type": "entry",
+      "kind": "http",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:19",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 2,
+        "of": 4,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/:param/archive",
+      "type": "entry",
+      "kind": "http",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:42",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 2,
+        "of": 4,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.archive",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:59",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 3,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:40",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 3,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.latest",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:30",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 3,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.archive",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:42",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 2,
+        "of": 3,
+        "most": 1
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.latest",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:19",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 2,
+        "of": 3,
+        "most": 1
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/aliases/current-aliases.controller.ts:CurrentAliasesController.resolve",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/aliases/current-aliases.controller.ts:11",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 0,
+        "most": 0
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/aliases/legacy-aliases.controller.ts:LegacyAliasesController.resolve",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/aliases/legacy-aliases.controller.ts:18",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 0,
+        "of": 0,
+        "most": 0
+      },
+      "confidence": "weak"
+    }
+  ],
+  "window": {
+    "since": "7d",
+    "from": "2025-10-16T07:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z",
+    "label": "2h",
+    "short": true
+  },
+  "total": 11,
+  "next": [
+    "dead({id: \"channel:order.archived\"})",
+    "who_calls({symbol: \"channel:order.archived\"})"
+  ]
+}

@@ -1,15 +1,23 @@
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  builtInShapesFor,
   countSources,
   createProject,
+  declarationShapesOf,
   GraphBuilder,
   normalizeFilePath,
   parseConfig,
   readResolvedPackageJson,
+  closeStandIns,
   reportSkippedTestDirectories,
+  reportPatterns,
+  readPatterns,
+  reportStandIns,
   reportUnreadableSources,
   silentLogger,
+  standInsFor,
+  type StandInsOfBuild,
   type ExtractContext,
   type FlowatlasConfig,
   type Logger,
@@ -22,14 +30,18 @@ import { addressingFindings, findBootstrapFile, readBootstrap } from './bootstra
 import { createNestContext, type NestStats } from './context.js';
 import { buildClassIndex } from './index-classes.js';
 import { applicationsPass } from './passes/applications.js';
+import { callShapePass } from './passes/call-shape.js';
 import { callsPass } from './passes/calls.js';
 import { diPass } from './passes/di.js';
 import { entriesPass } from './passes/entries.js';
+import { failuresPass } from './failures/pass.js';
 import { heldCallsPass } from './passes/held-calls.js';
+import { logsPass } from './passes/logs.js';
 import { modulesPass } from './passes/modules.js';
 import { providersPass } from './passes/providers.js';
 import { typesPass } from './passes/types-pass.js';
 import type { NestExtractorPass } from './passes/types.js';
+import { NEST_SHAPES } from './shapes/index.js';
 import { wrappingCollectPass, wrappingEdgesPass } from './passes/wrapping.js';
 
 export interface ExtractRepoOptions {
@@ -39,6 +51,20 @@ export interface ExtractRepoOptions {
   repo: string;
   service?: ServiceConfig;
   config?: FlowatlasConfig;
+  /**
+   * The directory of the configuration the service is read under, which the
+   * stand-ins of P78 resolve against: the shape files it lists and the
+   * repositories whose source may stand in for a package. Without it neither
+   * is read.
+   */
+  configDir?: string;
+  /**
+   * The stand-ins the build worked out once for every repository (P82), read
+   * instead of indexing the package sources and parsing the shape files again.
+   * Without it, or when it does not answer for this service, they are worked
+   * out here.
+   */
+  standInsOfBuild?: StandInsOfBuild;
   /** Adapters to use. Without one, no entry points are found. */
   registry?: AdapterRegistry;
   tsconfig?: string;
@@ -94,17 +120,27 @@ export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
  * what a function takes is written on every edge into it once the last of
  * those edges is drawn.
  */
-export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, typesPass];
+export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, callShapePass, typesPass, logsPass, failuresPass];
 
 /** Parses a repository, honouring the tsconfig the caller or the service names. */
 export const createRepoProject = (options: ExtractRepoOptions): Project => {
   const tsconfig = options.tsconfig ?? options.service?.tsconfig;
   const readTestDirectories = options.service?.readTestDirectories;
+  const standIns = standInsFor({
+    config: options.config,
+    service: options.service,
+    configDir: options.configDir,
+    ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
+  });
   return createProject({
     rootDir: options.rootDir,
+    // Read only where the package itself does not resolve, and not at all where
+    // the configuration says so (`builtInShapes: false`).
+    ...(builtInShapesFor(options.config, options.service) ? { shapes: NEST_SHAPES } : {}),
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(readTestDirectories === undefined ? {} : { readTestDirectories }),
     ...(options.deployed === undefined ? {} : { deployed: options.deployed }),
+    ...(standIns === undefined ? {} : { standIns }),
   });
 };
 
@@ -124,7 +160,22 @@ const foldStats = (existing: unknown, mine: NestStats): Record<string, unknown> 
   for (const [pkg, count] of Object.entries(mine.skippedExternalCalls)) {
     skippedExternalCalls[pkg] = (Object.hasOwn(skippedExternalCalls, pkg) ? (skippedExternalCalls[pkg] ?? 0) : 0) + count;
   }
-  return { ...mine, ...prior, skippedExternalCalls };
+  // Calls an edge explained are each half's own too, and summed (P88).
+  const explained =
+    (typeof prior['receiversExplainedByEdge'] === 'number' ? prior['receiversExplainedByEdge'] : 0) +
+    (mine.receiversExplainedByEdge ?? 0);
+  // Loops set aside are each half's own too, summed by why (P89).
+  const loopsBounded: Record<string, number> = { ...((prior['loopsBounded'] ?? {}) as Record<string, number>) };
+  for (const [by, count] of Object.entries(mine.loopsBounded ?? {})) {
+    loopsBounded[by] = (Object.hasOwn(loopsBounded, by) ? (loopsBounded[by] ?? 0) : 0) + count;
+  }
+  return {
+    ...mine,
+    ...prior,
+    skippedExternalCalls,
+    ...(explained === 0 ? {} : { receiversExplainedByEdge: explained }),
+    ...(Object.keys(loopsBounded).length === 0 ? {} : { loopsBounded }),
+  };
 };
 
 const defaultService = (repo: string, rootDir: string): ServiceConfig => ({
@@ -142,10 +193,15 @@ const defaultService = (repo: string, rootDir: string): ServiceConfig => ({
 export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGraph> => {
   const { rootDir, repo } = options;
   const logger = options.logger ?? silentLogger;
-  const config = options.config ?? parseConfig({});
   const service = options.service ?? defaultService(repo, rootDir);
+  // The project's own extraction patterns, compiled into the descriptions
+  // every reader below already reads (P121).
+  const patterns = readPatterns({ config: options.config ?? parseConfig({}), service, configDir: options.configDir });
+  const config = patterns.config;
 
   const project = options.project ?? createRepoProject(options);
+  const shaped = declarationShapesOf(project);
+  if (shaped.length > 0) logger.debug(`built-in shapes stand in for ${shaped.join(', ')}`);
   // The manifest that answers what this repository can import, which on a
   // package inside a workspace is not the leaf manifest alone. Everything below
   // gates on it, so widening it here is what lets an adapter stay a statement
@@ -225,6 +281,8 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // disagree about how many files were read.
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
+  reportStandIns(base);
+  reportPatterns(base, patterns);
   const sources = countSources(project);
 
   // The other half of the same directory. A repository built on a file-system
@@ -310,6 +368,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       entry: adapters.entry.map((adapter) => adapter.name),
     },
   };
+
+  // Last, once every edge is drawn: one whose receiver a stand-in typed is a guess (P78).
+  closeStandIns(base);
 
   return builder.build();
 };

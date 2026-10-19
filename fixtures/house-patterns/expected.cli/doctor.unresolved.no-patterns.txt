@@ -1,0 +1,21 @@
+can't follow: 6 places over 4 rows, by cause
+
+  module-not-installed: 4 places  2 services
+    Install the repository's dependencies so the package resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause module-not-installed
+    module-not-installed:@bookshop/bus: 3 places
+      ../../catalog/src/books/books.service.ts:23  BooksService.add -> this.bus.emit
+      ../../catalog/src/books/books.service.ts:29  BooksService.remove -> this.bus.emit
+      ../../stock/src/stock/stock.service.ts:21  StockService.onModuleInit -> this.bus.on
+    module-not-installed:@bookshop/http: 1 place
+      ../../catalog/src/books/books.service.ts:20  BooksService.add -> this.api.call
+
+  bootstrap-not-found: 2 places  2 services
+    Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.
+      ../../catalog/src/main.ts:1  bootstrap
+      ../../stock/src/main.ts:1  bootstrap
+
+by package:
+  @bookshop/bus       3  module-not-installed 3
+  @bookshop/http      1  module-not-installed 1

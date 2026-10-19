@@ -34,7 +34,7 @@ fixtures/.scratch-*/
 graph.html
 # A project commits its own baseline; see docs/ci.md. This repository is the
 # tool rather than a project being read, and the configuration here points at
-# somebody's five repositories, so a baseline of them belongs to nobody.
+# somebody's own repositories, so a baseline of them belongs to nobody.
 flowatlas.baseline.json
 # The marker two test processes use to agree who builds the fixture graph.
 fixtures/multi-repo/.build-lock/

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:05:16.939Z",
+  "builtAt": "2026-10-18T11:26:33.140Z",
   "services": [
     {
       "name": "gateway",
@@ -28,6 +28,30 @@
     }
   ],
   "nodes": [
+    {
+      "id": "billing#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
     {
       "id": "billing#src/app.module.ts:AppModule",
       "type": "module",
@@ -153,7 +177,7 @@
       "label": "InvoicesService",
       "repo": "billing",
       "file": "src/invoices/invoices.service.ts",
-      "line": 6,
+      "line": 13,
       "kind": "injectable",
       "meta": {
         "module": "AppModule"
@@ -165,7 +189,7 @@
       "label": "InvoicesService.create",
       "repo": "billing",
       "file": "src/invoices/invoices.service.ts",
-      "line": 10,
+      "line": 30,
       "meta": {
         "signature": {
           "params": [
@@ -184,7 +208,7 @@
       "label": "InvoicesService.findOne",
       "repo": "billing",
       "file": "src/invoices/invoices.service.ts",
-      "line": 21,
+      "line": 45,
       "meta": {
         "signature": {
           "params": [
@@ -246,6 +270,18 @@
       }
     },
     {
+      "id": "config_key:billing#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "billing",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "config.get"
+      }
+    },
+    {
       "id": "config_key:gateway#ORDERS_URL",
       "type": "config_key",
       "label": "ORDERS_URL",
@@ -302,78 +338,82 @@
     {
       "id": "db_query:orders#src/orders/orders.service.ts:26:23",
       "type": "db_query",
-      "label": "read Order",
+      "label": "read orders",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 26,
       "meta": {
         "op": "read",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "findOne",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:31:24",
       "type": "db_query",
-      "label": "read Order",
+      "label": "read orders",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 31,
       "meta": {
         "op": "read",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "find",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:41:23",
       "type": "db_query",
-      "label": "write Order",
+      "label": "write orders",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 41,
       "meta": {
         "op": "write",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "save",
         "receiver": "this.orders",
         "source": "type-arg",
+        "entityType": "Order",
         "entityTypeId": "type:orders#Order"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:60:23",
       "type": "db_query",
-      "label": "read Order",
+      "label": "read orders",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 60,
       "meta": {
         "op": "read",
-        "table": "Order",
+        "table": "orders",
         "tables": [
-          "Order"
+          "orders"
         ],
         "package": "typeorm",
         "method": "findOne",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityType": "Order"
       }
     },
     {
@@ -386,7 +426,16 @@
       "kind": "event",
       "meta": {
         "pattern": "invoice.requested",
-        "adapter": "nestjs-microservice"
+        "adapter": "nestjs-microservice",
+        "fails": [
+          {
+            "exception": "ConflictException",
+            "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "file": "src/invoices/invoices.service.ts",
+            "line": 31,
+            "source": "throw"
+          }
+        ]
       }
     },
     {
@@ -399,7 +448,16 @@
       "kind": "event",
       "meta": {
         "pattern": "order.created",
-        "adapter": "nestjs-microservice"
+        "adapter": "nestjs-microservice",
+        "fails": [
+          {
+            "exception": "ConflictException",
+            "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "file": "src/invoices/invoices.service.ts",
+            "line": 31,
+            "source": "throw"
+          }
+        ]
       }
     },
     {
@@ -415,7 +473,17 @@
         "path": "/invoices/:param",
         "rawPath": "/invoices/:id",
         "controller": "InvoicesController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "billing#src/invoices/invoices.service.ts:InvoicesService.findOne",
+            "file": "src/invoices/invoices.service.ts",
+            "line": 47,
+            "source": "throw"
+          }
+        ]
       }
     },
     {
@@ -431,7 +499,17 @@
         "path": "/invoices",
         "rawPath": "/invoices",
         "controller": "InvoicesController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "file": "src/invoices/invoices.service.ts",
+            "line": 31,
+            "source": "throw"
+          }
+        ]
       }
     },
     {
@@ -1092,6 +1170,23 @@
       }
     },
     {
+      "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+      "type": "http_out",
+      "label": "GET /orders/:param",
+      "repo": "billing",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/${…}",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:billing#OrderView",
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
       "id": "http_out:gateway#src/clients/billing.client.ts:33:12",
       "type": "http_out",
       "label": "POST ?",
@@ -1535,7 +1630,10 @@
           "filesRead": 6,
           "filesUnreadable": 0,
           "classes": 4,
-          "skippedExternalCalls": {}
+          "skippedExternalCalls": {
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1
+          }
         },
         "bootstrap": "src/main.ts",
         "adapters": {
@@ -1621,9 +1719,9 @@
       }
     },
     {
-      "id": "table:orders#Order",
+      "id": "table:orders#orders",
       "type": "table",
-      "label": "Order",
+      "label": "orders",
       "repo": "orders"
     },
     {
@@ -2284,6 +2382,38 @@
       "line": 28
     },
     {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "to": "billing#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 18
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "to": "billing#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 19
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "to": "config_key:billing#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "to": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33
+    },
+    {
       "from": "channel:invoice.requested",
       "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
       "type": "consumes",
@@ -2325,7 +2455,7 @@
     },
     {
       "from": "db_query:orders#src/orders/orders.service.ts:26:23",
-      "to": "table:orders#Order",
+      "to": "table:orders#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -2333,7 +2463,7 @@
     },
     {
       "from": "db_query:orders#src/orders/orders.service.ts:31:24",
-      "to": "table:orders#Order",
+      "to": "table:orders#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -2341,7 +2471,7 @@
     },
     {
       "from": "db_query:orders#src/orders/orders.service.ts:41:23",
-      "to": "table:orders#Order",
+      "to": "table:orders#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -2349,7 +2479,7 @@
     },
     {
       "from": "db_query:orders#src/orders/orders.service.ts:60:23",
-      "to": "table:orders#Order",
+      "to": "table:orders#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -2883,6 +3013,19 @@
       "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 62
+    },
+    {
+      "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 33,
+      "returns": "type:billing#OrderView",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
     },
     {
       "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
@@ -3605,6 +3748,28 @@
         "exported": true
       }
     },
+    "type:billing#OrderView": {
+      "name": "OrderView",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/invoice.dto.ts",
+      "structuralHash": "9b6c96ba536215ea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
     "type:gateway#InvoiceDto": {
       "name": "InvoiceDto",
       "kind": "object",
@@ -3734,8 +3899,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 19,
       "reason": "route-unguarded",
-      "message": "GET /orders/latest has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "GET /orders/latest has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /orders/latest"
     },
     {
@@ -3743,8 +3908,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 25,
       "reason": "route-unguarded",
-      "message": "GET /orders/:param has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "GET /orders/:param has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /orders/:param"
     },
     {
@@ -3752,8 +3917,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 31,
       "reason": "route-unguarded",
-      "message": "POST /orders has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders"
     },
     {
@@ -3761,8 +3926,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 42,
       "reason": "route-unguarded",
-      "message": "POST /orders/:param/archive has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders/:param/archive has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/:param/archive"
     },
     {

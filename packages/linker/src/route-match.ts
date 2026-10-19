@@ -501,4 +501,103 @@ export const behindUnread = (method: string, path: string, routes: readonly Grap
     .sort(cmp);
 };
 
+/**
+ * What a hole in a request's address may stand for: the rest of the segment
+ * it is written in, and any number of whole segments after it. Text nobody
+ * read may hold separators, so a hole is never held to one segment.
+ */
+const HOLE_SPANS = '[^/]*(?:/[^/]+)*';
+
+/** A request's address read in part, as a pattern a route's address can be tested against. */
+const partialShapeOf = (partialPath: string): RegExp => {
+  const read = normalizePath(partialPath)
+    .split(UNREAD_SPAN)
+    .map((piece) =>
+      piece
+        .split('/')
+        .map((segment) => (segment === PARAM_PLACEHOLDER ? '[^/]+' : segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+        .join('/'),
+    );
+  return new RegExp(`^${read.join(HOLE_SPANS)}$`, 'i');
+};
+
+/**
+ * Whether a request whose address was read in part could reach a route (P91).
+ *
+ * The mirror of {@link behindUnread}: there the route's address has the hole,
+ * here the request's does. Each hole stands for whatever text nobody read,
+ * which is the rest of a segment and any segments after it; everything that
+ * was read has to agree. A verb nobody read (`null`) is any verb. What was
+ * read has to say something - a literal segment - or every request with a
+ * hole could reach every route there is.
+ *
+ * Never an edge. The route is not called by this request as far as anything
+ * read says; what this settles is that nothing calling it is not known either,
+ * and `dead` says `likely-dead` rather than `dead`.
+ */
+export const couldReach = (method: string | null | undefined, partialPath: string, route: GraphNode): boolean => {
+  if (route.type !== 'entry' || route.kind !== 'http' || route.meta?.['contributes'] !== undefined) return false;
+  const routePath = String(route.meta?.['path'] ?? '');
+  if (routePath === '' || !wasRead(routePath)) return false;
+  if (typeof method === 'string' && !methodAnswers(String(route.meta?.['method'] ?? ''), method)) return false;
+  if (!saysSomething(partialPath)) return false;
+  // A request read in full and only its verb unread reaches the route its
+  // address matches, whichever verb that turns out to be.
+  if (wasRead(partialPath)) return answeringAt(route, partialPath) !== undefined;
+  return spellingsOf(routePath, route.meta?.['rawPath']).some((spelling) => partialShapeOf(partialPath).test(spelling.path));
+};
+
+/** A segment that stands for a value: a route's hole, a request's read-as-a-value, a wildcard. */
+const isHole = (segment: string): boolean => segment.startsWith(':') || segment === '*';
+
+const sameSegment = (route: string, asked: string): boolean =>
+  isHole(route) || isHole(asked) || route.toLowerCase() === asked.toLowerCase();
+
+/**
+ * How a request that found no route differs from this one by one segment
+ * (P95), or undefined: one literal for another (`cancel` for the route's
+ * `archive`), a segment the route has and the request leaves out (`POST
+ * /orders/ship` for `POST /orders/:param/ship`), or one the request adds.
+ *
+ * Never a join. A route renamed, a typo and two routes that only look alike
+ * all read the same way, which is why `dead` turns this into `unknown` rather
+ * than an edge: the graph cannot tell them apart, a person can. Both addresses
+ * must be read in full, and the verb must be one the route answers.
+ */
+export const oneSegmentOff = (method: string | null | undefined, requestPath: string, route: GraphNode): string | undefined => {
+  if (route.type !== 'entry' || route.kind !== 'http') return undefined;
+  const routePath = String(route.meta?.['path'] ?? '');
+  if (routePath === '' || requestPath === '' || !wasRead(routePath) || !wasRead(requestPath)) return undefined;
+  if (typeof method === 'string' && !methodAnswers(String(route.meta?.['method'] ?? ''), method)) return undefined;
+  if (pathAnswers(routePath, requestPath)) return undefined;
+  const ours = segmentsOf(routePath);
+  const asked = segmentsOf(requestPath);
+  if (ours.includes('*')) return undefined;
+  if (ours.length === asked.length) {
+    const differ = ours.flatMap((segment, index) => (sameSegment(segment, asked[index] ?? '') ? [] : [index]));
+    if (differ.length !== 1) return undefined;
+    const at = differ[0]!;
+    return `${asked[at] ?? ''} for ${ours[at] ?? ''}`;
+  }
+  const [longer, shorter] = ours.length > asked.length ? [ours, asked] : [asked, ours];
+  if (longer.length !== shorter.length + 1) return undefined;
+  // A segment more or fewer is read strictly: every other segment the same
+  // literal, or a value on both sides. Otherwise a value the route takes
+  // would swallow the literal the request names, and `/orders/ship` would be
+  // one off every route under `/orders/:param` with a third segment.
+  const strictly = (route: readonly string[], request: readonly string[]): boolean =>
+    route.length === request.length &&
+    route.every((segment, at) => {
+      const other = request[at] ?? '';
+      return isHole(segment) ? isHole(other) : !isHole(other) && segment.toLowerCase() === other.toLowerCase();
+    });
+  const at = longer.findIndex((_, index) => {
+    const without = [...longer.slice(0, index), ...longer.slice(index + 1)];
+    return longer === ours ? strictly(without, asked) : strictly(ours, without);
+  });
+  if (at < 0) return undefined;
+  const segment = longer[at] ?? '';
+  return longer === ours ? `${segment} left out` : `${segment} added`;
+};
+
 export { pathAnswers };

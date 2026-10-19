@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { serviceSourceDirs, workspaceRootOf } from '@flowatlas/core';
-import { hashFile, stampFiles, type DependencyState, type FileStamp } from './cache.js';
+import { hashFile, stampFiles, type DependencyState, type FileStamp, type StandInsState } from './cache.js';
 
 /**
  * Whether a service's dependencies are there, as the rebuild plan means it.
@@ -188,6 +188,75 @@ export const packageChange = (
 ): string | undefined => {
   for (const [file, stamp] of Object.entries(before ?? {}).sort(([a], [b]) => (a < b ? -1 : 1))) {
     if (after[file]?.hash !== stamp.hash) return `installed ${file} changed`;
+  }
+  return undefined;
+};
+
+/** One package's answer, in the words of a plan reason. */
+const answerWords = (answer: StandInsState['packages'][string] | undefined): string =>
+  answer === null || answer === undefined
+    ? 'answered by nothing'
+    : 'dir' in answer
+      ? `now at ${answer.dir}`
+      : `now claimed by ${answer.ambiguous.length} directories (${answer.ambiguous.join(', ')})`;
+
+/**
+ * What changed about what stands in for a repository's missing packages since
+ * it was read, in one phrase (P83).
+ *
+ * The files a stand-in was read from are {@link packageChange}'s; this is the
+ * rest of what decides which stand-in is read at all: the shape files a glob
+ * expands to now, and what the package index answers now for each name the
+ * last reading wanted. A new shape file under a listed glob, a package
+ * directory appearing for an import nothing answered and one of two
+ * directories claiming a name going away each change a graph without changing
+ * a file the cache stamped, so each is caught here or nowhere.
+ *
+ * Nothing recorded while something could stand in now is a change too: the
+ * last reading did not say what it wanted, and the cheap wrong answer is a
+ * stale graph. Nothing able to stand in now is no change, because the
+ * configuration saying so moved the configuration's hash already.
+ */
+export const standInsChange = (
+  before: StandInsState | undefined,
+  after: StandInsState | undefined,
+): string | undefined => {
+  if (after === undefined) {
+    // The last shape or pattern file under a glob that is still configured
+    // went (P121, P180): the configuration did not change, and what is read
+    // did. Nothing recorded and nothing now is no change.
+    const shape = Object.keys(before?.shapes ?? {}).sort()[0];
+    if (shape !== undefined) return `stand-ins changed: shape file ${shape} removed`;
+    const gone = Object.keys(before?.patterns ?? {}).sort()[0];
+    return gone === undefined ? undefined : `stand-ins changed: pattern file ${gone} removed`;
+  }
+  if (before === undefined) return 'stand-ins not recorded by the last build';
+  const files = [...new Set([...Object.keys(before.shapes), ...Object.keys(after.shapes)])].sort();
+  for (const file of files) {
+    const was = before.shapes[file];
+    const now = after.shapes[file];
+    if (was === now) continue;
+    if (was === undefined) return `stand-ins changed: shape file ${file} added`;
+    if (now === undefined) return `stand-ins changed: shape file ${file} removed`;
+    return `stand-ins changed: shape file ${file} changed`;
+  }
+  // A pattern file is compiled into the descriptions every reader reads (P121).
+  const patterns = [...new Set([...Object.keys(before.patterns ?? {}), ...Object.keys(after.patterns ?? {})])].sort();
+  for (const file of patterns) {
+    const was = before.patterns?.[file];
+    const now = after.patterns?.[file];
+    if (was === now) continue;
+    if (was === undefined) return `stand-ins changed: pattern file ${file} added`;
+    if (now === undefined) return `stand-ins changed: pattern file ${file} removed`;
+    return `stand-ins changed: pattern file ${file} changed`;
+  }
+  for (const name of Object.keys(before.packages).sort()) {
+    const was = before.packages[name];
+    const now = after.packages[name];
+    if (JSON.stringify(was) === JSON.stringify(now ?? null)) continue;
+    const moved = was === null || was === undefined || now === null || now === undefined || !('dir' in was) || !('dir' in now);
+    if (!moved && was.dir === now.dir) return `stand-ins changed: package ${name} manifest changed`;
+    return `stand-ins changed: package ${name} ${answerWords(now)}`;
   }
   return undefined;
 };

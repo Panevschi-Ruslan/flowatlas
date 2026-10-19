@@ -1,7 +1,7 @@
 {
   "doctorFormatVersion": 2,
   "schemaVersion": 6,
-  "flowatlasVersion": "0.5.1",
+  "flowatlasVersion": "0.6.0",
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "strict": false,
   "baselinePath": "<root>/fixtures/multi-repo-doctor/baseline.accepted.json",
@@ -10,14 +10,17 @@
     "markers",
     "desync",
     "contracts",
+    "rules",
     "baseline"
   ],
   "note": null,
   "unresolved": {
     "status": "ok",
     "total": 26,
-    "rows": 31,
-    "sites": 31,
+    "rows": 28,
+    "sites": 28,
+    "notes": 0,
+    "findings": 3,
     "info": {
       "rows": 5,
       "sites": 5
@@ -34,6 +37,7 @@
       {
         "reason": "unknown-db-package",
         "level": "action",
+        "kind": "gap",
         "count": 9,
         "sites": 9,
         "known": true,
@@ -106,6 +110,7 @@
       {
         "reason": "channel-from-config",
         "level": "action",
+        "kind": "gap",
         "count": 3,
         "sites": 3,
         "known": true,
@@ -147,6 +152,7 @@
       {
         "reason": "module-import-dynamic",
         "level": "action",
+        "kind": "gap",
         "count": 3,
         "sites": 3,
         "known": true,
@@ -188,11 +194,12 @@
       {
         "reason": "route-unguarded",
         "level": "action",
+        "kind": "finding",
         "count": 3,
         "sites": 3,
         "known": true,
         "excluded": false,
-        "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+        "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
         "rows": [
           {
             "service": "orders",
@@ -202,7 +209,7 @@
             "level": "action",
             "sites": 1,
             "message": "POST /orders has no guard in front of it and reaches stored data.",
-            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
           },
           {
             "service": "orders",
@@ -212,7 +219,7 @@
             "level": "action",
             "sites": 1,
             "message": "POST /orders/legacy has no guard in front of it and reaches stored data.",
-            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
           },
           {
             "service": "orders",
@@ -222,13 +229,14 @@
             "level": "action",
             "sites": 1,
             "message": "GET /orders/:param has no guard in front of it and reaches stored data.",
-            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\"."
           }
         ]
       },
       {
         "reason": "di-token-unknown",
         "level": "action",
+        "kind": "gap",
         "count": 2,
         "sites": 2,
         "known": true,
@@ -260,6 +268,7 @@
       {
         "reason": "dynamic-http-url",
         "level": "action",
+        "kind": "gap",
         "count": 2,
         "sites": 2,
         "known": true,
@@ -291,6 +300,7 @@
       {
         "reason": "marker-route-not-found",
         "level": "action",
+        "kind": "gap",
         "count": 1,
         "sites": 1,
         "known": true,
@@ -312,11 +322,12 @@
       {
         "reason": "marker-service-unknown",
         "level": "action",
+        "kind": "gap",
         "count": 1,
         "sites": 1,
         "known": true,
         "excluded": false,
-        "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation.",
+        "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
         "rows": [
           {
             "service": "gateway",
@@ -326,13 +337,14 @@
             "level": "action",
             "sites": 1,
             "message": "@CallsService names warehouse, which is not a configured service",
-            "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation."
+            "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation."
           }
         ]
       },
       {
         "reason": "target-route-not-found",
         "level": "action",
+        "kind": "gap",
         "count": 1,
         "sites": 1,
         "known": true,
@@ -354,6 +366,7 @@
       {
         "reason": "unknown-base-url-env",
         "level": "action",
+        "kind": "gap",
         "count": 1,
         "sites": 1,
         "known": true,
@@ -375,6 +388,7 @@
       {
         "reason": "dynamic-http-url",
         "level": "info",
+        "kind": "gap",
         "count": 3,
         "sites": 3,
         "known": true,
@@ -416,6 +430,7 @@
       {
         "reason": "channel-from-config",
         "level": "info",
+        "kind": "gap",
         "count": 2,
         "sites": 2,
         "known": true,
@@ -454,6 +469,33 @@
       {
         "service": "gateway",
         "looksLike": "it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises"
+      }
+    ],
+    "missingRepos": [
+      {
+        "token": "legacy",
+        "score": 1,
+        "places": 1,
+        "kinds": [
+          "setting"
+        ],
+        "weak": false,
+        "signals": [
+          {
+            "kind": "setting",
+            "name": "LEGACY_URL",
+            "says": "LEGACY_URL is used by gateway (1 request) and no service claims it",
+            "places": [
+              {
+                "service": "gateway",
+                "file": "src/clients/orders.client.ts",
+                "line": 66,
+                "gapId": "gap:gateway|src/clients/orders.client.ts|unknown-base-url-env"
+              }
+            ]
+          }
+        ],
+        "candidates": []
       }
     ]
   },
@@ -509,7 +551,7 @@
         "file": "src/clients/orders.client.ts",
         "line": 47,
         "message": "@CallsService names warehouse, which is not a configured service",
-        "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation."
+        "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation."
       },
       {
         "code": "marker-emits-shadowed",
@@ -752,6 +794,21 @@
     "errorCount": 4,
     "ignored": 1,
     "unchecked": 4
+  },
+  "rules": {
+    "status": "skipped",
+    "note": "no rules are configured",
+    "configured": 0,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "new": 0,
+    "failing": 0,
+    "heuristic": 0,
+    "excused": 0,
+    "violations": [],
+    "unchecked": [],
+    "notes": []
   },
   "baseline": {
     "status": "ok",

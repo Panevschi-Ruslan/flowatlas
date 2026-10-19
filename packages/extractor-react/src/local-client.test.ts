@@ -157,11 +157,13 @@ describe('a client class the repository wrote itself', () => {
       `,
     };
     // Undeclared, the transport's own unreadable request is all there is: the
-    // class is a client and nothing here could prove it.
-    expect(labels(read(files))).toEqual(['GET ?']);
+    // class is a client and nothing here could prove it. Its verb is the
+    // `{ method }` it is handed, unread where it is written, and not `GET`
+    // (P91).
+    expect(labels(read(files))).toEqual(['? ?']);
 
     const graph = read(files, ['BillingClient']);
-    expect(labels(graph)).toEqual(['GET ?', 'PUT /api/invoices']);
+    expect(labels(graph)).toEqual(['? ?', 'PUT /api/invoices']);
     const written = requests(graph).find((node) => node.label === 'PUT /api/invoices');
     expect(written?.meta).toMatchObject({
       client: 'BillingClient',

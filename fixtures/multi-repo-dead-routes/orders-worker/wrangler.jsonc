@@ -1,0 +1,7 @@
+{
+  // The worker that settles orders reaches the catalogue through a binding,
+  // by the name the catalogue is deployed under.
+  "name": "orders-worker",
+  "main": "src/worker.ts",
+  "services": [{ "binding": "CATALOG", "service": "catalog-worker" }],
+}

@@ -1,0 +1,39 @@
+86 nodes, 82 edges, 4 types, missed: 2 · notes: 4 · findings: 3
+
+nodes by type
+  repo      1
+  module    2
+  entry     16
+  provider  12
+  method    33
+  db_query  13
+  table     4
+  channel   2
+  producer  3
+
+nodes by service
+  parcels  86
+
+edges by type
+  imports  1
+  injects  14
+  calls    34
+  handles  16
+  queries  14
+  emits    3
+
+edges by confidence
+  static  82
+
+unresolved by reason, counted by site
+  payload-type-unknown  2
+receivers explained by a drawn call: 0
+loops set aside: chunk 1 · page 1 · cursor 1 · retry 1 · literal 1 · batch-call 2 · migration 1
+
+link report
+  calls out: 0 total, 0 linked (n/a), 0 no route, 0 unknown setting, 0 ambiguous, 0 third party, 0 dynamic
+  channels with no handler: 2
+    channel:mail
+    channel:sqs/parcel-exports
+  channels with no publisher: 0
+  routes never called: 16 of 16

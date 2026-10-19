@@ -37,6 +37,6 @@
                       @  members-send-notice                              members/infra/main.tf:30
                         -> handler                                        members/src/handlers/send-notice.ts:8
                           -> subjectOf                                    members/src/handlers/send-notice.ts:6
-        -> CheckoutRefused [Fail]                                         circulation/statemachine/checkout.asl.json:117
+        (again) CheckoutRefused [Fail]
       -> CheckoutRefused [Fail]                                           circulation/statemachine/checkout.asl.json:117
 unresolved on this path: 0

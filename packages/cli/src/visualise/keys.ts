@@ -11,9 +11,9 @@ import { createHash } from 'node:crypto';
  *
  * Six characters, the first a letter so a key is never mistaken for one of the
  * positions older links carry, the rest letters and digits: 1.6 billion keys,
- * so the odds that any two of twelve thousand nodes share one are about one in
- * twenty, and that a node added later takes the key of one already there about
- * one in a hundred thousand.
+ * so the odds that any two of ten thousand nodes share one are about one in
+ * thirty, and that a node added later takes the key of one already there about
+ * one in a hundred and fifty thousand.
  *
  * When two ids do spell the same key, neither keeps it: each spells as many more
  * characters of its own hash as it takes to differ from the other, so each key

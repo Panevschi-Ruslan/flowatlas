@@ -1,0 +1,1290 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T06:05:22.920Z",
+  "services": [
+    {
+      "name": "lending",
+      "repo": "./lending",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "members",
+      "repo": "./members",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/library-events/lambda/Lambda Function Invocation Result - Success",
+      "type": "channel",
+      "label": "eventbridge/library-events/lambda/Lambda Function Invocation Result - Success",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 53,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:kinesis/library-shelf-scans",
+      "type": "channel",
+      "label": "kinesis/library-shelf-scans",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 60,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "aws_kinesis_stream.shelf_scans",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/library-return-alerts",
+      "type": "channel",
+      "label": "sns/library-return-alerts",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 29,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 2,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/library-loan-failures",
+      "type": "channel",
+      "label": "sqs/library-loan-failures",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 7,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:lending#CARD_LOOKUP_URL",
+      "type": "config_key",
+      "label": "CARD_LOOKUP_URL",
+      "repo": "lending",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 5,
+      "meta": {
+        "key": "CARD_LOOKUP_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:lending#LOAN_URL",
+      "type": "config_key",
+      "label": "LOAN_URL",
+      "repo": "lending",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8,
+      "meta": {
+        "key": "LOAN_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:lending#infra/destinations.tf:aws_cloudwatch_event_target.audit_return",
+      "type": "consumer",
+      "label": "rule library-returned",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 53,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.audit_return",
+        "deployedBy": "terraform",
+        "name": "library-returned",
+        "rule": "aws_cloudwatch_event_rule.returned",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.shelf_scan",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 65,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.shelf_scan",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.member_digest.on_success",
+      "type": "consumer",
+      "label": "destination aws_lambda_function_event_invoke_config.member_digest.on_success",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 91,
+      "kind": "result",
+      "meta": {
+        "kind": "result",
+        "adapter": "aws-lambda",
+        "by": "destination",
+        "declaredAs": "aws_lambda_function_event_invoke_config.member_digest.on_success",
+        "deployedBy": "terraform",
+        "when": "success",
+        "resultOf": "invoke:library-members-digest"
+      }
+    },
+    {
+      "id": "entry:lending:event:kinesis/library-shelf-scans",
+      "type": "entry",
+      "label": "event kinesis/library-shelf-scans",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 65,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/library-shelf-scans",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.shelf_scan",
+        "deployedBy": "terraform",
+        "changesOf": "stream",
+        "name": "library-shelf-scans",
+        "function": "library-lending-shelf-scan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:http:ALL:/*@library-lending-card-lookup",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "lending",
+      "file": "infra/modules/function-url/main.tf",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/*",
+        "deployedBy": "terraform",
+        "function": "library-lending-card-lookup",
+        "declaredAs": "module.card_lookup_url.aws_lambda_function_url.this",
+        "by": "function-url",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:http:ALL:/*@library-lending-request-loan",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 56,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/*",
+        "deployedBy": "terraform",
+        "function": "library-lending-request-loan",
+        "declaredAs": "aws_lambda_function_url.request_loan",
+        "by": "function-url",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:library-lending-audit-return",
+      "type": "entry",
+      "label": "library-lending-audit-return",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-lending-audit-return",
+        "deployedBy": "terraform",
+        "name": "library-lending-audit-return",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"audit-return\"]",
+        "handler": "returns/audit-return.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#EventBridgeEvent<'Lambda Function Invocation Result - Success',{responsePayload:unknown}>",
+          "detail": "{responsePayload:unknown}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:library-lending-card-lookup",
+      "type": "entry",
+      "label": "library-lending-card-lookup",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-lending-card-lookup",
+        "deployedBy": "terraform",
+        "name": "library-lending-card-lookup",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"card-lookup\"]",
+        "handler": "cards/card-lookup.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reachedAs": {
+          "invoke:library-members-alert": {
+            "type": "triggers",
+            "when": "failure"
+          }
+        },
+        "reaches": [
+          "invoke:library-members-alert"
+        ],
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:library-lending-kiosk",
+      "type": "entry",
+      "label": "library-lending-kiosk",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 61,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-lending-kiosk",
+        "deployedBy": "terraform",
+        "name": "library-lending-kiosk",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.kiosk",
+        "handler": "kiosk/kiosk.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "CARD_LOOKUP_URL": {
+            "written": "module.card_lookup_url.aws_lambda_function_url.this.function_url",
+            "value": "library-lending-card-lookup",
+            "kind": "url"
+          },
+          "LOAN_URL": {
+            "written": "aws_lambda_function_url.request_loan.function_url",
+            "value": "library-lending-request-loan",
+            "kind": "url"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:library-lending-notify-member",
+      "type": "entry",
+      "label": "library-lending-notify-member",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-lending-notify-member",
+        "deployedBy": "terraform",
+        "name": "library-lending-notify-member",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"notify-member\"]",
+        "handler": "loans/notify-member.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{responsePayload:{loanId:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:library-lending-request-loan",
+      "type": "entry",
+      "label": "library-lending-request-loan",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-lending-request-loan",
+        "deployedBy": "terraform",
+        "name": "library-lending-request-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"request-loan\"]",
+        "handler": "loans/request-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{memberId:string;itemId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:library-lending-return-item",
+      "type": "entry",
+      "label": "library-lending-return-item",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-lending-return-item",
+        "deployedBy": "terraform",
+        "name": "library-lending-return-item",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"return-item\"]",
+        "handler": "returns/return-item.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{itemId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:lending:invoke:library-lending-shelf-scan",
+      "type": "entry",
+      "label": "library-lending-shelf-scan",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-lending-shelf-scan",
+        "deployedBy": "terraform",
+        "name": "library-lending-shelf-scan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"shelf-scan\"]",
+        "handler": "shelves/shelf-scan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#KinesisStreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-alert",
+      "type": "entry",
+      "label": "library-members-alert",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-alert",
+        "deployedBy": "terraform",
+        "name": "library-members-alert",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.alert",
+        "handler": "alerts/alert.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{requestContext:{functionArn:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:library-members-digest",
+      "type": "entry",
+      "label": "library-members-digest",
+      "repo": "members",
+      "file": "infra/main.tf",
+      "line": 33,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-members-digest",
+        "deployedBy": "terraform",
+        "name": "library-members-digest",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.digest",
+        "handler": "digest/digest.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{memberId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "http_out:lending#src/kiosk/kiosk.ts:5:22",
+      "type": "http_out",
+      "label": "GET /cards",
+      "repo": "lending",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "${CARD_LOOKUP_URL}/cards",
+        "path": "/cards",
+        "baseUrlEnv": "CARD_LOOKUP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "lending"
+      }
+    },
+    {
+      "id": "http_out:lending#src/kiosk/kiosk.ts:7:25",
+      "type": "http_out",
+      "label": "GET /${…}",
+      "repo": "lending",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 7,
+      "meta": {
+        "method": "GET",
+        "url": "${CARD_LOOKUP_URL}${…}",
+        "path": "/${…}",
+        "baseUrlEnv": "CARD_LOOKUP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "lending"
+      }
+    },
+    {
+      "id": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+      "type": "http_out",
+      "label": "POST /loans",
+      "repo": "lending",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8,
+      "meta": {
+        "method": "POST",
+        "url": "${LOAN_URL}/loans",
+        "path": "/loans",
+        "baseUrlEnv": "LOAN_URL",
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "value",
+        "targetService": "lending"
+      }
+    },
+    {
+      "id": "lending#infra/main.tf:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "lending",
+      "file": "infra/main.tf",
+      "line": 56,
+      "kind": "authorizer"
+    },
+    {
+      "id": "lending#src/cards/card-lookup.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/cards/card-lookup.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "lending#src/kiosk/kiosk.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "lending#src/loans/notify-member.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/loans/notify-member.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{responsePayload:{loanId:string}}"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "loan",
+            "at": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "lending#src/loans/request-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/loans/request-loan.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{memberId:string;itemId:string}"
+            }
+          ],
+          "returns": "{loanId:string}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/returns/audit-return.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/returns/audit-return.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'Lambda Function Invocation Result - Success',{responsePayload:unknown}>"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "lending#src/returns/return-item.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/returns/return-item.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{itemId:string}"
+            }
+          ],
+          "returns": "{itemId:string;returned:boolean}"
+        }
+      }
+    },
+    {
+      "id": "lending#src/shelves/shelf-scan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "lending",
+      "file": "src/shelves/shelf-scan.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#KinesisStreamEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "members#src/alerts/alert.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/alerts/alert.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{requestContext:{functionArn:string}}"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "failed",
+            "at": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "members#src/digest/digest.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "src/digest/digest.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{memberId:string}"
+            }
+          ],
+          "returns": "{memberId:string}"
+        }
+      }
+    },
+    {
+      "id": "producer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan.on_failure",
+      "type": "producer",
+      "label": "message sns/library-return-alerts",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 65,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "aws_lambda_event_source_mapping.shelf_scan.on_failure",
+        "deployedBy": "terraform",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.request_loan.on_failure",
+      "type": "producer",
+      "label": "message sqs/library-loan-failures",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "aws_lambda_function_event_invoke_config.request_loan.on_failure",
+        "deployedBy": "terraform",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_failure",
+      "type": "producer",
+      "label": "message sns/library-return-alerts",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 29,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "aws_lambda_function_event_invoke_config.return_item.on_failure",
+        "deployedBy": "terraform",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_success",
+      "type": "producer",
+      "label": "event eventbridge/library-events/lambda/Lambda Function Invocation Result - Success",
+      "repo": "lending",
+      "file": "infra/destinations.tf",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "aws_lambda_function_event_invoke_config.return_item.on_success",
+        "deployedBy": "terraform",
+        "when": "success"
+      }
+    },
+    {
+      "id": "repo:lending",
+      "type": "repo",
+      "label": "lending",
+      "repo": "lending",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:members",
+      "type": "repo",
+      "label": "members",
+      "repo": "members",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/library-events/lambda/Lambda Function Invocation Result - Success",
+      "to": "consumer:lending#infra/destinations.tf:aws_cloudwatch_event_target.audit_return",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 53,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:kinesis/library-shelf-scans",
+      "to": "consumer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 65,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:lending#infra/destinations.tf:aws_cloudwatch_event_target.audit_return",
+      "to": "entry:lending:invoke:library-lending-audit-return",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 53,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan",
+      "to": "entry:lending:event:kinesis/library-shelf-scans",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 65,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.member_digest.on_success",
+      "to": "entry:lending:invoke:library-lending-notify-member",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 91,
+      "meta": {
+        "via": "deployment",
+        "when": "success"
+      }
+    },
+    {
+      "from": "entry:lending:event:kinesis/library-shelf-scans",
+      "to": "lending#src/shelves/shelf-scan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shelves/shelf-scan.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:lending:event:kinesis/library-shelf-scans",
+      "to": "producer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan.on_failure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 65,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:lending:http:ALL:/*@library-lending-card-lookup",
+      "to": "lending#src/cards/card-lookup.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{path:string}",
+      "file": "src/cards/card-lookup.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:lending:http:ALL:/*@library-lending-request-loan",
+      "to": "lending#infra/main.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 56,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:lending:http:ALL:/*@library-lending-request-loan",
+      "to": "lending#src/loans/request-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/request-loan.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-audit-return",
+      "to": "lending#src/returns/audit-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/audit-return.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-card-lookup",
+      "to": "entry:members:invoke:library-members-alert",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 37,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:library-members-alert",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-card-lookup",
+      "to": "lending#src/cards/card-lookup.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/cards/card-lookup.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-kiosk",
+      "to": "lending#src/kiosk/kiosk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-notify-member",
+      "to": "lending#src/loans/notify-member.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/notify-member.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-request-loan",
+      "to": "entry:lending:invoke:library-lending-notify-member",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 7,
+      "meta": {
+        "via": "deployment",
+        "when": "success"
+      }
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-request-loan",
+      "to": "lending#src/loans/request-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/request-loan.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-request-loan",
+      "to": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.request_loan.on_failure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 7,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-return-item",
+      "to": "lending#src/returns/return-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/return-item.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-return-item",
+      "to": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_failure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 29,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-return-item",
+      "to": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_success",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 29,
+      "meta": {
+        "via": "deployment",
+        "when": "success"
+      }
+    },
+    {
+      "from": "entry:lending:invoke:library-lending-shelf-scan",
+      "to": "lending#src/shelves/shelf-scan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shelves/shelf-scan.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:library-members-alert",
+      "to": "members#src/alerts/alert.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/alerts/alert.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:members:invoke:library-members-digest",
+      "to": "consumer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.member_digest.on_success",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 91,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:library-members-digest",
+        "when": "success"
+      }
+    },
+    {
+      "from": "entry:members:invoke:library-members-digest",
+      "to": "members#src/digest/digest.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/digest/digest.ts",
+      "line": 2
+    },
+    {
+      "from": "http_out:lending#src/kiosk/kiosk.ts:5:22",
+      "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 5,
+      "meta": {
+        "via": "functionUrl",
+        "targetService": "lending",
+        "variable": "CARD_LOOKUP_URL"
+      }
+    },
+    {
+      "from": "http_out:lending#src/kiosk/kiosk.ts:7:25",
+      "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 7,
+      "meta": {
+        "via": "functionUrl",
+        "targetService": "lending",
+        "variable": "CARD_LOOKUP_URL"
+      }
+    },
+    {
+      "from": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+      "to": "entry:lending:http:ALL:/*@library-lending-request-loan",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "functionUrl",
+        "targetService": "lending",
+        "variable": "LOAN_URL"
+      }
+    },
+    {
+      "from": "lending#src/kiosk/kiosk.ts:handler",
+      "to": "config_key:lending#CARD_LOOKUP_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 5,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-lending-kiosk",
+            "written": "module.card_lookup_url.aws_lambda_function_url.this.function_url",
+            "value": "library-lending-card-lookup"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#src/kiosk/kiosk.ts:handler",
+      "to": "config_key:lending#LOAN_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-lending-kiosk",
+            "written": "aws_lambda_function_url.request_loan.function_url",
+            "value": "library-lending-request-loan"
+          }
+        ]
+      }
+    },
+    {
+      "from": "lending#src/kiosk/kiosk.ts:handler",
+      "to": "http_out:lending#src/kiosk/kiosk.ts:5:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 5
+    },
+    {
+      "from": "lending#src/kiosk/kiosk.ts:handler",
+      "to": "http_out:lending#src/kiosk/kiosk.ts:7:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 7
+    },
+    {
+      "from": "lending#src/kiosk/kiosk.ts:handler",
+      "to": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan.on_failure",
+      "to": "channel:sns/library-return-alerts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 65,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.request_loan.on_failure",
+      "to": "channel:sqs/library-loan-failures",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 7,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_failure",
+      "to": "channel:sns/library-return-alerts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 29,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_success",
+      "to": "channel:eventbridge/library-events/lambda/Lambda Function Invocation Result - Success",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/destinations.tf",
+      "line": 29,
+      "meta": {
+        "via": "deployment"
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#EventBridgeEvent<'Lambda Function Invocation Result - Success',{responsePayload:unknown}>": {
+      "name": "EventBridgeEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "927920068f37d58d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#KinesisStreamEvent": {
+      "name": "KinesisStreamEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "e6e5fb34bea91d37",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "lending",
+      "file": "infra/destinations.tf",
+      "line": 60,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/library-shelf-scans is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/library-shelf-scans"
+    }
+  ]
+}

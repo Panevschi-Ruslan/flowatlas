@@ -7,10 +7,20 @@
  * runs over one graph say the same thing, so a difference in CI is a difference
  * in the project.
  */
-import { tally, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/core';
+import { countsOf, rowKindOf, waysInOf, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
-import type { GraphDb, ServiceReport } from '@flowatlas/linker';
+import {
+  missingGroupsOf,
+  ruleFailures,
+  withAnsweredDemoted,
+  type GraphDb,
+  type MissingGroup,
+  type MissingService,
+  type RulesReport,
+  type ServiceReport,
+} from '@flowatlas/linker';
+import { narrowRules } from '../commands/rules.js';
 import { halfOf } from '../readers.js';
 import {
   compareBaseline,
@@ -20,8 +30,6 @@ import {
   type UnresolvedSnapshot,
 } from './baseline.js';
 import {
-  ANSWERED_HINT,
-  answeredByMarker,
   requestsAround,
   genericHint,
   hintFor,
@@ -29,7 +37,9 @@ import {
   kindHint,
   type HintContext,
 } from './hints.js';
-import { callerOfProducer, validateMarkers, type MarkerIssue } from './markers.js';
+import { validateMarkers, type MarkerIssue } from './markers.js';
+import { missingEntryOf, type MissingCandidate, type MissingRepoEntry } from './missing.js';
+import { countsUnderStrictRuntime } from './runtime.js';
 import { mostlyUnread, noWayInSentence, waysInByService, waysInTotal, type WaysIn } from './ways-in.js';
 import {
   DOCTOR_FORMAT_VERSION,
@@ -59,11 +69,25 @@ export interface DoctorInput {
 
 export interface DoctorSettings {
   strict?: boolean;
-  /** Which sections to run. Defaults to all five. */
+  /**
+   * `--strict-runtime` (P106): the rows about failures traffic answered and the
+   * code does not declare, or that the code declares and nothing answered,
+   * decide the exit code. Off, they are information only (D3).
+   */
+  strictRuntime?: boolean;
+  /** Which sections to run. Defaults to all six. */
   sections?: readonly Section[];
   /** Narrow everything to one service. */
   service?: string;
-  /** Most rows printed per section; the file on disk is always complete (I9). */
+  /**
+   * Narrow the rows to these reasons (`--reason`, P141), as `service` narrows
+   * them to a service: every spelling, already expanded by the caller.
+   */
+  reasons?: readonly string[];
+  /**
+   * Most rows `runDoctor` keeps per section, and per reason; the file on disk
+   * is always complete (I9), because the command writes `runDoctorComplete`.
+   */
   maxNodes?: number;
   /** False for `--no-contracts`. */
   contracts?: boolean;
@@ -78,6 +102,14 @@ export interface DoctorSettings {
   check?: CheckOptions;
   /** Which services claim each settings key, from the configuration. */
   envOwners?: ReadonlyMap<string, readonly string[]>;
+  /** Every alias a service is configured with, to the service's name (P91). */
+  aliases?: ReadonlyMap<string, string>;
+  /**
+   * The architecture rules as the command checked them (P114), with whether a
+   * guessed violation may fail; undefined when there are none to check or
+   * `--no-rules` was passed.
+   */
+  rules?: { report: RulesReport; failOnHeuristic: boolean; configured: number };
   /** Fixed timestamp, for reproducible output. */
   generatedAt?: string;
   flowatlasVersion?: string;
@@ -93,14 +125,29 @@ export interface DoctorSettings {
    * have a way in is not a question about them (R173).
    */
   declared?: readonly string[];
+  /**
+   * What the configuration knows of each service beyond the graph - aliases,
+   * hosts - so a name that is one is not taken for a missing repository (P122).
+   */
+  missingServices?: readonly MissingService[];
+  /**
+   * The directories on disk that look like each group's repository, aligned
+   * with the groups (P122). Handed in, as `looksLike` is, because this module
+   * reads no directory; without it, no group has a candidate.
+   */
+  candidatesOf?: (groups: readonly MissingGroup[]) => MissingCandidate[][];
+  /** Where the configuration is, which a candidate's path is written relative to. */
+  configDir?: string;
 }
 
 /** The reasons that mean a call does not land where it was aimed. */
 const DESYNC_REASONS: ReadonlySet<string> = new Set([
   'unknown-base-url-env',
+  'service-binding-unknown',
   'target-route-not-found',
   'ambiguous-route',
   'ambiguous-route-application',
+  'ambiguous-route-api',
   'ambiguous-route-target',
   'route-wildcard-only',
 ]);
@@ -261,11 +308,38 @@ const withoutWaysInOf = (
   return found.length === 0 ? {} : { withoutWaysIn: found };
 };
 
+/**
+ * The repositories probably missing from the project (P122), from the rows
+ * this run counts and the graph's channels; each with the directories that
+ * look like it. Narrowed to a service, only the evidence in it is kept.
+ */
+export const missingReposOf = (
+  db: GraphDb,
+  rows: readonly Unresolved[],
+  settings: Pick<DoctorSettings, 'service' | 'missingServices' | 'candidatesOf' | 'configDir'>,
+): MissingRepoEntry[] => {
+  const all = missingGroupsOf(db, rows, settings.missingServices ?? []);
+  const groups =
+    settings.service === undefined
+      ? all
+      : all.filter((group) => group.signals.some((signal) => signal.places.some((place) => place.service === settings.service)));
+  const candidates = settings.candidatesOf?.(groups) ?? [];
+  return groups.map((group, index) => missingEntryOf(group, candidates[index] ?? [], settings.configDir ?? process.cwd()));
+};
+
+const missingOf = (entries: MissingRepoEntry[]): { missingRepos?: MissingRepoEntry[] } =>
+  entries.length === 0 ? {} : { missingRepos: entries };
+
 /** What the verdict is decided from, read once from the sections above. */
 interface VerdictFacts {
   strict: boolean;
+  strictRuntime: boolean;
+  /** Runtime failure rows that count under `--strict-runtime`, after accepted ones left (P106). */
+  runtimeFailures: number;
   markerErrors: number;
   contractErrors: number;
+  /** Rule violations and unchecked rules that fail a strict run: new, at error (P114). */
+  ruleFailures: number;
   baseline: DoctorReport['baseline'];
   withoutWaysIn: NonNullable<DoctorReport['unresolved']['withoutWaysIn']>;
   /** The sentences that say this graph is not one to report on. */
@@ -294,6 +368,12 @@ const VERDICT_REASONS: ReadonlyArray<{ says(facts: VerdictFacts): string[] }> = 
       facts.contractErrors > 0 ? [`${plural(facts.contractErrors, 'contract error')} nothing excused`] : [],
   },
   {
+    says: (facts) =>
+      facts.ruleFailures > 0
+        ? [`${plural(facts.ruleFailures, 'architecture rule violation')} at error the baseline does not hold`]
+        : [],
+  },
+  {
     says: ({ baseline }) =>
       baseline.status === 'grew'
         ? [`unresolved grew by ${baseline.total.delta} (${baseline.total.baseline} accepted, ${baseline.total.current} now)`]
@@ -305,6 +385,12 @@ const VERDICT_REASONS: ReadonlyArray<{ says(facts: VerdictFacts): string[] }> = 
   },
   { says: (facts) => [...facts.faults] },
   {
+    says: ({ strictRuntime, runtimeFailures }) =>
+      strictRuntime && runtimeFailures > 0
+        ? [`${plural(runtimeFailures, 'failure')} traffic answered and the code does not declare, or the code declares and nothing answered (--strict-runtime)`]
+        : [],
+  },
+  {
     says: ({ strict, baseline }) =>
       strict && baseline.status === 'missing'
         ? [`${baseline.note ?? 'there is no baseline'} — or pass --no-baseline to check annotations and contracts only`]
@@ -314,7 +400,7 @@ const VERDICT_REASONS: ReadonlyArray<{ says(facts: VerdictFacts): string[] }> = 
 
 /** Whether a strict run found something: a check ran and its answer was no. */
 const foundSomething = (facts: VerdictFacts): boolean =>
-  facts.markerErrors > 0 || facts.contractErrors > 0 || facts.baseline.status === 'grew';
+  facts.markerErrors > 0 || facts.contractErrors > 0 || facts.ruleFailures > 0 || facts.baseline.status === 'grew';
 
 /**
  * The exit code, as an ordered list of rules: the first that applies decides it.
@@ -338,6 +424,7 @@ const EXIT_RULES: ReadonlyArray<{ applies(facts: VerdictFacts): boolean; exitCod
     { applies: (facts) => facts.baseline.status === 'invalid', exitCode: 2 },
     { applies: (facts) => facts.strict && facts.baseline.status === 'missing', exitCode: 2 },
     { applies: (facts) => facts.strict && foundSomething(facts), exitCode: 1 },
+    { applies: (facts) => facts.strictRuntime && facts.runtimeFailures > 0, exitCode: 1 },
   ]);
 
 const NOTHING_FAILS = { exitCode: 0 } as const;
@@ -372,6 +459,19 @@ const cut = <T>(all: readonly T[], max: number): { rows: T[]; truncated?: number
 };
 
 /**
+ * The order a reason's rows are listed in, where it is not the order they
+ * were read in: a loop reached from more ways in first (P89), then by place.
+ * A strategy per reason, so a reason with no entry keeps reading order.
+ */
+const ROW_ORDER: ReadonlyMap<string, (a: Unresolved, b: Unresolved) => number> = new Map([
+  [
+    'query-in-loop',
+    (a: Unresolved, b: Unresolved) =>
+      (waysInOf(b) ?? 0) - (waysInOf(a) ?? 0) || cmp(a.file ?? '', b.file ?? '') || (a.line ?? 0) - (b.line ?? 0),
+  ],
+]);
+
+/**
  * Every row of one reason, grouped, with the advice they share.
  *
  * Actionable reasons come first and the biggest within each half, because the
@@ -382,19 +482,20 @@ const groupByReason = (
   rows: readonly Unresolved[],
   contextOf: (row: Unresolved) => HintContext,
   ignore: ReadonlySet<string>,
-  maxNodes: number,
 ): { groups: ReasonGroup[]; unknown: string[] } => {
   // Keyed by reason *and* level, so a group's level is every member's and not
   // its loudest member's. One reason can hold both: a call whose address is
   // built at run time is something to do, and the same reason on a call an
   // annotation already answers is not (R36). Grouped together, the second
-  // would be listed under a heading asking for work that is already done.
+  // would be listed under a heading asking for work that is already done. And
+  // by kind (P81), for the same reason: one reason whose rows are findings and
+  // notes by what they recorded (P89's per-item loops) is two headings.
   const SPLIT = '\u0000';
   const levelOf = (row: Unresolved): 'action' | 'info' | 'nothing' =>
     (row.level ?? 'action') as 'action' | 'info' | 'nothing';
   const byReason = new Map<string, Unresolved[]>();
   for (const row of rows) {
-    const key = `${row.reason}${SPLIT}${levelOf(row)}`;
+    const key = `${row.reason}${SPLIT}${levelOf(row)}${SPLIT}${rowKindOf(row)}`;
     const list = byReason.get(key);
     if (list === undefined) byReason.set(key, [row]);
     else list.push(row);
@@ -409,7 +510,9 @@ const groupByReason = (
     const known = isKnownReason(reason);
     if (!known && !seen.has(reason)) unknown.push(reason);
     seen.add(reason);
-    const drawn: DoctorRow[] = list.map((row) => ({
+    const order = ROW_ORDER.get(reason);
+    const ordered = order === undefined ? list : [...list].sort(order);
+    const drawn: DoctorRow[] = ordered.map((row) => ({
       service: row.service ?? '',
       file: row.file,
       line: row.line,
@@ -418,11 +521,12 @@ const groupByReason = (
       sites: row.sites ?? 1,
       message: row.message ?? reason,
       hint: hintFor(row, contextOf(row)),
+      ...(waysInOf(row) === undefined ? {} : { waysIn: waysInOf(row) }),
     }));
-    const bounded = cut(drawn, maxNodes);
     groups.push({
       reason,
       level,
+      kind: rowKindOf(list[0] as Unresolved),
       count: list.length,
       sites: list.reduce((sum, row) => sum + (row.sites ?? 1), 0),
       known,
@@ -435,14 +539,19 @@ const groupByReason = (
       // that asserted one member's symbol over all of them, and left the
       // sentence it belonged to floating below somebody else's site (R35).
       hint: unanimous(drawn.map((row) => row.hint)) ?? kindHint(reason) ?? genericHint(reason),
-      rows: bounded.rows,
-      ...(bounded.truncated === undefined ? {} : { truncated: bounded.truncated }),
+      rows: drawn,
     });
   }
 
   const loudness = { action: 0, info: 1, nothing: 2 } as const;
+  // One reason under two headings (P89's loops): what is worth fixing first.
+  const kindOrder = { gap: 0, finding: 1, note: 2 } as const;
   groups.sort(
-    (a, b) => loudness[a.level] - loudness[b.level] || b.sites - a.sites || cmp(a.reason, b.reason),
+    (a, b) =>
+      loudness[a.level] - loudness[b.level] ||
+      b.sites - a.sites ||
+      cmp(a.reason, b.reason) ||
+      kindOrder[a.kind] - kindOrder[b.kind],
   );
   return { groups, unknown: unknown.sort(cmp) };
 };
@@ -451,8 +560,7 @@ const groupByReason = (
 const desyncOf = (
   rows: readonly Unresolved[],
   contextOf: (row: Unresolved) => HintContext,
-  maxNodes: number,
-): { rows: DesyncRow[]; truncated?: number } => {
+): { rows: DesyncRow[] } => {
   const found: DesyncRow[] = [];
   for (const row of rows) {
     if (!DESYNC_REASONS.has(row.reason)) continue;
@@ -475,100 +583,91 @@ const desyncOf = (
   found.sort(
     (a, b) => cmp(a.service, b.service) || cmp(a.file, b.file) || a.line - b.line || cmp(a.call, b.call),
   );
-  return cut(found, maxNodes);
+  return { rows: found };
 };
 
 const onService = (row: Unresolved, service: string): boolean => (row.service ?? '') === service;
 
-/**
- * The rows again, with the ones an annotation has already answered demoted.
- *
- * A row saying "annotate this" that the joined graph can see is annotated is
- * not something to act on: acting on it means writing an annotation that is
- * already there. It was counted in the number at the top of the section, which
- * is the whole argument for reading the section, and it was a row the baseline
- * could never be cleared of, because nothing anybody writes can clear it (R36).
- *
- * Applied once, at the top, so the count, the grouping, the fold and the
- * baseline are all looking at the same rows. Idempotent: a row already at
- * `info` is left as it is.
- */
-export const withAnsweredDemoted = (
-  rows: readonly Unresolved[],
-  db: Pick<GraphDb, 'node' | 'nodesByType' | 'allNodes' | 'edgesFrom' | 'edgesTo'>,
-): Unresolved[] => {
-  // Both kinds of outgoing request: one row's node is the call it names, and a
-  // browser request was never indexed here at all, so no `api-path-dynamic`
-  // row could find its node to be answered (R39).
-  const callsAt = new Map<string, GraphNode>();
-  for (const type of ['http_out', 'ui_api_call'] as const) {
-    for (const call of db.nodesByType(type)) {
-      callsAt.set(`${call.repo}|${call.file ?? ''}|${call.line ?? 0}`, call);
-    }
-  }
-  /**
-   * Methods by the name a row calls them, within the file they are declared in.
-   *
-   * A row read off one repository names its symbol as it is written rather
-   * than by id: the method, then what about it could not be read. The line is
-   * the line of the *call*, not of the method, so the join is the name and the
-   * file — the same join `doctor` already makes to put a marker issue on a row.
-   * A row about a publish names the producer instead, and its method is the one
-   * that calls it (R177).
-   */
-  const methodsAt = new Map<string, GraphNode>();
-  for (const node of db.allNodes()) {
-    if (node.type !== 'method') continue;
-    methodsAt.set(`${node.repo}|${node.file ?? ''}|${node.label}`, node);
-  }
-  const idFor = (row: Unresolved): string | undefined => {
-    if (row.symbol !== undefined && db.node(row.symbol) !== undefined) return callerOfProducer(db, row.symbol) ?? row.symbol;
-    const here = callsAt.get(`${row.service ?? ''}|${row.file}|${row.line}`);
-    if (here !== undefined) return here.id;
-    if (row.symbol === undefined) return undefined;
-    const named = row.symbol.split(' -> ')[0] ?? row.symbol;
-    return methodsAt.get(`${row.service ?? ''}|${row.file}|${named}`)?.id;
-  };
-  return rows.map((row) =>
-    (row.level ?? 'action') === 'action' && answeredByMarker(row.reason, idFor(row), db)
-      ? { ...row, level: 'info' as const, hint: ANSWERED_HINT }
-      : row,
+/** The rows a run is about: one service's, some reasons', or every one. */
+const narrowed = (rows: readonly Unresolved[], settings: DoctorSettings): readonly Unresolved[] => {
+  const reasons = settings.reasons === undefined ? undefined : new Set(settings.reasons);
+  if (settings.service === undefined && reasons === undefined) return rows;
+  return rows.filter(
+    (row) =>
+      (settings.service === undefined || onService(row, settings.service)) &&
+      (reasons === undefined || reasons.has(row.reason)),
   );
 };
 
+/** Moved to the linker (P80), so every surface demotes the same rows; re-exported for the callers that found it here. */
+export { withAnsweredDemoted };
+
 /**
- * Runs the check over an opened graph.
+ * The report as it is printed: `runDoctorComplete` with each list cut.
  *
  * Pure in the sense that matters: it opens nothing, writes nothing and spawns
  * nothing. The command around it decides where the graph came from and what to
  * do with the exit code; everything that decides the exit code is here, so a
  * test can ask for a verdict without a file system.
  */
-export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): DoctorReport => {
+export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): DoctorReport =>
+  boundDoctorReport(runDoctorComplete(input, settings), settings.maxNodes);
+
+/**
+ * A report cut for printing, every cut said by a `truncated` count (I9).
+ *
+ * Applied after the check rather than inside it, so the report the command
+ * writes to `doctor.json` is the same report with nothing left out (P192):
+ * every count here was taken over the whole list before the cut.
+ *
+ * How many places of one reason to name before saying how many more: the
+ * other sections are tables with a row each; this one is a list of locations,
+ * and one reason can hold hundreds of them. A real project answered `doctor`
+ * with a long run of `db-receiver-name-only` rows, all saying the same
+ * sentence, and the command the README calls "the one to run after a first
+ * build" was a wall of lines nobody reads. What a reader needs from a reason is
+ * the advice, how many places it covers, and enough of them to recognise the
+ * shape; `--max-nodes` is there for the rest, and the written file always has
+ * all of it.
+ */
+export const boundDoctorReport = (report: DoctorReport, maxNodes?: number): DoctorReport => {
+  const perSection = maxNodes ?? 150;
+  const perReason = maxNodes ?? 6;
+  const issues = cut(report.markers.issues, perSection);
+  const desync = cut(report.desync.rows, perSection);
+  const errors = cut(report.contracts.errors, perSection);
+  const violations = cut(report.rules.violations, perSection);
+  return {
+    ...report,
+    unresolved: {
+      ...report.unresolved,
+      byReason: report.unresolved.byReason.map((group) => {
+        const bounded = cut(group.rows, perReason);
+        return { ...group, rows: bounded.rows, ...truncatedOf(bounded) };
+      }),
+    },
+    markers: { ...report.markers, issues: issues.rows, ...truncatedOf(issues) },
+    desync: { ...report.desync, rows: desync.rows, ...truncatedOf(desync) },
+    contracts: { ...report.contracts, errors: errors.rows, ...truncatedOf(errors) },
+    rules: { ...report.rules, violations: violations.rows, ...truncatedOf(violations) },
+  };
+};
+
+const truncatedOf = (bounded: { truncated?: number }): { truncated?: number } =>
+  bounded.truncated === undefined ? {} : { truncated: bounded.truncated };
+
+/**
+ * Runs the check over an opened graph, and keeps every row it found: what the
+ * command writes to `doctor.json` (P192). `runDoctor` is the same cut.
+ */
+export const runDoctorComplete = (input: DoctorInput, settings: DoctorSettings = {}): DoctorReport => {
   const sections = [...(settings.sections ?? SECTIONS)];
   const wanted = new Set<Section>(sections);
-  const maxNodes = settings.maxNodes ?? 150;
-  /**
-   * How many places of one reason to name before saying how many more.
-   *
-   * The other sections are tables with a row each; this one is a list of
-   * locations, and one reason can hold hundreds of them. A real project
-   * answered `doctor` with 691 rows of `db-receiver-name-only`, all saying the
-   * same sentence, and the command the README calls "the one to run after a
-   * first build" was six hundred lines nobody reads. What a reader needs from a
-   * reason is the advice, how many places it covers, and enough of them to
-   * recognise the shape; `--max-nodes` is there for the rest, and the written
-   * file always has all of it.
-   */
-  const perReason = settings.maxNodes ?? 6;
   const strict = settings.strict === true;
   const ignore = new Set(settings.ignoreReasons ?? []);
   const { db } = input;
 
-  const rows =
-    settings.service === undefined
-      ? input.unresolved
-      : input.unresolved.filter((row) => onService(row, settings.service as string));
+  const rows = narrowed(input.unresolved, settings);
 
   const skipped = (): { status: SectionStatus } => ({ status: 'skipped' });
 
@@ -610,19 +709,22 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
 
   const snapshot: UnresolvedSnapshot = snapshotOf(levelled, { ignoreReasons: [...ignore] });
   const grouped = wanted.has('unresolved')
-    ? groupByReason(levelled, contextOf, ignore, perReason)
+    ? groupByReason(levelled, contextOf, ignore)
     : { groups: [], unknown: [] };
   const excludedSites = levelled
     .filter((row) => (row.level ?? 'action') === 'action' && ignore.has(row.reason))
     .reduce((sum, row) => sum + (row.sites ?? 1), 0);
 
-  // Places where nothing joins are their own line and nobody else's total.
-  const missed = tally(levelled.filter(wasMissed));
+  // By the one counter (P81): places where nothing joins are their own line and
+  // nobody else's total, and so are notes and findings.
+  const counted = countsOf(levelled);
   const unresolved: DoctorReport['unresolved'] = {
     status: wanted.has('unresolved') ? 'ok' : 'skipped',
     total: snapshot.total,
-    rows: missed.rows,
-    sites: missed.sites,
+    rows: counted.missed,
+    sites: counted.sites,
+    notes: counted.notes,
+    findings: counted.findings,
     info: snapshot.info,
     nothing: snapshot.nothing,
     excluded: { reasons: [...ignore].sort(cmp), sites: excludedSites },
@@ -630,6 +732,7 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     unknownReasons: grouped.unknown,
     waysIn: waysInTotal(ways),
     ...withoutWaysInOf(db, settings),
+    ...missingOf(wanted.has('unresolved') ? missingReposOf(db, levelled, settings) : []),
   };
 
   // ---- contracts --------------------------------------------------------
@@ -655,15 +758,13 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
                 finding.sender.service === settings.service ||
                 finding.receiver.service === settings.service,
             );
-      const bounded = cut(errors, maxNodes);
       contracts = {
         status: 'ok',
         note: null,
-        errors: bounded.rows,
+        errors,
         errorCount: errors.length,
         ignored: summary.ignored,
         unchecked: summary.unchecked,
-        ...(bounded.truncated === undefined ? {} : { truncated: bounded.truncated }),
       };
     } catch (cause) {
       // A check that cannot run is not a project that is broken, so it says so
@@ -692,8 +793,8 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
       unresolved: input.unresolved,
       ...(parties === undefined ? {} : { parties }),
       ...(settings.envOwners === undefined ? {} : { envOwners: settings.envOwners }),
+      ...(settings.aliases === undefined ? {} : { aliases: settings.aliases }),
     }).filter((issue) => settings.service === undefined || issue.service === settings.service);
-    const bounded = cut(found, maxNodes);
     const annotated = db.allNodes().some((node) => Array.isArray(node.meta?.['markers']));
     markers = {
       status: 'ok',
@@ -704,15 +805,21 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
         : 'no annotation is recorded on any symbol in this graph, so nothing was checked',
       errors: found.filter((issue) => issue.severity === 'error').length,
       warnings: found.filter((issue) => issue.severity === 'warning').length,
-      issues: bounded.rows,
-      ...(bounded.truncated === undefined ? {} : { truncated: bounded.truncated }),
+      issues: found,
     };
   }
 
   // ---- desync -----------------------------------------------------------
   const desync: DoctorReport['desync'] = wanted.has('desync')
-    ? { status: 'ok', ...desyncOf(rows, contextOf, maxNodes) }
+    ? { status: 'ok', ...desyncOf(rows, contextOf) }
     : { ...skipped(), rows: [] };
+
+  // ---- rules ------------------------------------------------------------
+  //
+  // Checked by the command (it reads the configuration and accepted.json);
+  // here they are narrowed and held against the baseline's keys; the cut is
+  // `boundDoctorReport`'s, like every other section's (P192).
+  const rules = rulesSectionOf(settings, wanted);
 
   // ---- baseline ---------------------------------------------------------
   const baseline = wanted.has('baseline')
@@ -722,8 +829,11 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
   // ---- verdict ----------------------------------------------------------
   const facts: VerdictFacts = {
     strict,
+    strictRuntime: settings.strictRuntime === true,
+    runtimeFailures: rows.filter(countsUnderStrictRuntime).length,
     markerErrors: markers.errors + (settings.warnAsError === true ? markers.warnings : 0),
     contractErrors: contracts.errorCount,
+    ruleFailures: rules.failing,
     baseline,
     withoutWaysIn: unresolved.withoutWaysIn ?? [],
     faults: graphFaults(db, ways, settings.service),
@@ -744,7 +854,49 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     markers,
     desync,
     contracts,
+    rules,
     baseline,
     verdict: { exitCode, reasons },
+  };
+};
+
+/** The keys a baseline that was read accepted; none when no baseline was read. */
+const acceptedRuleKeys = (read: BaselineRead | undefined): ReadonlySet<string> =>
+  read === undefined || isProblem(read) ? new Set() : new Set(Object.keys(read.baseline.rules ?? {}));
+
+/**
+ * The rules section: every violation nothing excused, marked new against the
+ * baseline's keys, and how many of the new ones fail a strict run.
+ */
+const rulesSectionOf = (settings: DoctorSettings, wanted: ReadonlySet<Section>): DoctorReport['rules'] => {
+  const empty = { errors: 0, warnings: 0, infos: 0, new: 0, failing: 0, heuristic: 0, excused: 0, violations: [], unchecked: [], notes: [] };
+  if (!wanted.has('rules') || settings.rules === undefined) {
+    return {
+      status: 'skipped',
+      note: settings.rules === undefined && wanted.has('rules') ? 'no rules are configured' : null,
+      configured: settings.rules?.configured ?? 0,
+      ...empty,
+    };
+  }
+  const report = narrowRules(settings.rules.report, settings.service === undefined ? {} : { service: settings.service });
+  const known = acceptedRuleKeys(settings.baseline);
+  const violations = report.violations.map((item) => ({ ...item, new: !known.has(item.key) }));
+  const unchecked = report.unchecked.map((item) => ({ ...item, new: !known.has(item.key) }));
+  const fresh = { violations: violations.filter((item) => item.new), unchecked: unchecked.filter((item) => item.new) };
+  const failing = ruleFailures(fresh, 'error', settings.rules.failOnHeuristic);
+  return {
+    status: 'ok',
+    note: null,
+    configured: settings.rules.configured,
+    errors: report.summary.errors,
+    warnings: report.summary.warnings,
+    infos: report.summary.infos,
+    new: fresh.violations.length + fresh.unchecked.length,
+    failing: failing.violations.length + failing.unchecked.length,
+    heuristic: report.summary.heuristic,
+    excused: report.summary.excused,
+    violations,
+    unchecked,
+    notes: report.notes,
   };
 };

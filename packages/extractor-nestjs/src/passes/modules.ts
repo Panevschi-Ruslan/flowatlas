@@ -1,4 +1,4 @@
-import type { ClassDeclaration, Expression, ObjectLiteralExpression } from 'ts-morph';
+import type { ClassDeclaration, Expression, MethodDeclaration, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { ModuleInfo, ModuleKind, ProviderRegistration } from '../modules-index.js';
@@ -19,6 +19,131 @@ const arrayProperty = (
   return initializer.getElements();
 };
 
+/** Looks through the wrappers an array value is written behind: `[...] as const`, `satisfies`, `!`. */
+const unwrapValue = (expr: Node): Node => {
+  let current = expr;
+  for (let depth = 0; depth < 8; depth += 1) {
+    if (
+      Node.isParenthesizedExpression(current) ||
+      Node.isAsExpression(current) ||
+      Node.isSatisfiesExpression(current) ||
+      Node.isNonNullExpression(current) ||
+      Node.isTypeAssertion(current)
+    ) {
+      current = current.getExpression();
+      continue;
+    }
+    return current;
+  }
+  return current;
+};
+
+/** The value a name was declared with, when it is a `const` of this repository. */
+const declaredValue = (identifier: Node): Node | undefined => {
+  if (!Node.isIdentifier(identifier)) return undefined;
+  const symbol = identifier.getSymbol();
+  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  if (declaration.getSourceFile().isInNodeModules() || declaration.getSourceFile().isDeclarationFile()) return undefined;
+  return declaration.getInitializer();
+};
+
+/** How many names deep an array is followed before it is called unread. */
+const FOLLOW_LIMIT = 4;
+
+/**
+ * The elements of a list as written, through every spread and name it is
+ * assembled from.
+ *
+ * `providers: [...authProviders, OrdersService]`, with `authProviders` an array
+ * declared in another file, is how an application-wide guard is usually put in
+ * place, and reading only the literal elements dropped it without a word - the
+ * route audit then reported every route of the application as unguarded (P76).
+ * What could not be followed is handed back, so a caller can say so.
+ */
+const listElements = (expr: Node, depth = 0): { items: Expression[]; unread: Node[] } => {
+  const value = unwrapValue(expr);
+  if (Node.isArrayLiteralExpression(value)) {
+    const items: Expression[] = [];
+    const unread: Node[] = [];
+    for (const element of value.getElements()) {
+      if (Node.isSpreadElement(element)) {
+        const inner = listElements(element.getExpression(), depth + 1);
+        items.push(...inner.items);
+        unread.push(...inner.unread);
+        continue;
+      }
+      if (Node.isOmittedExpression(element)) continue;
+      items.push(element);
+    }
+    return { items, unread };
+  }
+  const declared = depth < FOLLOW_LIMIT ? declaredValue(value) : undefined;
+  if (declared !== undefined) return listElements(declared, depth + 1);
+  return { items: [], unread: [value] };
+};
+
+/** A property's list, through spreads and names; nothing when the property is absent. */
+const listProperty = (
+  literal: ObjectLiteralExpression | undefined,
+  name: string,
+): { items: Expression[]; unread: Node[] } => {
+  const property = literal?.getProperty(name);
+  if (property === undefined) return { items: [], unread: [] };
+  if (Node.isShorthandPropertyAssignment(property)) return listElements(property.getNameNode());
+  if (!Node.isPropertyAssignment(property)) return { items: [], unread: [property] };
+  const initializer = property.getInitializer();
+  return initializer === undefined ? { items: [], unread: [] } : listElements(initializer);
+};
+
+/**
+ * The object literals a configuring method returns: `static forRoot() { return
+ * { module: AuthModule, providers: [...] }; }`. Only the method's own return
+ * statements, not those of a function written inside it.
+ */
+const returnedModules = (method: MethodDeclaration): ObjectLiteralExpression[] => {
+  const body = method.getBody();
+  if (body === undefined) return [];
+  const answers: Node[] = [];
+  if (Node.isBlock(body)) {
+    body.forEachDescendant((node, traversal) => {
+      if (Node.isFunctionLikeDeclaration(node) || Node.isClassDeclaration(node) || Node.isArrowFunction(node)) {
+        traversal.skip();
+        return;
+      }
+      if (Node.isReturnStatement(node)) {
+        const answer = node.getExpression();
+        if (answer !== undefined) answers.push(answer);
+      }
+    });
+  } else {
+    answers.push(body);
+  }
+  return answers
+    .map(unwrapValue)
+    .filter((answer): answer is ObjectLiteralExpression => Node.isObjectLiteralExpression(answer));
+};
+
+/**
+ * Says where a list of providers could not be read.
+ *
+ * A provider nobody could read is a token nobody can inject, and if it was an
+ * `APP_GUARD` it is a guard in front of every route that nothing here can see.
+ * Dropping it in silence is what made an application with one global guard
+ * read as an application with none (P76).
+ */
+const reportUnreadProviders = (ctx: NestExtractContext, owner: string, unread: readonly Node[]): void => {
+  for (const node of unread) {
+    ctx.report({
+      file: ctx.fileOf(node),
+      line: lineOf(node),
+      reason: 'module-providers-unread',
+      hint: 'List the providers, or a name that leads to an array of them in this repository. A guard registered as APP_GUARD among providers that cannot be read is in front of every route, and nothing here can see it.',
+      symbol: `${owner} providers ${node.getText().replace(/\s+/g, ' ').slice(0, 80)}`,
+    });
+  }
+};
+
 const moduleOptions = (
   declaration: Parameters<typeof getDecorator>[0],
 ): ObjectLiteralExpression | undefined => {
@@ -35,6 +160,14 @@ const readProvider = (
 ): ProviderRegistration | undefined => {
   const file = ctx.fileOf(expr);
   const line = lineOf(expr);
+
+  // `const jwtGuard = { provide: APP_GUARD, useClass: JwtGuard }`, listed by name.
+  const named = Node.isIdentifier(expr) ? declaredValue(expr) : undefined;
+  const namedValue = named === undefined ? undefined : unwrapValue(named);
+  if (namedValue !== undefined && Node.isObjectLiteralExpression(namedValue)) {
+    const registration = readProvider(namedValue, ctx);
+    return registration === undefined ? undefined : { ...registration, file, line };
+  }
 
   if (Node.isObjectLiteralExpression(expr)) {
     const provide = expr.getProperty('provide');
@@ -57,6 +190,7 @@ const readProvider = (
           token,
           kind: shape,
           ...(target.kind === 'local' ? { declaration: target.declaration } : {}),
+          ...(target.kind === 'external' ? { installed: { typeName: target.typeName, package: target.package } } : {}),
           file,
           line,
         };
@@ -91,6 +225,8 @@ const readProvider = (
  */
 export const modulesPass = definePass('modules', (ctx) => {
   const parsed: ModuleInfo[] = [];
+  /** Every `X.forRoot(...)` of a module of this repository, wherever it is imported. */
+  const configured: Array<{ expr: Expression; declaration: ClassDeclaration; name: string }> = [];
 
   for (const indexed of ctx.classes.withRole('module')) {
     const options = moduleOptions(indexed.declaration);
@@ -120,7 +256,9 @@ export const modulesPass = definePass('modules', (ctx) => {
       });
     }
 
-    const providers = arrayProperty(options, 'providers')
+    const listed = listProperty(options, 'providers');
+    reportUnreadProviders(ctx, indexed.name, listed.unread);
+    const providers = listed.items
       .map((expr) => readProvider(expr, ctx))
       .filter((provider): provider is ProviderRegistration => provider !== undefined);
 
@@ -156,6 +294,7 @@ export const modulesPass = definePass('modules', (ctx) => {
       }
       const target = ctx.classes.get(ref.declaration);
       if (target === undefined) continue;
+      if (dynamic) configured.push({ expr, declaration: ref.declaration, name: target.name });
       imports.push({
         id: target.id,
         declaration: ref.declaration,
@@ -177,6 +316,31 @@ export const modulesPass = definePass('modules', (ctx) => {
       exports,
       imports,
     });
+  }
+
+  // What each configuring method returns under `providers:`, kept on the module
+  // it configures, once per method however many modules import it that way.
+  const byDeclaration = new Map(parsed.map((info) => [info.declaration, info]));
+  const readMethods = new Set<MethodDeclaration>();
+  for (const { expr, declaration, name } of configured) {
+    const call = unwrapValue(expr);
+    if (!Node.isCallExpression(call)) continue;
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) continue;
+    const method = declaration.getStaticMethod(callee.getName());
+    const info = byDeclaration.get(declaration);
+    if (method === undefined || info === undefined || readMethods.has(method)) continue;
+    readMethods.add(method);
+    const through = `${name}.${callee.getName()}`;
+    for (const returned of returnedModules(method)) {
+      const listed = listProperty(returned, 'providers');
+      reportUnreadProviders(ctx, through, listed.unread);
+      for (const item of listed.items) {
+        const provider = readProvider(item, ctx);
+        if (provider === undefined) continue;
+        (info.dynamicProviders ??= []).push({ ...provider, through });
+      }
+    }
   }
 
   // Registered before any member node is created, so that each member picks up

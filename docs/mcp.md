@@ -5,7 +5,9 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Ten tools. Only one of them returns code.
+Twenty-six tools, three prompts and three resources. Only one of the tools
+returns code, and a session is offered only the tools its project can answer
+([which tools appear when](#which-tools-appear-when)).
 
 ---
 
@@ -65,24 +67,359 @@ are in, so the absolute `--config` path matters there.
 **Anything else** that speaks MCP over stdio: run `flowatlas mcp --config <path>`
 and let it talk on stdin and stdout.
 
+### The command
+
+| Flag | Does |
+|---|---|
+| `--config <path>` | the configuration whose database to serve (default: found from the working directory) |
+| `--db <path>` | a database to read directly, instead of the configured one |
+| `--install` | write `.mcp.json` into every repository of the project, and serve nothing |
+| `--repo <name>` | with `--install`, only this service |
+| `--dry-run` | with `--install`, say what would change and write nothing |
+| `--all-tools` | list every tool, not only those the project can answer, whatever the configuration's `mcp` block says |
+
+The server answers `initialize` as `flowatlas`, with the version of the command
+you installed as `serverInfo.version` (`flowatlas --version` prints the same).
+
 ---
 
-## The ten tools
+## The tools
 
-Every tool takes `detail` (0 to 3, how much of each node comes back) and
-`maxNodes` (the ceiling on the answer), except `get_source`, which takes
-`context` and a line limit instead. Answers are bounded and say when they
-were cut, rather than filling a context window.
+`detail` (0 to 3, how much of each row comes back) is taken by `list_entries`,
+`find_symbol`, `search`, `get_flow`, `who_calls`, `impact`, `who_emits`,
+`who_consumes`, `get_type`, `type_usage` and `what_changed`: 0 is ids only, 1 (the default)
+adds `file:line`, service and kind, 2 adds what the reader knows about each
+row, and 3 is answered at 2 and says so. Those tools, `check_contract`, `dead`,
+`findings` and `check_rules` take
+`maxNodes`, the most rows an answer holds: 150 by default, 60 for `get_flow`,
+which also stops at about `maxChars` characters (12,000). `start_here`, `cant_follow`,
+`describe_for_prompt` and `get_source` take neither: they are bounded by their
+own limits (`perService`; `top` and `samples`; `maxSteps` and `maxChars`;
+`maxLines`), as are `hot_paths`, `slow_steps`, `undeclared_failures` and
+`never_seen` (`limit`), `trace_for` (`maxNodes` per tree), `get_spec`
+(`maxChars`) and `test_pattern` (ten rules, ten tests a rule). Answers are
+bounded and say when they were cut, rather than filling a context window.
+
+### Which tools appear when
+
+Every tool's name, description and inputs are read by the assistant at the
+start of a session, about 13,000 characters for all twenty-six. A tool the
+project cannot answer yet would cost that and answer an error, so the server
+lists only the tools whose needs hold. Tools follow what the project has, not
+which frameworks it uses:
+
+| Tools | Listed when | Read from |
+|---|---|---|
+| `start_here`, `list_entries`, `find_symbol`, `get_flow`, `who_calls`, `impact`, `search`, `describe_for_prompt`, `cant_follow`, `dead`, `findings` | always | |
+| `get_source` | the server knows where each repository is (`--config`, not `--db` alone) | the server's options |
+| `who_emits`, `who_consumes` | the graph holds a channel | the graph |
+| `get_type`, `type_usage` | the graph holds a type | the graph |
+| `check_contract` | a request or a message crosses between two places, or traffic was observed (traffic against a route) | the graph, the observed file |
+| `get_spec` | the graph holds an HTTP route or a channel | the graph |
+| `what_changed` | a `diff.json` or a `check.<env>.json` is beside the graph | the output directory |
+| `check_rules` | the configuration has `rules` | the configuration |
+| `test_pattern` | the readers are there to run a pattern (always under `flowatlas mcp`) | the server's options |
+| `hot_paths`, `slow_steps`, `trace_for`, `undeclared_failures`, `never_seen` | an observed file is beside the graph (`flowatlas observe`) | the observed file |
+
+Before any graph is built only the "always" tools are listed, each answering
+that `flowatlas build` comes first, with `test_pattern`, which needs no graph.
+
+The list follows the project while the server runs. It is decided again before
+every `tools/list` and every call, when a build replaces the graph, and every
+two seconds while a client is connected if the graph, the observed file or a
+diff beside it changed. When it changes the server sends
+`notifications/tools/list_changed` (it declares `tools.listChanged`), so after a
+first `flowatlas observe` the run-time tools appear without a restart, and go
+again if the file is removed.
+
+`start_here` says in one line, under `hidden`, which tools are not listed and
+when each appears (`check_rules: after rules[] in flowatlas.config.json ·
+hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after
+flowatlas observe`), so the assistant knows they exist. A client that kept an
+older list and calls a tool no longer listed gets a failed call (`isError`)
+saying what it needs, not a crash:
+
+```json
+{ "error": "check_rules is not listed for this project: no rules are configured; it appears after rules[] in flowatlas.config.json", "needs": ["rules"] }
+```
+
+The `mcp` block of `flowatlas.config.json` changes the choice:
+
+```json
+{ "mcp": { "tools": "auto", "include": ["check_rules"], "exclude": ["get_spec"] } }
+```
+
+`tools` is `auto` (the default: by what each needs) or `all` (every tool).
+`include` lists a tool whatever it needs, and the tool then answers for itself;
+`exclude` never lists one, and a call of it says it is turned off. A name that is
+no tool stops the server at start with a configuration error that names it and
+the nearest tool (`mcp.exclude.0: no tool is named "check_rule"; did you mean
+check_rules?`); a tool in both lists is refused too. `flowatlas mcp --all-tools`
+lists every tool and ignores the block.
+
+### Answers
+
+Every answer is one compact JSON document, in the text content and again as
+`structuredContent`, so a client reads whichever it prefers. `start_here`,
+`list_entries`, `find_symbol`, `who_emits`, `who_consumes`, `get_type`,
+`get_source`, `search`, `cant_follow`, `dead`, `findings` and `type_usage` declare an `outputSchema`, and a
+client can check every answer against it; the tree tools follow once their
+shape is settled. An answer that is an error (`{ "error": … }`) carries
+`isError: true` and no `structuredContent`, every time, so a client shows a
+failed call and an assistant never reads it as an empty result. Where a near
+name exists the error names it: an unknown channel (`who_emits`,
+`who_consumes`), symbol (`get_source`) or entry (`get_flow`) answers with up to
+five `suggestions`, nearest first, and a `next` that asks again with each. A
+name that means more than one thing is not an error: it answers `candidates`,
+and `next` is the same tool once per candidate. Every tool is annotated
+`readOnlyHint: true`, `openWorldHint: false` and `idempotentHint: true`: none
+writes anything or reaches outside the project, so a client that asks before
+running a tool that might can skip asking.
+
+A list reads a page at a time. `list_entries`, `find_symbol`, `search`,
+`who_emits`, `who_consumes`, `impact` (its `entries`), `what_changed` (every
+list), `cant_follow` (its `causes`), `dead` (its `rows`), `findings` (one kind's
+`rows`), `check_rules` (its `violations`) and `type_usage` (every group at once) take `offset`, 0 by default. An answer
+that was cut says `total`, `nextOffset` and `truncated: "n more; next page
+offset k"`, and `next` starts with the same call from that offset:
+
+```
+list_entries({maxNodes: 2})          → total: 17, nextOffset: 2,
+                                       next: ["list_entries({maxNodes: 2, offset: 2})", …]
+list_entries({maxNodes: 2, offset: 2})
+```
+
+An offset past the end is an empty page that still says `total`. In `search`
+one offset pages every kind, and the next call asks again only for the kinds
+that had more; in `what_changed` it pages every list at once.
+
+Each fact is said once. A tree names a repeated node as `{ id, ref: true }`,
+and says `service` on its root and again only on the row that crosses into
+another service.
+
+### Ids, `next`, and where to begin
+
+Every row any tool returns carries an `id`, and every other tool takes that id
+as it is: an entry id goes to `get_flow`, a channel id to `who_emits` and
+`who_consumes`, a symbol id to `who_calls`, `impact` and `get_source`, a type id
+to `get_type`. Every answer ends with `next`, at most four calls written out
+with the ids it just returned, so an assistant never re-types or guesses a
+name:
+
+```
+start_here → get_flow({entry: id}) → get_source({symbol: id})
+who_emits / who_consumes({channel: id}) → get_flow on a handler
+find_symbol → who_calls / impact({symbol: id}) → get_flow on an entry
+get_type({type: id}) → type_usage({type: id}) → get_flow / check_contract on a use
+findings() → findings({kind}) → the call each row names
+dead({id}) → get_source on the call that could reach it
+search({query}) → whichever of the above its row's id goes to
+cant_follow → get_source on a place it names
+```
+
+The server's instructions describe the same chains. `list_entries`,
+`find_symbol`, `search`, `who_calls`, `impact`, `who_emits`, `who_consumes`,
+`start_here`, `what_changed`, `cant_follow`, `dead`, `findings`, `type_usage`,
+`check_rules`, `test_pattern` and the traffic tools `hot_paths`, `slow_steps`,
+`undeclared_failures` and `never_seen` all take the same optional `service`
+filter; `get_spec` requires one.
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `start_here` | nodes, entries by kind and open gaps per service, the unresolved rows counted by kind (`counts`), the five most common gap reasons with an example, channels with one end missing, a few entry ids to start from, `missingRepos`: the repositories probably missing from the project, at most three, by name with the directories that look like each, with rules configured `rules: { errors, warnings, unchecked }` (`next` then starts with `check_rules()`), and with a `check.<env>.json` beside the database `checks`, one line of each environment's verdict (`prod: not deployable · staging: deployable`; `next` then starts with `what_changed` on the first that is not deployable) | `service`, `perService` |
+| `describe_for_prompt` | one entry, channel, symbol or gap as Markdown to hand on: what is in front of it, what it can fail with, the steps in call order with repo-relative `file:line` and their marks, shapes in and out, gaps with their reasons, and the calls to make next with their ids; or, with `scope`, a whole class, file or service (a service's gaps are the rows nobody accepted; the page's *Copy as prompt* writes every scope the same). No source code; bounded by `maxSteps`, at most 12 failure lines (one per status and exception), 10 gaps, 4 consumers of a channel, 40 methods or nodes of a class or file, and `maxChars` | `id` (required: any id, a gap id, a place as `file:line` or `service#file:line` - the gap written there - a channel name or a route said aloud; a service name or `service#path` for those scopes), `scope`, `maxSteps`, `maxChars`, `withSpec` (the OpenAPI or AsyncAPI fragment of a route or a channel end, P118) |
+
+`describe_for_prompt` and the page's *Copy as prompt* write the same text
+(P97): each gathers one subject - the server from the database, the page from
+its packed model - and core's `renderPrompt` writes it. With an observed file,
+a way in's hits line and a step's marks carry its p95 and, when any request
+failed, its error rate (`[seen ×20, p95 79 ms, 5% errors]`): the join into the
+step's figures, else the step's own span's (P111). The headings are the
+same for every subject:
+
+- `# Way in: …`, `# Channel: …`, `# Check: …` (a gap id) or `# Symbol: …`, then
+  the id line (`` `id` — type / kind in service at `file:line` ``) and, for a
+  way in, its schedule and the hits seen at run time.
+- *In front of it* (the checks and opt-outs, P76) and *Can fail with* with the
+  statuses in the heading, one line per status and exception with how many
+  places raise it (P87).
+- For a way in seen at run time, *Failures seen at run time · n hits, <window>*
+  (P106): each status it answered that no failure declares (`**500** ×4, 10% of
+  requests — not declared`, with `expected: <why>` where the framework answers
+  it anyway and `maybe <exception>` for a declared failure that names no
+  status), each declared one traffic answered (`declared, seen ×n`; an assumed
+  one says traffic settled it), and each declared one no request answered in
+  the window (`declared, never seen in the window`), or that the hits were too
+  few to say so.
+- *Rules it breaks · n* (P114): each architecture rule a violation of runs
+  through the subject or one of its steps (for a service, any of its nodes),
+  with its severity, what crossed, where, `(best guess)` along a guessed edge
+  and the rule's note. The server writes it; the page's *Copy as prompt* has no
+  rules to read and leaves it out.
+- For a channel, *Published by · n* and *Consumed by · n*, each consumer with
+  the steps under it; for a check, *Where · n*, every row of the gap id at its
+  line with the node it is on, then *How to close it*: one line per way that
+  applies to its reason - link the repository that answers it (naming the one
+  probably missing, when the gap is its evidence), a setting, an alias, a
+  pattern, a shape file, the annotation meant for it, or the advice on its
+  places - from the one table `doctor` and the page read too, and last the
+  `flowatlas accept` line that takes it; for a symbol or a check, *Reached
+  from*, the ways in that reach it.
+- **Steps**: the walk `get_flow` takes, in call order, each step with how it
+  was reached and how sure the join is, what it takes and returns, and its
+  marks in brackets - `best guess`, `on failure`, `side by side`, `per item
+  (for-of)`, `likely N+1`, `throws 409 ConflictException`, `seen ×n` - and the
+  lines it logs under it. A step written out already says under which id.
+- **Shapes**, **Gaps** (in chain order, a loop reached from more ways in first)
+  and **Ask next**: the calls that take the ids above, as `next` lists them.
+
+`scope` writes more than one node (P95): `node` (the default) and `method` are
+the node itself; `class` is the class, or the class a method belongs to;
+`file` the file a node is in (or `service#path`); `service` the service a node
+is in (or a service name). A scope the node does not have is an `isError`
+answer naming the ones it does (`scopes`), with a `next` per scope.
+
+- `# Class: …`: *Reached from* (the ways in that reach any method), then
+  *Methods · n*, each method with the ways in that reach it and its own chain
+  under it, the chains sharing `maxSteps` in order, a method whose chain was
+  cut saying how many steps and the call that writes the rest; the gaps of
+  every chain once.
+- `# File: …`: *Reached from* (the ways in that reach any node of the file),
+  *In this file · n*, every node of the file under the class it belongs to and
+  by line (a method under its class, a route under its handler's, anything
+  else under its first caller's), and the gaps recorded in the file.
+- `# Service: …`: *Ways in · n* by kind, *Calls into other services* and
+  *Called from other services* (the crossings `check_contract` lists between
+  two services, by the other service), *Channels* it publishes and consumes,
+  *Findings · n* by kind with the top three of each as `findings` ranks them,
+  and its most common gaps. No *Steps*.
+
+The page gathers a class, a file and a service the same way (`subjectOf` in
+its `steps.js` takes them as targets, and the parity test compares both sides
+on every class, file and service of every built fixture), and its *Copy as
+prompt* offers each scope a node has (P134).
+
+`describeForPrompt` and `PROMPT_LIMITS` are still exported from
+`@flowatlas/mcp`; they are core's `renderPrompt` and limits.
+
+Every unresolved row is a **gap** (the reading could not follow something), a
+**note** (how a join or a reading was made; nothing was missed) or a
+**finding** (something about the code: a likely N+1, a route with no guard).
+`start_here`'s `counts` holds the figures `flowatlas build` ends on, from the
+same function, so one database says one set of numbers everywhere:
+
+| Name | Counts |
+|---|---|
+| `gaps` | gap rows that say something was not read: the build line's `missed` |
+| `sites` | the places those rows stand for, folding included |
+| `notes` | rows saying how a join or a reading was made |
+| `findings` | rows saying something about the code itself |
+| `nothing` | places with no edge to draw |
+
+`topGaps` and each service's `gaps` are the actionable gaps: places the reading
+could not follow, and nothing else. `topFindings` lists the findings beside them
+the same way (reason, count, services, a first place): what the reading found
+about the code, a likely N+1 or a route with no guard, whatever level the row is
+written at. Notes are counted above and listed in neither. Every row is also
+listed under `search({kinds: ["gaps"]})`, each hit with its `kind`.
+
+A gap hit's `id` is the method or function its first place is written in, when
+the graph draws one, so `next` is `get_source` and `who_calls` on it; its
+`gapId` (`gap:<service>|<file>|<reason>`) is the one `flowatlas accept` takes,
+and `next` starts with `describe_for_prompt({id: <gapId>})`, the gap with how to
+close it. `cant_follow` hands on to the same prompt for its first place.
+One hit stands for every row of its reason in its file: `sites` counts the
+places and `places` lists them as `file:line`, at most ten. A hit the graph
+draws nothing around has no `id`, and `next` searches the gaps of its file.
+
+A `query-in-loop` hit is one loop that runs a query, request or publish once per
+item (P89). It carries `severity` (`likely`, a finding, or `note`, a loop that is
+per item on purpose: a conditional write, a send to one recipient) and `waysIn`,
+how many ways in of its service reach it; the loop hits are ranked by `waysIn`,
+most first, a finding before a note reached alike (one hit per file and reason,
+so a file holding both keeps its finding: P130), and `describe_for_prompt` writes each loop on the chain with
+`Reached from N ways in.` in the same order. Loops bounded on purpose (chunks,
+pages, cursors, retries, literal lists, batch calls, migrations) are not rows;
+`flowatlas stats` counts them.
+
+### Is it dead, and what to look at
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `dead` | whether one node is dead, with what could make that wrong; or, without `id`, every row `flowatlas dead` lists, verdict first | `id`, or `service` and `kind` (`entries`, `channels`, `providers`, `methods`), `maxNodes`, `offset` |
+| `findings` | every finding counted by kind with the top three of each; with `kind`, one kind ranked by reach | `kind` (`n-plus-one`, `unguarded`, `contract-break`, `one-ended-channel`, `rule`, or a finding's reason), `service`, `maxNodes`, `offset` |
+| `check_rules` | the architecture rules of the configuration (P114), checked over the graph: each rule's status (`held`, `broken`, `unchecked`), each violation with its two ends, where it crosses (`loc`), the edge kind, the weakest confidence, `heuristic` for a guess, the rule's note and `next` (`get_flow` on the way in it starts behind, `get_source` on the crossing), the rules that could not be checked (`rule-matches-nothing`) and how many an accept excused | `rule`, `service`, `maxNodes`, `offset` |
+
+`check_rules` calls the function `flowatlas rules` calls (the linker's
+`evaluateRules`), with `accepted.json`'s `rule:<name>` entries excusing what
+they cover, so the two list the same violations. A `get_flow` step whose hop a
+violation runs along carries `violates: [rule names]`, and a broken rule is a
+`findings` kind of its own (`rule`, ranked by severity, then by the ways in
+reaching where it starts, shown by `check_rules({rule})`).
+
+`dead` reads the same functions `flowatlas dead` does (the linker's), so the
+two cannot disagree; a test compares them on three fixtures. A **verdict** is
+`dead` (nothing in the graph reaches it and nothing that could is unread),
+`likely-dead` (nothing reaches it, and a call read in part could), `unknown`
+(the graph's silence says nothing: it is triggered from outside the project,
+or a call one segment off names it) or `alive`. Its **evidence**:
+
+- `couldHit`: requests whose address was read in part and could reach the
+  route (`{ call, path, loc }`, the link report's near misses);
+- `oneOff`: requests that found no route and differ from this one by one
+  segment (`{ call, asks, differs, loc }`, `differs` like `cancel for archive`
+  or `:param left out`);
+- `outside`: why the callers are out of sight - the entry kind (`cron`,
+  `invoke`, a bot command), the infrastructure role (`probe`, `webhook`,
+  `callback`, `discovery`, `configured`), `stream`, `declared`, `exported` or
+  `library`;
+- `callers` and `caller` for `alive`; `missing` (`consumer`, `producer`,
+  `both`) for a channel; `unresolvedInjects` for a class in a service whose
+  injects did not all resolve (`likely-dead`); `classReached` for a method
+  nothing calls on a class that is used (`likely-dead`); `via` for a handler
+  or controller judged by the way in or route that decided it;
+- `seen` (`{ count, lastSeen, window }`) and `neverSeen` (`{ window,
+  confidence }`) when an observed file sits beside the graph (P110): seen in
+  the window is `alive` whatever the code says (and a route the build found
+  nobody calls says static reach missed a caller); never seen is `strong`
+  beside a sibling seen 20 times or more, over a window the file holds in
+  full, and `weak` otherwise. A way in nothing in the code reaches that was
+  never seen, strongly, is `likely-dead` rather than `unknown`; a static
+  `dead` keeps its verdict with the silence as corroboration. `dead` reads all
+  the file holds; `never_seen` and `flowatlas dead --since` cut the window.
+
+`dead({id})` takes a way in, a channel (by its bare name too), a class, a
+method or a function, by any name the other tools take; a controller is as
+alive as its liveliest route. Without `id` it lists entries, channels and
+classes (methods only with `kind: "methods"`), dead first, counted under
+`counts`; `excludedEntryKinds` names the kinds never listed.
+
+`findings` gathers the rows the graph classes a finding (P81) that nobody
+accepted, the channels with one end, and the contract errors and warnings the
+last `flowatlas contracts` wrote beside the database. Each row is `{ kind, id,
+to?, method?, service, loc, message, severity?, rank, reach, next }`: `id` the
+node it is about (the loop's method, the route, the sending side, the
+channel), `next` the call that shows it (`get_source` at the loop's line,
+`get_flow`, `check_contract`, `who_emits` / `who_consumes`). Ranked by reach
+(D3): an N+1 by the ways in that reach its loop, an unguarded route by the
+writes it reaches, then the reads, a contract break by severity and then the
+ways in that reach its sender, a one-ended channel by the ends it has; `rank`
+is its place in its kind across the project, and `reach` the numbers it was
+ranked by. The per-item loops are counted under `notes`, and the findings
+accepted with `flowatlas accept` under `accepted`.
 
 ### Finding your way in
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix` |
-| `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service` |
+| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `offset` |
+| `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service`, `offset` |
+| `search` | one query over routes and other ways in, channels, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
 
-`kind` is one of `http`, `rpc`, `event`, `cron`, `workflow`, `bot_command`,
-`bot_callback`, `bot_event` and `scene_step`. A `workflow` is a state machine,
+`kind` is one of `http`, `rpc`, `event`, `cron`, `invoke`, `workflow`,
+`bot_command`, `bot_callback`, `bot_event` and `scene_step`. An `invoke` is a
+deployed function called by name rather than by an address (a Lambda function,
+say, as its infrastructure declares it). A `workflow` is a state machine,
 reached by the name it is deployed under; its steps are `function` nodes of
 kind `state`. `rpc` is a procedure — a tRPC one, say — whose
 address is the dotted path its callers write, `orders.list`, rather than a verb
@@ -92,13 +429,32 @@ procedures out; narrow them with `service` and `kind` instead.
 `find_symbol` accepts initials: `osc` finds `OrdersService.create`. Start here
 when you know roughly what something is called.
 
+`search` is the wider net. `kinds` is any of `routes`, `channels`, `tables`,
+`types`, `gaps`, `fails` and `classes`. A gap's id, `gap:<service>|<file>|<reason>`,
+is what `flowatlas accept` takes, every hit carries its `kind` (`gap`, `note` or
+`finding`), new gaps come first, and an accepted one says
+`accepted: true` with its note, and `acceptedBy` when a rule took it; an
+`accepted.json` that cannot be read marks nothing accepted and says so in
+`note`. Under
+`fails`, an exception name or a status (`NotFoundException`, `404`) lists the
+ways in that can fail with it, one hit per route with the id `get_flow` takes:
+the first answer that matched (`exception`, `status`, `assumed` when nothing
+on the path writes that status, `sites`), and `more` when others on the same
+route matched too. A helper's choices count: `423` finds the routes whose
+`toHttpError` can choose a 423.
+
 ### Following a chain
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth` |
-| `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` |
-| `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required) |
+| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth` (8, one more per workflow step), `maxChars` |
+| `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` (3; 16 at most), `service` |
+| `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `service`, `offset` |
+
+Asked about a class, `who_calls` and `impact` answer for every method of it
+something calls (P95): calls point at methods, never at the class. Each
+`who_calls` caller says the method it calls under `calls`; `impact` says how
+many methods it answered for under `forMethods`.
 
 `entry` can be named the way you would say it aloud. All three of these mean the
 same route:
@@ -121,29 +477,402 @@ A procedure's callers are requests like any other, joined to it by that dotted
 path with a `hits` edge, so `who_calls` on a procedure reaches the code in
 another repository that asks for it.
 
+`who_calls`, `impact` and `get_source` take a `symbol` by the same names: an
+id, an entry said aloud (`GET /orders/123`, `bot:x`, `invoke:x`, read exactly as
+`get_flow` reads it), or a name that is the one best match. A route said with a
+literal segment resolves as the router would: `GET /orders/latest` is the route
+registered as `/orders/latest`, not `/orders/:param`, and the answer names the
+routes that would also answer it under `alsoAnswers`. Two routes that spell the
+address out alike, in two services, stay candidates.
+
 `impact` is the one to ask before changing something: it answers "what would
 have to be retested", including the services whose chains run into this one
-without an entry point of their own.
+without an entry point of their own. With no way in it says `entriesNone`
+("nothing in the graph reaches this from a way in; the callers may be behind a
+gap", or "nothing reaches this"), and `next` names a deeper `who_calls`, the
+service's `cant_follow` and a gap search on the file. A walk that stopped at
+its own limit (4,000 nodes) says so in `truncated`.
+
+`who_calls` walks breadth first to `depth` (3; 16 at most) and counts what it
+left: a cut tree says `truncated: "n more nodes past depth 3; raise depth"`,
+`stoppedBy` (`depth`, `maxNodes`, the one that left out more first), and
+`frontier`, the rows on the depth line with callers past it, to ask on from
+when 16 is not enough. A caller the graph holds no node for is a `missing` row.
+A row that is no way in and that nothing calls carries `topOfChain: true` and
+`gapsInFile`, the gaps in its file that may be hiding its caller (the target
+itself says so at the top of the answer); `next` then names `cant_follow` for
+its service and a gap search on its file. That is a lead, not a verdict: the
+code is dead, or it is called from behind one of those gaps.
+
+`get_flow` writes each node once. Met again on another path - a repository
+helper every method calls, a logger, a mapper - it is `{ "id": …, "ref": true,
+"seenAt": … }`, `seenAt` the id of the row its subtree is written under; met on
+its own path, a cycle, it is `{ "id": …, "ref": true }`. Its budget goes where
+the answer usually is: the steps that leave the service (a request, a publish,
+a hand-off to another way in) first, then a data store, the handler, a call
+into a method that itself leaves the service, any other call, and plumbing (a
+method more than five methods call) last. That decides which rows get room,
+never where they are written: children stay in call order. So a request
+through shared plumbing reaches the service it ends in within the defaults.
+
+A cut answer names the limit that cut it and the advice that helps:
+
+```
+"truncated": "23 more nodes past maxNodes 60; raise maxNodes or ask get_flow on a child id",
+"stoppedBy": ["maxNodes"],
+"crossingsLeft": [{ "from": "producer:…", "to": "channel:order.created", "type": "emits", "service": "orders" }]
+```
+
+`stoppedBy` is one or more of `depth` (`≥n more nodes past depth 8; raise
+depth`), `maxNodes` and `maxChars` (`n more nodes past about 12000 characters;
+raise maxChars or …`), the one that left out more first; the sentence is about
+that one. `crossingsLeft` (at most eight, out of the service before a store)
+are the crossings the walk reached and did not follow, ready to ask `get_flow`
+or `check_contract` about. `next` holds `check_contract` for the first HTTP
+crossing the tree reached and `get_flow` on the first crossing left, before
+`impact`.
+
+What `get_flow` says beside the chain:
+
+- **`fails`** on each entry: what it can end in, one entry per status and
+  exception - `{ status?, exception, assumed?, declared?, sources, sites, at,
+  loc? }`, with `at` and `loc` the first place it is raised and `sources` how
+  (`throw`, `guard`, `pipe`, `interceptor`). `assumed: true` is a status nothing on the path
+  writes, such as the framework's 500 for an error it does not know;
+  `declared` is the status the error class states where no filter maps it. At
+  `detail >= 2` each entry adds `places: [{ at, loc, source }]`. A throw whose
+  exception a helper chooses at run time (`throw toHttpError(check)`) is named
+  after the helper and adds `via: 'helper'` and `chosenFrom: [{ exception,
+  status?, assumed? }]`, what the helper's table can give; `status` is there
+  only when every choice agrees, and `family: 'auth'` marks a helper whose
+  answer could not be read that refuses a check of who is asking.
+  `describe_for_prompt` writes it as `toHttpError (401 | 403 | 423)` with the
+  classes it is chosen from. Read for NestJS. With an observed file, each row
+  gains **`seen: n`**, the requests that answered a status it declares in the
+  window (absent when none did).
+- **`failures`** on the root entry, with an observed file that saw it answer
+  statuses (P106): `{ hits, window, undeclared: [{ status, count, share,
+  expected?, maybe? }], declaredNeverSeen: [{ status?, exception, at, loc? }],
+  tooFewHits? }`. `undeclared` is each status from 400 up that no failure of
+  the root declares, the ones no reason explains first, then 5xx, then the
+  most common; `expected` says why the framework answers it anyway (the
+  router's 404 and 405, a 401 or 403 from a check in front of it, a 400 for a
+  body it cannot read). `declaredNeverSeen` is each declared failure no
+  request answered, said only of a way in hit at least 20 times in the
+  window; below that, `tooFewHits: true`. An `assumed` status never seen is
+  not listed: the code never declared it. `describe_for_prompt` carries the
+  same `failures` beside its text for an entry.
+- **Guards** in front of a NestJS route carry `where` (`global`, `module`,
+  `controller`, `route`), `via` (`APP_GUARD in AuthModule.forRoot`), and
+  `skippedBy` when an opt-out decorator switches one off; the entry carries
+  `optOuts`.
+- **`observed: n`** on a row real traffic went through, after
+  `flowatlas observe` has read a trace file: the count on the join into it, or
+  the entry's hits. Absent when nothing saw it. Beside it, **`p95`** (in
+  milliseconds) and **`errorRate`** (the error flag or a 5xx, over the
+  requests whose outcome is known) where the file measured them.
+- **`seenAmbiguous: n`** on a row that requests could have been, or whose
+  join into it they could have run, but fit other places as well: those are
+  counted on none of them, so `observed` never spreads one request over
+  guesses.
+- **`confirmedBy: "traffic"`** beside `edge.confidence: "heuristic"` on a row
+  joined by a best guess that traffic went through in the window (P110): the
+  join itself was seen. Read beside the confidence, never written into it; the
+  graph on disk does not change, and no edge becomes `runtime`.
+- **`baseUrlFrom`** and **`baseUrl`** on a request joined by a value read from a
+  repository's own files, the code's own fallback or the setting's name, saying
+  where the value came from.
+
+`who_calls` rows carry `observed: n`, `p95`, `errorRate`, `seenAmbiguous: n`
+and `confirmedBy` the same way. When the observed file holds a sample request of an entry, the
+entry's hints in `get_flow` and `list_entries` name `trace_for` second.
+
+### What ran
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `hot_paths` | the ways in real traffic used most, busiest first, each with its p50, p95, max and error rate and the joins it reached most | `service`, `limit` (10), `joins` (5) |
+| `slow_steps` | the joins and methods real traffic was slowest on, each with its count, p50, p95, max, error rate and, for a join, `measuredAt` (`caller` or `callee`) | `entry` (only what it reaches), `service`, `by` (`p95`, `max`, `p50`), `minCount` (5), `limit` (10) |
+| `trace_for` | one slow and one failing request of an entry, as trees of `{ id?, label, service?, kind, ms?, status?, error?, children }`, `id` the node each span was credited to | `entry` (required: an id or a route said aloud), `maxNodes` (60, per tree) |
+| `never_seen` | what the code runs and traffic never touched in the window - ways in (every kind), channels, and the methods ways in reach, in services the window holds a span of - strong first, each `{ id, type, kind?, service, loc?, window, reachableFrom, neighbours: { seen, of, most }, confidence }`; the answer carries the `window` (`{ since?, from, to, label, short? }`) and `notes`, one per service with no span at all | `since` (`7d`; all the file holds without it), `service`, `kind` (a node type or an entry kind), `confidence` (`strong`, `weak`), `limit` (20) |
+| `undeclared_failures` | the ways in whose traffic answered a status no failure in their code declares, worst first (requests answering a 5xx no reason explains, then any status no reason explains, then the largest share), each `{ entry, label, service, hits, undeclared, declaredNeverSeen?, tooFewHits?, next }` with `next` naming `trace_for` for a failing request and `get_source` on the handler; the answer carries the `window` | `service`, `minCount` (1, requests per status), `minHits` (20, the floor for "never seen"), `limit` (20) |
+
+They answer from the observed file `flowatlas observe` writes beside the
+graph (see the [CLI guide](CLI.md#flowatlas-observe-file)); with none they
+say so. A row names only places the graph still has, so a file older than
+the last build answers for what is still there. `slow_steps` leaves out a call
+site whose join is listed, since both are timed on the same span. A
+`trace_for` tree carries no trace or span id; the failing request is shown
+once when it is also the slowest, and an entry with no sample says what would
+give it one. Each answer is cut at its `limit` or `maxNodes` and says so, and
+`next` chains them: `hot_paths` → `slow_steps({entry})` → `trace_for({entry})`
+→ `get_source` on a slow step, and `undeclared_failures` → `trace_for({entry})`
+→ `get_source` on the handler. Only statuses and counts are compared: the
+observed file keeps no exception text, so which exception caused an
+undeclared 500 is never guessed.
+
+`never_seen` (P110) is evidence with a confidence, never a verdict: traffic is
+what was exercised, by whom, in which environment. A row is `strong` when the
+file holds the whole window asked for and one of its siblings - a way in of
+the same service and kind, a method of the same class, a channel of the same
+service - was seen at least 20 times; otherwise the service may simply not
+have been exercised there, and it is `weak`. A handler counts as seen when the
+way in it handles was hit; a method is asked about only where the service's
+spans name methods at all. `since` cuts the file's hours at read time, ending
+where the file does, so `7d` and `30d` differ without the traces at hand; a
+window longer than the file holds says `short: true` and every row is `weak`.
+`reachableFrom` is `code` when something in the graph reaches the node and
+`outside` when only something outside could. `next` names `dead({id})` and
+`get_flow({entry})` (or `who_calls`) on the first row.
 
 ### Messages and types
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `who_emits` | everything that publishes on a channel, across every repository | `channel` (required) |
-| `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required) |
+| `who_emits` | everything that publishes on a channel, across every repository | `channel` (required), `service`, `offset` |
+| `who_consumes` | everything that handles messages from it; empty means nothing does | `channel` (required), `service`, `offset` |
 | `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
-| `check_contract` | what one side of a crossing sends against what the other expects | `edge`, or `from` and `to` |
+| `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `service`, `offset` |
+| `check_contract` | what one side of a crossing sends against what the other expects; on an entry, what traffic carried into it against its code | `edge` (a crossing or an entry id), or `from` and `to` |
+| `get_spec` | a service's routes as the OpenAPI 3.1 document `flowatlas spec` writes, or its channel ends as AsyncAPI 3.0, as JSON text; with `path`, one operation and only the schemas it uses (P118) | `service` (required), `kind`, `path`, `maxChars` |
+
+`get_type` at `detail: 0` names the type and its fields (or its members); at 1
+it says what each field is, where the type is declared, and names each type it
+refers to with its fields' names under `nested`, keyed by id; at 2 it adds the
+structural hash, `meta` and the whole declaration of each nested type.
+
+`type_usage` takes what `get_type` takes (an id, or a name; a name two types
+have answers `candidates`) and lists every edge whose `params` or `returns`
+names the type, grouped: `taking` and `returning` (ways in whose handler takes
+or returns it: `{ id, handler }`), `crossings` (`http_calls`, `hits`),
+`channels` (`emits`, `consumes`) and `calls` inside a service (`{ from, to,
+type, carries }`, `carries` being `params` or `returns`), with `counts` per
+group, and `nested`: the types that hold it one level out, a field of it or a
+type argument, so a change to a nested type shows the outer ones. A type no
+edge names answers with `nested` and a note: it is used inside one function at
+most. `get_type`'s `next` names `type_usage` first.
 
 `check_contract` identifies a crossing either by its two ends or by one string:
-`"from -http_calls-> to"`.
+`"from -http_calls-> to"`. Its `findings`, when the contracts checker is
+installed (`flowatlas mcp` installs it), are `{ severity, kind, direction,
+field, expected, actual, message, ignored? }`; the crossing is the answer's
+`edge`.
+
+**Traffic as the third side (P113).** When `flowatlas observe --shapes` left
+body shapes beside the database, an answer about a crossing into an entry
+carries `traffic`: what real requests and answers carried, compared with the
+route's declared body type and its declared answer (or, when the route
+declares none it can be read through, the type the caller expects back).
+`traffic` is `{ samples, window, against?: { request?, response? }, request?:
+diff[], responses?: { [status]: diff[] }, unchecked?: ["response 500:
+status-not-declared", ...] }`, each diff `{ severity, kind, field, expected,
+actual, seenIn, of, message }`: `seenIn` bodies carried the field, of `of`
+that could have. Traffic is never an `error` on its own; `declared_never_sent`
+(information) is a declared optional field no body of at least 50 carried.
+Given an entry id as `edge` (`check_contract({edge: "entry:…"})`), it answers
+`{ entry, traffic | note, callers }` with `next` checking each call into it,
+and `get_flow` on an entry whose traffic differs puts that call second in its
+`next`. Only key names and JSON types are ever kept of a body, never a value.
+
+Given two service names as `from` and `to` (and no node by either name, which
+would win), it lists every crossing from one into the other: each request
+(`http_calls`, `hits`) that reaches an entry of the other, and each publish
+(`emits`) onto a channel the other handles (`via` names the channel). Each
+crossing is `{ from, to, type, via?, status, check }`, worst `status` first,
+`check` the call that checks it in full; `byStatus` counts them and `maxNodes`
+bounds the list. With none it says so, and how many go the other way.
+
+`get_spec` writes the document from the database as it stands, through the
+wire rules, so a schema says what goes over the wire; a shape it could not read
+is `{}` with `x-flowatlas-unread` and the reason, and `unread` and `omitted`
+count them. `path` takes a route as a request would say it (`GET /orders/{id}`
+or `get /orders/:id`; a path alone answers every verb of it), a channel address
+(`order.created`), or an operation's key (`send order.created`); without
+`kind` it looks in both documents. The text is cut at `maxChars` (12,000) and
+says `truncated` with how much there was; a cut whole document lists its
+`operations` and `next` asks for one. `describe_for_prompt` with `withSpec: true`
+adds the route's or channel end's fragment as an *OpenAPI* (or *AsyncAPI*)
+section in a fenced JSON block.
+
+### Why a flow stops
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `cant_follow` | every step the reading could not follow, grouped by cause and then by the package it points into, with a few places each and the id of the method each is written in | `service`, `cause`, `package`, `top`, `samples`, `offset` |
+| `test_pattern` | a draft extraction pattern checked before it is suggested: each rule refused with the part named, or its own tests run, and what it draws from the code with the holes it filled | `yaml` (required), `code`, `service` |
+
+With an observed file beside the graph (P110), what traffic reached and no
+reader drew stands under its own cause, `seen-not-in-code`: one row per
+service and kind of span `observe` matched to nothing, file-less, so the
+cause lists `seen` groups in place of packages, each `{ service?, kind,
+count, places, lastSeen, names: [{ name, count, lastSeen }], more?, next }`,
+`next` the call that looks for it (`find_symbol` for a method, `list_entries`
+for a route, `search` for a destination, a table or anything else). A blind
+spot is a question, never an edge; the rows go when a build reads them.
+A service's blind spots are one check, `gap:<service>||seen-not-in-code`, which
+`describe_for_prompt` writes with *How to close it* as the page does (P144):
+the link line, naming the repository probably missing when the service is one
+no configured service is, then finding and describing what it reached. Such a
+service's traffic is also one kind of evidence for `start_here`'s
+`missingRepos`, beside what the code says; weak alone, as in `doctor --missing`.
+
+The same breakdown `flowatlas doctor --unresolved` prints. A cause is what the
+code says about why: `module-not-installed` (with the package), `import-unresolved`
+(a path or alias that resolves to no file), `re-export-missing`, `any-typed`,
+`language-any`, `callback-param`, `untyped-parameter`, `dynamic-member`,
+`interface-type`, `function-field`, and so on; a row with no finer answer counts
+under its own reason. Rows are demoted where an annotation already answers
+them and gaps accepted with `flowatlas accept` are left out and counted apart,
+exactly as `doctor --unresolved` does, a route rule included; an `accepted.json`
+that cannot be read leaves nothing out and says so in `note`. Only gaps are
+here: notes and findings are not steps the reading missed, so they are counted
+apart under `apart: { notes, findings }` and listed by `search`. A `cause` that
+answers no causes says why in `note`: its rows are findings or notes
+(`"route-unguarded is a finding, not a step the reader missed: 4 rows"`, with
+`next` the search that lists them), or were all accepted, or there are none in
+that service or package. A cause nothing knows is an error with `known`, the
+causes of this graph and of the catalogue, and the `nearest` few by spelling. A place is
+`{ loc, id?, symbol?, service? }`: `symbol` where it is not the id (the text of
+a call, say), `service` where the cause spans more than one. `total.causes`
+counts every cause, and `offset` pages them. `next` offers `get_source` on the
+first place and the calls that narrow to its cause and its package.
+
+Under `module-not-installed`, a package the configuration as it stands would
+read in its place once rebuilt (P78) - its source in a repository read here, or a
+listed shape file - carries `coveredBy: "repo" | "shape"` and `coveredFrom`,
+which hold for every place under it; `next` then says to rebuild. One nothing would read
+in its place gets `run: flowatlas shapes --suggest --package <name>` in `next`,
+the command that lists the names the project uses of it. A step drawn through
+types such a stand-in supplied says so on its edge in `get_flow`: `because:
+["package-from-repo"]` or `["shape-file"]`, and `typedBy` naming the package.
+
+A cause whose rows are calls on a receiver nothing types, or a channel a
+wrapper hides (`call-dynamic-receiver`, `channel-dynamic`, and the other reasons
+`flowatlas patterns suggest` reads), also gets a `test_pattern` call in `next`,
+with a starter rule for its first place: the method that place calls, the kind
+its name suggests, and `TODO` for the receiver's type. `test_pattern` runs rules
+written as YAML - one rule or a list, as a pattern file holds them - by the
+reader the build runs, in memory, and is the same tester `flowatlas patterns
+test` is (P121): with `code`, what each rule draws from it (`producer on
+channel:book.added`), the rows it leaves and what each hole caught, or how far
+the pattern got (`stoppedAt`); with `service`, the code is typed in that
+service's own program. At most ten rules and ten tests a rule are answered. It
+runs only under `flowatlas mcp`, which hands the server the readers; a server
+started without them says so.
+
+### What a branch changed
+
+| Tool | Answers | Takes |
+|---|---|---|
+| `what_changed` | the last `flowatlas diff`, read back: nodes, edges and types added, removed or changed, the ways in that reach them, and the contracts the branch broke; with `verdict`, whether it is safe to merge and why. `file: "check.prod.json"` reads what `flowatlas check --env prod` compared instead (the deployed side as base) and adds `check: { environment, verdict, because }` | `service`, `file`, `verdict`, `offset` |
+
+It reads the `diff.json` that `flowatlas diff <base-ref>` writes rather than
+building two revisions inside a tool call; run the command to refresh it. At
+`detail: 0` a changed node is its id and a way in its id, type and the changed
+node it `reaches`; at 1 they add service and label (and a way in its kind and
+confidence); at 2 a changed node adds the `fields` that changed.
+
+`base` and `head` are `{ ref, label }`: `label` is `working tree` where no ref
+was read, and otherwise the ref with the commit each service was read at
+(`main (billing 392089da, orders 08ad86ef; gateway from the working tree)`).
+`counts` are the lengths of the lists below before `maxNodes` cut them, so a
+count beside a shorter list shows the cut; under `service` every count is that
+service's (types by the service in their id), and a service the diff does not
+name answers zeros and `note: "no such service in the diff"`. `counts.gaps`
+and `counts.lostJoins` count the gap ids the branch added and removed and the
+calls that stopped joining, and `counts.flows` the ways in whose flow changed.
+
+**What a flow does now.** A way in under `entries` (or `retest`) whose flow the
+branch changed carries `flow`: `{ side, added, removed, changed, steps }`, the
+step counts of its flow compared on both graphs (`side` `head` for a way in
+only the head has), and from `detail` 1 the changed steps as text, in call
+order - `+ orders → billing POST /invoices`, `- gateway → orders GET
+/shipments/:param`, `~ gateway → orders POST /orders (body: +channel
+(required))`, `+ gateway stops here: target-route-not-found` - at most 12 of
+them and a line counting the rest. The same steps `flowatlas diff` draws as a
+sequence diagram; an agent gets the text, never the diagram. A `diff.json` of
+format 2 has no flows; the verdict does not read them.
+
+**The verdict.** `what_changed({verdict: true})` adds `verdict` - `safe`,
+`unsafe` or `unknown` - and `because`, one sentence per reason, unsafe ones
+first. The rule is fixed, so a reviewer can disagree with a reason rather than
+with a score:
+
+- **unsafe**: a new contract error; a new violation of an architecture rule at
+  `error` along edges that are not guesses (P114); a call whose target went (it joined a
+  route on the base side and joins nothing now), or a channel left with no
+  producer or no consumer; a removed way in that another service still calls.
+- **unknown**: a service the base ref could not be read for (read from its
+  working tree on both sides, so reported unchanged without being compared); a
+  new gap on a path from a changed node back to a way in, which the reading
+  cannot see past; a `diff.json` older than format 4, which holds no rule
+  violations (format 1 no gap rows either: "rerun flowatlas diff for new gaps,
+  lost joins and rule violations"). The verdict does not read flows, so their
+  absence decides nothing.
+- **safe** otherwise.
+
+Beside it: `newGaps` (gap ids the head has and the base does not, each with
+the method it is in, `onChangedPath: true` where it makes the verdict
+unknown, and `next`; a gap id the base held too is listed when it gained
+sites, at the first new one, with `kept` the sites the base already had), `vanishedTargets` (`{ caller, target, now }`, `now` what
+the head side says instead, such as `target-route-not-found`), `retest` (the
+ways in that reach a change, ranked by how many changed nodes each reaches and
+then by `observed` traffic; it takes the place of `entries`) and `newFindings`
+(likely N+1s, unguarded routes and contract warnings the branch introduced,
+which never decide the verdict). One `offset` pages these with the rest.
+`next` traces the first way in to retest, checks the first break, reads the
+method of the first new gap and asks who calls the first caller that lost its
+target.
+
+### Pages that describe a node
+
+Where `flowatlas docs` has indexed doc blocks (its `docs.json`, beside the
+database), `get_flow`, `describe_for_prompt` and `impact` carry `docs` on an
+answer about a node a block names: `[{ file, line, kind, state }]`, `file`
+relative to the configuration, `kind` `flow`, `channel`, `symbol` or `ref`. The
+state is worked out when the question is asked, against the graph as it is
+then, not when the index was written: `ok`, `changed` (the flow the block
+describes gained or lost a step since it was written), `gone` or `ambiguous`.
+An agent changing that flow learns there is a page to update with it, and
+which line; `flowatlas docs --write` regenerates it. `start_here` says
+`staleDocs`, how many blocks no longer say what the graph says (under
+`service`, the blocks about its nodes). Without an index, neither appears. No
+tool is added for it.
+
+### Prompts and resources
+
+Three prompts write out the calls a common review takes, with the ids already
+resolved. They are text that names calls - the client runs them - and each
+call is written by the same functions `next` writes with.
+
+| Prompt | Arguments | Writes |
+|---|---|---|
+| `before-rename` | `symbol` | `who_calls` and `impact` on it (`type_usage` for a type), `check_contract` on each crossing it is on, and what else must be renamed with it |
+| `pr-review` | `base?` | `what_changed({verdict: true})` and how to follow its `next`; or, when `diff.json` is missing, older than the database or of another base, the `flowatlas diff` to run first |
+| `trace-route` | `route` | `get_flow` on it, `check_contract` on each crossing of the walk, `cant_follow` for the services where it stops, `describe_for_prompt` to hand it on |
+
+A name that answers to several things is listed with each candidate's id, and
+the prompt asks which.
+
+| Resource | Holds |
+|---|---|
+| `flowatlas://reasons` | every reason a row of the reading can give: its kind (gap, note, finding), the cause it is counted under, and the sentence `doctor` heads it with |
+| `flowatlas://services` | the services the graph holds, each with its resource |
+| `flowatlas://services/{name}` | one service: what `start_here` says of it, its crossings to and from every other service with how each checks, and its top findings |
+
+Resources read the same database as the tools: without one, a service reads as
+the same `graph.db not found … run flowatlas build` the tools answer.
 
 ### Source
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_source` | the code of one symbol | `symbol` (required), `context` |
+| `get_source` | the code of one symbol, by id or by name | `symbol` (required), `context`, `fromLine`, `maxLines` |
 
-The only tool that returns source, deliberately. A trace never drags in the body
+At most `maxLines` lines (400, the most there is) per answer. A declaration
+longer than that says `truncated: "declaration continues past line N; ask with
+fromLine N+1"`, and `next` starts with that call; `context` widens only the
+first and the last page. The only tool that returns source, deliberately. A trace never drags in the body
 of every method along it: the agent asks the graph which name to look at, then
 asks for that one name.
 
@@ -166,6 +895,9 @@ Some prompts that work as they are:
 - *"Use flowatlas impact on OrdersService.cancel before you edit it."*
 - *"Which service publishes order.created, and does anything handle it?"*
 - *"Follow POST /orders and tell me every settings key it needs."*
+- *"What can POST /orders fail with, and which guard is in front of it?"*
+- *"Why does the flow from GET /reports stop? Use cant_follow."*
+- *"Is this branch safe to merge? Use the pr-review prompt."*
 
 ---
 
@@ -179,8 +911,11 @@ flowatlas build            # after pulling, or after your own change
 flowatlas build --watch    # rebuild on every save, project held open
 ```
 
-A rebuild of a five-repository project takes about five seconds cold and under
-one when nothing moved.
+A rebuild with nothing moved reads only what changed, so it is a fraction of a
+cold build; the [README](../README.md#measured-on-the-demo-project) has both
+timed on the demo project. The tools listed follow too: a build that first reads
+a channel lists the channel tools, and `flowatlas observe` the run-time ones
+([which tools appear when](#which-tools-appear-when)).
 
 ---
 
@@ -194,6 +929,17 @@ same shell the client starts from.
 `--config` points at a configuration whose `output` directory is empty. Run
 `flowatlas build` and check that `.flowatlas/graph.db` exists.
 
+**A tool this page names is not listed.** The project cannot answer it yet:
+`start_here` says when it appears under `hidden` (`flowatlas observe` for the
+run-time tools, `rules` in the configuration for `check_rules`). A client that
+does not act on `tools/list_changed` shows a new tool only after it reconnects.
+To list every tool anyway, add `--all-tools` to the command, or set
+`"mcp": { "tools": "all" }` in the configuration.
+
+**The server will not start, naming a tool.** The configuration's
+`mcp.include` or `mcp.exclude` names a tool there is none of; the message names
+the nearest one.
+
 **A tool answers, but with nothing in it.** That is an answer: nothing reaches
 the symbol you named, or nothing handles the channel. `flowatlas doctor` says what
 could not be read and why, which is usually the next thing to look at.
@@ -204,8 +950,16 @@ contributed no node, or most of a service's ways in were read no further than
 their addresses — and it says which. Every tool will answer truthfully about
 that graph, and the graph is not the project.
 
-**An answer looks cut off.** It was, and it says so. Raise `maxNodes`, or narrow
-with `service` and `depth`.
+**An answer looks cut off.** It was, and it says so. A list says `nextOffset`:
+ask again with `offset` for the next page (`next` writes the call). A tree
+(`get_flow`, `who_calls`) does not page: it says which limit stopped it
+(`stoppedBy`), so raise that one, or ask `get_flow` on a row it showed or on one
+of its `crossingsLeft`, or `who_calls` on an id in its `frontier`.
+
+**An answer is empty.** It says why. `impact` with no way in says
+`entriesNone`, a `who_calls` chain that ends in nobody says `topOfChain` and
+`gapsInFile`, `cant_follow` for a cause with no gaps says what its rows are,
+and an unknown name is an error with `suggestions`.
 
 ---
 

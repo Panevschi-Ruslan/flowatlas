@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-unknown-orm",
-  "generatedAt": "2026-10-07T14:34:36.664Z",
+  "generatedAt": "2026-10-17T03:01:07.116Z",
   "nodes": [
     {
       "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:30:12",
@@ -273,7 +273,8 @@
           "classes": 5,
           "skippedExternalCalls": {
             "fake-orm": 4
-          }
+          },
+          "receiversExplainedByEdge": 2
         },
         "bootstrap": "src/main.ts",
         "adapters": {
@@ -425,20 +426,6 @@
       "reason": "unknown-db-package",
       "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
       "symbol": "this.videos.findAll"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 51,
-      "reason": "db-receiver-name-only",
-      "hint": "this.localRepo is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
-      "symbol": "this.localRepo.find"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 58,
-      "reason": "db-receiver-name-only",
-      "hint": "this.jobRepository is typed as JobBus, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
-      "symbol": "this.jobRepository.enqueue"
     }
   ]
 }

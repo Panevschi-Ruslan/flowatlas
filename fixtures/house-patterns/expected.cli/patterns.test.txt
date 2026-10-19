@@ -1,0 +1,36 @@
+ok  shop-bus-emit (publish)  flowatlas-patterns/house.yml:7  3/3 tests
+  pass  bus.emit({ topic: 'book.added', data: book })
+        expect channel: book.added
+        drew   producer on channel:book.added
+        holes  $BUS = bus; $CHANNEL = 'book.added'; $PAYLOAD = book
+  pass  bus.emit({ topic: topicFor(kind), data })
+        expect channel: *, row: channel-dynamic
+        drew   producer on a channel that cannot be read
+        row    channel-dynamic
+        holes  $BUS = bus; $CHANNEL = topicFor(kind); $PAYLOAD = data
+  pass  bus.flush()
+        expect none
+        row    call-dynamic-receiver
+ok  shop-bus-on (subscribe)  flowatlas-patterns/house.yml:23  1/1 tests
+  pass  bus.on('book.added', (book) => shelve(book))
+        expect channel: book.added
+        drew   consumer on channel:book.added
+        row    consumer-handler-unresolved
+        holes  $BUS = bus; $CHANNEL = 'book.added'; $HANDLER = (book) => shelve(book)
+ok  api-client-call (http-request)  flowatlas-patterns/house.yml:34  2/2 tests
+  pass  api.call('POST', '/stock/reserve', { isbn, copies: 1 })
+        expect verb: POST, url: /stock/reserve
+        drew   http_out POST /stock/reserve
+        holes  $API = api; $VERB = 'POST'; $URL = '/stock/reserve'; $BODY = { isbn, copies: 1 }
+  pass  api.call(verb, '/stock/reserve', body)
+        expect url: /stock/reserve, row: api-method-dynamic
+        drew   http_out ? /stock/reserve
+        row    api-method-dynamic
+        holes  $API = api; $VERB = verb; $URL = '/stock/reserve'; $BODY = body
+ok  storefront-send (http-request)  flowatlas-patterns/house.yml:48  1/1 tests
+  pass  useApi().send({ method: 'GET', path: '/books' })
+        expect verb: GET, url: /books
+        drew   http_out GET /books
+        holes  $API = useApi(); $VERB = 'GET'; $URL = '/books'
+
+4 rule(s), 0 refused; 7 test(s), 0 failed

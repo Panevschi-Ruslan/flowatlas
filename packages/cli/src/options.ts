@@ -2,9 +2,16 @@ import { DEFAULT_DETAIL, DEFAULT_MAX_NODES, type DetailLevel } from '@flowatlas/
 import type { Command } from 'commander';
 import { cannotRun } from './exit.js';
 
+/** The formats every walking command draws in. */
 export const FORMATS = ['tree', 'json', 'mermaid'] as const;
 
-export type Format = (typeof FORMATS)[number];
+/**
+ * And `flow`'s own: the walk from one way in as a sequence of messages between
+ * services (P116), the diagram `flowatlas diff` draws for a changed flow.
+ */
+export const FLOW_FORMATS = [...FORMATS, 'sequence'] as const;
+
+export type Format = (typeof FLOW_FORMATS)[number];
 
 /** How far a walk goes before it stops, when nobody says otherwise. */
 export const DEFAULT_DEPTH = 8;
@@ -45,7 +52,7 @@ export interface QuerySettings {
 }
 
 export interface ResolveOptions {
-  /** Formats this command can render. Defaults to all four. */
+  /** Formats this command can render. Defaults to `FORMATS`. */
   formats?: readonly Format[];
   /** Where the answer goes, which decides the default format and colour. */
   stdout?: { isTTY?: boolean };

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:01.320Z",
+  "builtAt": "2026-10-16T23:28:43.139Z",
   "configHash": "5058ec93d4d4",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 611,
+      "durationMs": 634,
       "packages": {
         "name": "nest-context-path-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 477,
+      "durationMs": 464,
       "packages": {
         "name": "nest-context-path-web",
         "runtime": [
@@ -111,6 +111,10 @@
     "nodes": 14,
     "edges": 5,
     "types": 0,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 4
   }
 }

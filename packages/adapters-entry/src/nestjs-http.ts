@@ -12,8 +12,9 @@ import {
   normalizePath,
   stringListArg,
   UNREAD_SPAN,
+  startLineOf,
 } from '@flowatlas/core';
-import { Node, type Decorator, type MethodDeclaration, type Node as TsNode } from 'ts-morph';
+import { Node, type ClassDeclaration, type Decorator, type MethodDeclaration, type Node as TsNode } from 'ts-morph';
 import {
   decoratorNames,
   decoratorsFrom,
@@ -320,12 +321,18 @@ export const nestjsHttpAdapter: EntryAdapter = {
         // this could not place is a reading that failed, and it gets a row.
         reportForeign(ctx, found.foreign, {
           file,
-          line: declaration.getStartLineNumber(),
+          line: startLineOf(declaration),
           symbol: controllerName,
         });
         continue;
       }
       const prefix = readControllerPrefix(controller);
+      // The controller's own decorators, by name, beside the handler's: what
+      // `dead` reads infrastructure from where the class says it (P91).
+      const controllerDecorators = declaration
+        .getDecorators()
+        .filter((item) => !decoratorNames(item).some((name) => FRAMEWORK_DECORATORS.has(name)))
+        .map((item) => decoratorName(item));
       // One entry per application that mounts this controller, which is one
       // entry and no qualifier at all for the ordinary service that creates a
       // single application. The judgement about when an id carries an
@@ -339,7 +346,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
       if (prefix.dynamic) {
         ctx.builder.addUnresolved({
           file,
-          line: declaration.getStartLineNumber(),
+          line: startLineOf(declaration),
           reason: 'route-path-dynamic',
           hint: 'Give @Controller a literal path; a computed prefix would make every route below it a guess.',
           symbol: controllerName,
@@ -352,7 +359,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
         const routes = nestDecorators(method, [...ROUTE_DECORATORS.keys()]);
         reportForeign(ctx, routes.foreign, {
           file,
-          line: method.getStartLineNumber(),
+          line: startLineOf(method),
           symbol: `${controllerName}.${method.getName()}`,
         });
         for (const decorator of routes.matched) {
@@ -367,7 +374,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
           if (httpMethod === undefined) {
             ctx.builder.addUnresolved({
               file,
-              line: method.getStartLineNumber(),
+              line: startLineOf(method),
               reason: 'entry-http-types-unmatched',
               level: 'info',
               message: `@${decoratorName(decorator)} on ${controllerName}.${method.getName()} came from ${NEST_PACKAGES[0]} and stands for no HTTP method this knows, so no route was read from it.`,
@@ -387,7 +394,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
             if (list === undefined) {
               ctx.builder.addUnresolved({
                 file,
-                line: method.getStartLineNumber(),
+                line: startLineOf(method),
                 reason: 'route-path-dynamic',
                 hint: 'Use a string literal, a const string, or an array of them.',
                 symbol: `${controllerName}.${method.getName()}`,
@@ -399,7 +406,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
           } else {
             ctx.builder.addUnresolved({
               file,
-              line: method.getStartLineNumber(),
+              line: startLineOf(method),
               reason: 'route-path-dynamic',
               hint: 'Use a string literal or a const string; a computed path cannot be matched against callers.',
               symbol: `${controllerName}.${method.getName()}`,
@@ -413,6 +420,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
           // level answers `undefined` only when it said nothing at all.
           const versions = versionsOf(method) ?? prefix.versions ?? defaultVersions ?? [];
           const authNote = authNoteOf(method);
+          const publicNote = publicNoteOf(method, declaration);
           const handler = handlerOf(method, ctx);
           const otherDecorators = method
             .getDecorators()
@@ -444,7 +452,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
                     key,
                     handler,
                     file,
-                    line: method.getStartLineNumber(),
+                    line: startLineOf(method),
                     meta: {
                       method: httpMethod,
                       path,
@@ -458,7 +466,9 @@ export const nestjsHttpAdapter: EntryAdapter = {
                       // applications from a tie between two routes of one.
                       ...(application === undefined ? {} : { application }),
                       ...(otherDecorators.length > 0 ? { decorators: otherDecorators } : {}),
+                      ...(controllerDecorators.length > 0 ? { controllerDecorators } : {}),
                       ...(authNote === undefined ? {} : { authNote }),
+                      ...(publicNote === undefined ? {} : { publicNote }),
                     },
                   });
                 }
@@ -490,6 +500,31 @@ const authNoteOf = (method: MethodDeclaration): string | undefined => {
   for (const doc of method.getJsDocs()) {
     const found = AUTH.exec(doc.getInnerText());
     if (found !== null) return found[1]?.trim() === '' ? 'the handler checks the request itself' : (found[1] as string).trim();
+  }
+  return undefined;
+};
+
+/**
+ * `@flowatlas-public opening hours are shown to anyone` — a route open on
+ * purpose, said in so many words (P90).
+ *
+ * Whether a route may be asked by anyone is a decision, and no reading of the
+ * code can see a decision: not its verb, not its path, not the name of its
+ * controller, not the absence of a user in its parameters. So nothing of that
+ * kind is ever read as public, and this marker is the one way to say it short
+ * of a decorator the project declares or `doctor.publicRoutes`. Written on the
+ * handler or on its controller class, the handler's own first. The reason is
+ * part of the marker: kept as written, and kept empty when none was given, so
+ * the audit can say that it is missing.
+ */
+const PUBLIC = /@flowatlas-public(?![\w-])[ \t]*(.*)/;
+
+const publicNoteOf = (method: MethodDeclaration, holder: ClassDeclaration): string | undefined => {
+  for (const documented of [method, holder]) {
+    for (const doc of documented.getJsDocs()) {
+      const found = PUBLIC.exec(doc.getInnerText());
+      if (found !== null) return (found[1] ?? '').trim();
+    }
   }
   return undefined;
 };

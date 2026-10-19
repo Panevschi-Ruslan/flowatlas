@@ -27,6 +27,8 @@ export {
   holeIn,
   PARAM_PLACEHOLDER,
   REACHES_META,
+  REACHED_AS_META,
+  RESULT_OF_META,
   STARTS_META,
   STEP_OF_META,
   STEPS_META,
@@ -45,6 +47,8 @@ export {
   makeLeafId,
   makeTableId,
   makeHttpEntryKey,
+  makeFunctionUrlEntryKey,
+  makeApiRouteEntryKey,
   makeInvokeEntryKey,
   makeStateId,
   makeSymbolId,
@@ -52,13 +56,16 @@ export {
   makeUnnamedWorkflowKey,
   makeTypeId,
   makeWorkflowEntryKey,
+  isBelowDir,
   normalizeFilePath,
   normalizePath,
+  pathKey,
+  toPosixPath,
   SITE_LEAF_TYPES,
   UNREAD_SPAN,
   wasRead,
 } from './ids.js';
-export type { DeployedEntryKind, HttpMethod, SiteLeafType } from './ids.js';
+export type { DeployedEntryKind, HttpMethod, ReachedAs, SiteLeafType } from './ids.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
 export { SENDS_META, wayInBodyRead } from './model/way-in.js';
@@ -84,6 +91,7 @@ export type {
 } from './model/types.js';
 
 export {
+  countsOf,
   DEFAULT_DETAIL,
   DEFAULT_MAX_NODES,
   DETAIL_LEVELS,
@@ -91,7 +99,26 @@ export {
   tally,
   wasMissed,
   type PlaceCount,
+  type RowCounts,
 } from './model/graph.js';
+export {
+  findingsWithoutRisk,
+  isRowKind,
+  kindOfRow,
+  reasonsWithoutKind,
+  RISK_NAMES,
+  RISKS,
+  riskOf,
+  ROW_KIND_NAMES,
+  ROW_KINDS,
+  rowClassOf,
+  rowKindOf,
+  rowRiskOf,
+  type KindedRow,
+  type Risk,
+  type RowKind,
+  type StoredKindRow,
+} from './model/row-kind.js';
 export type {
   DetailLevel,
   ProjectGraph,
@@ -127,7 +154,9 @@ export {
   customBrokerSchema,
   customProducerSchema,
   customSubscriberSchema,
+  customConsumerSchema,
   dbTableAccessSchema,
+  httpClientSchema,
   entryHttpAppTypesSchema,
   entryHttpMiddlewareSchema,
   entryHttpMountSchema,
@@ -140,10 +169,46 @@ export {
   flowatlasConfigSchema,
   infraModuleSchema,
   loadConfig,
+  mcpSettingsSchema,
+  builtInShapesFor,
+  packageSourcesFor,
   parseConfig,
+  shapesFor,
+  patternFilesFor,
   serviceConfigSchema,
+  serviceNamesOf,
   starterSchema,
 } from './config.js';
+export {
+  DEFAULT_RULE_VIA,
+  forbidRuleSchema,
+  onlyRuleSchema,
+  reachableRuleSchema,
+  RULE_EDGE_KINDS,
+  RULE_NAME,
+  RULE_OPS,
+  RULE_REACHES,
+  RULE_SEVERITIES,
+  RULE_SHAPES,
+  ruleSchema,
+  ruleSetOf,
+  rulesSettingsSchema,
+  SELECTOR_KEYS,
+  selectorSchema,
+  shapeOfRule,
+  tagsRuleSchema,
+} from './rule-config.js';
+export type {
+  RuleConfig,
+  RuleEdgeKind,
+  RuleReach,
+  RuleSelector,
+  RuleSet,
+  RuleSeverity,
+  RuleShape,
+  RulesSettings,
+  SelectorKey,
+} from './rule-config.js';
 export type {
   LocalBaseClass,
   CustomBrokerConfig,
@@ -151,22 +216,27 @@ export type {
   CustomProducerConfig,
   CustomSubscriberConfig,
   DbTableAccess,
+  HttpClientConfig,
   EntryHttpConfig,
   EntryHttpDescription,
   EntryProcedureConfig,
   EntryProcedureDescription,
   EntryRegistryConfig,
   FlowatlasConfig,
+  McpSettings,
   InfraModuleConfig,
   InfraModuleDescription,
   LoadConfigOptions,
   StarterConfig,
   LoadedConfig,
+  PackageSourcesSetting,
+  ServiceCatalog,
   ServiceConfig,
 } from './config.js';
 export type {
   DefinitionPosition,
   DeployedDefinition,
+  DeclaredStream,
   DeployedDelivery,
   DeployedFunction,
   DeployedHandler,
@@ -189,6 +259,8 @@ export type {
 export {
   ADDRESS_SEPARATOR,
   AWAITING_META,
+  CHANNEL_DECLARED_META,
+  WHERE_DECLARED_META,
   CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVIRONMENT_META,
@@ -205,6 +277,20 @@ export type {
   EnvironmentValue,
   PatternMatch,
 } from './channel-pattern.js';
+export {
+  addressOnly,
+  hostOf,
+  innerServiceName,
+  isInnerHost,
+  keptValue,
+  localHostsOf,
+  looksSecret,
+  NO_SETTINGS,
+  portOf,
+} from './setting-files.js';
+export type { HostAlias, RepoSettings, ServiceBinding, SettingValue } from './setting-files.js';
+export { GUESSED_META, isTaken, RECORDED_META, strongestTaken, TAKEN_BY_META, TAKES_META } from './takes.js';
+export type { Takes, Taken, TakenInstead } from './takes.js';
 export { OPERATION_VERBS, operationsOf } from './declared-operations.js';
 export type { DeclaredOperation } from './declared-operations.js';
 export {
@@ -264,6 +350,7 @@ export type {
   DbCallInput,
   DbClassification,
   DbDescriptor,
+  DbFilterAt,
   DbOp,
   DbSource,
   TableOverride,
@@ -287,6 +374,7 @@ export type { BodyRead, Origin, ResolveOriginOptions, TypeOrigin } from './origi
 export type { AddressPart, BrokerAdapter, CallPattern, ChannelKind, StartedEntry } from './adapters/broker.js';
 export {
   EVERY_ELEMENT,
+  EVERY_KEY,
   locatedExpressions,
   locatedSlots,
   locatorApplies,
@@ -330,6 +418,7 @@ export {
 export type { Location, Reach } from './location.js';
 
 export {
+  forgetWorkspaces,
   isServiceSource,
   serviceExtent,
   serviceSourceDirs,
@@ -343,6 +432,7 @@ export {
   countSources,
   createProject,
   findTsconfig,
+  forgetPackageAliases,
   installedFiles,
   listRepoSources,
   reportSkippedTestDirectories,
@@ -361,9 +451,73 @@ export type {
   UnreadableSourceContext,
 } from './project.js';
 
+export {
+  declarationShapesOf,
+  installDeclarationShapes,
+  isDeclarationShape,
+  readShapeFile,
+  RESOLUTION_ORDER,
+  resolutionOrder,
+  shapeFileOf,
+  shapeFilesOf,
+} from './declaration-shapes.js';
+export type { DeclarationShape, ResolutionSource, ShapeFileReading } from './declaration-shapes.js';
+export { forgetPackageIndexes, NEVER_A_SOURCE, packageIndexOf, rangeIncludes, serviceDirOf } from './package-index.js';
+export type { PackageIndex, PackageIndexInput, PackageSource, PackageSourceOrigin } from './package-index.js';
+export {
+  closeStandIns,
+  hashShapeFile,
+  isWithinDir,
+  markStandInEdges,
+  mountedFileSystem,
+  mountOfPath,
+  mountsOf,
+  mountTableOf,
+  packageCoverage,
+  readStandInsOfBuild,
+  reportStandIns,
+  STAND_INS_FILENAME,
+  STAND_INS_FORMAT_VERSION,
+  standInFiles,
+  standInOfFile,
+  standInsFingerprint,
+  standInsFingerprintOf,
+  standInsFingerprintOfBuild,
+  standInsFor,
+  standInsOfBuild,
+  standInWants,
+  realPathOf,
+  virtualRootOf,
+  withdrawPackageSourceRows,
+} from './stand-ins.js';
+export { WORK_COUNTS } from './work-counts.js';
+export {
+  collectPackageUses,
+  exportKindOf,
+  packageOfImport,
+  starterShape,
+} from './package-uses.js';
+export type { MemberUse, ModuleUses, UsedExport } from './package-uses.js';
+export type {
+  Mount,
+  MountTable,
+  PackageAnswer,
+  PackageCover,
+  PackageIndexRecord,
+  StandInContext,
+  StandInOfFile,
+  StandInRequest,
+  StandInsFingerprint,
+  StandInsFingerprintInput,
+  StandInsForOptions,
+  StandInsOfBuild,
+  StandInsRead,
+} from './stand-ins.js';
+export { RXJS_DECLARATION_SHAPE, RXJS_SHAPE } from './rxjs-shape.js';
+
 export { isTestDirectory, isTestFile } from './test-files.js';
 
-export { namesGivenTo, takesNames } from './markers.js';
+export { docsAbove, jsDocCallsIn, jsDocCallsMarkers, namesGivenTo, takesNames, type JsDocCall } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';
 
 export { definePass } from './passes.js';
@@ -456,6 +610,8 @@ export {
   resolveReceiver,
 } from './di/member-call.js';
 export type { ClassMethod, ReceiverInfo } from './di/member-call.js';
+export { classMembersOf } from './di/class-members.js';
+export type { ClassMembers } from './di/class-members.js';
 export { DiMap } from './di/types.js';
 export type {
   DiEntry,
@@ -486,6 +642,7 @@ export {
 export type { PrimitiveName, TypeRef, TypeRefAst, TypeRefField } from './types/type-ref.js';
 
 export {
+  argumentAlong,
   addressAt,
   callSitesOf,
   choosesASegment,
@@ -508,6 +665,10 @@ export {
   rootSettingAddress,
   rootSettingKey,
   splitAtParameter,
+  verbAlong,
+  verbParameterOf,
+  verbsAtCallers,
+  verbSpelledBy,
   writtenBodyOutward,
 } from './trace.js';
 export type {
@@ -522,6 +683,8 @@ export type {
   RootSettingOptions,
   SettingAddress,
   SplitAddress,
+  VerbAtCaller,
+  VerbsAtCallers,
 } from './trace.js';
 
 export {
@@ -533,3 +696,320 @@ export {
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
+export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
+export { BOUNDED_BY, boundedLoopOf, isMigrationFile } from './bounded-loop.js';
+export { rankByReach, waysInOf } from './model/row-reach.js';
+export type { BoundedBy, BoundedLoop, BoundedLoopOptions, MigrationMarks } from './bounded-loop.js';
+export { lineAndColumnAt, startLineOf } from './line-numbers.js';
+export type { CallIndex, CallShape, ConcurrentShape, LoopShape } from './call-shape.js';
+export {
+  ACCEPTED_FILE,
+  ACCEPTED_FORMAT_VERSION,
+  acceptedFor,
+  acceptedKeyOf,
+  acceptedPathFor,
+  compileAccepted,
+  compileRoutePattern,
+  covers,
+  describeAccepted,
+  describeAcceptedProblem,
+  gapIdOf,
+  isFileGlob,
+  isGapId,
+  isRule,
+  loadAccepted,
+  matchesRoutePattern,
+  parseGapId,
+  readAccepted,
+  routeOfSymbol,
+  routePatternOf,
+  saveAccepted,
+  splitAccepted,
+  withAccepted,
+  withoutAccepted,
+} from './accepted.js';
+export {
+  ACCESS_META,
+  ACCESS_WHERE,
+  accessOf,
+  AUTH_CHECK_WORDS,
+  OPT_OUT_WORDS,
+  PUBLIC_WORDS,
+  soundsLikeAuthCheck,
+  soundsLikeOptOut,
+  soundsPublic,
+} from './access.js';
+export type { AccessGuard, AccessOptOut, AccessWhere, RouteAccess } from './access.js';
+export type {
+  AcceptedFile,
+  AcceptedGap,
+  AcceptedProblem,
+  AcceptedProblemKind,
+  AcceptedRead,
+  AcceptedRules,
+  AcceptedSplit,
+  GapLike,
+  RoutePattern,
+} from './accepted.js';
+export {
+  AMBIGUOUS_CANDIDATES,
+  cutWindow,
+  describeObservedProblem,
+  durationLabel,
+  HOUR_MS,
+  hourOf,
+  isJoinEdge,
+  JOIN_EDGE_TYPES,
+  joinIdOf,
+  joinOfId,
+  mergeBuckets,
+  mergeObserved,
+  mergeSamples,
+  OBSERVED_DROPPED,
+  OBSERVED_FILE,
+  OBSERVED_FORMAT_VERSION,
+  OBSERVED_KEPT,
+  OBSERVED_READ_VERSIONS,
+  observedFromParts,
+  observedOf,
+  observedOver,
+  observedPathFor,
+  parseDuration,
+  readObserved,
+  rollUp,
+  SAMPLES_PER_ENTRY,
+  SPANS_PER_SAMPLE,
+  upgradeObserved,
+} from './observed.js';
+export type {
+  AmbiguousKind,
+  AmbiguousSpan,
+  EntrySamples,
+  HitSeen,
+  JoinAgg,
+  MeasuredAt,
+  MergeOptions,
+  Observed,
+  ObservedBodies,
+  ObservedBucket,
+  ObservedFigures,
+  ObservedParts,
+  ObservedPrivacy,
+  ObservedProblem,
+  ObservedProblemKind,
+  ObservedRead,
+  ObservedRollUp,
+  ObservedSample,
+  ObservedSource,
+  ObservedWindow,
+  ReadWindow,
+  Seen,
+  TraceTree,
+  UnmatchedAgg,
+  UnmatchedKind,
+  UnmatchedSpan,
+} from './observed.js';
+export {
+  isValueKey,
+  mergeEntryShapes,
+  mergeShapeRecords,
+  mergeShapes,
+  SHAPE_BODY_BYTES,
+  SHAPE_DEPTH,
+  SHAPE_KEYS,
+  SHAPE_OBJECTS,
+  SHAPE_TYPES,
+  shapeAt,
+  shapeOf,
+  toTypeEntry,
+  TRAFFIC_TYPE_PREFIX,
+  trafficTypeOf,
+} from './observed-shape.js';
+export type { EntryShapes, FieldShape, JsonType, Shape, ShapeType, TrafficType } from './observed-shape.js';
+export {
+  addSpan,
+  BUCKET_RATIO,
+  bucketOf,
+  bucketUpper,
+  emptyAgg,
+  isError,
+  mergeAgg,
+  MIN_MS,
+  quantile,
+  summarise,
+} from './observed-stats.js';
+export type { Agg, Histogram, SpanFigures, Summary } from './observed-stats.js';
+export {
+  compareEntryFailures,
+  compareSeenFailures,
+  comparisonSays,
+  FAILURE_FROM,
+  FAILURE_MIN_HITS,
+  failureContextOf,
+  seenOfGroup,
+} from './observed-failures.js';
+export type {
+  CompareOptions,
+  DeclaredNeverSeen,
+  DeclaredSeen,
+  FailureComparison,
+  FailureContext,
+  GroupStatuses,
+  StatusMix,
+  UndeclaredFailure,
+} from './observed-failures.js';
+export { compileGlob, expandGlob, isGlob, NEVER_WALKED } from './glob.js';
+export type { Glob } from './glob.js';
+export {
+  compareChoices,
+  compareFailures,
+  FAILS_META,
+  FAILURE_SOURCES,
+  failsWithAny,
+  failuresOf,
+  groupFailures,
+  settleFailures,
+} from './failures.js';
+export type { Failure, FailureChoice, FailureGroup, FailureSource } from './failures.js';
+export { hasSiteOrder, loopOfEdge, runsBeside, runsOnFailure, siteOrderOf } from './edge-sites.js';
+export {
+  askNextOf,
+  compareFailChoices,
+  groupFails,
+  PROMPT_FAIL_SOURCES,
+  PROMPT_LIMITS,
+  PROMPT_MAX_NEXT,
+  PROMPT_REMEDY_REASONS,
+  PROMPT_WALK,
+  promptFit,
+  promptHintsFor,
+  promptMsSay,
+  promptNextFor,
+  promptRateSay,
+  promptRemediesOf,
+  promptRemedyLines,
+  renderPrompt,
+} from './prompt-text.js';
+export { REMEDIES, remediesOf, remedyLinesOf } from './remedies.js';
+export type {
+  PromptAccess,
+  PromptCheckPlace,
+  PromptCount,
+  PromptCrossing,
+  PromptFailChoice,
+  PromptFailGroup,
+  PromptFailure,
+  PromptFailuresSeen,
+  PromptGap,
+  PromptRuleBreak,
+  PromptSpec,
+  PromptLimits,
+  PromptLog,
+  PromptMarks,
+  PromptMember,
+  PromptOverview,
+  PromptRemedy,
+  PromptScope,
+  PromptStep,
+  PromptSubject,
+} from './prompt-text.js';
+
+export {
+  BLIND_SPOT_NAMES,
+  blindSpotMessage,
+  blindSpotNext,
+  blindSpotPlaces,
+  blindSpotRows,
+  blindSpotsOf,
+  SEEN_NOT_IN_CODE,
+} from './blind-spots.js';
+export type { BlindSpot, BlindSpotName, BlindSpotOptions } from './blind-spots.js';
+export {
+  CAUSE_META,
+  CAUSE_SAMPLES,
+  CAUSES_META,
+  CauseTally,
+  PACKAGE_META,
+  causeLabel,
+  causeMeta,
+  causeOfRow,
+  causePartsOf,
+  groupCantFollow,
+  hintForCause,
+  isKnownCause,
+  knownCauses,
+  placeIdOf,
+} from './cant-follow.js';
+export type {
+  CantFollow,
+  CantFollowByPackage,
+  CantFollowCause,
+  CantFollowOptions,
+  CantFollowPackage,
+  CantFollowRow,
+  CantFollowSample,
+  CausePart,
+  CauseSample,
+} from './cant-follow.js';
+export {
+  causeOfParameterType,
+  causeOfTypeNode,
+  causeOfUnresolvedType,
+  whyNoClass,
+  whyUntyped,
+} from './follow-cause.js';
+export type { FollowCause } from './follow-cause.js';
+export { importOf, statedOrigin } from './stated-origin.js';
+export type { StatedOrigin } from './stated-origin.js';
+export { conditionsHold } from './adapters/conditions.js';
+export type { DescriptionCondition } from './adapters/conditions.js';
+export { describedRequestsAt, httpVerbOf } from './adapters/http-clients.js';
+export type { DescribedEvidence, DescribedRequest } from './adapters/http-clients.js';
+export { describedCallKey, withdrawDescribedCalls } from './described-calls.js';
+export {
+  PATTERN_CAUSES,
+  PATTERN_KINDS,
+  patternRuleSchema,
+  patternsFor,
+  readPatternFile,
+  readPatternText,
+} from './patterns/schema.js';
+export type {
+  PatternExpectation,
+  PatternFileReading,
+  PatternKind,
+  PatternRule,
+  PatternTest,
+  RuleReading,
+} from './patterns/schema.js';
+export { isParsed, parsePattern } from './patterns/parse.js';
+export type { ParsedPattern, PatternCall, PatternEntry, PatternNode, PatternSyntaxError } from './patterns/parse.js';
+export { compilePattern, describedByOf, isCompiled, opOfName, ruleIdOf } from './patterns/compile.js';
+export type { CompiledDescriptor, CompiledRule, CompileResult, HolePlaces, PatternRefusal } from './patterns/compile.js';
+export { readPatterns, reportPatterns, withCompiledRules } from './patterns/apply.js';
+export type { PatternReading, PlacedRule, RefusedRule } from './patterns/apply.js';
+export { precedenceOf, precedenceRows } from './patterns/precedence.js';
+export type { Precedence } from './patterns/precedence.js';
+export { unmatchedPatternRows } from './patterns/unmatched.js';
+export type { ServiceNodes } from './patterns/unmatched.js';
+export { matchPatternAt } from './patterns/match.js';
+export type { MatchOptions, MatchStep, PatternFit } from './patterns/match.js';
+export { guessPatternKind } from './patterns/starter.js';
+export {
+  DEPLOYED_FILE,
+  DEPLOYED_FORMAT_VERSION,
+  DeployedInvalidError,
+  PIN_SOURCES,
+  deployedPathOf,
+  deployedSchema,
+  emptyDeployed,
+  loadDeployed,
+  parseDeployed,
+  parsePinFlags,
+  pinEnvName,
+  pinsFor,
+  pinsFromEnv,
+  withPin,
+  writeDeployed,
+} from './deployed.js';
+export type { Deployed, Pin, PinSource } from './deployed.js';

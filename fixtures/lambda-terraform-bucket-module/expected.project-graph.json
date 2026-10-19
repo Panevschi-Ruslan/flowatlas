@@ -1,0 +1,1355 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T11:01:54.038Z",
+  "services": [
+    {
+      "name": "scans",
+      "repo": "./scans",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:s3/library-page-archive",
+      "type": "channel",
+      "label": "s3/library-page-archive",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 109,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-s3"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:s3/library-page-scans",
+      "type": "channel",
+      "label": "s3/library-page-scans",
+      "repo": "scans",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-s3"
+        ],
+        "producers": 4,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:s3/library-page-thumbs",
+      "type": "channel",
+      "label": "s3/library-page-thumbs",
+      "repo": "scans",
+      "file": "infra/thumbs.tf.json",
+      "line": 5,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-s3"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/library-scan-withdrawn",
+      "type": "channel",
+      "label": "sns/library-scan-withdrawn",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 89,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/library-scan-imports",
+      "type": "channel",
+      "label": "sqs/library-scan-imports",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 80,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:scans#infra/main.tf:aws_lambda_event_source_mapping.catalogue_import",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.catalogue_import",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 80,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.catalogue_import",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+      "type": "consumer",
+      "label": "notification note-withdrawal",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 109,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.archive.lambda_function[0]",
+        "deployedBy": "terraform",
+        "name": "note-withdrawal",
+        "takes": {
+          "kinds": [
+            "s3:ObjectRemoved:DeleteMarkerCreated"
+          ],
+          "instead": [
+            {
+              "kind": "s3:ObjectRemoved:Delete",
+              "as": "s3:ObjectRemoved:DeleteMarkerCreated",
+              "unless": "VersionId"
+            }
+          ],
+          "by": {
+            "field": "Key",
+            "prefix": "pages/"
+          }
+        }
+      }
+    },
+    {
+      "id": "consumer:scans#infra/main.tf:aws_sns_topic_subscription.note_withdrawal",
+      "type": "consumer",
+      "label": "subscription aws_sns_topic_subscription.note_withdrawal",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 89,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.note_withdrawal",
+        "deployedBy": "terraform",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+      "type": "consumer",
+      "label": "notification index-page",
+      "repo": "scans",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+        "deployedBy": "terraform",
+        "name": "index-page",
+        "takes": {
+          "kinds": [
+            "s3:ObjectCreated:*"
+          ],
+          "instead": [
+            {
+              "kind": "s3:ObjectRemoved:Delete",
+              "as": "s3:ObjectRemoved:DeleteMarkerCreated",
+              "unless": "VersionId"
+            }
+          ],
+          "by": {
+            "field": "Key",
+            "prefix": "pages/"
+          }
+        }
+      }
+    },
+    {
+      "id": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "type": "consumer",
+      "label": "notification catalogue-import",
+      "repo": "scans",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+        "deployedBy": "terraform",
+        "name": "catalogue-import",
+        "takes": {
+          "kinds": [
+            "s3:ObjectCreated:CompleteMultipartUpload"
+          ],
+          "instead": [
+            {
+              "kind": "s3:ObjectRemoved:Delete",
+              "as": "s3:ObjectRemoved:DeleteMarkerCreated",
+              "unless": "VersionId"
+            }
+          ],
+          "by": {
+            "field": "Key",
+            "prefix": "imports/"
+          }
+        }
+      }
+    },
+    {
+      "id": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "type": "consumer",
+      "label": "notification withdrawn",
+      "repo": "scans",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+        "deployedBy": "terraform",
+        "name": "withdrawn",
+        "takes": {
+          "kinds": [
+            "s3:ObjectRemoved:DeleteMarkerCreated"
+          ],
+          "instead": [
+            {
+              "kind": "s3:ObjectRemoved:Delete",
+              "as": "s3:ObjectRemoved:DeleteMarkerCreated",
+              "unless": "VersionId"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]",
+      "type": "consumer",
+      "label": "notification forget-thumbs",
+      "repo": "scans",
+      "file": "infra/thumbs.tf.json",
+      "line": 5,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "aws_s3_bucket_notification.thumbs.lambda_function[0]",
+        "deployedBy": "terraform",
+        "name": "forget-thumbs",
+        "takes": {
+          "kinds": [
+            "s3:ObjectRemoved:Delete"
+          ],
+          "by": {
+            "field": "Key",
+            "prefix": "thumbs/"
+          }
+        }
+      }
+    },
+    {
+      "id": "entry:scans:invoke:library-scans-catalogue-import",
+      "type": "entry",
+      "label": "library-scans-catalogue-import",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scans-catalogue-import",
+        "deployedBy": "terraform",
+        "name": "library-scans-catalogue-import",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"catalogue-import\"]",
+        "handler": "pages/catalogue-import.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:scans:invoke:library-scans-forget-thumbs",
+      "type": "entry",
+      "label": "library-scans-forget-thumbs",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scans-forget-thumbs",
+        "deployedBy": "terraform",
+        "name": "library-scans-forget-thumbs",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"forget-thumbs\"]",
+        "handler": "pages/forget-thumbs.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#S3Event"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:scans:invoke:library-scans-import-batch",
+      "type": "entry",
+      "label": "library-scans-import-batch",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scans-import-batch",
+        "deployedBy": "terraform",
+        "name": "library-scans-import-batch",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"import-batch\"]",
+        "handler": "pages/import-batch.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:scans#Batch"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:scans:invoke:library-scans-index-page",
+      "type": "entry",
+      "label": "library-scans-index-page",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scans-index-page",
+        "deployedBy": "terraform",
+        "name": "library-scans-index-page",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"index-page\"]",
+        "handler": "pages/index-page.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#S3Event"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:scans:invoke:library-scans-note-withdrawal",
+      "type": "entry",
+      "label": "library-scans-note-withdrawal",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scans-note-withdrawal",
+        "deployedBy": "terraform",
+        "name": "library-scans-note-withdrawal",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"note-withdrawal\"]",
+        "handler": "pages/note-withdrawal.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:scans:invoke:library-scans-purge-version",
+      "type": "entry",
+      "label": "library-scans-purge-version",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scans-purge-version",
+        "deployedBy": "terraform",
+        "name": "library-scans-purge-version",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"purge-version\"]",
+        "handler": "pages/purge-version.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:scans#Superseded"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:scans:invoke:library-scans-store-page",
+      "type": "entry",
+      "label": "library-scans-store-page",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scans-store-page",
+        "deployedBy": "terraform",
+        "name": "library-scans-store-page",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"store-page\"]",
+        "handler": "pages/store-page.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:scans#StoredPage"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:scans:invoke:library-scans-withdraw-page",
+      "type": "entry",
+      "label": "library-scans-withdraw-page",
+      "repo": "scans",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-scans-withdraw-page",
+        "deployedBy": "terraform",
+        "name": "library-scans-withdraw-page",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.fn[\"withdraw-page\"]",
+        "handler": "pages/withdraw-page.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:scans#Withdrawal"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "type": "producer",
+      "label": "message sqs/library-scan-imports",
+      "repo": "scans",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "notification",
+        "declaredAs": "module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "type": "producer",
+      "label": "message sns/library-scan-withdrawn",
+      "repo": "scans",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "deployment",
+        "by": "notification",
+        "declaredAs": "module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:scans#src/pages/import-batch.ts:13:9",
+      "type": "producer",
+      "label": "s3:ObjectCreated:* s3/library-page-scans",
+      "repo": "scans",
+      "file": "src/pages/import-batch.ts",
+      "line": 13,
+      "kind": "s3:ObjectCreated:*",
+      "meta": {
+        "kind": "s3:ObjectCreated:*",
+        "adapter": "aws-s3",
+        "channelVia": "const",
+        "method": "upload",
+        "recorded": {
+          "Key": [
+            "imports/*.tiff"
+          ]
+        }
+      }
+    },
+    {
+      "id": "producer:scans#src/pages/purge-version.ts:12:9",
+      "type": "producer",
+      "label": "s3:ObjectRemoved:Delete s3/library-page-scans",
+      "repo": "scans",
+      "file": "src/pages/purge-version.ts",
+      "line": 12,
+      "kind": "s3:ObjectRemoved:Delete",
+      "meta": {
+        "kind": "s3:ObjectRemoved:Delete",
+        "adapter": "aws-s3",
+        "channelVia": "const",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "pages/*.tiff"
+          ],
+          "VersionId": []
+        }
+      }
+    },
+    {
+      "id": "producer:scans#src/pages/store-page.ts:11:9",
+      "type": "producer",
+      "label": "s3:ObjectCreated:CompleteMultipartUpload s3/library-page-scans",
+      "repo": "scans",
+      "file": "src/pages/store-page.ts",
+      "line": 11,
+      "kind": "s3:ObjectCreated:CompleteMultipartUpload",
+      "meta": {
+        "kind": "s3:ObjectCreated:CompleteMultipartUpload",
+        "adapter": "aws-s3",
+        "channelVia": "const",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "pages/*.tiff"
+          ]
+        }
+      }
+    },
+    {
+      "id": "producer:scans#src/pages/withdraw-page.ts:16:9",
+      "type": "producer",
+      "label": "s3:ObjectRemoved:Delete s3/library-page-scans",
+      "repo": "scans",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 16,
+      "kind": "s3:ObjectRemoved:Delete",
+      "meta": {
+        "kind": "s3:ObjectRemoved:Delete",
+        "adapter": "aws-s3",
+        "channelVia": "const",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "pages/*.tiff"
+          ]
+        }
+      }
+    },
+    {
+      "id": "producer:scans#src/pages/withdraw-page.ts:17:9",
+      "type": "producer",
+      "label": "s3:ObjectRemoved:Delete s3/library-page-archive",
+      "repo": "scans",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 17,
+      "kind": "s3:ObjectRemoved:Delete",
+      "meta": {
+        "kind": "s3:ObjectRemoved:Delete",
+        "adapter": "aws-s3",
+        "channelVia": "const",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "pages/*.tiff"
+          ]
+        }
+      }
+    },
+    {
+      "id": "producer:scans#src/pages/withdraw-page.ts:18:9",
+      "type": "producer",
+      "label": "s3:ObjectRemoved:Delete s3/library-page-thumbs",
+      "repo": "scans",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 18,
+      "kind": "s3:ObjectRemoved:Delete",
+      "meta": {
+        "kind": "s3:ObjectRemoved:Delete",
+        "adapter": "aws-s3",
+        "channelVia": "const",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "thumbs/*-small.png",
+            "thumbs/*-large.png"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:scans",
+      "type": "repo",
+      "label": "scans",
+      "repo": "scans",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "aws-sdk": 2,
+            "@aws-sdk/client-s3": 5
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "scans#src/pages/catalogue-import.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "scans",
+      "file": "src/pages/catalogue-import.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "cataloguing {messageId}",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "scans#src/pages/forget-thumbs.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "scans",
+      "file": "src/pages/forget-thumbs.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#S3Event"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "forgetting {key}",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "scans#src/pages/import-batch.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "scans",
+      "file": "src/pages/import-batch.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "batch",
+              "type": "type:scans#Batch"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "scans#src/pages/index-page.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "scans",
+      "file": "src/pages/index-page.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#S3Event"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "indexing {key}",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "scans#src/pages/note-withdrawal.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "scans",
+      "file": "src/pages/note-withdrawal.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SNSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "withdrawn: {Message}",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "scans#src/pages/purge-version.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "scans",
+      "file": "src/pages/purge-version.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "superseded",
+              "type": "type:scans#Superseded"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "scans#src/pages/store-page.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "scans",
+      "file": "src/pages/store-page.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "stored",
+              "type": "type:scans#StoredPage"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "scans#src/pages/withdraw-page.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "scans",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "withdrawal",
+              "type": "type:scans#Withdrawal"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:s3/library-page-archive",
+      "to": "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 109,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:s3/library-page-scans",
+      "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:s3/library-page-scans",
+      "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:s3/library-page-scans",
+      "to": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:s3/library-page-thumbs",
+      "to": "consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/thumbs.tf.json",
+      "line": 5,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:sns/library-scan-withdrawn",
+      "to": "consumer:scans#infra/main.tf:aws_sns_topic_subscription.note_withdrawal",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 89,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/library-scan-imports",
+      "to": "consumer:scans#infra/main.tf:aws_lambda_event_source_mapping.catalogue_import",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 80,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:scans#infra/main.tf:aws_lambda_event_source_mapping.catalogue_import",
+      "to": "entry:scans:invoke:library-scans-catalogue-import",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 80,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]",
+      "to": "entry:scans:invoke:library-scans-note-withdrawal",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 109,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:scans#infra/main.tf:aws_sns_topic_subscription.note_withdrawal",
+      "to": "entry:scans:invoke:library-scans-note-withdrawal",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 89,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]",
+      "to": "entry:scans:invoke:library-scans-index-page",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "to": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "to": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]",
+      "to": "entry:scans:invoke:library-scans-forget-thumbs",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/thumbs.tf.json",
+      "line": 5,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:scans:invoke:library-scans-catalogue-import",
+      "to": "scans#src/pages/catalogue-import.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/catalogue-import.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:scans:invoke:library-scans-forget-thumbs",
+      "to": "scans#src/pages/forget-thumbs.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/forget-thumbs.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:scans:invoke:library-scans-import-batch",
+      "to": "scans#src/pages/import-batch.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/import-batch.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:scans:invoke:library-scans-index-page",
+      "to": "scans#src/pages/index-page.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/index-page.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:scans:invoke:library-scans-note-withdrawal",
+      "to": "scans#src/pages/note-withdrawal.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/note-withdrawal.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:scans:invoke:library-scans-purge-version",
+      "to": "scans#src/pages/purge-version.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/purge-version.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:scans:invoke:library-scans-store-page",
+      "to": "scans#src/pages/store-page.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/store-page.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:scans:invoke:library-scans-withdraw-page",
+      "to": "scans#src/pages/withdraw-page.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]",
+      "to": "channel:sqs/library-scan-imports",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]",
+      "to": "channel:sns/library-scan-withdrawn",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/notifications.tf",
+      "line": 4,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:scans#src/pages/import-batch.ts:13:9",
+      "to": "channel:s3/library-page-scans",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/pages/import-batch.ts",
+      "line": 13,
+      "meta": {
+        "takenBy": [
+          "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].queue[0]"
+        ],
+        "because": [
+          "the call is any of s3:ObjectCreated:*, and it takes s3:ObjectCreated:CompleteMultipartUpload alone"
+        ]
+      }
+    },
+    {
+      "from": "producer:scans#src/pages/purge-version.ts:12:9",
+      "to": "channel:s3/library-page-scans",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/pages/purge-version.ts",
+      "line": 12,
+      "meta": {
+        "takenBy": [],
+        "because": [
+          "nothing on the channel takes it"
+        ]
+      }
+    },
+    {
+      "from": "producer:scans#src/pages/store-page.ts:11:9",
+      "to": "channel:s3/library-page-scans",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/pages/store-page.ts",
+      "line": 11,
+      "meta": {
+        "takenBy": [
+          "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].lambda_function[0]"
+        ]
+      }
+    },
+    {
+      "from": "producer:scans#src/pages/withdraw-page.ts:16:9",
+      "to": "channel:s3/library-page-scans",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 16,
+      "meta": {
+        "takenBy": [
+          "consumer:scans#infra/notifications.tf:module.pages_notification.aws_s3_bucket_notification.this[0].topic[0]"
+        ]
+      }
+    },
+    {
+      "from": "producer:scans#src/pages/withdraw-page.ts:17:9",
+      "to": "channel:s3/library-page-archive",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 17,
+      "meta": {
+        "takenBy": [
+          "consumer:scans#infra/main.tf:aws_s3_bucket_notification.archive.lambda_function[0]"
+        ]
+      }
+    },
+    {
+      "from": "producer:scans#src/pages/withdraw-page.ts:18:9",
+      "to": "channel:s3/library-page-thumbs",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 18,
+      "meta": {
+        "takenBy": [
+          "consumer:scans#infra/thumbs.tf.json:aws_s3_bucket_notification.thumbs.lambda_function[0]"
+        ]
+      }
+    },
+    {
+      "from": "scans#src/pages/import-batch.ts:handler",
+      "to": "producer:scans#src/pages/import-batch.ts:13:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/import-batch.ts",
+      "line": 13
+    },
+    {
+      "from": "scans#src/pages/purge-version.ts:handler",
+      "to": "producer:scans#src/pages/purge-version.ts:12:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/purge-version.ts",
+      "line": 12
+    },
+    {
+      "from": "scans#src/pages/store-page.ts:handler",
+      "to": "producer:scans#src/pages/store-page.ts:11:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/store-page.ts",
+      "line": 11
+    },
+    {
+      "from": "scans#src/pages/withdraw-page.ts:handler",
+      "to": "producer:scans#src/pages/withdraw-page.ts:16:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 16
+    },
+    {
+      "from": "scans#src/pages/withdraw-page.ts:handler",
+      "to": "producer:scans#src/pages/withdraw-page.ts:17:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 17
+    },
+    {
+      "from": "scans#src/pages/withdraw-page.ts:handler",
+      "to": "producer:scans#src/pages/withdraw-page.ts:18:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/withdraw-page.ts",
+      "line": 18
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#S3Event": {
+      "name": "S3Event",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "debc039fb07befd0",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SNSEvent": {
+      "name": "SNSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "17e8e52b989c5abe",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:scans#Batch": {
+      "name": "Batch",
+      "kind": "object",
+      "declaredIn": "scans#src/pages/import-batch.ts",
+      "structuralHash": "35ab5ff979047a2c",
+      "fields": [
+        {
+          "name": "batch",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:scans#StoredPage": {
+      "name": "StoredPage",
+      "kind": "object",
+      "declaredIn": "scans#src/pages/store-page.ts",
+      "structuralHash": "8b36000721e7763a",
+      "fields": [
+        {
+          "name": "page",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "uploadId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:scans#Superseded": {
+      "name": "Superseded",
+      "kind": "object",
+      "declaredIn": "scans#src/pages/purge-version.ts",
+      "structuralHash": "3409c790e627f5b5",
+      "fields": [
+        {
+          "name": "page",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:scans#Withdrawal": {
+      "name": "Withdrawal",
+      "kind": "object",
+      "declaredIn": "scans#src/pages/withdraw-page.ts",
+      "structuralHash": "404c03918067cc8b",
+      "fields": [
+        {
+          "name": "page",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "scans",
+      "file": "src/pages/purge-version.ts",
+      "line": 12,
+      "reason": "s3-write-matches-nothing",
+      "level": "info",
+      "message": "the call at src/pages/purge-version.ts:12 is s3:ObjectRemoved:Delete on s3/library-page-scans, and none of its 3 notification(s) takes it",
+      "hint": "Each notification takes some events and, where it filters, keys with a given start and end. Nothing to fix if the write is meant to notify nobody.",
+      "symbol": "producer:scans#src/pages/purge-version.ts:12:9",
+      "meta": {
+        "notifications": [
+          "notification catalogue-import",
+          "notification index-page",
+          "notification withdrawn"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "entry:orders:http:POST:/orders/:param/archive",
+  "type": "entry",
+  "kind": "http",
+  "service": "orders",
+  "loc": "src/orders/orders.controller.ts:42",
+  "verdict": "unknown",
+  "reason": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it",
+  "class": "actionable",
+  "evidence": {
+    "oneOff": [
+      {
+        "call": "http_out:gateway#src/clients/orders.client.ts:44:12",
+        "asks": "POST /orders/:param/cancel",
+        "differs": "cancel for archive",
+        "loc": "src/clients/orders.client.ts:44"
+      }
+    ]
+  },
+  "next": [
+    "get_source({symbol: \"http_out:gateway#src/clients/orders.client.ts:44:12\"})",
+    "get_source({symbol: \"entry:orders:http:POST:/orders/:param/archive\"})",
+    "cant_follow({service: \"orders\"})"
+  ]
+}

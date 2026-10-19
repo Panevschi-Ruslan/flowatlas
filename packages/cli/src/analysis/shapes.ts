@@ -1,4 +1,5 @@
 import { CONFIDENCE_LEVELS } from '@flowatlas/core';
+import { DEAD_VERDICTS } from '@flowatlas/linker';
 import { z } from 'zod';
 
 /**
@@ -49,6 +50,27 @@ export const cyclesResultSchema = z.object({
   warnings: z.array(warning).optional(),
 });
 
+const located = { file: z.string().optional(), line: z.number().int().optional() };
+
+/** What a `dead` row claims (P95), from the linker's `DEAD_VERDICTS`. */
+const verdict = z.enum(DEAD_VERDICTS);
+
+/** What could make a verdict wrong (P95): the linker's `DeadEvidence`. */
+const evidence = z.object({
+  couldHit: z.array(z.object({ call: z.string(), path: z.string(), ...located })).optional(),
+  oneOff: z.array(z.object({ call: z.string(), asks: z.string(), differs: z.string(), ...located })).optional(),
+  outside: z.string().optional(),
+  callers: z.number().int().optional(),
+  caller: z.string().optional(),
+  missing: z.enum(['consumer', 'producer', 'both']).optional(),
+  unresolvedInjects: z.number().int().optional(),
+  classReached: z.literal(true).optional(),
+  via: z.string().optional(),
+  /** Traffic in the window (P110): how often it went through, or that it never did and how far to trust that. */
+  seen: z.object({ count: z.number().int(), lastSeen: z.string().nullable(), window: z.string() }).optional(),
+  neverSeen: z.object({ window: z.string(), confidence: z.enum(['strong', 'weak']) }).optional(),
+});
+
 export const deadResultSchema = z.object({
   analyticsFormatVersion: version,
   // One value for the whole document: none of these four predicates can prove
@@ -64,6 +86,16 @@ export const deadResultSchema = z.object({
         file: z.string().optional(),
         line: z.number().int().optional(),
         reason: z.string(),
+        /** What the row is (P91): only `actionable` rows are findings. */
+        class: z.enum(['actionable', 'stream', 'infrastructure', 'declared']),
+        /** The rule that put the row in its class. */
+        why: z.string(),
+        role: z.enum(['probe', 'webhook', 'callback', 'discovery', 'configured']).optional(),
+        /** `likely-dead` where a request whose address was read in part could reach it. */
+        confidence: z.enum(['dead', 'likely-dead']),
+        /** What `dead` claims (P95): `dead`, `likely-dead` or `unknown`; `alive` only where traffic was seen (P110). */
+        verdict,
+        evidence: evidence.optional(),
       }),
     )
     .optional(),
@@ -74,6 +106,8 @@ export const deadResultSchema = z.object({
         producers: z.array(z.string()),
         consumers: z.array(z.string()),
         reason: z.string(),
+        verdict,
+        evidence,
       }),
     )
     .optional(),
@@ -85,6 +119,8 @@ export const deadResultSchema = z.object({
         file: z.string().optional(),
         line: z.number().int().optional(),
         reason: z.string(),
+        verdict,
+        evidence: evidence.optional(),
       }),
     )
     .optional(),

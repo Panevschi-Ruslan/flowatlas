@@ -1,0 +1,42 @@
+{
+  "entry": "entry:gateway:http:GET:/orders/:param",
+  "traffic": {
+    "samples": 1,
+    "window": {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-16T09:00:00.000Z"
+    },
+    "against": {
+      "response": "type:web#OrderDto"
+    },
+    "responses": {
+      "200": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "field": "history",
+          "expected": null,
+          "actual": "Record<string,object>",
+          "seenIn": 1,
+          "of": 1,
+          "message": "responses carry `history: Record<string,object>`; web's OrderDto declares no such field (1 of 1)"
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "field": "owner",
+          "expected": null,
+          "actual": "string",
+          "seenIn": 1,
+          "of": 1,
+          "message": "responses carry `owner: string`; web's OrderDto declares no such field (1 of 1)"
+        }
+      ]
+    }
+  },
+  "callers": 2,
+  "next": [
+    "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:21:12\", to: \"entry:gateway:http:GET:/orders/:param\"})",
+    "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:73:12\", to: \"entry:gateway:http:GET:/orders/:param\"})"
+  ]
+}

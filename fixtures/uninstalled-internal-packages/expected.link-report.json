@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T23:29:52.041Z",
+  "configHash": "33d6136e10ea",
+  "services": [
+    {
+      "name": "loans-api",
+      "repo": "./loans-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 7,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 659,
+      "packages": {
+        "name": "loans-api",
+        "runtime": [
+          "@acme/feature-flags",
+          "@acme/money",
+          "@acme/queue-client",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "money-lib",
+      "repo": "./money-lib",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 1,
+      "edges": 0,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 477,
+      "packages": {
+        "name": "@acme/money",
+        "runtime": [],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 0,
+    "noConsumers": [
+      "channel:loan.approved"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:loans-api:http:GET:/loans/:param/fee",
+      "entry:loans-api:http:POST:/loans"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 13,
+    "edges": 7,
+    "types": 1,
+    "missed": 1,
+    "sites": 1,
+    "notes": 2,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

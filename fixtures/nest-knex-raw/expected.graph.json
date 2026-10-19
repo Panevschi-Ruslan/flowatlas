@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-knex-raw",
-  "generatedAt": "2026-10-07T14:34:16.328Z",
+  "generatedAt": "2026-10-17T03:50:21.595Z",
   "nodes": [
     {
       "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:14:12",
@@ -209,7 +209,8 @@
         "package": "knex",
         "method": "raw",
         "receiver": "this.db",
-        "source": "sql-parse"
+        "source": "sql-parse",
+        "batch": true
       }
     },
     {
@@ -717,7 +718,14 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/reports/reports.service.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "concurrent": true,
+        "together": {
+          "by": "Promise.all",
+          "line": 43
+        }
+      }
     },
     {
       "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.both",
@@ -725,7 +733,14 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/reports/reports.service.ts",
-      "line": 45
+      "line": 45,
+      "meta": {
+        "concurrent": true,
+        "together": {
+          "by": "Promise.all",
+          "line": 43
+        }
+      }
     },
     {
       "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.emails",
@@ -816,6 +831,31 @@
       "level": "info",
       "hint": "db on ReportsService is a field assigned a function from elsewhere, so there is no one body to follow. Declare it as a method to make the edge visible.",
       "symbol": "ReportsService.large -> this.db",
+      "meta": {
+        "causes": [
+          {
+            "cause": "function-field",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/reports/reports.service.ts",
+                "line": 67,
+                "symbol": "ReportsService.large -> this.db"
+              },
+              {
+                "file": "src/reports/reports.service.ts",
+                "line": 78,
+                "symbol": "ReportsService.emails -> this.db"
+              },
+              {
+                "file": "src/reports/reports.service.ts",
+                "line": 86,
+                "symbol": "ReportsService.touch -> this.db"
+              }
+            ]
+          }
+        ]
+      },
       "sites": 3
     }
   ]

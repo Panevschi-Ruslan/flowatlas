@@ -3,6 +3,7 @@ import {
   makeHttpEntryKey,
   normalizePath,
   UNREAD_SPAN,
+  type DeclaredStream,
   type DeployedDelivery,
   type DeployedFunction,
   type DeployedHandler,
@@ -20,11 +21,14 @@ import { readStateMachineInstance } from './state-machines.js';
 import { addressesOf, joinSegments, MAPPING_READERS } from './addresses.js';
 import { argument, siteOf, textOf, whyNot } from './arguments.js';
 import { environmentOf } from './environment.js';
+import { DESTINATION_READERS } from './destinations.js';
 import { EVENT_READERS } from './events.js';
+import { INVOKER_READERS } from './invokers.js';
 import { integrationOfRoute, integrationType, resourceIntegration, sentBy, type Integration } from './integrations.js';
 import { OPENAPI_BODY_READERS } from './openapi-body.js';
 import { PIPE_READERS } from './pipes.js';
 import { QUEUE_READERS } from './queues.js';
+import { BUCKET_READERS } from './buckets.js';
 import type { ResourceReading, RouteDraft, RouteGuard, RoutePath } from './reading.js';
 import { SOCKET_READERS } from './websocket.js';
 
@@ -58,6 +62,7 @@ export class DeploymentReading implements ResourceReading {
   readonly roots: PublishedRoot[] = [];
   readonly workflows: DeployedWorkflow[] = [];
   readonly deliveries: DeployedDelivery[] = [];
+  readonly streams: DeclaredStream[] = [];
   readonly rows: Unresolved[] = [];
   readonly #functionIndex = new Map<Instance, number>();
   readonly #instances: Instance[];
@@ -92,9 +97,17 @@ export class DeploymentReading implements ResourceReading {
     ['aws_api_gateway_method', (instance) => this.#restRoute(instance)],
     ['aws_apigatewayv2_route', (instance) => this.#httpRoute(instance)],
     ['aws_sfn_state_machine', (instance) => this.#workflow(instance)],
-    ...[...OPENAPI_BODY_READERS, ...SOCKET_READERS, ...MAPPING_READERS, ...EVENT_READERS, ...QUEUE_READERS, ...PIPE_READERS].map(
-      ([type, read]) => [type, (instance: Instance) => read(instance, this)] as const,
-    ),
+    ...[
+      ...OPENAPI_BODY_READERS,
+      ...SOCKET_READERS,
+      ...MAPPING_READERS,
+      ...EVENT_READERS,
+      ...QUEUE_READERS,
+      ...PIPE_READERS,
+      ...INVOKER_READERS,
+      ...DESTINATION_READERS,
+      ...BUCKET_READERS,
+    ].map(([type, read]) => [type, (instance: Instance) => read(instance, this)] as const),
   ];
 
   read(): Deployment {
@@ -108,6 +121,7 @@ export class DeploymentReading implements ResourceReading {
       roots: this.roots,
       workflows: this.workflows,
       deliveries: this.deliveries,
+      streams: this.streams,
       rows: [...this.configuration.rows, ...this.rows],
     };
   }
@@ -411,7 +425,14 @@ export class DeploymentReading implements ResourceReading {
         ...(resolvedTarget === undefined ? {} : { target: resolvedTarget }),
         ...(path.kind === 'root' ? { root: { key: path.key, below: normalizePath(path.below) } } : {}),
         ...(draft.guards.length === 0 ? {} : { guards: draft.guards }),
-        meta: { declaredAs: draft.address, key: makeHttpEntryKey(method, fullPath), ...address.meta },
+        meta: {
+          declaredAs: draft.address,
+          key: makeHttpEntryKey(method, fullPath),
+          // What keeps the route apart from another API's when the name is not read (P61).
+          ...(api === undefined ? {} : { apiAddress: api.address }),
+          ...address.meta,
+          ...draft.meta,
+        },
       });
     }
   }

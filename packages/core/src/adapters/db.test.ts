@@ -308,3 +308,47 @@ describe('classifying a call', () => {
     ).toMatchObject({ table: 'Order', op: 'read', confidence: 'static' });
   });
 });
+
+describe('a table named by the entity class handed to a call (P88)', () => {
+  const manager: DbDescriptor = { ...descriptor, tableOverride: { kind: 'entity-arg', index: 0 } };
+  const onManager = origin({ typeName: 'EntityManager', typeArgs: [] });
+
+  it('takes the table the caller read off the class', () => {
+    const result = classifyDbCall({
+      method: 'find',
+      origin: onManager,
+      descriptor: manager,
+      entityArg: { table: 'orders', declared: 'Order' },
+    });
+    expect(result).toMatchObject({
+      emit: true,
+      table: 'orders',
+      tables: ['orders'],
+      op: 'read',
+      source: 'entity-arg',
+      confidence: 'static',
+      entityType: 'Order',
+    });
+  });
+
+  it('records no declared name when the class name is the table', () => {
+    const result = classifyDbCall({
+      method: 'save',
+      origin: onManager,
+      descriptor: manager,
+      entityArg: { table: 'Reviewer', declared: 'Reviewer' },
+    });
+    expect(result?.table).toBe('Reviewer');
+    expect(result?.entityType).toBeUndefined();
+  });
+
+  it('names no table when no class was read', () => {
+    const result = classifyDbCall({ method: 'find', origin: onManager, descriptor: manager });
+    expect(result).toMatchObject({ table: null, tables: [], source: 'entity-arg', confidence: 'heuristic' });
+  });
+
+  it('lets the type argument answer with what its declaration states', () => {
+    const result = classifyDbCall({ method: 'find', origin: origin(), descriptor, entityTable: 'orders' });
+    expect(result).toMatchObject({ table: 'orders', source: 'type-arg', entityType: 'Order' });
+  });
+});

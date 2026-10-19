@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
 import type { CreateOrderDto, OrderDto } from '../clients/dto';
 import { OrdersClient } from '../clients/orders.client';
@@ -12,5 +12,10 @@ export class GatewayController {
   create(@Body() body: CreateOrderDto): OrderDto {
     this.orders.create(body);
     return { id: '1', customerId: body.customerId, status: 'created' };
+  }
+
+  @Get(':id/shipment')
+  shipment(@Param('id') id: string): void {
+    this.orders.shipment(id);
   }
 }

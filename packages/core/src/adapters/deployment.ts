@@ -81,7 +81,7 @@ export interface DeployedFunction {
  * `stream` is an ordered log a reader walks; a `table`'s changes can be read in
  * order as well.
  */
-export type DeployedKind = 'function' | 'workflow' | 'queue' | 'topic' | 'bus' | 'table' | 'stream';
+export type DeployedKind = 'function' | 'workflow' | 'queue' | 'topic' | 'bus' | 'table' | 'stream' | 'bucket';
 
 /** One value a function is deployed with. */
 export interface DeployedSetting {
@@ -96,9 +96,10 @@ export interface DeployedSetting {
    * What the value is an attribute of, when it is one of something deployed:
    * its URL, its ARN, its name. The name is the deployed name, which is what
    * everything joins on, so it is given even where the value itself - an ARN
-   * the provider assigns - is not known until the thing is created.
+   * the provider assigns - is not known until the thing is created. A `url`
+   * is a function's own address, named by the function (P54).
    */
-  readonly names?: { readonly kind: DeployedKind; readonly name: string };
+  readonly names?: { readonly kind: DeployedKind | 'url'; readonly name: string };
   /** Why the value is not read, when it is not. */
   readonly unread?: {
     readonly text: string;
@@ -129,6 +130,11 @@ export type DeliveryTarget =
   | { readonly kind: 'function'; readonly name: string }
   /** A workflow, by its deployed name: whoever declares it, here or elsewhere. */
   | { readonly kind: 'workflow'; readonly name: string }
+  /**
+   * A table written to or a stream put on, by its deployed name: a publisher
+   * onto the channel its stream's readers take from (P56).
+   */
+  | { readonly kind: 'changes'; readonly of: 'table' | 'stream'; readonly name: string }
   | MessageTarget;
 
 /**
@@ -171,10 +177,48 @@ export type DeliverySource =
    * of the message. `api` is the API's name, or where it is declared when its
    * name is not read.
    */
-  | { readonly kind: 'connection'; readonly api: string; readonly route: string };
+  | { readonly kind: 'connection'; readonly api: string; readonly route: string }
+  /**
+   * The objects written to and removed from a bucket, as one notification of
+   * it takes them: the events it names as written (`s3:ObjectCreated:*`), and
+   * the start and end of the keys it filters on, when it filters (P52).
+   */
+  | {
+      readonly kind: 'bucket';
+      readonly name: string;
+      readonly events: readonly string[];
+      readonly prefix?: string;
+      readonly suffix?: string;
+      /**
+       * The bucket keeps versions: a delete that names no version removes
+       * nothing and leaves a delete marker, firing
+       * `s3:ObjectRemoved:DeleteMarkerCreated` (P56).
+       */
+      readonly versioned?: boolean;
+    }
+  /**
+   * A service that runs a function itself, on a happening of its own nothing
+   * in code publishes: a sign-up in a user pool, a message on an IoT topic.
+   * `key` is the way in as the graph spells it, `cognito/<pool>/<trigger>` or
+   * `iot/<topic filter>`.
+   */
+  | { readonly kind: 'trigger'; readonly service: string; readonly key: string }
+  /**
+   * What a function's run ends in, handed on by the platform: an invocation's
+   * result to the destination for its success or its failure, or a batch a
+   * mapping gave up on (P54). `of` is the function, by its position in
+   * `functions`, the address of the mapping's own delivery, which is drawn
+   * before this one, or, for a function another deployment creates, its
+   * deployed name, which the linker joins to that function's entry (P60).
+   */
+  | {
+      readonly kind: 'outcome';
+      readonly when: 'success' | 'failure';
+      readonly of: { readonly function: number } | { readonly delivery: string } | { readonly name: string };
+    };
 
 /** What declares a delivery. */
-export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route';
+export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route' | 'notification' | 'trigger' | 'destination';
 
 /**
  * One way messages reach something: a rule's target, a subscription, a mapping
@@ -313,6 +357,21 @@ export interface DeployedWorkflow {
   readonly meta?: Record<string, unknown>;
 }
 
+/**
+ * A stream of records the deployment declares: a table's stream of changes, or
+ * a stream of its own. What is written to it is a message to whatever reads it,
+ * so a write onto it is a publish (P51).
+ */
+export interface DeclaredStream {
+  readonly file: string;
+  readonly line: number;
+  /** Where it is declared, in the deployment's own terms. */
+  readonly address: string;
+  readonly of: 'table' | 'stream';
+  /** The table's or the stream's deployed name. */
+  readonly name: string;
+}
+
 /** Everything one reader found in one repository. */
 export interface Deployment {
   readonly functions: readonly DeployedFunction[];
@@ -321,6 +380,8 @@ export interface Deployment {
   readonly workflows: readonly DeployedWorkflow[];
   /** The subscribers it declares (P23). */
   readonly deliveries: readonly DeployedDelivery[];
+  /** The streams it declares, which a write in code publishes onto (P51). */
+  readonly streams?: readonly DeclaredStream[];
   /** What could not be read, with repo-relative files. */
   readonly rows: readonly Unresolved[];
 }

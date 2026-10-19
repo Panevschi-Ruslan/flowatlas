@@ -193,7 +193,8 @@ describe('what a write through a new descriptor is worth to the strip check', ()
  * defect agreed.
  */
 const plain = fixtureAt('fn-data-layer');
-const plainWrite = writeIn(plain, 'Order');
+// The table is what `@Entity('orders')` states (P88 D1); the document is still `Order`.
+const plainWrite = writeIn(plain, 'orders');
 const about: About = { repo: 'fn-data-layer', write: plainWrite, types: plain.types };
 
 describe('a write whose entity name had no suffix to strip', () => {

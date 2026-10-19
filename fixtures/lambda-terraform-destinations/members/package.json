@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-members",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A lending library's members: an alert the loans service hands failures to, and a digest whose results it routes.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

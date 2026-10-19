@@ -30,7 +30,7 @@ const requestShape = (
   method: TsNode,
   collect: (parameter: ParameterDeclaration) => TypeRef,
 ): Record<string, TypeRef> => {
-  const parts: Record<string, Array<{ key?: string; ref: TypeRef }>> = {};
+  const parts: Record<string, Array<{ key?: string; ref: TypeRef; optional?: boolean }>> = {};
   // Only a method written as a method has parameters a decorator can sit on.
   if (!Node.isMethodDeclaration(method)) return {};
 
@@ -43,7 +43,10 @@ const requestShape = (
       if (part === undefined) continue;
       const key = firstStringArg(decorator);
       const ref = collect(parameter);
-      (parts[part] ??= []).push(key === undefined ? { ref } : { key, ref });
+      // `@Query('page') page?: number` and `page = 1` may be left out by a
+      // caller: an optional field of the part, not a required one (P197).
+      const optional = parameter.hasQuestionToken() || parameter.hasInitializer();
+      (parts[part] ??= []).push(key === undefined ? { ref } : { key, ref, ...(optional ? { optional } : {}) });
     }
   }
 
@@ -54,13 +57,13 @@ const requestShape = (
       out[part] = whole.ref;
       continue;
     }
-    out[part] = `{${entries.map((entry) => `${entry.key}:${entry.ref}`).join(';')}}`;
+    out[part] = `{${entries.map((entry) => `${entry.key}${entry.optional === true ? '?' : ''}:${entry.ref}`).join(';')}}`;
   }
   return out;
 };
 
 /** Every method of every class this reader indexed, however written, by its node's id. */
-function* methodsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode]> {
+export function* methodsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode]> {
   for (const indexed of ctx.classes.all()) {
     for (const method of methodsOfClass(indexed.declaration)) {
       const id = ctx.methodIdOf(method);
@@ -70,7 +73,7 @@ function* methodsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode
 }
 
 /** Every function this reader made a node of, by that node's id. */
-function* functionsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode]> {
+export function* functionsOf(ctx: NestExtractContext): Generator<readonly [string, TsNode]> {
   for (const [id, fn] of ctx.drawnFunctions) yield [id, fn.declaration];
 }
 

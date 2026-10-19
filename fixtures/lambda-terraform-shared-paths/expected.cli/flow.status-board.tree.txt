@@ -1,0 +1,22 @@
+@  library-branch-kiosk-status-board        kiosk/infra/main.tf:24
+  -> handler                                kiosk/src/kiosk/status-board.ts:9
+    $  LOANS_API_URL                        kiosk/src/kiosk/status-board.ts:10
+    ^  GET /status                          kiosk/src/kiosk/status-board.ts:10
+      => branch @  GET /status ~heuristic   branch/infra/apis.tf:14
+        -> handler                          branch/src/status/loans-status.ts:4
+    $  EVENTS_API_URL                       kiosk/src/kiosk/status-board.ts:11
+    ^  GET /status                          kiosk/src/kiosk/status-board.ts:11
+      => branch @  GET /status ~heuristic   branch/infra/apis.tf:32
+        -> handler                          branch/src/status/events-status.ts:4
+    $  STAFF_LB_URL                         kiosk/src/kiosk/status-board.ts:12
+    ^  GET /health                          kiosk/src/kiosk/status-board.ts:12
+    $  BRANCH_URL                           kiosk/src/kiosk/status-board.ts:14
+    ^  GET /status                          kiosk/src/kiosk/status-board.ts:14
+    -> HoursBoard.deskHours                 kiosk/src/kiosk/hours-board.ts:10
+      $  DESK_HOURS_URL                     kiosk/src/kiosk/hours-board.ts:12
+      ^  GET /:param                        kiosk/src/kiosk/hours-board.ts:12
+        => branch @  GET /hours ~heuristic  branch/infra/hours.tf:23
+          -> handler                        branch/src/hours/desk-hours.ts:4
+    -> HoursBoard.anyHours                  kiosk/src/kiosk/hours-board.ts:17
+      ^  GET ? ~heuristic                   kiosk/src/kiosk/hours-board.ts:19
+unresolved on this path: 6

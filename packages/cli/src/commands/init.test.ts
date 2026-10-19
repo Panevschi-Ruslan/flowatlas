@@ -173,7 +173,8 @@ describe('runInit', () => {
     makeRepo(root, 'api', { name: 'api', dependencies: { '@nestjs/core': '10.0.0' } });
 
     const linked = join(makeRoot(), 'by-another-name');
-    symlinkSync(join(out, '..'), linked, 'dir');
+    // A junction on Windows, which needs no privilege a directory link does (P199).
+    symlinkSync(join(out, '..'), linked, process.platform === 'win32' ? 'junction' : 'dir');
 
     const result = await runInit({
       dir: root,
@@ -208,6 +209,7 @@ describe('runInit', () => {
       entry: { registries: [], http: [], procedures: [] },
       broker: { custom: [] },
       starters: [],
+      http: { clients: [] },
       infra: { modules: [] },
       db: { localBaseClasses: [], tables: [] },
       frontend: { localClientClasses: [] },

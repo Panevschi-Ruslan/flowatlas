@@ -1,0 +1,9 @@
+{
+  "services": [
+    { "name": "gateway", "repo": "../../gateway", "type": "nestjs" },
+    { "name": "orders", "repo": "../../orders", "type": "nestjs" },
+    { "name": "jobs", "repo": "../../jobs", "type": "lambda" },
+    { "name": "payments-api", "repo": "../../payments-api", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

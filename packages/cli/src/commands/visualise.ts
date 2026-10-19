@@ -1,11 +1,20 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
-import { loadConfig } from '@flowatlas/core';
+import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted, type AcceptedRead } from '@flowatlas/core';
+import { trafficPaths, trafficReport } from '@flowatlas/contracts';
+import { acceptedSplitOf, confirmedJoins, neverSeen, type ContractBreak, type GraphDb } from '@flowatlas/linker';
+import { blindSpotsAsRows, CONTRACT_STATUS_RANK, crossingStatusOf, docsNow, loadContractBreaks, rankedFindingsOf } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
-import { openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
+import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
+import { readObservedBeside } from '../observe/store.js';
 import { EDITOR_NAMES } from '../visualise/graph.js';
-import { packGraph, type PackInput } from '../visualise/pack.js';
+import { packGraph, type PackedGraph, type PackInput } from '../visualise/pack.js';
+import type { PackDiffInput, PackTraffic } from '../visualise/observed.js';
+import { diffNamesOf, minCountOf, readDiffPair } from './observe.js';
+import { packChanges, type PackedChanges } from '../visualise/changes.js';
+import { runDiff } from './diff.js';
 import { shipped } from '../own-path.js';
 
 /** A file the page is made of, beside the code whether that is source or build output. */
@@ -24,18 +33,105 @@ const part = (name: string): string => {
 };
 
 /**
- * The page, with the graph view's logic written into it.
- *
- * The logic is three modules of its own - what to draw, the frame around it,
- * and the map of the whole project - so that a test can import exactly the
- * text the browser runs; the page holds all three inline, in one module
- * script, so the result is still one file with nothing to fetch.
+ * Core's prompt renderer (P97), the one the MCP server writes with: copied
+ * beside the page when the command is built, and read from core itself when it
+ * runs from source.
  */
-const template = (): string =>
-  part('page.html')
-    .replace('__GRAPH_LOGIC__', () => part('graph.js'))
-    .replace('__FRAME_LOGIC__', () => part('frame.js'))
-    .replace('__MAP_LOGIC__', () => part('map.js'));
+const promptPart = (): string => {
+  const name = 'prompt-text.js';
+  const beside = shipped(import.meta.url, `visualise/${name}`, `../visualise/${name}`, `../../../core/src/${name}`);
+  try {
+    return readFileSync(beside, 'utf8');
+  } catch {
+    try {
+      return readFileSync(createRequire(import.meta.url).resolve(`@flowatlas/core/${name}`), 'utf8');
+    } catch {
+      throw cannotRun(`the page's ${name} is missing; rebuild the command`);
+    }
+  }
+};
+
+/**
+ * What `page.html` is made of besides its markup (P103), in the order the page
+ * holds them: each placeholder and the file written in its place. The styles;
+ * the logic - what to draw, the frame around it, the map of the whole project,
+ * core's renderer for a copied prompt, the steps of a way in; then the page's
+ * context, one factory per panel, and the boot that calls them in order.
+ */
+export const PAGE_PARTS: readonly (readonly [placeholder: string, file: string])[] = [
+  ['__PAGE_CSS__', 'page.css'],
+  ['__GRAPH_LOGIC__', 'graph.js'],
+  ['__FRAME_LOGIC__', 'frame.js'],
+  ['__MAP_LOGIC__', 'map.js'],
+  ['__PROMPT_LOGIC__', 'prompt-text.js'],
+  ['__STEPS_LOGIC__', 'steps.js'],
+  ['__CONTEXT_LOGIC__', 'panels/context.js'],
+  ['__BAND_LOGIC__', 'panels/band.js'],
+  ['__VIRTUAL_LIST_LOGIC__', 'panels/virtual-list.js'],
+  ['__WAYS_LOGIC__', 'panels/ways.js'],
+  ['__SHEET_LOGIC__', 'panels/sheet.js'],
+  ['__TABLES_LOGIC__', 'panels/tables.js'],
+  ['__FIND_LOGIC__', 'panels/find.js'],
+  ['__MENU_LOGIC__', 'panels/menu.js'],
+  ['__MISSING_LOGIC__', 'panels/missing.js'],
+  ['__GRAPH_DRAW_LOGIC__', 'panels/graph-draw.js'],
+  ['__DETAILS_LOGIC__', 'panels/details.js'],
+  ['__CHECKING_LOGIC__', 'panels/checking.js'],
+  ['__GRAPH_UI_LOGIC__', 'panels/graph-ui.js'],
+  ['__FRAME_UI_LOGIC__', 'panels/frame-ui.js'],
+  ['__MAP_UI_LOGIC__', 'panels/map-ui.js'],
+  ['__STEPS_UI_LOGIC__', 'panels/steps-ui.js'],
+  ['__TRACES_LOGIC__', 'panels/traces.js'],
+  ['__PALETTE_LOGIC__', 'panels/palette.js'],
+  ['__WIRING_LOGIC__', 'panels/wiring.js'],
+  ['__BOOT_LOGIC__', 'panels/boot.js'],
+];
+
+/** A panel's imports, one statement each: `import { a, b } from '../graph.js';`. */
+const PANEL_IMPORT = /^import \{([^}]*)\} from '[^']+';\n/gm;
+
+/**
+ * A part as the page holds it. A panel imports what it uses so that a test can
+ * load it alone; in the page every part shares one script, where those names
+ * are already declared, so its imports are dropped. An import the page could
+ * not drop - a default, a namespace, a name taken under another - is refused
+ * rather than written in broken.
+ */
+export const inlined = (file: string, text: string): string => {
+  if (!file.startsWith('panels/')) return text;
+  const bare = text.replace(PANEL_IMPORT, (_statement, names: string) => {
+    if (/\bas\b/.test(names)) throw cannotRun(`the page's ${file} imports a name under another; rebuild the command`);
+    return '';
+  });
+  if (/^import\b/m.test(bare)) throw cannotRun(`the page's ${file} has an import the page cannot drop; rebuild the command`);
+  return bare;
+};
+
+/** Placeholders the command fills itself, after the parts: the title and the graph. */
+const FILLED_LATER = new Set(['__TITLE__', '__DATA__']);
+
+/**
+ * `html` with every part written into it, each read by `read`, so the result
+ * is still one file with nothing to fetch. A part with no placeholder, or a
+ * placeholder left without its part, refuses to write a page with a panel
+ * missing.
+ */
+export const writeParts = (html: string, read: (file: string) => string): string => {
+  let page = html;
+  for (const [placeholder, file] of PAGE_PARTS) {
+    if (!page.includes(placeholder)) throw cannotRun(`the page has no place for its ${file}; rebuild the command`);
+    const text = inlined(file, read(file));
+    // Replaced through a function: a part is free to contain `$&` or `$1`.
+    page = page.replace(placeholder, () => text);
+  }
+  const left = [...page.matchAll(/__[A-Z][A-Z_]*__/g)].map(([found]) => found).filter((found) => !FILLED_LATER.has(found));
+  if (left.length > 0) throw cannotRun(`the page's ${left[0]} has no part; rebuild the command`);
+  return page;
+};
+
+/** The page as the command ships it, every part read from beside the code. */
+export const template = (): string =>
+  writeParts(part('page.html'), (file) => (file === 'prompt-text.js' ? promptPart() : part(file)));
 
 /**
  * A name for the project, since the configuration does not carry one.
@@ -81,6 +177,12 @@ export interface VisualiseOptions extends DbOptions {
   title?: string;
   /** `vscode`, `cursor`, `idea` or `file`: make every `file:line` a link that opens it. */
   editorLinks?: string;
+  /** What `flowatlas diff <ref>` found, already packed; fills the Changes tab. */
+  changes?: PackedChanges;
+  /** `--observed-diff <a> <b>`: two observed files to compare on a Run time changes tab (P111), read and never written. */
+  observedDiff?: string[];
+  /** `--min-count <n>`: with `--observed-diff`, the fewest requests on both sides before a time or failure share is compared. */
+  minCount?: string;
   print?: (message: string) => void;
 }
 
@@ -105,6 +207,93 @@ const editorFor = (options: VisualiseOptions): PackInput['editor'] => {
   return { name, rootOf: (service) => roots.repoDir(service) };
 };
 
+/**
+ * What the configuration says about routes nobody calls, for the Map's counts
+ * (P91); nothing when the page is drawn from a database alone or the
+ * configuration cannot be read, and the built-in rules then decide.
+ */
+const routeRulesFor = (options: VisualiseOptions): PackInput['routes'] => {
+  if (options.config === undefined && options.db !== undefined) return undefined;
+  try {
+    const { config } = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
+    return { publicRoutes: config.doctor.publicRoutes, infrastructure: config.dead.infrastructure };
+  } catch {
+    return undefined;
+  }
+};
+
+const withRoutes = (routes: PackInput['routes']): Pick<PackInput, 'routes'> => (routes === undefined ? {} : { routes });
+
+const withDocsOf = (docs: NonNullable<PackInput['docs']>): Pick<PackInput, 'docs'> => (docs.length === 0 ? {} : { docs });
+
+/**
+ * The graph in a database, packed for the page: every node and edge, and the
+ * rows as every other surface counts them - demoted where an annotation
+ * answered them, and split by what was accepted, once (P80). The prompt
+ * parity test packs through here too, so it reads what the page reads (P97).
+ *
+ * The service prompt's findings and crossing verdicts (P134) are worked out
+ * here by the MCP server's own code: the findings ranked over the rows nobody
+ * accepted and `contracts`, the breaks the last `flowatlas contracts` wrote.
+ */
+export const packDatabase = (
+  db: GraphDb,
+  read: AcceptedRead,
+  extra: Partial<Pick<PackInput, 'observed' | 'editor' | 'changes' | 'routes' | 'docs' | 'observedDiff'>> & {
+    contracts?: readonly ContractBreak[];
+  } = {},
+): PackedGraph => {
+  const report = db.report();
+  if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
+  const split = acceptedSplitOf(db, db.allUnresolved(), read);
+  // What traffic says over the graph (P110): never seen, and best guesses it
+  // went through, asked of the database here so the page and the server agree;
+  // and its blind spots as the rows the server reads them as (P144).
+  const traffic: PackTraffic | undefined =
+    extra.observed === undefined
+      ? undefined
+      : (() => {
+          const never = neverSeen(db, extra.observed);
+          // Bodies traffic carried against the code (P113), when `observe --shapes` kept their shapes.
+          const shapes = extra.observed.shapes;
+          const drift =
+            shapes === undefined
+              ? []
+              : trafficReport(shapes, extra.observed.window, db)
+                  .entries.filter((comparison) => comparison.differs > 0)
+                  .map((comparison) => ({ entry: comparison.entry, fields: comparison.differs, paths: trafficPaths(comparison) }));
+          const blind = acceptedSplitOf(db, blindSpotsAsRows(extra.observed), read).rows;
+          return {
+            never: { window: never.window.label, rows: never.rows },
+            confirmed: confirmedJoins(db, extra.observed).map((join) => join.id),
+            ...(drift.length === 0 ? {} : { drift }),
+            ...(blind.length === 0 ? {} : { blind }),
+          };
+        })();
+  const { contracts = [], ...rest } = extra;
+  return packGraph({
+    builtAt: report.builtAt,
+    nodes: db.allNodes(),
+    edges: db.allEdges(),
+    unresolved: split.rows,
+    report,
+    typeOf: (id) => db.type(id),
+    accepted: split,
+    overview: {
+      findings: rankedFindingsOf(db, split.fresh, contracts),
+      verdictOf: (edge, consumed) => CONTRACT_STATUS_RANK[crossingStatusOf(db, edge, consumed)],
+    },
+    ...rest,
+    ...(traffic === undefined ? {} : { traffic }),
+  });
+};
+
+/** The two files `--observed-diff` names, read, with their names and the floor (P111). */
+const diffInputOf = (paths: readonly string[], minCount: string | undefined): PackDiffInput => {
+  const [a, b] = readDiffPair(paths, '--observed-diff');
+  return { a, b, names: diffNamesOf(paths), minCount: minCountOf(minCount) };
+};
+
 export interface VisualiseResult {
   path: string;
   bytes: number;
@@ -123,24 +312,28 @@ export interface VisualiseResult {
 export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult => {
   const print = options.print ?? ((message: string) => process.stdout.write(`${message}\n`));
   const editor = editorFor(options);
+  if (options.minCount !== undefined && options.observedDiff === undefined) throw cannotRun('--min-count applies to --observed-diff only');
+  const compared = options.observedDiff === undefined ? undefined : diffInputOf(options.observedDiff, options.minCount);
   const db = openDbFromOptions(options);
+  const seen = readObservedBeside(dbPathFor(options));
+  const observed = seen.observed;
+  const read = readAccepted(dbPathFor(options));
   let packed;
   let counts;
   try {
-    const report = db.report();
-    if (report === undefined) throw cannotRun('the database holds no report; run flowatlas build');
-    const nodes = db.allNodes();
-    const edges = db.allEdges();
-    counts = { nodes: nodes.length, edges: edges.length };
-    packed = packGraph({
-      builtAt: report.builtAt,
-      nodes,
-      edges,
-      unresolved: db.allUnresolved(),
-      report,
-      typeOf: (id) => db.type(id),
+    packed = packDatabase(db, read, {
+      ...(observed === undefined ? {} : { observed }),
       ...(editor === undefined ? {} : { editor }),
+      ...(options.changes === undefined ? {} : { changes: options.changes }),
+      ...(compared === undefined ? {} : { observedDiff: compared }),
+      ...withRoutes(routeRulesFor(options)),
+      // The pages that describe a node (P120), from `flowatlas docs`, checked against this graph.
+      ...withDocsOf(docsNow(db, dbPathFor(options))),
+      // What a service's prompt ranks its contract breaks from (P134).
+      contracts: loadContractBreaks(dbPathFor(options)),
     });
+    const totals = db.counts();
+    counts = { nodes: totals.nodes, edges: totals.edges };
   } finally {
     db.close();
   }
@@ -156,12 +349,25 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
   writeFileSync(path, page, 'utf8');
 
   const result = { path, bytes: Buffer.byteLength(page), ...counts };
+  if (read.problem !== undefined) print(`warning: ${describeAcceptedProblem(read.problem)}`);
+  if (seen.problem !== undefined) print(`warning: ${describeObservedProblem(seen.problem)}`);
   print(
     `${result.nodes.toLocaleString()} nodes, ${result.edges.toLocaleString()} edges, ` +
       `${Math.round(result.bytes / 1024)}KB`,
   );
   print(path);
   return result;
+};
+
+/**
+ * The Changes tab's content: `flowatlas diff` run as it is, its printed
+ * document kept quiet, and its report packed. `diff.json` is still written,
+ * so the page and the file never disagree.
+ */
+export const changesAgainst = async (ref: string, options: DbOptions): Promise<PackedChanges> => {
+  const quiet = { out: () => undefined, err: () => undefined };
+  const { report } = await runDiff(ref, undefined, options.config === undefined ? {} : { config: options.config }, quiet);
+  return packChanges(report);
 };
 
 export const registerVisualise = (program: Command): void => {
@@ -177,7 +383,12 @@ export const registerVisualise = (program: Command): void => {
       '--editor-links <editor>',
       `make each file:line a link that opens it: ${EDITOR_NAMES.join(', ')}. Writes absolute local paths into the page`,
     )
-    .action((options: VisualiseOptions) => {
-      runVisualise(options);
+    .option('--diff <ref>', 'add a Changes tab: what the working tree changes against this ref, as flowatlas diff reads it')
+    .option('--observed-diff <files...>', 'add a Run time changes tab comparing two observed files, before then after a deploy')
+    .option('--min-count <n>', 'with --observed-diff, the fewest requests on both sides before a time or failure share is compared (default 20)')
+    .action(async (options: VisualiseOptions & { diff?: string }) => {
+      const { diff, ...rest } = options;
+      const changes = diff === undefined ? undefined : await changesAgainst(diff, rest);
+      runVisualise({ ...rest, ...(changes === undefined ? {} : { changes }) });
     });
 };

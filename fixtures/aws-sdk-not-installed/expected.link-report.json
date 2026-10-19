@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:14.568Z",
+  "builtAt": "2026-10-16T23:27:46.380Z",
   "configHash": "207cd8675ce6",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 1,
       "unresolved": 6,
-      "durationMs": 467,
+      "durationMs": 471,
       "packages": {
         "name": "library-catalogue",
         "runtime": [
@@ -69,6 +69,10 @@
     "nodes": 18,
     "edges": 14,
     "types": 1,
+    "missed": 6,
+    "sites": 10,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 6
   }
 }

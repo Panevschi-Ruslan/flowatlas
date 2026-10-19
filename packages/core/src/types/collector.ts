@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import type { Node as TsNode, Symbol as TsSymbol, Type } from 'ts-morph';
 import { Node, ts } from 'ts-morph';
+import { causeMeta } from '../cant-follow.js';
+import { causeOfUnresolvedType, type FollowCause } from '../follow-cause.js';
 import type { GraphBuilder } from '../builder.js';
 import { makeTypeId, normalizeFilePath } from '../ids.js';
 import type { Unresolved } from '../model/graph.js';
@@ -9,6 +11,7 @@ import type { Signature, TypeEntry, TypeField, TypeKind, TypeRegistry } from '..
 import { mergeFieldMeta, type FieldDeclaration, type FieldMetaReader } from './field-meta.js';
 import { DEFAULT_HASH_DEPTH, structuralHash } from './structural-hash.js';
 import { formatFieldKey, formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
+import { startLineOf } from '../line-numbers.js';
 
 export interface TypeCollectorOptions {
   builder: GraphBuilder;
@@ -39,6 +42,15 @@ const SYMBOL_KEYED = '__@';
  */
 const writtenAt = (type: Type, site: TsNode): string =>
   type.getText(site).replace(IMPORT_QUALIFIER, '');
+
+/** Why a type met at a site did not resolve; a site the question cannot be asked of says nothing. */
+const unresolvedTypeCause = (site: TsNode, written: string): FollowCause | undefined => {
+  try {
+    return causeOfUnresolvedType(site, written);
+  } catch {
+    return undefined;
+  }
+};
 
 /**
  * A declaration file belonging to the language itself rather than to a
@@ -264,12 +276,15 @@ export class TypeCollector {
 
   #collect(type: Type, site: TsNode, depth: number): TypeRef {
     if ((type.compilerType as { intrinsicName?: string }).intrinsicName === 'error') {
+      const written = writtenAt(type, site);
       this.#report({
         file: this.#fileOf(site),
-        line: site.getStartLineNumber(),
+        line: startLineOf(site),
         reason: 'type-unresolved',
         hint: 'The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.',
-        symbol: writtenAt(type, site),
+        symbol: written,
+        // Which package, or which import, it could not resolve (P75).
+        ...causeMeta(unresolvedTypeCause(site, written)),
       });
       return 'unknown';
     }
@@ -288,7 +303,7 @@ export class TypeCollector {
     if (type.isTypeParameter()) {
       this.#report({
         file: this.#fileOf(site),
-        line: site.getStartLineNumber(),
+        line: startLineOf(site),
         reason: 'type-generic-uninstantiated',
         hint: 'The type argument is not known here, so the reference names the parameter.',
         symbol: writtenAt(type, site),
@@ -634,7 +649,7 @@ export class TypeCollector {
         declared === undefined ? [] : this.#readers.map((reader) => reader.read(declared)),
       );
       for (const { at, reason, hint, symbol } of fromReaders.unread) {
-        this.#report({ file: this.#fileOf(at), line: at.getStartLineNumber(), reason, hint, symbol });
+        this.#report({ file: this.#fileOf(at), line: startLineOf(at), reason, hint, symbol });
       }
 
       const optional = questionToken || mapped || undefinedUnion || fromReaders.optional === true;
@@ -667,7 +682,7 @@ export class TypeCollector {
     if (depth >= this.#maxDepth) {
       this.#report({
         file: this.#fileOf(site),
-        line: site.getStartLineNumber(),
+        line: startLineOf(site),
         reason: 'type-depth-exceeded',
         hint: `Nesting is written out to ${this.#maxDepth} levels. Raise types.maxDepth to see further.`,
         symbol: writtenAt(type, site),

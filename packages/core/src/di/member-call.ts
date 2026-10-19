@@ -10,6 +10,7 @@ import type {
 import { Node } from 'ts-morph';
 import { packageOfFile } from '../nodes.js';
 import { originOfType } from '../origin.js';
+import { classMembersOf } from './class-members.js';
 import type { DiMap } from './types.js';
 
 /** What the thing before the dot turned out to be. */
@@ -182,24 +183,30 @@ export const enclosingMethod = (node: TsNode): ClassMethod | undefined => {
  * "what are this class's methods" has to include them. A walk that reads
  * bodies asks {@link methodBodies} instead.
  */
-export const methodsOfClass = (declaration: ClassDeclaration): ClassMethod[] => [
-  ...declaration.getMethods(),
-  ...declaration.getProperties().filter((property) => fieldFunction(property) !== undefined),
-];
+export const methodsOfClass = (declaration: ClassDeclaration): ClassMethod[] => {
+  const members = classMembersOf(declaration);
+  return [
+    ...members.methods,
+    ...members.properties.filter((property) => fieldFunction(property) !== undefined),
+  ];
+};
 
 /**
  * The method of that name on one class, written either way.
  *
  * One step, not a search: the caller decides whether to walk what the class
  * extends. {@link findMethod} does; a trace standing in a known class does not.
+ * Asked once per call, so it reads the class's members from one walk of them
+ * rather than walking them again for every name (P124).
  */
 export const methodNamedOn = (
   owner: ClassDeclaration,
   name: string,
 ): ClassMethod | undefined => {
-  const method = owner.getMethod(name);
+  const members = classMembersOf(owner);
+  const method = members.method(name);
   if (method !== undefined) return method;
-  const property = owner.getProperty(name);
+  const property = members.property(name);
   return property !== undefined && fieldFunction(property) !== undefined ? property : undefined;
 };
 

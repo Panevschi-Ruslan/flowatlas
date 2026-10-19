@@ -1,0 +1,99 @@
+{
+  "missingRepos": [
+    {
+      "token": "payments",
+      "score": 4,
+      "places": 6,
+      "kinds": [
+        "setting",
+        "package",
+        "channel",
+        "subscription"
+      ],
+      "weak": false,
+      "signals": [
+        {
+          "kind": "setting",
+          "name": "PAYMENTS_URL",
+          "says": "PAYMENTS_URL is used by gateway (2 requests) and no service claims it",
+          "places": [
+            {
+              "service": "gateway",
+              "file": "src/checkout.controller.ts",
+              "line": 12,
+              "gapId": "gap:gateway|src/checkout.controller.ts|unknown-base-url-env"
+            },
+            {
+              "service": "gateway",
+              "file": "src/checkout.controller.ts",
+              "line": 21,
+              "gapId": "gap:gateway|src/checkout.controller.ts|unknown-base-url-env"
+            }
+          ]
+        },
+        {
+          "kind": "package",
+          "name": "@acme/payments-client",
+          "says": "@acme/payments-client is imported by orders and is not installed",
+          "places": [
+            {
+              "service": "orders",
+              "file": "src/orders.service.ts",
+              "line": 17,
+              "gapId": "gap:orders|src/orders.service.ts|call-dynamic-receiver"
+            }
+          ]
+        },
+        {
+          "kind": "channel",
+          "name": "payment.requested",
+          "says": "channel payment.requested is published by orders and nobody here consumes it",
+          "places": [
+            {
+              "service": "orders",
+              "file": "src/orders.service.ts",
+              "line": 18
+            }
+          ]
+        },
+        {
+          "kind": "subscription",
+          "name": "acme.payments*",
+          "says": "events from acme.payments* are taken by jobs (1 rule) and nothing here publishes one",
+          "places": [
+            {
+              "service": "jobs",
+              "file": "infra/main.tf",
+              "line": 68,
+              "gapId": "gap:jobs|infra/main.tf|subscription-matches-nothing"
+            }
+          ]
+        },
+        {
+          "kind": "subscription",
+          "name": "kinesis/payments",
+          "says": "stream kinesis/payments is read by jobs and nothing here writes to it",
+          "places": [
+            {
+              "service": "jobs",
+              "file": "infra/main.tf",
+              "line": 46,
+              "gapId": "gap:jobs|infra/main.tf|stream-no-writer"
+            }
+          ]
+        }
+      ],
+      "candidates": [
+        {
+          "path": "./payments-api",
+          "name": "@acme/payments-api",
+          "matchedBy": [
+            "package",
+            "directory",
+            "compose"
+          ]
+        }
+      ]
+    }
+  ]
+}

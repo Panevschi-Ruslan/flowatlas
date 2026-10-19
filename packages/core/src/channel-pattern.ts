@@ -43,6 +43,16 @@ export interface EnvironmentValue {
 export const AWAITING_META = 'awaiting';
 
 /**
+ * On a channel, that a deployment declares it - a table's stream, a stream - by
+ * what declares it; on a producer that publishes only onto such a channel,
+ * `true` under {@link WHERE_DECLARED_META}. The linker keeps such a producer's
+ * edge onto a declared channel and drops the rest, with the producer, its
+ * rows and a channel left with nothing (P51).
+ */
+export const CHANNEL_DECLARED_META = 'declaredBy';
+export const WHERE_DECLARED_META = 'whereDeclared';
+
+/**
  * One part of an address: written in the code, or the value of an environment
  * variable with the longer spellings the name may be written inside (`forms`,
  * each a regular expression whose first group is the name), and the name the

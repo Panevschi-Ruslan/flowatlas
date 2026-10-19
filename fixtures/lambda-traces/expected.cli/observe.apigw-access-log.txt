@@ -1,0 +1,7 @@
+2 spans read from 1 file(s)
+0 joins seen, 1 entries hit, 1 seen at run time but not found in code, 0 that could be more than one place
+  http      ?  GET /favicon.ico  (1)
+slowest entries (p95):
+  shop POST /checkout  count 1  p50 187ms  p95 187ms  max 187ms  errors 0%
+window 2025-10-16T08:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
+<copy>/observed.json

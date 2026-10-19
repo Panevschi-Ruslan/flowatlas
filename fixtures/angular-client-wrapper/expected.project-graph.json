@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:04:42.464Z",
+  "builtAt": "2026-10-16T16:20:16.578Z",
   "services": [
     {
       "name": "angular-client-wrapper",
@@ -564,7 +564,7 @@
         "signature": {
           "params": [
             {
-              "name": "initData",
+              "name": "sessionToken",
               "type": "string"
             }
           ],
@@ -1114,15 +1114,15 @@
     {
       "id": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:21:12@24:12",
       "type": "ui_api_call",
-      "label": "GET /telegram/me/deals",
+      "label": "GET /portal/me/deals",
       "repo": "angular-client-wrapper",
       "file": "src/app/deals/deals.client.ts",
       "line": 21,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "url": "${apiUrl}/telegram/me/deals",
-        "path": "/telegram/me/deals",
+        "url": "${apiUrl}/portal/me/deals",
+        "path": "/portal/me/deals",
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal[]",
         "bodyType": null,
@@ -1134,15 +1134,15 @@
     {
       "id": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:25:12@24:12",
       "type": "ui_api_call",
-      "label": "GET /telegram/deals/:param",
+      "label": "GET /portal/deals/:param",
       "repo": "angular-client-wrapper",
       "file": "src/app/deals/deals.client.ts",
       "line": 25,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "url": "${apiUrl}/telegram/deals/:param",
-        "path": "/telegram/deals/:param",
+        "url": "${apiUrl}/portal/deals/:param",
+        "path": "/portal/deals/:param",
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": null,
@@ -1154,15 +1154,15 @@
     {
       "id": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:29:12@28:12",
       "type": "ui_api_call",
-      "label": "POST /telegram/deals/:param/claim",
+      "label": "POST /portal/deals/:param/claim",
       "repo": "angular-client-wrapper",
       "file": "src/app/deals/deals.client.ts",
       "line": 29,
       "kind": "http",
       "meta": {
         "method": "POST",
-        "url": "${apiUrl}/telegram/deals/:param/claim",
-        "path": "/telegram/deals/:param/claim",
+        "url": "${apiUrl}/portal/deals/:param/claim",
+        "path": "/portal/deals/:param/claim",
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": "type:angular-client-wrapper#ClaimDealDto",
@@ -1175,15 +1175,15 @@
     {
       "id": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:33:12@32:12",
       "type": "ui_api_call",
-      "label": "DELETE /telegram/deals/:param",
+      "label": "DELETE /portal/deals/:param",
       "repo": "angular-client-wrapper",
       "file": "src/app/deals/deals.client.ts",
       "line": 33,
       "kind": "http",
       "meta": {
         "method": "DELETE",
-        "url": "${apiUrl}/telegram/deals/:param",
-        "path": "/telegram/deals/:param",
+        "url": "${apiUrl}/portal/deals/:param",
+        "path": "/portal/deals/:param",
         "baseUrlEnv": "apiUrl",
         "responseType": "void",
         "bodyType": null,
@@ -1907,10 +1907,10 @@
       "name": "RequestOpts",
       "kind": "object",
       "declaredIn": "angular-client-wrapper#src/app/shared/api-client.ts",
-      "structuralHash": "38351d058c962cc3",
+      "structuralHash": "2433203331063d15",
       "fields": [
         {
-          "name": "initData",
+          "name": "sessionToken",
           "type": "string",
           "optional": true,
           "meta": {
@@ -2116,8 +2116,8 @@
       "file": "src/app/deals/deals.client.ts",
       "line": 21,
       "reason": "target-route-not-found",
-      "message": "no configured service serves GET /telegram/me/deals",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /telegram/me/deals */.",
+      "message": "no configured service serves GET /portal/me/deals",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /portal/me/deals */.",
       "symbol": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:21:12@24:12"
     },
     {
@@ -2125,8 +2125,8 @@
       "file": "src/app/deals/deals.client.ts",
       "line": 25,
       "reason": "target-route-not-found",
-      "message": "no configured service serves GET /telegram/deals/:param",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /telegram/deals/:param */.",
+      "message": "no configured service serves GET /portal/deals/:param",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /portal/deals/:param */.",
       "symbol": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:25:12@24:12"
     },
     {
@@ -2134,8 +2134,8 @@
       "file": "src/app/deals/deals.client.ts",
       "line": 29,
       "reason": "target-route-not-found",
-      "message": "no configured service serves POST /telegram/deals/:param/claim",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /telegram/deals/:param/claim */.",
+      "message": "no configured service serves POST /portal/deals/:param/claim",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /portal/deals/:param/claim */.",
       "symbol": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:29:12@28:12"
     },
     {
@@ -2143,8 +2143,8 @@
       "file": "src/app/deals/deals.client.ts",
       "line": 33,
       "reason": "target-route-not-found",
-      "message": "no configured service serves DELETE /telegram/deals/:param",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /telegram/deals/:param */.",
+      "message": "no configured service serves DELETE /portal/deals/:param",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /portal/deals/:param */.",
       "symbol": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:33:12@32:12"
     }
   ]

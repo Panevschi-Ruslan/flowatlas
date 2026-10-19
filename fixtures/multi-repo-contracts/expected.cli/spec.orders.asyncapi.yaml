@@ -1,0 +1,89 @@
+asyncapi: 3.0.0
+info:
+  title: orders
+  version: unversioned
+  description: The channels orders publishes to and consumes from, as flowatlas read them from the code. Nothing here was run.
+channels:
+  order.created:
+    address: order.created
+    messages:
+      send.order.created:
+        $ref: "#/components/messages/send.order.created"
+    x-flowatlas-channel-kind: topic
+  orders.get:
+    address: orders.get
+    messages:
+      receive.orders.get:
+        $ref: "#/components/messages/receive.orders.get"
+    x-flowatlas-channel-kind: topic
+operations:
+  receive.orders.get:
+    action: receive
+    channel:
+      $ref: "#/channels/orders.get"
+    messages:
+      - $ref: "#/channels/orders.get/messages/receive.orders.get"
+    summary: OrdersRpcController.get
+    x-flowatlas-source: src/rpc/orders.rpc.controller.ts:15
+    x-flowatlas-confidence: static
+    x-flowatlas-callers:
+      billing: 1
+  send.order.created:
+    action: send
+    channel:
+      $ref: "#/channels/order.created"
+    messages:
+      - $ref: "#/channels/order.created/messages/send.order.created"
+    summary: OrdersService.create
+    x-flowatlas-source: src/orders/orders.service.ts:69
+    x-flowatlas-confidence: static
+    x-flowatlas-consumers:
+      billing: 1
+components:
+  messages:
+    receive.orders.get:
+      name: receive.orders.get
+      payload:
+        $ref: "#/components/schemas/GetOrderQuery"
+    send.order.created:
+      name: send.order.created
+      payload:
+        $ref: "#/components/schemas/OrderCreatedEvent"
+  schemas:
+    GetOrderQuery:
+      type: object
+      properties:
+        orderId:
+          type: string
+        includeItems:
+          type: boolean
+      required:
+        - orderId
+        - includeItems
+      x-flowatlas-type: type:orders#GetOrderQuery
+    MoneyDto:
+      type: object
+      properties:
+        amount:
+          type: number
+        currency:
+          type: string
+      required:
+        - amount
+        - currency
+      x-flowatlas-type: type:@fx/wire#MoneyDto
+    OrderCreatedEvent:
+      type: object
+      properties:
+        orderId:
+          type: string
+        total:
+          $ref: "#/components/schemas/MoneyDto"
+        placedAt:
+          type: string
+          format: date-time
+      required:
+        - orderId
+        - total
+        - placedAt
+      x-flowatlas-type: type:orders#OrderCreatedEvent

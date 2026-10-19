@@ -1,0 +1,64 @@
+{
+  "steps": [
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:33:12 -http_calls-> entry:orders:http:GET:/orders/:param",
+      "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "label": "gateway GET /orders/:param -> orders GET /orders/:param",
+      "service": "gateway",
+      "count": 1,
+      "p50": 500,
+      "p95": 500,
+      "max": 500,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "label": "OrdersService.findOne",
+      "service": "orders",
+      "count": 2,
+      "p50": 0.74,
+      "p95": 492,
+      "max": 492,
+      "errorRate": 0
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+      "label": "OrdersController.findOne",
+      "service": "gateway",
+      "count": 21,
+      "p50": 61.29,
+      "p95": 72.88,
+      "max": 520,
+      "errorRate": 0
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "label": "OrdersController.findOne",
+      "service": "orders",
+      "count": 1,
+      "p50": 0.9,
+      "p95": 0.9,
+      "max": 0.9,
+      "errorRate": 0
+    },
+    {
+      "id": "table:orders#orders",
+      "label": "orders",
+      "service": "orders",
+      "count": 2,
+      "p50": 0.4,
+      "p95": 0.4,
+      "max": 0.4,
+      "errorRate": 0
+    }
+  ],
+  "total": 5,
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "trace_for({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "get_source({symbol: \"http_out:gateway#src/clients/orders.client.ts:33:12\"})"
+  ]
+}

@@ -1,0 +1,530 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "gateway"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "http"
+          },
+          "spans": [
+            {
+              "traceId": "a7000000000000000000000000000001",
+              "spanId": "b700000000000011",
+              "name": "POST /checkout/:id/pay",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602200000000000",
+              "endTimeUnixNano": "1760602200090000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/pay"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-4001/pay"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000001",
+              "spanId": "b700000000000012",
+              "parentSpanId": "b700000000000011",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602200010000000",
+              "endTimeUnixNano": "1760602200080000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "http://payments:4000/charges"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000002",
+              "spanId": "b700000000000021",
+              "name": "POST /checkout/:id/pay",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602800000000000",
+              "endTimeUnixNano": "1760602800090000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/pay"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-4002/pay"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000002",
+              "spanId": "b700000000000022",
+              "parentSpanId": "b700000000000021",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760602800010000000",
+              "endTimeUnixNano": "1760602800080000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "http://payments:4000/charges"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000003",
+              "spanId": "b700000000000031",
+              "name": "POST /checkout/:id/pay",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760603400000000000",
+              "endTimeUnixNano": "1760603400090000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/pay"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-4003/pay"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000003",
+              "spanId": "b700000000000032",
+              "parentSpanId": "b700000000000031",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760603400010000000",
+              "endTimeUnixNano": "1760603400080000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "http://payments:4000/charges"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000004",
+              "spanId": "b700000000000041",
+              "name": "POST /checkout/:id/refund",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760604000000000000",
+              "endTimeUnixNano": "1760604000090000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout/:id/refund"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/checkout/ord-4004/refund"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000004",
+              "spanId": "b700000000000042",
+              "parentSpanId": "b700000000000041",
+              "name": "POST",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1760604000010000000",
+              "endTimeUnixNano": "1760604000080000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "url.full",
+                  "value": {
+                    "stringValue": "http://payments:4000/refunds"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "payments"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "http"
+          },
+          "spans": [
+            {
+              "traceId": "a7000000000000000000000000000001",
+              "spanId": "b700000000000013",
+              "parentSpanId": "b700000000000012",
+              "name": "POST /charges",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602200015000000",
+              "endTimeUnixNano": "1760602200075000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/charges"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/charges"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000001",
+              "spanId": "b700000000000014",
+              "parentSpanId": "b700000000000013",
+              "name": "charge",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1760602200020000000",
+              "endTimeUnixNano": "1760602200070000000",
+              "attributes": [
+                {
+                  "key": "code.namespace",
+                  "value": {
+                    "stringValue": "ChargesController"
+                  }
+                },
+                {
+                  "key": "code.function",
+                  "value": {
+                    "stringValue": "charge"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000002",
+              "spanId": "b700000000000023",
+              "parentSpanId": "b700000000000022",
+              "name": "POST /charges",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760602800015000000",
+              "endTimeUnixNano": "1760602800075000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/charges"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/charges"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000002",
+              "spanId": "b700000000000024",
+              "parentSpanId": "b700000000000023",
+              "name": "charge",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1760602800020000000",
+              "endTimeUnixNano": "1760602800070000000",
+              "attributes": [
+                {
+                  "key": "code.namespace",
+                  "value": {
+                    "stringValue": "ChargesController"
+                  }
+                },
+                {
+                  "key": "code.function",
+                  "value": {
+                    "stringValue": "charge"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000003",
+              "spanId": "b700000000000033",
+              "parentSpanId": "b700000000000032",
+              "name": "POST /charges",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760603400015000000",
+              "endTimeUnixNano": "1760603400075000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/charges"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/charges"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000003",
+              "spanId": "b700000000000034",
+              "parentSpanId": "b700000000000033",
+              "name": "charge",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1760603400020000000",
+              "endTimeUnixNano": "1760603400070000000",
+              "attributes": [
+                {
+                  "key": "code.namespace",
+                  "value": {
+                    "stringValue": "ChargesController"
+                  }
+                },
+                {
+                  "key": "code.function",
+                  "value": {
+                    "stringValue": "charge"
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000004",
+              "spanId": "b700000000000043",
+              "parentSpanId": "b700000000000042",
+              "name": "POST /refunds",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1760604000015000000",
+              "endTimeUnixNano": "1760604000075000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/refunds"
+                  }
+                },
+                {
+                  "key": "url.path",
+                  "value": {
+                    "stringValue": "/refunds"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": 201
+                  }
+                }
+              ]
+            },
+            {
+              "traceId": "a7000000000000000000000000000004",
+              "spanId": "b700000000000044",
+              "parentSpanId": "b700000000000043",
+              "name": "refund",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1760604000020000000",
+              "endTimeUnixNano": "1760604000070000000",
+              "attributes": [
+                {
+                  "key": "code.namespace",
+                  "value": {
+                    "stringValue": "ChargesController"
+                  }
+                },
+                {
+                  "key": "code.function",
+                  "value": {
+                    "stringValue": "refund"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

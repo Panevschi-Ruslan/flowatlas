@@ -1,5 +1,6 @@
 import {
   applicationOfFile,
+  jsDocCallsIn,
   makeChannelId,
   makeLeafId,
   makeSymbolId,
@@ -8,12 +9,10 @@ import {
   siteOf,
   type ClassMethod,
   type GraphNode,
+  type JsDocCall,
 } from '@flowatlas/core';
 import { ANGULAR_HTTP } from '../index-classes.js';
 import { definePass } from './types.js';
-
-/** `@flowatlas-calls POST /orders` — the request a method makes, said outright. */
-const CALLS = /@flowatlas-calls\s+([A-Za-z]+)\s+(\S+)/g;
 
 /** `@flowatlas-consumes order.updated` — the channel a method handles. */
 const CONSUMES = /@flowatlas-consumes\s+(\S+)/g;
@@ -32,30 +31,37 @@ const docsOf = (method: ClassMethod): string =>
  * address at the call site, and a stream the browser subscribes to has no name
  * the checker can follow. Both are the reader's word rather than the compiler's,
  * so both land as `marker` and never as `static` (I10).
+ *
+ * `@flowatlas-calls POST /orders` is the request a method makes, said outright;
+ * `@flowatlas-calls catalog POST /orders` also says which service answers it
+ * (P127). Both are read by the core's `jsDocCallsIn`, the one the server
+ * readers read the same tag with.
  */
 export const markersPass = definePass('markers', (ctx) => {
-  /** A request already read from the source says the same thing better. */
-  const alreadyStatic = (owner: GraphNode | undefined, method: string, path: string): boolean =>
-    owner !== undefined &&
-    ctx.builder.edges.some((edge) => {
-      if (edge.type !== 'calls' || edge.from !== owner.id) return false;
+  /** The request already read from the source that says the same thing, when one does. */
+  const alreadyStatic = (owner: GraphNode | undefined, method: string, path: string): GraphNode | undefined => {
+    if (owner === undefined) return undefined;
+    for (const edge of ctx.builder.edges) {
+      if (edge.type !== 'calls' || edge.from !== owner.id) continue;
       const target = ctx.builder.getNode(edge.to);
-      return (
-        target?.type === 'ui_api_call' &&
-        target.meta?.['method'] === method &&
-        target.meta?.['path'] === path
-      );
-    });
+      if (target?.type === 'ui_api_call' && target.meta?.['method'] === method && target.meta?.['path'] === path) {
+        return target;
+      }
+    }
+    return undefined;
+  };
 
-  const apiCall = (
-    method: ClassMethod,
-    verb: string,
-    path: string,
-    file: string,
-    methodId: string,
-  ): void => {
+  const apiCall = (method: ClassMethod, written: JsDocCall, file: string, methodId: string): void => {
+    const { method: verb, path, service } = written;
     const wanted = normalizePath(path);
-    if (alreadyStatic(ctx.builder.getNode(methodId), verb, wanted)) return;
+    // A request read from the source says the same thing better. Where the
+    // annotation also names the service, that much is still news: the address
+    // was read and where it goes was not (P127).
+    const read = alreadyStatic(ctx.builder.getNode(methodId), verb, wanted);
+    if (read !== undefined) {
+      if (service !== undefined) read.meta = { ...read.meta, service };
+      return;
+    }
 
     const at = siteOf(method);
     const id = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
@@ -85,6 +91,9 @@ export const markersPass = definePass('markers', (ctx) => {
         // more than one; the other half of what an entry records about its own
         // address (R132).
         ...(application === undefined ? {} : { application }),
+        // The service the annotation names, by name or alias: the linker asks
+        // it before anything else (P127).
+        ...(service === undefined ? {} : { service }),
         via: 'marker',
       },
     });
@@ -157,10 +166,9 @@ export const markersPass = definePass('markers', (ctx) => {
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined) continue;
 
-      for (const [, verb, path] of docs.matchAll(CALLS)) {
-        if (verb === undefined || path === undefined) continue;
+      for (const written of jsDocCallsIn(docs)) {
         ctx.ensureMethodNode(method);
-        apiCall(method, verb.toUpperCase(), path, indexed.file, methodId);
+        apiCall(method, written, indexed.file, methodId);
       }
       for (const [, channelName] of docs.matchAll(CONSUMES)) {
         if (channelName === undefined) continue;

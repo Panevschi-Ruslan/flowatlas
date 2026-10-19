@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
 import { Node, SymbolFlags, VariableDeclarationKind } from 'ts-morph';
+import { toPosixPath } from './ids.js';
 import { declarationOf } from './static-value.js';
 
 /**
@@ -46,7 +47,9 @@ const LIB_FILE = /\/lib\.[^/]*\.d\.ts$/;
  * layout resolve to the package itself rather than to the directory the store
  * keeps its copies in.
  */
-export const packageOfPath = (filePath: string): string | null => {
+export const packageOfPath = (written: string): string | null => {
+  // Spelled either way (P199): the compiler's forward slashes or the OS's own.
+  const filePath = toPosixPath(written);
   const marker = '/node_modules/';
   const at = filePath.lastIndexOf(marker);
   if (at < 0) return null;
@@ -627,7 +630,7 @@ export const writtenKeysOf = (written: readonly TsNode[]): string[] | undefined 
  * The keys a spread certainly contributes, or nothing when it may contribute
  * fewer than it could.
  *
- * `{ ...topping }` where every field of `topping` is required does put them all
+ * `{ ...order }` where every field of `order` is required does put them all
  * on the wire. `{ ...patch }` where `patch` is a `Partial<T>` puts none of them
  * there necessarily, and reading the type's properties said it put all of them
  * — permission reported as act, which is the whole of R34 reappearing inside
@@ -676,7 +679,7 @@ export type BodyRead = 'literal' | 'literals' | 'value' | 'type';
  * parentheses, `as T`, `satisfies T` and `!`. An assertion is the author saying
  * what they believe the shape is; the literal is the shape.
  *
- * A spread — `{ ...topping, extra: 1 }` — is deliberately still a literal here.
+ * A spread — `{ ...order, extra: 1 }` — is deliberately still a literal here.
  * It genuinely does put the spread object's keys on the wire, and the type of
  * the literal says so.
  */

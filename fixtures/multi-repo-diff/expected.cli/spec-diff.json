@@ -1,0 +1,144 @@
+{
+  "specDiffFormatVersion": 1,
+  "documents": {
+    "base": 4,
+    "head": 4
+  },
+  "changes": [
+    {
+      "kind": "endpoint-removed",
+      "level": "error",
+      "document": "orders",
+      "format": "openapi",
+      "service": "orders",
+      "operation": "GET /shipments/{id}",
+      "field": null,
+      "base": "GET /shipments/{id}",
+      "head": null,
+      "message": "GET /shipments/{id}: the route is gone",
+      "place": {
+        "side": "base",
+        "file": "src/shipments/shipments.controller.ts",
+        "line": 16
+      },
+      "callers": [
+        {
+          "id": "http_out:gateway#src/clients/orders.client.ts:26:12",
+          "service": "gateway",
+          "file": "src/clients/orders.client.ts",
+          "line": 26,
+          "confidence": "static",
+          "via": "http_calls"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "endpoint-removed|orders|GET /shipments/{id}|"
+    },
+    {
+      "kind": "request-property-added-required",
+      "level": "error",
+      "document": "orders",
+      "format": "openapi",
+      "service": "orders",
+      "operation": "POST /orders",
+      "field": "body.channel",
+      "base": null,
+      "head": "string",
+      "message": "POST /orders: head has `body.channel` as `string` and requires it; base did not",
+      "place": {
+        "side": "base",
+        "file": "src/orders/orders.controller.ts",
+        "line": 19
+      },
+      "callers": [
+        {
+          "id": "http_out:gateway#src/clients/orders.client.ts:21:12",
+          "service": "gateway",
+          "file": "src/clients/orders.client.ts",
+          "line": 21,
+          "confidence": "static",
+          "via": "http_calls"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "request-property-added-required|orders|POST /orders|body.channel"
+    },
+    {
+      "kind": "endpoint-added",
+      "level": "info",
+      "document": "billing",
+      "format": "asyncapi",
+      "service": "billing",
+      "operation": "receive order.gift-wrapped",
+      "field": null,
+      "base": null,
+      "head": "receive order.gift-wrapped",
+      "message": "receive order.gift-wrapped: added on the head side",
+      "place": {
+        "side": "head",
+        "file": "src/invoices/gift-wrap.consumer.ts",
+        "line": 15
+      },
+      "callers": [],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "endpoint-added|billing|receive order.gift-wrapped|"
+    },
+    {
+      "kind": "endpoint-added",
+      "level": "info",
+      "document": "orders",
+      "format": "openapi",
+      "service": "orders",
+      "operation": "GET /shipments/{id}/status",
+      "field": null,
+      "base": null,
+      "head": "GET /shipments/{id}/status",
+      "message": "GET /shipments/{id}/status: added on the head side",
+      "place": {
+        "side": "head",
+        "file": "src/shipments/shipments.controller.ts",
+        "line": 17
+      },
+      "callers": [],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "endpoint-added|orders|GET /shipments/{id}/status|"
+    },
+    {
+      "kind": "endpoint-added",
+      "level": "info",
+      "document": "orders",
+      "format": "asyncapi",
+      "service": "orders",
+      "operation": "send order.gift-wrapped",
+      "field": null,
+      "base": null,
+      "head": "send order.gift-wrapped",
+      "message": "send order.gift-wrapped: added on the head side",
+      "place": {
+        "side": "head",
+        "file": "src/orders/orders.service.ts",
+        "line": 23
+      },
+      "callers": [],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "endpoint-added|orders|send order.gift-wrapped|"
+    }
+  ],
+  "summary": {
+    "errors": 2,
+    "warnings": 0,
+    "infos": 3,
+    "breaking": 2,
+    "uncalled": 0
+  }
+}

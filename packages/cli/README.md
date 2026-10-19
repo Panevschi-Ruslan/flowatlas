@@ -44,7 +44,9 @@ steps with a recording of each.
 
 **Ways in**
 
-- NestJS controllers, message handlers and schedules, with their guards and pipes
+- NestJS controllers, message handlers and schedules, with their guards and pipes,
+  app-wide guards and opt-out decorators included, and what each route can fail
+  with
 - Express, Fastify, Koa and Hono, where a route is registered by a call
 - Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path
   of a file - a SvelteKit page's `load` and form actions included
@@ -76,6 +78,7 @@ steps with a recording of each.
   node-postgres
 - read with nothing installed, even a Prisma client that was never generated
 - a repository base of your own, with the table each class states
+- a query run once per item of a loop, flagged as a likely N+1
 - Redis and cache-manager, and every settings key a request depends on
 
 **Messages**
@@ -87,17 +90,20 @@ steps with a recording of each.
 **Across repositories**
 
 - a monorepo's services with the workspace packages they use, on a fresh clone
+- a base address no setting claims, read from the repository's own example
+  env, compose and deployment files, keeping only the address
 - a service you have no source for, from its OpenAPI or AsyncAPI document
 - every contract compared where one repository meets another
 
 **What it cannot read**
 
 - a row saying why, and the one change that would read it
+- what could not be followed, grouped by cause and by the package it points into
 - an address or a table decided at run time is reported, never guessed
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 140 of them, and
+compared on every push. There are 167 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 
@@ -111,27 +117,39 @@ lists them all, generated from their READMEs.
 | `flowatlas impact <symbol>` | every entry point that reaches a symbol, and whose |
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
 | `flowatlas contracts` | what each service sends against what the other declares |
-| `flowatlas doctor` | what could not be read, and what has drifted |
+| `flowatlas doctor` | what could not be read, and what has drifted; `--unresolved` groups it by cause and package |
+| `flowatlas shapes --suggest` | which packages that are not installed to describe in a shape file, with the names used of each; `--out` writes starters |
+| `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
+| `flowatlas accept` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base>` | what a branch changes and who would notice |
-| `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a graph to walk, every type on hover |
+| `flowatlas check --env <name>` | can this be deployed: what shipping it would break against what an environment runs, from the pins `flowatlas deployed` records |
+| `flowatlas spec` | an OpenAPI and an AsyncAPI document of each service, written from the graph; `spec diff` and `spec --against` compare them |
+| `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue or a Structurizr workspace, relations from the joins; `--check` keeps a committed copy true |
+| `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a way in step by step, the crossings, what did not join, the busiest nodes, and the graph with every type |
+| `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have, or `--listen` for exporters posting to `127.0.0.1:4318` |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
-`flowatlas --help` lists all twenty.
+`flowatlas --help` lists all thirty commands, and `flowatlas help <command>` the options of one.
 
 ---
 
 ## What to expect on a first build
 
-Not everything joins, and the tool says so rather than guessing. Five
-repositories that ship as one product, three NestJS services and two Angular
-frontends with a shared package of types between them, measured with 0.5.0:
+Not everything joins, and the tool says so rather than guessing. Measured with
+0.6.0 on the demo project,
+[`fixtures/multi-repo`](https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo):
+three NestJS services and an Angular frontend in four repositories, with a
+shared package of types between them. It is synthetic, and holds every kind of
+join exactly once, including the ones that fail, so the rows that did not join
+are there on purpose:
 
 | | first build | configured |
 |---|---|---|
-| HTTP routes found | 564 | 564 |
-| Browser requests matched to a route | 494 of 503 | 494 of 503 |
-| Calls between services matched | 1 of 43 | 41 of 43 |
-| Routes something reaches | 483 | 508 |
+| HTTP routes found | 15 | 15 |
+| Browser requests matched to a route | 4 of 13 | 6 of 13 |
+| Calls between services matched | 2 of 6 | 2 of 6 |
+| Routes something reaches | 6 | 7 |
+| Edges that cross a repository boundary | 9 | 11 |
 
 The first column is what `init` writes and nothing more. The second adds the
 settings `init` cannot know: `baseUrlEnv`, the settings key that addresses a
@@ -157,5 +175,5 @@ and it is optional.
 
 ---
 
-Node 20 or newer. MIT.
+Node 22.12 or newer. MIT.
 [Source, docs and issues](https://github.com/Panevschi-Ruslan/flowatlas).

@@ -418,7 +418,7 @@ describe('drawing a forwarded request no less surely than the helper does', () =
     const callers = `
       import { Api } from './client';
       export const nearby = (api: Api, lat: number) => {
-        let path = \`/restaurants/nearby?lat=\${lat}\`;
+        let path = \`/stores/nearby?lat=\${lat}\`;
         if (lat > 0) path += '&north=1';
         return api.get(path);
       };
@@ -462,5 +462,53 @@ describe('deciding whether an address can be read where it stands', () => {
   it('refuses an address whose middle is a parameter', () => {
     const file = parse(`class C { go(id: string) { return fetch(\`/orders/\${id}\`); } }`);
     expect(isReadable(address(file))).toBe(false);
+  });
+});
+
+describe('an address joined to a setting with +', () => {
+  it('reads the setting as its root and the text after it as the path', () => {
+    const file = parse(`export const go = () => fetch(process.env.CARD_LOOKUP_URL + '/cards');`);
+    expect(analyzeUrl(address(file))).toEqual({ url: '${CARD_LOOKUP_URL}/cards', path: '/cards', baseUrlEnv: 'CARD_LOOKUP_URL', host: null });
+  });
+
+  it('reads nothing where what follows the setting is not read', () => {
+    const file = parse(`export const go = (rest: string) => fetch(process.env.CARD_LOOKUP_URL + rest);`);
+    expect(analyzeUrl(address(file)).baseUrlEnv).toBeNull();
+  });
+});
+
+describe('what the code falls back to where a setting is not set (P77)', () => {
+  it('keeps the literal after ?? beside the setting', () => {
+    const file = parse(`export const go = () => fetch(\`\${process.env.ORDERS_URL ?? 'http://orders:3000'}/orders\`);`);
+    expect(analyzeUrl(address(file))).toMatchObject({ baseUrlEnv: 'ORDERS_URL', path: '/orders', baseUrlDefault: 'http://orders:3000' });
+  });
+
+  it('keeps the literal after || through a name it was given', () => {
+    const file = parse(`
+      const base = process.env.ORDERS_URL || 'http://orders:3000';
+      export const go = () => fetch(\`\${base}/orders\`);
+    `);
+    expect(analyzeUrl(address(file))).toMatchObject({ baseUrlEnv: 'ORDERS_URL', baseUrlDefault: 'http://orders:3000' });
+  });
+
+  it('keeps the default a settings read is called with, through a property', () => {
+    const file = parse(`
+      declare class Settings { get(key: string, otherwise?: string): string | undefined; }
+      class C {
+        private readonly base: string;
+        constructor(private readonly config: Settings) {
+          this.base = this.config.get('ORDERS_URL', 'http://orders:3000') as string;
+        }
+        go() { return fetch(\`\${this.base}/orders\`); }
+      }
+    `);
+    expect(analyzeUrl(address(file))).toMatchObject({ baseUrlEnv: 'ORDERS_URL', baseUrlDefault: 'http://orders:3000' });
+  });
+
+  it('keeps nothing where the fallback is empty or not a literal', () => {
+    const empty = parse(`export const go = () => fetch(\`\${process.env.ORDERS_URL ?? ''}/orders\`);`);
+    expect(analyzeUrl(address(empty)).baseUrlDefault).toBeUndefined();
+    const computed = parse(`declare const other: string; export const go = () => fetch(\`\${process.env.ORDERS_URL ?? other}/orders\`);`);
+    expect(analyzeUrl(address(computed)).baseUrlDefault).toBeUndefined();
   });
 });

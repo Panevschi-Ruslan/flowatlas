@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-di-tokens",
-  "generatedAt": "2026-10-07T14:34:08.715Z",
+  "generatedAt": "2026-10-16T15:11:37.323Z",
   "nodes": [
     {
       "id": "nest-di-tokens#src/app.module.ts:AppModule",
@@ -498,7 +498,10 @@
       "line": 35,
       "reason": "call-through-token",
       "hint": "Cannot follow a value provided for CLIENT; provide it with useClass to make calls visible.",
-      "symbol": "OrdersService.place -> this.client.send"
+      "symbol": "OrdersService.place -> this.client.send",
+      "meta": {
+        "cause": "untyped-di-token"
+      }
     }
   ]
 }

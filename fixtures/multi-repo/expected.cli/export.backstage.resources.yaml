@@ -1,0 +1,24 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: api.stripe.com
+  description: "api.stripe.com, called from the code; outside the project."
+  annotations:
+    flowatlas/graph-id: external_api:api.stripe.com
+spec:
+  type: external-api
+  owner: unknown
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: orders
+  description: "The table orders, as the code queries it."
+  annotations:
+    flowatlas/graph-id: "table:orders#orders"
+    flowatlas/read-by: orders
+    flowatlas/written-by: orders
+spec:
+  type: database
+  owner: team-orders
+  system: bookshop

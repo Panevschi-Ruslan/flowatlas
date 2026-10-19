@@ -3,8 +3,10 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { z } from 'zod';
 import { isUniversalMethod } from './adapters/db.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
+import { expandGlob } from './glob.js';
 import { ENTRY_KINDS } from './model/nodes.js';
 import { requestReadingSchema } from './request.js';
+import { ruleSchema, rulesSettingsSchema } from './rule-config.js';
 
 export const CONFIG_FILENAME = 'flowatlas.config.json';
 export const DEFAULT_OUTPUT = '.flowatlas';
@@ -21,6 +23,14 @@ export const DEFAULT_TYPE_MAX_DEPTH = 3;
  * is the fact rather than a word chosen to stand for it.
  */
 const DECLARED_SERVICE_TYPE = 'declared';
+
+/**
+ * Where the source of an uninstalled package may be read from (P78): `true`
+ * for the configured repositories and the directories directly under the
+ * configuration, `"services"` for the configured repositories alone, `false`
+ * for nowhere.
+ */
+const packageSourcesSchema = z.union([z.boolean(), z.literal('services')]);
 
 /**
  * One end of the project: a repository, or a document standing in for one.
@@ -89,11 +99,60 @@ const serviceEntrySchema = z.strictObject({
    * file actually used when a path turns out not to be a file.
    */
   openapi: z.string().min(1).optional(),
+  /**
+   * API documents the repository commits by hand (P195), each compared with
+   * the one written from its code by `flowatlas contracts` and `flowatlas
+   * spec --against`. Unlike `document`, nothing is taken from them: the code
+   * is read, and the document is checked against it. `path` is relative to
+   * the configuration file; `application` names the address space it
+   * describes when the service has more than one.
+   */
+  apiDocuments: z
+    .array(z.strictObject({ kind: z.string().min(1), path: z.string().min(1), application: z.string().min(1).optional() }))
+    .optional(),
   type: z.string().min(1).optional(),
   /** Environment variables that hold this service's own base URL. */
   baseUrlEnv: z.array(z.string().min(1)).optional(),
   /** Settings keys a frontend reads its API base URL from. */
   apiBaseEnv: z.array(z.string().min(1)).optional(),
+  /**
+   * Hosts this service is reached at, as `host` or `host:port`: what a base
+   * address read from a repository's files is matched against (P77), beside
+   * the service's own name and what its files say it is reached at.
+   */
+  hosts: z.array(z.string().min(1)).optional(),
+  /**
+   * Other names this service is known by (P91): the short name an annotation
+   * uses for it, the name its worker is deployed under. A name written here
+   * is the service, wherever a service is named - an annotation, a service
+   * binding, `apiTarget` - and must be unique across every name and alias.
+   * Matched exactly: `catalog` is never taken for `catalog-api` unless it is
+   * written down, because a prefix would join the wrong service the day a
+   * second one starts with the same word.
+   */
+  aliases: z.array(z.string().min(1)).optional(),
+  /**
+   * Names a rule can select this service by (P114): `frontend`, `edge`,
+   * `domain:payments`. A tag is a name only; nothing is inferred from it.
+   */
+  tags: z.array(z.string().min(1)).optional(),
+  /**
+   * What a software catalogue says of this service and the code cannot (P119):
+   * who owns it, where in its life it is, which system it belongs to, a line
+   * about it, and the address of its repository. `flowatlas export` writes
+   * these as they are and writes `unknown` for an owner or lifecycle nobody
+   * gave; none of them is ever guessed from the code.
+   */
+  catalog: z
+    .strictObject({
+      owner: z.string().min(1).optional(),
+      lifecycle: z.string().min(1).optional(),
+      system: z.string().min(1).optional(),
+      description: z.string().min(1).optional(),
+      /** The repository's address (`https://…/tree/main/`), for `backstage.io/source-location`. */
+      sourceUrl: z.string().min(1).optional(),
+    })
+    .optional(),
   /**
    * Which service answers each of those keys, by name.
    *
@@ -110,6 +169,31 @@ const serviceEntrySchema = z.strictObject({
    * is left out, and reported as `test-directory-skipped`.
    */
   readTestDirectories: z.array(z.string().min(1)).optional(),
+  /**
+   * Whether a reader's built-in declaration shapes stand in for packages this
+   * service does not have installed. Overrides the project-wide setting of the
+   * same name; on unless one of the two says `false`.
+   */
+  builtInShapes: z.boolean().optional(),
+  /**
+   * Shape files this service reads beside the project's (P78): paths or globs
+   * of `.d.ts` files, relative to the configuration, each holding
+   * `declare module '<package>' { ... }` blocks. Added to the project-wide list,
+   * never in place of it.
+   */
+  shapes: z.array(z.string().min(1)).optional(),
+  /**
+   * Pattern files this service reads beside the project's (P121), as paths
+   * or globs relative to the configuration. Added to the project-wide list,
+   * never in place of it.
+   */
+  patterns: z.array(z.string().min(1)).optional(),
+  /**
+   * Whether an import of a package that is not installed is read from that
+   * package's source when a repository of the project is that package (P78).
+   * Overrides the project-wide setting of the same name.
+   */
+  packageSources: packageSourcesSchema.optional(),
   /** Entry file where global wrapping is installed, when there is one. */
   bootstrap: z.string().min(1).optional(),
   /**
@@ -163,6 +247,14 @@ export const serviceConfigSchema = serviceEntrySchema
         code: 'custom',
         path: ['document'],
         message: 'a service is declared by one document: write document, not openapi as well.',
+      });
+      return;
+    }
+    if (documentOf(service) !== undefined && service.apiDocuments !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['apiDocuments'],
+        message: 'a service declared by a document has no code to compare a document with: apiDocuments needs a repo.',
       });
       return;
     }
@@ -246,7 +338,45 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
     /** Which argument of that call the path starts in. The first by default. */
     index: z.number().int().min(0).optional(),
   }),
+  z.strictObject({
+    kind: z.literal('receiver-constructed-path'),
+    /** The class the receiver is constructed from, in the call or in a `const` before it (P52). */
+    class: z.string().min(1),
+    /** Properties from the constructor's argument inwards; `*` is every element. */
+    path: z.array(z.string().min(1)),
+    /** Which argument of the constructor the path starts in. The first by default. */
+    index: z.number().int().min(0).optional(),
+  }),
 ]);
+
+/**
+ * A value a call must write somewhere for a description to apply to it (P121).
+ *
+ * A description says where the parts of a call are; a pattern written as code
+ * also says what some of them are: `$API.call('POST', $URL)` is a request only
+ * where the first argument is `'POST'`. The place is a locator, so the two
+ * vocabularies stay one, and the value is read as any name is - a literal, a
+ * constant, an enum member. A call that writes anything else there, or nothing,
+ * is not the call described, which is different from a call whose name could
+ * not be read.
+ */
+const conditionSchema = z.strictObject({
+  at: nameLocatorSchema,
+  equals: z.union([z.string(), z.number(), z.boolean(), z.null()]),
+});
+
+/** Every condition a description applies under; absent applies everywhere it matched. */
+const whereSchema = z.array(conditionSchema).min(1).optional();
+
+/**
+ * The pattern rule a description was compiled from, `pattern:<id>` (P121).
+ *
+ * Written by the pattern compiler and copied onto every node the description
+ * draws as `meta.describedBy`, so a graph says why a node exists. A description
+ * written by hand leaves it out; where both kinds match one call, the one
+ * without it wins.
+ */
+const describedBySchema = z.string().min(1).optional();
 
 /** A regular expression, refused here rather than when the first call is read. */
 const patternSchema = z.string().min(1).refine((source) => {
@@ -300,6 +430,12 @@ export const customProducerSchema = z.strictObject({
    * import renames it to.
    */
   function: z.string().min(1).optional(),
+  /**
+   * The package `function` is imported from (P121): the call is then the
+   * function called by its name or as a member of what the package exports,
+   * matched on the import, so a package nobody installed is matched as readily.
+   */
+  module: z.string().min(1).optional(),
   /** Shorthand for a channel written as one plain argument. */
   channelArg: z.number().int().min(0).default(0),
   /** Where the channel is written, tried in order. Overrides `channelArg`. */
@@ -326,6 +462,16 @@ export const customProducerSchema = z.strictObject({
    */
   payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
+  /**
+   * The call sends many messages in one round trip, or sends to one recipient
+   * and has no batch form (P89): how a loop around it is read. A loop around
+   * nothing but batches is not listed; one around nothing but per-recipient
+   * sends is a note.
+   */
+  batch: z.boolean().optional(),
+  perItem: z.boolean().optional(),
+  where: whereSchema,
+  describedBy: describedBySchema,
 }).superRefine((producer, ctx) => {
   const onReceiver = producer.receiverType !== undefined || producer.method !== undefined;
   if (producer.function !== undefined && onReceiver) {
@@ -333,6 +479,12 @@ export const customProducerSchema = z.strictObject({
       code: 'custom',
       path: ['function'],
       message: 'a producer is either a function, or a method with its receiverType, not both.',
+    });
+  } else if (producer.module !== undefined && producer.function === undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['module'],
+      message: 'module names the package a function is imported from: write function as well.',
     });
   } else if (producer.function === undefined && (producer.receiverType === undefined || producer.method === undefined)) {
     ctx.addIssue({
@@ -368,6 +520,8 @@ export const customSubscriberSchema = z.strictObject({
   /** Argument holding what runs when a message arrives, when the call takes one. */
   handlerArg: z.number().int().min(0).optional(),
   kind: z.string().min(1).default('event'),
+  where: whereSchema,
+  describedBy: describedBySchema,
 });
 
 /**
@@ -389,6 +543,9 @@ export const customConsumerSchema = z.strictObject({
   /** Where the message sits inside that parameter. The whole of it by default. */
   payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
+  /** Values the decorator must write, read at the decorator as `channel` is. */
+  where: whereSchema,
+  describedBy: describedBySchema,
 });
 
 export const customBrokerSchema = z.strictObject({
@@ -440,6 +597,8 @@ export const starterSchema = z
     names: z.record(z.string().min(1), z.string().min(1)).optional(),
     /** Recorded on the node the call is drawn as. `start` or `invoke` by default. */
     kind: z.string().min(1).optional(),
+    where: whereSchema,
+    describedBy: describedBySchema,
   })
   .superRefine((starter, ctx) => {
     const onReceiver = starter.receiverType !== undefined || starter.method !== undefined;
@@ -790,9 +949,76 @@ export const dbTableAccessSchema = z.strictObject({
   /** The argument that is the table's name, or the table itself for a function that always touches one. */
   table: z.union([z.number().int().min(0), z.string().min(1)]),
   op: z.enum(['read', 'write', 'delete']).optional(),
+  where: whereSchema,
+  describedBy: describedBySchema,
 });
 
 export type DbTableAccess = z.infer<typeof dbTableAccessSchema>;
+
+/** One name or several, as a description writes either. */
+const oneOrMany = z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]);
+
+/**
+ * An HTTP client of the project's own, described in configuration (P121).
+ *
+ * The request half of what `broker.custom` is for messages: a wrapper a
+ * project wrote around the network - `api.call('POST', url, body)`,
+ * `send({ method, path })` - with no library behind it for a reader to know.
+ * It says which call it is (the type it is made on, the function that makes
+ * the client, or a function called by its name), where the address and the
+ * body are written, and where the verb is: fixed, at a place in the call, or,
+ * when neither is said, the method's own name (`post`, `delete`). The answer
+ * is the call's type argument, as for every client. Read by the server
+ * reader's request pass and by both browser readers beside
+ * `frontend.localClientClasses`, through one matcher in the core.
+ */
+export const httpClientSchema = z
+  .strictObject({
+    /** Type the call is made on, as for a producer. */
+    receiverType: oneOrMany.optional(),
+    /** Or the function whose call made the receiver: `const api = useApi(); api.send(...)`. */
+    factory: z.string().min(1).optional(),
+    /** The method called on it, or every spelling of it. */
+    method: oneOrMany.optional(),
+    /** Or a function of the project's own that sends the request, called by its name. */
+    function: z.string().min(1).optional(),
+    /** The package `function` or `factory` is imported from, matched on the import. */
+    module: z.string().min(1).optional(),
+    /** The verb every call sends, when the call does not say. */
+    verb: z.string().min(1).optional(),
+    /** Where the call writes its verb, tried in order. */
+    verbAt: z.array(nameLocatorSchema).min(1).optional(),
+    /** Where the address is written, tried in order. */
+    url: z.array(nameLocatorSchema).min(1),
+    /** Where the body is written, tried in order. */
+    body: z.array(nameLocatorSchema).min(1).optional(),
+    where: whereSchema,
+    describedBy: describedBySchema,
+  })
+  .superRefine((client, ctx) => {
+    const onReceiver = client.receiverType !== undefined || client.factory !== undefined;
+    if (client.function !== undefined && (onReceiver || client.method !== undefined)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['function'],
+        message: 'a client is either a function, or a method with the receiverType or factory it is called on, not both.',
+      });
+    } else if (client.function === undefined && (!onReceiver || client.method === undefined)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [onReceiver ? 'method' : 'receiverType'],
+        message: 'a client names the function it is, or the method and the receiverType (or factory) it is called on.',
+      });
+    }
+    if (client.receiverType !== undefined && client.factory !== undefined) {
+      ctx.addIssue({ code: 'custom', path: ['factory'], message: 'a client is matched by its receiverType or by its factory, not both.' });
+    }
+    if (client.verb !== undefined && client.verbAt !== undefined) {
+      ctx.addIssue({ code: 'custom', path: ['verbAt'], message: 'a verb is either fixed (verb) or read from the call (verbAt), not both.' });
+    }
+  });
+
+export type HttpClientConfig = z.infer<typeof httpClientSchema>;
 
 const expressionValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
@@ -851,11 +1077,58 @@ export const adapterForceSchema = z.strictObject({
   frontend: adapterNamesSchema.optional(),
 });
 
+/** How a tool is named in `mcp.include` and `mcp.exclude`: as the server lists it. */
+const toolNameSchema = z.string().regex(/^[a-z][a-z0-9_]*$/, 'a tool is named in lower case with underscores, as the server lists it (check_rules)');
+
+/** The `mcp` block (P201): which tools the server lists. */
+export const mcpSettingsSchema = z.strictObject({
+  tools: z.enum(['auto', 'all']).default('auto'),
+  include: z.array(toolNameSchema).default([]),
+  exclude: z.array(toolNameSchema).default([]),
+});
+
+export type McpSettings = z.infer<typeof mcpSettingsSchema>;
+
 export const flowatlasConfigSchema = z
   .strictObject({
     services: z.array(serviceConfigSchema).default([]),
     /** Packages shared between repositories, followed when resolving constants. */
     sharedPackages: z.array(z.string().min(1)).default([]),
+    /**
+     * Whether a reader's built-in declaration shapes stand in for packages a
+     * repository does not have installed: a few hand-written declarations of a
+     * framework's public surface, read only where the package itself does not
+     * resolve. On unless `false`; a service may say otherwise for itself.
+     */
+    builtInShapes: z.boolean().optional(),
+    /**
+     * Shape files of the project's own (P78): paths or globs of `.d.ts` files,
+     * relative to this configuration, each holding one or more
+     * `declare module '<package>' { ... }` blocks. Read in memory exactly as a
+     * built-in shape is, only where the package is neither installed nor the
+     * source of a repository read here; never executed, never written.
+     */
+    shapes: z.array(z.string().min(1)).optional(),
+    /**
+     * Pattern files of the project's own (P121): paths or globs of `.yml` /
+     * `.yaml` files, relative to this configuration, each a list of rules that
+     * say in code what a call of an in-house wrapper is - a publish, a
+     * subscription, a request, a start, a table access - and where its name,
+     * address and payload are written. Compiled into the descriptions under
+     * `adapters` and read exactly as those are; `flowatlas patterns test`
+     * runs each rule's own tests.
+     */
+    patterns: z.array(z.string().min(1)).optional(),
+    /**
+     * Whether an import of a package that is not installed is read from that
+     * package's source when one is on disk (P78): a configured repository, or
+     * a workspace member of one, whose `package.json` `name` is the package -
+     * and, unless this says `"services"`, a directory directly under this
+     * configuration whose manifest names it. Types only: nothing of the
+     * package becomes a node of the service that imports it. `false` turns it
+     * off. An installed package always wins.
+     */
+    packageSources: packageSourcesSchema.optional(),
     adapters: z
       .strictObject({
         auto: z.boolean().default(true),
@@ -883,6 +1156,12 @@ export const flowatlasConfigSchema = z
           .default({ custom: [] }),
         /** Calls that start a workflow or invoke a function by its deployed name. */
         starters: z.array(starterSchema).default([]),
+        /** Requests the project sends through a client of its own (P121). */
+        http: z
+          .strictObject({
+            clients: z.array(httpClientSchema).default([]),
+          })
+          .default({ clients: [] }),
         /**
          * What a repository's infrastructure is read with, where its ways in are
          * declared there.
@@ -911,7 +1190,7 @@ export const flowatlasConfigSchema = z
                     /**
                      * The property each class extending the base sets to the name
                      * of its table: `collectionName` for
-                     * `protected readonly collectionName = 'menuItems'` (R165).
+                     * `protected readonly collectionName = 'products'` (R165).
                      */
                     tableProperty: z.string().min(1).optional(),
                   }),
@@ -954,10 +1233,26 @@ export const flowatlasConfigSchema = z
         entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
         starters: [],
+        http: { clients: [] },
         infra: { modules: [] },
         db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
       }),
+    /**
+     * Whether the values a repository's own files give its settings are read
+     * (P77): example environment files, the environment a container is started
+     * with, the variables a deployment declares. Only addresses are kept, and
+     * only their scheme, host and path. `environment` chooses which of several
+     * environments a file is for is read, where files name more than one
+     * (`.env.development` and `.env.staging`): the files for it are read, and
+     * the files for no environment in particular, and no other.
+     */
+    settingFiles: z
+      .strictObject({
+        read: z.boolean().default(true),
+        environment: z.string().min(1).optional(),
+      })
+      .default({ read: true }),
     /** Directory for generated artefacts, relative to the configuration file. */
     output: z.string().min(1).default(DEFAULT_OUTPUT),
     /**
@@ -979,6 +1274,13 @@ export const flowatlasConfigSchema = z
         ignoreEdges: z.array(z.string().min(1)).default([]),
       })
       .default({ depth: DEFAULT_TYPE_MAX_DEPTH, rules: { disable: [] }, ignoreEdges: [] }),
+    /**
+     * Where the file saying which ref of each service runs in each environment
+     * is (P117): `flowatlas check --env` reads it, `flowatlas deployed set`
+     * writes it. Relative to this configuration; `flowatlas.deployed.json`
+     * beside it when not given.
+     */
+    deployed: z.strictObject({ file: z.string().min(1).optional() }).optional(),
     /**
      * What a health check treats as already agreed to.
      *
@@ -1036,8 +1338,95 @@ export const flowatlasConfigSchema = z
         maxDepth: z.number().int().min(1).default(DEFAULT_TYPE_MAX_DEPTH),
       })
       .default({ maxDepth: DEFAULT_TYPE_MAX_DEPTH }),
+    /**
+     * What a loop that runs a query per item may do on purpose (P89).
+     *
+     * `conditionalWrites` names the functions or methods of the project's own
+     * that change a row only in the state it is expected in - a guarded
+     * transition, a compare-and-set - which have no batch form: a loop whose
+     * every query goes through one is a note, not a likely N+1.
+     * `perItemHosts` does the same for requests to a host that takes one
+     * recipient per call. `boundedCalls` names helpers that split a list into
+     * chunks, beside the built-in `chunk`, `chunks`, `batches`, `inChunks` and
+     * `splitEvery`: a loop over what one hands back is not listed.
+     */
+    callShape: z
+      .strictObject({
+        conditionalWrites: z.array(z.string().min(1)).default([]),
+        perItemHosts: z.array(z.string().min(1)).default([]),
+        boundedCalls: z.array(z.string().min(1)).default([]),
+      })
+      .default({ conditionalWrites: [], perItemHosts: [], boundedCalls: [] }),
+    /**
+     * What `flowatlas dead` reads as infrastructure (P91): routes something
+     * outside the project calls by design - a probe, a webhook, a provider's
+     * callback - listed apart from the routes nobody calls.
+     *
+     * `paths` are route patterns spelled as `doctor.publicRoutes` spells them
+     * (`METHOD /path`, `*` for any run of characters); `decorators` name a
+     * decorator on the handler or its controller; `names` a handler or a
+     * controller by its name. All three are added to the built-in rules, which
+     * `builtIn: false` turns off.
+     */
+    dead: z
+      .strictObject({
+        infrastructure: z
+          .strictObject({
+            paths: z.array(z.string().min(1)).default([]),
+            decorators: z.array(z.string().min(1)).default([]),
+            names: z.array(z.string().min(1)).default([]),
+            builtIn: z.boolean().default(true),
+          })
+          .default({ paths: [], decorators: [], names: [], builtIn: true }),
+      })
+      .default({ infrastructure: { paths: [], decorators: [], names: [], builtIn: true } }),
+    /**
+     * The Markdown files `flowatlas docs` reads for blocks tied to flows
+     * (P120): paths or globs relative to this configuration. Absent, every
+     * `*.md` under the configuration's directory is read, outside
+     * `node_modules`, `.git` and the output directory.
+     */
+    docs: z
+      .strictObject({
+        files: z.array(z.string().min(1)).optional(),
+      })
+      .optional(),
+    /**
+     * Who may call, write, publish to or consume what (P114): each rule a name,
+     * a severity, a note and one of four shapes (`forbid`, `only`, `tags`,
+     * `reachable`), checked by `flowatlas rules`, `doctor`, `diff` and the MCP
+     * server over the joined graph. See `rule-config.ts`.
+     */
+    rules: z.array(ruleSchema).default([]),
+    /** How the rules are read: whether a guessed edge can fail a run. */
+    rulesSettings: rulesSettingsSchema.default({ failOnHeuristic: false }),
+    /**
+     * Which tools the MCP server lists (P201). `auto` lists those the
+     * project can answer - the run-time tools once an observed file is beside
+     * the graph, `check_rules` once `rules` holds one - and `all` every tool.
+     * `include` lists a tool whatever it needs, `exclude` never lists one;
+     * both take tool names, which the server checks when it starts, naming
+     * any it does not have.
+     */
+    mcp: mcpSettingsSchema.optional(),
   })
   .superRefine((config, ctx) => {
+    // A tool both listed whatever it needs and never listed says nothing (P201).
+    const excluded = new Set(config.mcp?.exclude ?? []);
+    config.mcp?.include.forEach((tool, index) => {
+      if (excluded.has(tool)) {
+        ctx.addIssue({ code: 'custom', path: ['mcp', 'include', index], message: `${JSON.stringify(tool)} is in both mcp.include and mcp.exclude.` });
+      }
+    });
+    // A rule's name is the key a baseline and an accept hold it by, so two
+    // rules of one name would be one rule to both.
+    const ruleNames = new Set<string>();
+    config.rules.forEach((rule, index) => {
+      if (ruleNames.has(rule.name)) {
+        ctx.addIssue({ code: 'custom', path: ['rules', index, 'name'], message: `Duplicate rule name ${JSON.stringify(rule.name)}.` });
+      }
+      ruleNames.add(rule.name);
+    });
     const seen = new Set<string>();
     config.services.forEach((service, index) => {
       if (seen.has(service.name)) {
@@ -1060,9 +1449,32 @@ export const flowatlasConfigSchema = z
       }
     });
 
+    // An alias is a name, and a name names one service (P91): one written
+    // twice, or the same as another service's name, would make whichever
+    // annotation uses it mean two services.
+    const claimed = new Map<string, string>(config.services.map((service) => [service.name, service.name]));
+    config.services.forEach((service, index) => {
+      (service.aliases ?? []).forEach((alias, at) => {
+        const owner = claimed.get(alias);
+        if (owner !== undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['services', index, 'aliases', at],
+            message:
+              owner === service.name
+                ? `${JSON.stringify(alias)} is already a name of ${JSON.stringify(service.name)}.`
+                : `${JSON.stringify(alias)} is already a name of ${JSON.stringify(owner)}; a name names one service.`,
+          });
+          return;
+        }
+        claimed.set(alias, service.name);
+      });
+    });
+
     // A target naming a service that does not exist is a typo that would
-    // otherwise show up much later as a call that reaches nothing.
-    const names = new Set(config.services.map((service) => service.name));
+    // otherwise show up much later as a call that reaches nothing. An alias
+    // is a name the service answers to (P91).
+    const names = new Set(claimed.keys());
     config.services.forEach((service, index) => {
       for (const [key, target] of Object.entries(service.apiTarget ?? {})) {
         if (names.has(target)) continue;
@@ -1108,6 +1520,8 @@ export type CustomConsumerConfig = z.infer<typeof customConsumerSchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;
 export type ServiceConfig = z.infer<typeof serviceConfigSchema>;
+/** What a software catalogue says of a service (P119): `services[].catalog`. */
+export type ServiceCatalog = NonNullable<ServiceConfig['catalog']>;
 export type FlowatlasConfig = z.infer<typeof flowatlasConfigSchema>;
 
 export interface LoadedConfig {
@@ -1127,16 +1541,30 @@ export interface LoadConfigOptions {
   checkRepos?: boolean;
 }
 
-const formatIssues = (error: z.ZodError): string[] =>
+/**
+ * The rule an issue is about, by name, when it is about one (P114): a rule
+ * that fails its schema is refused naming it (`rule-invalid`), since
+ * `rules.3.forbid.from` is a place a reader has to count to.
+ */
+const ruleNamed = (data: unknown, path: readonly PropertyKey[]): string | undefined => {
+  if (path[0] !== 'rules' || typeof path[1] !== 'number') return undefined;
+  const rules = (data as { rules?: unknown } | null)?.rules;
+  const name = Array.isArray(rules) ? (rules[path[1]] as { name?: unknown } | undefined)?.name : undefined;
+  return typeof name === 'string' ? name : undefined;
+};
+
+const formatIssues = (error: z.ZodError, data?: unknown): string[] =>
   error.issues.map((issue) => {
     const path = issue.path.length > 0 ? issue.path.join('.') : '(root)';
-    return `${path}: ${issue.message}`;
+    const rule = ruleNamed(data, issue.path);
+    const about = issue.path[0] === 'rules' && typeof issue.path[1] === 'number' ? ` (rule-invalid${rule === undefined ? '' : `: rule ${JSON.stringify(rule)}`})` : '';
+    return `${path}${about}: ${issue.message}`;
   });
 
 /** Validates an already-parsed object. `source` only labels error messages. */
 export const parseConfig = (data: unknown, source = CONFIG_FILENAME): FlowatlasConfig => {
   const result = flowatlasConfigSchema.safeParse(data);
-  if (!result.success) throw new ConfigInvalidError(source, formatIssues(result.error));
+  if (!result.success) throw new ConfigInvalidError(source, formatIssues(result.error, data));
   return result.data;
 };
 
@@ -1265,4 +1693,76 @@ export const localBaseTableProperty = (
     if (typeof entry !== 'string' && entry.name === base) return entry.tableProperty;
   }
   return undefined;
+};
+
+/** Whether built-in declaration shapes are read for a service (see `builtInShapes`). */
+export const builtInShapesFor = (
+  config: Pick<FlowatlasConfig, 'builtInShapes'> | undefined,
+  service: Pick<ServiceConfig, 'builtInShapes'> | undefined,
+): boolean => service?.builtInShapes ?? config?.builtInShapes ?? true;
+
+/** Where a service's uninstalled packages may be read from (see `packageSources`). */
+export type PackageSourcesSetting = z.infer<typeof packageSourcesSchema>;
+
+/** Whether, and from where, a service reads the source of a package it has not installed. */
+export const packageSourcesFor = (
+  config: Pick<FlowatlasConfig, 'packageSources'> | undefined,
+  service: Pick<ServiceConfig, 'packageSources'> | undefined,
+): PackageSourcesSetting => service?.packageSources ?? config?.packageSources ?? true;
+
+/**
+ * The shape files a service reads, as absolute paths in a settled order (P78).
+ *
+ * The project's list and then the service's own, each path or glob relative to
+ * the configuration's directory; a glob is expanded against the disk and a
+ * plain path is kept whether or not it is there, so a file named and missing is
+ * a row (`shape-file-unread`) rather than nothing. The grammar is `glob.ts`'s,
+ * the one an accepted `file` rule is read with too.
+ */
+export const shapesFor = (
+  config: Pick<FlowatlasConfig, 'shapes'> | undefined,
+  service: Pick<ServiceConfig, 'shapes'> | undefined,
+  configDir: string,
+): string[] => {
+  const patterns = [...(config?.shapes ?? []), ...(service?.shapes ?? [])];
+  const out: string[] = [];
+  for (const pattern of patterns) {
+    for (const path of expandGlob(configDir, pattern)) if (!out.includes(path)) out.push(path);
+  }
+  return out;
+};
+
+/**
+ * The pattern files a service reads, as absolute paths in a settled order
+ * (P121): the project's list and then the service's own, expanded as
+ * `shapes` are, so a file named and missing is a row (`pattern-file-unread`)
+ * rather than nothing.
+ */
+export const patternFilesFor = (
+  config: Pick<FlowatlasConfig, 'patterns'> | undefined,
+  service: Pick<ServiceConfig, 'patterns'> | undefined,
+  configDir: string,
+): string[] => {
+  const globs = [...(config?.patterns ?? []), ...(service?.patterns ?? [])];
+  const out: string[] = [];
+  for (const glob of globs) {
+    for (const path of expandGlob(configDir, glob)) if (!out.includes(path)) out.push(path);
+  }
+  return out;
+};
+
+/**
+ * Every name each service answers to, its own and its aliases, mapped to the
+ * service's name (P91). The schema keeps the names unique, so each one maps
+ * to exactly one service.
+ */
+export const serviceNamesOf = (
+  config: Pick<FlowatlasConfig, 'services'>,
+): ReadonlyMap<string, string> => {
+  const names = new Map<string, string>();
+  for (const service of config.services) {
+    names.set(service.name, service.name);
+    for (const alias of service.aliases ?? []) if (!names.has(alias)) names.set(alias, service.name);
+  }
+  return names;
 };

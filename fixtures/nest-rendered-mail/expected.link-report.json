@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:25.438Z",
+  "builtAt": "2026-10-16T23:29:09.592Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 649,
+      "durationMs": 655,
       "packages": {
         "name": "@rendered-mail/api",
         "runtime": [
@@ -84,6 +84,10 @@
     "nodes": 15,
     "edges": 8,
     "types": 0,
+    "missed": 6,
+    "sites": 6,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 6
   }
 }

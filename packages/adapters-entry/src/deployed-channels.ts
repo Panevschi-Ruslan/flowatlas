@@ -1,4 +1,9 @@
 import {
+  BUCKET_CHANNEL,
+  BUCKET_FIELDS,
+  bucketChannel,
+  CHANGES_CHANNELS,
+  changesChannel,
   channelOfTarget,
   deliveryEnvelope,
   DEPLOYED_CHANNELS,
@@ -7,9 +12,11 @@ import {
   eventChannelPattern,
   forwardedToBus,
   queueChannel,
+  S3_VERSIONED_DELETE,
   topicChannel,
 } from '@flowatlas/aws';
 import {
+  CHANNEL_DECLARED_META,
   CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVELOPE_META,
@@ -22,9 +29,15 @@ import {
   makeUnnamedInvokeKey,
   makeWorkflowEntryKey,
   MOST_CHOICES,
+  REACHED_AS_META,
   REACHES_META,
+  RESULT_OF_META,
+  type ReachedAs,
+  TAKES_META,
+  WHERE_DECLARED_META,
   type ChannelForward,
   type Confidence,
+  type DeclaredStream,
   type DeployedDelivery,
   type DeployedFunction,
   type DeliverySource,
@@ -35,6 +48,7 @@ import {
   type ExtractContext,
   type MessagePattern,
   type MessageTarget,
+  type Takes,
   type Unresolved,
 } from '@flowatlas/core';
 
@@ -70,6 +84,8 @@ interface WayIn {
    * an entry, `triggers` from a channel that hands on what its readers fail on.
    */
   readonly link?: 'calls' | 'triggers';
+  /** The outcome of a run it hands on, for a function's or a mapping's destination (P54). */
+  readonly when?: 'success' | 'failure';
 }
 
 /** The code a function this deployment creates runs, as its own entry was given it. */
@@ -88,18 +104,38 @@ interface Drawing extends Canvas {
   readonly entries: Map<string, EntryNode>;
   /** The handler of a function this deployment creates, by its position. */
   readonly handlerOf: (index: number) => DeployedCode | undefined;
+  /** The node each delivery drawn so far enters by, under its address. */
+  readonly drawn: ReadonlyMap<string, string>;
+  /** A function's `invoke` entry, by id: drawn by the extractor, not here. */
+  readonly invoked: (id: string) => EntryNode | undefined;
 }
 
-const channelNode = (drawing: Canvas, name: string, kind: MessageTarget['kind'], file: string, line: number): string => {
+/** What a channel is drawn as: the adapter that reads it, and its kind. */
+type ChannelKinds = { readonly adapter: string; readonly channelKind: string };
+
+/**
+ * A channel, joined with the one any other delivery drew under its name. A
+ * stream's channel is marked as declared by what declares it: a write in code
+ * lands on it only then (P51). A mapping that reads a table's stream declares
+ * it as surely as the table does; a service that writes to the table says
+ * nothing of a stream, and leaves `declaredBy` out (P56).
+ */
+const channelNode = (drawing: Canvas, name: string, kinds: ChannelKinds, file: string, line: number, declaredBy?: string): string => {
   const { ctx } = drawing;
-  const { adapter, channelKind } = DEPLOYED_CHANNELS[kind];
+  const { adapter, channelKind } = kinds;
   const id = makeChannelId(name);
   const existing = ctx.builder.getNode(id);
   const adapters = [...new Set([...((existing?.meta?.['adapters'] as string[] | undefined) ?? []), adapter])];
-  const node = ctx.builder.addNode({ id, type: 'channel', label: name, repo: ctx.repo, file, line, meta: { channelKind, adapters } });
-  node.meta = { ...node.meta, adapters };
+  const declarer = (existing?.meta?.[CHANNEL_DECLARED_META] as string | undefined) ?? declaredBy;
+  const declared = declarer === undefined ? {} : { [CHANNEL_DECLARED_META]: declarer };
+  const node = ctx.builder.addNode({ id, type: 'channel', label: name, repo: ctx.repo, file, line, meta: { channelKind, adapters, ...declared } });
+  node.meta = { ...node.meta, adapters, ...declared };
   return id;
 };
+
+/** The channel of a table's changes or a stream's records. */
+const streamChannelNode = (drawing: Canvas, stream: Omit<DeclaredStream, 'address'> & { readonly declaredBy?: string }): string =>
+  channelNode(drawing, changesChannel(stream.of, stream.name), CHANGES_CHANNELS[stream.of], stream.file, stream.line, stream.declaredBy);
 
 /** Every (source, detail type) a pattern names exactly, or `undefined` where it does not name them. */
 const exactEvents = (pattern: MessagePattern): (readonly [string, string])[] | undefined => {
@@ -216,7 +252,7 @@ type SourceDrawer<K extends DeliverySource['kind']> = (
  */
 const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
   queue: (drawing, delivery) => {
-    const channel = channelNode(drawing, queueChannel(delivery.from.name), 'queue', delivery.file, delivery.line);
+    const channel = channelNode(drawing, queueChannel(delivery.from.name), DEPLOYED_CHANNELS.queue, delivery.file, delivery.line);
     // A redrive does not read the queue: what its readers fail on is handed on
     // by the queue itself, so a queue nothing reads still reads as one.
     if (delivery.by === 'redrive') {
@@ -228,7 +264,7 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
   },
   topic: (drawing, delivery) => {
     const way = consumerOf(drawing, delivery, 'message', DEPLOYED_CHANNELS.topic.adapter);
-    consume(drawing, channelNode(drawing, topicChannel(delivery.from.name), 'topic', delivery.file, delivery.line), way, delivery);
+    consume(drawing, channelNode(drawing, topicChannel(delivery.from.name), DEPLOYED_CHANNELS.topic, delivery.file, delivery.line), way, delivery);
     return way;
   },
   bus: (drawing, delivery) => {
@@ -242,7 +278,7 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       events === undefined ? { [CHANNEL_PATTERN_META]: eventChannelPattern(bus, pattern) } : {},
     );
     for (const [source, detailType] of events ?? []) {
-      consume(drawing, channelNode(drawing, eventChannel(bus, source, detailType), 'bus', delivery.file, delivery.line), way, delivery);
+      consume(drawing, channelNode(drawing, eventChannel(bus, source, detailType), DEPLOYED_CHANNELS.bus, delivery.file, delivery.line), way, delivery);
     }
     return events === undefined ? way : { ...way, events };
   },
@@ -252,11 +288,52 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       ...(delivery.name === undefined ? { nameRead: false } : {}),
       ...(delivery.meta?.['disabled'] === true ? { disabled: true } : {}),
     }),
-  changes: (drawing, delivery) =>
-    entryOf(drawing, delivery, 'event', `${delivery.from.of === 'table' ? 'dynamodb' : 'kinesis'}/${delivery.from.name}`, {
-      changesOf: delivery.from.of,
-      name: delivery.from.name,
-    }),
+  // A stream read in order is an entry onto the function it runs, and the
+  // channel code writes onto: the mapping is a consumer of that channel that
+  // triggers the entry, so a write reaches the function through it (P51).
+  changes: (drawing, delivery) => {
+    const { of, name } = delivery.from;
+    const way = entryOf(drawing, delivery, 'event', changesChannel(of, name), { changesOf: of, name });
+    const channel = streamChannelNode(drawing, { of, name, file: delivery.file, line: delivery.line, declaredBy: delivery.address });
+    const consumer = consumerOf(drawing, delivery, CHANGES_CHANNELS[of].kind, CHANGES_CHANNELS[of].adapter);
+    consume(drawing, channel, consumer, delivery);
+    drawing.ctx.builder.addEdge({
+      from: consumer.id,
+      to: way.id,
+      type: 'triggers',
+      confidence: consumer.confidence,
+      file: delivery.file,
+      line: delivery.line,
+      meta: { via: 'deployment' },
+    });
+    if (notMatchedOn(delivery).length > 0) {
+      drawing.rows.push({
+        file: delivery.file,
+        line: delivery.line,
+        reason: 'stream-filter-not-matched',
+        level: 'info',
+        message: `${delivery.address} hands ${changesChannel(of, name)} on through a filter, which is recorded on its edge and not matched against what is written`,
+        hint: 'Every write onto the stream is drawn as reaching the function; the filter decides at run time which of them do.',
+        symbol: delivery.address,
+      });
+    }
+    return way;
+  },
+  // A notification of a bucket takes what writes to it fire, and says which:
+  // the linker asks each write whether it is taken (P52).
+  bucket: (drawing, delivery) => {
+    const { name, events, prefix, suffix, versioned } = delivery.from;
+    const takes: Takes = {
+      kinds: events,
+      ...(versioned === true ? { instead: [S3_VERSIONED_DELETE] } : {}),
+      ...(prefix === undefined && suffix === undefined
+        ? {}
+        : { by: { field: BUCKET_FIELDS.key, ...(prefix === undefined ? {} : { prefix }), ...(suffix === undefined ? {} : { suffix }) } }),
+    };
+    const way = consumerOf(drawing, delivery, 'object', BUCKET_CHANNEL.adapter, { [TAKES_META]: takes });
+    consume(drawing, channelNode(drawing, bucketChannel(name), BUCKET_CHANNEL, delivery.file, delivery.line), way, delivery);
+    return way;
+  },
   // A route of a socket API is a way in of its own: nothing publishes to it
   // but a client holding a connection open (R174).
   connection: (drawing, delivery) =>
@@ -265,6 +342,30 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       route: delivery.from.route,
       ...(delivery.meta ?? {}),
     }),
+  // A user pool or an IoT rule runs its function on something that happens
+  // in the service itself, which nothing in code publishes.
+  trigger: (drawing, delivery) =>
+    entryOf(drawing, delivery, 'event', delivery.from.key, {
+      service: delivery.from.service,
+      ...(delivery.name === undefined ? {} : { name: delivery.name }),
+      ...Object.fromEntries(Object.entries(delivery.meta ?? {}).filter(([key]) => key !== 'when')),
+    }),
+  // What a run ends in is handed on from the function's own entry, or from
+  // where the mapping that gave up took its batches in (P54).
+  outcome: (drawing, delivery) => {
+    const { of, when } = delivery.from;
+    // A function another deployment creates hands its run on into a node of
+    // this one's, which the linker joins to that function's entry (P60).
+    if ('name' in of) {
+      const resultOf = makeEntryReference('invoke', makeInvokeEntryKey(of.name));
+      return { ...consumerOf(drawing, delivery, 'result', 'aws-lambda', { [RESULT_OF_META]: resultOf }), link: 'triggers', when };
+    }
+    const id = 'function' in of ? localFunction(drawing, of.function) : drawing.drawn.get(of.delivery);
+    if (id === undefined) return { ...consumerOf(drawing, delivery, 'result', 'aws-lambda'), link: 'triggers', when };
+    // An entry this module draws keeps its references on itself until it is returned.
+    const reaches = (drawing.entries.get(id)?.meta?.[REACHES_META] as string[] | undefined) ?? [];
+    return { id, file: delivery.file, line: delivery.line, reaches, confidence: confidenceOf(delivery), link: 'triggers', when };
+  },
 };
 
 /** Where a publisher a deployment declares sits, and what declares it. */
@@ -276,10 +377,50 @@ interface Declared {
   readonly meta?: Record<string, unknown>;
 }
 
-/** The publisher a delivery or a route is, reached from where its messages come in. */
-const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, label: string): string => {
+/**
+ * When a delivery runs, where that is not on every message: an IoT rule's
+ * error action, on a failure of its other actions alone (P56). Kept on what the
+ * delivery draws, never on the entry its source shares with the others.
+ */
+const whenOf = (delivery: Declared): Record<string, unknown> =>
+  delivery.meta?.['when'] === undefined ? {} : { when: delivery.meta['when'] };
+
+/** What an edge out of a way in says: drawn from the deployment, and the outcome it carries (P54) or the delivery's own (P56). */
+const edgeMeta = (way: WayIn, delivery?: Declared): Record<string, unknown> =>
+  way.when === undefined ? { via: 'deployment', ...(delivery === undefined ? {} : whenOf(delivery)) } : { via: 'deployment', when: way.when };
+
+/**
+ * A reference by deployed name, and how the linker is to draw the edge it
+ * becomes: the same type and outcome an edge to a target this deployment
+ * creates would carry (P60). A reference the way in already reaches plainly
+ * stays plain, so one edge does not claim an outcome only some of its
+ * deliveries carry.
+ */
+const reachByName = (drawing: Drawing, way: WayIn, delivery: Declared, reference: string): void => {
+  const plain = way.reaches.includes(reference);
+  way.reaches.push(reference);
+  const when = edgeMeta(way, delivery)['when'] as ReachedAs['when'];
+  const as: ReachedAs = { ...(way.link === 'triggers' ? { type: 'triggers' } : {}), ...(when === undefined ? {} : { when }) };
+  const node = drawing.entries.get(way.id) ?? drawing.ctx.builder.getNode(way.id) ?? drawing.invoked(way.id);
+  if (node === undefined) return;
+  const recorded = { ...((node.meta?.[REACHED_AS_META] as Record<string, ReachedAs> | undefined) ?? {}) };
+  if (plain && recorded[reference] === undefined) return;
+  if (Object.keys(as).length === 0) delete recorded[reference];
+  else recorded[reference] = as;
+  const { [REACHED_AS_META]: _old, ...rest } = node.meta ?? {};
+  node.meta = Object.keys(recorded).length === 0 ? rest : { ...rest, [REACHED_AS_META]: recorded };
+};
+
+/** A producer a delivery or a route is, reached from where its messages come in. */
+const producerNode = (
+  drawing: Canvas,
+  way: WayIn,
+  delivery: Declared,
+  { adapter, kind }: { readonly adapter: string; readonly kind: string },
+  label: string,
+  meta: Record<string, unknown> = {},
+): string => {
   const { ctx } = drawing;
-  const { adapter, kind } = DEPLOYED_CHANNELS[target.kind];
   const id = `producer:${makeSymbolId(ctx.repo, delivery.file, delivery.address)}`;
   ctx.builder.addNode({
     id,
@@ -296,17 +437,22 @@ const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: Mess
       by: delivery.by,
       declaredAs: delivery.address,
       deployedBy: drawing.deployedBy,
-      ...(way.link === 'triggers' ? (delivery.meta ?? {}) : {}),
+      ...whenOf(delivery),
+      ...meta,
     },
   });
-  ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+  ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way, delivery) });
   return id;
 };
+
+/** The publisher a delivery or a route is onto a queue, a topic or a bus. */
+const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, label: string): string =>
+  producerNode(drawing, way, delivery, DEPLOYED_CHANNELS[target.kind], label, way.link === 'triggers' ? (delivery.meta ?? {}) : {});
 
 /** A publisher a delivery or a route is, onto the channel it sends to. */
 const forward = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, channel: string): void => {
   const id = publisher(drawing, way, delivery, target, channel);
-  const to = channelNode(drawing, channel, target.kind, delivery.file, delivery.line);
+  const to = channelNode(drawing, channel, DEPLOYED_CHANNELS[target.kind], delivery.file, delivery.line);
   drawing.ctx.builder.addEdge({ from: id, to, type: 'emits', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
 };
 
@@ -388,22 +534,34 @@ const runAsEntry = (drawing: Drawing, way: WayIn, target: Extract<DeliveryTarget
  * consumer does, because an entry has one handler.
  */
 const TARGETS: { readonly [K in DeliveryTarget['kind']]: TargetDrawer<K> } = {
-  function: (drawing, way, _delivery, target) => {
-    if (runAsEntry(drawing, way, target)) return;
+  function: (drawing, way, delivery, target) => {
+    // An error action runs only when the others fail, so it is never the
+    // code the entry runs, whatever order the actions are read in.
+    if (delivery.meta?.['when'] === undefined && runAsEntry(drawing, way, target)) return;
     if ('name' in target) {
-      way.reaches.push(makeEntryReference('invoke', makeInvokeEntryKey(target.name)));
+      reachByName(drawing, way, delivery, makeEntryReference('invoke', makeInvokeEntryKey(target.name)));
       return;
     }
     const to = localFunction(drawing, target.function);
     if (to === undefined) return;
-    drawing.ctx.builder.addEdge({ from: way.id, to, type: 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+    drawing.ctx.builder.addEdge({ from: way.id, to, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: edgeMeta(way, delivery) });
   },
-  workflow: (_drawing, way, _delivery, target) => {
-    way.reaches.push(makeEntryReference('workflow', makeWorkflowEntryKey(target.name)));
+  workflow: (drawing, way, delivery, target) => {
+    reachByName(drawing, way, delivery, makeEntryReference('workflow', makeWorkflowEntryKey(target.name)));
   },
   queue: sendOn,
   topic: sendOn,
   bus: sendOn,
+  // A write to a table or a record put on a stream, by the service itself: a
+  // publisher onto the channel the stream's readers take from (P56).
+  changes: (drawing, way, delivery, target) => {
+    // A table's changes are a channel only where its stream is declared, as
+    // they are for a write in code (P51); a stream's records always are.
+    const whereDeclared = target.of === 'table' ? { [WHERE_DECLARED_META]: true } : {};
+    const id = producerNode(drawing, way, delivery, CHANGES_CHANNELS[target.of], changesChannel(target.of, target.name), whereDeclared);
+    const to = streamChannelNode(drawing, { of: target.of, name: target.name, file: delivery.file, line: delivery.line });
+    drawing.ctx.builder.addEdge({ from: id, to, type: 'emits', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+  },
 };
 
 const drawSource = (drawing: Drawing, delivery: DeployedDelivery): WayIn =>
@@ -425,8 +583,10 @@ export const drawDeliveries = (
   rows: Unresolved[],
   drawn: Map<string, string>,
   handlerOf: (index: number) => DeployedCode | undefined,
+  invoked: (id: string) => EntryNode | undefined = () => undefined,
 ): EntryNode[] => {
-  const drawing: Drawing = { ctx, deployment, deployedBy, rows, entries: new Map(), handlerOf };
+  const drawing: Drawing = { ctx, deployment, deployedBy, rows, entries: new Map(), handlerOf, drawn, invoked };
+  for (const stream of deployment.streams ?? []) streamChannelNode(drawing, { ...stream, declaredBy: stream.address });
   for (const delivery of deployment.deliveries) {
     const way = drawSource(drawing, delivery);
     // A row about the delivery - a target not read, a forward not drawn - is
@@ -437,7 +597,7 @@ export const drawDeliveries = (
     // A consumer is drawn by this module and keeps its references on its own
     // node; an entry is drawn by the extractor from what is returned.
     if (way.reaches.length > 0 && !drawing.entries.has(way.id)) {
-      const node = ctx.builder.getNode(way.id);
+      const node = ctx.builder.getNode(way.id) ?? invoked(way.id);
       if (node !== undefined) node.meta = { ...node.meta, [REACHES_META]: [...new Set([...((node.meta?.[REACHES_META] as string[] | undefined) ?? []), ...way.reaches])] };
     }
   }

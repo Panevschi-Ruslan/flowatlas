@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:27.872Z",
+  "builtAt": "2026-10-17T03:49:10.221Z",
   "services": [
     {
       "name": "catalogue",
@@ -261,7 +261,8 @@
         "kind": "event",
         "adapter": "aws-eventbridge",
         "channelVia": "literal",
-        "method": "send"
+        "method": "send",
+        "batch": true
       }
     },
     {
@@ -515,6 +516,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "SQSClient",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@aws-sdk/client-sqs"
+      },
       "service": "catalogue"
     },
     {
@@ -525,6 +530,43 @@
       "sites": 5,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "announceWithdrawal -> sns\n    .publish({\n      TopicArn: 'arn:aws:sns:eu-west-1:111122223333:catalogue-withdrawals',\n      Message: JSON.stringify({ itemId }),\n    }).promise",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "express",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/catalogue.handlers.ts",
+                "line": 26,
+                "symbol": "catalogueItem -> res.status(201).json"
+              },
+              {
+                "file": "src/catalogue.handlers.ts",
+                "line": 26,
+                "symbol": "catalogueItem -> res.status"
+              },
+              {
+                "file": "src/catalogue.handlers.ts",
+                "line": 31,
+                "symbol": "withdrawItem -> res.status(204).send"
+              }
+            ]
+          },
+          {
+            "cause": "untyped-value",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/catalogue-events.ts",
+                "line": 48,
+                "symbol": "announceWithdrawal -> sns\n    .publish({\n      TopicArn: 'arn:aws:sns:eu-west-1:111122223333:catalogue-withdrawals',\n      Message: JSON.stringify({ itemId }),\n    }).promise"
+              }
+            ]
+          }
+        ]
+      },
       "service": "catalogue"
     },
     {
@@ -533,6 +575,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "Request",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      },
       "service": "catalogue"
     },
     {
@@ -541,6 +587,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "Response",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      },
       "service": "catalogue"
     },
     {
@@ -549,6 +599,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "Request",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      },
       "service": "catalogue"
     },
     {
@@ -557,6 +611,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "Response",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      },
       "service": "catalogue"
     }
   ]

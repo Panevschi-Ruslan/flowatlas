@@ -32,6 +32,8 @@ const patternOf = (starter: StarterConfig): CallPattern => ({
   channel: starter.name,
   kind: starter.kind ?? (starter.target === 'workflow' ? 'start' : 'invoke'),
   starts: { entry: starter.target, ...(starter.names === undefined ? {} : { names: starter.names }) },
+  ...(starter.where === undefined ? {} : { where: starter.where }),
+  ...(starter.describedBy === undefined ? {} : { describedBy: starter.describedBy }),
 });
 
 export const createStarterAdapter = (starters: readonly StarterConfig[]): BrokerSpec => ({

@@ -1,4 +1,4 @@
-import { channelOfTarget, DEPLOYED_CHANNELS, SDK_SENDS } from '@flowatlas/aws';
+import { CHANGES_CHANNELS, changesChannel, channelOfTarget, DEPLOYED_CHANNELS, SDK_SENDS, SDK_WRITES } from '@flowatlas/aws';
 import {
   CARRIES_ON_META,
   makeChannelId,
@@ -16,6 +16,7 @@ import {
   type GraphNode,
   type MessageTarget,
   type Unresolved,
+  WHERE_DECLARED_META,
 } from '@flowatlas/core';
 import type { State, StateMachine, Transition } from './definition.js';
 import { requiredInput } from './input.js';
@@ -186,6 +187,13 @@ const TABLE_WORDS: Readonly<Record<Extract<Task, { kind: 'table' }>['op'], strin
   delete: 'deletes from a table',
 };
 
+/** The same, for a batch or a transaction whose whole list of tables is chosen at run time (P62). */
+const TABLES_WORDS: Readonly<Record<Extract<Task, { kind: 'table' }>['op'], string>> = {
+  read: 'reads tables',
+  write: 'writes to tables',
+  delete: 'deletes from tables',
+};
+
 /**
  * Where one target of a sending step goes, as a deployment would name it, or
  * the rows that say why it cannot be named.
@@ -240,7 +248,28 @@ const channelEffects = (site: Site, target: Extract<Task, { kind: 'channel' }>):
   };
   if (sends.size === 0) return { ...NOTHING, rows, task };
 
-  const { adapter, channelKind, kind } = DEPLOYED_CHANNELS[target.transport];
+  return { reaches: [], ...producerEffects(site, sends, DEPLOYED_CHANNELS[target.transport], target.call), rows, task: { ...task, channels: [...sends.keys()] } };
+};
+
+/** How a producer and its channels are recorded: the adapter, the channel's kind, the producer's. */
+interface ChannelKinds {
+  readonly adapter: string;
+  readonly channelKind: string;
+  readonly kind: string;
+}
+
+/**
+ * One producer at the step onto each channel it names, with the message each
+ * is given as written. `whereDeclared` marks a write the linker keeps only
+ * where a deployment declares the channel - a table's stream (P51, P55).
+ */
+const producerEffects = (
+  site: Site,
+  sends: ReadonlyMap<string, Readonly<Record<string, unknown>> | undefined>,
+  { adapter, channelKind, kind }: ChannelKinds,
+  call: Task['call'],
+  whereDeclared = false,
+): Pick<Effects, 'nodes' | 'edges'> => {
   const id = makeLeafId('producer', site.repo, site.file, site.line, site.column);
   const located = { file: site.file, line: site.line };
   const producer: GraphNode = {
@@ -254,11 +283,11 @@ const channelEffects = (site: Site, target: Extract<Task, { kind: 'channel' }>):
       kind,
       adapter,
       channelVia: 'definition',
-      ...(target.call === undefined ? {} : { service: target.call.service, action: target.call.action }),
+      ...(call === undefined ? {} : { service: call.service, action: call.action }),
+      ...(whereDeclared ? { [WHERE_DECLARED_META]: true } : {}),
     },
   };
   return {
-    reaches: [],
     nodes: [
       producer,
       ...[...sends.keys()].map(
@@ -285,9 +314,30 @@ const channelEffects = (site: Site, target: Extract<Task, { kind: 'channel' }>):
         }),
       ),
     ],
-    rows,
-    task: { ...task, channels: [...sends.keys()] },
   };
+};
+
+/** The field of a write that carries what is written, by action: what a reader of the stream is handed. */
+const writtenOf = (site: Site, call: Task['call']): Readonly<Record<string, unknown>> | undefined => {
+  const operation = SDK_WRITES.table.operations.find((each) => each.method.toLowerCase() === call?.action.toLowerCase());
+  if (operation === undefined || !('message' in operation)) return undefined;
+  const [field] = operation.message;
+  const parameters = site.state.fields['Parameters'] ?? site.state.fields['Arguments'];
+  if (typeof parameters !== 'object' || parameters === null) return undefined;
+  const fields = parameters as Record<string, unknown>;
+  for (const key of [field, `${field}.$`]) if (Object.hasOwn(fields, key)) return { [key]: fields[key] };
+  return undefined;
+};
+
+/**
+ * A write to a table, onto the channel of its stream (P55): the same producer
+ * a Lambda's write is, kept by the linker only where the stream is declared.
+ */
+const tableWrites = (site: Site, target: Extract<Task, { kind: 'table' }>, tables: readonly string[]): Pick<Effects, 'nodes' | 'edges'> => {
+  if (target.op === 'read' || tables.length === 0) return { nodes: [], edges: [] };
+  const payload = writtenOf(site, target.call);
+  const sends = new Map(tables.map((table) => [changesChannel('table', table), payload] as const));
+  return producerEffects(site, sends, CHANGES_CHANNELS.table, target.call, true);
 };
 
 /** The `db_query` a task on a table becomes, and the tables it reaches. */
@@ -309,18 +359,32 @@ const tableEffects = (site: Site, target: Extract<Task, { kind: 'table' }>): Eff
     },
   };
   const located = { file: site.file, line: site.line };
+  const writes = tableWrites(site, target, [...new Set(read)]);
   return {
     reaches: [],
-    nodes: [query, ...read.map((table) => ({ id: makeTableId(site.repo, table), type: 'table' as const, label: table, repo: site.repo }))],
+    nodes: [...writes.nodes, query, ...read.map((table) => ({ id: makeTableId(site.repo, table), type: 'table' as const, label: table, repo: site.repo }))],
     edges: [
       { from: site.id, to: id, type: 'calls', confidence: 'static', ...located },
       ...read.map((table): GraphEdge => ({ from: id, to: makeTableId(site.repo, table), type: 'queries', confidence: 'static', ...located })),
+      ...writes.edges,
     ],
     rows: target.tables.flatMap((reading) =>
-      reading.read ? [] : [unreadRow(site, TABLE_WORDS[target.op], 'TableName', reading)],
+      reading.read ? [] : [unreadRow(site, (target.field === 'TableName' ? TABLE_WORDS : TABLES_WORDS)[target.op], target.field, reading)],
     ),
     task: { op: target.op, tables: read },
   };
+};
+
+/** Records put on a Kinesis stream: a producer onto `kinesis/<stream>`, which is always a channel. */
+const recordsEffects = (site: Site, target: Extract<Task, { kind: 'records' }>): Effects => {
+  const rows = target.streams.flatMap((reading) =>
+    reading.read ? [] : [unreadRow(site, 'puts records on a stream', 'StreamName', reading)],
+  );
+  const read = [...new Set(target.streams.flatMap((reading) => (reading.read ? [reading.value] : [])))];
+  const task = { streams: read };
+  if (read.length === 0) return { ...NOTHING, rows, task };
+  const sends = new Map(read.map((stream) => [changesChannel('stream', stream), undefined] as const));
+  return { reaches: [], ...producerEffects(site, sends, CHANGES_CHANNELS.stream, target.call), rows, task };
 };
 
 type TargetEffects = { readonly [K in TaskTargetKind]: (site: Site, target: Extract<Task, { kind: K }>) => Effects };
@@ -342,6 +406,7 @@ const TARGET_EFFECTS: TargetEffects = {
     ),
   workflow: (site, target) => reachedBy(site, target.name, workflowReference, 'starts a workflow', 'StateMachineArn'),
   table: tableEffects,
+  records: recordsEffects,
   channel: channelEffects,
   service: () => ({ ...NOTHING, task: {} }),
   activity: (site, target) =>

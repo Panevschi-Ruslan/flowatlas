@@ -1,12 +1,22 @@
 import {
   AWS_SERVICE_PREFIX,
+  BUCKET_CHANNEL,
+  BUCKET_FIELDS,
+  CHANGES_CHANNELS,
+  CHANGES_PREFIX,
   DEPLOYED_CHANNELS,
   DEPLOYED_FORMS,
   FUNCTION_NAME_FORMS,
+  PRESIGNER,
+  S3_UPLOAD,
+  S3_WRITES,
   SDK_SENDS,
+  SDK_WRITES,
   type SendingService,
+  type WritingService,
 } from '@flowatlas/aws';
 import {
+  EVERY_ELEMENT,
   hasAnyDependency,
   manifestsWithin,
   type AddressPart,
@@ -53,6 +63,12 @@ import type { BrokerSpec } from './types.js';
  * (P24): an operation that `starts` reads its address as the deployed name of
  * an entry rather than of a channel, so the same three shapes of call, the
  * same locators and the same completion from the environment serve both.
+ *
+ * Writing to a DynamoDB table and putting a record on a Kinesis stream are rows
+ * too (P51): onto `dynamodb/<table>` and `kinesis/<stream>`, where the function
+ * a mapping from that stream runs reads them. A table write is a publish only
+ * where a deployment declares the table's stream, which no call says, so it is
+ * drawn as one `whereDeclared` and the linker keeps or drops it.
  */
 
 /** A part of an address, written against the operation's input rather than a call. */
@@ -60,8 +76,11 @@ type InputPart =
   | { readonly literal: string }
   | {
       readonly path: readonly string[];
+      /** Further paths tried after it, in order, at each element. */
+      readonly or?: readonly (readonly string[])[];
       readonly absent?: string;
       readonly forms?: readonly string[];
+      readonly unwrittenIsNone?: boolean;
     };
 
 /** What an operation that starts something starts, written against its input. */
@@ -74,16 +93,23 @@ interface Starts {
 
 /** One operation that publishes, or starts something. */
 interface Operation {
-  /** The command class version 3 sends it as. */
-  readonly command: string;
+  /** The command class version 3 sends it as; absent for an operation only version 2 has. */
+  readonly command?: string;
   /** The method both clients that take the input directly call it as. */
   readonly method: string;
   readonly address: readonly InputPart[];
   /** Where in the input the message is, for an operation that sends one or starts something with one. */
   readonly payload?: readonly string[];
+  /** The operation hands its receivers no message of its own: a write to a bucket (P52). */
+  readonly silent?: boolean;
+  /** Fields of the input recorded on the publisher as written, by name. */
+  readonly recorded?: Readonly<Record<string, readonly string[]>>;
   /** What it is recorded as, where that is not the service's word. */
   readonly kind?: string;
   readonly starts?: Starts;
+  readonly whereDeclared?: boolean;
+  /** Many messages or items in one round trip (P89). */
+  readonly batch?: true;
 }
 
 /** One service: its package, its clients, and what it publishes or starts. */
@@ -102,6 +128,8 @@ interface Service {
   /** The class version 2 names the service by, where it is not version 3's. */
   readonly v2Service?: string;
   readonly operations: readonly Operation[];
+  /** Calls of the service that are not an operation on its client: a helper of another package. */
+  readonly helpers?: readonly CallPattern[];
 }
 
 /** The version 2 SDK, one package for every service. */
@@ -128,9 +156,95 @@ const sendsTo = (target: MessageTarget['kind'], service: string): Operation[] =>
         ...(event === undefined ? [] : [event.source, event.detailType].map((field) => ({ path: named(field) }))),
       ],
       payload: inEntry(operation.message),
+      ...(operation.batch === true ? { batch: true as const } : {}),
     };
   });
 };
+
+/**
+ * The operations that write to a bucket, each a publisher onto it recorded as
+ * the event it fires there, with the key it writes, which a notification of the
+ * bucket filters on (P52). A notification is handed the service's notice of
+ * the write, never what was written, so no message is read.
+ */
+const BUCKET: readonly InputPart[] = [
+  { literal: AWS_SERVICE_PREFIX.s3 },
+  { path: [BUCKET_FIELDS.bucket], forms: DEPLOYED_FORMS.bucket },
+];
+
+const bucketWrites = (): Operation[] =>
+  S3_WRITES.map((write) => ({
+    ...(write.command === undefined ? {} : { command: write.command }),
+    method: write.method,
+    address: BUCKET,
+    silent: true,
+    recorded: {
+      [BUCKET_FIELDS.key]: write.key ?? [BUCKET_FIELDS.key],
+      ...(write.version === undefined ? {} : { [BUCKET_FIELDS.version]: write.version }),
+    },
+    kind: write.event,
+  }));
+
+/** A bucket written through a locator of the shape of call at hand. */
+const bucketAt = (at: (path: readonly string[]) => NameLocator, receiverPackages: string[]): Pick<CallPattern, 'channelArg' | 'address' | 'payload' | 'recorded' | 'receiverPackages'> => ({
+  channelArg: -1,
+  address: [{ literal: AWS_SERVICE_PREFIX.s3 }, { at: [at([BUCKET_FIELDS.bucket])], forms: DEPLOYED_FORMS.bucket }],
+  payload: [],
+  recorded: { [BUCKET_FIELDS.key]: [at([BUCKET_FIELDS.key])] },
+  receiverPackages,
+});
+
+/**
+ * Two writes that are not an operation on the client: `@aws-sdk/lib-storage`'s
+ * `Upload`, told where it writes when it is made and run by `done()`; and a
+ * URL signed for a `PutObjectCommand`, which the browser it is handed writes
+ * with - recorded as the signing, and drawn as a guess (P52).
+ */
+const BUCKET_HELPERS: readonly CallPattern[] = [
+  {
+    method: S3_UPLOAD.method,
+    ...bucketAt((path) => ({ kind: 'receiver-constructed-path', class: S3_UPLOAD.class, path: [...S3_UPLOAD.input, ...path] }), [S3_UPLOAD.package]),
+    receiverType: [S3_UPLOAD.class],
+    kind: S3_UPLOAD.event,
+  },
+  {
+    method: PRESIGNER.function,
+    calledAs: 'function',
+    module: PRESIGNER.package,
+    ...bucketAt((path) => ({ kind: 'constructed-argument-path', class: PRESIGNER.command, path }), [PRESIGNER.package]),
+    kind: PRESIGNER.event,
+    guessed: PRESIGNER.guessed,
+  },
+];
+
+/**
+ * The operations that write to a table or put a record on a stream, written
+ * against their input from the fields `@flowatlas/aws` states. A table's write
+ * is one only where its stream is declared; a record put on a stream is always
+ * on it.
+ */
+const writesTo = ({ changes, operations }: WritingService): Operation[] =>
+  operations.map((operation) => {
+    const [path = [], ...or] = operation.address;
+    return {
+      command: operation.command,
+      method: operation.method,
+      address: [
+        { literal: CHANGES_PREFIX[changes] },
+        {
+          path,
+          ...(or.length === 0 ? {} : { or }),
+          forms: DEPLOYED_FORMS[changes],
+          // An entry of a list that names none - a transaction's condition check - writes nothing.
+          ...(path.includes(EVERY_ELEMENT) ? { unwrittenIsNone: true } : {}),
+        },
+      ],
+      // A batch or a transaction writes many items, none of them the message (P55).
+      ...(operation.message === undefined ? { silent: true } : { payload: operation.message }),
+      ...(changes === 'table' ? { whereDeclared: true } : {}),
+      ...(operation.batch === true ? { batch: true as const } : {}),
+    };
+  });
 
 const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.workflow }];
 
@@ -158,6 +272,40 @@ const SERVICES: readonly Service[] = [
     client: 'SNSClient',
     service: 'SNS',
     operations: sendsTo('topic', AWS_SERVICE_PREFIX.sns),
+  },
+  {
+    ...BUCKET_CHANNEL,
+    kind: 'object',
+    package: '@aws-sdk/client-s3',
+    client: 'S3Client',
+    service: 'S3',
+    operations: bucketWrites(),
+    helpers: BUCKET_HELPERS,
+  },
+  {
+    ...CHANGES_CHANNELS.table,
+    package: '@aws-sdk/client-dynamodb',
+    client: 'DynamoDBClient',
+    service: 'DynamoDB',
+    operations: writesTo(SDK_WRITES.table),
+  },
+  {
+    ...CHANGES_CHANNELS.table,
+    // One adapter per client: the document client is a description of its own.
+    adapter: `${CHANGES_CHANNELS.table.adapter}-document`,
+    package: '@aws-sdk/lib-dynamodb',
+    client: 'DynamoDBDocumentClient',
+    service: 'DynamoDBDocument',
+    // `new AWS.DynamoDB.DocumentClient()` in version 2.
+    v2Service: 'DocumentClient',
+    operations: writesTo(SDK_WRITES.document),
+  },
+  {
+    ...CHANGES_CHANNELS.stream,
+    package: '@aws-sdk/client-kinesis',
+    client: 'KinesisClient',
+    service: 'Kinesis',
+    operations: writesTo(SDK_WRITES.stream),
   },
   {
     adapter: 'aws-stepfunctions',
@@ -231,9 +379,10 @@ const addressAt = (parts: readonly InputPart[], locate: InputLocator): AddressPa
     'literal' in part
       ? part
       : {
-          at: [locate(part.path)],
+          at: [part.path, ...(part.or ?? [])].map(locate),
           ...(part.absent === undefined ? {} : { absent: part.absent }),
           ...(part.forms === undefined ? {} : { forms: part.forms }),
+          ...(part.unwrittenIsNone === true ? { unwrittenIsNone: true } : {}),
         },
   );
 
@@ -245,14 +394,19 @@ const startsAt = (starts: Starts, locate: InputLocator): StartedEntry => ({
 
 /** The two patterns one operation is read through: a command sent, and a method called. */
 const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
+  const command = operation.command;
   const shapes: readonly { method: string; locate: InputLocator; receiverType: string[]; receiverPackages: string[] }[] = [
-    {
-      method: 'send',
-      locate: viaCommand(operation.command),
-      // The aggregated client sends commands too.
-      receiverType: [service.client, service.service],
-      receiverPackages: [service.package],
-    },
+    ...(command === undefined
+      ? []
+      : [
+          {
+            method: 'send',
+            locate: viaCommand(command),
+            // The aggregated client sends commands too.
+            receiverType: [service.client, service.service],
+            receiverPackages: [service.package],
+          },
+        ]),
     {
       method: operation.method,
       locate: viaInput,
@@ -264,11 +418,16 @@ const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
     method,
     channelArg: -1,
     address: addressAt(operation.address, locate),
-    ...(operation.payload === undefined ? {} : { payload: [locate(operation.payload)] }),
+    ...(operation.silent === true ? { payload: [] } : operation.payload === undefined ? {} : { payload: [locate(operation.payload)] }),
+    ...(operation.recorded === undefined
+      ? {}
+      : { recorded: Object.fromEntries(Object.entries(operation.recorded).map(([name, path]) => [name, [locate(path)]])) }),
     receiverType,
     receiverPackages,
     kind: operation.kind ?? service.kind,
     ...(operation.starts === undefined ? {} : { starts: startsAt(operation.starts, locate) }),
+    ...(operation.whereDeclared === true ? { whereDeclared: true } : {}),
+    ...(operation.batch === true ? { batch: true } : {}),
   }));
 };
 
@@ -286,7 +445,7 @@ const declaredAnywhere = (pkg: PackageJson, names: readonly string[], repoDir: s
 const specOf = (service: Service): BrokerSpec => ({
   name: service.adapter,
   detect: (pkg, _config, repoDir) => declaredAnywhere(pkg, [service.package, V2_PACKAGE], repoDir),
-  producerPatterns: service.operations.flatMap((operation) => patternsOf(service, operation)),
+  producerPatterns: [...service.operations.flatMap((operation) => patternsOf(service, operation)), ...(service.helpers ?? [])],
   consumerDecorators: [],
   consumerPatterns: [],
   // A service that only starts things names no channel, and this is never read.

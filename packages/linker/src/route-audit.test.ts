@@ -194,7 +194,7 @@ describe('a route nothing guards', () => {
   it('matches a configured route by verb and pattern', () => {
     expect(matchesRoutePattern('* /api/health', 'GET', '/api/health')).toBe(true);
     expect(matchesRoutePattern('POST /api/*', 'GET', '/api/x')).toBe(false);
-    expect(matchesRoutePattern('GET /api/:param/menu', 'GET', '/api/:param/menu')).toBe(true);
+    expect(matchesRoutePattern('GET /api/:param/catalog', 'GET', '/api/:param/catalog')).toBe(true);
   });
 });
 
@@ -222,5 +222,140 @@ describe('a worker route in front of an application route', () => {
     const rows = auditRoutes(nodes, edges, OPTIONS);
     expect(rows.map((row) => row.reason)).toEqual(['route-shadowed']);
     expect(rows[0]?.message).toContain('the worker route has middleware requestLogger, withNest.');
+  });
+});
+
+describe('what the reader of the framework read in front of a route (P76)', () => {
+  const access = (extra: Record<string, unknown>) => ({ access: { guards: [], ...extra } });
+  const jwt = { id: 'api#JwtGuard', name: 'JwtGuard', layer: 'guard', where: 'global', via: 'APP_GUARD in AuthModule' };
+
+  it('treats a guard the handler switches off by a flag the guard reads as not there', () => {
+    const { nodes, edges } = graph({ guard: true, meta: access({ guards: [{ ...jwt, skippedBy: 'SkipTenant' }] }) });
+    const [row] = auditRoutes(nodes, edges, OPTIONS);
+    expect(row).toMatchObject({ reason: 'route-guard-skipped', level: 'info' });
+    expect(row?.message).toContain('JwtGuard (skipped by @SkipTenant)');
+  });
+
+  it('reads an opt-out that says it is open on purpose as public, on the handler or its class', () => {
+    for (const where of ['route', 'controller']) {
+      const optOuts = [{ decorator: 'AllowGuest', key: 'isPublic', public: true, skips: ['JwtGuard'], where }];
+      const { nodes, edges } = graph({ guard: true, meta: access({ guards: [{ ...jwt, skippedBy: 'AllowGuest' }], optOuts }) });
+      expect(auditRoutes(nodes, edges, OPTIONS)).toEqual([]);
+    }
+    // A decorator configured as public counts the same, whatever its flag is called.
+    const optOuts = [{ decorator: 'Public', key: 'k', public: false, skips: [], where: 'controller' }];
+    const { nodes, edges } = graph({ meta: access({ optOuts }) });
+    expect(auditRoutes(nodes, edges, OPTIONS)).toEqual([]);
+  });
+
+  it('keeps a route guarded when its opt-out is read by no check in front of it', () => {
+    const optOuts = [{ decorator: 'Public', key: 'isPublic', public: true, skips: [], where: 'route' }];
+    const { nodes, edges } = graph({ guard: true, meta: access({ guards: [jwt], optOuts }) });
+    expect(auditRoutes(nodes, edges, OPTIONS)).toEqual([]);
+  });
+
+  it('lists a route that refuses a request in its own code at info, naming the throw', () => {
+    const fails = [
+      { status: 404, exception: 'NotFoundException', at: 'api#OrdersService.list', source: 'throw' },
+      { status: 401, exception: 'UnauthorizedException', at: 'api#OrdersController.list', file: 'src/orders.controller.ts', line: 14, source: 'throw' },
+    ];
+    const { nodes, edges } = graph({ meta: { fails } });
+    const [row] = auditRoutes(nodes, edges, OPTIONS);
+    expect(row).toMatchObject({ reason: 'route-checked-in-body', level: 'info', symbol: 'GET /orders' });
+    expect(row?.message).toBe(
+      'GET /orders reaches Order with no guard in front of it, and refuses a request in its own code: ' +
+        'UnauthorizedException (401) in OrdersController.list, src/orders.controller.ts:14.',
+    );
+  });
+
+  it('does not take a refusal by a check, or a failure that is not one, for a check in the body', () => {
+    const byGuard = graph({ meta: { fails: [{ status: 403, exception: 'ForbiddenException', at: 'api#X', source: 'guard' }] } });
+    const notFound = graph({ meta: { fails: [{ status: 404, exception: 'NotFoundException', at: 'api#X', source: 'throw' }] } });
+    for (const { nodes, edges } of [byGuard, notFound]) {
+      expect(auditRoutes(nodes, edges, OPTIONS).map((row) => row.reason)).toEqual(['route-unguarded']);
+    }
+  });
+
+  it('says how to accept the routes public by decision together', () => {
+    const { nodes, edges } = graph({});
+    expect(auditRoutes(nodes, edges, OPTIONS)[0]?.hint).toContain('flowatlas accept route-unguarded --service');
+  });
+});
+
+
+describe('a check thrown through a helper, and a route public by marker only (P90)', () => {
+  const helper = (extra: Record<string, unknown>) => ({
+    exception: 'toHttpError',
+    at: 'api#OrdersController.list',
+    file: 'src/orders.controller.ts',
+    line: 14,
+    source: 'throw',
+    via: 'helper',
+    ...extra,
+  });
+  const reasons = (meta: Record<string, unknown>) => {
+    const { nodes, edges } = graph({ meta });
+    return auditRoutes(nodes, edges, OPTIONS);
+  };
+
+  it('reads a helper that can choose a 401 or a 403 as a check in the body, naming it and what it can give', () => {
+    const chosenFrom = [
+      { exception: 'UnauthorizedException', status: 401 },
+      { exception: 'ForbiddenException', status: 403 },
+      { exception: 'LockedAccountError', status: 423 },
+    ];
+    const [row] = reasons({ fails: [helper({ chosenFrom })] });
+    expect(row).toMatchObject({ reason: 'route-checked-in-body', level: 'info' });
+    expect(row?.message).toBe(
+      'GET /orders reaches Order with no guard in front of it, and refuses a request in its own code through ' +
+        'toHttpError(…) (401, 403 or 423, chosen at run time) in OrdersController.list, src/orders.controller.ts:14.',
+    );
+    expect(row?.hint).toContain('chosen at run time');
+  });
+
+  it('keeps a helper whose table gives only 404 and 410 unguarded', () => {
+    const chosenFrom = [
+      { exception: 'NotFoundException', status: 404 },
+      { exception: 'GoneException', status: 410 },
+    ];
+    expect(reasons({ fails: [helper({ chosenFrom })] }).map((row) => row.reason)).toEqual(['route-unguarded']);
+  });
+
+  it('reads a helper it could not read as a check only under a check of who is asking', () => {
+    const [auth] = reasons({ fails: [helper({ family: 'auth' })] });
+    expect(auth).toMatchObject({ reason: 'route-checked-in-body' });
+    expect(auth?.message).toContain('through toHttpError(…) after a check of who is asking (the status it gives was not read) in');
+    expect(reasons({ fails: [helper({})] }).map((row) => row.reason)).toEqual(['route-unguarded']);
+  });
+
+  it('lists a route marked @flowatlas-public at info with its reason, and an empty marker as one without', () => {
+    const [declared] = reasons({ publicNote: 'opening hours are shown to anyone' });
+    expect(declared).toMatchObject({ reason: 'route-public-declared', level: 'info' });
+    expect(declared?.message).toBe(
+      'GET /orders has no guard in front of it and reaches Order, and is declared public: opening hours are shown to anyone.',
+    );
+    expect(reasons({ publicNote: '' }).map((row) => [row.reason, row.level])).toEqual([['marker-reason-missing', 'info']]);
+  });
+
+  it('calls no route public by its verb, its path or its name', () => {
+    const entry = node('entry:api:http:GET:/catalogue/items', 'entry', {
+      kind: 'http',
+      label: 'GET /catalogue/items',
+      file: 'src/public-catalogue.controller.ts',
+      line: 3,
+      meta: { method: 'GET', path: '/catalogue/items', controller: 'PublicCatalogueController' },
+    });
+    const nodes = new Map<string, GraphNode>([
+      [entry.id, entry],
+      ['api#PublicCatalogueController.items', node('api#PublicCatalogueController.items', 'method')],
+      ['db_query:api#2', node('db_query:api#2', 'db_query')],
+      ['table:api#Item', node('table:api#Item', 'table', { label: 'Item' })],
+    ]);
+    const edges = [
+      edge(entry.id, 'handles', 'api#PublicCatalogueController.items'),
+      edge('api#PublicCatalogueController.items', 'calls', 'db_query:api#2'),
+      edge('db_query:api#2', 'queries', 'table:api#Item'),
+    ];
+    expect(auditRoutes(nodes, edges, OPTIONS).map((row) => [row.reason, row.level])).toEqual([['route-unguarded', undefined]]);
   });
 });

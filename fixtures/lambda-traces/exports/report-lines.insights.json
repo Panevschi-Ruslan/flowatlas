@@ -1,0 +1,56 @@
+[
+  {
+    "@timestamp": "2025-10-16 08:29:59.998",
+    "@message": "START RequestId: planted-req-0001 Version: $LATEST\n",
+    "@log": "111122223333:/aws/lambda/checkout",
+    "@logStream": "2025/10/16/[$LATEST]planted0stream08"
+  },
+  {
+    "@timestamp": "2025-10-16 08:30:00.060",
+    "@message": "2025-10-16T08:30:00.060Z\tplanted-req-0001\tINFO\tcharging planted-customer, card planted-card-4242\n",
+    "@log": "111122223333:/aws/lambda/checkout",
+    "@logStream": "2025/10/16/[$LATEST]planted0stream08"
+  },
+  {
+    "@timestamp": "2025-10-16 08:30:00.180",
+    "@message": "REPORT RequestId: planted-req-0001\tDuration: 180.00 ms\tBilled Duration: 181 ms\tMemory Size: 512 MB\tMax Memory Used: 91 MB\t\nXRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2\tSegmentId: planted-seg-0001\tSampled: true\t\n",
+    "@log": "111122223333:/aws/lambda/checkout",
+    "@logStream": "2025/10/16/[$LATEST]planted0stream08",
+    "@duration": "180.0"
+  },
+  {
+    "@timestamp": "2025-10-16 08:30:00.290",
+    "@message": "REPORT RequestId: planted-req-0002\tDuration: 200.00 ms\tBilled Duration: 201 ms\tMemory Size: 512 MB\tMax Memory Used: 92 MB\t\nXRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2\tSegmentId: planted-seg-0002\tSampled: true\t\n",
+    "@log": "111122223333:/aws/lambda/reserve-stock",
+    "@logStream": "2025/10/16/[$LATEST]planted0stream013",
+    "@duration": "200.0"
+  },
+  {
+    "@timestamp": "2025-10-16 08:30:00.590",
+    "@message": "REPORT RequestId: planted-req-0003\tDuration: 270.00 ms\tBilled Duration: 271 ms\tMemory Size: 512 MB\tMax Memory Used: 93 MB\tStatus: error\tError Type: Runtime.Unknown\t\nXRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2\tSegmentId: planted-seg-0003\tSampled: true\t\n",
+    "@log": "111122223333:/aws/lambda/charge-card",
+    "@logStream": "2025/10/16/[$LATEST]planted0stream011",
+    "@duration": "270.0"
+  },
+  {
+    "@timestamp": "2025-10-16 08:30:01.400",
+    "@message": "REPORT RequestId: planted-req-0004\tDuration: 400.00 ms\tBilled Duration: 401 ms\tMemory Size: 512 MB\tMax Memory Used: 94 MB\t\nXRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2\tSegmentId: planted-seg-0004\tSampled: true\t\n",
+    "@log": "111122223333:/aws/lambda/ship-order",
+    "@logStream": "2025/10/16/[$LATEST]planted0stream010",
+    "@duration": "400.0"
+  },
+  {
+    "@timestamp": "2025-10-16 08:30:01.370",
+    "@message": "REPORT RequestId: planted-req-0005\tDuration: 320.00 ms\tBilled Duration: 321 ms\tMemory Size: 512 MB\tMax Memory Used: 95 MB\t\nXRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2\tSegmentId: planted-seg-0005\tSampled: true\t\n",
+    "@log": "111122223333:/shop/functions",
+    "@logStream": "2025/10/16/print-label[$LATEST]planted0stream05",
+    "@duration": "320.0"
+  },
+  {
+    "@timestamp": "2025-10-16 08:30:01.520",
+    "@message": "REPORT RequestId: planted-req-0006\tDuration: 20.00 ms\tBilled Duration: 21 ms\tMemory Size: 512 MB\tMax Memory Used: 96 MB\tInit Duration: 312.77 ms\t\nXRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2\tSegmentId: planted-seg-0006\tSampled: true\t\n",
+    "@log": "111122223333:/aws/lambda/index-orders",
+    "@logStream": "2025/10/16/[$LATEST]planted0stream012",
+    "@duration": "20.0"
+  }
+]

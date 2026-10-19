@@ -1,5 +1,6 @@
-import { wasRead, type GraphNode } from '@flowatlas/core';
-import { unreadRouteFinding, type Finding } from './http-link.js';
+import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
+import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
+import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
 import { cmp } from './order.js';
 import {
   behindUnread,
@@ -26,6 +27,12 @@ export interface UiIndex {
   claimantsOf(env: string): readonly string[];
   /** Every service that serves routes, for the last-resort search. */
   services(): readonly string[];
+  /** What the value the request's settings key is given says its base address is (P77). */
+  baseUrlOf?(call: GraphNode): BaseUrlAnswer | undefined;
+  /** The configured service a name or an alias stands for, or undefined when none answers to it (P127). */
+  serviceOf?(name: string): string | undefined;
+  /** Every alias configured, for the row that says a name answers to none. */
+  aliases?(): readonly string[];
 }
 
 /**
@@ -36,8 +43,10 @@ export interface UiIndex {
  * ranks with the two configured answers rather than with the guess: a path that
  * matches a route in the very repository the call was written in is evidence
  * from one reading of one directory, and nothing about it is a guess (R93).
+ * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
+ * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'api-target' | 'base-url-env' | 'same-service' | 'unique-route';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'same-service' | 'unique-route';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -48,6 +57,8 @@ interface Details {
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
     mountAssumed?: readonly string[];
+    /** The value the base address was taken from, where a setting's value decided it (P77). */
+    baseUrl?: FoundValue;
   };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
@@ -63,7 +74,11 @@ interface Details {
      * {@link behindUnread}.
      */
     unread: readonly string[];
+    /** The service was the one an annotation named, so it is the annotation that is wrong (P127). */
+    named?: true;
   };
+  /** An annotation names a service nothing configured answers to, by name or alias (P127). */
+  serviceUnknown: { service: string; aliases: readonly string[] };
   /**
    * More than one thing answers, and nothing says which one is meant.
    *
@@ -107,7 +122,13 @@ const missingRoute = ({ targetService, method, path, verbs }: Details['noRoute']
 const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null } = {
   linked: null,
   dynamic: null,
-  noRoute: (detail) => (detail.unread.length === 0 ? missingRoute(detail) : unreadRouteFinding(detail)),
+  noRoute: (detail) => {
+    if (detail.named === true && detail.targetService !== null) {
+      return MARKER_FINDINGS.routeNotFound({ ...detail, service: detail.targetService }, '@flowatlas-calls');
+    }
+    return detail.unread.length === 0 ? missingRoute(detail) : unreadRouteFinding(detail);
+  },
+  serviceUnknown: (detail) => MARKER_FINDINGS.serviceUnknown(detail, detail.aliases, '@flowatlas-calls'),
   ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
 };
 
@@ -194,6 +215,24 @@ interface Ask {
   index: UiIndex;
 }
 
+/**
+ * The service an annotation names, `@flowatlas-calls catalog GET /items`, by
+ * its name or an alias (P127).
+ *
+ * First, and terminal for the same reason `apiTarget` is: somebody wrote down
+ * which service the request goes to. A name nothing answers to is said as the
+ * server's annotation says it, and so is a route the named service lacks.
+ */
+const byAnnotation = (ask: Ask): UiOutcome | undefined => {
+  const { call, index } = ask;
+  const service = call.meta?.['service'];
+  if (typeof service !== 'string') return undefined;
+  const named = index.serviceOf?.(service) ?? (index.routesOf(service) === undefined ? undefined : service);
+  if (named === undefined) return { kind: 'serviceUnknown', service, aliases: index.aliases?.() ?? [] };
+  const found = within(ask, named, 'marker');
+  return found.kind === 'noRoute' ? { ...found, named: true } : found;
+};
+
 /** A settings entry naming the service this frontend's key stands for. */
 const byApiTarget = (ask: Ask): UiOutcome | undefined => {
   const { call, env, index } = ask;
@@ -210,6 +249,26 @@ const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
   if (env === undefined) return undefined;
   const claiming = index.claimantsOf(env);
   return claiming.length === 1 ? within(ask, claiming[0] as string, 'base-url-env') : undefined;
+};
+
+/**
+ * The one service the value the settings key is given names, where nobody
+ * claims the key (P77). A guess, the way a route found by its address alone
+ * is: the value is the one the repository writes down for running it.
+ */
+const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
+  const { env, index } = ask;
+  if (env === undefined || index.claimantsOf(env).length > 0) return undefined;
+  const answer = index.baseUrlOf?.(ask.call);
+  if (answer?.kind !== 'service') return undefined;
+  // A value with a path of its own is where the request goes, path included
+  // (P91); where that answers nothing and the path alone does, the value's
+  // path is a mount and the join without it stands.
+  const start = pathOfValue(answer.found);
+  const whole = start === undefined ? undefined : within({ ...ask, path: normalizePath(`${start}/${ask.path}`) }, answer.service, 'base-url-value');
+  const found = whole?.kind === 'linked' ? whole : within(ask, answer.service, 'base-url-value');
+  if (found.kind === 'linked') return { ...found, baseUrl: answer.found };
+  return whole ?? found;
 };
 
 /**
@@ -280,8 +339,10 @@ const byUniqueRoute = (ask: Ask): UiOutcome | undefined => {
  * next way is asked; when all of them pass, nothing serves the address.
  */
 const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
+  byAnnotation,
   byApiTarget,
   byBaseUrlEnv,
+  byBaseUrlValue,
   bySameService,
   byUniqueRoute,
 ];

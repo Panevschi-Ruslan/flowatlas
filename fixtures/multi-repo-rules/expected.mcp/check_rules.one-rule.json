@@ -1,0 +1,33 @@
+{
+  "rules": [
+    {
+      "name": "frontends-reach-only-edge",
+      "shape": "tags",
+      "severity": "error",
+      "status": "broken",
+      "violations": 1,
+      "note": "the browser talks to the gateway, never to a domain service"
+    }
+  ],
+  "violations": [
+    {
+      "rule": "frontends-reach-only-edge",
+      "severity": "error",
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:34:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "service": "web",
+      "loc": "src/app/orders-api.service.ts:34",
+      "via": "hits",
+      "confidence": "static",
+      "message": "web (frontend) requests orders GET /orders/:param, and orders carries none of edge",
+      "note": "the browser talks to the gateway, never to a domain service",
+      "next": [
+        "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:34:12\"})"
+      ]
+    }
+  ],
+  "total": 1,
+  "next": [
+    "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:34:12\"})"
+  ]
+}

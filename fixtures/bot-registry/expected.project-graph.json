@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:10.915Z",
+  "builtAt": "2026-10-16T15:10:34.832Z",
   "services": [
     {
       "name": "bot-registry",
@@ -770,6 +770,37 @@
       "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "Bot.setup -> callbackRegistry.dispatch",
+      "meta": {
+        "causes": [
+          {
+            "cause": "object-literal",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/bot.ts",
+                "line": 27,
+                "symbol": "Bot.setup -> callbackRegistry.dispatch"
+              },
+              {
+                "file": "src/bot.ts",
+                "line": 27,
+                "symbol": "on callback_query@26 -> callbackRegistry.dispatch"
+              }
+            ]
+          },
+          {
+            "cause": "function-field",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/bot.ts",
+                "line": 51,
+                "symbol": "Bot.ready -> this.onReady"
+              }
+            ]
+          }
+        ]
+      },
       "service": "bot-registry"
     },
     {

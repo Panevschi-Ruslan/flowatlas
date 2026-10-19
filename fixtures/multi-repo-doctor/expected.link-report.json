@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:53.231Z",
+  "builtAt": "2026-10-17T04:49:59.448Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 798,
+      "durationMs": 719,
       "packages": {
         "name": "doctor-billing",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 19,
       "types": 4,
       "unresolved": 7,
-      "durationMs": 858,
+      "durationMs": 764,
       "packages": {
         "name": "doctor-gateway",
         "runtime": [
@@ -58,7 +58,7 @@
       "edges": 38,
       "types": 3,
       "unresolved": 17,
-      "durationMs": 810,
+      "durationMs": 750,
       "packages": {
         "name": "doctor-orders",
         "runtime": [
@@ -126,7 +126,7 @@
       "line": 49,
       "reason": "marker-service-unknown",
       "message": "@CallsService names warehouse, which is not a configured service",
-      "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation.",
+      "hint": "Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
       "symbol": "http_out:gateway#src/clients/orders.client.ts:49:12"
     },
     {
@@ -153,7 +153,7 @@
       "line": 11,
       "reason": "route-unguarded",
       "message": "POST /orders has no guard in front of it and reaches stored data.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders"
     },
     {
@@ -162,7 +162,7 @@
       "line": 16,
       "reason": "route-unguarded",
       "message": "POST /orders/legacy has no guard in front of it and reaches stored data.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/legacy"
     },
     {
@@ -171,7 +171,7 @@
       "line": 21,
       "reason": "route-unguarded",
       "message": "GET /orders/:param has no guard in front of it and reaches stored data.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /orders/:param"
     }
   ],
@@ -179,6 +179,10 @@
     "nodes": 85,
     "edges": 69,
     "types": 8,
-    "unresolved": 31
+    "missed": 28,
+    "sites": 28,
+    "notes": 0,
+    "findings": 3,
+    "unresolved": 28
   }
 }

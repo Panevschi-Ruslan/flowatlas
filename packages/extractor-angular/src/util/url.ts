@@ -92,11 +92,18 @@ const settingBehind = (node: TsNode): SettingBehind | null => {
     });
     const [key] = inner?.envRefs ?? [];
     if (key !== undefined) {
-      return {
+      const found: SettingBehind = {
         key,
         prefix: inner?.value ?? '',
         ...(inner?.guessed === true ? { guessed: true } : {}),
       };
+      // What the helper returns, read without what it was called with: a
+      // hole where a parameter is. The call says what the parameter holds -
+      // its argument, or its default where it has none, `url()` for
+      // `url(suffix = '')` (P91) - and a reading that settles the hole wins.
+      if (!(found.prefix ?? '').includes(UNREAD_SPAN)) return found;
+      const bound = rootSettingAddress(node, { readSetting });
+      return bound !== null && bound.key === key && !(bound.prefix ?? '').includes(UNREAD_SPAN) ? bound : found;
     }
   }
 

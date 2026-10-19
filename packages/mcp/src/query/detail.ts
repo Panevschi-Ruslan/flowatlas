@@ -49,21 +49,44 @@ export const projectEdge = (edge: GraphEdge, level: DetailLevel): FlowEdge => {
   if (edge.returns !== undefined) projected.returns = edge.returns;
   const because = strings(edge.meta?.['because']);
   if (edge.confidence !== 'static' && because.length > 0) projected.because = because;
+  const typedBy = edge.meta?.['typedBy'];
+  if (typeof typedBy === 'string') projected.typedBy = typedBy;
   const notMatchedOn = strings(edge.meta?.['notMatchedOn']);
   if (notMatchedOn.length > 0) projected.notMatchedOn = notMatchedOn;
+  const baseUrlFrom = edge.meta?.['baseUrlFrom'];
+  if (typeof baseUrlFrom === 'string') projected.baseUrlFrom = baseUrlFrom;
+  const baseUrl = edge.meta?.['baseUrl'];
+  if (typeof baseUrl === 'string') projected.baseUrl = baseUrl;
   return projected;
 };
 
 export interface Truncated<T> {
   items: T[];
+  /** How many there are in all, whatever page this is. */
+  total: number;
+  /** Set when rows are left after this page: how many, and where the next page starts. */
   truncated?: string;
+  /** The `offset` that asks for the next page; absent on the last one. */
+  nextOffset?: number;
 }
 
-/** Keeps the first `maxNodes` and says exactly how many were left. */
-export const truncate = <T>(items: readonly T[], maxNodes: number): Truncated<T> => {
-  if (items.length <= maxNodes) return { items: [...items] };
+/**
+ * One page of a list: `maxNodes` rows from `offset`, and how to ask for the
+ * rest (P93).
+ *
+ * The remedy for a cut used to be a larger `maxNodes`, which makes the answer
+ * the size it was cut to avoid; a page keeps every answer the size asked for.
+ * An offset past the end is an empty page that still says the total.
+ */
+export const truncate = <T>(items: readonly T[], maxNodes: number, offset = 0): Truncated<T> => {
+  const start = Math.min(offset, items.length);
+  const page = items.slice(start, start + maxNodes);
+  const nextOffset = start + page.length;
+  if (nextOffset >= items.length) return { items: page, total: items.length };
   return {
-    items: items.slice(0, maxNodes),
-    truncated: truncationMessage(items.length - maxNodes, true),
+    items: page,
+    total: items.length,
+    truncated: truncationMessage(items.length - nextOffset, true, { nextOffset }),
+    nextOffset,
   };
 };

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T23:28:14.599Z",
+  "configHash": "33c7cd79accd",
+  "services": [
+    {
+      "name": "lending",
+      "repo": "./lending",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 35,
+      "edges": 30,
+      "types": 4,
+      "unresolved": 0,
+      "durationMs": 523,
+      "packages": {
+        "name": "lending-library-loans",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "members",
+      "repo": "./members",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 498,
+      "packages": {
+        "name": "lending-library-members",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 1,
+    "noConsumers": [
+      "channel:sns/library-return-alerts",
+      "channel:sqs/library-loan-failures"
+    ],
+    "noProducers": [
+      "channel:kinesis/library-shelf-scans"
+    ]
+  },
+  "routes": {
+    "total": 2,
+    "called": 2,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "lending",
+      "file": "infra/destinations.tf",
+      "line": 60,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/library-shelf-scans is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/library-shelf-scans"
+    }
+  ],
+  "totals": {
+    "nodes": 40,
+    "edges": 37,
+    "types": 4,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 0
+  }
+}

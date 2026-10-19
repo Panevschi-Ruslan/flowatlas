@@ -1,0 +1,9 @@
+service: payments
+provider:
+  name: example
+  environment:
+    ORDERS_API: http://orders:3000
+    STAGE_URL: https://${opt:stage}.payments.example.com
+functions:
+  api:
+    handler: dist/main.handler

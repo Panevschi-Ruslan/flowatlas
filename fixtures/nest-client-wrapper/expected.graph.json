@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-client-wrapper",
-  "generatedAt": "2026-10-07T14:34:05.893Z",
+  "generatedAt": "2026-10-17T06:05:56.336Z",
   "nodes": [
     {
       "id": "config_key:nest-client-wrapper#BILLING_URL",
@@ -62,8 +62,8 @@
         "path": "/invoices",
         "baseUrlEnv": "BILLING_URL",
         "responseType": "type:nest-client-wrapper#Invoice",
-        "bodyType": "string",
-        "bodyFrom": "type"
+        "bodyType": "type:nest-client-wrapper#Invoice",
+        "bodyFrom": "value"
       }
     },
     {
@@ -79,7 +79,11 @@
         "path": "/bot${…}/sendMessage",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null,
+        "bodyType": "{text:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "text"
+        ],
         "host": "chat.example.test"
       }
     },

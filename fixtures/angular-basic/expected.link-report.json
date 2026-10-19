@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-09T08:17:43.660Z",
+  "builtAt": "2026-10-16T23:27:42.532Z",
   "configHash": "b1d164ec2ac5",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 34,
       "types": 2,
       "unresolved": 6,
-      "durationMs": 843,
+      "durationMs": 522,
       "packages": {
         "name": "angular-basic",
         "runtime": [
@@ -104,6 +104,10 @@
     "nodes": 54,
     "edges": 34,
     "types": 2,
+    "missed": 10,
+    "sites": 10,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 10
   }
 }

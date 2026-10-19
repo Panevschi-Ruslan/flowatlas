@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:02.473Z",
+  "builtAt": "2026-10-16T23:28:44.304Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 598,
+      "durationMs": 607,
       "packages": {
         "name": "@dev-sibling/api",
         "runtime": [
@@ -75,6 +75,10 @@
     "nodes": 10,
     "edges": 5,
     "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 1
   }
 }

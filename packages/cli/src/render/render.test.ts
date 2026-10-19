@@ -154,12 +154,20 @@ describe('drawing a walk as a tree', () => {
     const text = renderTree(tree(), options({ ascii: true }));
     expect(text).not.toMatch(/[◆→▣🛡⇢↺]/u);
     expect(text).toContain('=> orders');
-    expect(text).toContain('(cycle)');
+    // A repeat is a cycle or a node written out elsewhere in the walk (P92).
+    expect(text).toContain('(again)');
   });
 
   it('says exactly how many nodes were left out', () => {
     const text = renderTree(tree(), options({ truncated: '12 more nodes, increase depth or narrow scope' }));
     expect(text).toContain('… truncated: 12 more nodes (raise --max-nodes or lower --depth)');
+  });
+
+  it('names the flag for the limit the walker says stopped it (P92)', () => {
+    expect(truncationLine('12 more nodes past maxNodes 150; raise maxNodes or ask get_flow on a child id')).toBe(
+      '… truncated: 12 more nodes (raise --max-nodes)',
+    );
+    expect(truncationLine('≥3 more nodes past depth 8; raise depth', true)).toBe('... truncated: ≥3 more nodes (raise --depth)');
   });
 
   it('keeps the walker\'s "at least" when the count is not exact', () => {

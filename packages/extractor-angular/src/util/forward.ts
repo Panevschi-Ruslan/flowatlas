@@ -12,6 +12,7 @@ import {
   type CallFrame,
   type ClassMethod,
   type FiniteLookup,
+  lineAndColumnAt,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
@@ -57,7 +58,7 @@ export const requestIdOf = (
   network: TsNode,
   request: Pick<ReadRequest, 'frames' | 'choice'>,
 ): string => {
-  const at = network.getSourceFile().getLineAndColumnAtPos(network.getStart());
+  const at = lineAndColumnAt(network.getSourceFile(), network.getStart());
   const via = request.frames.length === 0 ? '' : `@${at.line}:${at.column}`;
   return `${leaf}${via}${request.choice === undefined ? '' : `#${request.choice}`}`;
 };

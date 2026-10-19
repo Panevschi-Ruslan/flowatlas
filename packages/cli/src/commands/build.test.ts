@@ -213,20 +213,32 @@ describe('the line the summary ends on', () => {
   });
 
   it('says rows and places apart when a reason was folded', () => {
-    expect(unresolvedLine([row(), row({ sites: 192, level: 'info' })], 2)).toBe(
-      'unresolved: 2 rows over 193 sites',
+    expect(unresolvedLine([row(), row({ sites: 192, level: 'info' })])).toBe(
+      'missed: 2 over 193 sites · notes: 0 · findings: 0',
     );
   });
 
   it('says nothing about places where nothing joins, when there are none', () => {
-    expect(unresolvedLine([row()], 1)).toBe('unresolved: 1');
+    expect(unresolvedLine([row()])).toBe('missed: 1 · notes: 0 · findings: 0');
   });
 
   // The number that matters is what was missed. Adding four hundred template
   // bindings to it would make a well-read project look like a badly read one.
   it('keeps places where nothing joins out of the count, and says them after it', () => {
     const rows = [row(), row({ level: 'nothing', sites: 397, reason: 'handler-not-a-method' })];
-    expect(unresolvedLine(rows, 1)).toBe('unresolved: 1, and 397 sites with nothing to join');
+    expect(unresolvedLine(rows)).toBe('missed: 1 · notes: 0 · findings: 0 · 397 sites with nothing to join');
+  });
+
+  // P81: a join made from the repository's files is a note, and a likely N+1 a
+  // finding. Neither is a miss, and neither is "nothing to join".
+  it('counts notes and findings apart from what was missed', () => {
+    const rows = [
+      row(),
+      row({ reason: 'base-url-from-files', level: 'info' }),
+      row({ reason: 'base-url-from-name', level: 'info' }),
+      row({ reason: 'query-in-loop', level: 'info', sites: 1 }),
+    ];
+    expect(unresolvedLine(rows)).toBe('missed: 1 · notes: 2 · findings: 1');
   });
 });
 
@@ -242,8 +254,9 @@ describe('building a project', () => {
 
     expect(result.failed).toBe(false);
     expect(result.report.httpOut).toEqual({
-      total: 6,
-      linked: 2,
+      // Billing reads the order it invoices from orders through `ORDERS_URL` (P209).
+      total: 7,
+      linked: 3,
       byMarker: 1,
       unknownEnv: 1,
       noRoute: 1,
@@ -276,7 +289,7 @@ describe('building a project', () => {
       },
     });
     expect(result.project.builtAt).toBe(FIXED);
-    expect(summariseBuild(result).join('\n')).toContain('calls out: 6 total, 2 linked');
+    expect(summariseBuild(result).join('\n')).toContain('calls out: 7 total, 3 linked');
     expect(summariseBuild(result).join('\n')).toContain('ui calls: 13 total, 6 joined to a route');
   }, 120_000);
 
@@ -304,7 +317,7 @@ describe('building a project', () => {
     });
     db.close();
     expect(walk.rows.map((row) => row.edgeType)).toContain('hits');
-    expect(walk.rows.map((row) => row.id)).toContain('table:orders#Order');
+    expect(walk.rows.map((row) => row.id)).toContain('table:orders#orders');
   }, 120_000);
 
   /**
@@ -781,7 +794,10 @@ describe('the line a rebuild prints', () => {
     expect(summariseRebuild(first)).toMatch(/^rebuilt in \d+ms \(orders: full \(no cache\)\)/);
 
     const second = await buildProject({ config, builtAt: FIXED });
-    expect(summariseRebuild(second, first.report.totals.unresolved)).toContain('nothing changed');
-    expect(summariseRebuild(second, first.report.totals.unresolved + 2)).toContain('(-2)');
+    expect(summariseRebuild(second, first.report.totals.missed)).toContain('nothing changed');
+    expect(summariseRebuild(second, first.report.totals.missed + 2)).toContain('(-2)');
+    expect(summariseRebuild(second)).toContain(`missed: ${first.report.totals.missed}`);
+    // The deprecated alias says the same number for one more version (P81).
+    expect(first.report.totals.unresolved).toBe(first.report.totals.missed);
   }, 240_000);
 });

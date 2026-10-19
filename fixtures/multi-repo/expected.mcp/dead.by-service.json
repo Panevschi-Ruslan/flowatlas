@@ -1,0 +1,82 @@
+{
+  "rows": [
+    {
+      "id": "entry:orders:http:GET:/a/:param",
+      "type": "entry",
+      "verdict": "dead",
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "service": "orders",
+      "loc": "src/aliases/current-aliases.controller.ts:11"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "verdict": "dead",
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:31"
+    },
+    {
+      "id": "channel:order.archived",
+      "type": "channel",
+      "verdict": "dead",
+      "reason": "no consumer in any repo",
+      "service": "orders",
+      "evidence": {
+        "missing": "consumer"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "type": "entry",
+      "verdict": "likely-dead",
+      "reason": "no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:19",
+      "evidence": {
+        "couldHit": [
+          {
+            "call": "http_out:gateway#src/clients/orders.client.ts:59:12",
+            "path": "/orders/${…}${…}",
+            "loc": "src/clients/orders.client.ts:59"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/:param/archive",
+      "type": "entry",
+      "verdict": "unknown",
+      "reason": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:42",
+      "evidence": {
+        "oneOff": [
+          {
+            "call": "http_out:gateway#src/clients/orders.client.ts:44:12",
+            "asks": "POST /orders/:param/cancel",
+            "differs": "cancel for archive",
+            "loc": "src/clients/orders.client.ts:44"
+          }
+        ]
+      }
+    }
+  ],
+  "total": 5,
+  "counts": {
+    "dead": 3,
+    "likely-dead": 1,
+    "unknown": 1
+  },
+  "excludedEntryKinds": [
+    "cron",
+    "bot_command",
+    "bot_callback",
+    "bot_event",
+    "scene_step",
+    "invoke"
+  ],
+  "next": [
+    "dead({id: \"entry:orders:http:GET:/a/:param\"})"
+  ]
+}

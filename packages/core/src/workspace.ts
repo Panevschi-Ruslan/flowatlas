@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
+import { isBelowDir, isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
 
 /**
@@ -339,6 +340,19 @@ export const workspaceRootOf = (dir: string): string | undefined => {
   return workspaceRootsAbove(member).find((root) => workspaceMemberDirs(root).includes(member));
 };
 
+/**
+ * Forgets every workspace this process walked (P206): the globs each root
+ * declares, the members they found and each service's extent. One build cannot
+ * see them change, but a watch is many builds in one process, and a member
+ * that appears during it would otherwise never be a package anything could
+ * import. A build forgets them when it starts, beside the package index.
+ */
+export const forgetWorkspaces = (): void => {
+  patternsByRoot.clear();
+  memberDirsByRoot.clear();
+  extentByService.clear();
+};
+
 
 type DependencySection =
   | 'dependencies'
@@ -456,7 +470,7 @@ export const serviceExtent = (repoDir: string): readonly ExtentPackage[] => {
         const dir = byName.get(name);
         // A package the service is inside of would bring the whole repository
         // with it, and the answer to "what is this service" would be "all of it".
-        if (dir === undefined || own === dir || own.startsWith(`${dir}/`)) continue;
+        if (dir === undefined || isWithinDir(own, dir)) continue;
         declares.push(dir);
         if (seen.has(dir)) continue;
         seen.add(dir);
@@ -498,13 +512,17 @@ const allDeclared = (pkg: PackageJson): Record<string, string> =>
  */
 export const serviceSourceDirs = (repoDir: string): readonly string[] => {
   const [own, ...members] = serviceExtent(repoDir).map((pkg) => pkg.dir) as [string, ...string[]];
-  return [own, ...members.filter((dir) => !dir.startsWith(`${own}/`)).sort()];
+  return [own, ...members.filter((dir) => !isBelowDir(dir, own)).sort()];
 };
 
 
-/** Whether a file belongs to one of a service's own directories. */
+/**
+ * Whether a file belongs to one of a service's own directories. The file may
+ * be spelled as the compiler spells it or as the OS does (P199): on Windows
+ * the one has forward slashes and the other backslashes.
+ */
 export const isServiceSource = (file: string, repoDir: string): boolean => {
-  const path = file.replace(/\\/g, '/');
+  const path = toPosixPath(file);
   if (path.includes('/node_modules/')) return false;
-  return serviceSourceDirs(repoDir).some((dir) => path.startsWith(`${dir}/`));
+  return serviceSourceDirs(repoDir).some((dir) => isBelowDir(path, dir));
 };

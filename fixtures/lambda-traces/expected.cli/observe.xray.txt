@@ -1,0 +1,15 @@
+24 spans read from 1 file(s)
+not read: 6 segments of origin AWS::Lambda, read through to the function segment under it, 14 subsegments naming no call, read through to the calls under them
+12 joins seen, 9 entries hit, 2 seen at run time but not found in code, 0 that could be more than one place
+  cloud     checkout  SecretsManager/GetSecretValue  (1)
+  table     checkout  carts  (1)
+slowest entries (p95):
+  shop workflow fulfil-order  count 1  p50 825ms  p95 825ms  max 825ms  errors 0%
+  shop ship-order  count 1  p50 400ms  p95 400ms  max 400ms  errors 0%
+  shop print-label  count 1  p50 320ms  p95 320ms  max 320ms  errors 0%
+  shop charge-card  count 1  p50 270ms  p95 270ms  max 270ms  errors 100%
+  shop reserve-stock  count 1  p50 200ms  p95 200ms  max 200ms  errors 0%
+failing most:
+  shop charge-card  count 1  p50 270ms  p95 270ms  max 270ms  errors 100%
+window 2025-10-16T08:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
+<copy>/observed.json

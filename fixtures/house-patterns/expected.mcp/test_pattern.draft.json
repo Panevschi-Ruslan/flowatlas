@@ -1,0 +1,23 @@
+{
+  "rules": [
+    {
+      "id": "shop-bus-emit",
+      "kind": "publish",
+      "tests": [],
+      "code": {
+        "drew": [
+          "producer on channel:book.added"
+        ],
+        "rows": [],
+        "holes": {
+          "$BUS": "bus",
+          "$CHANNEL": "'book.added'",
+          "$PAYLOAD": "book"
+        }
+      }
+    }
+  ],
+  "next": [
+    "run: flowatlas patterns test, once the rule is in a pattern file listed under \"patterns\""
+  ]
+}

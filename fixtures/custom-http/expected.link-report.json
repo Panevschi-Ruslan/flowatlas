@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:17.782Z",
+  "builtAt": "2026-10-16T23:27:50.934Z",
   "configHash": "d95e219d6b04",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 450,
+      "durationMs": 461,
       "packages": {
         "name": "custom-http-api",
         "runtime": [
@@ -64,6 +64,10 @@
     "nodes": 10,
     "edges": 8,
     "types": 2,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 1
   }
 }

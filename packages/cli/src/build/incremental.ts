@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import type { RepoGraph } from '@flowatlas/core';
-import type { BuildCache, DependencyState, FileStamp } from './cache.js';
+import type { BuildCache, DependencyState, FileStamp, StandInsState } from './cache.js';
 import { diffRepoFiles, hashText } from './cache.js';
-import { dependencyChange, packageChange } from './dependencies.js';
+import { dependencyChange, packageChange, standInsChange } from './dependencies.js';
 
 /**
  * The hash of a graph file as the rebuild plan means it: its body, not its bytes.
@@ -111,6 +111,12 @@ export interface RepoSurvey {
   dependencies: DependencyState;
   /** The package files the last reading recorded, as they are now. */
   packages: Record<string, FileStamp>;
+  /**
+   * What would stand in for this repository's missing packages now (P83): its
+   * shape files as the globs expand today, and what the build's index answers
+   * for each name the last reading wanted. Absent when nothing can stand in.
+   */
+  standIns?: StandInsState;
   /** Files whose change affects the whole repository, from the extractor. */
   globalFiles: string[];
   files: Record<string, FileStamp>;
@@ -199,6 +205,11 @@ const planOne = (
   // re-read at all.
   const dependencies = dependencyChange(entry.dependencies, survey.dependencies);
   if (dependencies !== undefined) return full(dependencies);
+  // Which stand-in is read at all, before the files one was read from (P83):
+  // a shape file under a glob, or a directory answering an import, changes a
+  // graph without changing a file the cache stamped.
+  const standIns = standInsChange(entry.standIns, survey.standIns);
+  if (standIns !== undefined) return full(standIns);
   // Not a file of the repository, so never a partial read: what a declaration
   // says reaches every file that uses the type.
   const installed = packageChange(entry.packages, survey.packages);

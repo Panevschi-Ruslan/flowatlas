@@ -1,18 +1,10 @@
 import type { Command } from 'commander';
 import { inDegree, type DegreeRow } from '../analysis/degree.js';
 import { loadGraph } from '../analysis/graph.js';
+import { HOTSPOT_EDGES } from '../analysis/hotspots.js';
 import { maxRows, openProjectDb, print, wantsJson, type ReadOptions } from '../analysis/open.js';
 import { ANALYTICS_FORMAT_VERSION, type HotspotsResult } from '../analysis/shapes.js';
 import { moreRows, renderTable } from '../format/table.js';
-
-/**
- * Edges that count toward being depended upon.
- *
- * `imports` and `reads_config` are left out deliberately: a settings key read
- * forty times is not fragile, and a module everything imports is a fact about
- * Nest rather than about this project.
- */
-export const HOTSPOT_EDGES = ['calls', 'http_calls', 'hits', 'consumes', 'injects'] as const;
 
 export interface HotspotsOptions extends ReadOptions {
   top?: string | number;

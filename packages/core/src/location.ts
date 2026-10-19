@@ -1,5 +1,6 @@
 import type { ExportSpecifier, Node as TsNode, SourceFile } from 'ts-morph';
 import { fileOf, lineOf } from './nodes.js';
+import { startLineOf } from './line-numbers.js';
 
 /**
  * A position in a file, as an editor counts.
@@ -58,16 +59,16 @@ type ExportSiteReader = (through: SourceFile, name: string) => number | undefine
 const namedExportSite: ExportSiteReader = (through, name) => {
   for (const declaration of through.getExportDeclarations()) {
     for (const specifier of declaration.getNamedExports()) {
-      if (exportedAs(specifier) === name) return specifier.getStartLineNumber();
+      if (exportedAs(specifier) === name) return startLineOf(specifier);
     }
     const namespace = declaration.getNamespaceExport();
     if (namespace !== undefined && namespace.getName() === name) {
-      return namespace.getStartLineNumber();
+      return startLineOf(namespace);
     }
   }
   if (name !== 'default') return undefined;
   const [assignment] = through.getExportAssignments();
-  return assignment?.getStartLineNumber();
+  return assignment === undefined ? undefined : startLineOf(assignment);
 };
 
 /**
@@ -81,7 +82,7 @@ const starExportSite: ExportSiteReader = (through) => {
   for (const declaration of through.getExportDeclarations()) {
     if (declaration.getNamedExports().length > 0) continue;
     if (declaration.getNamespaceExport() !== undefined) continue;
-    return declaration.getStartLineNumber();
+    return startLineOf(declaration);
   }
   return undefined;
 };

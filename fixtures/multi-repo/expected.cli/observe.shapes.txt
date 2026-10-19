@@ -1,0 +1,34 @@
+126 spans read from 6 file(s)
+not read: 1 entry of type document, 1 entry of type script, 1 entry of type image, 1 entry of a static file
+otlp files carry no bodies, so --shapes read nothing of them
+8 joins seen, 6 entries hit, 4 seen at run time but not found in code, 4 that could be more than one place
+  db        billing  invoices  (2)
+  http      gateway  GET /metrics  (1)
+  messaging orders  order.audited  (1)
+  external  web  analytics.example.net  (1)
+could be more than one place, so counted on none:
+  client    gateway  GET /orders/:value  (1)
+    any of http_out:gateway#src/clients/orders.client.ts:33:12, http_out:gateway#src/clients/orders.client.ts:59:12
+  client    web  GET /orders/:value  (1)
+    any of ui_api_call:web#src/app/orders-api.service.ts:21:12, ui_api_call:web#src/app/orders-api.service.ts:73:12
+  client    web  GET /orders/:value  (1)
+    any of ui_api_call:web#src/app/orders-api.service.ts:34:12, ui_api_call:web#src/app/orders-api.service.ts:48:12
+  client    web  POST /orders/:value/invoice  (1)
+    any of ui_api_call:web#src/app/orders-api.service.ts:123:3, ui_api_call:web#src/app/orders-api.service.ts:138:3, ui_api_call:web#src/app/orders-api.service.ts:61:12
+slowest entries (p95):
+  orders GET /orders/:param  count 2  p50 1.04ms  p95 496ms  max 496ms  errors 0%
+  gateway GET /orders/:param  count 22  p50 61.29ms  p95 72.88ms  max 520ms  errors 0%
+  orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
+  billing event order.created  count 2  p50 0.96ms  p95 12ms  max 12ms  errors 0%
+  billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
+failing most:
+  orders POST /orders  count 1  p50 35ms  p95 35ms  max 35ms  errors 100%
+  billing POST /invoices  count 22  p50 8.35ms  p95 11.81ms  max 41.5ms  errors 4.6%
+bodies read for shape only (key names and JSON types, no value): 9 exchanges placed on a route, 1 on none (no single route fits the call)
+traffic differs from the code on 3 route(s):
+  billing POST /invoices  2 fields: request amount, request memo
+  gateway GET /orders/:param  2 fields: 200 history, 200 owner
+  gateway POST /orders/:param/invoice  2 fields: request giftNote, request status
+3 route(s) carried bodies the code declares no type for, so there was nothing to compare them with
+window 2025-10-16T07:00:00.000Z to 2025-10-16T09:00:00.000Z; 0 files skipped as already read
+<copy>/observed.json

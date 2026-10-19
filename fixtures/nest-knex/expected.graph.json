@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-knex",
-  "generatedAt": "2026-10-07T14:34:15.766Z",
+  "generatedAt": "2026-10-16T15:11:46.967Z",
   "nodes": [
     {
       "id": "db_query:nest-knex#src/users/users.service.ts:13:12",
@@ -768,6 +768,31 @@
       "level": "info",
       "hint": "db on UsersService is a field assigned a function from elsewhere, so there is no one body to follow. Declare it as a method to make the edge visible.",
       "symbol": "UsersService.findAll -> this.db",
+      "meta": {
+        "causes": [
+          {
+            "cause": "function-field",
+            "sites": 8,
+            "samples": [
+              {
+                "file": "src/users/users.service.ts",
+                "line": 13,
+                "symbol": "UsersService.findAll -> this.db"
+              },
+              {
+                "file": "src/users/users.service.ts",
+                "line": 19,
+                "symbol": "UsersService.findOne -> this.db"
+              },
+              {
+                "file": "src/users/users.service.ts",
+                "line": 24,
+                "symbol": "UsersService.count -> this.db"
+              }
+            ]
+          }
+        ]
+      },
       "sites": 8
     },
     {

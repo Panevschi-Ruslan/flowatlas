@@ -1,6 +1,7 @@
 import type { Format } from '../options.js';
 import { renderJson } from './json.js';
 import { renderMermaid } from './mermaid.js';
+import { renderSequence } from './sequence.js';
 import { renderTree } from './tree.js';
 import type { Renderer } from './types.js';
 
@@ -14,12 +15,15 @@ const RENDERERS: Record<Format, Renderer> = {
   tree: { name: 'tree', render: renderTree },
   mermaid: { name: 'mermaid', render: renderMermaid },
   json: { name: 'json', render: renderJson },
+  sequence: { name: 'sequence', render: renderSequence },
 };
 
 export const getRenderer = (format: Format): Renderer => RENDERERS[format];
 
 export { renderJson } from './json.js';
 export { renderMermaid, sanitiseIds } from './mermaid.js';
+export { foldSteps, mermaidText, renderSequence, renderSequenceDiagram } from './sequence.js';
+export type { DrawnSequence, DrawnStep, FoldedItem, SequenceDiagramOptions } from './sequence.js';
 export { renderTree, truncationLine } from './tree.js';
 export { graphOf } from './graphify.js';
 export type { FlatGraph, Link } from './graphify.js';

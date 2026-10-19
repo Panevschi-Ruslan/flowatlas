@@ -171,4 +171,20 @@ describe('a bus described in configuration', () => {
       }),
     ).toThrow();
   });
+
+  it('carries a send with no batch form, and one that is a batch, onto the pattern (P89)', () => {
+    const bus = busFrom({
+      name: 'mail',
+      producers: [
+        { receiverType: 'Transporter', method: 'sendMail', address: [{ literal: 'mail' }], perItem: true },
+        { receiverType: 'Transporter', method: 'sendBulk', address: [{ literal: 'mail' }], batch: true },
+        { receiverType: 'Transporter', method: 'queue', address: [{ literal: 'mail' }] },
+      ],
+    });
+    expect(bus.producerPatterns.map((pattern) => [pattern.perItem, pattern.batch])).toEqual([
+      [true, undefined],
+      [undefined, true],
+      [undefined, undefined],
+    ]);
+  });
 });

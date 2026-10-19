@@ -1,0 +1,18 @@
+{
+  "//": "The thumbnails bucket's notification, written as JSON: each thumbnail removed is forgotten.",
+  "resource": {
+    "aws_s3_bucket_notification": {
+      "thumbs": {
+        "bucket": "${aws_s3_bucket.thumbs.id}",
+        "lambda_function": [
+          {
+            "id": "forget-thumbs",
+            "lambda_function_arn": "${aws_lambda_function.fn[\"forget-thumbs\"].arn}",
+            "events": ["s3:ObjectRemoved:Delete"],
+            "filter_prefix": "thumbs/"
+          }
+        ]
+      }
+    }
+  }
+}

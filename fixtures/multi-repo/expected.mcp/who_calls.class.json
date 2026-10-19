@@ -1,0 +1,96 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService",
+    "type": "provider",
+    "label": "OrdersService",
+    "loc": "src/orders/orders.service.ts:11",
+    "service": "orders",
+    "kind": "injectable"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController.archive",
+        "type": "method",
+        "label": "OrdersController.archive",
+        "loc": "src/orders/orders.controller.ts:42"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "void"
+      },
+      "calls": "orders#src/orders/orders.service.ts:OrdersService.archive",
+      "children": []
+    },
+    {
+      "node": {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
+        "type": "method",
+        "label": "OrdersController.create",
+        "loc": "src/orders/orders.controller.ts:31"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "type:@fx/contracts#CreateOrderDto"
+        ],
+        "returns": "type:@fx/contracts#OrderDto"
+      },
+      "calls": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "children": []
+    },
+    {
+      "node": {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+        "type": "method",
+        "label": "OrdersController.findOne",
+        "loc": "src/orders/orders.controller.ts:25"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "type:@fx/contracts#OrderDto"
+      },
+      "calls": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "children": []
+    },
+    {
+      "node": {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController.latest",
+        "type": "method",
+        "label": "OrdersController.latest",
+        "loc": "src/orders/orders.controller.ts:19"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "returns": "type:@fx/contracts#OrderDto[]"
+      },
+      "calls": "orders#src/orders/orders.service.ts:OrdersService.latest",
+      "children": []
+    }
+  ],
+  "truncated": "4 more nodes past depth 1; raise depth",
+  "stoppedBy": [
+    "depth"
+  ],
+  "frontier": [
+    "orders#src/orders/orders.controller.ts:OrdersController.archive",
+    "orders#src/orders/orders.controller.ts:OrdersController.create",
+    "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+    "orders#src/orders/orders.controller.ts:OrdersController.latest"
+  ],
+  "next": [
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService\", depth: 2})",
+    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService\"})",
+    "describe_for_prompt({id: \"orders#src/orders/orders.service.ts:OrdersService\", scope: \"class\"})"
+  ]
+}

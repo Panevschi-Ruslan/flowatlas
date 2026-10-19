@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:24.870Z",
+  "builtAt": "2026-10-16T23:27:59.188Z",
   "configHash": "4e88876e469f",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 19,
       "types": 3,
       "unresolved": 1,
-      "durationMs": 507,
+      "durationMs": 514,
       "packages": {
         "name": "fn-broker-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 17,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 650,
+      "durationMs": 678,
       "packages": {
         "name": "fn-broker-worker",
         "runtime": [
@@ -82,6 +82,10 @@
     "nodes": 38,
     "edges": 36,
     "types": 4,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 2
   }
 }

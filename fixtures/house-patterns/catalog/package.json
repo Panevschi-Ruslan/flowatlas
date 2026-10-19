@@ -1,0 +1,11 @@
+{
+  "name": "catalog",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@bookshop/bus": "^1.0.0",
+    "@bookshop/http": "^1.0.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  }
+}

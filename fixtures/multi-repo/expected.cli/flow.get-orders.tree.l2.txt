@@ -6,8 +6,8 @@
         => orders @  GET /orders/:param  orders/src/orders/orders.controller.ts:25
           -> OrdersController.findOne    orders/src/orders/orders.controller.ts:25
             -> OrdersService.findOne     orders/src/orders/orders.service.ts:25
-              [] read Order              orders/src/orders/orders.service.ts:26
-                #  Order
+              [] read orders             orders/src/orders/orders.service.ts:26
+                #  orders
 
 --- types ---
 type:@fx/contracts#Money  Money (object)

@@ -1,6 +1,15 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileOf, hasDecorator, installedFiles, normalizeFilePath, type RepoGraph } from '@flowatlas/core';
+import {
+  fileOf,
+  hasDecorator,
+  installedFiles,
+  normalizeFilePath,
+  standInFiles,
+  standInWants,
+  type RepoGraph,
+  type StandInsOfBuild,
+} from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 import { findBootstrapFile } from './bootstrap.js';
 import { createRepoProject, extractRepo, type ExtractRepoOptions } from './extract-repo.js';
@@ -15,7 +24,11 @@ import { NEST_COMMON } from './index-classes.js';
  * than every analysis pass put together.
  */
 export interface WarmRepo {
-  readonly options: ExtractRepoOptions;
+  /**
+   * What it was opened with. Replaced only by {@link useStandIns}, when a
+   * watch's next build has worked the stand-ins out again (P83).
+   */
+  options: ExtractRepoOptions;
   project: Project;
 }
 
@@ -42,6 +55,22 @@ export const reopenRepo = (repo: WarmRepo): void => {
   repo.project = createRepoProject(repo.options);
 };
 
+/**
+ * Hands an open repository the stand-ins its next build worked out (P83).
+ *
+ * A full read parses again from `options`, so the next one stands in what
+ * the disk holds now rather than what it held when the watch began: a package
+ * directory added during a watch is mounted on the first full read after it.
+ * A partial read keeps the project it has, and the plan only asks for one
+ * when what stands in has not changed.
+ */
+export const useStandIns = (repo: WarmRepo, standInsOfBuild: StandInsOfBuild): void => {
+  repo.options = { ...repo.options, standInsOfBuild };
+};
+
+/** The package names the open program wanted something to stand in for (P83). */
+export const standInWantsOf = (repo: WarmRepo): string[] => standInWants(repo.project);
+
 /** Source files of the repository itself, repo-relative and sorted. */
 export const repoFiles = (repo: WarmRepo): string[] =>
   sourceFilesOf(repo)
@@ -54,7 +83,12 @@ const sourceFilesOf = (repo: WarmRepo): SourceFile[] =>
     .filter((sourceFile) => !sourceFile.getFilePath().includes('/node_modules/'));
 
 /** Files out of installed packages the open program read; see {@link installedFiles}. */
-export const packageFiles = (repo: WarmRepo): string[] => installedFiles(repo.project, repo.options.rootDir);
+export const packageFiles = (repo: WarmRepo): string[] => [
+  ...installedFiles(repo.project, repo.options.rootDir),
+  // And what stood in for a package that is not installed (P78): a package
+  // source read in its place, its manifest, and the shape files listed.
+  ...standInFiles(repo.project, repo.options.rootDir),
+];
 
 /**
  * What each file of the repository imports, one level, repo-relative.

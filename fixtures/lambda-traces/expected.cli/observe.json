@@ -1,0 +1,1494 @@
+{
+  "observedFormatVersion": 3,
+  "spans": 21,
+  "privacy": {
+    "kept": [
+      "traceId",
+      "spanId",
+      "parentId",
+      "service",
+      "kind",
+      "method",
+      "route",
+      "path",
+      "destination",
+      "symbol",
+      "collection",
+      "rpc",
+      "at",
+      "status",
+      "durationMs",
+      "error",
+      "faas",
+      "trigger",
+      "invokes",
+      "workflow",
+      "state",
+      "tables",
+      "awsOp",
+      "transport",
+      "peerService",
+      "thirdParty",
+      "sampleable",
+      "peerName"
+    ],
+    "dropped": [
+      "request and response headers",
+      "cookies",
+      "query strings and fragments",
+      "hosts and ports",
+      "values in a path (masked as :value)",
+      "request and response bodies",
+      "database statements and queries",
+      "end-user attributes",
+      "span names",
+      "span events and exception text",
+      "status messages",
+      "every attribute not on the kept list",
+      "@nestjs/observe user, request, tags, logs, objectives, runtime and custom data",
+      "cloud account ids and regions (an ARN or a queue URL is cut to the name inside it)",
+      "parameters of a cloud SDK call (keys, items, message bodies, workflow input)",
+      "workflow step names the map does not declare",
+      "HAR cookies, authorization and every other request and response header",
+      "HAR request bodies (postData) and response content",
+      "HAR pages, initiators, timings, server addresses and connections",
+      "the origin of a browser call (compared with the base URLs, then dropped)",
+      "the path of a call to a third party (kept by host only)"
+    ],
+    "droppedAttributes": 50,
+    "samples": {
+      "kept": true,
+      "perEntry": 3,
+      "spansPerSample": 200
+    },
+    "bodies": "not read"
+  },
+  "window": {
+    "from": "2025-10-16T08:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z"
+  },
+  "sources": [
+    {
+      "sha256": "be123443b03a74466c4ef0844d84c3dcbd99e6f6be536f6926a3ed9c5a2758a2",
+      "format": "otlp",
+      "spans": 21,
+      "readAt": "2025-10-16T09:00:00.000Z"
+    }
+  ],
+  "joins": {
+    "channel:dynamodb/orders -consumes-> consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:01.500Z",
+      "firstSeen": "2025-10-16T08:30:01.500Z",
+      "p50": 20,
+      "p95": 20,
+      "max": 20,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "callee"
+    },
+    "channel:sqs/order-placed -consumes-> consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:01.002Z",
+      "firstSeen": "2025-10-16T08:30:01.002Z",
+      "p50": 388,
+      "p95": 388,
+      "max": 388,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "callee"
+    },
+    "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders -triggers-> entry:shop:event:dynamodb/orders": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:01.500Z",
+      "firstSeen": "2025-10-16T08:30:01.500Z",
+      "p50": 20,
+      "p95": 20,
+      "max": 20,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "callee"
+    },
+    "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order -calls-> entry:shop:invoke:ship-order": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:01.002Z",
+      "firstSeen": "2025-10-16T08:30:01.002Z",
+      "p50": 388,
+      "p95": 388,
+      "max": 388,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "callee"
+    },
+    "producer:shop#src/handlers/checkout.ts:15:9 -emits-> channel:dynamodb/orders": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.005Z",
+      "firstSeen": "2025-10-16T08:30:00.005Z",
+      "p50": 20,
+      "p95": 20,
+      "max": 20,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "producer:shop#src/handlers/checkout.ts:16:9 -emits-> channel:sqs/order-placed": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.030Z",
+      "firstSeen": "2025-10-16T08:30:00.030Z",
+      "p50": 12,
+      "p95": 12,
+      "max": 12,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "producer:shop#src/handlers/checkout.ts:17:9 -calls-> entry:shop:workflow:fulfil-order": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.045Z",
+      "firstSeen": "2025-10-16T08:30:00.045Z",
+      "p50": 25,
+      "p95": 25,
+      "max": 25,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "producer:shop#src/handlers/ship-order.ts:11:11 -calls-> entry:shop:invoke:print-label": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:01.040Z",
+      "firstSeen": "2025-10-16T08:30:01.040Z",
+      "p50": 340,
+      "p95": 340,
+      "max": 340,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "producer:shop#statemachine/fulfil-order.asl.json:21:5 -emits-> channel:dynamodb/orders": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.615Z",
+      "firstSeen": "2025-10-16T08:30:00.615Z",
+      "p50": 75,
+      "p95": 75,
+      "max": 75,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "producer:shop#statemachine/fulfil-order.asl.json:41:5 -emits-> channel:sns/receipts": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.715Z",
+      "firstSeen": "2025-10-16T08:30:00.715Z",
+      "p50": 165,
+      "p95": 165,
+      "max": 165,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard -calls-> entry:shop:invoke:charge-card": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.310Z",
+      "firstSeen": "2025-10-16T08:30:00.310Z",
+      "p50": 290,
+      "p95": 290,
+      "max": 290,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    },
+    "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock -calls-> entry:shop:invoke:reserve-stock": {
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.080Z",
+      "firstSeen": "2025-10-16T08:30:00.080Z",
+      "p50": 220,
+      "p95": 220,
+      "max": 220,
+      "errors": 0,
+      "errorRate": 0,
+      "measuredAt": "caller"
+    }
+  },
+  "entries": {
+    "entry:shop:event:dynamodb/orders": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:01.500Z",
+      "firstSeen": "2025-10-16T08:30:01.500Z",
+      "p50": 20,
+      "p95": 20,
+      "max": 20,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:shop:http:POST:/checkout": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.000Z",
+      "firstSeen": "2025-10-16T08:30:00.000Z",
+      "p50": 180,
+      "p95": 180,
+      "max": 180,
+      "statuses": {
+        "201": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:shop:invoke:charge-card": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.320Z",
+      "firstSeen": "2025-10-16T08:30:00.320Z",
+      "p50": 270,
+      "p95": 270,
+      "max": 270,
+      "errors": 1,
+      "errorRate": 1
+    },
+    "entry:shop:invoke:checkout": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.000Z",
+      "firstSeen": "2025-10-16T08:30:00.000Z",
+      "p50": 180,
+      "p95": 180,
+      "max": 180,
+      "statuses": {
+        "201": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:shop:invoke:index-orders": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:01.500Z",
+      "firstSeen": "2025-10-16T08:30:01.500Z",
+      "p50": 20,
+      "p95": 20,
+      "max": 20,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:shop:invoke:print-label": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:01.050Z",
+      "firstSeen": "2025-10-16T08:30:01.050Z",
+      "p50": 320,
+      "p95": 320,
+      "max": 320,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:shop:invoke:reserve-stock": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.090Z",
+      "firstSeen": "2025-10-16T08:30:00.090Z",
+      "p50": 200,
+      "p95": 200,
+      "max": 200,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:shop:invoke:ship-order": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:01.000Z",
+      "firstSeen": "2025-10-16T08:30:01.000Z",
+      "p50": 400,
+      "p95": 400,
+      "max": 400,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:shop:workflow:fulfil-order": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.075Z",
+      "firstSeen": "2025-10-16T08:30:00.075Z",
+      "p50": 825,
+      "p95": 825,
+      "max": 825,
+      "errors": 0,
+      "errorRate": 0
+    }
+  },
+  "symbols": {
+    "db_query:shop#statemachine/fulfil-order.asl.json:21:5": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.615Z",
+      "firstSeen": "2025-10-16T08:30:00.615Z",
+      "p50": 75,
+      "p95": 75,
+      "max": 75,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "producer:shop#src/handlers/checkout.ts:17:9": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.045Z",
+      "firstSeen": "2025-10-16T08:30:00.045Z",
+      "p50": 25,
+      "p95": 25,
+      "max": 25,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "producer:shop#src/handlers/ship-order.ts:11:11": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:01.040Z",
+      "firstSeen": "2025-10-16T08:30:01.040Z",
+      "p50": 340,
+      "p95": 340,
+      "max": 340,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.310Z",
+      "firstSeen": "2025-10-16T08:30:00.310Z",
+      "p50": 290,
+      "p95": 290,
+      "max": 290,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.610Z",
+      "firstSeen": "2025-10-16T08:30:00.610Z",
+      "p50": 90,
+      "p95": 90,
+      "max": 90,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.080Z",
+      "firstSeen": "2025-10-16T08:30:00.080Z",
+      "p50": 220,
+      "p95": 220,
+      "max": 220,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "shop#statemachine/fulfil-order.asl.json:fulfil-order/SendReceipt": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.710Z",
+      "firstSeen": "2025-10-16T08:30:00.710Z",
+      "p50": 180,
+      "p95": 180,
+      "max": 180,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "table:shop#orders": {
+      "hits": 3,
+      "lastSeen": "2025-10-16T08:30:01.010Z",
+      "firstSeen": "2025-10-16T08:30:00.005Z",
+      "p50": 21.67,
+      "p95": 75,
+      "max": 75,
+      "errors": 0,
+      "errorRate": 0
+    }
+  },
+  "channels": {
+    "channel:dynamodb/orders": {
+      "hits": 3,
+      "lastSeen": "2025-10-16T08:30:01.500Z",
+      "firstSeen": "2025-10-16T08:30:00.005Z",
+      "p50": 21.67,
+      "p95": 75,
+      "max": 75,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "channel:sns/receipts": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:30:00.715Z",
+      "firstSeen": "2025-10-16T08:30:00.715Z",
+      "p50": 165,
+      "p95": 165,
+      "max": 165,
+      "errors": 0,
+      "errorRate": 0
+    },
+    "channel:sqs/order-placed": {
+      "hits": 2,
+      "lastSeen": "2025-10-16T08:30:01.002Z",
+      "firstSeen": "2025-10-16T08:30:00.030Z",
+      "p50": 12.88,
+      "p95": 388,
+      "max": 388,
+      "errors": 0,
+      "errorRate": 0
+    }
+  },
+  "unmatched": [
+    {
+      "service": "checkout",
+      "kind": "cloud",
+      "name": "SecretsManager/GetSecretValue",
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.082Z",
+      "firstSeen": "2025-10-16T08:30:00.082Z",
+      "p50": 13,
+      "p95": 13,
+      "max": 13,
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "checkout",
+      "kind": "table",
+      "name": "carts",
+      "count": 1,
+      "lastSeen": "2025-10-16T08:30:00.072Z",
+      "firstSeen": "2025-10-16T08:30:00.072Z",
+      "p50": 8,
+      "p95": 8,
+      "max": 8,
+      "errors": 0,
+      "errorRate": 0
+    }
+  ],
+  "ambiguous": [],
+  "samples": {
+    "entry:shop:event:dynamodb/orders": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:01.500Z",
+          "ms": 20,
+          "spans": 1,
+          "tree": {
+            "id": "entry:shop:invoke:index-orders",
+            "label": "index-orders",
+            "service": "index-orders",
+            "kind": "server",
+            "ms": 20
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:shop:http:POST:/checkout": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:00.000Z",
+          "ms": 180,
+          "status": 201,
+          "spans": 21,
+          "tree": {
+            "id": "entry:shop:http:POST:/checkout",
+            "label": "POST /checkout",
+            "service": "checkout",
+            "kind": "server",
+            "ms": 180,
+            "status": 201,
+            "children": [
+              {
+                "id": "table:shop#orders",
+                "label": "DynamoDB/PutItem",
+                "service": "checkout",
+                "kind": "client",
+                "start": 5,
+                "ms": 20,
+                "children": [
+                  {
+                    "id": "entry:shop:invoke:index-orders",
+                    "label": "index-orders",
+                    "service": "index-orders",
+                    "kind": "server",
+                    "start": 1500,
+                    "ms": 20
+                  }
+                ]
+              },
+              {
+                "id": "channel:sqs/order-placed",
+                "label": "SQS/SendMessage",
+                "service": "checkout",
+                "kind": "producer",
+                "start": 30,
+                "ms": 12,
+                "children": [
+                  {
+                    "id": "entry:shop:invoke:ship-order",
+                    "label": "ship-order",
+                    "service": "ship-order",
+                    "kind": "server",
+                    "start": 1000,
+                    "ms": 400,
+                    "children": [
+                      {
+                        "id": "channel:sqs/order-placed",
+                        "label": "sqs/order-placed",
+                        "service": "ship-order",
+                        "kind": "consumer",
+                        "start": 1002,
+                        "ms": 388,
+                        "children": [
+                          {
+                            "id": "table:shop#orders",
+                            "label": "DynamoDB/GetItem",
+                            "service": "ship-order",
+                            "kind": "client",
+                            "start": 1010,
+                            "ms": 20
+                          },
+                          {
+                            "id": "producer:shop#src/handlers/ship-order.ts:11:11",
+                            "label": "Lambda/Invoke",
+                            "service": "ship-order",
+                            "kind": "client",
+                            "start": 1040,
+                            "ms": 340,
+                            "children": [
+                              {
+                                "id": "entry:shop:invoke:print-label",
+                                "label": "print-label",
+                                "service": "print-label",
+                                "kind": "server",
+                                "start": 1050,
+                                "ms": 320
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "producer:shop#src/handlers/checkout.ts:17:9",
+                "label": "SFN/StartExecution",
+                "service": "checkout",
+                "kind": "client",
+                "start": 45,
+                "ms": 25,
+                "children": [
+                  {
+                    "id": "entry:shop:workflow:fulfil-order",
+                    "label": "fulfil-order",
+                    "service": "fulfil-order",
+                    "kind": "server",
+                    "start": 75,
+                    "ms": 825,
+                    "children": [
+                      {
+                        "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock",
+                        "label": "fulfil-order/ReserveStock",
+                        "service": "fulfil-order",
+                        "kind": "internal",
+                        "start": 80,
+                        "ms": 220,
+                        "children": [
+                          {
+                            "id": "entry:shop:invoke:reserve-stock",
+                            "label": "reserve-stock",
+                            "service": "reserve-stock",
+                            "kind": "server",
+                            "start": 90,
+                            "ms": 200
+                          }
+                        ]
+                      },
+                      {
+                        "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard",
+                        "label": "fulfil-order/ChargeCard",
+                        "service": "fulfil-order",
+                        "kind": "internal",
+                        "start": 310,
+                        "ms": 290,
+                        "children": [
+                          {
+                            "id": "entry:shop:invoke:charge-card",
+                            "label": "charge-card",
+                            "service": "charge-card",
+                            "kind": "server",
+                            "start": 320,
+                            "ms": 270,
+                            "error": true
+                          }
+                        ]
+                      },
+                      {
+                        "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid",
+                        "label": "fulfil-order/MarkPaid",
+                        "service": "fulfil-order",
+                        "kind": "internal",
+                        "start": 610,
+                        "ms": 90,
+                        "children": [
+                          {
+                            "id": "table:shop#orders",
+                            "label": "DynamoDB/UpdateItem",
+                            "service": "fulfil-order",
+                            "kind": "client",
+                            "start": 615,
+                            "ms": 75
+                          }
+                        ]
+                      },
+                      {
+                        "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/SendReceipt",
+                        "label": "fulfil-order/SendReceipt",
+                        "service": "fulfil-order",
+                        "kind": "internal",
+                        "start": 710,
+                        "ms": 180,
+                        "children": [
+                          {
+                            "id": "channel:sns/receipts",
+                            "label": "SNS/Publish",
+                            "service": "fulfil-order",
+                            "kind": "producer",
+                            "start": 715,
+                            "ms": 165
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "DynamoDB/GetItem",
+                "service": "checkout",
+                "kind": "client",
+                "start": 72,
+                "ms": 8
+              },
+              {
+                "label": "SecretsManager/GetSecretValue",
+                "service": "checkout",
+                "kind": "client",
+                "start": 82,
+                "ms": 13
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:shop:invoke:charge-card": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:00.320Z",
+          "ms": 270,
+          "error": true,
+          "spans": 1,
+          "tree": {
+            "id": "entry:shop:invoke:charge-card",
+            "label": "charge-card",
+            "service": "charge-card",
+            "kind": "server",
+            "ms": 270,
+            "error": true
+          }
+        }
+      ],
+      "failing": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:00.320Z",
+          "ms": 270,
+          "error": true,
+          "spans": 1,
+          "tree": {
+            "id": "entry:shop:invoke:charge-card",
+            "label": "charge-card",
+            "service": "charge-card",
+            "kind": "server",
+            "ms": 270,
+            "error": true
+          }
+        }
+      ]
+    },
+    "entry:shop:invoke:checkout": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:00.000Z",
+          "ms": 180,
+          "status": 201,
+          "spans": 21,
+          "tree": {
+            "id": "entry:shop:http:POST:/checkout",
+            "label": "POST /checkout",
+            "service": "checkout",
+            "kind": "server",
+            "ms": 180,
+            "status": 201,
+            "children": [
+              {
+                "id": "table:shop#orders",
+                "label": "DynamoDB/PutItem",
+                "service": "checkout",
+                "kind": "client",
+                "start": 5,
+                "ms": 20,
+                "children": [
+                  {
+                    "id": "entry:shop:invoke:index-orders",
+                    "label": "index-orders",
+                    "service": "index-orders",
+                    "kind": "server",
+                    "start": 1500,
+                    "ms": 20
+                  }
+                ]
+              },
+              {
+                "id": "channel:sqs/order-placed",
+                "label": "SQS/SendMessage",
+                "service": "checkout",
+                "kind": "producer",
+                "start": 30,
+                "ms": 12,
+                "children": [
+                  {
+                    "id": "entry:shop:invoke:ship-order",
+                    "label": "ship-order",
+                    "service": "ship-order",
+                    "kind": "server",
+                    "start": 1000,
+                    "ms": 400,
+                    "children": [
+                      {
+                        "id": "channel:sqs/order-placed",
+                        "label": "sqs/order-placed",
+                        "service": "ship-order",
+                        "kind": "consumer",
+                        "start": 1002,
+                        "ms": 388,
+                        "children": [
+                          {
+                            "id": "table:shop#orders",
+                            "label": "DynamoDB/GetItem",
+                            "service": "ship-order",
+                            "kind": "client",
+                            "start": 1010,
+                            "ms": 20
+                          },
+                          {
+                            "id": "producer:shop#src/handlers/ship-order.ts:11:11",
+                            "label": "Lambda/Invoke",
+                            "service": "ship-order",
+                            "kind": "client",
+                            "start": 1040,
+                            "ms": 340,
+                            "children": [
+                              {
+                                "id": "entry:shop:invoke:print-label",
+                                "label": "print-label",
+                                "service": "print-label",
+                                "kind": "server",
+                                "start": 1050,
+                                "ms": 320
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "producer:shop#src/handlers/checkout.ts:17:9",
+                "label": "SFN/StartExecution",
+                "service": "checkout",
+                "kind": "client",
+                "start": 45,
+                "ms": 25,
+                "children": [
+                  {
+                    "id": "entry:shop:workflow:fulfil-order",
+                    "label": "fulfil-order",
+                    "service": "fulfil-order",
+                    "kind": "server",
+                    "start": 75,
+                    "ms": 825,
+                    "children": [
+                      {
+                        "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock",
+                        "label": "fulfil-order/ReserveStock",
+                        "service": "fulfil-order",
+                        "kind": "internal",
+                        "start": 80,
+                        "ms": 220,
+                        "children": [
+                          {
+                            "id": "entry:shop:invoke:reserve-stock",
+                            "label": "reserve-stock",
+                            "service": "reserve-stock",
+                            "kind": "server",
+                            "start": 90,
+                            "ms": 200
+                          }
+                        ]
+                      },
+                      {
+                        "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard",
+                        "label": "fulfil-order/ChargeCard",
+                        "service": "fulfil-order",
+                        "kind": "internal",
+                        "start": 310,
+                        "ms": 290,
+                        "children": [
+                          {
+                            "id": "entry:shop:invoke:charge-card",
+                            "label": "charge-card",
+                            "service": "charge-card",
+                            "kind": "server",
+                            "start": 320,
+                            "ms": 270,
+                            "error": true
+                          }
+                        ]
+                      },
+                      {
+                        "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid",
+                        "label": "fulfil-order/MarkPaid",
+                        "service": "fulfil-order",
+                        "kind": "internal",
+                        "start": 610,
+                        "ms": 90,
+                        "children": [
+                          {
+                            "id": "table:shop#orders",
+                            "label": "DynamoDB/UpdateItem",
+                            "service": "fulfil-order",
+                            "kind": "client",
+                            "start": 615,
+                            "ms": 75
+                          }
+                        ]
+                      },
+                      {
+                        "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/SendReceipt",
+                        "label": "fulfil-order/SendReceipt",
+                        "service": "fulfil-order",
+                        "kind": "internal",
+                        "start": 710,
+                        "ms": 180,
+                        "children": [
+                          {
+                            "id": "channel:sns/receipts",
+                            "label": "SNS/Publish",
+                            "service": "fulfil-order",
+                            "kind": "producer",
+                            "start": 715,
+                            "ms": 165
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "DynamoDB/GetItem",
+                "service": "checkout",
+                "kind": "client",
+                "start": 72,
+                "ms": 8
+              },
+              {
+                "label": "SecretsManager/GetSecretValue",
+                "service": "checkout",
+                "kind": "client",
+                "start": 82,
+                "ms": 13
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:shop:invoke:index-orders": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:01.500Z",
+          "ms": 20,
+          "spans": 1,
+          "tree": {
+            "id": "entry:shop:invoke:index-orders",
+            "label": "index-orders",
+            "service": "index-orders",
+            "kind": "server",
+            "ms": 20
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:shop:invoke:print-label": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:01.050Z",
+          "ms": 320,
+          "spans": 1,
+          "tree": {
+            "id": "entry:shop:invoke:print-label",
+            "label": "print-label",
+            "service": "print-label",
+            "kind": "server",
+            "ms": 320
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:shop:invoke:reserve-stock": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:00.090Z",
+          "ms": 200,
+          "spans": 1,
+          "tree": {
+            "id": "entry:shop:invoke:reserve-stock",
+            "label": "reserve-stock",
+            "service": "reserve-stock",
+            "kind": "server",
+            "ms": 200
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:shop:invoke:ship-order": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:01.000Z",
+          "ms": 400,
+          "spans": 5,
+          "tree": {
+            "id": "entry:shop:invoke:ship-order",
+            "label": "ship-order",
+            "service": "ship-order",
+            "kind": "server",
+            "ms": 400,
+            "children": [
+              {
+                "id": "channel:sqs/order-placed",
+                "label": "sqs/order-placed",
+                "service": "ship-order",
+                "kind": "consumer",
+                "start": 2,
+                "ms": 388,
+                "children": [
+                  {
+                    "id": "table:shop#orders",
+                    "label": "DynamoDB/GetItem",
+                    "service": "ship-order",
+                    "kind": "client",
+                    "start": 10,
+                    "ms": 20
+                  },
+                  {
+                    "id": "producer:shop#src/handlers/ship-order.ts:11:11",
+                    "label": "Lambda/Invoke",
+                    "service": "ship-order",
+                    "kind": "client",
+                    "start": 40,
+                    "ms": 340,
+                    "children": [
+                      {
+                        "id": "entry:shop:invoke:print-label",
+                        "label": "print-label",
+                        "service": "print-label",
+                        "kind": "server",
+                        "start": 50,
+                        "ms": 320
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:shop:workflow:fulfil-order": {
+      "slow": [
+        {
+          "traceId": "a7c0ffee000000000000000000000001",
+          "at": "2025-10-16T08:30:00.075Z",
+          "ms": 825,
+          "spans": 9,
+          "tree": {
+            "id": "entry:shop:workflow:fulfil-order",
+            "label": "fulfil-order",
+            "service": "fulfil-order",
+            "kind": "server",
+            "ms": 825,
+            "children": [
+              {
+                "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock",
+                "label": "fulfil-order/ReserveStock",
+                "service": "fulfil-order",
+                "kind": "internal",
+                "start": 5,
+                "ms": 220,
+                "children": [
+                  {
+                    "id": "entry:shop:invoke:reserve-stock",
+                    "label": "reserve-stock",
+                    "service": "reserve-stock",
+                    "kind": "server",
+                    "start": 15,
+                    "ms": 200
+                  }
+                ]
+              },
+              {
+                "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard",
+                "label": "fulfil-order/ChargeCard",
+                "service": "fulfil-order",
+                "kind": "internal",
+                "start": 235,
+                "ms": 290,
+                "children": [
+                  {
+                    "id": "entry:shop:invoke:charge-card",
+                    "label": "charge-card",
+                    "service": "charge-card",
+                    "kind": "server",
+                    "start": 245,
+                    "ms": 270,
+                    "error": true
+                  }
+                ]
+              },
+              {
+                "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid",
+                "label": "fulfil-order/MarkPaid",
+                "service": "fulfil-order",
+                "kind": "internal",
+                "start": 535,
+                "ms": 90,
+                "children": [
+                  {
+                    "id": "table:shop#orders",
+                    "label": "DynamoDB/UpdateItem",
+                    "service": "fulfil-order",
+                    "kind": "client",
+                    "start": 540,
+                    "ms": 75
+                  }
+                ]
+              },
+              {
+                "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/SendReceipt",
+                "label": "fulfil-order/SendReceipt",
+                "service": "fulfil-order",
+                "kind": "internal",
+                "start": 635,
+                "ms": 180,
+                "children": [
+                  {
+                    "id": "channel:sns/receipts",
+                    "label": "SNS/Publish",
+                    "service": "fulfil-order",
+                    "kind": "producer",
+                    "start": 640,
+                    "ms": 165
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    }
+  },
+  "buckets": [
+    {
+      "hour": "2025-10-16T08:00:00.000Z",
+      "spans": 21,
+      "joins": {
+        "channel:dynamodb/orders -consumes-> consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.500Z",
+          "lastSeen": "2025-10-16T08:30:01.500Z",
+          "hist": {
+            "35": 1
+          },
+          "max": 20,
+          "callee": 1
+        },
+        "channel:sqs/order-placed -consumes-> consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.002Z",
+          "lastSeen": "2025-10-16T08:30:01.002Z",
+          "hist": {
+            "69": 1
+          },
+          "max": 388,
+          "callee": 1
+        },
+        "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders -triggers-> entry:shop:event:dynamodb/orders": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.500Z",
+          "lastSeen": "2025-10-16T08:30:01.500Z",
+          "hist": {
+            "35": 1
+          },
+          "max": 20,
+          "callee": 1
+        },
+        "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order -calls-> entry:shop:invoke:ship-order": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.002Z",
+          "lastSeen": "2025-10-16T08:30:01.002Z",
+          "hist": {
+            "69": 1
+          },
+          "max": 388,
+          "callee": 1
+        },
+        "producer:shop#src/handlers/checkout.ts:15:9 -emits-> channel:dynamodb/orders": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.005Z",
+          "lastSeen": "2025-10-16T08:30:00.005Z",
+          "hist": {
+            "35": 1
+          },
+          "max": 20
+        },
+        "producer:shop#src/handlers/checkout.ts:16:9 -emits-> channel:sqs/order-placed": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.030Z",
+          "lastSeen": "2025-10-16T08:30:00.030Z",
+          "hist": {
+            "29": 1
+          },
+          "max": 12
+        },
+        "producer:shop#src/handlers/checkout.ts:17:9 -calls-> entry:shop:workflow:fulfil-order": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.045Z",
+          "lastSeen": "2025-10-16T08:30:00.045Z",
+          "hist": {
+            "37": 1
+          },
+          "max": 25
+        },
+        "producer:shop#src/handlers/ship-order.ts:11:11 -calls-> entry:shop:invoke:print-label": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.040Z",
+          "lastSeen": "2025-10-16T08:30:01.040Z",
+          "hist": {
+            "67": 1
+          },
+          "max": 340
+        },
+        "producer:shop#statemachine/fulfil-order.asl.json:21:5 -emits-> channel:dynamodb/orders": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.615Z",
+          "lastSeen": "2025-10-16T08:30:00.615Z",
+          "hist": {
+            "50": 1
+          },
+          "max": 75
+        },
+        "producer:shop#statemachine/fulfil-order.asl.json:41:5 -emits-> channel:sns/receipts": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.715Z",
+          "lastSeen": "2025-10-16T08:30:00.715Z",
+          "hist": {
+            "59": 1
+          },
+          "max": 165
+        },
+        "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard -calls-> entry:shop:invoke:charge-card": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.310Z",
+          "lastSeen": "2025-10-16T08:30:00.310Z",
+          "hist": {
+            "65": 1
+          },
+          "max": 290
+        },
+        "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock -calls-> entry:shop:invoke:reserve-stock": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.080Z",
+          "lastSeen": "2025-10-16T08:30:00.080Z",
+          "hist": {
+            "62": 1
+          },
+          "max": 220
+        }
+      },
+      "entries": {
+        "entry:shop:event:dynamodb/orders": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.500Z",
+          "lastSeen": "2025-10-16T08:30:01.500Z",
+          "hist": {
+            "35": 1
+          },
+          "max": 20
+        },
+        "entry:shop:http:POST:/checkout": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.000Z",
+          "lastSeen": "2025-10-16T08:30:00.000Z",
+          "statuses": {
+            "201": 1
+          },
+          "hist": {
+            "60": 1
+          },
+          "max": 180
+        },
+        "entry:shop:invoke:charge-card": {
+          "count": 1,
+          "errors": 1,
+          "firstSeen": "2025-10-16T08:30:00.320Z",
+          "lastSeen": "2025-10-16T08:30:00.320Z",
+          "hist": {
+            "65": 1
+          },
+          "max": 270
+        },
+        "entry:shop:invoke:checkout": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.000Z",
+          "lastSeen": "2025-10-16T08:30:00.000Z",
+          "statuses": {
+            "201": 1
+          },
+          "hist": {
+            "60": 1
+          },
+          "max": 180
+        },
+        "entry:shop:invoke:index-orders": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.500Z",
+          "lastSeen": "2025-10-16T08:30:01.500Z",
+          "hist": {
+            "35": 1
+          },
+          "max": 20
+        },
+        "entry:shop:invoke:print-label": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.050Z",
+          "lastSeen": "2025-10-16T08:30:01.050Z",
+          "hist": {
+            "67": 1
+          },
+          "max": 320
+        },
+        "entry:shop:invoke:reserve-stock": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.090Z",
+          "lastSeen": "2025-10-16T08:30:00.090Z",
+          "hist": {
+            "61": 1
+          },
+          "max": 200
+        },
+        "entry:shop:invoke:ship-order": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.000Z",
+          "lastSeen": "2025-10-16T08:30:01.000Z",
+          "hist": {
+            "69": 1
+          },
+          "max": 400
+        },
+        "entry:shop:workflow:fulfil-order": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.075Z",
+          "lastSeen": "2025-10-16T08:30:00.075Z",
+          "hist": {
+            "78": 1
+          },
+          "max": 825
+        }
+      },
+      "symbols": {
+        "db_query:shop#statemachine/fulfil-order.asl.json:21:5": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.615Z",
+          "lastSeen": "2025-10-16T08:30:00.615Z",
+          "hist": {
+            "50": 1
+          },
+          "max": 75
+        },
+        "producer:shop#src/handlers/checkout.ts:17:9": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.045Z",
+          "lastSeen": "2025-10-16T08:30:00.045Z",
+          "hist": {
+            "37": 1
+          },
+          "max": 25
+        },
+        "producer:shop#src/handlers/ship-order.ts:11:11": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:01.040Z",
+          "lastSeen": "2025-10-16T08:30:01.040Z",
+          "hist": {
+            "67": 1
+          },
+          "max": 340
+        },
+        "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.310Z",
+          "lastSeen": "2025-10-16T08:30:00.310Z",
+          "hist": {
+            "65": 1
+          },
+          "max": 290
+        },
+        "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.610Z",
+          "lastSeen": "2025-10-16T08:30:00.610Z",
+          "hist": {
+            "52": 1
+          },
+          "max": 90
+        },
+        "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.080Z",
+          "lastSeen": "2025-10-16T08:30:00.080Z",
+          "hist": {
+            "62": 1
+          },
+          "max": 220
+        },
+        "shop#statemachine/fulfil-order.asl.json:fulfil-order/SendReceipt": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.710Z",
+          "lastSeen": "2025-10-16T08:30:00.710Z",
+          "hist": {
+            "60": 1
+          },
+          "max": 180
+        },
+        "table:shop#orders": {
+          "count": 3,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.005Z",
+          "lastSeen": "2025-10-16T08:30:01.010Z",
+          "hist": {
+            "35": 2,
+            "50": 1
+          },
+          "max": 75
+        }
+      },
+      "channels": {
+        "channel:dynamodb/orders": {
+          "count": 3,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.005Z",
+          "lastSeen": "2025-10-16T08:30:01.500Z",
+          "hist": {
+            "35": 2,
+            "50": 1
+          },
+          "max": 75
+        },
+        "channel:sns/receipts": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.715Z",
+          "lastSeen": "2025-10-16T08:30:00.715Z",
+          "hist": {
+            "59": 1
+          },
+          "max": 165
+        },
+        "channel:sqs/order-placed": {
+          "count": 2,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.030Z",
+          "lastSeen": "2025-10-16T08:30:01.002Z",
+          "hist": {
+            "29": 1,
+            "69": 1
+          },
+          "max": 388
+        }
+      },
+      "unmatched": [
+        {
+          "service": "checkout",
+          "kind": "cloud",
+          "name": "SecretsManager/GetSecretValue",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.082Z",
+          "lastSeen": "2025-10-16T08:30:00.082Z",
+          "hist": {
+            "30": 1
+          },
+          "max": 13
+        },
+        {
+          "service": "checkout",
+          "kind": "table",
+          "name": "carts",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:30:00.072Z",
+          "lastSeen": "2025-10-16T08:30:00.072Z",
+          "hist": {
+            "24": 1
+          },
+          "max": 8
+        }
+      ],
+      "ambiguous": []
+    }
+  ]
+}

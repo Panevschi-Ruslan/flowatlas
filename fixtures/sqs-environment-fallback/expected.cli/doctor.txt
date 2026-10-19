@@ -1,6 +1,11 @@
-unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: none
+unresolved: 0 to act on · missed: 0 · notes: 0 · findings: 2
+  2 findings: 2 likely N+1s
+  query-in-loop (finding): 2 rows
+    Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
+      returns/src/returns/bulk-return.ts:7  A `for-of` loop runs 1 publish once per item: likely N+1.  (2 ways in)
+      returns/src/returns/process-return.ts:20  A `for-of` loop runs 2 publishes once per item: likely N+1.  (1 way in)
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

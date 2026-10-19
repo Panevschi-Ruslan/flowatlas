@@ -1,0 +1,43 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: orders
+  description: Takes and keeps orders.
+  annotations:
+    flowatlas/graph-id: repo:orders
+spec:
+  type: service
+  lifecycle: production
+  owner: team-orders
+  system: bookshop
+  providesApis:
+    - orders-asyncapi
+    - orders-openapi
+  dependsOn:
+    - resource:orders
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: orders-openapi
+  description: "The routes orders answers (5), read from the code by flowatlas."
+spec:
+  type: openapi
+  lifecycle: production
+  owner: team-orders
+  system: bookshop
+  definition:
+    $text: ./orders.openapi.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: orders-asyncapi
+  description: "The channels orders publishes (2), read from the code by flowatlas."
+spec:
+  type: asyncapi
+  lifecycle: production
+  owner: team-orders
+  system: bookshop
+  definition:
+    $text: ./orders.asyncapi.yaml

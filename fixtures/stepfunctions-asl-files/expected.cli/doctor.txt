@@ -1,6 +1,7 @@
-unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 5 to act on over 9 rows, and 5 places static reading cannot see, folded into 4
+unresolved: 5 to act on · missed: 7 · notes: 2 · findings: 0
+  2 missed places static reading cannot see, folded into 2 rows
   reference-not-found: 4 rows
     Add the repository that deploys it to the configuration, so this step reaches its code.
       circulation/statemachine/loan-approval.asl.json:14  CheckBorrowerStanding [Task lambda:invoke] reaches the function check-borrower-standing, which no configured service declares
@@ -10,7 +11,7 @@ unresolved: 5 to act on over 9 rows, and 5 places static reading cannot see, fol
   workflow-template-unbound: 1 row
     Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.
       circulation/statemachine/loan-approval.asl.json:216  ApplyLateFeePolicy invokes a function named by ${LateFeePolicyFunctionArn}, and nothing here says what ${LateFeePolicyFunctionArn} stands for
-  workflow-named-by-file (info): 2 rows over 3 places
+  workflow-named-by-file (note): 2 rows over 3 places
     A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.
       circulation/statemachine/loan-approval.asl.json:1  the workflow in statemachine/loan-approval.asl.json is named loan-approval after its file; nothing here says the name it is deployed under
       notifications/workflows/borrower-notifications.asl.yaml:1  the workflow in workflows/borrower-notifications.asl.yaml is named borrower-notifications after its file; nothing here says the name it is deployed under

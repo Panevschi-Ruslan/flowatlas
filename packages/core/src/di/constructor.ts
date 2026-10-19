@@ -1,10 +1,23 @@
 import type { ClassDeclaration, ParameterDeclaration } from 'ts-morph';
+import { causeOfParameterType, whyNoClass, type FollowCause } from '../follow-cause.js';
 import { resolveClassOfType } from './class-ref.js';
 import type { DiEntry, DiResolution, DiResolverOptions } from './types.js';
 
 const DEFAULT_HINT = 'Inject a class this repository declares.';
 
 const nameOf = (owner: ClassDeclaration): string => owner.getName() ?? '<anonymous>';
+
+/**
+ * Why a parameter with a type the checker read names no class: an interface,
+ * a union, a type parameter.
+ */
+const whyShaped = (parameter: ParameterDeclaration): FollowCause | undefined => {
+  try {
+    return whyNoClass(parameter.getNameNode());
+  } catch {
+    return undefined;
+  }
+};
 
 /**
  * Works out what a constructor parameter will be handed at run time, from its
@@ -35,9 +48,11 @@ const resolveByType = (
     };
   }
   const optional = parameter.hasQuestionToken() || options.isOptional?.(parameter) === true;
+  const cause = causeOfParameterType(parameter) ?? whyShaped(parameter);
   return {
     kind: 'unresolved',
     reason: 'di-type-unresolved',
+    ...(cause === undefined ? {} : { cause }),
     hint: optional
       ? 'Optional parameter with no class type; nothing to point at.'
       : (options.injectHint ?? DEFAULT_HINT),

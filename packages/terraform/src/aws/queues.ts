@@ -1,4 +1,4 @@
-import type { DeliverySource } from '@flowatlas/core';
+import type { DeclaredStream, DeliverySource } from '@flowatlas/core';
 import { asText, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, blockOrArgument, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
 import { deployedAt, deployedInText, deployedOf, deployedOfValue, isBecause, targetOf, type Deployed } from './deployed.js';
@@ -11,6 +11,9 @@ import type { ResourceReader, ResourceReading } from './reading.js';
  * for it; a topic hands each message to its subscriptions; a queue hands what
  * its readers failed on to its dead-letter queue. None of these is written in
  * the code that reads the message, which only ever sees the batch it is given.
+ *
+ * A table with a stream, and a stream, are declared here too (P51): what code
+ * writes to either is a message to whatever a mapping from it runs.
  */
 
 /** Where a mapping or a pipe reads from, as a delivery's source, or why it cannot be one. */
@@ -175,7 +178,31 @@ const readQueue = (queue: Instance, reading: ResourceReading): void =>
 const readRedrivePolicy = (policy: Instance, reading: ResourceReading): void =>
   pushRedrive(policy, deployedAt(policy, 'queue_url', reading), argument(policy, 'redrive_policy'), reading);
 
+/**
+ * A stream the deployment declares, by the name of what it is the stream of.
+ *
+ * A table has one where `stream_enabled` is true or a `stream_view_type` is
+ * set; a stream is one. A name the files do not settle declares nothing a
+ * write could be joined to, and the table's own reading says so where it
+ * matters.
+ */
+const streamOf =
+  (of: DeclaredStream['of'], declares: (instance: Instance) => boolean) =>
+  (instance: Instance, reading: ResourceReading): void => {
+    if (!declares(instance)) return;
+    const found = deployedOf({ kind: 'instance', instance }, reading);
+    if (found === undefined || isBecause(found)) return;
+    reading.streams.push({ ...siteOf(instance), address: instance.address, of, name: found.name });
+  };
+
+const hasStream = (table: Instance): boolean => {
+  const enabled = argument(table, 'stream_enabled');
+  return (enabled?.kind === 'bool' && enabled.value) || textOf(argument(table, 'stream_view_type')) !== undefined;
+};
+
 export const QUEUE_READERS: readonly ResourceReader[] = [
+  ['aws_dynamodb_table', streamOf('table', hasStream)],
+  ['aws_kinesis_stream', streamOf('stream', () => true)],
   ['aws_lambda_event_source_mapping', readMapping],
   ['aws_sns_topic_subscription', readSubscription],
   ['aws_sqs_queue', readQueue],

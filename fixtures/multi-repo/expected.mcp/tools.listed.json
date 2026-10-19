@@ -1,0 +1,20 @@
+[
+  "start_here",
+  "list_entries",
+  "find_symbol",
+  "get_flow",
+  "who_calls",
+  "impact",
+  "who_emits",
+  "who_consumes",
+  "get_type",
+  "check_contract",
+  "get_source",
+  "describe_for_prompt",
+  "search",
+  "cant_follow",
+  "dead",
+  "findings",
+  "type_usage",
+  "get_spec"
+]

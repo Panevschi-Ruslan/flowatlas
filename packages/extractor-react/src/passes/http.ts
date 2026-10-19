@@ -8,8 +8,15 @@ import {
   requestVerbOf,
   resolveTypeOrigin,
   siteOf,
+  verbAlong,
+  verbParameterOf,
+  verbsAtCallers,
   wasRead,
   writtenKeysOf,
+  describedRequestsAt,
+  precedenceOf,
+  precedenceRows,
+  type DescribedRequest,
   type TypeOrigin,
 } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
@@ -23,7 +30,7 @@ import {
 } from '../clients.js';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
-import { requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
+import { enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
@@ -42,6 +49,12 @@ interface FoundCall {
    * see whether the tool worked it out or was told (R87).
    */
   local?: 'declared' | 'recognised';
+  /**
+   * The client the configuration describes, when the call is one
+   * (`adapters.http.clients`, P121): its verb, address and body are where the
+   * description says, not where a shape's indexes would put them.
+   */
+  described?: DescribedRequest;
 }
 
 /** The object written in place at an argument, when one was. */
@@ -84,8 +97,21 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * of the options — including null where they were assembled elsewhere, which
    * is a row rather than a guess at `GET` (R140).
    */
-  const verbOf = (call: CallExpression, shape: CallShape): string | null =>
-    shape.method !== null ? shape.method : requestVerbOf(call);
+  const verbOf = (call: CallExpression, shape: CallShape, chain: readonly CallExpression[] = []): string | null => {
+    if (shape.method !== null) return shape.method;
+    const read = requestVerbOf(call);
+    if (read !== null || chain.length === 0) return read;
+    // A verb the wrapper is handed, read at the caller its address was read
+    // at, along the same calls (P91).
+    const parameter = verbParameterOf(verbWrittenIn(call, shape));
+    return parameter === undefined ? null : (verbAlong(parameter, chain) ?? null);
+  };
+
+  /** Where a call writes its verb, when it writes one in its options. */
+  const verbWrittenIn = (call: CallExpression, shape: CallShape): TsNode | undefined => {
+    if (shape.method !== null || shape.optionsAt === undefined) return undefined;
+    return objectAt(call, shape.optionsAt)?.getProperty('method');
+  };
 
   const typeOfResponse = (call: CallExpression): string | null => {
     const [written] = call.getTypeArguments();
@@ -117,6 +143,14 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       type: ctx.types.collectType(written.getType(), written),
       ...(keys === undefined ? {} : { keys }),
     };
+  };
+
+  /** The body a described client's call writes where its description says (P121). */
+  const describedBodyOf = (described: DescribedRequest): { type: string | null; keys?: readonly string[] } => {
+    const written = described.body;
+    if (written === undefined) return { type: null };
+    const keys = writtenKeysOf([written]);
+    return { type: ctx.types.collectType(written.getType(), written), ...(keys === undefined ? {} : { keys }) };
   };
 
   /**
@@ -153,7 +187,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     return null;
   };
 
-  const record = (found: FoundCall, request: ReadRequest): void => {
+  const record = (found: FoundCall, request: ReadRequest, handedIn?: string | null): void => {
     const { call: network, client, shape } = found;
     const { site } = request;
     // The path at the call site is written under whatever base its client holds,
@@ -177,8 +211,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const network_at = siteOf(network);
     const id = request.depth === 0 ? leaf : `${leaf}@${network_at.line}:${network_at.column}`;
 
-    const verb = verbOf(network, shape);
-    const body = bodyOf(network, client, shape);
+    const verb =
+      handedIn !== undefined ? handedIn : found.described !== undefined ? found.described.verb : verbOf(network, shape, request.calls);
+    const body = found.described === undefined ? bodyOf(network, client, shape) : describedBodyOf(found.described);
     const application = applicationOfFile(ctx.meta, site.file);
 
     ctx.builder.addNode({
@@ -213,6 +248,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         ...(written?.kind === 'base' ? { baseFrom: 'call' } : {}),
         ...(found.local === undefined ? {} : { localClient: found.local }),
         via: address.via,
+        ...(found.described?.client.describedBy === undefined ? {} : { describedBy: found.described.client.describedBy }),
         ...(address.host === null ? {} : { host: address.host }),
         ...(address.guessed ? { guessed: true } : {}),
         ...(request.through === undefined ? {} : { through: request.through }),
@@ -222,7 +258,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       from: site.ownerId,
       to: id,
       type: 'calls',
-      confidence: address.path === null || verb === null ? 'heuristic' : 'static',
+      confidence: address.path === null || verb === null || found.described?.evidence === 'stated' ? 'heuristic' : 'static',
       file: site.file,
       line: at.line,
     });
@@ -421,12 +457,46 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       : { call: node, client: reading.client, shape, local: reading.via };
   };
 
+  /**
+   * A call of a client the configuration describes, when it is one (P121):
+   * asked after the clients this reader knows, which win and leave a pattern
+   * on the same call shadowed, and before a class of the repository is asked
+   * whether it is a client, because the description is the project saying so.
+   */
+  const { clients } = ctx.config.adapters.http;
+  const describedAt = (node: CallExpression, builtIn: boolean): FoundCall | undefined => {
+    if (clients.length === 0) return undefined;
+    const matches = describedRequestsAt(node, clients);
+    if (matches.length === 0) return undefined;
+    const at = { file: ctx.fileOf(node), line: siteOf(node).line, symbol: node.getExpression().getText().slice(0, 60) };
+    const choice = builtIn
+      ? { chosen: [], shadowed: [...new Set(matches.flatMap((match) => match.client.describedBy ?? []))], ambiguous: [] }
+      : precedenceOf(matches, (match) => match.client.describedBy);
+    for (const row of precedenceRows(choice, at, builtIn ? 'the built-in reading of the request' : 'a client described under adapters.http.clients')) {
+      ctx.report(row);
+    }
+    const chosen = choice.chosen[0];
+    if (chosen === undefined) return undefined;
+    return {
+      call: node,
+      client: { name: chosen.client.describedBy ?? 'described', package: null },
+      shape: { method: chosen.verb, urlAt: -1 },
+      described: chosen,
+    };
+  };
+
   /** Every request spelling this reader knows, found in one body. */
   const callsIn = (body: TsNode): FoundCall[] => {
     const found = describedCallsIn(body);
     const already = new Set(found.map((call) => call.call));
+    if (clients.length > 0) for (const call of already) describedAt(call, true);
     forEachCall(body, (node) => {
       if (!Node.isCallExpression(node) || already.has(node)) return;
+      const described = describedAt(node, false);
+      if (described !== undefined) {
+        found.push(described);
+        return;
+      }
       const callee = node.getExpression();
       if (!Node.isPropertyAccessExpression(callee)) return;
       const local = localCallAt(node, callee.getExpression(), callee.getName().toLowerCase());
@@ -435,16 +505,46 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     return found;
   };
 
+  /**
+   * One request per caller of a function that reads its address in place and
+   * is handed its verb (P91), or nothing when the verb is not a parameter. A
+   * caller outside any indexed function keeps the request where it is
+   * written, verb unread.
+   */
+  const perVerbCaller = (found: FoundCall, request: ReadRequest): boolean => {
+    if (verbOf(found.call, found.shape) !== null) return false;
+    const parameter = verbParameterOf(verbWrittenIn(found.call, found.shape));
+    if (parameter === undefined) return false;
+    const callers = verbsAtCallers(parameter);
+    let unnamed = callers.undecided || callers.calls.length === 0;
+    for (const caller of callers.calls) {
+      const owner = enclosingIndexed(ctx, caller.site);
+      if (owner === undefined) {
+        unnamed = true;
+        continue;
+      }
+      ensureOwner(ctx, owner.id);
+      record(
+        found,
+        { ...request, site: { call: caller.site, ownerId: owner.id, file: owner.file }, calls: caller.hops },
+        caller.verb,
+      );
+    }
+    if (unnamed) record(found, request);
+    return true;
+  };
+
   for (const indexed of ctx.functions.all()) {
     const found = callsIn(indexed.fn.body);
     if (found.length === 0) continue;
     ctx.ensureFunctionNode(indexed.fn);
     for (const call of found) {
-      const urlArg = call.call.getArguments()[call.shape.urlAt];
+      const urlArg = call.described === undefined ? call.call.getArguments()[call.shape.urlAt] : (call.described.url ?? call.call);
       if (urlArg === undefined) continue;
       const site: RequestSite = { call: call.call, ownerId: indexed.id, file: indexed.file };
       for (const request of requestsOf(ctx, urlArg, indexed, site)) {
         ensureOwner(ctx, request.site.ownerId);
+        if (request.depth === 0 && call.described === undefined && perVerbCaller(call, request)) continue;
         record(call, request);
       }
     }

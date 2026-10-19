@@ -3,13 +3,15 @@
     {
       "name": "gateway",
       "repo": "./gateway",
-      "type": "nestjs"
+      "type": "nestjs",
+      "hosts": ["gateway.example.test"]
     },
     {
       "name": "orders",
       "repo": "./orders",
       "type": "nestjs",
-      "baseUrlEnv": ["ORDERS_URL"]
+      "baseUrlEnv": ["ORDERS_URL"],
+      "hosts": ["orders.example.test"]
     },
     {
       "name": "billing",
@@ -26,5 +28,6 @@
     }
   ],
   "sharedPackages": ["@fx/contracts"],
+  "docs": { "files": ["docs/**/*.md"] },
   "output": ".flowatlas"
 }

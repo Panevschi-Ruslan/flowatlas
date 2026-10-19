@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:51.802Z",
+  "builtAt": "2026-10-16T23:28:33.617Z",
   "configHash": "14afc89d6d8c",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 5,
       "unresolved": 2,
-      "durationMs": 644,
+      "durationMs": 723,
       "packages": {
         "name": "declared-api",
         "runtime": [
@@ -35,7 +35,7 @@
       "edges": 4,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 3
+      "durationMs": 4
     }
   ],
   "httpOut": {
@@ -77,6 +77,10 @@
     "nodes": 20,
     "edges": 15,
     "types": 10,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 2
   }
 }

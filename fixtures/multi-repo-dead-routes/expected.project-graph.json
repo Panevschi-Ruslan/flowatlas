@@ -1,0 +1,1587 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T04:49:56.851Z",
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "orders-worker",
+      "repo": "./orders-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ops-scripts",
+      "repo": "./ops-scripts",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "catalog-api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController",
+          "HealthController",
+          "WebhooksController",
+          "OAuthController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog-api#src/health/health.controller.ts:HealthController",
+      "type": "provider",
+      "label": "HealthController",
+      "repo": "catalog-api",
+      "file": "src/health/health.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/health/health.controller.ts:HealthController.live",
+      "type": "method",
+      "label": "HealthController.live",
+      "repo": "catalog-api",
+      "file": "src/health/health.controller.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{status:string}"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/health/health.controller.ts:HealthController.ready",
+      "type": "method",
+      "label": "HealthController.ready",
+      "repo": "catalog-api",
+      "file": "src/health/health.controller.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{status:string}"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 18,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.exportAll",
+      "type": "method",
+      "label": "ItemsController.exportAll",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.list",
+      "type": "method",
+      "label": "ItemsController.list",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog-api#Item[]"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.one",
+      "type": "method",
+      "label": "ItemsController.one",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalog-api#Item"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.price",
+      "type": "method",
+      "label": "ItemsController.price",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;price:number}"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.reindex",
+      "type": "method",
+      "label": "ItemsController.reindex",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{queued:boolean}"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.remove",
+      "type": "method",
+      "label": "ItemsController.remove",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.rename",
+      "type": "method",
+      "label": "ItemsController.rename",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{title:string}"
+            }
+          ],
+          "returns": "type:catalog-api#Item"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/oauth/oauth.controller.ts:OAuthController",
+      "type": "provider",
+      "label": "OAuthController",
+      "repo": "catalog-api",
+      "file": "src/oauth/oauth.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/oauth/oauth.controller.ts:OAuthController.callback",
+      "type": "method",
+      "label": "OAuthController.callback",
+      "repo": "catalog-api",
+      "file": "src/oauth/oauth.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "code",
+              "type": "string"
+            }
+          ],
+          "returns": "{code:string}"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/webhooks/webhooks.controller.ts:WebhooksController",
+      "type": "provider",
+      "label": "WebhooksController",
+      "repo": "catalog-api",
+      "file": "src/webhooks/webhooks.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/webhooks/webhooks.controller.ts:WebhooksController.payment",
+      "type": "method",
+      "label": "WebhooksController.payment",
+      "repo": "catalog-api",
+      "file": "src/webhooks/webhooks.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{received:string}"
+        }
+      }
+    },
+    {
+      "id": "config_key:ops-scripts#REINDEX_URL",
+      "type": "config_key",
+      "label": "REINDEX_URL",
+      "repo": "ops-scripts",
+      "file": "src/reindex.ts",
+      "line": 3,
+      "meta": {
+        "key": "REINDEX_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders-worker#CATALOG",
+      "type": "config_key",
+      "label": "CATALOG",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 35,
+      "meta": {
+        "key": "CATALOG",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:DELETE:/items/:param",
+      "type": "entry",
+      "label": "DELETE /items/:param",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/healthz",
+      "type": "entry",
+      "label": "GET /healthz",
+      "repo": "catalog-api",
+      "file": "src/health/health.controller.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/healthz",
+        "rawPath": "/healthz",
+        "controller": "HealthController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/:param/price",
+      "type": "entry",
+      "label": "GET /items/:param/price",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 50,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param/price",
+        "rawPath": "/items/:id/price",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/export",
+      "type": "entry",
+      "label": "GET /items/export",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/export",
+        "rawPath": "/items/export",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/oauth/callback",
+      "type": "entry",
+      "label": "GET /oauth/callback",
+      "repo": "catalog-api",
+      "file": "src/oauth/oauth.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/oauth/callback",
+        "rawPath": "/oauth/callback",
+        "controller": "OAuthController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/ready",
+      "type": "entry",
+      "label": "GET /ready",
+      "repo": "catalog-api",
+      "file": "src/health/health.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/ready",
+        "rawPath": "/ready",
+        "controller": "HealthController",
+        "decorators": [
+          {
+            "name": "HealthCheck",
+            "args": []
+          }
+        ],
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:PATCH:/items/:param",
+      "type": "entry",
+      "label": "PATCH /items/:param",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/items/reindex",
+      "type": "entry",
+      "label": "POST /items/reindex",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items/reindex",
+        "rawPath": "/items/reindex",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/webhooks/payments",
+      "type": "entry",
+      "label": "POST /webhooks/payments",
+      "repo": "catalog-api",
+      "file": "src/webhooks/webhooks.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/webhooks/payments",
+        "rawPath": "/webhooks/payments",
+        "controller": "WebhooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:ops-scripts#src/reindex.ts:3:9",
+      "type": "http_out",
+      "label": "POST ",
+      "repo": "ops-scripts",
+      "file": "src/reindex.ts",
+      "line": 3,
+      "meta": {
+        "method": "POST",
+        "url": "${REINDEX_URL}",
+        "path": "",
+        "baseUrlEnv": "REINDEX_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "https://catalog.internal/items/reindex",
+        "baseUrlFrom": ".env.example",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "http_out:orders-worker#src/worker.ts:11:26",
+      "type": "http_out",
+      "label": "GET /items/:param",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "https://catalog/items/${…}",
+        "path": "/items/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "binding": "CATALOG",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "http_out:orders-worker#src/worker.ts:23:26",
+      "type": "http_out",
+      "label": "GET ?",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 23,
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "http_out:orders-worker#src/worker.ts:39:12",
+      "type": "http_out",
+      "label": "PATCH /items/:param",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 39,
+      "meta": {
+        "method": "PATCH",
+        "url": "https://catalog/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "binding": "CATALOG",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ops-scripts#src/reindex.ts:reindex",
+      "type": "function",
+      "label": "reindex",
+      "repo": "ops-scripts",
+      "file": "src/reindex.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-worker#src/worker.ts:CatalogClient",
+      "type": "provider",
+      "label": "CatalogClient",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 31,
+      "kind": "injectable"
+    },
+    {
+      "id": "orders-worker#src/worker.ts:CatalogClient.req",
+      "type": "method",
+      "label": "CatalogClient.req",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "method",
+              "type": "string"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "orders-worker#src/worker.ts:CatalogClient.restock",
+      "type": "method",
+      "label": "CatalogClient.restock",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "orders-worker#src/worker.ts:allItems",
+      "type": "function",
+      "label": "allItems",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "address",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "markers": [
+          {
+            "name": "CallsService",
+            "args": [
+              "catalog",
+              "GET /items"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders-worker#src/worker.ts:itemFor",
+      "type": "function",
+      "label": "itemFor",
+      "repo": "orders-worker",
+      "file": "src/worker.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "env",
+              "type": "type:orders-worker#Env"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog-api",
+      "type": "repo",
+      "label": "catalog-api",
+      "repo": "catalog-api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:ops-scripts",
+      "type": "repo",
+      "label": "ops-scripts",
+      "repo": "ops-scripts",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:orders-worker",
+      "type": "repo",
+      "label": "orders-worker",
+      "repo": "orders-worker",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "@cloudflare/workers-types": 1
+          }
+        },
+        "adapters": {
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {
+            "@angular/common": 4
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "storefront#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "storefront",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "storefront#src/app/items.client.ts:ItemsClient",
+      "type": "provider",
+      "label": "ItemsClient",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 25,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "storefront#src/app/items.client.ts:ItemsClient.list",
+      "type": "method",
+      "label": "ItemsClient.list",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:storefront#Item[]"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "storefront#src/app/items.client.ts:ItemsClient.one",
+      "type": "method",
+      "label": "ItemsClient.one",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:storefront#Item"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "storefront#src/app/items.client.ts:ItemsClient.remove",
+      "type": "method",
+      "label": "ItemsClient.remove",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "storefront#src/app/items.client.ts:ItemsClient.rename",
+      "type": "method",
+      "label": "ItemsClient.rename",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "type:storefront#Item"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "storefront#src/app/items.client.ts:ItemsClient.req",
+      "type": "method",
+      "label": "ItemsClient.req",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "method",
+              "type": "string"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/app/items.client.ts:ItemsClient.url",
+      "type": "method",
+      "label": "ItemsClient.url",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "suffix",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/app/items.client.ts:ItemsClient.variant",
+      "type": "method",
+      "label": "ItemsClient.variant",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "slug",
+              "type": "string"
+            },
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "extra",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/items.client.ts:38:12",
+      "type": "ui_api_call",
+      "label": "GET /items",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 38,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/items",
+        "path": "/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:storefront#Item[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/items.client.ts:42:12",
+      "type": "ui_api_call",
+      "label": "GET /items/:param",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:storefront#Item",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/items.client.ts:46:12@34:12",
+      "type": "ui_api_call",
+      "label": "PATCH /items/:param",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 46,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "${apiUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:storefront#Item",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "through": "ItemsClient.req",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/items.client.ts:50:12@34:12",
+      "type": "ui_api_call",
+      "label": "DELETE /items/:param",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 50,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "${apiUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "through": "ItemsClient.req",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/app/items.client.ts:59:12",
+      "type": "ui_api_call",
+      "label": "GET /items/:param/${…}${…}",
+      "repo": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 59,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/items/:param/${…}${…}",
+        "path": "/items/:param/${…}${…}",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog-api:http:DELETE:/items/:param",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/items/items.controller.ts",
+      "line": 45,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/healthz",
+      "to": "catalog-api#src/health/health.controller.ts:HealthController.live",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{status:string}",
+      "file": "src/health/health.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog-api#Item[]",
+      "file": "src/items/items.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/:param",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.one",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalog-api#Item",
+      "file": "src/items/items.controller.ts",
+      "line": 35,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/:param/price",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.price",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;price:number}",
+      "file": "src/items/items.controller.ts",
+      "line": 50,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/export",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.exportAll",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/items/items.controller.ts",
+      "line": 25
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/oauth/callback",
+      "to": "catalog-api#src/oauth/oauth.controller.ts:OAuthController.callback",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{code:string}",
+      "file": "src/oauth/oauth.controller.ts",
+      "line": 6,
+      "meta": {
+        "query": "{code:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/ready",
+      "to": "catalog-api#src/health/health.controller.ts:HealthController.ready",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{status:string}",
+      "file": "src/health/health.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:catalog-api:http:PATCH:/items/:param",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.rename",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{title:string}"
+      ],
+      "returns": "type:catalog-api#Item",
+      "file": "src/items/items.controller.ts",
+      "line": 40,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{title:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/items/reindex",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.reindex",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{queued:boolean}",
+      "file": "src/items/items.controller.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/webhooks/payments",
+      "to": "catalog-api#src/webhooks/webhooks.controller.ts:WebhooksController.payment",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "{received:string}",
+      "file": "src/webhooks/webhooks.controller.ts",
+      "line": 6,
+      "meta": {
+        "body": "{id:string}"
+      }
+    },
+    {
+      "from": "http_out:ops-scripts#src/reindex.ts:3:9",
+      "to": "entry:catalog-api:http:POST:/items/reindex",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/reindex.ts",
+      "line": 3,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "catalog-api",
+        "baseUrl": "https://catalog.internal/items/reindex",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:orders-worker#src/worker.ts:11:26",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 11,
+      "meta": {
+        "via": "serviceBinding",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "http_out:orders-worker#src/worker.ts:23:26",
+      "to": "entry:catalog-api:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "marker",
+      "file": "src/worker.ts",
+      "line": 23,
+      "meta": {
+        "via": "marker",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "http_out:orders-worker#src/worker.ts:39:12",
+      "to": "entry:catalog-api:http:PATCH:/items/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 39,
+      "meta": {
+        "via": "serviceBinding",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ops-scripts#src/reindex.ts:reindex",
+      "to": "config_key:ops-scripts#REINDEX_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/reindex.ts",
+      "line": 3
+    },
+    {
+      "from": "ops-scripts#src/reindex.ts:reindex",
+      "to": "http_out:ops-scripts#src/reindex.ts:3:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reindex.ts",
+      "line": 3
+    },
+    {
+      "from": "orders-worker#src/worker.ts:CatalogClient.req",
+      "to": "config_key:orders-worker#CATALOG",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/worker.ts",
+      "line": 35
+    },
+    {
+      "from": "orders-worker#src/worker.ts:CatalogClient.restock",
+      "to": "http_out:orders-worker#src/worker.ts:39:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 39
+    },
+    {
+      "from": "orders-worker#src/worker.ts:CatalogClient.restock",
+      "to": "orders-worker#src/worker.ts:CatalogClient.req",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Response",
+      "file": "src/worker.ts",
+      "line": 39
+    },
+    {
+      "from": "orders-worker#src/worker.ts:allItems",
+      "to": "http_out:orders-worker#src/worker.ts:23:26",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/worker.ts",
+      "line": 23
+    },
+    {
+      "from": "orders-worker#src/worker.ts:itemFor",
+      "to": "config_key:orders-worker#CATALOG",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/worker.ts",
+      "line": 11
+    },
+    {
+      "from": "orders-worker#src/worker.ts:itemFor",
+      "to": "http_out:orders-worker#src/worker.ts:11:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 11
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient",
+      "to": "storefront#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 27
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.list",
+      "to": "storefront#src/app/items.client.ts:ItemsClient.url",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/app/items.client.ts",
+      "line": 38
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.list",
+      "to": "ui_api_call:storefront#src/app/items.client.ts:38:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 38
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.one",
+      "to": "storefront#src/app/items.client.ts:ItemsClient.url",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/app/items.client.ts",
+      "line": 42
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.one",
+      "to": "ui_api_call:storefront#src/app/items.client.ts:42:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 42
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.remove",
+      "to": "storefront#src/app/items.client.ts:ItemsClient.req",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "T",
+      "file": "src/app/items.client.ts",
+      "line": 50
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.remove",
+      "to": "ui_api_call:storefront#src/app/items.client.ts:50:12@34:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 50
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.rename",
+      "to": "storefront#src/app/items.client.ts:ItemsClient.req",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "T",
+      "file": "src/app/items.client.ts",
+      "line": 46
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.rename",
+      "to": "ui_api_call:storefront#src/app/items.client.ts:46:12@34:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 46
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.req",
+      "to": "storefront#src/app/items.client.ts:ItemsClient.url",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/app/items.client.ts",
+      "line": 34
+    },
+    {
+      "from": "storefront#src/app/items.client.ts:ItemsClient.variant",
+      "to": "ui_api_call:storefront#src/app/items.client.ts:59:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 59
+    },
+    {
+      "from": "ui_api_call:storefront#src/app/items.client.ts:38:12",
+      "to": "entry:catalog-api:http:GET:/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 38,
+      "returns": "type:storefront#Item[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/app/items.client.ts:42:12",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 42,
+      "returns": "type:storefront#Item",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/app/items.client.ts:46:12@34:12",
+      "to": "entry:catalog-api:http:PATCH:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 46,
+      "returns": "type:storefront#Item",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/app/items.client.ts:50:12@34:12",
+      "to": "entry:catalog-api:http:DELETE:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 50,
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    }
+  ],
+  "types": {
+    "type:@cloudflare/workers-types#Fetcher": {
+      "name": "Fetcher",
+      "kind": "external",
+      "declaredIn": "@cloudflare/workers-types",
+      "structuralHash": "402cf03d0c477f0d",
+      "meta": {
+        "declKind": "external",
+        "package": "@cloudflare/workers-types"
+      }
+    },
+    "type:catalog-api#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "catalog-api#src/items/items.controller.ts",
+      "structuralHash": "291d74b05eba43c1",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders-worker#Env": {
+      "name": "Env",
+      "kind": "object",
+      "declaredIn": "orders-worker#src/worker.ts",
+      "structuralHash": "56aa8b98cb401b27",
+      "fields": [
+        {
+          "name": "CATALOG",
+          "type": "type:@cloudflare/workers-types#Fetcher",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:storefront#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "storefront#src/app/items.client.ts",
+      "structuralHash": "291d74b05eba43c1",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "ops-scripts",
+      "file": "src/reindex.ts",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "REINDEX_URL is https://catalog.internal/items/reindex in .env.example, which is taken as catalog-api",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add REINDEX_URL to services[].baseUrlEnv of catalog-api to say so outright.",
+      "symbol": "http_out:ops-scripts#src/reindex.ts:3:9",
+      "meta": {
+        "variable": "REINDEX_URL",
+        "value": "https://catalog.internal/items/reindex",
+        "from": ".env.example"
+      }
+    },
+    {
+      "file": "src/worker.ts",
+      "line": 23,
+      "reason": "dynamic-http-url",
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "symbol": "fetch(address)",
+      "service": "orders-worker"
+    },
+    {
+      "file": "src/app/items.client.ts",
+      "line": 33,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "storefront"
+    }
+  ]
+}

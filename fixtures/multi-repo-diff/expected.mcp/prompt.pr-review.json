@@ -1,0 +1,12 @@
+{
+  "description": "Review the branch",
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "type": "text",
+        "text": "# Review this branch\n\nThe last `flowatlas diff` compared HEAD~1 (billing 392089da, orders 08ad86ef; gateway from the working tree) with the working tree.\n\n1. `what_changed({verdict: true})` — safe, unsafe or unknown, with the reasons under `because`.\n\nThen ask the calls its `next` gives, in order: `get_flow` on the first way in under `retest`, `check_contract` on the first break, `get_source` on the method of the first new gap, `who_calls` on a caller under `vanishedTargets`. A cut answer says `nextOffset`: ask again from it.\n\nWrite the review as: the verdict and each reason under `because`, the calls that lost their target and what to do about each, the new gaps a change cannot be seen past, and the ways in to retest, busiest first. Name ids; do not paste code.\n"
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { REACHES_META, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { REACHED_AS_META, REACHES_META, RESULT_OF_META, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { joinReferences } from './reference-link.js';
 
@@ -97,5 +97,47 @@ describe('joinReferences', () => {
     const caller = step('circulation', 'Ask', ['workflow:returns']);
     const route: GraphNode = { id: 'entry:returns:event:returns', type: 'entry', kind: 'event', label: 'returns', repo: 'returns' };
     expect(join([caller, route]).rows.map((row) => row.reason)).toEqual(['reference-not-found']);
+  });
+
+  it('draws the edge a node says it reaches a reference by: a triggers edge, with the outcome it carries (P60)', () => {
+    const caller: GraphNode = {
+      ...step('lending', 'request-loan', []),
+      meta: {
+        [REACHES_META]: ['invoke:library-members-alert', 'workflow:restock'],
+        [REACHED_AS_META]: { 'invoke:library-members-alert': { type: 'triggers', when: 'failure' }, 'workflow:restock': { when: 'failure' } },
+      },
+    };
+    const alert: GraphNode = { id: 'entry:members:invoke:library-members-alert', type: 'entry', kind: 'invoke', label: 'invoke alert', repo: 'members' };
+    const { edges, rows } = join([caller, alert, workflow('members', 'restock')]);
+    expect(rows).toEqual([]);
+    expect(edges.map(({ to, type, meta }) => [to, type, meta?.['when']])).toEqual([
+      ['entry:members:invoke:library-members-alert', 'triggers', 'failure'],
+      ['entry:members:workflow:restock', 'calls', 'failure'],
+    ]);
+  });
+
+  it("joins a function created elsewhere into the node it hands its run on into (P60)", () => {
+    const result: GraphNode = {
+      id: 'consumer:lending#infra/main.tf#aws_lambda_function_event_invoke_config.alert.on_success',
+      type: 'consumer',
+      label: 'destination alert',
+      repo: 'lending',
+      file: 'infra/main.tf',
+      line: 3,
+      meta: { [RESULT_OF_META]: 'invoke:library-members-alert', when: 'success' },
+    };
+    const alert: GraphNode = { id: 'entry:members:invoke:library-members-alert', type: 'entry', kind: 'invoke', label: 'invoke alert', repo: 'members' };
+    expect(join([result, alert]).edges).toEqual([
+      {
+        from: alert.id,
+        to: result.id,
+        type: 'triggers',
+        confidence: 'static',
+        file: 'infra/main.tf',
+        line: 3,
+        meta: { via: 'deployed-name', reference: 'invoke:library-members-alert', when: 'success' },
+      },
+    ]);
+    expect(join([result]).rows.map((row) => row.reason)).toEqual(['reference-not-found']);
   });
 });

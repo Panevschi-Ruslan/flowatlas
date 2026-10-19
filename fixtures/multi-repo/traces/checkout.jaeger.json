@@ -1,0 +1,652 @@
+{
+  "data": [
+    {
+      "traceID": "a1000000000000000000000000000001",
+      "spans": [
+        {
+          "traceID": "a1000000000000000000000000000001",
+          "spanID": "b100000000000001",
+          "operationName": "GET /orders/ord-1042",
+          "references": [],
+          "flags": 1,
+          "startTime": 1760600000000000,
+          "duration": 520000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "server"
+            },
+            {
+              "key": "http.request.method",
+              "type": "string",
+              "value": "GET"
+            },
+            {
+              "key": "http.route",
+              "type": "string",
+              "value": "/orders/:id"
+            },
+            {
+              "key": "url.full",
+              "type": "string",
+              "value": "http://gateway.local/orders/ord-1042?session=s3cr3t"
+            },
+            {
+              "key": "http.request.header.authorization",
+              "type": "string",
+              "value": "Bearer not-a-real-token"
+            },
+            {
+              "key": "enduser.id",
+              "type": "string",
+              "value": "user-7781"
+            },
+            {
+              "key": "code.namespace",
+              "type": "string",
+              "value": "OrdersController"
+            },
+            {
+              "key": "code.function",
+              "type": "string",
+              "value": "findOne"
+            },
+            {
+              "key": "http.response.status_code",
+              "type": "int64",
+              "value": 200
+            },
+            {
+              "key": "http.request.header.cookie",
+              "type": "string",
+              "value": "sid=cookie-val-55"
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": [
+            "clock skew adjusted for ord-1042"
+          ]
+        },
+        {
+          "traceID": "a1000000000000000000000000000001",
+          "spanID": "b100000000000002",
+          "operationName": "GET",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "a1000000000000000000000000000001",
+              "spanID": "b100000000000001"
+            }
+          ],
+          "flags": 1,
+          "startTime": 1760600000001000,
+          "duration": 500000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "client"
+            },
+            {
+              "key": "http.method",
+              "type": "string",
+              "value": "GET"
+            },
+            {
+              "key": "http.url",
+              "type": "string",
+              "value": "http://orders.local/orders/ord-1042?expand=lines"
+            },
+            {
+              "key": "http.response.status_code",
+              "type": "int64",
+              "value": 200
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": null
+        },
+        {
+          "traceID": "a1000000000000000000000000000001",
+          "spanID": "c100000000000001",
+          "operationName": "GET /orders/:id",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "a1000000000000000000000000000001",
+              "spanID": "b100000000000002"
+            }
+          ],
+          "flags": 1,
+          "startTime": 1760600000002000,
+          "duration": 496000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "server"
+            },
+            {
+              "key": "http.request.method",
+              "type": "string",
+              "value": "GET"
+            },
+            {
+              "key": "http.route",
+              "type": "string",
+              "value": "/orders/:id"
+            },
+            {
+              "key": "http.response.status_code",
+              "type": "int64",
+              "value": 200
+            }
+          ],
+          "logs": [],
+          "processID": "p2",
+          "warnings": null
+        },
+        {
+          "traceID": "a1000000000000000000000000000001",
+          "spanID": "c100000000000002",
+          "operationName": "OrdersService.findOne",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "a1000000000000000000000000000001",
+              "spanID": "c100000000000001"
+            }
+          ],
+          "flags": 1,
+          "startTime": 1760600000003000,
+          "duration": 492000,
+          "tags": [
+            {
+              "key": "code.function.name",
+              "type": "string",
+              "value": "OrdersService.findOne"
+            }
+          ],
+          "logs": [],
+          "processID": "p2",
+          "warnings": null
+        },
+        {
+          "traceID": "a1000000000000000000000000000001",
+          "spanID": "c100000000000003",
+          "operationName": "mongodb.find",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "a1000000000000000000000000000001",
+              "spanID": "c100000000000002"
+            }
+          ],
+          "flags": 1,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "client"
+            },
+            {
+              "key": "db.collection.name",
+              "type": "string",
+              "value": "orders"
+            },
+            {
+              "key": "db.query.text",
+              "type": "string",
+              "value": "{ \"_id\": \"ord-1042\" }"
+            },
+            {
+              "key": "db.statement",
+              "type": "string",
+              "value": "db.orders.find(secret-stmt-8)"
+            }
+          ],
+          "logs": [],
+          "processID": "p2",
+          "warnings": null
+        }
+      ],
+      "processes": {
+        "p1": {
+          "serviceName": "gateway",
+          "tags": [
+            {
+              "key": "hostname",
+              "type": "string",
+              "value": "gateway-host-h7"
+            },
+            {
+              "key": "ip",
+              "type": "string",
+              "value": "198.51.100.9"
+            },
+            {
+              "key": "jaeger.version",
+              "type": "string",
+              "value": "Go-2.30.0"
+            }
+          ]
+        },
+        "p2": {
+          "serviceName": "orders",
+          "tags": [
+            {
+              "key": "hostname",
+              "type": "string",
+              "value": "orders-host-h7"
+            },
+            {
+              "key": "ip",
+              "type": "string",
+              "value": "198.51.100.9"
+            },
+            {
+              "key": "jaeger.version",
+              "type": "string",
+              "value": "Go-2.30.0"
+            }
+          ]
+        }
+      },
+      "warnings": null
+    },
+    {
+      "traceID": "a1000000000000000000000000000004",
+      "spans": [
+        {
+          "traceID": "a1000000000000000000000000000004",
+          "spanID": "b400000000000001",
+          "operationName": "GET /orders/:id",
+          "references": [],
+          "flags": 1,
+          "startTime": 1760600006000000,
+          "duration": 45000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "server"
+            },
+            {
+              "key": "http.request.method",
+              "type": "string",
+              "value": "GET"
+            },
+            {
+              "key": "http.route",
+              "type": "string",
+              "value": "/orders/:id"
+            },
+            {
+              "key": "http.response.status_code",
+              "type": "int64",
+              "value": 200
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": null
+        },
+        {
+          "traceID": "a1000000000000000000000000000004",
+          "spanID": "b400000000000002",
+          "operationName": "GET",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "a1000000000000000000000000000004",
+              "spanID": "b400000000000001"
+            }
+          ],
+          "flags": 1,
+          "startTime": 1760600006001000,
+          "duration": 39000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "client"
+            },
+            {
+              "key": "http.method",
+              "type": "string",
+              "value": "GET"
+            },
+            {
+              "key": "http.url",
+              "type": "string",
+              "value": "http://orders.local/orders/ord-2001"
+            },
+            {
+              "key": "http.response.status_code",
+              "type": "int64",
+              "value": 200
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": null
+        }
+      ],
+      "processes": {
+        "p1": {
+          "serviceName": "gateway",
+          "tags": [
+            {
+              "key": "hostname",
+              "type": "string",
+              "value": "gateway-host-h7"
+            },
+            {
+              "key": "ip",
+              "type": "string",
+              "value": "198.51.100.9"
+            },
+            {
+              "key": "jaeger.version",
+              "type": "string",
+              "value": "Go-2.30.0"
+            }
+          ]
+        }
+      },
+      "warnings": null
+    },
+    {
+      "traceID": "a1000000000000000000000000000003",
+      "spans": [
+        {
+          "traceID": "a1000000000000000000000000000003",
+          "spanID": "b300000000000001",
+          "operationName": "GET /metrics",
+          "references": [],
+          "flags": 1,
+          "startTime": 1760600005000000,
+          "duration": 2000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "server"
+            },
+            {
+              "key": "http.request.method",
+              "type": "string",
+              "value": "GET"
+            },
+            {
+              "key": "http.route",
+              "type": "string",
+              "value": "/metrics"
+            },
+            {
+              "key": "http.response.status_code",
+              "type": "int64",
+              "value": 200
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": null
+        }
+      ],
+      "processes": {
+        "p1": {
+          "serviceName": "gateway",
+          "tags": [
+            {
+              "key": "hostname",
+              "type": "string",
+              "value": "gateway-host-h7"
+            },
+            {
+              "key": "ip",
+              "type": "string",
+              "value": "198.51.100.9"
+            },
+            {
+              "key": "jaeger.version",
+              "type": "string",
+              "value": "Go-2.30.0"
+            }
+          ]
+        }
+      },
+      "warnings": null
+    },
+    {
+      "traceID": "a1000000000000000000000000000002",
+      "spans": [
+        {
+          "traceID": "a1000000000000000000000000000002",
+          "spanID": "c200000000000001",
+          "operationName": "POST /orders",
+          "references": [],
+          "flags": 1,
+          "startTime": 1760600003000000,
+          "duration": 35000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "server"
+            },
+            {
+              "key": "http.request.method",
+              "type": "string",
+              "value": "POST"
+            },
+            {
+              "key": "http.route",
+              "type": "string",
+              "value": "/orders"
+            },
+            {
+              "key": "http.response.status_code",
+              "type": "int64",
+              "value": 500
+            },
+            {
+              "key": "error",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "key": "otel.status_code",
+              "type": "string",
+              "value": "ERROR"
+            },
+            {
+              "key": "otel.status_description",
+              "type": "string",
+              "value": "insert failed for ord-1043 at stack frame"
+            }
+          ],
+          "logs": [
+            {
+              "timestamp": 1760600003000005,
+              "fields": [
+                {
+                  "key": "event",
+                  "type": "string",
+                  "value": "exception"
+                },
+                {
+                  "key": "exception.message",
+                  "type": "string",
+                  "value": "duplicate key for cus-311"
+                }
+              ]
+            }
+          ],
+          "processID": "p1",
+          "warnings": null
+        },
+        {
+          "traceID": "a1000000000000000000000000000002",
+          "spanID": "c200000000000002",
+          "operationName": "order.created publish",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "a1000000000000000000000000000002",
+              "spanID": "c200000000000001"
+            }
+          ],
+          "flags": 1,
+          "startTime": 1760600003001000,
+          "duration": 3000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "producer"
+            },
+            {
+              "key": "messaging.system",
+              "type": "string",
+              "value": "kafka"
+            },
+            {
+              "key": "messaging.destination.name",
+              "type": "string",
+              "value": "order.created"
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": null
+        },
+        {
+          "traceID": "a1000000000000000000000000000002",
+          "spanID": "c200000000000003",
+          "operationName": "order.audited publish",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "a1000000000000000000000000000002",
+              "spanID": "c200000000000001"
+            }
+          ],
+          "flags": 1,
+          "startTime": 1760600003002000,
+          "duration": 500,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "producer"
+            },
+            {
+              "key": "messaging.system",
+              "type": "string",
+              "value": "kafka"
+            },
+            {
+              "key": "messaging.destination.name",
+              "type": "string",
+              "value": "order.audited"
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": null
+        },
+        {
+          "traceID": "a1000000000000000000000000000002",
+          "spanID": "d200000000000001",
+          "operationName": "order.created process",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "a1000000000000000000000000000002",
+              "spanID": "c200000000000002"
+            }
+          ],
+          "flags": 1,
+          "startTime": 1760600003500000,
+          "duration": 12000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "consumer"
+            },
+            {
+              "key": "messaging.system",
+              "type": "string",
+              "value": "kafka"
+            },
+            {
+              "key": "messaging.destination.name",
+              "type": "string",
+              "value": "order.created"
+            },
+            {
+              "key": "messaging.kafka.message.key",
+              "type": "string",
+              "value": "ord-1043"
+            }
+          ],
+          "logs": [],
+          "processID": "p2",
+          "warnings": null
+        }
+      ],
+      "processes": {
+        "p1": {
+          "serviceName": "orders",
+          "tags": [
+            {
+              "key": "hostname",
+              "type": "string",
+              "value": "orders-host-h7"
+            },
+            {
+              "key": "ip",
+              "type": "string",
+              "value": "198.51.100.9"
+            },
+            {
+              "key": "jaeger.version",
+              "type": "string",
+              "value": "Go-2.30.0"
+            }
+          ]
+        },
+        "p2": {
+          "serviceName": "billing",
+          "tags": [
+            {
+              "key": "hostname",
+              "type": "string",
+              "value": "billing-host-h7"
+            },
+            {
+              "key": "ip",
+              "type": "string",
+              "value": "198.51.100.9"
+            },
+            {
+              "key": "jaeger.version",
+              "type": "string",
+              "value": "Go-2.30.0"
+            }
+          ]
+        }
+      },
+      "warnings": null
+    }
+  ],
+  "total": 0,
+  "limit": 0,
+  "offset": 0,
+  "errors": null
+}

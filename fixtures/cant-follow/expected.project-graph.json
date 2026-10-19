@@ -1,0 +1,846 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T15:10:36.360Z",
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:payments:http:POST:/charges",
+      "type": "entry",
+      "label": "POST /charges",
+      "repo": "payments",
+      "file": "src/charges/charges.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/charges",
+        "rawPath": "/charges",
+        "controller": "ChargesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:storefront:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "storefront",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:storefront:http:POST:/orders/:param/resend",
+      "type": "entry",
+      "label": "POST /orders/:param/resend",
+      "repo": "storefront",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/resend",
+        "rawPath": "/orders/:id/resend",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "payments#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "payments",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ChargesController"
+        ],
+        "providers": [
+          "ChargesService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "payments#src/charges/charges.controller.ts:ChargesController",
+      "type": "provider",
+      "label": "ChargesController",
+      "repo": "payments",
+      "file": "src/charges/charges.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "payments#src/charges/charges.controller.ts:ChargesController.create",
+      "type": "method",
+      "label": "ChargesController.create",
+      "repo": "payments",
+      "file": "src/charges/charges.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{amount:number}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "payments#src/charges/charges.service.ts:ChargesService",
+      "type": "provider",
+      "label": "ChargesService",
+      "repo": "payments",
+      "file": "src/charges/charges.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "payments#src/charges/charges.service.ts:ChargesService.create",
+      "type": "method",
+      "label": "ChargesService.create",
+      "repo": "payments",
+      "file": "src/charges/charges.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:payments",
+      "type": "repo",
+      "label": "payments",
+      "repo": "payments",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "storefront#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "storefront",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService",
+          "NotifyService",
+          "PricingService",
+          "ReminderJob"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "storefront#src/jobs/reminder.job.ts:ReminderJob",
+      "type": "provider",
+      "label": "ReminderJob",
+      "repo": "storefront",
+      "file": "src/jobs/reminder.job.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/jobs/reminder.job.ts:ReminderJob.handle",
+      "type": "method",
+      "label": "ReminderJob.handle",
+      "repo": "storefront",
+      "file": "src/jobs/reminder.job.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "payload",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/jobs/reminder.job.ts:ReminderJob.start",
+      "type": "method",
+      "label": "ReminderJob.start",
+      "repo": "storefront",
+      "file": "src/jobs/reminder.job.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "registry",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/notify/notify.service.ts:NotifyService",
+      "type": "provider",
+      "label": "NotifyService",
+      "repo": "storefront",
+      "file": "src/notify/notify.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/notify/notify.service.ts:NotifyService.confirm",
+      "type": "method",
+      "label": "NotifyService.confirm",
+      "repo": "storefront",
+      "file": "src/notify/notify.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "storefront",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "method",
+      "label": "OrdersController.place",
+      "repo": "storefront",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/orders/orders.controller.ts:OrdersController.resend",
+      "type": "method",
+      "label": "OrdersController.resend",
+      "repo": "storefront",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "storefront",
+      "file": "src/orders/orders.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/orders/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "storefront",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/orders/orders.service.ts:OrdersService.resend",
+      "type": "method",
+      "label": "OrdersService.resend",
+      "repo": "storefront",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/pricing/pricing.service.ts:PricingService",
+      "type": "provider",
+      "label": "PricingService",
+      "repo": "storefront",
+      "file": "src/pricing/pricing.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/pricing/pricing.service.ts:PricingService.quote",
+      "type": "method",
+      "label": "PricingService.quote",
+      "repo": "storefront",
+      "file": "src/pricing/pricing.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:payments:http:POST:/charges",
+      "to": "payments#src/charges/charges.controller.ts:ChargesController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{amount:number}"
+      ],
+      "returns": "unknown",
+      "file": "src/charges/charges.controller.ts",
+      "line": 10,
+      "meta": {
+        "body": "{amount:number}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/orders",
+      "to": "storefront#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "body": "{sku:string;quantity:number}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/orders/:param/resend",
+      "to": "storefront#src/orders/orders.controller.ts:OrdersController.resend",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "payments#src/charges/charges.controller.ts:ChargesController",
+      "to": "payments#src/charges/charges.service.ts:ChargesService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/charges/charges.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "payments#src/charges/charges.controller.ts:ChargesController.create",
+      "to": "payments#src/charges/charges.service.ts:ChargesService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/charges/charges.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "storefront#src/orders/orders.controller.ts:OrdersController",
+      "to": "storefront#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "storefront#src/orders/orders.controller.ts:OrdersController.place",
+      "to": "storefront#src/orders/orders.service.ts:OrdersService.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "storefront#src/orders/orders.controller.ts:OrdersController.resend",
+      "to": "storefront#src/orders/orders.service.ts:OrdersService.resend",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "storefront#src/orders/orders.service.ts:OrdersService",
+      "to": "storefront#src/notify/notify.service.ts:NotifyService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 13
+    },
+    {
+      "from": "storefront#src/orders/orders.service.ts:OrdersService",
+      "to": "storefront#src/pricing/pricing.service.ts:PricingService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "from": "storefront#src/orders/orders.service.ts:OrdersService.place",
+      "to": "storefront#src/notify/notify.service.ts:NotifyService.confirm",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "storefront#src/orders/orders.service.ts:OrdersService.place",
+      "to": "storefront#src/pricing/pricing.service.ts:PricingService.quote",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "number",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "from": "storefront#src/orders/orders.service.ts:OrdersService.resend",
+      "to": "storefront#src/notify/notify.service.ts:NotifyService.confirm",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.service.ts",
+      "line": 24
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/charges/charges.controller.ts",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "LedgerEntry",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@shopkit/ledger"
+      },
+      "service": "payments"
+    },
+    {
+      "file": "src/charges/charges.service.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "LedgerEntry",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@shopkit/ledger"
+      },
+      "service": "payments"
+    },
+    {
+      "file": "src/charges/charges.service.ts",
+      "line": 9,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "ChargesService.create -> this.ledger.reserve",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "@shopkit/ledger",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/charges/charges.service.ts",
+                "line": 9,
+                "symbol": "ChargesService.create -> this.ledger.reserve"
+              },
+              {
+                "file": "src/charges/charges.service.ts",
+                "line": 10,
+                "symbol": "ChargesService.create -> this.ledger.post"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "payments"
+    },
+    {
+      "file": "src/jobs/reminder.job.ts",
+      "line": 6,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "ReminderJob.constructor[0]",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@shopkit/queue"
+      },
+      "service": "storefront"
+    },
+    {
+      "file": "src/jobs/reminder.job.ts",
+      "line": 11,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 11,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "ReminderJob.start -> registry.on",
+      "meta": {
+        "causes": [
+          {
+            "cause": "interface-type",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/jobs/reminder.job.ts",
+                "line": 11,
+                "symbol": "ReminderJob.start -> registry.on"
+              },
+              {
+                "file": "src/pricing/pricing.service.ts",
+                "line": 13,
+                "symbol": "PricingService.quote -> this.rules.apply"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "@shopkit/mailer",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/notify/notify.service.ts",
+                "line": 19,
+                "symbol": "NotifyService.confirm -> this.mail.attach"
+              },
+              {
+                "file": "src/notify/notify.service.ts",
+                "line": 20,
+                "symbol": "NotifyService.confirm -> this.mail.deliver"
+              }
+            ]
+          },
+          {
+            "cause": "any-typed",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/jobs/reminder.job.ts",
+                "line": 12,
+                "symbol": "ReminderJob.start -> this.legacy.flush"
+              }
+            ]
+          },
+          {
+            "cause": "callback-param",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/jobs/reminder.job.ts",
+                "line": 11,
+                "symbol": "ReminderJob.start -> job.ack"
+              }
+            ]
+          },
+          {
+            "cause": "dynamic-member",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/orders/orders.service.ts",
+                "line": 19,
+                "symbol": "OrdersService.place -> this.steps[sku]"
+              }
+            ]
+          },
+          {
+            "cause": "import-unresolved",
+            "package": "../legacy/templates",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/notify/notify.service.ts",
+                "line": 17,
+                "symbol": "NotifyService.confirm -> this.templates.render"
+              }
+            ]
+          },
+          {
+            "cause": "import-unresolved",
+            "package": "@storefront/audit",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/notify/notify.service.ts",
+                "line": 18,
+                "symbol": "NotifyService.confirm -> this.audit.record"
+              }
+            ]
+          },
+          {
+            "cause": "re-export-missing",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/pricing/pricing.service.ts",
+                "line": 14,
+                "symbol": "PricingService.quote -> this.tax.add"
+              }
+            ]
+          },
+          {
+            "cause": "untyped-parameter",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/jobs/reminder.job.ts",
+                "line": 16,
+                "symbol": "ReminderJob.handle -> payload.complete"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "storefront"
+    },
+    {
+      "file": "src/notify/notify.service.ts",
+      "line": 16,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Receipt",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@shopkit/mailer"
+      },
+      "service": "storefront"
+    },
+    {
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Receipt",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@shopkit/mailer"
+      },
+      "service": "storefront"
+    },
+    {
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Receipt",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@shopkit/mailer"
+      },
+      "service": "storefront"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Receipt",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@shopkit/mailer"
+      },
+      "service": "storefront"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Receipt",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@shopkit/mailer"
+      },
+      "service": "storefront"
+    }
+  ]
+}

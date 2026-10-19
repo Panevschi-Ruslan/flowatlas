@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:42.053Z",
+  "builtAt": "2026-10-17T06:05:18.506Z",
   "services": [
     {
       "name": "catalogue",
@@ -273,7 +273,8 @@
         "path": "/holds/requests",
         "baseUrlEnv": "LIBRARY_API_URL",
         "responseType": null,
-        "bodyType": null,
+        "bodyType": "string",
+        "bodyFrom": "value",
         "targetService": "catalogue"
       }
     },
@@ -448,6 +449,9 @@
       "confidence": "static",
       "file": "src/kiosk/request-hold.ts",
       "line": 5,
+      "params": [
+        "string"
+      ],
       "meta": {
         "via": "baseUrlEnv",
         "targetService": "catalogue"

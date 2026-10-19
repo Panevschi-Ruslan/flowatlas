@@ -6,10 +6,13 @@
  * reads `doctor.json` breaks silently when a field moves. Bump the format
  * version when a field is removed or changes meaning.
  */
+import { ROW_KIND_NAMES, type RowKind } from '@flowatlas/core';
 import { contractFindingSchema } from '@flowatlas/contracts';
 import type { ContractFinding } from '@flowatlas/contracts';
+import { ruleUncheckedSchema, ruleViolationSchema, type RuleNote, type RuleUnchecked, type RuleViolation } from '@flowatlas/linker';
 import { z } from 'zod';
 import { MARKER_CODES, type MarkerIssue } from './markers.js';
+import type { MissingRepoEntry } from './missing.js';
 
 /**
  * Version of `.flowatlas/doctor.json`.
@@ -19,11 +22,16 @@ import { MARKER_CODES, type MarkerIssue } from './markers.js';
  */
 export const DOCTOR_FORMAT_VERSION = 2;
 
-/** Version of `.flowatlas/baseline.json`, which moves independently. */
-export const BASELINE_FORMAT_VERSION = 1;
+/**
+ * Version of `flowatlas.baseline.json`, which moves independently.
+ *
+ * 2 (P114) added `rules`: the keys of the rule violations accepted. A
+ * baseline of version 1 is still read, as one that accepted no violation.
+ */
+export const BASELINE_FORMAT_VERSION = 2;
 
-/** The five things `doctor` looks at. Any subset can be asked for. */
-export const SECTIONS = ['unresolved', 'markers', 'desync', 'contracts', 'baseline'] as const;
+/** The six things `doctor` looks at. Any subset can be asked for. */
+export const SECTIONS = ['unresolved', 'markers', 'desync', 'contracts', 'rules', 'baseline'] as const;
 
 export type Section = (typeof SECTIONS)[number];
 
@@ -47,12 +55,19 @@ export interface DoctorRow {
   sites: number;
   message: string;
   hint: string;
+  /**
+   * How many ways in of its service reach the place, where the row says so
+   * (P89: a loop that runs a query per item). The group is ranked by it.
+   */
+  waysIn?: number;
 }
 
 /** Every row of one reason, with the advice they share. */
 export interface ReasonGroup {
   reason: string;
   level: 'action' | 'info' | 'nothing';
+  /** What the rows are about (P81): a gap, a note, or a finding about the code. */
+  kind: RowKind;
   /** Rows in the list. */
   count: number;
   /**
@@ -138,16 +153,36 @@ export interface DoctorReport {
      */
     total: number;
     /**
-     * Rows that say something was not read: actionable and informational
-     * alike, and never the ones where there was nothing to read.
+     * Rows that say something was not read - gaps, by `countsOf` (P81):
+     * actionable and informational alike, and never the ones where there was
+     * nothing to read, nor notes or findings.
      */
     rows: number;
     /** Places those rows stand for. */
     sites: number;
+    /** Rows saying how a join or a reading was made, with nothing missed (P81). */
+    notes: number;
+    /**
+     * Rows saying something about the code itself (P81): a likely N+1, a route
+     * with no guard. An actionable one is still in `total`, so a baseline keeps
+     * its verdict.
+     */
+    findings: number;
+    /** Gap rows at `info`: places static reading cannot see. */
     info: { rows: number; sites: number };
     /** Places where nothing joins. Reported, never added to anything. */
     nothing: { rows: number; sites: number };
     excluded: { reasons: string[]; sites: number };
+    /**
+     * Gaps `accepted.json` names (P72): out of every count above, present only
+     * when there are some or the file could not be read. `problem` says why it
+     * accepted nothing (P80): every row is then counted as new.
+     */
+    accepted?: {
+      rows: number;
+      sites: number;
+      problem?: { path: string; kind: 'unparseable' | 'invalid' | 'newer-version' | 'unknown-version'; detail: string };
+    };
     byReason: ReasonGroup[];
     /** Reasons the catalogue has never heard of, each named once. */
     unknownReasons: string[];
@@ -167,6 +202,13 @@ export interface DoctorReport {
      * that.
      */
     withoutWaysIn?: Array<{ service: string; looksLike: string }>;
+    /**
+     * The repositories that are probably missing from the project (P122),
+     * likeliest first, each with the evidence for it and the directories on
+     * disk that look like it. A guess, said as one: it decides no exit code
+     * and changes no join. Absent when nothing points at one.
+     */
+    missingRepos?: MissingRepoEntry[];
   };
   markers: {
     status: SectionStatus;
@@ -190,8 +232,41 @@ export interface DoctorReport {
     unchecked: number;
     truncated?: number;
   };
+  /**
+   * The architecture rules (P114): violations nothing excused, each marked
+   * `new` when the baseline does not hold its key. `--strict` fails on a new
+   * one at `error` (a guessed one only with `rulesSettings.failOnHeuristic`)
+   * and on a rule at `error` that could not be checked.
+   */
+  rules: {
+    status: SectionStatus;
+    note: string | null;
+    /** Rules the configuration declares. */
+    configured: number;
+    errors: number;
+    warnings: number;
+    infos: number;
+    /** Violations and unchecked rules the baseline does not hold. */
+    new: number;
+    /** Of those, the ones that fail a strict run. */
+    failing: number;
+    heuristic: number;
+    excused: number;
+    violations: Array<RuleViolation & { new: boolean }>;
+    unchecked: Array<RuleUnchecked & { new: boolean }>;
+    notes: RuleNote[];
+    truncated?: number;
+  };
   baseline: BaselineDelta;
   verdict: DoctorVerdict;
+  /**
+   * What traffic said of the best guesses (P110), present only with an
+   * observed file beside the database: how many `heuristic` joins the graph
+   * has, how many of them the window went through, and how many rows
+   * explaining a guess were left out because of it. Read beside the graph,
+   * never written into it.
+   */
+  traffic?: { window: string; bestGuesses: number; confirmed: number; withdrawn: number };
 }
 
 const level = z.enum(['action', 'info', 'nothing']);
@@ -250,6 +325,8 @@ export const doctorReportSchema = z.object({
     total: z.number().int().nonnegative(),
     rows: z.number().int().nonnegative(),
     sites: z.number().int().nonnegative(),
+    notes: z.number().int().nonnegative(),
+    findings: z.number().int().nonnegative(),
     info: z.object({
       rows: z.number().int().nonnegative(),
       sites: z.number().int().nonnegative(),
@@ -262,10 +339,24 @@ export const doctorReportSchema = z.object({
       reasons: z.array(z.string()),
       sites: z.number().int().nonnegative(),
     }),
+    accepted: z
+      .object({
+        rows: z.number().int().nonnegative(),
+        sites: z.number().int().nonnegative(),
+        problem: z
+          .object({
+            path: z.string(),
+            kind: z.enum(['unparseable', 'invalid', 'newer-version', 'unknown-version']),
+            detail: z.string(),
+          })
+          .optional(),
+      })
+      .optional(),
     byReason: z.array(
       z.object({
         reason: z.string(),
         level,
+        kind: z.enum(ROW_KIND_NAMES),
         count: z.number().int().nonnegative(),
         sites: z.number().int().nonnegative(),
         known: z.boolean(),
@@ -281,6 +372,45 @@ export const doctorReportSchema = z.object({
       read: z.number().int().nonnegative(),
     }),
     withoutWaysIn: z.array(z.object({ service: z.string(), looksLike: z.string() })).optional(),
+    missingRepos: z
+      .array(
+        z.object({
+          token: z.string(),
+          score: z.number().int().positive(),
+          places: z.number().int().nonnegative(),
+          kinds: z.array(z.string()),
+          weak: z.boolean(),
+          signals: z.array(
+            z.object({
+              kind: z.string(),
+              name: z.string(),
+              says: z.string(),
+              places: z.array(
+                z.object({
+                  service: z.string().optional(),
+                  file: z.string().optional(),
+                  line: z.number().int().positive().optional(),
+                  gapId: z.string().optional(),
+                  // A place of traffic (P144): one blind-spot group of a service nobody configured.
+                  seen: z
+                    .object({
+                      kind: z.string(),
+                      places: z.number().int().nonnegative(),
+                      count: z.number().int().nonnegative(),
+                      names: z.array(z.string()),
+                      window: z.string(),
+                      // The place's service called the name by its peer.service (P146).
+                      called: z.literal(true).optional(),
+                    })
+                    .optional(),
+                }),
+              ),
+            }),
+          ),
+          candidates: z.array(z.object({ path: z.string(), name: z.string().optional(), matchedBy: z.array(z.string()) })),
+        }),
+      )
+      .optional(),
   }),
   markers: z.object({
     status,
@@ -298,6 +428,22 @@ export const doctorReportSchema = z.object({
     errorCount: z.number().int().nonnegative(),
     ignored: z.number().int().nonnegative(),
     unchecked: z.number().int().nonnegative(),
+    truncated,
+  }),
+  rules: z.object({
+    status,
+    note: z.string().nullable(),
+    configured: z.number().int().nonnegative(),
+    errors: z.number().int().nonnegative(),
+    warnings: z.number().int().nonnegative(),
+    infos: z.number().int().nonnegative(),
+    new: z.number().int().nonnegative(),
+    failing: z.number().int().nonnegative(),
+    heuristic: z.number().int().nonnegative(),
+    excused: z.number().int().nonnegative(),
+    violations: z.array(ruleViolationSchema.extend({ new: z.boolean() })),
+    unchecked: z.array(ruleUncheckedSchema.extend({ new: z.boolean() })),
+    notes: z.array(z.object({ rule: z.string(), reason: z.string(), service: z.string(), message: z.string() })),
     truncated,
   }),
   baseline: z.object({
@@ -320,6 +466,14 @@ export const doctorReportSchema = z.object({
     goneKeys: z.array(z.string()),
     truncated,
   }),
+  traffic: z
+    .object({
+      window: z.string(),
+      bestGuesses: z.number().int().nonnegative(),
+      confirmed: z.number().int().nonnegative(),
+      withdrawn: z.number().int().nonnegative(),
+    })
+    .optional(),
   verdict: z.object({
     exitCode: z.union([z.literal(0), z.literal(1), z.literal(2)]),
     reasons: z.array(z.string()),

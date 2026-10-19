@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:04.058Z",
+  "builtAt": "2026-10-17T03:00:29.658Z",
   "services": [
     {
       "name": "gateway",
@@ -669,7 +669,30 @@
         "path": "/orders",
         "rawPath": "/orders",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "gateway#src/auth/auth.guard.ts:AuthGuard",
+              "name": "AuthGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on OrdersController",
+              "file": "src/orders/orders.controller.ts",
+              "line": 8
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "gateway#src/auth/auth.guard.ts:AuthGuard",
+            "file": "src/orders/orders.controller.ts",
+            "line": 8,
+            "source": "guard"
+          }
+        ]
       }
     },
     {
@@ -1748,7 +1771,8 @@
             "@nestjs/microservices": 2,
             "@nestjs/axios": 2,
             "@nestjs/config": 4
-          }
+          },
+          "receiversExplainedByEdge": 2
         },
         "bootstrap": "src/main.ts",
         "adapters": {
@@ -2881,22 +2905,6 @@
       "reason": "di-token-unknown",
       "hint": "No module in this repository provides ORDERS_DB. Register it with { provide, useClass } or force the adapter that does.",
       "symbol": "OrdersRepository.constructor[1]",
-      "service": "orders"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 20,
-      "reason": "db-receiver-name-only",
-      "hint": "this.repository is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
-      "symbol": "this.repository.save",
-      "service": "orders"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 28,
-      "reason": "db-receiver-name-only",
-      "hint": "this.repository is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
-      "symbol": "this.repository.recent",
       "service": "orders"
     }
   ]

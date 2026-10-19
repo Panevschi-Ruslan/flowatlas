@@ -1,0 +1,12 @@
+{
+  "description": "Before renaming POST /orders",
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "type": "text",
+        "text": "# Before renaming `POST /orders`\n\n`POST /orders` answers to more than one thing.\n\nAsk the person which one they mean, then use this prompt again with its id:\n\n- `entry:gateway:http:POST:/orders` — POST /orders, entry in gateway at `src/orders/gateway.controller.ts:11`: `who_calls({symbol: \"entry:gateway:http:POST:/orders\"})`\n- `entry:orders:http:POST:/orders` — POST /orders, entry in orders at `src/orders/orders.controller.ts:23`: `who_calls({symbol: \"entry:orders:http:POST:/orders\"})`\n"
+      }
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-18T10:28:16.517Z",
+  "configHash": "a4aa242aade4",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1039,
+      "packages": {
+        "name": "@acme/gateway",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 6,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 700,
+      "packages": {
+        "name": "@acme/jobs",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1087,
+      "packages": {
+        "name": "@acme/orders",
+        "runtime": [
+          "@acme/payments-client",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 2,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 0,
+    "noConsumers": [
+      "channel:payment.requested"
+    ],
+    "noProducers": [
+      "channel:kinesis/payments"
+    ]
+  },
+  "routes": {
+    "total": 3,
+    "called": 0,
+    "uncalled": [
+      "entry:gateway:http:POST:/checkout/:param/pay",
+      "entry:gateway:http:POST:/checkout/:param/refund",
+      "entry:orders:http:POST:/orders/:param/confirm"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "src/checkout.controller.ts",
+      "line": 12,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares PAYMENTS_URL",
+      "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:gateway#src/checkout.controller.ts:12:26"
+    },
+    {
+      "service": "gateway",
+      "file": "src/checkout.controller.ts",
+      "line": 21,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares PAYMENTS_URL",
+      "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:gateway#src/checkout.controller.ts:21:26"
+    },
+    {
+      "service": "jobs",
+      "file": "infra/main.tf",
+      "line": 46,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/payments is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/payments"
+    },
+    {
+      "service": "jobs",
+      "file": "infra/main.tf",
+      "line": 68,
+      "reason": "subscription-matches-nothing",
+      "level": "info",
+      "message": "rule acme-payment-captured takes events by a pattern that no publisher in the configured services matches",
+      "hint": "A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.",
+      "symbol": "consumer:jobs#infra/main.tf:aws_cloudwatch_event_target.receipts"
+    }
+  ],
+  "totals": {
+    "nodes": 30,
+    "edges": 19,
+    "types": 3,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 4
+  }
+}

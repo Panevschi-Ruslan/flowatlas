@@ -1,0 +1,7 @@
+{
+  "id": "gap:web|src/app/orders-api.service.ts|api-path-dynamic",
+  "markdown": "# Check: api-path-dynamic\n\n`gap:web|src/app/orders-api.service.ts|api-path-dynamic` — check / info, action in web at `src/app/orders-api.service.ts`\n\nRead from the source by flowatlas, without running it. Steps are in call order; a best guess is a join it inferred, not one the code proves.\n\n## Where · 3\n\n- `src/app/orders-api.service.ts:124`: this.http.get<unknown>(this.opaque()) (An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.)\n- `src/app/orders-api.service.ts:139`: this.http.post<unknown>(this.opaque(), {}) (The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.)\n- `src/app/orders-api.service.ts:140`: this.http.get<unknown>(this.opaque()) (The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.)\n\n## How to close it\n\n- Annotate the method with `/** @flowatlas-calls METHOD /path */` to say where it goes.\n- Or, if it is right as it is, accept it: `flowatlas accept api-path-dynamic --service web --file src/app/orders-api.service.ts --note '<why this one is fine>'`.\n\n## Ask next\n\n- `search({query: \"src/app/orders-api.service.ts\", kinds: [\"gaps\"]})`\n",
+  "next": [
+    "search({query: \"src/app/orders-api.service.ts\", kinds: [\"gaps\"]})"
+  ]
+}

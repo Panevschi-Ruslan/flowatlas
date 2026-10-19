@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-members",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A lending library's members: functions run by a function URL, a user pool, IoT shelf sensors, a load balancer and a log subscription.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

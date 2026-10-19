@@ -1,0 +1,39 @@
+{
+  "entry": "entry:billing:http:POST:/invoices",
+  "traffic": {
+    "samples": 2,
+    "window": {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-16T09:00:00.000Z"
+    },
+    "against": {
+      "request": "type:billing#CreateInvoiceDto"
+    },
+    "request": [
+      {
+        "severity": "warning",
+        "kind": "optionality_mismatch",
+        "field": "amount",
+        "expected": "number",
+        "actual": "number",
+        "seenIn": 1,
+        "of": 2,
+        "message": "`amount` is required by the route's CreateInvoiceDto and missing from 1 of 2 requests"
+      },
+      {
+        "severity": "info",
+        "kind": "extra_field",
+        "field": "memo",
+        "expected": null,
+        "actual": "string",
+        "seenIn": 1,
+        "of": 2,
+        "message": "requests send `memo: string`; the route's CreateInvoiceDto declares no such field (1 of 2)"
+      }
+    ]
+  },
+  "callers": 1,
+  "next": [
+    "check_contract({from: \"http_out:gateway#src/clients/billing.client.ts:33:12\", to: \"entry:billing:http:POST:/invoices\"})"
+  ]
+}

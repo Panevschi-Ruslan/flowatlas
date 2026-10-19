@@ -9,6 +9,7 @@ import type {
   VariableDeclaration,
 } from 'ts-morph';
 import { Node, VariableDeclarationKind } from 'ts-morph';
+import { lineAndColumnAt, startLineOf } from './line-numbers.js';
 
 /**
  * A function with a name, however it was written.
@@ -40,7 +41,7 @@ export const namedFunction = (declaration: TsNode): NamedFunction | undefined =>
     // An overload signature has a name and no body; the implementation below it
     // is the one that runs.
     if (name === undefined || body === undefined) return undefined;
-    return { name, declaration, body, line: declaration.getStartLineNumber() };
+    return { name, declaration, body, line: startLineOf(declaration) };
   }
   if (!Node.isVariableDeclaration(declaration)) return undefined;
   const initializer = declaration.getInitializer();
@@ -52,7 +53,7 @@ export const namedFunction = (declaration: TsNode): NamedFunction | undefined =>
     name: declaration.getName(),
     declaration,
     body: initializer.getBody(),
-    line: declaration.getStartLineNumber(),
+    line: startLineOf(declaration),
   };
 };
 
@@ -86,7 +87,7 @@ export const inlineFunction = (
   fn: ArrowFunction | FunctionExpression,
   label: string,
 ): NamedFunction => {
-  const line = fn.getStartLineNumber();
+  const line = startLineOf(fn);
   return { name: `${label}@${line}`, declaration: fn, body: fn.getBody(), line };
 };
 
@@ -147,7 +148,7 @@ export const functionAt = (
   let found: ArrowFunction | FunctionExpression | undefined;
   sourceFile.forEachDescendant((node) => {
     if (!Node.isArrowFunction(node) && !Node.isFunctionExpression(node)) return;
-    const at = sourceFile.getLineAndColumnAtPos(node.getStart());
+    const at = lineAndColumnAt(sourceFile, node.getStart());
     if (at.line === line && at.column === column) found = node;
   });
   return found;
@@ -171,7 +172,7 @@ export const memberFunction = (receiver: TsNode, member: string): NamedFunction 
   if (initializer === undefined || !Node.isObjectLiteralExpression(initializer)) return undefined;
   const property = initializer.getProperty(member);
   const name = `${declaration.getName()}.${member}`;
-  const line = property?.getStartLineNumber() ?? declaration.getStartLineNumber();
+  const line = startLineOf(property ?? declaration);
   if (property !== undefined && Node.isMethodDeclaration(property)) {
     const body = property.getBody();
     return body === undefined ? undefined : { name, declaration: property, body, line };

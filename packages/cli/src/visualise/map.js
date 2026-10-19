@@ -10,6 +10,11 @@
  *   mapLayout     where each unit goes: a column per role, left to right in
  *                 the order a request travels, ordered within a column so the
  *                 links cross as little as a few sweeps can make them
+ *   mapCallOrder  the same by call depth: a column per step from the front
+ *                 ends, queues between, stores and outside hosts under
+ *                 the app that uses them
+ *   mapTouching   what hovering a unit keeps lit
+ *   mapTopTargets a service's busiest tables and channels
  *   mapCycles     the units that reach each other, and the links inside them
  *   mapMarks      a number per unit for what is being checked
  *   serviceInside a service's ways in and its busiest classes
@@ -414,7 +419,8 @@ export const serviceInside = (data, repo, limits = { ways: 60, classes: 12 }) =>
   data.nodes.forEach((node, i) => {
     if (node[2] !== at) return;
     const type = types[node[0]];
-    if (type === 'entry') ways.push(i);
+    // A front end's screen actions are its ways in, as on the Ways in list (P101).
+    if (type === 'entry' || type === 'ui_action') ways.push(i);
     if (type === 'method' || type === 'function') {
       const label = String(node[1]);
       const dot = label.indexOf('.');
@@ -434,6 +440,292 @@ export const serviceInside = (data, repo, limits = { ways: 60, classes: 12 }) =>
   return { ways: ways.slice(0, limits.ways), waysLeft: Math.max(0, ways.length - limits.ways), classes };
 };
 
+/** What hangs under the app that uses it, rather than taking a column of its own. */
+const HANGING = new Set(['data', 'external']);
+
+/** How many stores and outside hosts one app shows under it before `+n more`. */
+export const MAP_HANG = Object.freeze({ under: 3, indent: 18, more: 18 });
+
+const kindOfUnit = (map, unit) => MAP_BOX_KINDS[map.boxes[unit.members[0]].k];
+
+/**
+ * The step a unit sits at, counted in half steps from the front ends: an app
+ * on an even step, a queue or topic on the odd one between the app that
+ * publishes to it and the app that consumes it. Shortest from any start, a
+ * start being a front end or anything nothing else calls; a cycle that
+ * nothing outside it reaches starts at its first unit by name.
+ */
+const callSlots = (map, view, flow) => {
+  const ids = [...flow].sort(byName);
+  const into = new Map(ids.map((id) => [id, []]));
+  const outOf = new Map(ids.map((id) => [id, []]));
+  for (const link of view.links) {
+    if (link.kind === 'package' || !flow.has(link.from) || !flow.has(link.to) || link.from === link.to) continue;
+    outOf.get(link.from).push(link.to);
+    into.get(link.to).push(link.from);
+  }
+  const isChannel = (id) => kindOfUnit(map, view.units.get(id)) === 'channel';
+  const after = (slot, id) => {
+    const even = slot % 2 === 0;
+    if (isChannel(id)) return slot + (even ? 1 : 2);
+    return slot + (even ? 2 : 1);
+  };
+  const slot = new Map();
+  const queue = [];
+  const begin = (id) => {
+    slot.set(id, isChannel(id) ? 1 : 0);
+    queue.push(id);
+  };
+  const drain = () => {
+    while (queue.length > 0) {
+      const id = queue.shift();
+      for (const next of outOf.get(id)) {
+        const at = after(slot.get(id), next);
+        if (slot.has(next) && slot.get(next) <= at) continue;
+        slot.set(next, at);
+        queue.push(next);
+      }
+    }
+  };
+  ids.filter((id) => MAP_COLUMNS[view.units.get(id).column] === 'front' || into.get(id).length === 0).forEach(begin);
+  drain();
+  for (const id of ids) {
+    if (slot.has(id)) continue;
+    begin(id);
+    drain();
+  }
+  return slot;
+};
+
+/**
+ * Where a hanging unit goes: under the app that reaches it, the one nearest
+ * the start and then first by name, so an outside host many apps call is one
+ * box under the first of them and the others' links run to it.
+ */
+const ownersOf = (view, hanging, slot) => {
+  const owner = new Map();
+  const weight = new Map();
+  for (const link of view.links) {
+    if (!hanging.has(link.to) || !slot.has(link.from)) continue;
+    weight.set(link.to, (weight.get(link.to) || 0) + link.count);
+    const had = owner.get(link.to);
+    const nearer = had === undefined || slot.get(link.from) < slot.get(had) ||
+      (slot.get(link.from) === slot.get(had) && byName(link.from, had) < 0);
+    if (nearer) owner.set(link.to, link.from);
+  }
+  return { owner, weight };
+};
+
+const SLOT_SAYS = (slot) => (slot < 0 ? 'packages' : slot % 2 === 1 ? 'queues and topics'
+  : 'step ' + (slot / 2 + 1));
+
+/**
+ * The map in call order: one column per step from the front ends, left to
+ * right, queues and topics in the columns between, and the stores and outside
+ * hosts an app uses hanging under it - at most `hang` of them, the busiest,
+ * with a `+n more` line for the rest. Packages, when drawn, are the last
+ * column. Within a column a unit sits by where what reaches it sits, so a
+ * chain reads straight across; the same view gives the same picture.
+ *
+ * Gives what `mapLayout` gives, with each column's `label`, and `more`
+ * (`{ owner, n, x, y, w, h }` per app with units not drawn) and `hidden`, the
+ * units not drawn.
+ */
+export const mapCallOrder = (map, view, hang = MAP_HANG.under) => {
+  const { w, h, gap, column: colGap } = MAP_BOX;
+  const hanging = new Set();
+  const packages = [];
+  const flow = new Set();
+  for (const [id, unit] of view.units) {
+    const kind = kindOfUnit(map, unit);
+    if (kind === 'package') packages.push(id);
+    else if (HANGING.has(kind)) hanging.add(id);
+    else flow.add(id);
+  }
+  const slot = callSlots(map, view, flow);
+  const { owner, weight } = ownersOf(view, hanging, slot);
+  // A store or host nothing drawn reaches is a start of its own.
+  for (const id of [...hanging]) {
+    if (owner.has(id)) continue;
+    hanging.delete(id);
+    flow.add(id);
+    slot.set(id, 0);
+  }
+  const under = new Map();
+  for (const [id, by] of owner) under.set(by, [...(under.get(by) || []), id]);
+  const hidden = new Set();
+  const moreOf = new Map();
+  for (const [by, list] of under) {
+    list.sort((a, b) => (weight.get(b) || 0) - (weight.get(a) || 0) || byName(a, b));
+    for (const id of list.slice(hang)) hidden.add(id);
+    if (list.length > hang) moreOf.set(by, list.length - hang);
+    under.set(by, list.slice(0, hang));
+  }
+
+  const slots = [...new Set(slot.values())].sort((a, b) => a - b);
+  const columns = slots.map((s) => ({ slot: s, ids: [...flow].filter((id) => slot.get(id) === s).sort(byName) }));
+  if (packages.length > 0) columns.push({ slot: -1, ids: packages.sort(byName) });
+
+  const reachers = new Map();
+  for (const link of view.links) {
+    if (flow.has(link.to)) reachers.set(link.to, [...(reachers.get(link.to) || []), link.from]);
+  }
+  const placed = new Map();
+  const more = [];
+  const centreOf = (id) => {
+    const at = placed.get(id);
+    return at ? at.y + at.h / 2 : null;
+  };
+  let tallest = 0;
+  columns.forEach((column, c) => {
+    const x = c * (w + colGap);
+    const score = new Map(column.ids.map((id) => {
+      const ys = (reachers.get(id) || []).map(centreOf).filter((y) => y !== null);
+      return [id, ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : Infinity];
+    }));
+    column.ids.sort((a, b) => {
+      const sa = score.get(a), sb = score.get(b);
+      return sa === sb ? byName(a, b) : sa - sb;
+    });
+    let y = 0;
+    for (const id of column.ids) {
+      placed.set(id, { x, y, w, h });
+      y += h + gap;
+      for (const hung of under.get(id) || []) {
+        placed.set(hung, { x: x + MAP_HANG.indent, y, w: w - MAP_HANG.indent, h, under: id });
+        y += h + gap;
+      }
+      if (moreOf.has(id)) {
+        more.push({ owner: id, n: moreOf.get(id), x: x + MAP_HANG.indent, y, w: w - MAP_HANG.indent, h: MAP_HANG.more });
+        y += MAP_HANG.more + gap;
+      }
+      y += gap;
+    }
+    tallest = Math.max(tallest, y - 2 * gap);
+  });
+  return {
+    placed,
+    frames: [],
+    columns: columns.map((column, c) => ({
+      name: column.slot < 0 ? 'package' : 'calls', label: SLOT_SAYS(column.slot), x: c * (w + colGap),
+    })),
+    width: columns.length === 0 ? 0 : columns.length * (w + colGap) - colGap,
+    height: Math.max(0, tallest),
+    more,
+    hidden,
+  };
+};
+
+/** A unit and everything one drawn link from it: what hovering it keeps lit. */
+export const mapTouching = (view, id) => {
+  const out = new Set([id]);
+  for (const link of view.links) {
+    if (link.from === id) out.add(link.to);
+    if (link.to === id) out.add(link.from);
+  }
+  return out;
+};
+
+const TARGET_EDGES = Object.freeze({ queries: 'tables', caches: 'tables', emits: 'channels' });
+
+/**
+ * The tables and channels a service touches most, by edges: what its queries
+ * reach, what it publishes to and what it consumes from. Bounded.
+ */
+export const mapTopTargets = (data, repo, limit = 6) => {
+  const { repos, edgeTypes } = data.dicts;
+  const at = repos.indexOf(repo);
+  if (at < 0) return { tables: [], channels: [] };
+  const counts = { tables: new Map(), channels: new Map() };
+  for (const edge of data.edges) {
+    const type = edgeTypes[edge[2]];
+    const into = TARGET_EDGES[type];
+    if (into && data.nodes[edge[0]][2] === at) counts[into].set(edge[1], (counts[into].get(edge[1]) || 0) + 1);
+    if (type === 'consumes' && data.nodes[edge[1]][2] === at) {
+      counts.channels.set(edge[0], (counts.channels.get(edge[0]) || 0) + 1);
+    }
+  }
+  const top = (found) => [...found]
+    .sort((a, b) => b[1] - a[1] || byName(data.nodes[a[0]][1], data.nodes[b[0]][1]))
+    .slice(0, limit)
+    .map(([node, n]) => ({ node, n }));
+  return { tables: top(counts.tables), channels: top(counts.channels) };
+};
+
+/**
+ * How many times the edges behind a drawn link were seen at run time, from
+ * `seen.join` (steps.js): what draws a link thicker.
+ */
+export const mapSeenCount = (map, link, seenJoin) => {
+  let n = 0;
+  for (const i of link.links) {
+    for (const e of map.links[i].e || []) {
+      const join = seenJoin(e);
+      if (join) n += join.count;
+    }
+  }
+  return n;
+};
+
+/** What the Map can colour its links by (P111): how much traffic went through, or how slow the slowest edge was. */
+export const MAP_HEATS = Object.freeze(['traffic', 'p95']);
+
+/**
+ * How hot a drawn link is (P111), from `seen` (steps.js `createSeen`), by
+ * `traffic` - the requests through the edges behind it - or by `p95` - the
+ * largest p95 of those edges, since a link stands for several and the worst
+ * one is what a reader acts on (D2). `{ value, count }`, with `count` the
+ * requests either way; null when no edge behind it was seen, or, by p95,
+ * none measured a time.
+ */
+export const mapHeat = (map, link, seen, by) => {
+  let count = 0, worst = -1;
+  for (const i of link.links) {
+    for (const e of map.links[i].e || []) {
+      const join = seen.join(e);
+      if (!join) continue;
+      count += join.count;
+      const figures = seen.stats(e);
+      if (figures && figures.p95 !== undefined) worst = Math.max(worst, figures.p95);
+    }
+  }
+  if (count === 0) return null;
+  if (by === 'p95') return worst < 0 ? null : { value: worst, count };
+  return { value: count, count };
+};
+
+/** Steps of the heat ramp, coolest first: as many as the page has `--heat-<n>` tokens. */
+export const MAP_HEAT_STEPS = 5;
+
+/**
+ * Which step of the ramp a heat is, from 0 to `MAP_HEAT_STEPS - 1`, against
+ * the hottest link drawn: on a log scale, since traffic and time both run
+ * over orders of magnitude and a linear ramp would paint all but one link
+ * cold. Everything at the hottest is the last step.
+ */
+export const mapHeatStep = (value, hottest) => {
+  if (!(hottest > 0) || !(value > 0)) return 0;
+  const share = Math.log1p(value) / Math.log1p(hottest);
+  return Math.max(0, Math.min(MAP_HEAT_STEPS - 1, Math.ceil(share * MAP_HEAT_STEPS) - 1));
+};
+
+/**
+ * Whether every best guess behind a drawn link was seen at run time (P110),
+ * from `seen.confirmed` (steps.js): such a link is drawn solid with its seen
+ * mark rather than dashed. A link with no best guess behind it is not one.
+ */
+export const mapGuessesConfirmed = (map, link, isGuess, confirmed) => {
+  let guesses = 0;
+  for (const i of link.links) {
+    for (const e of map.links[i].e || []) {
+      if (!isGuess(e)) continue;
+      guesses += 1;
+      if (!confirmed(e)) return false;
+    }
+  }
+  return guesses > 0;
+};
+
 const encode = (value) => encodeURIComponent(value).replace(/%3A/gi, ':');
 const listOf = (text) => (text ? text.split(',').map((item) => {
   try { return decodeURIComponent(item); } catch { return null; }
@@ -444,7 +736,7 @@ const oneOf = (text) => {
 };
 
 /**
- * `#map[/s=<unit>&l=<link>&f=<unit>&t=<cluster>,…&h=<kind>,…&m=<mark>&p=1&d=1]`, or null
+ * `#map[/s=<unit>&l=<link>&f=<unit>&t=<cluster>,…&h=<kind>,…&m=<mark>&p=1&d=1&o=role&x=<heat>]`, or null
  * for any other address. Units and clusters are named, never numbered, so a
  * link lasts across builds; a name this page does not hold is the page's to
  * say, not this function's. An unknown mark or kind is dropped.
@@ -467,6 +759,8 @@ export const parseMapHash = (hash) => {
     mark: MAP_MARKS.includes(mark) ? mark : null,
     packages: params.get('p') === '1',
     dev: params.get('d') === '1',
+    layout: params.get('o') === 'role' ? 'role' : 'calls',
+    heat: MAP_HEATS.includes(params.get('x')) ? params.get('x') : null,
   };
 };
 
@@ -483,5 +777,7 @@ export const formatMapHash = (state) => {
   if (state.mark) parts.push('m=' + state.mark);
   if (state.packages) parts.push('p=1');
   if (state.packages && state.dev) parts.push('d=1');
+  if (state.layout === 'role') parts.push('o=role');
+  if (MAP_HEATS.includes(state.heat)) parts.push('x=' + state.heat);
   return parts.length === 0 ? '#map' : '#map/' + parts.join('&');
 };

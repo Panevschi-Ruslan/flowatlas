@@ -3,6 +3,7 @@ import type {
   ParameterDeclaration,
   PropertyDeclaration,
 } from 'ts-morph';
+import type { FollowCause } from '../follow-cause.js';
 import type { UnresolvedLevel } from '../model/graph.js';
 
 /** How a provider token is satisfied, when the injection goes through one. */
@@ -43,6 +44,8 @@ export interface DiUnresolved {
   readonly level?: UnresolvedLevel;
   readonly hint: string;
   readonly text: string;
+  /** Why the type names no class, as the code says it (P75). */
+  readonly cause?: FollowCause;
 }
 
 export type DiResolution = DiTarget | DiUnresolved;

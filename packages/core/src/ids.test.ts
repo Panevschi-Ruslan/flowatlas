@@ -10,9 +10,13 @@ import {
   makeSymbolId,
   makeWorkflowEntryKey,
   makeTypeId,
+  isBelowDir,
+  isWithinDir,
   normalizeFilePath,
   normalizePath,
 } from './ids.js';
+import { isExternalFile } from './nodes.js';
+import { packageOfPath } from './origin.js';
 
 describe('normalizePath', () => {
   const cases: ReadonlyArray<readonly [string, string]> = [
@@ -177,5 +181,69 @@ describe('workflows and references by name', () => {
   it('rejects an empty name', () => {
     expect(() => makeWorkflowEntryKey(' ')).toThrow(InvalidIdError);
     expect(() => makeStateId('library', 'a.asl.json', 'loan-approval', '')).toThrow(InvalidIdError);
+  });
+});
+
+describe('normalizeFilePath with Windows paths (P83)', () => {
+  it('climbs out of the repository for a path on the same drive', () => {
+    expect(normalizeFilePath('C:/work/shop/packages/money/src/a.ts', 'C:/work/shop/services/orders')).toBe(
+      '../../packages/money/src/a.ts',
+    );
+    expect(normalizeFilePath('C:\\work\\shop\\packages\\money\\src\\a.ts', 'C:\\work\\shop\\services\\orders')).toBe(
+      '../../packages/money/src/a.ts',
+    );
+  });
+
+  it('strips the repository from a path inside it, either spelling', () => {
+    expect(normalizeFilePath('C:/work/shop/services/orders/src/a.ts', 'C:\\work\\shop\\services\\orders\\')).toBe('src/a.ts');
+    expect(normalizeFilePath('C:/work/a.ts', 'C:/')).toBe('work/a.ts');
+  });
+
+  it('ignores the case of the drive letter', () => {
+    expect(normalizeFilePath('c:/work/shop/services/orders/src/a.ts', 'C:/work/shop/services/orders')).toBe('src/a.ts');
+    expect(normalizeFilePath('C:/work/shop/packages/money/a.ts', 'c:/work/shop/services/orders')).toBe(
+      '../../packages/money/a.ts',
+    );
+  });
+
+  it('leaves a path on another drive absolute, since no relative path leads there', () => {
+    expect(normalizeFilePath('D:/cache/money/a.ts', 'C:/work/shop/services/orders')).toBe('D:/cache/money/a.ts');
+    expect(normalizeFilePath('D:/cache/money/a.ts', '/work/shop/services/orders')).toBe('D:/cache/money/a.ts');
+    expect(normalizeFilePath('/work/shop/a.ts', 'C:/work/shop/services/orders')).toBe('/work/shop/a.ts');
+  });
+});
+
+describe('a path inside a directory, spelled either way (P199)', () => {
+  // The compiler names a file `C:/work/...` on Windows; `path.join` names its
+  // directory `C:\work\...`. Each pair below is one place spelled two ways.
+  it('is inside its directory whichever separator either side uses', () => {
+    expect(isWithinDir('C:/work/shop/packages/lib/src/a.ts', 'C:\\work\\shop\\packages\\lib')).toBe(true);
+    expect(isWithinDir('C:\\work\\shop\\packages\\lib\\src\\a.ts', 'C:/work/shop/packages/lib/')).toBe(true);
+    expect(isBelowDir('c:/work/shop/packages/lib/src/a.ts', 'C:\\work\\shop\\packages\\lib')).toBe(true);
+    expect(isBelowDir('/work/shop/packages/lib/src/a.ts', '/work/shop/packages/lib')).toBe(true);
+  });
+
+  it('tells the directory itself from what is below it', () => {
+    expect(isWithinDir('C:\\work\\shop', 'C:/work/shop')).toBe(true);
+    expect(isBelowDir('C:\\work\\shop', 'C:/work/shop/')).toBe(false);
+    expect(isBelowDir('/work/shop', '/work/shop')).toBe(false);
+  });
+
+  it('is not inside a directory it only begins like, or one on another drive', () => {
+    expect(isWithinDir('C:\\work\\shop-extra\\a.ts', 'C:/work/shop')).toBe(false);
+    expect(isWithinDir('D:/work/shop/a.ts', 'C:\\work\\shop')).toBe(false);
+    expect(isBelowDir('/work/shop-extra/a.ts', '/work/shop')).toBe(false);
+  });
+
+  it('is inside the root of a drive or of the file system', () => {
+    expect(isBelowDir('C:\\work\\a.ts', 'C:\\')).toBe(true);
+    expect(isBelowDir('/work/a.ts', '/')).toBe(true);
+  });
+
+  it('finds the package of a file under node_modules, either spelling', () => {
+    expect(packageOfPath('C:\\work\\shop\\node_modules\\@acme\\money\\index.d.ts')).toBe('@acme/money');
+    expect(packageOfPath('C:/work/shop/node_modules/left-pad/index.d.ts')).toBe('left-pad');
+    expect(isExternalFile('C:\\work\\shop\\node_modules\\left-pad\\index.d.ts')).toBe(true);
+    expect(isExternalFile('C:\\work\\shop\\src\\main.ts')).toBe(false);
   });
 });

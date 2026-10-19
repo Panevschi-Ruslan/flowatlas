@@ -1,0 +1,39 @@
+{
+  "resources": [
+    {
+      "name": "reasons",
+      "title": "Why a step was not followed",
+      "uri": "flowatlas://reasons",
+      "description": "Every reason a row of the reading can give, with its kind (gap, note, finding), its cause and what to do about it.",
+      "mimeType": "application/json"
+    },
+    {
+      "name": "services",
+      "title": "Services",
+      "uri": "flowatlas://services",
+      "description": "The services the graph holds, each with the resource that reads it.",
+      "mimeType": "application/json"
+    },
+    {
+      "name": "service billing",
+      "title": "One service",
+      "uri": "flowatlas://services/billing",
+      "description": "One service's summary: counts, gaps and findings, its crossings to and from the others, its top findings.",
+      "mimeType": "application/json"
+    },
+    {
+      "name": "service gateway",
+      "title": "One service",
+      "uri": "flowatlas://services/gateway",
+      "description": "One service's summary: counts, gaps and findings, its crossings to and from the others, its top findings.",
+      "mimeType": "application/json"
+    },
+    {
+      "name": "service orders",
+      "title": "One service",
+      "uri": "flowatlas://services/orders",
+      "description": "One service's summary: counts, gaps and findings, its crossings to and from the others, its top findings.",
+      "mimeType": "application/json"
+    }
+  ]
+}

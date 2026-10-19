@@ -281,7 +281,26 @@
       "declaredIn": "@fx/contracts",
       "structuralHash": "3961cde6eaf5d2f0",
       "fields": []
+    },
+    {
+      "id": "type:billing#OrderView",
+      "name": "OrderView",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/invoice.dto.ts",
+      "structuralHash": "9b6c96ba536215ea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ]
     }
   ],
-  "total": 14
+  "total": 15
 }

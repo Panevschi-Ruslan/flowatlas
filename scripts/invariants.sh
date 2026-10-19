@@ -88,6 +88,9 @@ I2_PRUNED='.git .claude .idea dist node_modules .coverage-cache .demo-casts .flo
 
 # Files entitled to a byte below the printable range, each with the reason:
 #   *.gif, *.png  images — the bytes are the picture
+#   *.zip         archives — the bytes are the packed entries; the ones in the
+#                 tree are what Playwright's `recordHar` writes for a `.zip`
+#                 path and its own trace, under `fixtures/multi-repo/traces/playwright` (P205)
 #   *.ansi.txt    a recording of coloured terminal output — the ESC byte is the
 #                 thing the snapshot exists to record, and one such expectation
 #                 (`fixtures/multi-repo/expected.cli/...tree.ansi.txt`) is the
@@ -99,7 +102,7 @@ I2_PRUNED='.git .claude .idea dist node_modules .coverage-cache .demo-casts .flo
 #                 repository, where `git ls-files` would make it pass by reading
 #                 nothing. So an untracked file has to be named to be skipped,
 #                 and this is the one everybody on a Mac has.
-I2_EXEMPT='*.gif *.png *.ansi.txt */.DS_Store'
+I2_EXEMPT='*.gif *.png *.zip *.ansi.txt */.DS_Store'
 
 # Every file the gate reads, built from the list above rather than from a second
 # copy of it written into a `find` expression.

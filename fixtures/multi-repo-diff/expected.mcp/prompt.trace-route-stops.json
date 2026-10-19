@@ -1,0 +1,12 @@
+{
+  "description": "Trace GET /orders/:param/shipment",
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "type": "text",
+        "text": "# Trace GET /orders/:param/shipment\n\n`entry:gateway:http:GET:/orders/:param/shipment` — entry in gateway at `src/orders/gateway.controller.ts:17`.\n\nAsk, in this order:\n\n1. `get_flow({entry: \"entry:gateway:http:GET:/orders/:param/shipment\"})` — what it reaches, crossing by crossing.\n\nThe walk crosses into no other service.\n\nThe walk passes 1 place the reading could not follow: ask `cant_follow({service: \"gateway\"})` for why.\n\nTo hand it on: `describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param/shipment\"})`.\n"
+      }
+    }
+  ]
+}

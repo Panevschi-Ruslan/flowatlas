@@ -19,7 +19,7 @@ import {
   parametersOf,
   type ClassMethod,
 } from './di/member-call.js';
-import { holeIn, UNREAD_SPAN } from './ids.js';
+import { HTTP_METHODS, holeIn, UNREAD_SPAN } from './ids.js';
 import { writtenObjectLiteral } from './origin.js';
 import {
   declarationOf,
@@ -207,6 +207,11 @@ export interface RootSettingOptions {
    * core follows values around; it does not know what a setting looks like.
    */
   readSetting: (node: TsNode) => string | null;
+  /**
+   * What a settings read written with a fallback falls back to, where the read
+   * itself carries one: `config.get('ORDERS_URL', 'http://orders:3000')` (P77).
+   */
+  settingDefault?: (node: TsNode) => string | undefined;
   budget?: number;
 }
 
@@ -231,6 +236,13 @@ export interface SettingAddress {
    * `heuristic` edge, never a `static` one.
    */
   guessed?: boolean;
+  /**
+   * What the code falls back to where the setting is not set, when it writes
+   * one for the whole value: `process.env.ORDERS_URL ?? 'http://orders:3000'`
+   * (P77). Only ever a literal; the setting is still what the address is
+   * rooted at.
+   */
+  otherwise?: string;
 }
 
 /**
@@ -246,6 +258,8 @@ export interface SettingAddress {
 interface Scope {
   /** Recognises a settings read and names the key. Supplied by the caller. */
   readSetting: (node: TsNode) => string | null;
+  /** What such a read falls back to, where it carries a fallback of its own. */
+  settingDefault?: (node: TsNode) => string | undefined;
   self: ClassNode | undefined;
   bound: ReadonlyMap<ParameterDeclaration, Bound>;
   /**
@@ -813,7 +827,10 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   const node = unwrap(value);
 
   const direct = scope.readSetting(node);
-  if (direct !== null) return { key: direct, prefix: '' };
+  if (direct !== null) {
+    const otherwise = scope.settingDefault?.(node);
+    return { key: direct, prefix: '', ...(otherwise === undefined ? {} : { otherwise }) };
+  }
 
   if (Node.isTemplateExpression(node)) {
     const [first] = node.getTemplateSpans();
@@ -895,7 +912,15 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   if (Node.isBinaryExpression(node)) {
     const operator = node.getOperatorToken().getKind();
     if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) {
-      return addressOf(node.getLeft(), scope, budget - 1) ?? addressOf(node.getRight(), scope, budget - 1);
+      const left = addressOf(node.getLeft(), scope, budget - 1);
+      if (left === null) return addressOf(node.getRight(), scope, budget - 1);
+      // `process.env.X ?? 'http://orders:3000'`: what the code falls back to
+      // for the whole value is worth keeping beside the setting (P77).
+      if (left.prefix !== '' || left.otherwise !== undefined) return left;
+      const fallback = evaluateExpression(node.getRight());
+      return fallback.resolved && typeof fallback.value === 'string' && fallback.value !== ''
+        ? { ...left, otherwise: fallback.value }
+        : left;
     }
     if (operator === SyntaxKind.PlusToken) {
       const left = addressOf(node.getLeft(), scope, budget - 1);
@@ -977,7 +1002,11 @@ export const rootSettingAddress = (
   value: TsNode,
   options: RootSettingOptions & { frames?: readonly CallFrame[] },
 ): SettingAddress | null =>
-  addressOf(value, scopeOf(value, options.readSetting, options.frames), options.budget ?? BUDGET);
+  addressOf(
+    value,
+    scopeOf(value, options.readSetting, options.frames, undefined, options.settingDefault),
+    options.budget ?? BUDGET,
+  );
 
 /**
  * One step outward from where an address is written: a call, and the method it
@@ -1023,8 +1052,12 @@ const scopeOf = (
   readSetting: Scope['readSetting'],
   frames: readonly CallFrame[] | undefined,
   choices?: ReadonlyMap<TsNode, string>,
+  settingDefault?: Scope['settingDefault'],
 ): Scope => {
-  const picked = choices === undefined ? {} : { choices };
+  const picked = {
+    ...(choices === undefined ? {} : { choices }),
+    ...(settingDefault === undefined ? {} : { settingDefault }),
+  };
   if (frames === undefined || frames.length === 0) {
     return { readSetting, self: enclosingClass(value), bound: NOTHING, ...picked };
   }
@@ -1095,9 +1128,9 @@ export const addressAt = (
  * It is also a bound on work. `callSitesOf` is `findReferencesAsNodes`, asked
  * up to four times per body argument of every POST, PUT and PATCH; a shared
  * helper with two hundred callers then had two hundred literals' types read and
- * unioned. The 0.4.0 review measured the cold build on the project this is
- * developed against at 5.5s with and without the walk, so the cap is a guard
- * against a repository shaped differently rather than a saving here (R43).
+ * unioned. The 0.4.0 review measured the cold build on a real project at the
+ * same time with and without the walk, so the cap is a guard against a
+ * repository shaped differently rather than a saving here (R43).
  *
  * Twelve, the same dozen `MOST_CHOICES` draws the line at, and for the same
  * reason: a set that size is a domain rather than an enumeration of what some
@@ -1581,6 +1614,8 @@ export interface SplitAddress {
   parameter: ParameterDeclaration;
   /** Settings key the fixed half is rooted at, when it is rooted at one. */
   baseUrlEnv: string | null;
+  /** What the code falls back to where that setting is not set, when it writes one (P77). */
+  otherwise?: string;
   /** Literal text before and after the part the caller supplies. */
   before: string;
   after: string;
@@ -1608,6 +1643,7 @@ export const splitAtParameter = (
 
   const spans = node.getTemplateSpans();
   let baseUrlEnv: string | null = null;
+  let otherwise: string | undefined;
   let text = node.getHead().getLiteralText();
   let start = 0;
 
@@ -1622,7 +1658,9 @@ export const splitAtParameter = (
   ) {
     const literal = evaluateExpression(first.getExpression());
     if (!(literal.resolved && typeof literal.value === 'string')) {
-      baseUrlEnv = rootSettingKey(first.getExpression(), options);
+      const rooted = rootSettingAddress(first.getExpression(), options);
+      baseUrlEnv = rooted?.key ?? null;
+      otherwise = rooted?.otherwise;
       text = first.getLiteral().getLiteralText();
       start = 1;
     }
@@ -1637,7 +1675,7 @@ export const splitAtParameter = (
 
     if (parameter !== undefined) {
       if (split !== undefined) return undefined;
-      split = { parameter, baseUrlEnv, before: text, after: literal };
+      split = { parameter, baseUrlEnv, ...(otherwise === undefined ? {} : { otherwise }), before: text, after: literal };
       text = '';
       continue;
     }
@@ -1653,8 +1691,17 @@ export const splitAtParameter = (
 export interface ForwardedCall {
   /** The call that supplies the value, one hop out from where it was needed. */
   site: TsNode;
-  /** What was passed there. */
+  /**
+   * What was passed there, or the parameter's default where nothing was
+   * (P91): `url(suffix = '')` called as `url()` is called with `''`.
+   */
   argument: TsNode;
+  /**
+   * Every call the value was handed through on its way out, innermost first,
+   * ending with `site` (P91). What else those calls hand on - the verb a
+   * wrapper is given beside the address - is read along the same calls.
+   */
+  hops: readonly CallExpression[];
 }
 
 /** Who supplies a parameter, and whether anybody else may. */
@@ -1694,7 +1741,10 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
   if (index < 0) return out;
 
   for (const call of callSitesOf(holder)) {
-    const argument = call.getArguments()[index];
+    // A caller that leaves the argument out hands the parameter its default,
+    // which is written in the helper and read there (P91). One that leaves
+    // out a parameter with no default hands it nothing worth following.
+    const argument = call.getArguments()[index] ?? parameter.getInitializer();
     if (argument === undefined) continue;
     if (dispatchAt(call, holder) === 'undecided') {
       out.undecided = true;
@@ -1705,15 +1755,175 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
     // If nothing calls it either, the whole chain is unused and this hop stands
     // for nobody, so it is dropped rather than recorded as a request.
     const further = parameterBehind(argument, budget);
-    if (further !== undefined) {
+    if (further !== undefined && further !== parameter) {
       const outer = forwardedFrom(further, budget - 1);
-      out.calls.push(...outer.calls);
+      out.calls.push(...outer.calls.map((each) => ({ ...each, hops: [call, ...each.hops] })));
       out.undecided ||= outer.undecided;
       continue;
     }
-    out.calls.push({ site: call, argument });
+    out.calls.push({ site: call, argument, hops: [call] });
   }
   return out;
+};
+
+/**
+ * The verb a value spells, where it spells one outright: a literal, a
+ * `const`, an enum member (`HttpVerb.Delete`), a member of an `as const`
+ * object (`VERBS.patch`). Upper-cased; `null` for anything else, including
+ * a string that is no verb at all.
+ */
+export const verbSpelledBy = (value: TsNode): string | null => {
+  const read = evaluateExpression(value);
+  if (!read.resolved || typeof read.value !== 'string') return null;
+  const verb = read.value.toUpperCase();
+  return (HTTP_METHODS as readonly string[]).includes(verb) ? verb : null;
+};
+
+/**
+ * The parameter a request's verb comes from, where it comes from one: the
+ * expression a client reads its verb from - `{ method }`, `request(method,
+ * url)` - followed to the parameter of the enclosing function it names.
+ *
+ * `{ method }` names a binding in scope rather than pointing at one, so a
+ * shorthand property is asked for the value it names.
+ */
+export const verbParameterOf = (written: TsNode | undefined): ParameterDeclaration | undefined => {
+  if (written === undefined) return undefined;
+  if (Node.isShorthandPropertyAssignment(written)) {
+    const declaration = written.getValueSymbol()?.getDeclarations()[0];
+    return declaration !== undefined && Node.isParameterDeclaration(declaration) ? declaration : undefined;
+  }
+  const value = Node.isPropertyAssignment(written) ? written.getInitializer() : written;
+  return value === undefined ? undefined : parameterBehind(value);
+};
+
+/** One caller's verb, and the calls it was handed through to reach the request. */
+export interface VerbAtCaller {
+  /** The call that decides it: the outermost one a constant is written at. */
+  site: CallExpression;
+  /** The verb, or `null` where the caller hands on something unread. */
+  verb: string | null;
+  /** Every call between the request and `site`, innermost first, ending with `site`. */
+  hops: readonly CallExpression[];
+}
+
+export interface VerbsAtCallers {
+  calls: VerbAtCaller[];
+  /** True when a call may run this function or another implementation of it (R158). */
+  undecided: boolean;
+}
+
+/** The argument a call hands a parameter, or the parameter's default where it hands nothing. */
+const handedTo = (call: CallExpression, parameter: ParameterDeclaration): TsNode | undefined =>
+  call.getArguments()[positionOf(parameter)] ?? parameter.getInitializer();
+
+/**
+ * Every verb a request whose verb is a parameter is sent with, one per caller
+ * (P91).
+ *
+ * A client that takes the verb as an argument - `this.req('PATCH', path,
+ * body)` into `fetch(base + path, { method })` - writes one request for every
+ * verb it will ever send, so the verb is only real at the call sites, exactly
+ * as an address forwarded through a wrapper is. The same walk the address
+ * takes (`callSitesOf`), out through further wrappers that hand the verb on as
+ * one of their own parameters, to the call that writes it as a constant. A
+ * caller handing on something nothing can read is kept, with `verb: null`:
+ * the request is still made there, and its verb is the row.
+ */
+export const verbsAtCallers = (parameter: ParameterDeclaration, budget = 4): VerbsAtCallers => {
+  const out: VerbsAtCallers = { calls: [], undecided: false };
+  if (budget <= 0) return out;
+  const holder = forwarderOf(parameter);
+  if (holder === undefined || positionOf(parameter) < 0) return out;
+  for (const call of callSitesOf(holder)) {
+    if (dispatchAt(call, holder) === 'undecided') {
+      out.undecided = true;
+      continue;
+    }
+    const argument = handedTo(call, parameter);
+    const verb = argument === undefined ? null : verbSpelledBy(argument);
+    const further = argument === undefined || verb !== null ? undefined : parameterBehind(argument);
+    if (further !== undefined && further !== parameter && budget > 1) {
+      const outer = verbsAtCallers(further, budget - 1);
+      out.calls.push(...outer.calls.map((each) => ({ ...each, hops: [call, ...each.hops] })));
+      out.undecided ||= outer.undecided;
+      continue;
+    }
+    out.calls.push({ site: call, verb, hops: [call] });
+  }
+  return out;
+};
+
+/** The name a call is made by: `this.req(…)` and `req(…)` are both `req`. */
+const calledName = (call: CallExpression): string => {
+  const callee = unwrap(call.getExpression());
+  return Node.isPropertyAccessExpression(callee) ? callee.getName() : callee.getText();
+};
+
+/** The name callers call a forwarder by. */
+const nameOf = (holder: Forwarder): string | undefined =>
+  Node.isMethodDeclaration(holder) || Node.isFunctionDeclaration(holder) || Node.isPropertyDeclaration(holder) || Node.isVariableDeclaration(holder)
+    ? holder.getName()
+    : undefined;
+
+/**
+ * The value a parameter is handed by one caller, read along the calls a
+ * request was already followed out through (P128): the general form of
+ * {@link verbAlong}, for whatever else a wrapper is handed beside the address -
+ * its body, `req(method, path, body)`.
+ *
+ * Walked outward, innermost first. A call on the way that does not call the
+ * function holding the parameter is passed over (the address may go through a
+ * wrapper that settled this value before). Where the argument a call hands is
+ * itself a parameter of a function further out, the walk goes on; the answer
+ * is the argument at the outermost call it reached, which may still be a
+ * parameter of the function the request is credited to (`issue(invoice)` into
+ * `this.req('POST', '/invoices', invoice)` hands `invoice`). `undefined` when
+ * no call on the way calls the holder, `null` where one hands on nothing
+ * worth following - an argument left out with no default, a parameter of a
+ * function nothing can be followed out of, or a loop.
+ */
+export const argumentAlong = (
+  parameter: ParameterDeclaration,
+  hops: readonly CallExpression[],
+): TsNode | null | undefined => {
+  let current = parameter;
+  let handed: TsNode | undefined;
+  for (const hop of hops) {
+    const holder = forwarderOf(current);
+    if (holder === undefined) return null;
+    if (calledName(hop) !== nameOf(holder)) continue;
+    const argument = handedTo(hop, current);
+    if (argument === undefined) return null;
+    handed = argument;
+    const further = parameterBehind(argument);
+    if (further === undefined) return argument;
+    if (further === current) return null;
+    current = further;
+  }
+  return handed;
+};
+
+/**
+ * The verb a request whose verb is a parameter is sent with by one caller,
+ * read along the calls the request's address was already followed through
+ * (P91). The twin of {@link verbsAtCallers} for a reader that has those calls
+ * in hand: the address and the verb are decided by the same caller, and
+ * reading them along the same calls is what keeps them from belonging to two.
+ *
+ * {@link argumentAlong} with the verb read out of what was handed.
+ * `undefined` when the calls run out with the verb still a parameter, `null`
+ * where a call hands on something nothing can read.
+ */
+export const verbAlong = (
+  parameter: ParameterDeclaration,
+  hops: readonly CallExpression[],
+): string | null | undefined => {
+  const handed = argumentAlong(parameter, hops);
+  if (handed === undefined || handed === null) return handed;
+  const verb = verbSpelledBy(handed);
+  if (verb !== null) return verb;
+  return parameterBehind(handed) === undefined ? null : undefined;
 };
 
 /**
@@ -1741,7 +1951,7 @@ export interface Forwarding<R> {
  * what a call starts - is drawn.
  *
  * Following a value out to a caller says who decided it, and must never cost
- * what the helper states: `sendViaTelegram(token, job)` with a token nobody can
+ * what the helper states: `sendViaWebhook(token, job)` with a token nobody can
  * read made a static request in the helper a heuristic one at the caller, and
  * took the helper's node and the caller's call into it with it. So a caller is
  * drawn on only where its reading is at least as sure as the helper's own; the

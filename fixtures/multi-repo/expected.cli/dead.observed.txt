@@ -1,0 +1,18 @@
+nothing here is proof: every row is a heuristic with the reason it fired
+entry kinds never reported (triggered from outside): cron, bot_command, bot_callback, bot_event, scene_step, invoke
+traffic over 2h: seen is alive whatever the code says; never seen is strong only beside a busy neighbour
+
+entries:
+  id                                             where                                         verdict      seen                  why
+  entry:billing:event:invoice.requested          src/invoices/invoices.consumer.ts:28          dead         never in 2h (weak)    channel:invoice.requested has no publisher in any repo
+  entry:gateway:http:POST:/orders/charge         src/orders/orders.controller.ts:50            dead         never in 2h (strong)  no http_calls/hits from any repo (may be a public API)
+  entry:gateway:http:POST:/orders/pay            src/orders/orders.controller.ts:45            dead         never in 2h (strong)  no http_calls/hits from any repo (may be a public API)
+  entry:orders:http:GET:/a/:param                src/aliases/current-aliases.controller.ts:11  dead         never in 2h (weak)    no http_calls/hits from any repo (may be a public API)
+  entry:gateway:http:POST:/orders/:param/cancel  src/orders/orders.controller.ts:35            likely-dead  never in 2h (strong)  no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it; never seen in 2h while 1 of its 7 neighbours was, the busiest 22 times
+  entry:orders:http:GET:/orders/latest           src/orders/orders.controller.ts:19            likely-dead  never in 2h (weak)    no http_calls/hits from any repo (may be a public API); a request whose address was read in part could reach it
+  entry:billing:http:GET:/invoices/:param        src/invoices/invoices.controller.ts:26        alive        seen ×3               no http_calls/hits from any repo (may be a public API); seen 3 times in 2h at run time, so something static reach does not see calls it (a blind spot)
+  entry:orders:http:POST:/orders                 src/orders/orders.controller.ts:31            alive        seen ×1               no http_calls/hits from any repo (may be a public API); seen 1 time in 2h at run time, so something static reach does not see calls it (a blind spot)
+  entry:orders:http:POST:/orders/:param/archive  src/orders/orders.controller.ts:42            unknown      never in 2h (weak)    no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it
+  POST:/orders/:param/cancel is one segment off POST /orders/:param/hold at src/app/orders-api.service.ts:106 (hold for cancel)
+  GET:/orders/latest could be reached by /orders/${…}${…} at src/clients/orders.client.ts:59
+  POST:/orders/:param/archive is one segment off POST /orders/:param/cancel at src/clients/orders.client.ts:44 (cancel for archive)

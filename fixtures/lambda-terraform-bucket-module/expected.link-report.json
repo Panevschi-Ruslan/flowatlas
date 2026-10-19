@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T23:28:11.331Z",
+  "configHash": "50bbc0bbbec5",
+  "services": [
+    {
+      "name": "scans",
+      "repo": "./scans",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 37,
+      "edges": 36,
+      "types": 7,
+      "unresolved": 0,
+      "durationMs": 501,
+      "packages": {
+        "name": "lending-library-scans",
+        "runtime": [
+          "@aws-sdk/client-s3",
+          "aws-sdk"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 5,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "scans",
+      "file": "src/pages/purge-version.ts",
+      "line": 12,
+      "reason": "s3-write-matches-nothing",
+      "level": "info",
+      "message": "the call at src/pages/purge-version.ts:12 is s3:ObjectRemoved:Delete on s3/library-page-scans, and none of its 3 notification(s) takes it",
+      "hint": "Each notification takes some events and, where it filters, keys with a given start and end. Nothing to fix if the write is meant to notify nobody.",
+      "symbol": "producer:scans#src/pages/purge-version.ts:12:9",
+      "meta": {
+        "notifications": [
+          "notification catalogue-import",
+          "notification index-page",
+          "notification withdrawn"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 37,
+    "edges": 36,
+    "types": 7,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 0
+  }
+}

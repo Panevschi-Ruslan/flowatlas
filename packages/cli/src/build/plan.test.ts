@@ -360,3 +360,86 @@ describe('planning against a graph file on disk', () => {
     expect(plan.orders?.reason).toBe('graph changed outside the build');
   });
 });
+
+describe('planning around what stood in for a missing package (P83)', () => {
+  const recorded = {
+    shapes: { 'flowatlas-shapes/queue.d.ts': 'sha1:queue' },
+    packages: {
+      '@acme/flags': null,
+      '@acme/money': { dir: 'money-lib', manifestHash: 'sha1:money' },
+    },
+  };
+  const plan = (before: RepoCache['standIns'], now: RepoSurvey['standIns']) =>
+    planRebuild([survey(now === undefined ? {} : { standIns: now })], {
+      cache: cacheOf(['orders', entry(before === undefined ? {} : { standIns: before })]),
+    }).orders;
+
+  it('reads nothing when the same things stand in', () => {
+    expect(plan(recorded, structuredClone(recorded))).toEqual({ mode: 'skip', reason: '0 files changed' });
+  });
+
+  it.each([
+    [
+      'a shape file added under a glob',
+      { ...recorded, shapes: { ...recorded.shapes, 'flowatlas-shapes/flags.d.ts': 'sha1:flags' } },
+      'stand-ins changed: shape file flowatlas-shapes/flags.d.ts added',
+    ],
+    ['a shape file removed', { ...recorded, shapes: {} }, 'stand-ins changed: shape file flowatlas-shapes/queue.d.ts removed'],
+    [
+      'a shape file edited',
+      { ...recorded, shapes: { 'flowatlas-shapes/queue.d.ts': 'sha1:edited' } },
+      'stand-ins changed: shape file flowatlas-shapes/queue.d.ts changed',
+    ],
+    [
+      'a directory answering a missing import',
+      { ...recorded, packages: { ...recorded.packages, '@acme/flags': { dir: 'flags-lib', manifestHash: 'sha1:f' } } },
+      'stand-ins changed: package @acme/flags now at flags-lib',
+    ],
+    [
+      'a second directory claiming a mounted name',
+      { ...recorded, packages: { ...recorded.packages, '@acme/money': { ambiguous: ['money-lib', 'money-lib-copy'] } } },
+      'stand-ins changed: package @acme/money now claimed by 2 directories (money-lib, money-lib-copy)',
+    ],
+    [
+      'the mounted directory gone',
+      { ...recorded, packages: { ...recorded.packages, '@acme/money': null } },
+      'stand-ins changed: package @acme/money answered by nothing',
+    ],
+    [
+      'the mounted manifest edited',
+      { ...recorded, packages: { ...recorded.packages, '@acme/money': { dir: 'money-lib', manifestHash: 'sha1:new' } } },
+      'stand-ins changed: package @acme/money manifest changed',
+    ],
+  ])('reads everything again for %s', (_, now, reason) => {
+    expect(plan(recorded, now)).toEqual({ mode: 'full', reason });
+  });
+
+  it('reads again an entry that did not record what stood in, when something can stand in now', () => {
+    expect(plan(undefined, recorded)).toEqual({ mode: 'full', reason: 'stand-ins not recorded by the last build' });
+  });
+
+  it('asks nothing of a repository nothing can stand in for', () => {
+    expect(plan(undefined, undefined)).toEqual({ mode: 'skip', reason: '0 files changed' });
+  });
+
+  it('reads again when the last shape file under a glob went and nothing stands in now (P180)', () => {
+    expect(plan(recorded, undefined)).toEqual({ mode: 'full', reason: 'stand-ins changed: shape file flowatlas-shapes/queue.d.ts removed' });
+  });
+
+  it.each([
+    ['a pattern file added', { ...recorded, patterns: { 'flowatlas-patterns/bus.yml': 'sha1:bus' } }, recorded, 'added'],
+    ['a pattern file edited', { ...recorded, patterns: { 'flowatlas-patterns/bus.yml': 'sha1:bus' } }, { ...recorded, patterns: { 'flowatlas-patterns/bus.yml': 'sha1:new' } }, 'changed'],
+    ['a pattern file removed', { ...recorded, shapes: {}, patterns: { 'flowatlas-patterns/bus.yml': 'sha1:bus' } }, { ...recorded, shapes: {} }, 'removed'],
+  ])('reads everything again for %s (P121)', (_, now, before, how) => {
+    const [was, is] = how === 'added' ? [before, now] : [now, before];
+    expect(plan(was, is)).toEqual({ mode: 'full', reason: `stand-ins changed: pattern file flowatlas-patterns/bus.yml ${how}` });
+  });
+
+  it('says what stood in before an installed file that changed', () => {
+    const moved = { ...recorded, shapes: {} };
+    const result = planRebuild([survey({ standIns: moved, packages: { 'node_modules/x/index.d.ts': stamp('sha1:new') } })], {
+      cache: cacheOf(['orders', entry({ standIns: recorded, packages: { 'node_modules/x/index.d.ts': stamp('sha1:old') } })]),
+    }).orders;
+    expect(result?.reason).toBe('stand-ins changed: shape file flowatlas-shapes/queue.d.ts removed');
+  });
+});
