@@ -1067,7 +1067,7 @@ block.
 table, a type, a gap (by its message, its reason in words, or the reason's code) or a
 class by name, under *Fails with* the ways in that can fail with an exception or a
 status (`NotFoundException`, `404`), and under *Nodes* every node, by label, type,
-kind, service or file, the way the Graph tab's own search found them (`table orders`
+kind, service or file (`table orders`
 is the table called `orders`). It is the only search on the page: `/` reaches it from
 anywhere but a field, the arrows move through what it found, Enter goes, and Escape
 clears it and hands the keyboard back. A hit goes to where it is **in the tab that is
@@ -5907,5 +5907,5 @@ who wrote it believes the tool agreed with them.
 
 | Variable | Does |
 |---|---|
-| `FLOWATLAS_DB` | the database `flowatlas-mcp` reads, when no flag says otherwise |
+| `FLOWATLAS_PIN_<SERVICE>` | with `check --env` and `diff --env`: the ref a service runs, over the pins file and under `--pin`; the service name upper-cased, every character that is not a letter or digit `_` |
 | `NO_COLOR` | any value turns colour off everywhere, the same as `--no-color` |

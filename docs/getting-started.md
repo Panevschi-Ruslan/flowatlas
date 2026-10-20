@@ -165,7 +165,7 @@ missed: 9 · notes: 0 · findings: 4
 
 A first build is rarely all joined, and it is not supposed to be. Nothing was
 guessed: every request that did not join is counted by the reason it did not.
-Three lines are worth knowing about before they surprise you:
+Four lines are worth knowing about before they surprise you:
 
 - **`ways in`** counts entry points found apart from entry points whose handler
   was read. Only the second is coverage of what happens after a request arrives.
@@ -219,7 +219,13 @@ flowatlas doctor --section desync        # calls that no longer match a route
 flowatlas doctor --section markers       # annotations that point at something gone
 flowatlas doctor --section contracts     # what two services disagree about
 flowatlas doctor --strict                # exit 1 if any of it is a problem
+flowatlas doctor --reason <code>         # every place of one kind of gap
+flowatlas doctor --missing               # the repository probably missing, and why
 ```
+
+On a first build of the demo, `doctor` names `payments` as a repository that is
+probably missing - the one setting, `PAYMENTS_URL`, that no service claims - and
+asks for the two settings the next step adds.
 
 **Exit 2 means the graph is not one to report on.** Four graphs are refused
 whatever flags were given: one a failed build wrote, one with no node in it, one
@@ -239,9 +245,10 @@ pnpm flowatlas doctor --config fixtures/next-hollow/flowatlas.config.json --no-b
 Most of what a first build cannot join is a fact only the person who deployed
 the project knows. Two settings do most of the work.
 
-**`baseUrlEnv`** is what turns a request into an edge. A service declares the
-settings keys other services use to address it. Without it, a request is recorded
-and joined to nothing.
+**`baseUrlEnv`** says which settings keys other services use to address a
+service. Without it, a key named after a service (`ORDERS_URL`, `orders`) is
+still joined to it, with a `base-url-from-name` note saying only the name chose
+it, and a key named after nothing (`PAYMENTS_URL`) is joined to nothing.
 
 **`apiTarget`** does the same for a browser: it says which service a frontend's
 settings key points at.
@@ -271,12 +278,18 @@ pnpm flowatlas flow "POST /orders" --config fixtures/multi-repo/flowatlas.config
         ⚡ order.created                                src/orders/orders.service.ts:49
           ⇢ billing ⚡ InvoicesConsumer.onOrderCreated  billing/src/invoices/invoices.consumer.ts:17
             →  InvoicesConsumer.onOrderCreated         billing/src/invoices/invoices.consumer.ts:17
-              →  InvoicesService.create                billing/src/invoices/invoices.service.ts:14
+              →  InvoicesService.create                billing/src/invoices/invoices.service.ts:30
+                ⚙  ORDERS_URL                          billing/src/invoices/invoices.service.ts:33
+                ↗  GET /orders/:param                  billing/src/invoices/invoices.service.ts:33
+… truncated: ≥1 more nodes (raise --depth)
 unresolved on this path: 0
 ```
 
 One route, the row it writes, the event it publishes, and the handler in another
-repository that receives it, marked `⇢ billing` where the walk crosses into it.
+repository that receives it, marked `⇢ billing` where the walk crosses into it -
+which reads `ORDERS_URL` and calls back into orders for the order it was told
+about. The walk stops at the default depth and says so; `--depth 20` follows it
+into orders again.
 `unresolved on this path: 0` says nothing along it was guessed. `--ascii` prints
 plain prefixes instead of the icons.
 
@@ -286,9 +299,9 @@ An entry can be named however you would say it aloud. These three are the same
 route:
 
 ```sh
-flowatlas flow "POST /orders/12345"
-flowatlas flow "POST /orders/:param"
-flowatlas flow "entry:orders:http:POST:/orders/:param"
+flowatlas flow "POST /orders/12345/archive"
+flowatlas flow "POST /orders/:param/archive"
+flowatlas flow "entry:orders:http:POST:/orders/:param/archive"
 ```
 
 A tRPC procedure is named by its id, `entry:api:rpc:orders.list`, and a name that
@@ -344,13 +357,20 @@ pnpm flowatlas channel order.created --config fixtures/multi-repo/flowatlas.conf
 ```
 
 ```
-⚡ order.created                           src/orders/orders.service.ts:49
+⚡ order.created                             src/orders/orders.service.ts:49
   ·  producers (1)
-    ⚡ event order.created                 orders/src/orders/orders.service.ts:49
+    ⚡ event order.created                   orders/src/orders/orders.service.ts:49
   ·  consumers (1)
-    ⚡ InvoicesConsumer.onOrderCreated     billing/src/invoices/invoices.consumer.ts:17
-      →  InvoicesConsumer.onOrderCreated  billing/src/invoices/invoices.consumer.ts:17
-        →  InvoicesService.create         billing/src/invoices/invoices.service.ts:14
+    ⚡ InvoicesConsumer.onOrderCreated       billing/src/invoices/invoices.consumer.ts:17
+      →  InvoicesConsumer.onOrderCreated    billing/src/invoices/invoices.consumer.ts:17
+        →  InvoicesService.create           billing/src/invoices/invoices.service.ts:30
+          ⚙  ORDERS_URL                     billing/src/invoices/invoices.service.ts:33
+          ↗  GET /orders/:param             billing/src/invoices/invoices.service.ts:33
+            ⇢ orders ◆  GET /orders/:param  orders/src/orders/orders.controller.ts:25
+              →  OrdersController.findOne   orders/src/orders/orders.controller.ts:25
+                →  OrdersService.findOne    orders/src/orders/orders.service.ts:25
+                  ▣  read orders            orders/src/orders/orders.service.ts:26
+… truncated: 1 more nodes (raise --depth)
 ```
 
 A channel with nothing at one end comes back with an empty list, which is an
@@ -415,18 +435,23 @@ flowatlas visualise             # the whole graph as one self-contained page
 `visualise` writes one page with the graph inside it: no server and nothing to
 install. It asks Google Fonts for two typefaces and falls back to yours if it
 cannot reach them, so it reads offline but is not yet free of a third party. It
-opens on a *Map* of the services and what passes between them, lists every way
-in, and follows any one of them across service boundaries, marking each crossing
-with what it was joined by and how much to trust it. *Steps* shows one way in as a list in call order, with
-what it can fail with and a *Copy as prompt* button; *Not joined* groups what
-could not be followed by cause; *Busiest* ranks the methods most things lean
-on; *Crossings* lists every join between repositories; *Graph* draws the
-neighbourhood of any node, every type on hover; and `flowatlas visualise --diff
-main` adds a *Changes* tab for a branch. One
-search box, reached with `/`, finds a route, channel, table, type, gap, class or
-node and goes to it; `?` lists the keys and ⌘K the commands.
+opens on a *Map* of the services, queues, tables and outside hosts in the order a
+request travels, with *Start here* offering the busiest way in and the worst gap.
+*Steps* shows one way in as a list in call order, with what it can fail with, a
+*Waterfall* of its typical times once traces are laid over it, and a *Copy as
+prompt* button; *Not joined* groups what could not be followed by cause, beside
+the risks found in the code and what was accepted; *Busiest* ranks the methods
+most things lean on; *Crossings* lists every join between repositories;
+*Traces* draws real requests one at a time; *Graph* draws the neighbourhood of
+any node, every type on hover. `flowatlas visualise --diff main` adds a
+*Changes* tab for a branch, and `--observed-diff before.json after.json` a *Run
+time changes* tab for a deploy. One search box, reached with `/`, finds a route,
+channel, table, type, gap or class and goes to it; `?` lists the keys and ⌘K the
+commands.
 
 ![the generated page](media/10-visualise.png)
+
+![a tour of the page](media/14-map-tour.gif)
 
 ## 10. Ask what a branch changes
 
@@ -434,13 +459,37 @@ node and goes to it; `?` lists the keys and ⌘K the commands.
 
 ![flowatlas diff](media/08-diff.gif)
 
-One route is renamed in the orders service, and flowatlas names the gateway route
-that called it and the browser button above that, in two repositories the change
-does not touch. The output is markdown because its destination is a pull request
-comment; `--fail-on-contract-break` makes it a build failure instead. See
+One route is renamed in the orders service, and flowatlas names every way in that
+reached it - the gateway route, billing's handlers and the browser button above
+them, in repositories the change does not touch - and shows each flow it cuts,
+step by step, as a sequence diagram in the Markdown. The output is Markdown
+because its destination is a pull request comment; `--fail-on-contract-break`
+and `--fail-on-rule-break` make it a build failure instead. `flowatlas check
+--env production` asks the same question against what an environment runs. See
 [docs/ci.md](ci.md) for the whole recipe.
 
-## 11. Give it to an agent
+## 11. Lay what really ran over it: `observe`
+
+Everything so far was read from code. `observe` adds what real traffic did, from
+OpenTelemetry, Zipkin, Jaeger, @nestjs/observe, the HAR files a Playwright run
+saves, or AWS exports, and lays it over the map: how often each join ran, how
+long it took, how it answered. A trace never draws an edge; what it shows that
+the code does not is listed as a question.
+
+```sh
+t=fixtures/multi-repo/traces
+pnpm flowatlas observe $t/checkout.otlp.json $t/orders.observe.json $t/billing.observe.json \
+  --config fixtures/multi-repo/flowatlas.config.json
+pnpm flowatlas doctor --reason failure-seen-undeclared --config fixtures/multi-repo/flowatlas.config.json
+```
+
+![flowatlas observe](media/15-run-time.gif)
+
+One route answered 500 that nothing in its code declares; doctor names it, and
+the page puts the same counts and timings on every step. [Run time in five
+minutes](run-time.md) goes from an end-to-end test run to that picture.
+
+## 12. Give it to an agent
 
 `init` already registered the server in each repository. An agent in any one of
 them gets the whole project.
@@ -450,7 +499,9 @@ them gets the whole project.
 Twenty-six tools, and only one of them returns source code. A trace never drags in the
 body of every method along it; the agent asks the graph which name to look at,
 then asks for that one name. A session is offered only the tools your project can
-answer: the run-time ones appear once you have run `flowatlas observe`.
+answer - nineteen on the demo - and the run-time ones appear once you have run
+`flowatlas observe`, without a restart; `flowatlas mcp --all-tools` lists every
+one.
 
 ```sh
 flowatlas mcp --install       # register in every repository, merging what is there
@@ -471,14 +522,19 @@ After that, `claude mcp list` shows `flowatlas`.
   configuration key, and every reason a row can carry.
 - [Running it in CI](ci.md) — the staged adoption that does not fail the build on
   day one.
+- [Run time in five minutes](run-time.md) — from an end-to-end test run to counts
+  and timings on the map.
+- [Coverage](coverage.md) — how the tool is measured against repositories nobody
+  here wrote.
 - [The README](../README.md) — how the joining works, what it reads, and what it
   still cannot.
 
 ## Reproducing these recordings
 
 ```sh
-scripts/demo/record.sh          # all of them, into docs/media
+scripts/demo/record.sh          # every terminal scene, into docs/media
 scripts/demo/record.sh 04 09    # just those two
+node scripts/demo/page-tour.mjs "$(scripts/demo/page-project.sh)"   # the page's still and tour
 ```
 
 Most scenes run against `fixtures/multi-repo`; the stream one runs against
@@ -491,5 +547,10 @@ renders it with [asciinema](https://asciinema.org) and
 [agg](https://github.com/asciinema/agg).
 
 ```sh
-brew install asciinema agg
+brew install asciinema agg jq ffmpeg
 ```
+
+The page's pictures are taken in a headless Google Chrome, driven over its
+DevTools protocol (`CHROME` names another browser); `DEMO_DRY=1
+scripts/demo/record.sh` runs the scenes untyped and keeps what each printed in
+`.demo-casts`, to read before recording.

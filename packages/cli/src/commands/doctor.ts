@@ -894,7 +894,7 @@ export const registerDoctor = (program: Command): void => {
     .option('--strict', 'exit 1 on a broken annotation, a contract error, a rule violation the baseline does not hold, or growth past the baseline')
     .option('--strict-runtime', 'exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered')
     .option('--accept', 'write the current numbers to the baseline')
-    .option('--baseline <path>', 'where the accepted numbers live (default: <output>/baseline.json)')
+    .option('--baseline <path>', 'where the accepted numbers live (default: flowatlas.baseline.json beside the configuration)')
     .option('--no-baseline', 'skip the growth check, so --strict asks only about annotations and contracts')
     .option(
       '--section <name>',

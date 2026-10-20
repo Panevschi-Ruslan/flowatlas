@@ -115,6 +115,16 @@ record() {
   name=$(basename "$scene" .sh)
   state=$(state_of "$name")
 
+  # DEMO_DRY=1 runs each scene once, untyped, and keeps what it printed beside
+  # the casts, to read before anything is recorded.
+  if [ -n "${DEMO_DRY:-}" ]; then
+    prepare "$state"
+    runner "$scene" fast
+    "$DEMO/.bin/scene" > "$CASTS/$name.txt" 2>&1 || true
+    printf '   %s\n' ".demo-casts/$name.txt"
+    return 0
+  fi
+
   prepare "$state"
   rows=$(height_of "$scene")
   echo "── $name (from $state, ${COLS}x${rows})"

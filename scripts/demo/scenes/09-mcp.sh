@@ -1,6 +1,6 @@
 note "init also registered the graph server in every repository"
 say "cat orders/.mcp.json" 3
-note "an agent connects over stdio and gets ten tools"
+note "an agent connects over stdio and gets the tools this project can answer"
 say "mcp-call tools/list | jq -r '.tools[].name'" 4
 note "camel-case initials are enough to find a symbol"
 say "mcp-call find_symbol '{\"query\":\"osc\"}' | jq -r '.content[0].text' | jq -r '.matches[].id'" 3.5

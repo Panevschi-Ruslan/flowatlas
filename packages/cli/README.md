@@ -29,7 +29,7 @@ flowatlas doctor         # what it could not read, and the one thing to change
 
 ![one click in a browser, followed into a third repository](https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/docs/media/04-flow.gif)
 
-![the Map of five repositories, then one route's types field by field in the Graph](https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/docs/media/14-map-tour.gif)
+![the Map of four repositories coloured by p95, the busiest way in opened in Steps and as a waterfall, Not joined, the search, and one route's types in the Graph](https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/docs/media/14-map-tour.gif)
 
 That is one `(click)` in an Angular template, followed through a gateway, into
 an orders service, down to the row it reads. Three repositories, and
@@ -103,7 +103,7 @@ steps with a recording of each.
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 167 of them, and
+compared on every push. There are 168 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 
@@ -117,6 +117,7 @@ lists them all, generated from their READMEs.
 | `flowatlas impact <symbol>` | every entry point that reaches a symbol, and whose |
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
 | `flowatlas contracts` | what each service sends against what the other declares |
+| `flowatlas dead` | routes, channels, providers and fields nothing appears to reach, each with its reason |
 | `flowatlas doctor` | what could not be read, and what has drifted; `--unresolved` groups it by cause and package |
 | `flowatlas shapes --suggest` | which packages that are not installed to describe in a shape file, with the names used of each; `--out` writes starters |
 | `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
@@ -125,6 +126,7 @@ lists them all, generated from their READMEs.
 | `flowatlas check --env <name>` | can this be deployed: what shipping it would break against what an environment runs, from the pins `flowatlas deployed` records |
 | `flowatlas spec` | an OpenAPI and an AsyncAPI document of each service, written from the graph; `spec diff` and `spec --against` compare them |
 | `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue or a Structurizr workspace, relations from the joins; `--check` keeps a committed copy true |
+| `flowatlas docs` | Markdown blocks tied to a flow, a channel or a symbol, kept true with `--check` or rewritten with `--write` |
 | `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a way in step by step, the crossings, what did not join, the busiest nodes, and the graph with every type |
 | `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have, or `--listen` for exporters posting to `127.0.0.1:4318` |
 | `flowatlas mcp` | serve it to an agent over stdio |
@@ -147,9 +149,9 @@ are there on purpose:
 |---|---|---|
 | HTTP routes found | 15 | 15 |
 | Browser requests matched to a route | 4 of 13 | 6 of 13 |
-| Calls between services matched | 2 of 6 | 2 of 6 |
+| Calls between services matched | 3 of 7 | 3 of 7 |
 | Routes something reaches | 6 | 7 |
-| Edges that cross a repository boundary | 9 | 11 |
+| Edges that cross a repository boundary | 10 | 12 |
 
 The first column is what `init` writes and nothing more. The second adds the
 settings `init` cannot know: `baseUrlEnv`, the settings key that addresses a

@@ -35,7 +35,7 @@ never be written over one.
 
 ## What to turn on first
 
-Almost no project can adopt all three on the first day, and one that fails on
+Almost no project can adopt all four on the first day, and one that fails on
 every branch is switched off within a week. Turn them on in the order the
 numbers allow.
 
@@ -433,7 +433,7 @@ on the page as a tab.
 **Every repository needs its dependencies installed.** flowatlas reads types, and
 a repository with no `node_modules` resolves nothing outside itself. It is still
 read — what its own source states is read, and marked `heuristic` — and the run
-says once, at the head of `doctor` and after `build`'s `unresolved` line, that
+says once, at the head of `doctor` and after `build`'s `missed · notes · findings` line, that
 the read was partial. But a CI job is the one place the install costs nothing,
 and a graph read with every type resolved is the one to gate on. Install without
 running scripts if you must, and know that a client a postinstall script

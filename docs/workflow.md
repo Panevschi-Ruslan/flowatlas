@@ -132,6 +132,8 @@ flowatlas observe --listen           # or receive traces on this machine while y
 flowatlas doctor --strict-runtime    # fail on a status the code does not declare
 ```
 
+[Run time in five minutes](run-time.md) has the recipe from a test run.
+
 Then read it:
 
 - **Never seen:** routes no request reached. A `dead` candidate with evidence.
@@ -143,9 +145,9 @@ Then read it:
 ## 7. Now and then
 
 - `flowatlas hotspots`: where change concentrates.
-- `flowatlas cycles`: services that call each other in a loop.
+- `flowatlas cycles`: call cycles, the ones that cross services first.
 - `flowatlas dead`: what to delete.
-- The page's **Busiest** tab: the ways in that cross the most services.
+- The page's **Busiest** tab: the methods most things lean on, with the ways in that reach each.
 - `flowatlas export backstage | structurizr`: keep a catalogue or C4 model fed from the code.
 
 ## The short version

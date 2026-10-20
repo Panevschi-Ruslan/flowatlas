@@ -46,8 +46,8 @@ export function createDetails(page) {
           : `<details class="fail-sites"><summary class="hint">${esc(g.srcs.join('/'))} &times;${g.n}</summary><ul>` +
             g.sites.map((f) => `<li>${failSiteHtml(v, f)}</li>`).join('') + '</ul></details>') +
         '</li>').join('') + undeclared.map(undeclaredHtml).join('') +
-      (compared && compared.tooFewHits ? `<li><span class="hint">${compared.hits} hits are too few to say a declared failure was never seen</span></li>` : '') +
-      '</ul>' + (compared ? `<p class="hint">Run time: ${compared.hits} hits, ${esc(failWindowSay(compared.window))}.</p>` : '') + '</section>';
+      (compared && compared.tooFewHits ? `<li><span class="hint">${compared.hits} ${compared.hits === 1 ? 'hit is' : 'hits are'} too few to say a declared failure was never seen</span></li>` : '') +
+      '</ul>' + (compared ? `<p class="hint">Run time: ${compared.hits} ${compared.hits === 1 ? 'hit' : 'hits'}, ${esc(failWindowSay(compared.window))}.</p>` : '') + '</section>';
   };
   /* The pages that describe a node (P120): blocks of Markdown files tied to
      it by flowatlas docs, and whether each still says what the graph says. */

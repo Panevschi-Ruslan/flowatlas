@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>flowatlas walkthrough</title>
-<meta name="description" content="flowatlas reads several TypeScript repositories — NestJS, Next.js, Express, React, Angular, tRPC and more — and joins them into one graph. Ten recorded steps from an empty directory to that graph.">
+<meta name="description" content="flowatlas reads several TypeScript repositories — NestJS, Next.js, Express, React, Angular, tRPC and more — and joins them into one graph, with what really ran laid over it. Eleven recorded steps from an empty directory to that graph.">
 <meta property="og:title" content="flowatlas walkthrough">
-<meta property="og:description" content="One map of a project that lives in several repositories. Ten recorded steps.">
+<meta property="og:description" content="One map of a project that lives in several repositories. Eleven recorded steps.">
 <meta property="og:image" content="https://github.com/Panevschi-Ruslan/flowatlas/raw/main/docs/media/10-visualise.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🗺️</text></svg>">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -257,7 +257,7 @@ footer {
 </div>
 
 <header>
-  <p class="eyebrow">flowatlas &middot; a walkthrough in ten steps</p>
+  <p class="eyebrow">flowatlas &middot; a walkthrough in eleven steps</p>
   <h1>One map of a project that lives in several repositories</h1>
   <p class="lede">A command-line tool that reads several TypeScript
     repositories with the compiler's own checker, <em>without running them</em>,
@@ -284,7 +284,11 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     <li>Who handles this event, and does anyone?</li>
     <li>Which settings does this one request actually depend on?</li>
     <li>What does the browser call that the server no longer serves?</li>
+    <li>Can this branch be deployed against what production runs?</li>
+    <li>What did real traffic do that the code does not say?</li>
   </ul>
+  <p class="sub">Node 22.12 or later. Nothing is sent anywhere: the graph, the
+    traces it is given and the page it writes stay on your machine.</p>
 </header>
 
 <section class="covers">
@@ -332,6 +336,25 @@ flowatlas build          <span class="c"># read them all and join them</span></c
         <li>a monorepo's services with the workspace packages they use, on a fresh clone</li>
         <li>a service you have no source for, from its OpenAPI or AsyncAPI document</li>
         <li>every contract compared where one repository meets another</li>
+      </ul>
+    </div>
+    <div>
+      <h3>what really ran</h3>
+      <ul>
+        <li>OpenTelemetry, Zipkin and Jaeger traces, @nestjs/observe, and the HAR files a Playwright run saves</li>
+        <li>AWS X-Ray, Step Functions histories, API Gateway and Lambda logs</li>
+        <li>counts, p50 and p95, statuses and payload shapes laid over the map; never an edge drawn from a trace</li>
+        <li>what was seen and never declared, and what the tests never reached</li>
+      </ul>
+    </div>
+    <div>
+      <h3>before a merge</h3>
+      <ul>
+        <li><code>diff</code>: a verdict, and every changed flow as a sequence diagram</li>
+        <li><code>check --env</code>: can this be deployed against what an environment runs</li>
+        <li><code>rules</code>: who may call, write, publish to or consume what</li>
+        <li><code>spec</code> and <code>export</code>: OpenAPI, AsyncAPI, Backstage and Structurizr from the graph</li>
+        <li>SARIF for GitHub code scanning; <a href="https://github.com/Panevschi-Ruslan/flowatlas/blob/main/docs/ci.md">in CI</a> has the recipes</li>
       </ul>
     </div>
     <div>
@@ -404,9 +427,9 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     <div>
       <h3>what it says it cannot see</h3>
       <div class="tw"><table>
-        <tr><td>findings to act on</td><td>11</td></tr>
-        <tr><td>rows they are listed in</td><td>13</td></tr>
-        <tr><td>places static reading cannot reach</td><td>2</td></tr>
+        <tr><td>gaps and findings to act on</td><td>11</td></tr>
+        <tr><td>places the reader missed, and findings</td><td>9 + 4</td></tr>
+        <tr><td>of those, places static reading cannot reach</td><td>2</td></tr>
         <tr><td>edges inferred, and marked so</td><td>5</td></tr>
       </table></div>
     </div>
@@ -435,7 +458,7 @@ flowatlas build          <span class="c"># read them all and join them</span></c
       kinds of problem a real project has. A scene is a shell script, so what is on screen is
       what actually ran.</p>
   </div>
-  <nav class="toc"><a href="#s01"><span class="n">01</span><span>Point it at the repositories</span></a><a href="#s02"><span class="n">02</span><span>Build</span></a><a href="#s03"><span class="n">03</span><span>Ask what it could not read</span></a><a href="#s04"><span class="n">04</span><span>Answer it in the configuration</span></a><a href="#s05"><span class="n">05</span><span>Follow one request</span></a><a href="#s06"><span class="n">06</span><span>Ask the other direction</span></a><a href="#s07"><span class="n">07</span><span>Compare what crosses a boundary</span></a><a href="#s08"><span class="n">08</span><span>See the shape of the whole thing</span></a><a href="#s09"><span class="n">09</span><span>Ask what a branch changes</span></a><a href="#s10"><span class="n">10</span><span>Give it to an agent</span></a></nav>
+  <nav class="toc"><a href="#s01"><span class="n">01</span><span>Point it at the repositories</span></a><a href="#s02"><span class="n">02</span><span>Build</span></a><a href="#s03"><span class="n">03</span><span>Ask what it could not read</span></a><a href="#s04"><span class="n">04</span><span>Answer it in the configuration</span></a><a href="#s05"><span class="n">05</span><span>Follow one request</span></a><a href="#s06"><span class="n">06</span><span>Ask the other direction</span></a><a href="#s07"><span class="n">07</span><span>Compare what crosses a boundary</span></a><a href="#s08"><span class="n">08</span><span>See the shape of the whole thing</span></a><a href="#s09"><span class="n">09</span><span>Ask what a branch changes</span></a><a href="#s10"><span class="n">10</span><span>Lay what really ran over it</span></a><a href="#s11"><span class="n">11</span><span>Give it to an agent</span></a></nav>
 </section>
 
 <section class="col">
@@ -468,43 +491,53 @@ flowatlas init --dir .  <span class="c"># look under this one, not beside it</sp
     <img src="media/01-init.gif" alt="flowatlas init finding four repositories, then flowatlas build joining them" loading="lazy">
   </figure>
   <div class="col">
-    <p>Four requests leave the gateway for an address flowatlas cannot attribute to
-      any service, and only one of six browser requests found its route. Nothing
-      was guessed; all of it was recorded, with a file and a line.</p>
+    <p>Three of the seven calls between services joined; one goes to
+      <code>PAYMENTS_URL</code>, which no service claims. Four of thirteen
+      browser requests found their route. The last line counts what is left:
+      <code>missed</code> places the reader could not join, <code>notes</code>
+      on joins it made from a name alone, and <code>findings</code> about the
+      code itself. Nothing was guessed; all of it was recorded, with a file and a
+      line.</p>
   </div>
 </section>
 
 <section>
   <div class="col">
     <h2 id="s03"><span class="n">03</span>Ask what it could not read</h2>
-    <p><code>doctor</code> turns those counts into a list of things to do. Every
-      row names the reason, the file, the line, the call, and what to change.</p>
+    <p><code>doctor</code> turns those counts into a list of things to do,
+      grouped by cause. Every row names the reason, the file, the line, the call,
+      and what to change.</p>
   </div>
-  
+
   <figure class="rec">
-    <div class="rec-bar"><span>flowatlas doctor --section desync --service gateway</span></div>
-    <img src="media/02-doctor.gif" alt="flowatlas doctor naming four calls rooted at a settings key no service claims" loading="lazy">
+    <div class="rec-bar"><span>flowatlas doctor</span><span>flowatlas doctor --reason ambiguous-route-target</span><span>flowatlas doctor --reason base-url-from-name</span></div>
+    <img src="media/02-doctor.gif" alt="flowatlas doctor grouping what it could not join, a repository probably missing, and two settings it asks for" loading="lazy">
   </figure>
   <div class="col">
-    <p>All four rows here say the same thing: a request is rooted at a settings
-      key, and no service in the configuration claims that key.</p>
-    <pre><code>flowatlas doctor --section unresolved  <span class="c"># what could not be read</span>
-flowatlas doctor --section desync      <span class="c"># calls matching no route</span>
-flowatlas doctor --section markers     <span class="c"># annotations gone stale</span>
-flowatlas doctor --strict              <span class="c"># exit 1 on a problem</span></code></pre>
+    <p>It names the repository that is probably missing &mdash; something
+      called <code>payments</code>, from the one setting nobody claims. Three
+      browser calls could go to two services, so it asks which one the
+      frontend's <code>apiUrl</code> names. And <code>ORDERS_URL</code> was
+      joined to <code>orders</code> only because of its name, which is kept as a
+      note until the configuration says so outright.</p>
+    <pre><code>flowatlas doctor --reason &lt;code&gt;  <span class="c"># one kind of gap</span>
+flowatlas doctor --missing          <span class="c"># the repository missing</span>
+flowatlas accept route-unguarded --service orders
+flowatlas doctor --strict           <span class="c"># exit 1 past the baseline</span></code></pre>
   </div>
 </section>
 
 <section>
   <div class="col">
     <h2 id="s04"><span class="n">04</span>Answer it in the configuration</h2>
-    <p>Two settings close four of the fifteen findings, and three of the five
-      browser requests that had nowhere to go.</p>
-    <p><strong>baseUrlEnv</strong> is what turns a request into an edge: a
-      service declares the settings keys other services use to address it.
-      Without it, a request is recorded and joined to nothing.
-      <strong>apiTarget</strong> does the same for a browser, saying which
-      service a frontend's settings key points at.</p>
+    <p>Two settings join two more browser requests, reach one more route, and
+      turn both notes into facts.</p>
+    <p><strong>baseUrlEnv</strong> says which settings keys other services use
+      to address a service. Without it, a key named after a service is still
+      joined to it, and doctor keeps a note saying only the name chose it; a key
+      named after nothing is joined to nothing. <strong>apiTarget</strong> does
+      the same for a browser, saying which service a frontend's settings key
+      points at.</p>
   </div>
   
   <figure class="rec">
@@ -514,10 +547,10 @@ flowatlas doctor --strict              <span class="c"># exit 1 on a problem</sp
   <div class="col">
     <div class="tw"><table>
       <tr><th></th><th>first build</th><th>after two settings</th></tr>
-      <tr><td>calls between services linked</td><td class="num">1</td><td class="num good">2</td></tr>
-      <tr><td>browser requests joined to a route</td><td class="num">1</td><td class="num good">3</td></tr>
-      <tr><td>routes something reaches</td><td class="num">2</td><td class="num good">4</td></tr>
-      <tr><td>rows left unread</td><td class="num">15</td><td class="num good">11</td></tr>
+      <tr><td>calls between services linked</td><td class="num">3 of 7</td><td class="num">3 of 7</td></tr>
+      <tr><td>browser requests joined to a route</td><td class="num">4 of 13</td><td class="num good">6 of 13</td></tr>
+      <tr><td>routes something reaches</td><td class="num">6</td><td class="num good">7</td></tr>
+      <tr><td>places missed &middot; notes</td><td class="num">11 &middot; 2</td><td class="num good">9 &middot; 0</td></tr>
     </table></div>
     <p>What survives is no longer missing configuration. It is the project
       disagreeing with itself, which is the thing worth knowing.</p>
@@ -545,11 +578,13 @@ flowatlas doctor --strict              <span class="c"># exit 1 on a problem</sp
       is recorded with <code>confidence: marker</code> rather than
       <code>static</code>, so it is always clear which edges were told rather
       than found.</p>
+    <p>The second also shows billing calling back into orders for the order it
+      invoices: three repositories again, one of them twice.</p>
     <p>An entry can be named however you would say it aloud. These three are the
       same route:</p>
-    <pre><code>flowatlas flow "POST /orders/12345"
-flowatlas flow "POST /orders/:param"
-flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
+    <pre><code>flowatlas flow "POST /orders/12345/archive"
+flowatlas flow "POST /orders/:param/archive"
+flowatlas flow "entry:orders:http:POST:/orders/:param/archive"</code></pre>
   </div>
 </section>
 
@@ -567,8 +602,9 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
   </figure>
   <div class="col">
     <p><code>hotspots</code> ranks what the most things point at, and
-      <code>channel</code> shows both ends of a message channel — here, one with
-      a handler and no publisher anywhere in the project.</p>
+      <code>channel</code> shows both ends of a message channel &mdash; here
+      <code>order.created</code>, published in orders and handled in billing,
+      whose handler calls back into orders for the order it was told about.</p>
   </div>
 </section>
 
@@ -582,17 +618,18 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
   
   <figure class="rec">
     <div class="rec-bar"><span>flowatlas contracts --severity error --max-nodes 4</span><span>flowatlas types --drift --format tree</span></div>
-    <img src="media/06-contracts.gif" alt="contract errors between the gateway and the web app, and two types declared twice" loading="lazy">
+    <img src="media/06-contracts.gif" alt="no contract errors, the boundaries that could not be compared and why, and two types declared two ways" loading="lazy">
   </figure>
   <div class="col">
-    <p>The frontend declares an <code>OrderDto</code> with four required fields,
-      and the gateway answers that route with none of them: it sends a wrapper
-      whose only field is <code>data</code>, of an unreadable shape. Nobody wrote
-      that down anywhere and no test covers it, because the two sides live in
-      different repositories.</p>
-    <p>The <code>unchecked</code> list matters as much as the findings. It says
-      which boundaries could not be compared and what to do about each, rather
-      than reporting them as agreement.</p>
+    <p>No boundary in the demo disagrees, and the <code>unchecked</code> list
+      is why that is worth believing: it says which boundaries could not be
+      compared and what to do about each &mdash; a literal where a typed value
+      would do, a call that says nothing about what it expects back &mdash;
+      rather than reporting them as agreement.</p>
+    <p><code>types --drift</code> finds what a compiler in one checkout never
+      can: <code>InvoiceDto</code> declared one way in billing and another in
+      the gateway, and <code>OrderDto</code> in the shared package and again in
+      the web app. <code>contracts</code> compares the two field by field.</p>
   </div>
 </section>
 
@@ -616,40 +653,44 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
       it.</p>
   </div>
   <figure class="rec">
-    <div class="rec-bar"><span>flowatlas visualise --title "flowatlas demo"</span></div>
+    <div class="rec-bar"><span>flowatlas visualise --title Shop</span></div>
     <img src="media/10-visualise.png" loading="lazy"
-         alt="the generated page, following a route from the gateway into the orders service">
+         alt="the generated page: Steps on a gateway route followed into billing and on into orders, with the time each step took in the traces">
   </figure>
   <div class="col">
     <p>It is a report you can click, not a viewer you keep running. Attach it to
       a review, or keep it beside a decision.</p>
-    <p>It opens on a <strong>Map</strong>: one box per service, laid out from the
-      browser to the data, joined by what passes between them and counted. A
-      check marks what to look at &mdash; routes nothing calls, channels with one
-      end, services that reach each other. Click a link for the calls behind it,
-      a service for its ways in, and any one of them opens in the
-      <strong>Graph</strong> tab, where every node carries what it takes and
-      gives back: the body a route reads, what it answers, what it answers when
-      it fails, each type opened field by field.</p>
+    <p>It opens on a <strong>Map</strong>: one box per service, queue, table and
+      outside host, laid out in the order a request travels, joined by what
+      passes between them and counted. A check marks what to look at &mdash;
+      routes nothing calls, channels with one end, services that reach each
+      other &mdash; and, once traces are laid over it, a heat colours each link
+      by its traffic or its p95. <em>Start here</em> offers the busiest way in
+      and the worst gap.</p>
     <p><strong>Steps</strong> shows one way in as a list in call order: each
       table, address and channel inline, calls side by side or once per item of
-      a loop, what it can fail with, and the lines each step logs.
-      <em>Copy as prompt</em> hands it to an assistant as Markdown.
-      <strong>Not joined</strong> lists what did not join, with a
-      <em>Can&rsquo;t follow</em> sheet that groups it by cause and package.
-      <strong>Busiest</strong> ranks the methods most things lean on, and
-      <code>--diff &lt;ref&gt;</code> adds <strong>Changes</strong>: what a
-      branch adds, removes and still calls. One search box above the tabs finds
-      a route, channel, table, type, gap, class or node, and goes to it.</p>
+      a loop, what it can fail with, and &mdash; where traffic went through
+      &mdash; how often it ran and how long it took; <em>Waterfall</em> draws the
+      same steps on a time axis. <em>Copy as prompt</em> hands it to an
+      assistant as Markdown. <strong>Not joined</strong> lists what did not
+      join, grouped by cause, with the risks found in the code and what was
+      accepted. <strong>Busiest</strong> ranks the methods most things lean on,
+      <strong>Traces</strong> draws real requests one by one, and the
+      <strong>Graph</strong> tab shows any node with what it takes and gives
+      back, each type opened field by field. <code>--diff &lt;ref&gt;</code>
+      adds <strong>Changes</strong> and <code>--observed-diff</code> adds
+      <strong>Run time changes</strong>. One search box above the tabs finds a
+      route, channel, table, type, gap or class, and goes to it.</p>
   </div>
   <figure class="rec">
-    <div class="rec-bar"><span>Map</span><span>a link</span><span>a service</span><span>Graph &middot; Types &middot; Expand all</span><span>hover</span><span>Back</span></div>
+    <div class="rec-bar"><span>Map</span><span>heat p95</span><span>Start here</span><span>Waterfall</span><span>Not joined</span><span>search</span><span>Graph &middot; Types</span></div>
     <img src="media/14-map-tour.gif" loading="lazy"
-         alt="the Map of five services, a link and a service opened, then one route followed in the Graph tab down to its handler with every type opened">
+         alt="the Map of the four services coloured by p95, the busiest way in opened in Steps and as a waterfall, Not joined grouped by cause, the search, and one route in the Graph with its types">
   </figure>
   <div class="col">
-    <p>The page above is <code>fixtures/request-shapes</code>: an Angular admin and
-      four APIs in Koa, Fastify, Express and Next.js.</p>
+    <p>The page above is the demo project with its sample traces laid over it
+      (scene 10): <code>scripts/demo/page-project.sh</code> builds it and
+      <code>scripts/demo/page-tour.mjs</code> takes the pictures.</p>
   </div>
 </section>
 
@@ -662,20 +703,54 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
   
   <figure class="rec">
     <div class="rec-bar"><span>git -C orders diff -U0</span><span>flowatlas diff HEAD</span></div>
-    <img src="media/08-diff.gif" alt="one renamed route, and the gateway entry and browser button that depended on it" loading="lazy">
+    <img src="media/08-diff.gif" alt="one renamed route, who reaches it, and two flows it cuts, step by step" loading="lazy">
   </figure>
   <div class="col">
-    <p>One route is renamed in the orders service. flowatlas names the gateway
-      route that called it and the browser button above that, in two
-      repositories the change does not touch. The output is markdown because its
+    <p>One route is renamed in the orders service. flowatlas names every way in
+      that reached it &mdash; the gateway route, billing's handlers and the
+      browser button above them, in repositories the change does not touch
+      &mdash; and shows each flow it cuts as the steps before and after, drawn
+      as a sequence diagram in the Markdown. The output is Markdown because its
       destination is a pull request comment;
-      <code>--fail-on-contract-break</code> makes it a build failure instead.</p>
+      <code>--fail-on-contract-break</code> and
+      <code>--fail-on-rule-break</code> make it a build failure instead.</p>
+    <pre><code>flowatlas diff main               <span class="c"># this branch against main</span>
+flowatlas check --env production  <span class="c"># safe to deploy there?</span>
+flowatlas rules                   <span class="c"># who may call what</span></code></pre>
   </div>
 </section>
 
 <section>
   <div class="col">
-    <h2 id="s10"><span class="n">10</span>Give it to an agent</h2>
+    <h2 id="s10"><span class="n">10</span>Lay what really ran over it</h2>
+    <p>Everything so far was read from code. <code>observe</code> adds what
+      real traffic did &mdash; from OpenTelemetry, Zipkin, Jaeger,
+      @nestjs/observe, a test run's HAR files or AWS logs &mdash; and lays it over
+      the map: how often each join ran, how long it took, how it answered.
+      A trace never draws an edge; what it shows that the code does not is
+      listed as a question.</p>
+  </div>
+
+  <figure class="rec">
+    <div class="rec-bar"><span>ls traces/*.json</span><span>flowatlas observe traces/…</span><span>flowatlas doctor --reason failure-seen-undeclared</span></div>
+    <img src="media/15-run-time.gif" alt="three trace files read, the joins they ran with their timings, and a status traffic got that the code never declares" loading="lazy">
+  </figure>
+  <div class="col">
+    <p>Twenty-nine spans from three files: the joins they ran, the slowest ways
+      in by p95, and three things traffic reached that no reader drew &mdash; a
+      collection, a metrics route and a queue. One route answered 500 that
+      nothing in its code says it can; doctor names it, and the page puts the
+      same counts and timings on every step.</p>
+    <pre><code>flowatlas observe test-results  <span class="c"># a Playwright run's HAR files</span>
+flowatlas observe --listen      <span class="c"># OTLP on 127.0.0.1:4318</span></code></pre>
+    <p><a href="https://github.com/Panevschi-Ruslan/flowatlas/blob/main/docs/run-time.md">Run time in five minutes</a>
+      goes from an end-to-end test run to that picture.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <h2 id="s11"><span class="n">11</span>Give it to an agent</h2>
     <p><code>init</code> already registered the server in each repository. An
       agent in any one of them gets the whole project over the Model Context
       Protocol.</p>
@@ -686,7 +761,10 @@ flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
     <img src="media/09-mcp.gif" alt="the registered server, its tools listed, and two of them answering" loading="lazy">
   </figure>
   <div class="col">
-    <p>Twenty-six tools, and only one of them returns source code. A trace never drags
+    <p>Twenty-six tools in all, and a session lists the ones its project can
+      answer: nineteen here, until traces are laid over it or rules are written
+      (<code>flowatlas mcp --all-tools</code> lists every one). Only one of them
+      returns source code. A trace never drags
       in the body of every method along it; the agent asks the graph which name
       to look at, then asks for that one name.</p>
     <pre><code>flowatlas mcp --install   <span class="c"># register everywhere, merging</span>
@@ -701,9 +779,10 @@ flowatlas mcp --install --dry-run</code></pre>
 
 <footer class="col">
   <p>Reproduce every recording on this page from a clean checkout:</p>
-  <pre><code>brew install asciinema agg
-scripts/demo/record.sh        <span class="c"># all of them, into docs/media</span>
-scripts/demo/record.sh 04 09  <span class="c"># just those two</span></code></pre>
+  <pre><code>brew install asciinema agg jq ffmpeg
+scripts/demo/record.sh        <span class="c"># every terminal scene, into docs/media</span>
+scripts/demo/record.sh 04 09  <span class="c"># just those two</span>
+node scripts/demo/page-tour.mjs "$(scripts/demo/page-project.sh)"  <span class="c"># the page's still and tour; needs Chrome</span></code></pre>
   <p>The same walkthrough as markdown is
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/blob/main/docs/getting-started.md">docs/getting-started.md</a>. Every
     flag of every command is in the

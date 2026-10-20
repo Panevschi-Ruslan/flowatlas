@@ -359,7 +359,7 @@ const promptSeenFailLines = (seen, limits) => {
   ];
   const kept = lines.slice(0, limits.maxFails);
   if (lines.length > limits.maxFails) kept.push(`- … ${lines.length - limits.maxFails} more; ask undeclared_failures for the rest`);
-  if (seen.tooFewHits === true) kept.push(`- ${seen.hits} hits are too few to say a declared failure was never seen`);
+  if (seen.tooFewHits === true) kept.push(`- ${seen.hits} ${seen.hits === 1 ? 'hit is' : 'hits are'} too few to say a declared failure was never seen`);
   return kept;
 };
 

@@ -460,9 +460,9 @@ many methods it answered for under `forMethods`.
 same route:
 
 ```
-POST /orders/12345
-POST /orders/:param
-entry:orders:http:POST:/orders/:param
+POST /orders/12345/archive
+POST /orders/:param/archive
+entry:orders:http:POST:/orders/:param/archive
 ```
 
 Two kinds of entry are best named by their id, which `list_entries` and

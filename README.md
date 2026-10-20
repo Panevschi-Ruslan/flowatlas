@@ -187,7 +187,7 @@ flowatlas flow "POST /orders"   # follow one request through
 
 ![one click in a browser, followed into a third repository](docs/media/04-flow.gif)
 
-![the Map of five repositories, then one route's types field by field in the Graph](docs/media/14-map-tour.gif)
+![the Map of four repositories coloured by p95, the busiest way in opened in Steps and as a waterfall, Not joined, the search, and one route's types in the Graph](docs/media/14-map-tour.gif)
 
 That is one button in an Angular template, followed through the gateway, into the
 orders service, to the row it reads. Three repositories, and `unresolved on this
@@ -195,7 +195,9 @@ path: 0` says nothing along it was guessed.
 
 [**The walkthrough**](https://panevschi-ruslan.github.io/flowatlas/) does the whole
 thing from an empty directory, with a recording of every step. The same thing as
-markdown is [docs/getting-started.md](docs/getting-started.md).
+markdown is [docs/getting-started.md](docs/getting-started.md), and
+[docs/workflow.md](docs/workflow.md) is which command to reach for at each step of
+a change, from before you start to after it runs.
 
 `init` writes `flowatlas.config.json`, works out each repository's name and kind
 from its manifest, and registers the graph server in every one of them so an
@@ -402,7 +404,7 @@ two applications serving one path puts the application in the id,
 comes back with the ids to choose from.
 
 `flow`, `impact` and `channel` take `--detail 0..3` and
-`--format tree|json|mermaid`, so the same
+`--format tree|json|mermaid` (and `flow` also `sequence`), so the same
 walk is read in a terminal, parsed by a script, or pasted into a document as a
 diagram. Every flag of every command is in the [command reference](docs/CLI.md).
 Output is bounded and says what it cut, and which flag shows more:
@@ -438,7 +440,7 @@ between them and counted, with families of services that open and close and a
 layer for the packages they are built from - then lists every way in, follows
 any one of them across service boundaries, and has a tab each for every crossing
 and for everything that did not join. The Graph tab draws the
-neighbourhood of any node you search for, with its details one click away, and
+neighbourhood of any node the search or a click opens, with its details one click away, and
 walks on from there in either direction. It folds the plumbing round a route,
 groups a busy table's callers, finds a path between two nodes and what reaches
 one, marks the nodes with problems, and keeps a view as a link. Hovering a node
@@ -449,8 +451,9 @@ route's body, query and response - and any type opens to its fields.
 step with its table, address or channel, calls run side by side or once per
 item of a loop, failure paths in red, where the chain breaks, what the way in
 can fail with and the lines each step logs. *Copy as prompt* copies it as Markdown for an
-assistant. **Not joined** lists everything that did not join, with a *Can't
-follow* sheet that groups it by cause and package, accepted gaps muted.
+assistant. **Not joined** lists everything that did not join, grouped by cause and
+package under *Couldn't join*, with what the code itself risks under *Risks*
+and what was accepted under *Accepted*.
 **Busiest** ranks the methods most things lean on, with the ways in that reach
 each. **Changes**, with `--diff`, lists what a branch adds and removes, the
 removed routes something still calls, and shapes that moved. **Traces**, once
@@ -479,7 +482,7 @@ overwriting so any servers already there survive. After that, `claude mcp list`
 shows `flowatlas`, and a session has these twenty-six tools, beside three
 prompts and the `flowatlas://` resources. Only the tools the project can answer
 are listed: the run-time ones appear after `flowatlas observe`, `check_rules`
-once rules are configured, `what_changed` after `flowatlas diff`, and the
+once rules are configured, `what_changed` after `flowatlas diff` or `check --env`, and the
 channel and type tools once the graph holds one, without restarting anything
 (`flowatlas mcp --all-tools` lists all of them):
 
@@ -696,7 +699,7 @@ some routes and not the rest says how many. The one failure this tool is built
 not to have is silence that reads as a clean result.
 
 An edge is never drawn on a guess *silently*. Some are drawn on a guess and say
-so: on the demo project measured above, 99 edges were read from the code and 5
+so: on the demo project measured above, 104 edges were read from the code and 5
 were inferred and carry `confidence: "heuristic"`. An inference is a guess with
 its reasoning attached, and the field is there so you can filter on it, not so
 the word can be avoided. What cannot be inferred either is recorded as
@@ -1013,14 +1016,14 @@ Or one at a time:
 pnpm -r build
 pnpm -r typecheck
 pnpm fixtures:run     # run the tool over every fixture
-pnpm -r test          # 5,271 tests
+pnpm -r test          # 5,393 tests
 pnpm invariants       # rules no test can express
 pnpm fixtures:check   # extraction, server and terminal snapshots, and the read gate
 ```
 
 `fixtures:check` compares against recorded output, so the fixtures have to be run
 first, and a snapshot nobody compares is not a gate. It therefore prints two
-counts — `340 compared, 341 validated` — and every snapshot in the gap between
+counts — `342 compared, 343 validated` — and every snapshot in the gap between
 them has to be accounted for: either the fixture has not been run, which fails and
 says so, or the fixture is named in `VALIDATE_ONLY` in `scripts/fixtures-check.mjs`
 with the reason, which the gate then prints on every run. One fixture is,
@@ -1107,8 +1110,8 @@ there and over `multi-repo` and `nest-leaves`, and
 not changed; only something written from the source proves it is right.
 
 `docs/getting-started.md` is the walkthrough, recorded step by step, and
-`scripts/demo/page.mjs` writes the same thing as `docs/index.html`, which is what
-GitHub Pages serves at <https://panevschi-ruslan.github.io/flowatlas/>.
+`docs/index.html` is the same thing as a page, which is what GitHub Pages serves
+at <https://panevschi-ruslan.github.io/flowatlas/>.
 `docs/CLI.md` is the complete reference: every command, every flag, every
 configuration key. `docs/run-time.md` adds run time from an end-to-end test
 run in five minutes. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
@@ -1116,8 +1119,9 @@ it in a build. `docs/coverage.md` is how this tool is measured against
 repositories nobody here wrote, by one counting rule; the list of repositories and
 the reports stay on the machine that measures. The [fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists every fixture and what it proves, generated from their READMEs.
-`PUBLISHING.md` is the release runbook. `scripts/demo/record.sh` remakes every recording in the
-walkthrough from `fixtures/multi-repo`.
+`PUBLISHING.md` is the release runbook. `scripts/demo/record.sh` remakes every terminal
+recording in the walkthrough from `fixtures/multi-repo`, and `scripts/demo/page-tour.mjs`
+the page's still and tour, from the page `scripts/demo/page-project.sh` builds.
 
 The page `flowatlas visualise` writes is one file made of parts that live apart
 in `packages/cli/src/visualise/`: `page.html` is the markup and a placeholder

@@ -6,7 +6,7 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
-## [0.6.0][] - 2026-10-18
+## [0.6.0][] - 2026-10-20
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0.
 
@@ -1000,6 +1000,10 @@ twenty-six, with prompts, resources and paged, structured answers.
   contract verdict of each crossing that is not unchecked (about 2% of the
   pack over the fixtures).
 
+- **One request read "1 hits".** A route's details on the page and
+  `describe_for_prompt` said "1 hits are too few to say a declared failure was
+  never seen" and "Run time: 1 hits"; one is a hit now.
+
 #### The graph server (MCP)
 
 - **Every answer hands on the next question (P63, P72, P75).** Every answer
@@ -1526,6 +1530,19 @@ twenty-six, with prompts, resources and paged, structured answers.
   `ti`. The demo figures in the README and on the project page are measured
   again: 130 nodes, 114 edges, 12 of them across a repository boundary, 3 of 7
   calls between services joined.
+- **The walkthrough is recorded again, and the page is pictured by a
+  script.** Every recording in `docs/media` is retaken with 0.6.0. Scene 02
+  shows `doctor` grouping by cause, naming the repository probably missing and
+  asked by `--reason`; scene 08 the flows a renamed route cuts, step by step;
+  scene 09 the tools the demo can answer; and a new scene, 15, lays the demo's
+  traces over the map. The page's still (`10-visualise.png`, also the site's
+  preview) and its tour (`14-map-tour.gif`) are taken by
+  `scripts/demo/page-tour.mjs` in a headless Chrome, of the page
+  `scripts/demo/page-project.sh` builds: the demo with its traces.
+  `DEMO_DRY=1 scripts/demo/record.sh` runs every scene untyped and keeps what it
+  printed, to read before anything is recorded. `scripts/demo/page.mjs`, which
+  wrote an older `docs/index.html` and would have overwritten the newer one, is
+  removed; the page is edited by hand.
 
 ### Fixed
 
@@ -1813,6 +1830,24 @@ twenty-six, with prompts, resources and paged, structured answers.
 - **Command and tool counts in the READMEs.** `packages/cli/README.md` and
   `docs/mcp.md` quoted command and tool counts that had drifted; they now say
   what `flowatlas --help` and the tool-list test hold.
+- **The walkthrough, the site and the READMEs say what 0.6.0 prints.** The
+  `flow` and `channel` transcripts in `docs/getting-started.md` predated
+  billing's call into orders (P209); three spellings of `POST /orders/:param`
+  named a route the demo does not have, and now name `POST
+  /orders/:param/archive`; the npm README's first-build table said 2 of 6 calls
+  and 9 → 11 crossing edges (3 of 7, and 10 → 12) and 167 fixtures (168); the
+  README said 99 edges were read from code (104). The project page's scenes
+  describe what each recording now shows, its configure table is measured
+  again, a scene shows `observe`, and it says what reads traces and what checks
+  a merge. The page's tabs are described as they are (Not joined's sections,
+  Traces, Run time changes, one search), a session's tools as the ones its
+  project can answer (19 on the demo, 26 with `--all-tools`), and `docs/ci.md`
+  names the build line `missed · notes · findings`. `docs/CLI.md` lists
+  `FLOWATLAS_PIN_<SERVICE>` among the environment variables, in place of
+  `FLOWATLAS_DB`, which `flowatlas mcp` never read.
+- **`doctor --help` named the wrong baseline.** It gave the default as
+  `<output>/baseline.json`; the baseline is `flowatlas.baseline.json` beside the
+  configuration, as `docs/CLI.md` says.
 
 ## [0.5.1][] - 2026-10-12
 
