@@ -868,6 +868,13 @@ twenty-six, with prompts, resources and paged, structured answers.
   environment's name; every section equals the check document's `diff`. The
   Markdown opens with the pins. A pin that does not resolve exits 2, never
   assumed unchanged; `<base-ref>` and `--env` are exclusive.
+- **`flowatlas diff --section <name>` (P226).** Only those parts of the
+  Markdown, repeatable: `impact`, `flows`, `docs`, `contracts`, `api`,
+  `rules`, `joins`, `gaps`, `types` or `graph`, in the document's order and
+  without its heading, side table and footer, so `diff main --section impact`
+  answers who would notice in a terminal. The warnings stay, since what could
+  not be read qualifies every section; `diff.json` is whole either way, and
+  `--section` with `--format json` or `sarif` exits 2.
 - **Docs tied to flows (P120).** `flowatlas docs [paths...]` reads Markdown
   blocks that name a flow, a channel or a symbol by its graph id (`<!--
   flowatlas:flow id="POST /orders" view="sequence" -->` … `<!--
@@ -1540,7 +1547,12 @@ twenty-six, with prompts, resources and paged, structured answers.
   `scripts/demo/page-tour.mjs` in a headless Chrome, of the page
   `scripts/demo/page-project.sh` builds: the demo with its traces.
   `DEMO_DRY=1 scripts/demo/record.sh` runs every scene untyped and keeps what it
-  printed, to read before anything is recorded. `scripts/demo/page.mjs`, which
+  printed, to read before anything is recorded. Every command a scene types is
+  one a reader can run as it stands, with no `jq`, `sed`, `grep` or `head`
+  between it and what it prints: a scene shows code with `show <file>
+  <from>-<to>`, an edit as `git diff`, part of `doctor` by `--section` and
+  `--reason`, part of `diff` by `--section`, and `mcp-call` takes
+  `key=value` arguments and prints the tools by title and an answer as text. `scripts/demo/page.mjs`, which
   wrote an older `docs/index.html` and would have overwritten the newer one, is
   removed; the page is edited by hand.
 

@@ -42,7 +42,7 @@ import { isDirty } from '../git/worktree.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { environmentLead } from '../report/check-render.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
-import { DIFF_MARKDOWN_DEFAULTS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
+import { DIFF_MARKDOWN_DEFAULTS, DIFF_SECTIONS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
 import { flowChanges } from '../report/flow-changes.js';
 import { staleDocsOf, type StaleDocs } from '../report/stale-docs.js';
 import { classifyRules, ruleBreaks } from '../report/rule-delta.js';
@@ -116,6 +116,8 @@ export interface DiffOptions extends PinFlags {
   maxFlows?: string;
   /** Write both sides' API documents in memory and add their changes as `spec` (P118). */
   spec?: boolean;
+  /** Only these parts of the Markdown, e.g. `impact`; `diff.json` stays whole. */
+  section?: string[];
 }
 
 export interface DiffRun {
@@ -477,6 +479,12 @@ export const runDiff = async (
     maxChars: whole(options.maxChars, DIFF_MARKDOWN_DEFAULTS.maxChars, '--max-chars'),
     diagrams: options.diagrams !== false,
   };
+  const sections = (options.section ?? []).map((name) => oneOf(name, DIFF_SECTIONS, 'impact', '--section'));
+  if (sections.length > 0 && format !== 'markdown') {
+    throw cannotRun(`--section picks parts of the Markdown, and --format ${format} writes the whole report`, [
+      'Leave out --format, or leave out --section.',
+    ]);
+  }
   const sequenceDetail = sequenceDetailOf(options.sequenceDetail);
   const sarifLevel = sarifLevelFlag(options.sarifLevel);
 
@@ -546,7 +554,7 @@ export const runDiff = async (
           )
         : format === 'json'
           ? `${JSON.stringify(report, null, 2)}\n`
-          : renderDiffMarkdown(report, { file, ...markdown, docs, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) });
+          : renderDiffMarkdown(report, { file, ...markdown, docs, sections, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) });
     if (format !== 'sarif') io.out(text);
     io.err(`${summariseDiff(report)}\n`);
     for (const note of said?.notes ?? []) io.err(`note: ${note}\n`);
@@ -614,6 +622,7 @@ export const registerDiff = (program: Command): void => {
     .option('--pins <path>', 'with --env: the pins file (default: deployed.file, or flowatlas.deployed.json beside the configuration)')
     .option('--service <name>', 'compare only this repository, repeatable (with --env: the ones that move)', collect, [])
     .option('--format <name>', `one of ${FORMATS.join(', ')}`)
+    .option('--section <name>', `only this part of the Markdown: ${DIFF_SECTIONS.join(', ')} (repeatable)`, collect, [])
     .option('--output <file>', 'write what was printed to this file as well; with --format sarif, the log goes there instead of stdout')
     .option('--fail-on-contract-break', 'exit 1 when this revision introduces a contract error')
     .option('--fail-on-rule-break', 'exit 1 when this revision introduces a violation of an architecture rule at error')

@@ -2843,6 +2843,7 @@ are new. Markdown by default, because its destination is a pull request comment.
 | `--pin <service>=<ref>` | none | with `--env`: the ref a service runs, over the pins file and `FLOWATLAS_PIN_<SERVICE>`, repeatable |
 | `--pins <path>` | `deployed.file`, or `flowatlas.deployed.json` | with `--env`: the pins file |
 | `--format <name>` | `markdown` | `markdown`, `json` or `sarif` (the new and fixed contract findings and rule violations, [SARIF](#--format-sarif-findings-for-code-scanning)) |
+| `--section <name>` | every one | only this part of the Markdown, repeatable: `impact`, `flows`, `docs`, `contracts`, `api`, `rules`, `joins`, `gaps`, `types`, `graph`; without the heading, the side table and the footer, the warnings kept. `diff.json` is whole either way, and another `--format` is refused |
 | `--output <file>` | none | write what was printed here as well; with `--format sarif`, the log goes here instead of stdout |
 | `--sarif-root <dir>` | the configuration's directory | with `--format sarif`: paths relative to this checkout |
 | `--sarif-level <level>` | `note` | with `--format sarif`: leave out results below `error`, `warning` or `note` |

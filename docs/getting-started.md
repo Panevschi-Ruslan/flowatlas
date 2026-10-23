@@ -463,8 +463,10 @@ One route is renamed in the orders service, and flowatlas names every way in tha
 reached it - the gateway route, billing's handlers and the browser button above
 them, in repositories the change does not touch - and shows each flow it cuts,
 step by step, as a sequence diagram in the Markdown. The output is Markdown
-because its destination is a pull request comment; `--fail-on-contract-break`
-and `--fail-on-rule-break` make it a build failure instead. `flowatlas check
+because its destination is a pull request comment; `--section impact` prints
+only who would notice, and `--section flows` only the flows, as in the
+recording. `--fail-on-contract-break` and `--fail-on-rule-break` make it a build
+failure instead. `flowatlas check
 --env production` asks the same question against what an environment runs. See
 [docs/ci.md](ci.md) for the whole recipe.
 
@@ -542,7 +544,10 @@ Most scenes run against `fixtures/multi-repo`; the stream one runs against
 `fixtures/folded-channels`.
 
 Each scene is a shell script under `scripts/demo/scenes`. The commands you see
-typed are the commands that ran; the driver sizes the terminal to the scene and
+typed are the commands that ran, each one a reader can run as it stands: two
+small helpers on the demo's `PATH`, `show <file> <from>-<to>` and `mcp-call
+<tool> key=value`, print a file's lines and ask the graph server as an agent
+would. The driver sizes the terminal to the scene and
 renders it with [asciinema](https://asciinema.org) and
 [agg](https://github.com/asciinema/agg).
 

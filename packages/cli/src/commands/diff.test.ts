@@ -204,7 +204,16 @@ describe('what a revision changed, across four repositories', () => {
     expect(strict.failedOn).toEqual(['rule']);
   }, 300_000);
 
-  it('answers the same twice, whether it read the commits or remembered them', async () => {
+  it('prints only the sections asked for, and refuses them with another format', async () => {
+    const impact = await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED, section: ['impact'] }, quiet);
+    expect(impact.text).toMatch(/^(## Warnings\n[^#]*)?## Impact\n/);
+    expect(impact.text).not.toContain('## Changed flows');
+    expect(impact.report.impact).toEqual(run.report.impact);
+    await expect(runDiff('HEAD~1', undefined, { config, section: ['flow'] }, quiet)).rejects.toThrow('--section must be one of impact, flows,');
+    await expect(runDiff('HEAD~1', undefined, { config, section: ['impact'], format: 'json' }, quiet)).rejects.toThrow('--section picks parts of the Markdown');
+  }, 300_000);
+
+    it('answers the same twice, whether it read the commits or remembered them', async () => {
     // The second run takes its graphs from the cache, which is the only thing
     // that should differ: what it found cannot.
     const again = await runDiff('HEAD~1', undefined, { config, generatedAt: FIXED }, quiet);

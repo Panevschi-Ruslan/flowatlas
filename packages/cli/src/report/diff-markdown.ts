@@ -50,14 +50,25 @@ export interface DiffMarkdownOptions {
    * `check` (P117) puts above the same body, its verdict first.
    */
   lead?: readonly string[];
+  /**
+   * Only these sections, in the document's own order, with no heading, side
+   * table or footer above and below them: `diff --section impact` in a
+   * terminal. The warnings stay, since what could not be read qualifies every
+   * section; the file on disk is the whole report either way.
+   */
+  sections?: readonly DiffSection[];
 }
+
+/** The parts `--section` can pick, named as the document heads them. */
+export const DIFF_SECTIONS = ['impact', 'flows', 'docs', 'contracts', 'api', 'rules', 'joins', 'gaps', 'types', 'graph'] as const;
+export type DiffSection = (typeof DIFF_SECTIONS)[number];
 
 /**
  * What a document leaves out when nobody says. `maxChars` stays under the
  * 65,536 characters a pull-request comment on GitHub may hold, with room for
  * whatever a workflow adds around it.
  */
-export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions, 'file' | 'docs' | 'lead'>>> = Object.freeze({
+export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions, 'file' | 'docs' | 'lead' | 'sections'>>> = Object.freeze({
   maxRows: 50,
   maxDiagrams: 5,
   context: 3,
@@ -67,7 +78,7 @@ export const DIFF_MARKDOWN_DEFAULTS: Readonly<Required<Omit<DiffMarkdownOptions,
 
 const DEFAULTS = DIFF_MARKDOWN_DEFAULTS;
 
-type Settings = Required<Omit<DiffMarkdownOptions, 'file' | 'docs' | 'lead'>> & DiffMarkdownOptions;
+type Settings = Required<Omit<DiffMarkdownOptions, 'file' | 'docs' | 'lead' | 'sections'>> & DiffMarkdownOptions;
 
 const escape = (text: string): string => text.replace(/\|/g, '\\|');
 
@@ -622,27 +633,31 @@ export const renderDiffMarkdown = (report: DiffReport, options: DiffMarkdownOpti
   const settings = { ...DEFAULTS, ...options };
   const changed = report.flows.filter(flowChanged).length;
   const drawn = Math.min(changed, settings.maxDiagrams);
+  const picked = settings.sections === undefined || settings.sections.length === 0 ? undefined : new Set(settings.sections);
+  const only = (section: DiffSection, lines: () => string[]): string[] => (picked === undefined || picked.has(section) ? lines() : []);
   const render = (room: FlowRoom): string => {
     const lines = [
-      ...(settings.lead ?? [
-        '## flowatlas diff',
-        '',
-        `\`${report.base.ref ?? 'working tree'}\` → \`${report.head.ref ?? 'working tree'}\``,
-        '',
-      ]),
-      ...sideLines(report),
+      ...(picked !== undefined
+        ? []
+        : (settings.lead ?? [
+            '## flowatlas diff',
+            '',
+            `\`${report.base.ref ?? 'working tree'}\` → \`${report.head.ref ?? 'working tree'}\``,
+            '',
+          ])),
+      ...(picked === undefined ? sideLines(report) : []),
       ...warningLines(report),
-      ...impactLines(report, settings),
-      ...flowLines(report, settings, room),
-      ...staleDocLines(settings.docs, settings.maxRows),
-      ...contractLines(report, settings),
-      ...(report.spec === null ? [] : specDiffLines(report.spec, { maxRows: settings.maxRows, ...(settings.file === undefined ? {} : { file: settings.file }) })),
-      ...ruleLines(report, settings),
-      ...joinLines(report, settings),
-      ...gapLines(report, settings),
-      ...typeLines(report, settings),
-      ...graphLines(report),
-      ...footer(report),
+      ...only('impact', () => impactLines(report, settings)),
+      ...only('flows', () => flowLines(report, settings, room)),
+      ...only('docs', () => staleDocLines(settings.docs, settings.maxRows)),
+      ...only('contracts', () => contractLines(report, settings)),
+      ...only('api', () => (report.spec === null ? [] : specDiffLines(report.spec, { maxRows: settings.maxRows, ...(settings.file === undefined ? {} : { file: settings.file }) }))),
+      ...only('rules', () => ruleLines(report, settings)),
+      ...only('joins', () => joinLines(report, settings)),
+      ...only('gaps', () => gapLines(report, settings)),
+      ...only('types', () => typeLines(report, settings)),
+      ...only('graph', () => graphLines(report)),
+      ...(picked === undefined ? footer(report) : []),
     ];
     return `${lines.join('\n')}\n`;
   };

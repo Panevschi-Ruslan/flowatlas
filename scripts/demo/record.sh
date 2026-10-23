@@ -4,7 +4,7 @@
 #   scripts/demo/record.sh            every scene
 #   scripts/demo/record.sh 03 07      only those
 #
-# Needs asciinema and agg:  brew install asciinema agg
+# Needs asciinema, agg and jq:  brew install asciinema agg jq
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
@@ -31,12 +31,7 @@ state_of() {
 
 # The two settings `flowatlas doctor` asks for in scene 02, applied off camera so
 # that the later scenes start from a project that is configured.
-tune() {
-  jq '(.services[]|select(.name=="orders")).baseUrlEnv=["ORDERS_URL"]
-    | (.services[]|select(.name=="web")).apiTarget={apiUrl:"gateway"}' \
-    "$DEMO/flowatlas.config.json" > "$DEMO/c.tmp"
-  mv "$DEMO/c.tmp" "$DEMO/flowatlas.config.json"
-}
+tune() { "$ROOT/scripts/demo/tune.sh" "$DEMO/flowatlas.config.json"; }
 
 # Which fixture a state is built from, when it is not the four-service one.
 fixture_of() {
@@ -62,7 +57,15 @@ prepare() {
   "$ROOT/scripts/demo/reset.sh" > /dev/null
   [ "$1" = raw ] && return 0
   (cd "$DEMO" && PATH="$DEMO/.bin:$PATH" flowatlas init --dir . --yes) > /dev/null 2>&1
-  [ "$1" = built ] || tune
+  if [ "$1" = built ]; then
+    # The configuration under git of its own, so that scene 03 can show the
+    # settings it adds as a diff.
+    git -C "$DEMO" init -q -b main
+    git -C "$DEMO" add flowatlas.config.json
+    git -C "$DEMO" -c user.name=demo -c user.email=demo@example.com commit -qm 'the configuration init wrote'
+  else
+    tune
+  fi
   (cd "$DEMO" && PATH="$DEMO/.bin:$PATH" flowatlas build) > /dev/null 2>&1
   if [ "$1" = renamed ]; then
     sed -i '' "s/@Get(':id')/@Get('detail\/:id')/" \
@@ -79,6 +82,7 @@ runner() {
     echo '#!/bin/bash'
     echo "source '$ROOT/scripts/demo/lib.sh'"
     echo "export PATH='$DEMO/.bin':\$PATH"
+    echo 'export GIT_PAGER=cat'
     echo "cd '$DEMO'"
     if [ -n "$fast" ]; then
       echo 'DEMO_TYPE_DELAY=0'

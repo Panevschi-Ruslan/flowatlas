@@ -146,3 +146,30 @@ describe('Gaps and findings in the diff document (P194)', () => {
     expect(summariseDiff(grown)).toContain('gaps +2/-0');
   });
 });
+
+describe('Only some sections of the diff document', () => {
+  const changed = flow('POST /orders', [enters('POST /orders'), step('POST /invoices', 'removed')]);
+
+  it('prints the sections asked for, in the document\'s order, with no heading, side table or footer', () => {
+    const text = renderDiffMarkdown(report([changed]), { file: 'out/diff.json', sections: ['flows', 'impact'] });
+    expect(text.startsWith('## Impact')).toBe(true);
+    expect(text.indexOf('## Changed flows')).toBeGreaterThan(text.indexOf('## Impact'));
+    expect(text).not.toContain('## flowatlas diff');
+    expect(text).not.toContain('## Contract changes');
+    expect(text).not.toContain('## Graph');
+    expect(text).not.toContain('ms total');
+  });
+
+  it('keeps the warnings, since what could not be read qualifies every section', () => {
+    const unread = { ...report([]), warnings: [{ reason: 'ref-not-found', service: 'orders', message: 'orders has no ref main.', hint: 'Fetch it.' }] } as DiffReport;
+    const text = renderDiffMarkdown(unread, { sections: ['impact'] });
+    expect(text.indexOf('## Warnings')).toBe(0);
+    expect(text).toContain('## Impact');
+  });
+
+  it('prints the whole document when no section is named', () => {
+    const text = renderDiffMarkdown(report([changed]), { sections: [] });
+    expect(text).toContain('## flowatlas diff');
+    expect(text).toContain('## Graph');
+  });
+});

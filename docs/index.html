@@ -510,14 +510,14 @@ flowatlas init --dir .  <span class="c"># look under this one, not beside it</sp
   </div>
 
   <figure class="rec">
-    <div class="rec-bar"><span>flowatlas doctor</span><span>flowatlas doctor --reason ambiguous-route-target</span><span>flowatlas doctor --reason base-url-from-name</span></div>
-    <img src="media/02-doctor.gif" alt="flowatlas doctor grouping what it could not join, a repository probably missing, and two settings it asks for" loading="lazy">
+    <div class="rec-bar"><span>flowatlas doctor --unresolved</span><span>flowatlas doctor --reason base-url-from-name --section unresolved</span></div>
+    <img src="media/02-doctor.gif" alt="flowatlas doctor grouping what it could not join by cause, and the two settings it asks for" loading="lazy">
   </figure>
   <div class="col">
-    <p>It names the repository that is probably missing &mdash; something
-      called <code>payments</code>, from the one setting nobody claims. Three
-      browser calls could go to two services, so it asks which one the
-      frontend's <code>apiUrl</code> names. And <code>ORDERS_URL</code> was
+    <p>Three browser calls could go to two services, so it asks which one the
+      frontend's <code>apiUrl</code> names. <code>PAYMENTS_URL</code> is a
+      setting no service claims, and <code>doctor --missing</code> names the
+      repository it probably belongs to. And <code>ORDERS_URL</code> was
       joined to <code>orders</code> only because of its name, which is kept as a
       note until the configuration says so outright.</p>
     <pre><code>flowatlas doctor --reason &lt;code&gt;  <span class="c"># one kind of gap</span>
@@ -541,8 +541,8 @@ flowatlas doctor --strict           <span class="c"># exit 1 past the baseline</
   </div>
   
   <figure class="rec">
-    <div class="rec-bar"><span>jq -c '.services[]' flowatlas.config.json</span><span>flowatlas build</span></div>
-    <img src="media/03-configure.gif" alt="the services array before and after two settings, and the build that follows" loading="lazy">
+    <div class="rec-bar"><span>git diff</span><span>flowatlas build</span></div>
+    <img src="media/03-configure.gif" alt="the two settings added to the configuration, as a diff, and the build that follows" loading="lazy">
   </figure>
   <div class="col">
     <div class="tw"><table>
@@ -702,7 +702,7 @@ flowatlas flow "entry:orders:http:POST:/orders/:param/archive"</code></pre>
   </div>
   
   <figure class="rec">
-    <div class="rec-bar"><span>git -C orders diff -U0</span><span>flowatlas diff HEAD</span></div>
+    <div class="rec-bar"><span>git -C orders diff</span><span>flowatlas diff HEAD --section impact</span><span>flowatlas diff HEAD --section flows</span></div>
     <img src="media/08-diff.gif" alt="one renamed route, who reaches it, and two flows it cuts, step by step" loading="lazy">
   </figure>
   <div class="col">
@@ -715,6 +715,7 @@ flowatlas flow "entry:orders:http:POST:/orders/:param/archive"</code></pre>
       <code>--fail-on-contract-break</code> and
       <code>--fail-on-rule-break</code> make it a build failure instead.</p>
     <pre><code>flowatlas diff main               <span class="c"># this branch against main</span>
+flowatlas diff main --section impact  <span class="c"># only who would notice</span>
 flowatlas check --env production  <span class="c"># safe to deploy there?</span>
 flowatlas rules                   <span class="c"># who may call what</span></code></pre>
   </div>
@@ -757,8 +758,8 @@ flowatlas observe --listen      <span class="c"># OTLP on 127.0.0.1:4318</span><
   </div>
   
   <figure class="rec">
-    <div class="rec-bar"><span>cat orders/.mcp.json</span><span>tools/list</span><span>find_symbol</span><span>impact</span></div>
-    <img src="media/09-mcp.gif" alt="the registered server, its tools listed, and two of them answering" loading="lazy">
+    <div class="rec-bar"><span>cat orders/.mcp.json</span><span>tools/list</span><span>find_symbol</span><span>describe_for_prompt</span></div>
+    <img src="media/09-mcp.gif" alt="the registered server, its tools listed, a symbol found by its initials, and a table described for a prompt" loading="lazy">
   </figure>
   <div class="col">
     <p>Twenty-six tools in all, and a session lists the ones its project can
